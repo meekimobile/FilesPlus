@@ -1,0 +1,122 @@
+// import QtQuick 1.0 // to target S60 5th Edition or Maemo 5
+import QtQuick 1.1
+import com.nokia.symbian 1.1
+import "Utility.js" as Utility
+
+Rectangle {
+    id: driveGridRect
+    anchors.fill: parent
+    color: "transparent"
+
+    signal driveSelected (string driveName)
+
+    property alias model: driveGrid.model
+    property variant driveTypeTexts: ["No Drive", "Internal Drive", "Removable Drive", "Remote Drive", "Cdrom Drive",             "Internal Flash Drive", "Ram Drive"]
+    property variant driveIcons:     ["",         "device.svg",     "memory_card.svg", "",             "music_player_update.svg", "memory_card.svg",      "device.svg"]
+
+    GridView {
+        id: driveGrid
+        anchors.fill: parent
+        cellWidth: parent.width
+        cellHeight: 60
+        delegate: driveCell
+        highlight: Rectangle {
+            color: "steelblue"
+        }
+        highlightFollowsCurrentItem: true
+        highlightMoveDuration: 0
+        focus: true
+        currentIndex: -1
+
+        property string currentDriveName: ""
+
+        onCurrentIndexChanged: {
+            console.debug("driveGrid onCurrentIndexChanged " + currentIndex + ", " + currentDriveName);
+            driveGridRect.driveSelected(currentDriveName);
+        }
+    }
+
+    Component {
+        id: driveCell
+
+        Item {
+            id: driveCellItem
+            width: driveGrid.cellWidth
+            height: driveGrid.cellHeight
+
+            Row {
+                anchors.fill: parent
+                spacing: 2
+                Image {
+                    id: driveIcon
+                    width: 67
+                    height: 57
+                    source: driveIcons[model.driveType]
+                }
+
+                Column {
+                    width: parent.width - driveIcon.width - 4
+                    height: parent.height
+                    spacing: 0
+                    Text {
+                        width: parent.width
+                        height: 29
+                        color: "white"
+                        font.family: "Century Gothic"
+                        font.pixelSize: 18
+                        text: model.logicalDrive + ": " + driveTypeTexts[model.driveType]
+                    }
+
+                    Rectangle {
+                        width: parent.width
+                        height: 29
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: "blue" }
+                            GradientStop { position: 1.0; color: "darkblue" }
+                        }
+
+                        Rectangle {
+                            width: (model.availableSpace / model.totalSpace) * parent.width
+                            height: parent.height
+                            gradient: Gradient {
+                                GradientStop { position: 0.0; color: "white" }
+                                GradientStop { position: 1.0; color: "#00AAFF" }
+                            }
+                        }
+                        Text {
+                            width: parent.width
+                            height: parent.height
+                            color: "white"
+                            font.family: "Century Gothic"
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                            style: Text.Outline
+                            font.pixelSize:16
+                            text: "Free: " + Utility.formatFileSize(model.availableSpace, 1)
+                                  + " / Total: " + Utility.formatFileSize(model.totalSpace, 1)
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: "grey"
+                anchors.bottom: parent.bottom
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton
+
+                onClicked: {
+                    console.debug("driveCellItem clicked " + (parent.x + mouseX) + ", " + (parent.y + mouseY) );
+                    var index = driveGrid.indexAt(parent.x + mouseX, parent.y + mouseY);
+                    driveGrid.currentDriveName = model.logicalDrive;
+                    driveGrid.currentIndex = index;
+                }
+            }
+        }
+    }
+}
