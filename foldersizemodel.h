@@ -26,7 +26,7 @@ public:
     void setCurrentDir(const QString currentDir);
 
     int sortFlag() const;
-    void setSortFlag(int sortFlag);
+    bool setSortFlag(int sortFlag);
 
     QStringList getDriveList();
     void fetchDirSize(const bool clearCache = false);

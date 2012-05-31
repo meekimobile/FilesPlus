@@ -21,6 +21,14 @@ Page {
             when: !flipable1.flipped
         }
     ]
+
+    onStateChanged: {
+        console.debug("folderPage onStateChanged state=" + folderPage.state);
+        if (state == "chart") {
+            fsModel.setSortFlag(FolderSizeItemListModel.SortBySize);
+        }
+    }
+
     tools: toolBarLayout
 
     ToolBarLayout {
@@ -49,7 +57,7 @@ Page {
 
         ToolButton {
             id: flipButton
-            iconSource: (state != "list") ? "list.svg" : "chart.svg"
+            iconSource: (folderPage.state != "list") ? "list.svg" : "chart.svg"
             flat: true
 
             Component.onCompleted: {
@@ -78,7 +86,7 @@ Page {
         id: sortByMenu
 
         onSelectSort: {
-            console.debug("setSortFlag flag=" + flag);
+            console.debug("sortByMenu setSortFlag flag=" + flag);
             fsModel.setSortFlag(flag);
         }
     }
@@ -102,7 +110,7 @@ Page {
 
     function goUpSlot() {
         if (fsModel.isRoot()) {
-            pageStack.pop();
+            pageStack.push(Qt.resolvedUrl("DrivePage.qml"), {}, true);
         } else {
             fsModel.changeDir("..");
         }
@@ -163,6 +171,8 @@ Page {
         onCurrentDirChanged: {
             console.debug("QML FolderSizeItemListModel::currentDirChanged");
             currentPath.text = fsModel.currentDir;
+
+            refreshSlot();
         }
 
         onRefreshBegin: {
@@ -171,7 +181,7 @@ Page {
         }
 
         onDataChanged: {
-            console.debug("QML FolderSizeItemListModel::dataChanged");
+//            console.debug("QML FolderSizeItemListModel::dataChanged");
         }
 
         onRefreshCompleted: {

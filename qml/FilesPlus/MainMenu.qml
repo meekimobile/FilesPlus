@@ -5,7 +5,7 @@ Menu {
     id: mainMenu
     z: 2
 
-    property variant disabledMenus;
+    property variant disabledMenus: []
         
     signal resetCache();
 
@@ -15,6 +15,13 @@ Menu {
             platformSubItemIndicator: true
             onClicked: {
                 sortByMenu.open();
+            }
+        }
+
+        MenuItem {
+            text: "Reset CloudPrint"
+            onClicked: {
+                if (gcpClient) gcpClient.refreshAccessToken();
             }
         }
 

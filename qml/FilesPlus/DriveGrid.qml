@@ -11,6 +11,7 @@ Rectangle {
     property alias model: driveGrid.model
     property variant driveTypeTexts: ["No Drive", "Internal Drive", "Removable Drive", "Remote Drive", "Cdrom Drive",             "Internal Flash Drive", "Ram Drive"]
     property variant driveIcons:     ["",         "device.svg",     "memory_card.svg", "",             "music_player_update.svg", "memory_card.svg",      "device.svg"]
+    property int currentIndex: driveGrid.currentIndex
 
     GridView {
         id: driveGrid
@@ -21,7 +22,7 @@ Rectangle {
         highlight: Rectangle {
             border.color: "blue"
             border.width: 1
-            color: "transparent"
+            color: "blue"
         }
         highlightFollowsCurrentItem: true
         highlightMoveDuration: 0
@@ -29,6 +30,8 @@ Rectangle {
         currentIndex: -1
 
         property string currentDriveName: ""
+
+
     }
 
     Component {

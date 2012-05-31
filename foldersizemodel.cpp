@@ -189,19 +189,15 @@ QString FolderSizeModel::formatFileSize(double size) {
 void FolderSizeModel::sortItemList() {
     switch (m_sortFlag) {
     case SortByName:
-        qDebug() << "sort by name";
         qSort(itemList.begin(), itemList.end(), nameLessThan);
         break;
     case SortByTime:
-        qDebug() << "sort by time";
         qSort(itemList.begin(), itemList.end(), timeGreaterThan);
         break;
     case SortByType:
-        qDebug() << "sort by type";
         qSort(itemList.begin(), itemList.end(), typeLessThan);
         break;
     case SortBySize:
-        qDebug() << "sort by size";
         qSort(itemList.begin(), itemList.end(), sizeGreaterThan);
         break;
     }
@@ -242,6 +238,9 @@ void FolderSizeModel::fetchDirSize(const bool clearCache) {
         }
     }
 
+    // Sort itemList as current sortFlag.
+    sortItemList();
+
     // Refresh Cache for the currentDir.
     QFileInfo dirInfo(m_currentDir);
 //    qDebug() << "Refresh cache dirInfo.absoluteFilePath() " << dirInfo.absoluteFilePath();
@@ -271,13 +270,16 @@ int FolderSizeModel::sortFlag() const
     return m_sortFlag;
 }
 
-void FolderSizeModel::setSortFlag(int sortFlag)
+bool FolderSizeModel::setSortFlag(int sortFlag)
 {
     qDebug() << "FolderSizeModel::setSortFlag m_sortFlag " << m_sortFlag << " sortFlag " << sortFlag;
     if (m_sortFlag != sortFlag) {
         m_sortFlag = sortFlag;
 
         sortItemList();
+        return true;
+    } else {
+        return false;
     }
 }
 

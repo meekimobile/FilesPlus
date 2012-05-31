@@ -13,6 +13,7 @@ class FolderSizeItemListModel : public QAbstractListModel, public QDeclarativePa
     Q_ENUMS(SortFlags)
     Q_INTERFACES(QDeclarativeParserStatus)
     Q_PROPERTY(QString currentDir READ currentDir WRITE setCurrentDir NOTIFY currentDirChanged)
+    Q_PROPERTY(int sortFlag READ getSortFlag WRITE setSortFlag)
 public:
     static const int TimerInterval;
 

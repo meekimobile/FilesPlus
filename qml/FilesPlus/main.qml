@@ -3,7 +3,7 @@ import com.nokia.symbian 1.1
 
 PageStackWindow {
     id: window
-    initialPage: DrivePage { id: drivePage; }
+    initialPage: FolderPage { id: folderPage; }
     showStatusBar: true
     showToolBar: true
 
@@ -110,5 +110,10 @@ PageStackWindow {
     Splash {
         id: splashScreen
         interval: 5000
+    }
+
+    Component.onCompleted: {
+        // Load folderPage then push drivePage to increase performance.
+        pageStack.push(Qt.resolvedUrl("DrivePage.qml"));
     }
 }

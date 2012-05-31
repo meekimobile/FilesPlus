@@ -36,12 +36,5 @@ ContextMenu {
                 selectSort(FolderSizeItemListModel.SortBySize);
             }
         }
-
-        MenuItem {
-            text: "Back"
-            onClicked: {
-                sortByMenu.close();
-            }
-        }
     }
 }

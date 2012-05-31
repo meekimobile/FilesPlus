@@ -3,7 +3,7 @@
 #include <QThreadPool>
 #include <QUrl>
 
-const int FolderSizeItemListModel::TimerInterval = 500;
+const int FolderSizeItemListModel::TimerInterval = 100;
 
 FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -156,9 +156,10 @@ int FolderSizeItemListModel::getSortFlag() const
 
 void FolderSizeItemListModel::setSortFlag(const int sortFlag)
 {
-    m.setSortFlag(sortFlag);
-
-    emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, 0));
+    if (m.setSortFlag(sortFlag)) {
+        // If itemList is actually sorted, emit dataChanged.
+        emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, 0));
+    }
 }
 
 bool FolderSizeItemListModel::removeRow(int row, const QModelIndex &parent)

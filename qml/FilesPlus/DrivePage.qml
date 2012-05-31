@@ -76,6 +76,7 @@ Page {
     }
 
     DriveGrid {
+        id: driveGrid
         width: parent.width
         height: parent.height - bluePanel.height
         anchors.top: bluePanel.bottom
@@ -83,7 +84,9 @@ Page {
 
         onDriveSelected: {
             console.debug("driveSelection onDriveSelected " + driveName);
-            pageStack.push(Qt.resolvedUrl("FolderPage.qml"), { currentDir: driveName });
+            var p = pageStack.find(function(page) { return (page.name == "folderPage"); });
+            if (p) p.currentDir = driveName;
+            pageStack.pop(drivePage, true);
         }
     }
 
@@ -109,6 +112,12 @@ Page {
                 anchors.margins: 4
                 color: "white"
             }
+        }
+    }
+
+    onStatusChanged: {
+        if (status == PageStatus.Active) {
+            driveGrid.currentIndex = -1;
         }
     }
 }
