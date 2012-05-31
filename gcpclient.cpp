@@ -267,7 +267,9 @@ void GCPClient::accessToken()
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accessTokenReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    manager->post(req, postData);
+    QNetworkReply *reply = manager->post(req, postData);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
 void GCPClient::refreshAccessToken()
@@ -292,7 +294,9 @@ void GCPClient::refreshAccessToken()
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(refreshAccessTokenReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    manager->post(req, postData);
+    QNetworkReply *reply = manager->post(req, postData);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
 void GCPClient::accountInfo()
@@ -306,7 +310,9 @@ void GCPClient::accountInfo()
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setRawHeader("Authorization", QByteArray().append("Bearer ").append(m_paramMap["access_token"]));
-    manager->get(req);
+    QNetworkReply *reply = manager->get(req);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
 void GCPClient::search(QString q)
@@ -329,7 +335,9 @@ void GCPClient::search(QString q)
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setRawHeader("Authorization", authHeader) ;
     req.setRawHeader("X-CloudPrint-Proxy", "Chrome");
-    manager->get(req);
+    QNetworkReply *reply = manager->get(req);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
 void GCPClient::submit(QString printerId, QString title, QString capabilities, QString contentPath, QString contentType, QString tag)
@@ -372,6 +380,7 @@ void GCPClient::submit(QString printerId, QString title, QString capabilities, Q
     req.setHeader(QNetworkRequest::ContentLengthHeader, postData.length());
     QNetworkReply *reply = manager->post(req, postData);
     connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
 void GCPClient::submit(QString printerId, QString contentPath)

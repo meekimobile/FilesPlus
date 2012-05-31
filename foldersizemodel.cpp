@@ -248,6 +248,12 @@ bool FolderSizeModel::isReady()
     return m_isReady;
 }
 
+bool FolderSizeModel::isRoot()
+{
+    QDir dir(m_currentDir);
+    return (dir.isRoot());
+}
+
 bool FolderSizeModel::clearCache()
 {
     return m_clearCache;

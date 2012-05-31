@@ -3,6 +3,9 @@ import QtQuick 1.1
 
 Rectangle {
     id: splashScreen
+
+    property alias interval: splashTimer.interval
+
     z: 3
     width: parent.width
     height: parent.height

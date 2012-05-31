@@ -13,6 +13,7 @@ public:
     explicit SystemInfoHelper(QDeclarativeItem *parent = 0);
     
     Q_INVOKABLE int getDriveTypeInt(const QString &drive);
+    Q_INVOKABLE QStringList getDriveList();
 signals:
     
 public slots:

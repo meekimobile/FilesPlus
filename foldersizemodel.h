@@ -31,6 +31,7 @@ public:
     void removeItem(const int index);
 
     bool isReady();
+    bool isRoot();
 
     bool clearCache();
     void setClearCache(bool clearCache);

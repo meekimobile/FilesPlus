@@ -43,6 +43,7 @@ public:
     Q_INVOKABLE void changeDir(const QString &name);
     Q_INVOKABLE void refreshDir(const bool clearCache = false);
     Q_INVOKABLE QString getUrl(const QString absPath);
+    Q_INVOKABLE bool isRoot();
 
     Q_INVOKABLE bool removeRow(int row, const QModelIndex & parent = QModelIndex());
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());

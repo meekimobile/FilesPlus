@@ -1,3 +1,4 @@
+#include <QDir>
 #include "systeminfohelper.h"
 
 SystemInfoHelper::SystemInfoHelper(QDeclarativeItem *parent) :
@@ -54,4 +55,15 @@ int SystemInfoHelper::getDriveTypeInt(const QString &drive)
     }
 
     return drvTypeInt;
+}
+
+QStringList SystemInfoHelper::getDriveList() {
+    QFileInfoList drives = QDir::drives();
+    QStringList driveList;
+
+    for (int i=0; i<drives.length(); i++) {
+        driveList.append(drives.at(i).absolutePath());
+    }
+
+    return driveList;
 }

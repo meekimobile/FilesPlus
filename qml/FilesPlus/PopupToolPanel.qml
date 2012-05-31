@@ -5,6 +5,8 @@ import "Utility.js" as Utility
 Rectangle {
     property bool forFile
     property string srcFilePath
+    property string selectedFilePath
+    property int selectedFileIndex
     property bool isCopy
     property string pastePath
     
@@ -95,7 +97,7 @@ Rectangle {
             onClicked: {
                 popupToolPanel.visible = false;
                 // TODO to avoid directly refer to external element.
-                popupToolPanel.srcFilePath = fsListView.currentItem.filePath;
+                popupToolPanel.srcFilePath = selectedFilePath;
                 popupToolPanel.isCopy = false;
             }
         }
@@ -109,7 +111,7 @@ Rectangle {
             onClicked: {
                 popupToolPanel.visible = false;
                 // TODO to avoid directly refer to external element.
-                popupToolPanel.srcFilePath = fsListView.currentItem.filePath;
+                popupToolPanel.srcFilePath = selectedFilePath;
                 popupToolPanel.isCopy = true;
             }
         }
@@ -123,7 +125,8 @@ Rectangle {
             onClicked: {
                 popupToolPanel.visible = false;
                 // TODO to avoid directly refer to external element.
-                popupToolPanel.printFile(fsListView.currentItem.filePath, fsListView.currentIndex);
+                console.debug("popupToolPanel print " + selectedFilePath + ", " + selectedFileIndex);
+                popupToolPanel.printFile(selectedFilePath, selectedFileIndex);
             }
         }
 

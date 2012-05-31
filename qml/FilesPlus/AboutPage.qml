@@ -2,7 +2,7 @@ import QtQuick 1.1
 import com.nokia.symbian 1.1
 
 Page {
-    id: moreApps
+    id: aboutPage
     z: 3
     tools: ToolBarLayout {
         ToolButton {

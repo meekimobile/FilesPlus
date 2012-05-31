@@ -1,11 +1,9 @@
 // import QtQuick 1.0 // to target S60 5th Edition or Maemo 5
 import QtQuick 1.1
-import com.nokia.symbian 1.1
 import "Utility.js" as Utility
 
 Rectangle {
     id: driveGridRect
-    anchors.fill: parent
     color: "transparent"
 
     signal driveSelected (string driveName)
@@ -21,7 +19,9 @@ Rectangle {
         cellHeight: 60
         delegate: driveCell
         highlight: Rectangle {
-            color: "steelblue"
+            border.color: "blue"
+            border.width: 1
+            color: "transparent"
         }
         highlightFollowsCurrentItem: true
         highlightMoveDuration: 0
@@ -29,11 +29,6 @@ Rectangle {
         currentIndex: -1
 
         property string currentDriveName: ""
-
-        onCurrentIndexChanged: {
-            console.debug("driveGrid onCurrentIndexChanged " + currentIndex + ", " + currentDriveName);
-            driveGridRect.driveSelected(currentDriveName);
-        }
     }
 
     Component {
@@ -115,6 +110,7 @@ Rectangle {
                     var index = driveGrid.indexAt(parent.x + mouseX, parent.y + mouseY);
                     driveGrid.currentDriveName = model.logicalDrive;
                     driveGrid.currentIndex = index;
+                    driveGridRect.driveSelected(model.logicalDrive);
                 }
             }
         }

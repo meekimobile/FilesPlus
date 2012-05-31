@@ -144,6 +144,11 @@ QString FolderSizeItemListModel::getUrl(const QString absPath)
     return QUrl::fromLocalFile(absPath).toString();
 }
 
+bool FolderSizeItemListModel::isRoot()
+{
+    return m.isRoot();
+}
+
 bool FolderSizeItemListModel::removeRow(int row, const QModelIndex &parent)
 {
     return removeRows(row, 1, parent);

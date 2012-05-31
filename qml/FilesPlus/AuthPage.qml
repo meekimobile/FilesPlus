@@ -58,15 +58,15 @@ Page {
             if (webView.title.match("^Success")) {
                 var p = pageStack.find(function(page) {
                     console.debug("pageStack.find page.name=" + page.name);
-                    return (page.name == "mainPage");
+                    return (page.name == "folderPage");
                 });
                 // TODO Remove dependency to make authPage reusable for other REST API.
-                p.setGCPClientAuthCode(webView.title);
-                pageStack.pop(authPage);
+                if (p) p.setGCPClientAuthCode(webView.title);
+                pageStack.pop();
             }
 
             if (webView.title.match("^Denied")) {
-                pageStack.pop(authPage);
+                pageStack.pop();
             }
         }
     }

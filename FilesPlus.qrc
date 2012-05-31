@@ -11,25 +11,33 @@
         <file>qml/FilesPlus/folder.svg</file>
         <file>qml/FilesPlus/notes.svg</file>
         <file>qml/FilesPlus/FolderPieIcon.svg</file>
-        <file>qml/FilesPlus/main.qml</file>
-        <file>qml/FilesPlus/MainPage.qml</file>
-        <file>qml/FilesPlus/Utility.js</file>
-        <file>qml/FilesPlus/DriveGrid.qml</file>
         <file>qml/FilesPlus/music_player_update.svg</file>
         <file>qml/FilesPlus/usb.svg</file>
         <file>qml/FilesPlus/delete.svg</file>
         <file>qml/FilesPlus/trim.svg</file>
         <file>qml/FilesPlus/next.svg</file>
-        <file>qml/FilesPlus/PopupToolPanel.qml</file>
         <file>qml/FilesPlus/copy.svg</file>
         <file>qml/FilesPlus/paste.svg</file>
-        <file>qml/FilesPlus/Splash.qml</file>
-        <file>qml/FilesPlus/MoreApps.qml</file>
         <file>qml/FilesPlus/FilesPlusIcon.svg</file>
-        <file>qml/FilesPlus/FilesPlusInfo.qml</file>
-        <file>qml/FilesPlus/FolderPieInfo.qml</file>
         <file>qml/FilesPlus/FilesPlus256.png</file>
         <file>qml/FilesPlus/FolderPie256.png</file>
         <file>qml/FilesPlus/print.svg</file>
+        <file>qml/FilesPlus/Utility.js</file>
+        <file>qml/FilesPlus/Splash.qml</file>
+        <file>qml/FilesPlus/AboutPage.qml</file>
+        <file>qml/FilesPlus/AuthPage.qml</file>
+        <file>qml/FilesPlus/ConfirmDialog.qml</file>
+        <file>qml/FilesPlus/DriveGrid.qml</file>
+        <file>qml/FilesPlus/DrivePage.qml</file>
+        <file>qml/FilesPlus/FilesPlusInfo.qml</file>
+        <file>qml/FilesPlus/FolderPage.qml</file>
+        <file>qml/FilesPlus/FolderPieInfo.qml</file>
+        <file>qml/FilesPlus/main.qml</file>
+        <file>qml/FilesPlus/MainMenu.qml</file>
+        <file>qml/FilesPlus/MainPage.qml</file>
+        <file>qml/FilesPlus/MoreApps.qml</file>
+        <file>qml/FilesPlus/PopupMenu.qml</file>
+        <file>qml/FilesPlus/PopupToolPanel.qml</file>
+        <file>qml/FilesPlus/Sandbox.qml</file>
     </qresource>
 </RCC>
