@@ -4,6 +4,30 @@
 #include <QDebug>
 #include <QCoreApplication>
 
+bool nameLessThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
+{
+    return o1.name < o2.name;
+}
+
+bool timeGreaterThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
+{
+    return o1.lastModified > o2.lastModified;
+}
+
+bool typeLessThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
+{
+    if (o1.isDir && !o2.isDir) {
+        // If dir before file, return true.
+        return true;
+    } else if (!o1.isDir && o2.isDir) {
+        // If file before dir, return false;
+        return false;
+    } else {
+        // If both the same, compare size.
+        return o1.fileType < o2.fileType && o1.name < o2.name;
+    }
+}
+
 bool sizeGreaterThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
 {
     if (o1.isDir && !o2.isDir) {
@@ -162,6 +186,27 @@ QString FolderSizeModel::formatFileSize(double size) {
     return fileSize;
 }
 
+void FolderSizeModel::sortItemList() {
+    switch (m_sortFlag) {
+    case SortByName:
+        qDebug() << "sort by name";
+        qSort(itemList.begin(), itemList.end(), nameLessThan);
+        break;
+    case SortByTime:
+        qDebug() << "sort by time";
+        qSort(itemList.begin(), itemList.end(), timeGreaterThan);
+        break;
+    case SortByType:
+        qDebug() << "sort by type";
+        qSort(itemList.begin(), itemList.end(), typeLessThan);
+        break;
+    case SortBySize:
+        qDebug() << "sort by size";
+        qSort(itemList.begin(), itemList.end(), sizeGreaterThan);
+        break;
+    }
+}
+
 QList<FolderSizeItem> FolderSizeModel::getDirContent() const
 {
     return itemList;
@@ -197,10 +242,6 @@ void FolderSizeModel::fetchDirSize(const bool clearCache) {
         }
     }
 
-//    qDebug() << QTime::currentTime() << "FolderSizeModel::fetchDirSize sorting itemList";
-    qSort(itemList.begin(), itemList.end(), sizeGreaterThan);
-//    qDebug() << QTime::currentTime() << "FolderSizeModel::fetchDirSize done";
-
     // Refresh Cache for the currentDir.
     QFileInfo dirInfo(m_currentDir);
 //    qDebug() << "Refresh cache dirInfo.absoluteFilePath() " << dirInfo.absoluteFilePath();
@@ -223,6 +264,21 @@ FolderSizeItem FolderSizeModel::getFileItem(const QFileInfo fileInfo) {
 void FolderSizeModel::setCurrentDir(const QString currentDir)
 {
     m_currentDir = currentDir;
+}
+
+int FolderSizeModel::sortFlag() const
+{
+    return m_sortFlag;
+}
+
+void FolderSizeModel::setSortFlag(int sortFlag)
+{
+    qDebug() << "FolderSizeModel::setSortFlag m_sortFlag " << m_sortFlag << " sortFlag " << sortFlag;
+    if (m_sortFlag != sortFlag) {
+        m_sortFlag = sortFlag;
+
+        sortItemList();
+    }
 }
 
 bool FolderSizeModel::changeDir(const QString dirName)

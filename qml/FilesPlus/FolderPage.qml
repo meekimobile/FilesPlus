@@ -74,6 +74,15 @@ Page {
         }
     }
 
+    SortByMenu {
+        id: sortByMenu
+
+        onSelectSort: {
+            console.debug("setSortFlag flag=" + flag);
+            fsModel.setSortFlag(flag);
+        }
+    }
+
     ConfirmDialog {
         id: resetCacheConfirmation
         titleText: "Reset Cache"

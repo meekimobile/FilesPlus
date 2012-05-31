@@ -17,6 +17,10 @@ public:
     bool isDir;
     double subDirCount;
     double subFileCount;
+
+    QString fileType;
+private:
+    void setFileType();
 };
 
 QDataStream &operator<<(QDataStream &out, const FolderSizeItem &item);

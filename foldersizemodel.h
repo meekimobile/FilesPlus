@@ -12,12 +12,21 @@ public:
     static const QString CACHE_FILE_PATH;
     static const QString DEFAULT_CURRENT_DIR;
 
+    enum SortFlags {
+        SortByName,
+        SortByTime,
+        SortBySize,
+        SortByType
+    };
 
     FolderSizeModel();
     FolderSizeModel(QString currentDir);
 
     QString currentDir() const;
     void setCurrentDir(const QString currentDir);
+
+    int sortFlag() const;
+    void setSortFlag(int sortFlag);
 
     QStringList getDriveList();
     void fetchDirSize(const bool clearCache = false);
@@ -40,12 +49,14 @@ public:
 private:
     FolderSizeItem getCachedDir(const QFileInfo dir, const bool clearCache = false);
     FolderSizeItem getFileItem(const QFileInfo fileInfo);
+    void sortItemList();
 
     QHash<QString, FolderSizeItem> dirSizeCache;
     QList<FolderSizeItem> itemList;
     QString m_currentDir;
     bool m_isReady;
     bool m_clearCache;
+    int m_sortFlag;
 };
 
 #endif // FOLDERSIZEMODEL_H

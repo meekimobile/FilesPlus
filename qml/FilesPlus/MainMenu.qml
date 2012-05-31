@@ -11,6 +11,14 @@ Menu {
 
     content: MenuLayout {
         MenuItem {
+            text: "Sort by"
+            platformSubItemIndicator: true
+            onClicked: {
+                sortByMenu.open();
+            }
+        }
+
+        MenuItem {
             text: "About"
             onClicked: {
                 pageStack.push(Qt.resolvedUrl("AboutPage.qml"));

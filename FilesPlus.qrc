@@ -39,5 +39,6 @@
         <file>qml/FilesPlus/PopupMenu.qml</file>
         <file>qml/FilesPlus/PopupToolPanel.qml</file>
         <file>qml/FilesPlus/Sandbox.qml</file>
+        <file>qml/FilesPlus/SortByMenu.qml</file>
     </qresource>
 </RCC>

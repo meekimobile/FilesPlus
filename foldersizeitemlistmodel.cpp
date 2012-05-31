@@ -149,6 +149,18 @@ bool FolderSizeItemListModel::isRoot()
     return m.isRoot();
 }
 
+int FolderSizeItemListModel::getSortFlag() const
+{
+    return m.sortFlag();
+}
+
+void FolderSizeItemListModel::setSortFlag(const int sortFlag)
+{
+    m.setSortFlag(sortFlag);
+
+    emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, 0));
+}
+
 bool FolderSizeItemListModel::removeRow(int row, const QModelIndex &parent)
 {
     return removeRows(row, 1, parent);

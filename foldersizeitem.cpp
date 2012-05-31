@@ -1,4 +1,5 @@
 #include "foldersizeitem.h"
+#include <QRegExp>
 
 FolderSizeItem::FolderSizeItem()
 {
@@ -13,6 +14,18 @@ FolderSizeItem::FolderSizeItem(const QString &name, const QString &absolutePath,
     this->isDir = isDir;
     this->subDirCount = subDirCount;
     this->subFileCount = subFileCount;
+
+    setFileType();
+}
+
+void FolderSizeItem::setFileType()
+{
+    // Get file extension.
+    QRegExp rx("^(.+)(\\.)(.+)$");
+    rx.indexIn(name);
+    if (rx.captureCount() == 3) {
+        fileType = rx.cap(3);
+    }
 }
 
 QDataStream &operator<<(QDataStream &out, const FolderSizeItem &item)
