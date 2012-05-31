@@ -4,7 +4,7 @@
 #include "foldersizeitemlistmodel.h"
 #include "systeminfohelper.h"
 #include "gcpclient.h"
-#include "dropboxclientmodel.h"
+#include "dropboxclient.h"
 #include <QAbstractListModel>
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
@@ -13,7 +13,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qmlRegisterType<FolderSizeItemListModel>("FolderSizeItemListModel", 1, 0, "FolderSizeItemListModel");
     qmlRegisterType<SystemInfoHelper>("SystemInfoHelper", 1, 0, "SystemInfoHelper");
     qmlRegisterType<GCPClient>("GCPClient", 1, 0, "GCPClient");
-    qmlRegisterType<DropboxClientModel>("DropboxClientModel", 1, 0, "DropboxClientModel");
+    qmlRegisterType<DropboxClient>("DropboxClient", 1, 0, "DropboxClient");
     qmlRegisterType<QAbstractListModel>();
 
     QScopedPointer<QApplication> app(createApplication(argc, argv));

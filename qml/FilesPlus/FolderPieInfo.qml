@@ -18,7 +18,7 @@ Column {
     Text {
         id: title
         color: "white"
-        text: qsTr("FolderPie " + window.version)
+        text: qsTr("FolderPie 1.0.2")
         anchors.horizontalCenter: parent.horizontalCenter
         horizontalAlignment: Text.AlignLeft
         font.bold: true

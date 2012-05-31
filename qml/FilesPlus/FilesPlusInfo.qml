@@ -17,7 +17,7 @@ Column {
     Text {
         id: title
         color: "white"
-        text: qsTr("Files+")
+        text: qsTr("Files+ " + window.version)
         anchors.horizontalCenter: parent.horizontalCenter
         horizontalAlignment: Text.AlignLeft
         font.bold: true
