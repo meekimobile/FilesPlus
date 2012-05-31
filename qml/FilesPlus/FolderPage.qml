@@ -664,8 +664,10 @@ Page {
             console.debug("sandboxPage gcpClient onRefreshAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
-                // Resume printing
-                printFileSlot(popupToolPanel.selectedFilePath);
+                // Resume printing if selectedFilePath exists.
+                if (popupToolPanel.selectedFilePath != "") {
+                    printFileSlot(popupToolPanel.selectedFilePath);
+                }
             } else {
                 // TODO Notify failed refreshAccessToken.
             }
