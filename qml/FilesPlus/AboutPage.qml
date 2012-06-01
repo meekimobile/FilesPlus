@@ -14,7 +14,7 @@ Page {
         }
     }
 
-    FolderPieInfo {
+    FilesPlusInfo {
         id: appInfo
     }
 }
