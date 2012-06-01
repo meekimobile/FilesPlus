@@ -44,5 +44,6 @@
         <file>qml/FilesPlus/play.svg</file>
         <file>qml/FilesPlus/MenuItemWithCheck.qml</file>
         <file>qml/FilesPlus/TitlePanel.qml</file>
+        <file>qml/FilesPlus/refresh.svg</file>
     </qresource>
 </RCC>

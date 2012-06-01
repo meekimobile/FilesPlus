@@ -3,6 +3,7 @@ import com.nokia.symbian 1.1
 import Charts 1.0
 import FolderSizeItemListModel 1.0
 import GCPClient 1.0
+import DropboxClient 1.0
 import "Utility.js" as Utility
 
 Page {
@@ -182,6 +183,37 @@ Page {
         if (res) {
             gcpClient.accessToken();
         }
+    }
+
+    function syncFileSlot(srcFilePath) {
+        console.debug("folderPage syncFileSlot srcFilePath=" + srcFilePath);
+        if (!dbClient.isAuthorized()) {
+            messageDialog.message = "Files+ sync your files via Dropbox service.\
+\nYou will redirect to authorization page.";
+            messageDialog.titleText = "Sync with Dropbox";
+            messageDialog.open();
+
+            dbClient.requestToken();
+        } else {
+            uidDialog.open();
+//            var printerList = gcpClient.getStoredPrinterList();
+//            console.debug("folderPage printFileSlot gcpClient.getStoredPrinterList()=" + printerList);
+//            if (printerList.length > 0) {
+//                printerSelectionDialog.srcFilePath = srcFilePath;
+//                printerSelectionDialog.model = printerList;
+//                printerSelectionDialog.open();
+//            } else {
+//                // TODO Open progress dialog.
+//                downloadProgressDialog.titleText = "Search for printers";
+//                downloadProgressDialog.indeterminate = true;
+//                downloadProgressDialog.open();
+//                gcpClient.search("");
+//            }
+        }
+    }
+
+    function dropboxAccessTokenSlot() {
+        dbClient.accessToken();
     }
 
     FolderSizeItemListModel {
@@ -402,6 +434,10 @@ Page {
 
         onPrintFile: {
             printFileSlot(srcFilePath);
+        }
+
+        onSyncFile: {
+            syncFileSlot(srcFilePath);
         }
     }
 
@@ -683,12 +719,12 @@ Page {
         id: gcpClient
 
         onAuthorizeRedirectSignal: {
-            console.debug("sandboxPage gcpClient onAuthorizeRedirectSignal " + url);
+            console.debug("folderPage gcpClient onAuthorizeRedirectSignal " + url);
             pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url });
         }
 
         onAccessTokenReplySignal: {
-            console.debug("sandboxPage gcpClient onAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
+            console.debug("folderPage gcpClient onAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
                 // Resume printing
@@ -699,7 +735,7 @@ Page {
         }
 
         onRefreshAccessTokenReplySignal: {
-            console.debug("sandboxPage gcpClient onRefreshAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
+            console.debug("folderPage gcpClient onRefreshAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
                 // Resume printing if selectedFilePath exists.
@@ -716,14 +752,14 @@ Page {
         }
 
         onAccountInfoReplySignal: {
-            console.debug("sandboxPage gcpClient onAccountInfoReplySignal " + err + " " + errMsg + " " + msg);
+            console.debug("folderPage gcpClient onAccountInfoReplySignal " + err + " " + errMsg + " " + msg);
 
             var jsonObj = Utility.createJsonObj(msg);
             console.debug("jsonObj.email " + jsonObj.email);
         }
 
         onSearchReplySignal: {
-            console.debug("sandboxPage gcpClient onSearchReplySignal " + err + " " + errMsg + " " + msg);
+            console.debug("folderPage gcpClient onSearchReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
                 // Once search done, open printerSelectionDialog
@@ -735,7 +771,7 @@ Page {
         }
 
         onSubmitReplySignal: {
-//            console.debug("sandboxPage gcpClient onSubmitReplySignal " + err + " " + errMsg + " " + msg);
+//            console.debug("folderPage gcpClient onSubmitReplySignal " + err + " " + errMsg + " " + msg);
 
             // Notify submit result.
             var jsonObj = Utility.createJsonObj(msg);
@@ -758,6 +794,109 @@ Page {
             // Reset popupToolPanel selectedFile.
             popupToolPanel.selectedFilePath = "";
             popupToolPanel.selectedFileIndex = -1;
+        }
+
+        onDownloadProgress: {
+//            console.debug("sandBox gcpClient onDownloadProgress " + bytesReceived + " / " + bytesTotal);
+
+            // Shows in progress bar.
+            if (downloadProgressDialog.status != DialogStatus.Open) {
+                downloadProgressDialog.indeterminate = false;
+                downloadProgressDialog.open();
+            }
+            downloadProgressDialog.min = 0;
+            downloadProgressDialog.max = bytesTotal;
+            downloadProgressDialog.value = bytesReceived;
+        }
+
+        onUploadProgress: {
+//            console.debug("sandBox gcpClient onUploadProgress " + bytesSent + " / " + bytesTotal);
+
+            // Shows in progress bar.
+            if (uploadProgressDialog.status != DialogStatus.Open) {
+                uploadProgressDialog.indeterminate = false;
+                uploadProgressDialog.open();
+            }
+            uploadProgressDialog.min = 0;
+            uploadProgressDialog.max = bytesTotal;
+            uploadProgressDialog.value = bytesSent;
+        }
+    }
+
+    SelectionDialog {
+        id: uidDialog
+        titleText: "Please select Dropbox UID"
+        model: dbClient.getStoredUidList();
+
+        onAccepted: {
+            // Item referring for QStringList model.
+            var uid = uidDialog.model[uidDialog.selectedIndex];
+//            dbClient.accountInfo(uid);
+//            dbClient.metadata(uid, "");
+//            dbClient.fileGet(uid, "Getting Started.pdf");
+//            dbClient.filePut(uid, "C:/dummy.txt", "sub/dummy.txt");
+            var remoteFilePath = dbClient.getDefaultRemoteFilePath(popupToolPanel.selectedFilePath);
+            dbClient.filePut(uid, popupToolPanel.selectedFilePath, remoteFilePath);
+        }
+    }
+
+    DropboxClient {
+        id: dbClient
+
+        onRequestTokenReplySignal: {
+            console.debug("folderPage dbClient onRequestTokenReplySignal " + err + " " + errMsg + " " + msg);
+
+            if (err == 0) {
+                // TODO how to check if app has been authorized by user.
+                dbClient.authorize();
+            } else {
+                messageDialog.titleText = "Dropbox Request Token"
+                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.open();
+            }
+        }
+
+        onAuthorizeRedirectSignal: {
+            console.debug("folderPage dbClient onAuthorizeRedirectSignal " + url);
+            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url });
+        }
+
+        onAccessTokenReplySignal: {
+            console.debug("folderPage dbClient onAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
+
+            if (err == 0) {
+                syncFileSlot(popupToolPanel.selectedFilePath);
+            } else {
+                messageDialog.titleText = "Dropbox Access Token"
+                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.open();
+            }
+        }
+
+        onAccountInfoReplySignal: {
+            console.debug("folderPage dbClient onAccountInfoReplySignal " + err + " " + errMsg + " " + msg);
+            replyMessage.text += "\n" + msg;
+
+            if (err == 0) {
+                var jsonObj = Utility.createJsonObj(msg);
+                console.debug("jsonObj.email " + jsonObj.email);
+            } else {
+                messageDialog.titleText = "Dropbox Account Info"
+                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.open();
+            }
+        }
+
+        onFileGetReplySignal: {
+            console.debug("folderPage dbClient onFileGetReplySignal " + err + " " + errMsg + " " + msg);
+        }
+
+        onFilePutReplySignal: {
+            console.debug("folderPage dbClient onFilePutReplySignal " + err + " " + errMsg + " " + msg);
+        }
+
+        onMetadataReplySignal: {
+            console.debug("folderPage dbClient onMetadataReplySignal " + err + " " + errMsg + " " + msg);
         }
 
         onDownloadProgress: {

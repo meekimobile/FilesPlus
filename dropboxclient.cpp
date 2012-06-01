@@ -179,7 +179,9 @@ void DropboxClient::requestToken()
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(requestTokenReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(requestTokenURI));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    manager->post(req, postData);
+    QNetworkReply *reply = manager->post(req, postData);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
 void DropboxClient::authorize()
@@ -225,7 +227,14 @@ void DropboxClient::accessToken()
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accessTokenReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    manager->post(req, postData);
+    QNetworkReply *reply = manager->post(req, postData);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
+}
+
+bool DropboxClient::isAuthorized()
+{
+    return (!accessTokenPairMap.isEmpty());
 }
 
 QStringList DropboxClient::getStoredUidList()
@@ -276,7 +285,9 @@ void DropboxClient::accountInfo(QString uid)
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(uid, "GET", uri));
-    manager->get(req);
+    QNetworkReply *reply = manager->get(req);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
 void DropboxClient::fileGet(QString uid, QString remoteFilePath) {
@@ -291,7 +302,18 @@ void DropboxClient::fileGet(QString uid, QString remoteFilePath) {
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(uid, "GET", uri));
     QNetworkReply *reply = manager->get(req);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
+}
+
+QString DropboxClient::getDefaultLocalFilePath(const QString &remoteFilePath)
+{
+    QRegExp rx("^([C-F])(/.+)$");
+    rx.indexIn(remoteFilePath);
+    if (rx.captureCount() == 2) {
+        return rx.cap(1).append(":").append(rx.cap(2));
+    }
+    return "";
 }
 
 void DropboxClient::filePut(QString uid, QString localFilePath, QString remoteFilePath) {
@@ -312,9 +334,20 @@ void DropboxClient::filePut(QString uid, QString localFilePath, QString remoteFi
         req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize);
         QNetworkReply *reply = manager->put(req, localSrcfile);
         connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
+        connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 
         qDebug() << "DropboxClient::filePut put file " << localFilePath << " to dropbox " << remoteFilePath;
     }
+}
+
+QString DropboxClient::getDefaultRemoteFilePath(const QString &localFilePath)
+{
+    QRegExp rx("^([C-F])(:)(/.+)$");
+    rx.indexIn(localFilePath);
+    if (rx.captureCount() == 3) {
+        return rx.cap(1).append(rx.cap(3));
+    }
+    return "";
 }
 
 void DropboxClient::metadata(QString uid, QString remoteFilePath) {
@@ -330,6 +363,7 @@ void DropboxClient::metadata(QString uid, QString remoteFilePath) {
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(uid, "GET", uri));
     QNetworkReply *reply = manager->get(req);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 

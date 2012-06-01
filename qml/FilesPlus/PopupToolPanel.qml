@@ -11,6 +11,7 @@ Rectangle {
     property string pastePath
     
     signal printFile(string srcFilePath, int srcItemIndex)
+    signal syncFile(string srcFilePath, int srcItemIndex)
 
     function getPopupToolPanelWidth() {
         var w = 0;
@@ -20,13 +21,14 @@ Rectangle {
         w += (copyButton.visible) ? (copyButton.width + 3) : 0;
         w += (printButton.visible) ? (printButton.width + 3) : 0;
         w += (deleteButton.visible) ? (deleteButton.width + 3) : 0;
-        
+        w += (syncButton.visible) ? (syncButton.width + 3) : 0;
+
         return w;
     }
     
     function getPopupToolPanelHeight() {
         var h = 0;
-        h += (pasteButton.visible || cutButton.visible || copyButton.visible || printButton.visible || deleteButton.visible) ? (pasteButton.height + 6) : 0;
+        h += (pasteButton.visible || cutButton.visible || copyButton.visible || printButton.visible || deleteButton.visible || syncButton.visible) ? (pasteButton.height + 6) : 0;
         
         return h;
     }
@@ -140,6 +142,20 @@ Rectangle {
                 popupToolPanel.visible = false;
                 // TODO to avoid directly refer to external element.
                 fileDeleteDialog.open();
+            }
+        }
+
+        Button {
+            id: syncButton
+            visible: popupToolPanel.forFile
+            width: 60
+            height: 60
+            iconSource: "refresh.svg"
+            onClicked: {
+                popupToolPanel.visible = false;
+                // TODO to avoid directly refer to external element.
+                console.debug("popupToolPanel sync " + selectedFilePath + ", " + selectedFileIndex);
+                popupToolPanel.syncFile(selectedFilePath, selectedFileIndex);
             }
         }
     }

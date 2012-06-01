@@ -38,10 +38,13 @@ public:
     Q_INVOKABLE void requestToken();
     Q_INVOKABLE void authorize();
     Q_INVOKABLE void accessToken();
+    Q_INVOKABLE bool isAuthorized();
     Q_INVOKABLE QStringList getStoredUidList();
     Q_INVOKABLE void accountInfo(QString uid);
     Q_INVOKABLE void fileGet(QString uid, QString remoteFilePath);
+    Q_INVOKABLE QString getDefaultLocalFilePath(const QString &remoteFilePath);
     Q_INVOKABLE void filePut(QString uid, QString localFilePath, QString remoteFilePath);
+    Q_INVOKABLE QString getDefaultRemoteFilePath(const QString &localFilePath);
     Q_INVOKABLE void metadata(QString uid, QString remoteFilePath);
 signals:
     void requestTokenReplySignal(int err, QString errMsg, QString msg);

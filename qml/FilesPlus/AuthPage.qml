@@ -68,6 +68,21 @@ Page {
             if (webView.title.match("^Denied")) {
                 pageStack.pop();
             }
+
+            // DropboxClient handler
+            var uidIndex = html.indexOf("uid:");
+            if (uidIndex != -1) {
+                console.debug("found uid! at " + uidIndex);
+                console.debug(html);
+
+                var p = pageStack.find(function(page) {
+                    console.debug("pageStack.find page.name=" + page.name);
+                    return (page.name == "folderPage");
+                });
+                // TODO Remove dependency to make authPage reusable for other REST API.
+                if (p) p.dropboxAccessTokenSlot();
+                pageStack.pop();
+            }
         }
     }
 }
