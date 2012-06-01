@@ -152,6 +152,10 @@ Page {
                 printerSelectionDialog.model = printerList;
                 printerSelectionDialog.open();
             } else {
+                // TODO Open progress dialog.
+                downloadProgressDialog.titleText = "Search for printers";
+                downloadProgressDialog.indeterminate = true;
+                downloadProgressDialog.open();
                 gcpClient.search("");
             }
         }
@@ -519,6 +523,12 @@ Page {
                 gcpClient.submit(pid, srcFilePath);
             }
         }
+
+        onRejected: {
+            // Reset popupToolPanel.
+            popupToolPanel.selectedFilePath = "";
+            popupToolPanel.selectedFileIndex = -1;
+        }
     }
 
     CommonDialog {
@@ -529,10 +539,12 @@ Page {
         property alias min: uploadProgressBar.minimumValue
         property alias max: uploadProgressBar.maximumValue
         property alias value: uploadProgressBar.value
+        property alias indeterminate: uploadProgressBar.indeterminate
         property bool autoClose: true
 
         titleText: "Uploading"
         titleIcon: "FilesPlusIcon.svg"
+        buttonTexts: ["OK"]
         content: Column {
             width: parent.width - 8
             spacing: 4
@@ -551,8 +563,9 @@ Page {
                 onValueChanged: {
                     uploadProgressText.text = value + " / " + maximumValue;
                     if (uploadProgressDialog.autoClose && value == maximumValue) {
-                        uploadProgressDialog.autoClose = true;
                         uploadProgressDialog.close();
+                    } else if (value == maximumValue) {
+                        indeterminate = true;
                     }
                 }
             }
@@ -564,7 +577,7 @@ Page {
                 horizontalAlignment: Text.AlignRight
             }
             Rectangle {
-                color: "white"
+                color: "grey"
                 width: parent.width
                 height: 1
             }
@@ -579,6 +592,15 @@ Page {
         onButtonClicked: {
             uploadProgressDialog.close();
         }
+
+        onStatusChanged: {
+            if (status == DialogStatus.Closed) {
+                srcFilePath = "";
+                autoClose = true;
+                message = "";
+                indeterminate = false;
+            }
+        }
     }
 
     CommonDialog {
@@ -589,10 +611,12 @@ Page {
         property alias min: downloadProgressBar.minimumValue
         property alias max: downloadProgressBar.maximumValue
         property alias value: downloadProgressBar.value
+        property alias indeterminate: downloadProgressBar.indeterminate
         property bool autoClose: true
 
         titleText: "Downloading"
         titleIcon: "FilesPlusIcon.svg"
+        buttonTexts: ["OK"]
         content: Column {
             width: parent.width - 8
             spacing: 4
@@ -611,8 +635,9 @@ Page {
                 onValueChanged: {
                     downloadProgressText.text = value + " / " + maximumValue;
                     if (downloadProgressDialog.autoClose && value == maximumValue) {
-                        downloadProgressDialog.autoClose = true;
                         downloadProgressDialog.close();
+                    } else if (value == maximumValue) {
+                        indeterminate = true;
                     }
                 }
             }
@@ -624,7 +649,7 @@ Page {
                 horizontalAlignment: Text.AlignRight
             }
             Rectangle {
-                color: "white"
+                color: "grey"
                 width: parent.width
                 height: 1
             }
@@ -638,6 +663,15 @@ Page {
 
         onButtonClicked: {
             downloadProgressDialog.close();
+        }
+
+        onStatusChanged: {
+            if (status == DialogStatus.Closed) {
+                targetFilePath = "";
+                autoClose = true;
+                message = "";
+                indeterminate = false;
+            }
         }
     }
 
@@ -685,6 +719,7 @@ Page {
 
             if (err == 0) {
                 // Once search done, open printerSelectionDialog
+                // TODO any case that error=0 but no printers returned.
                 printFileSlot(popupToolPanel.selectedFilePath);
             } else {
                 gcpClient.refreshAccessToken();
@@ -702,8 +737,19 @@ Page {
             }
             message += jsonObj.message;
 
+            // Show reply message on progressDialog and also turn indeterminate off.
+            if (uploadProgressDialog.status != DialogStatus.Open) {
+                uploadProgressDialog.titleText = "Printing";
+                uploadProgressDialog.srcFilePath = popupToolPanel.selectedFilePath;
+                uploadProgressDialog.autoClose = false;
+                uploadProgressDialog.open();
+            }
+            uploadProgressDialog.indeterminate = false;
             uploadProgressDialog.message = message;
-            uploadProgressDialog.buttonTexts = ["OK"];
+
+            // Reset popupToolPanel selectedFile.
+            popupToolPanel.selectedFilePath = "";
+            popupToolPanel.selectedFileIndex = -1;
         }
 
         onDownloadProgress: {
@@ -711,11 +757,11 @@ Page {
 
             // Shows in progress bar.
             if (downloadProgressDialog.status != DialogStatus.Open) {
+                downloadProgressDialog.indeterminate = false;
                 downloadProgressDialog.open();
-                downloadProgressDialog.buttonTexts = "";
-                downloadProgressDialog.min = 0;
-                downloadProgressDialog.max = bytesTotal;
             }
+            downloadProgressDialog.min = 0;
+            downloadProgressDialog.max = bytesTotal;
             downloadProgressDialog.value = bytesReceived;
         }
 
@@ -724,11 +770,11 @@ Page {
 
             // Shows in progress bar.
             if (uploadProgressDialog.status != DialogStatus.Open) {
+                uploadProgressDialog.indeterminate = false;
                 uploadProgressDialog.open();
-                uploadProgressDialog.buttonTexts = "";
-                uploadProgressDialog.min = 0;
-                uploadProgressDialog.max = bytesTotal;
             }
+            uploadProgressDialog.min = 0;
+            uploadProgressDialog.max = bytesTotal;
             uploadProgressDialog.value = bytesSent;
         }
     }
