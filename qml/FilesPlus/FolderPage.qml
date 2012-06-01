@@ -893,6 +893,22 @@ Page {
 
         onFilePutReplySignal: {
             console.debug("folderPage dbClient onFilePutReplySignal " + err + " " + errMsg + " " + msg);
+
+            // TODO how to get uid of put file.
+//            console.debug("popupToolPanel.selectedFilePath " + popupToolPanel.selectedFilePath + " uid " + uidDialog.model[uidDialog.selectedIndex]);
+
+            if (err == 0) {
+                // TODO
+                // impl. in DropboxClient to store item(DropboxClient, uid, filePath, jsonObj(msg).rev)
+                // On next metadata fetching. If rev is changed, sync to newer rev either put or get.
+                // Syncing folder must queue each get/put jobs (by using ThreadPool).
+            } else {
+                messageDialog.titleText = "Dropbox File Put"
+                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.open();
+            }
+
+
         }
 
         onMetadataReplySignal: {

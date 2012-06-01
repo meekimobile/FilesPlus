@@ -38,7 +38,6 @@
         <file>qml/FilesPlus/MoreApps.qml</file>
         <file>qml/FilesPlus/PopupMenu.qml</file>
         <file>qml/FilesPlus/PopupToolPanel.qml</file>
-        <file>qml/FilesPlus/Sandbox.qml</file>
         <file>qml/FilesPlus/SortByMenu.qml</file>
         <file>qml/FilesPlus/SettingMenu.qml</file>
         <file>qml/FilesPlus/play.svg</file>

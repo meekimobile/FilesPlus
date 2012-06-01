@@ -9,6 +9,16 @@ Menu {
         
     content: MenuLayout {
         id: mainMenuLayout
+
+        MenuItem {
+            text: "Sync folder (WIP)"
+            onClicked: {
+                // TODO implement metadata to get file list and verify each file hash with stored file hash map.
+//                uidDialog.open();
+                dbClient.metadata("34040982", dbClient.getDefaultRemoteFilePath(currentPath.text));
+            }
+        }
+
         MenuItem {
             id: sortByMenuItem
             text: "Sort by"
