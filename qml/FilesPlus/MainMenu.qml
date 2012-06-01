@@ -7,10 +7,10 @@ Menu {
 
     property variant disabledMenus: []
         
-    signal resetCache();
-
     content: MenuLayout {
+        id: mainMenuLayout
         MenuItem {
+            id: sortByMenuItem
             text: "Sort by"
             platformSubItemIndicator: true
             onClicked: {
@@ -19,9 +19,11 @@ Menu {
         }
 
         MenuItem {
-            text: "Reset CloudPrint"
+            id: settingMenuItem
+            text: "Settings"
+            platformSubItemIndicator: true
             onClicked: {
-                if (gcpClient) gcpClient.refreshAccessToken();
+                settingMenu.open();
             }
         }
 
@@ -31,24 +33,7 @@ Menu {
                 pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
             }
         }
-        
-        MenuItem {
-            text: "Help"
-            onClicked: {
-                Qt.openUrlExternally("http://sites.google.com/site/meekimobile");
-            }
-        }
-        
-        MenuItem {
-            id: menuResetCache
-            text: "Reset Cache"
-            visible: (disabledMenus.indexOf(menuResetCache.text) != -1)
-            onClicked: {
-                console.debug(disabledMenus.indexOf(menuResetCache.text));
-                resetCache();
-            }
-        }
-        
+                
         MenuItem {
             text: "More Apps"
             onClicked: {
@@ -61,6 +46,13 @@ Menu {
             onClicked: {
                 Qt.quit();
             }
+        }
+    }
+
+    onStatusChanged: {
+        if (status == DialogStatus.Opening) {
+            sortByMenuItem.visible = (disabledMenus.indexOf(sortByMenuItem.text) == -1);
+            settingMenuItem.visible = (disabledMenus.indexOf(settingMenuItem.text) == -1);
         }
     }
 }

@@ -6,34 +6,45 @@ ContextMenu {
     id: sortByMenu
     z: 2
 
+    property int sortFlag
+    property variant disabledSorts: []
+
     signal selectSort (int flag)
 
     content: MenuLayout {
-        MenuItem {
+        MenuItemWithCheck {
+            property int flag: FolderSizeItemListModel.SortByName
             text: "Sort by Name"
+            checked: (sortFlag == flag)
             onClicked: {
-                selectSort(FolderSizeItemListModel.SortByName);
+                selectSort(flag);
             }
         }
 
-        MenuItem {
+        MenuItemWithCheck {
+            property int flag: FolderSizeItemListModel.SortByType
             text: "Sort by Type"
+            checked: (sortFlag == flag)
             onClicked: {
-                selectSort(FolderSizeItemListModel.SortByType);
+                selectSort(flag);
             }
         }
 
-        MenuItem {
+        MenuItemWithCheck {
+            property int flag: FolderSizeItemListModel.SortByTime
             text: "Sort by Time"
+            checked: (sortFlag == flag)
             onClicked: {
-                selectSort(FolderSizeItemListModel.SortByTime);
+                selectSort(flag);
             }
         }
 
-        MenuItem {
+        MenuItemWithCheck {
+            property int flag: FolderSizeItemListModel.SortBySize
             text: "Sort by Size"
+            checked: (sortFlag == flag)
             onClicked: {
-                selectSort(FolderSizeItemListModel.SortBySize);
+                selectSort(flag);
             }
         }
     }

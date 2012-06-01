@@ -77,9 +77,6 @@ Page {
 
     MainMenu {
         id: mainMenu
-        onResetCache: {
-            resetCacheConfirmation.open();
-        }
     }
 
     SortByMenu {
@@ -88,6 +85,25 @@ Page {
         onSelectSort: {
             console.debug("sortByMenu setSortFlag flag=" + flag);
             fsModel.setSortFlag(flag);
+        }
+
+        onStatusChanged: {
+            if (status == DialogStatus.Open) {
+                // TODO remove dependency
+                sortFlag = fsModel.getSortFlag();
+            }
+        }
+    }
+
+    SettingMenu {
+        id: settingMenu
+        onResetCache: {
+            resetCacheConfirmation.open();
+        }
+        onResetCloudPrint: {
+            popupToolPanel.selectedFilePath = "";
+            popupToolPanel.selectedFileIndex = -1;
+            gcpClient.refreshAccessToken();
         }
     }
 
@@ -209,9 +225,9 @@ Page {
     Flipable {
         id: flipable1
         width: parent.width
-        height: parent.height - bluePanel.height
+        height: parent.height - currentPath.height
         x: 0
-        anchors.top: bluePanel.bottom
+        anchors.top: currentPath.bottom
 
         property bool flipped: false
 
@@ -459,43 +475,29 @@ Page {
             height: implicitHeight
             anchors.horizontalCenter: parent.horizontalCenter
         }
+
+        onStatusChanged: {
+            if (status == DialogStatus.Closed) {
+                message = "";
+            }
+        }
     }
 
-    Rectangle {
-        id: bluePanel
-        anchors.top: parent.top
-        width: parent.width
-        height: 40
-        color: "transparent"
+    TitlePanel {
+        id: currentPath
 
-        Rectangle {
+        MouseArea {
             anchors.fill: parent
-            anchors.margins: 1
-            border.color: "grey"
-            border.width: 1
-            radius: 4
-            color: "transparent"
 
-            Text {
-                id: currentPath
-                anchors.fill: parent
-                anchors.margins: 4
-                color: "white"
-
-                MouseArea {
-                    anchors.fill: parent
-
-                    onPressAndHold: {
-                        if (folderPage.state == "list") {
-                            popupToolPanel.forFile = false;
-                            popupToolPanel.pastePath = currentPath.text;
-                            var panelX = currentPath.x + mouseX;
-                            var panelY = currentPath.y + mouseY;
-                            popupToolPanel.x = panelX;
-                            popupToolPanel.y = panelY;
-                            popupToolPanel.visible = true;
-                        }
-                    }
+            onPressAndHold: {
+                if (folderPage.state == "list") {
+                    popupToolPanel.forFile = false;
+                    popupToolPanel.pastePath = currentPath.text;
+                    var panelX = currentPath.x + mouseX;
+                    var panelY = currentPath.y + mouseY;
+                    popupToolPanel.x = panelX;
+                    popupToolPanel.y = panelY;
+                    popupToolPanel.visible = true;
                 }
             }
         }
@@ -580,6 +582,7 @@ Page {
                 color: "grey"
                 width: parent.width
                 height: 1
+                visible: (uploadMessage.text != "")
             }
             Text {
                 id: uploadMessage
@@ -652,6 +655,7 @@ Page {
                 color: "grey"
                 width: parent.width
                 height: 1
+                visible: (downloadMessage.text != "")
             }
             Text {
                 id: downloadMessage
@@ -701,6 +705,10 @@ Page {
                 // Resume printing if selectedFilePath exists.
                 if (popupToolPanel.selectedFilePath != "") {
                     printFileSlot(popupToolPanel.selectedFilePath);
+                } else {
+                    messageDialog.titleText = "Reset CloudPrint"
+                    messageDialog.message = "Resetting is done.";
+                    messageDialog.open();
                 }
             } else {
                 // TODO Notify failed refreshAccessToken.

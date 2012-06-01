@@ -35,7 +35,7 @@ Page {
 
     MainMenu {
         id: mainMenu
-        disabledMenus: ["Reset Cache"]
+        disabledMenus: ["Sort by", "Settings"]
     }
 
     StorageInfo {
@@ -78,8 +78,8 @@ Page {
     DriveGrid {
         id: driveGrid
         width: parent.width
-        height: parent.height - bluePanel.height
-        anchors.top: bluePanel.bottom
+        height: parent.height - titlePanel.height
+        anchors.top: titlePanel.bottom
         model: getStorageModel()
 
         onDriveSelected: {
@@ -90,29 +90,9 @@ Page {
         }
     }
 
-    Rectangle {
-        id: bluePanel
-        anchors.top: parent.top
-        width: parent.width
-        height: 40
-        color: "transparent"
-
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: 1
-            border.color: "grey"
-            border.width: 1
-            radius: 4
-            color: "transparent"
-
-            Text {
-                id: headerText
-                text: "Drives"
-                anchors.fill: parent
-                anchors.margins: 4
-                color: "white"
-            }
-        }
+    TitlePanel {
+        id: titlePanel
+        text: "Drives"
     }
 
     onStatusChanged: {

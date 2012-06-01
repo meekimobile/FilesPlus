@@ -40,5 +40,9 @@
         <file>qml/FilesPlus/PopupToolPanel.qml</file>
         <file>qml/FilesPlus/Sandbox.qml</file>
         <file>qml/FilesPlus/SortByMenu.qml</file>
+        <file>qml/FilesPlus/SettingMenu.qml</file>
+        <file>qml/FilesPlus/play.svg</file>
+        <file>qml/FilesPlus/MenuItemWithCheck.qml</file>
+        <file>qml/FilesPlus/TitlePanel.qml</file>
     </qresource>
 </RCC>
