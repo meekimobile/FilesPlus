@@ -832,7 +832,7 @@ Page {
     }
 
     function getUidListModel(localPath) {
-        console.debug("getCloudItemListModel localPath " + localPath);
+        console.debug("getUidListModel localPath " + localPath);
 
         // TODO Get uid list from GDClient.
 
@@ -888,7 +888,6 @@ Page {
                 }
                 ListItemText {
                     width: 60
-                    anchors.right: parent.right
                     mode: uidDialogListViewItem.mode
                     role: "Title"
                     text: (hash != "") ? "Sync" : ""

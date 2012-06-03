@@ -34,14 +34,16 @@ void CloudDriveModel::saveCloudItems() {
 
 CloudItem CloudDriveModel::getItem(QString localPath, ClientTypes type, QString uid)
 {
+//    qDebug() << "CloudDriveModel::getItem " << localPath << ", " << type << ", " << uid;
     CloudItem item;
     foreach (item, getItemList(localPath)) {
         if (item.type == type && item.uid == uid) {
+//            qDebug() << "CloudDriveModel::getItem " << item;
             return item;
         }
     }
 
-    return item;
+    return CloudItem();
 }
 
 QList<CloudItem> CloudDriveModel::getItemList(QString localPath) {
