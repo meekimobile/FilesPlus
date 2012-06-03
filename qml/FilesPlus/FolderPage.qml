@@ -3,6 +3,7 @@ import com.nokia.symbian 1.1
 import Charts 1.0
 import FolderSizeItemListModel 1.0
 import GCPClient 1.0
+import CloudDriveModel 1.0
 import DropboxClient 1.0
 import "Utility.js" as Utility
 
@@ -195,20 +196,12 @@ Page {
 
             dbClient.requestToken();
         } else {
+            // TODO
+            // [/] impl. in DropboxClient to store item(DropboxClient, uid, filePath, jsonObj(msg).rev) [Done on FilePutRely]
+            // [/] On next metadata fetching. If rev is changed, sync to newer rev either put or get.
+            // [ ] Syncing folder must queue each get/put jobs (by using ThreadPool).
+            uidDialog.localPath = srcFilePath;
             uidDialog.open();
-//            var printerList = gcpClient.getStoredPrinterList();
-//            console.debug("folderPage printFileSlot gcpClient.getStoredPrinterList()=" + printerList);
-//            if (printerList.length > 0) {
-//                printerSelectionDialog.srcFilePath = srcFilePath;
-//                printerSelectionDialog.model = printerList;
-//                printerSelectionDialog.open();
-//            } else {
-//                // TODO Open progress dialog.
-//                downloadProgressDialog.titleText = "Search for printers";
-//                downloadProgressDialog.indeterminate = true;
-//                downloadProgressDialog.open();
-//                gcpClient.search("");
-//            }
         }
     }
 
@@ -331,13 +324,24 @@ Page {
                     source: (popupToolPanel.isCopy) ? "copy.svg" : "trim.svg"
                 }
 
+                Image {
+                    id: syncIcon
+                    x: 0
+                    z: 1
+                    width: 32
+                    height: 32
+                    anchors.left: listItem.left
+                    anchors.bottom: listItem.bottom
+                    visible: cloudDriveModel.isConnected(absolutePath);
+                    source: "refresh.svg"
+                }
+
                 Row {
+                    id: listDelegateRow
                     anchors.fill: listItem.paddingItem
                     spacing: 5
                     Image {
                         id: icon1
-                        x: 0
-                        y: 0
                         width: 48
                         height: 48
                         sourceSize.width: 48
@@ -823,20 +827,95 @@ Page {
         }
     }
 
+    CloudDriveModel {
+        id: cloudDriveModel
+    }
+
+    function getUidListModel(localPath) {
+        console.debug("getCloudItemListModel localPath " + localPath);
+
+        // TODO Get uid list from GDClient.
+
+        // Get uid list from DropboxClient.
+        var dbUidList = dbClient.getStoredUidList();
+
+        // Construct model.
+        var model = Qt.createQmlObject(
+                    'import QtQuick 1.1; ListModel {}', folderPage);
+
+        for (var i=0; i<dbUidList.length; ++i)
+        {
+            model.append({ type: CloudDriveModel.Dropbox,
+                             uid: dbUidList[i],
+                             hash: cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, dbUidList[i])
+                         });
+        }
+
+        return model;
+    }
+
+    function getCloudIcon(type) {
+        switch (type) {
+        case CloudDriveModel.Dropbox:
+            return "DropboxIcon.png";
+        case CloudDriveModel.GoogleDrive:
+            return "GoogleDriveIcon.png";
+        }
+    }
+
     SelectionDialog {
         id: uidDialog
-        titleText: "Please select Dropbox UID"
-        model: dbClient.getStoredUidList();
+
+        property string localPath
+        property string selectedUid
+
+        titleText: "Please select Cloud Account"
+        delegate: ListItem {
+            id: uidDialogListViewItem
+            Row {
+                anchors.fill: uidDialogListViewItem.paddingItem
+                ListItemText {
+                    width: 60
+                    mode: uidDialogListViewItem.mode
+                    role: "Title"
+                    text: getCloudIcon(type)
+                }
+                ListItemText {
+                    width: parent.width - 120
+                    mode: uidDialogListViewItem.mode
+                    role: "SubTitle"
+                    text: uid
+                }
+                ListItemText {
+                    width: 60
+                    anchors.right: parent.right
+                    mode: uidDialogListViewItem.mode
+                    role: "Title"
+                    text: (hash != "") ? "Sync" : ""
+                }
+            }
+
+            onClicked: {
+                uidDialog.selectedIndex = index;
+                uidDialog.selectedUid = uidDialog.model.get(uidDialog.selectedIndex).uid;
+                uidDialog.accept();
+            }
+        }
 
         onAccepted: {
-            // Item referring for QStringList model.
-            var uid = uidDialog.model[uidDialog.selectedIndex];
-//            dbClient.accountInfo(uid);
-//            dbClient.metadata(uid, "");
-//            dbClient.fileGet(uid, "Getting Started.pdf");
-//            dbClient.filePut(uid, "C:/dummy.txt", "sub/dummy.txt");
-            var remoteFilePath = dbClient.getDefaultRemoteFilePath(popupToolPanel.selectedFilePath);
-            dbClient.filePut(uid, popupToolPanel.selectedFilePath, remoteFilePath);
+            // TODO Proceed for GoogleDrive
+            // Proceed for Dropbox
+            console.debug("uidDialog.selectedIndex " + uidDialog.selectedIndex);
+            var uid = uidDialog.selectedUid;
+            console.debug("uidDialog uid " + uid);
+            var remoteFilePath = dbClient.getDefaultRemoteFilePath(localPath);
+            dbClient.metadata(uid, remoteFilePath);
+        }
+
+        onStatusChanged: {
+            if (status == DialogStatus.Open) {
+                uidDialog.model = getUidListModel(localPath);
+            }
         }
     }
 
@@ -865,7 +944,14 @@ Page {
             console.debug("folderPage dbClient onAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
-                syncFileSlot(popupToolPanel.selectedFilePath);
+                if (popupToolPanel.selectedFilePath) {
+                    syncFileSlot(popupToolPanel.selectedFilePath);
+                } else {
+                    // TODO Get account info and show in dialog.
+                    messageDialog.titleText = "Dropbox Access Token"
+                    messageDialog.message = "New user is authorized";
+                    messageDialog.open();
+                }
             } else {
                 messageDialog.titleText = "Dropbox Access Token"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
@@ -875,7 +961,6 @@ Page {
 
         onAccountInfoReplySignal: {
             console.debug("folderPage dbClient onAccountInfoReplySignal " + err + " " + errMsg + " " + msg);
-            replyMessage.text += "\n" + msg;
 
             if (err == 0) {
                 var jsonObj = Utility.createJsonObj(msg);
@@ -889,30 +974,83 @@ Page {
 
         onFileGetReplySignal: {
             console.debug("folderPage dbClient onFileGetReplySignal " + err + " " + errMsg + " " + msg);
+
+            if (err == 0) {
+                var jsonObj = Utility.createJsonObj(msg);
+                var uid = uidDialog.selectedUid;
+                var localPath = popupToolPanel.selectedFilePath; // TODO remove dependency.
+                var localPathHash = cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, uid);
+                var remotePath;
+                if (localPathHash == "") {
+                    remotePath = dbClient.getDefaultRemoteFilePath(localPath);
+                } else {
+                    remotePath = cloudDriveModel.getItemRemotePath(localPath, CloudDriveModel.Dropbox, uid);
+                }
+                cloudDriveModel.addItem(CloudDriveModel.Dropbox, uid, localPath, remotePath, jsonObj.rev);
+            } else {
+                messageDialog.titleText = "Dropbox File Get"
+                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.open();
+            }
         }
 
         onFilePutReplySignal: {
             console.debug("folderPage dbClient onFilePutReplySignal " + err + " " + errMsg + " " + msg);
 
-            // TODO how to get uid of put file.
-//            console.debug("popupToolPanel.selectedFilePath " + popupToolPanel.selectedFilePath + " uid " + uidDialog.model[uidDialog.selectedIndex]);
-
             if (err == 0) {
-                // TODO
-                // impl. in DropboxClient to store item(DropboxClient, uid, filePath, jsonObj(msg).rev)
-                // On next metadata fetching. If rev is changed, sync to newer rev either put or get.
-                // Syncing folder must queue each get/put jobs (by using ThreadPool).
+                var jsonObj = Utility.createJsonObj(msg);
+                var uid = uidDialog.selectedUid;
+                var localPath = popupToolPanel.selectedFilePath; // TODO remove dependency.
+                var localPathHash = cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, uid);
+                var remotePath;
+
+                if (localPathHash == "") {
+                    remotePath = dbClient.getDefaultRemoteFilePath(localPath);
+                } else {
+                    remotePath = cloudDriveModel.getItemRemotePath(localPath, CloudDriveModel.Dropbox, uid);
+                }
+                cloudDriveModel.addItem(CloudDriveModel.Dropbox, uid, localPath, remotePath, jsonObj.rev);
             } else {
                 messageDialog.titleText = "Dropbox File Put"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
-
-
         }
 
         onMetadataReplySignal: {
             console.debug("folderPage dbClient onMetadataReplySignal " + err + " " + errMsg + " " + msg);
+
+            var uid = uidDialog.selectedUid;
+            var localPath = popupToolPanel.selectedFilePath; // TODO remove dependency.
+            var remotePath;
+
+            if (err == 0) {
+                // TODO implment sync folder.
+                var jsonObj = Utility.createJsonObj(msg);
+                var localPathHash = cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, uid);
+
+                if (localPathHash == "") {
+                    remotePath = dbClient.getDefaultRemoteFilePath(localPath);
+                } else {
+                    remotePath = cloudDriveModel.getItemRemotePath(localPath, CloudDriveModel.Dropbox, uid);
+                }
+
+                console.debug("jsonObj.rev " + jsonObj.rev + " localPathHash " + localPathHash);
+                if (jsonObj.rev > localPathHash) {
+                    // TODO it should be specified with localPath instead of always use defaultLocalPath.
+                    dbClient.fileGet(uid, remotePath, localPath);
+                } else if (jsonObj.rev < localPathHash) {
+                    dbClient.filePut(uid, localPath, remotePath);
+                }
+            } else if (err == 203) {
+                // If metadata is not found, put it to cloud right away.
+                remotePath = dbClient.getDefaultRemoteFilePath(localPath);
+                dbClient.filePut(uid, localPath, remotePath);
+            } else {
+                messageDialog.titleText = "Dropbox Metadata"
+                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.open();
+            }
         }
 
         onDownloadProgress: {

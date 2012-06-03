@@ -41,7 +41,7 @@ public:
     Q_INVOKABLE bool isAuthorized();
     Q_INVOKABLE QStringList getStoredUidList();
     Q_INVOKABLE void accountInfo(QString uid);
-    Q_INVOKABLE void fileGet(QString uid, QString remoteFilePath);
+    Q_INVOKABLE void fileGet(QString uid, QString remoteFilePath, QString localFilePath);
     Q_INVOKABLE QString getDefaultLocalFilePath(const QString &remoteFilePath);
     Q_INVOKABLE void filePut(QString uid, QString localFilePath, QString remoteFilePath);
     Q_INVOKABLE QString getDefaultRemoteFilePath(const QString &localFilePath);
@@ -68,7 +68,8 @@ private:
     QMap<QString, TokenPair> accessTokenPairMap;
     TokenPair requestTokenPair;
     QString localPath;
-    QFile *localSrcfile;
+    QFile *localSourcefile;
+    QFile *localTargetfile;
 
     void loadAccessPairMap();
     void saveAccessPairMap();

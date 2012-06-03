@@ -20,6 +20,13 @@ Menu {
         }
 
         MenuItem {
+            text: "New Dropbox user"
+            onClicked: {
+                dbClient.requestToken();
+            }
+        }
+
+        MenuItem {
             id: sortByMenuItem
             text: "Sort by"
             platformSubItemIndicator: true

@@ -47,6 +47,9 @@ void DropboxClient::loadAccessPairMap() {
 }
 
 void DropboxClient::saveAccessPairMap() {
+    // TODO workaround fix to remove tokenPair with key="".
+    accessTokenPairMap.remove("");
+
     QFile file(KeyStoreFilePath);
     if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);   // we will serialize the data into the file
@@ -290,11 +293,14 @@ void DropboxClient::accountInfo(QString uid)
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
-void DropboxClient::fileGet(QString uid, QString remoteFilePath) {
+void DropboxClient::fileGet(QString uid, QString remoteFilePath, QString localFilePath) {
     qDebug() << "----- DropboxClient::fileGet -----";
 
     QString uri = fileGetURI.arg(dropboxRoot, remoteFilePath);
     qDebug() << "DropboxClient::fileGet uri " << uri;
+
+    // Create localTargetFile for file getting.
+    localTargetfile = new QFile(localFilePath);
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -322,9 +328,9 @@ void DropboxClient::filePut(QString uid, QString localFilePath, QString remoteFi
     QString uri = filePutURI.arg(dropboxRoot, remoteFilePath);
     qDebug() << "DropboxClient::filePut uri " << uri;
 
-    localSrcfile = new QFile(localFilePath);
-    if (localSrcfile->open(QIODevice::ReadOnly)) {
-        qint64 fileSize = localSrcfile->size();
+    localSourcefile = new QFile(localFilePath);
+    if (localSourcefile->open(QIODevice::ReadOnly)) {
+        qint64 fileSize = localSourcefile->size();
 
         // Send request.
         QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -332,7 +338,7 @@ void DropboxClient::filePut(QString uid, QString localFilePath, QString remoteFi
         QNetworkRequest req = QNetworkRequest(QUrl(uri));
         req.setRawHeader("Authorization", createOAuthHeaderForUid(uid, "PUT", uri));
         req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize);
-        QNetworkReply *reply = manager->put(req, localSrcfile);
+        QNetworkReply *reply = manager->put(req, localSourcefile);
         connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
         connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 
@@ -407,7 +413,9 @@ void DropboxClient::accessTokenReplyFinished(QNetworkReply *reply)
         accessTokenPair.secret = m_paramMap["oauth_token_secret"];
         QString uid = m_paramMap["uid"];
 
-        accessTokenPairMap[uid] = accessTokenPair;
+        if (uid != "" && accessTokenPair.token != "" && accessTokenPair.secret != "") {
+            accessTokenPairMap[uid] = accessTokenPair;
+        }
 
         qDebug() << "m_paramMap " << m_paramMap;
         qDebug() << "accessTokenPairMap " << accessTokenPairMap;
@@ -434,14 +442,12 @@ void DropboxClient::fileGetReplyFinished(QNetworkReply *reply) {
         qDebug() << "x-dropbox-metadata " << metadata;
 
         // TODO stream replyBody to a file on localPath.
-        localPath = "C:/";
-        QFile file(localPath + "/downloaded.raw");
-        if (file.open(QIODevice::WriteOnly)) {
-            QDataStream out(&file);   // we will serialize the data into the file
+        if (localTargetfile->open(QIODevice::WriteOnly)) {
+            QDataStream out(localTargetfile);   // we will serialize the data into the file
             out << reply->readAll();
         }
-        file.flush();
-        file.close();
+        localTargetfile->flush();
+        localTargetfile->close();
 
         emit fileGetReplySignal(reply->error(), reply->errorString(), metadata);
     } else {
