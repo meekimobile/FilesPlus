@@ -3,13 +3,15 @@
 #include <QCryptographicHash>
 #include <QCoreApplication>
 
-const QString DropboxClient::KeyStoreFilePath = "C:/DropboxClient.ks";
+const QString DropboxClient::KeyStoreFilePath = "C:/DropboxClient.dat";
+
 //const QString DropboxClient::consumerKey = "4i5z1mwqh60x832"; // Key from DropBox
 //const QString DropboxClient::consumerSecret = "tcf4h7zo5c5nuzr"; // Secret from Dropbox
 //const QString DropboxClient::dropboxRoot = "dropbox"; // For full access
 const QString DropboxClient::consumerKey = "u4f161p2wonac7p"; // Key from DropBox
 const QString DropboxClient::consumerSecret = "itr3zb95dwequun"; // Secret from Dropbox
 const QString DropboxClient::dropboxRoot = "sandbox"; // For app folder access, root will be app folder.
+
 const QString DropboxClient::signatureMethod = "HMAC-SHA1";
 const QString DropboxClient::requestTokenURI = "https://api.dropbox.com/1/oauth/request_token";
 const QString DropboxClient::authorizeURI = "https://www.dropbox.com/1/oauth/authorize";
@@ -42,7 +44,7 @@ void DropboxClient::loadAccessPairMap() {
         QDataStream in(&file);    // read the data serialized from the file
         in >> accessTokenPairMap;
 
-        qDebug() << "loadAccessPairMap " << accessTokenPairMap;
+        qDebug() << "DropboxClient::loadAccessPairMap " << accessTokenPairMap;
     }
 }
 

@@ -63,8 +63,8 @@ SOURCES += main.cpp \
     tokenpair.cpp \
     gcpclient.cpp \
     dropboxclient.cpp \
-    clouditem.cpp \
-    clouddrivemodel.cpp
+    clouddrivemodel.cpp \
+    clouddriveitem.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -81,8 +81,8 @@ HEADERS += \
     tokenpair.h \
     gcpclient.h \
     dropboxclient.h \
-    clouditem.h \
-    clouddrivemodel.h
+    clouddrivemodel.h \
+    clouddriveitem.h
 
 OTHER_FILES +=
 

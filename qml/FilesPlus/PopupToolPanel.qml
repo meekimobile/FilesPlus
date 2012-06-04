@@ -9,13 +9,15 @@ Rectangle {
     property int selectedFileIndex
     property bool isCopy
     property string pastePath
+    property string syncPath
+    property alias timeout: popupTimer.interval
     
     signal printFile(string srcFilePath, int srcItemIndex)
     signal syncFile(string srcFilePath, int srcItemIndex)
 
     function getPopupToolPanelWidth() {
         var w = 0;
-        w += (pasteButton.visible || cutButton.visible || copyButton.visible || deleteButton.visible) ? 3 : 0;
+        w += (pasteButton.visible || cutButton.visible || copyButton.visible || deleteButton.visible || syncButton.visible) ? 3 : 0;
         w += (pasteButton.visible) ? (pasteButton.width + 3) : 0;
         w += (cutButton.visible) ? (cutButton.width + 3) : 0;
         w += (copyButton.visible) ? (copyButton.width + 3) : 0;
@@ -66,15 +68,15 @@ Rectangle {
     
     Timer {
         id: popupTimer
-        interval: 3000
+        interval: 2000
         running: false;
         onTriggered: parent.visible = false
     }
     
     Row {
         id: buttonRow
-        x: 3
-        y: 3
+        anchors.fill: parent
+        anchors.margins: 3
         spacing: 3
         
         Button {
@@ -147,7 +149,7 @@ Rectangle {
 
         Button {
             id: syncButton
-            visible: popupToolPanel.forFile
+            visible: true
             width: 60
             height: 60
             iconSource: "refresh.svg"

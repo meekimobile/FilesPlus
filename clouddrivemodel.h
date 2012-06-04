@@ -5,7 +5,7 @@
 #include <QHash>
 #include <QMultiHash>
 #include <QAbstractListModel>
-#include "clouditem.h"
+#include "clouddriveitem.h"
 
 class CloudDriveModel : public QDeclarativeItem
 {
@@ -24,9 +24,9 @@ public:
     explicit CloudDriveModel(QDeclarativeItem *parent = 0);
     ~CloudDriveModel();
 
-    void addItem(QString localPath, CloudItem item);
-    QList<CloudItem> getItemList(QString localPath);
-    CloudItem getItem(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
+    void addItem(QString localPath, CloudDriveItem item);
+    QList<CloudDriveItem> getItemList(QString localPath);
+    CloudDriveItem getItem(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
 
     Q_INVOKABLE bool isConnected(QString localPath);
     Q_INVOKABLE void addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash);
@@ -39,10 +39,10 @@ signals:
 public slots:
     
 private:
-    QMultiMap<QString, CloudItem> m_cloudItems;
+    QMultiMap<QString, CloudDriveItem> m_cloudDriveItems;
 
-    void loadCloudItems();
-    void saveCloudItems();
+    void loadCloudDriveItems();
+    void saveCloudDriveItems();
 };
 
 #endif // CLOUDDRIVEMODEL_H

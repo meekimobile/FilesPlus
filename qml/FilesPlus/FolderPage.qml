@@ -532,6 +532,7 @@ Page {
             onPressAndHold: {
                 if (folderPage.state == "list") {
                     popupToolPanel.forFile = false;
+                    popupToolPanel.syncPath = currentPath.text
                     popupToolPanel.pastePath = currentPath.text;
                     var panelX = currentPath.x + mouseX;
                     var panelY = currentPath.y + mouseY;
@@ -1024,22 +1025,42 @@ Page {
             var remotePath;
 
             if (err == 0) {
-                // TODO implment sync folder.
                 var jsonObj = Utility.createJsonObj(msg);
                 var localPathHash = cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, uid);
 
+                // localPath is already connected if localPathHash exists.
                 if (localPathHash == "") {
                     remotePath = dbClient.getDefaultRemoteFilePath(localPath);
                 } else {
                     remotePath = cloudDriveModel.getItemRemotePath(localPath, CloudDriveModel.Dropbox, uid);
                 }
 
-                console.debug("jsonObj.rev " + jsonObj.rev + " localPathHash " + localPathHash);
-                if (jsonObj.rev > localPathHash) {
-                    // TODO it should be specified with localPath instead of always use defaultLocalPath.
-                    dbClient.fileGet(uid, remotePath, localPath);
-                } else if (jsonObj.rev < localPathHash) {
-                    dbClient.filePut(uid, localPath, remotePath);
+                // TODO Implement sync folder.
+                if (jsonObj.is_dir) {
+                    // Sync folder.
+                    console.debug("Sync folder jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
+                    if (jsonObj.hash != localPathHash) {
+                        var i;
+                        var item;
+                        for(i=0; i<jsonObj.contents.length; i++) {
+                            item = jsonObj.contents[i];
+                            if (item.is_dir) {
+                                // TODO invoke metadata
+                                // This flow will trigger recursive metadata calling.
+                            } else {
+                                // TODO invoke metadata
+                            }
+                        }
+                    }
+                } else {
+                    // Sync file.
+                    console.debug("Sync file jsonObj.rev " + jsonObj.rev + " localPathHash " + localPathHash);
+                    if (jsonObj.rev > localPathHash) {
+                        // TODO it should be specified with localPath instead of always use defaultLocalPath.
+                        dbClient.fileGet(uid, remotePath, localPath);
+                    } else if (jsonObj.rev < localPathHash) {
+                        dbClient.filePut(uid, localPath, remotePath);
+                    }
                 }
             } else if (err == 203) {
                 // If metadata is not found, put it to cloud right away.

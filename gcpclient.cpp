@@ -6,7 +6,7 @@
 #include <QScriptValue>
 #include <QScriptValueIterator>
 
-const QString GCPClient::KeyStoreFilePath = "C:/GCPClient.ks";
+const QString GCPClient::KeyStoreFilePath = "C:/GCPClient.dat";
 const QString GCPClient::consumerKey = "196573379494.apps.googleusercontent.com";
 const QString GCPClient::consumerSecret = "il59cyz3dwBW6tsHBkZYGSWj";
 
@@ -42,7 +42,7 @@ void GCPClient::loadParamMap() {
         QDataStream in(&file);    // read the data serialized from the file
         in >> m_paramMap;
 
-        qDebug() << "loadParamMap " << m_paramMap;
+        qDebug() << "GCPClient::loadParamMap " << m_paramMap;
     }
 }
 
@@ -52,7 +52,7 @@ void GCPClient::saveParamMap() {
         QDataStream out(&file);   // we will serialize the data into the file
         out << m_paramMap;
 
-        qDebug() << "saveParamMap " << m_paramMap;
+//        qDebug() << "GCPClient::saveParamMap " << m_paramMap;
     }
 }
 
