@@ -12,10 +12,12 @@ public:
     static const QString KeyStoreFilePath;
     static const QString consumerKey;
     static const QString consumerSecret;
+    static const qstring authorizationScope;
 
     static const QString authorizeURI;
     static const QString accessTokenURI;
     static const QString accountInfoURI;
+
     static const QString submitURI;
     static const QString jobsURI;
     static const QString deletejobURI;

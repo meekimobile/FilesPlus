@@ -9,10 +9,12 @@
 const QString GCPClient::KeyStoreFilePath = "C:/GCPClient.dat";
 const QString GCPClient::consumerKey = "196573379494.apps.googleusercontent.com";
 const QString GCPClient::consumerSecret = "il59cyz3dwBW6tsHBkZYGSWj";
+const QString GCPClient::authorizationScope = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/cloudprint";
 
 const QString GCPClient::authorizeURI = "https://accounts.google.com/o/oauth2/auth";
 const QString GCPClient::accessTokenURI = "https://accounts.google.com/o/oauth2/token";
 const QString GCPClient::accountInfoURI = "https://www.googleapis.com/oauth2/v1/userinfo";
+
 const QString GCPClient::submitURI = "http://www.google.com/cloudprint/submit";
 const QString GCPClient::jobsURI = "http://www.google.com/cloudprint/jobs";
 const QString GCPClient::deletejobURI = "http://www.google.com/cloudprint/deletejob";
@@ -219,7 +221,7 @@ void GCPClient::authorize()
     sortMap["response_type"] = "code";
     sortMap["client_id"] = consumerKey;
     sortMap["redirect_uri"] = "urn:ietf:wg:oauth:2.0:oob";
-    sortMap["scope"] = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/cloudprint";
+    sortMap["scope"] = authorizationScope;
     sortMap["state"] = createNonce();
     QString queryString = createQueryString(sortMap);
     qDebug() << "queryString " << queryString;
