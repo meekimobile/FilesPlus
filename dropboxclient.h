@@ -41,6 +41,7 @@ public:
     Q_INVOKABLE bool isAuthorized();
     Q_INVOKABLE QStringList getStoredUidList();
     Q_INVOKABLE void accountInfo(QString uid);
+
     Q_INVOKABLE void fileGet(QString uid, QString remoteFilePath, QString localFilePath);
     Q_INVOKABLE QString getDefaultLocalFilePath(const QString &remoteFilePath);
     Q_INVOKABLE void filePut(QString uid, QString localFilePath, QString remoteFilePath);
@@ -51,6 +52,7 @@ signals:
     void authorizeRedirectSignal(QString url);
     void accessTokenReplySignal(int err, QString errMsg, QString msg);
     void accountInfoReplySignal(int err, QString errMsg, QString msg);
+
     void fileGetReplySignal(int err, QString errMsg, QString msg);
     void filePutReplySignal(int err, QString errMsg, QString msg);
     void metadataReplySignal(int err, QString errMsg, QString msg);
@@ -60,6 +62,7 @@ public slots:
     void requestTokenReplyFinished(QNetworkReply *reply);
     void accessTokenReplyFinished(QNetworkReply *reply);
     void accountInfoReplyFinished(QNetworkReply *reply);
+
     void fileGetReplyFinished(QNetworkReply *reply);
     void filePutReplyFinished(QNetworkReply *reply);
     void metadataReplyFinished(QNetworkReply *reply);

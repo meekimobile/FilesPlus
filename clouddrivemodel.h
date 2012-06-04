@@ -2,10 +2,12 @@
 #define CLOUDDRIVEMODEL_H
 
 #include <QDeclarativeItem>
+#include <QtNetwork>
 #include <QHash>
 #include <QMultiHash>
 #include <QAbstractListModel>
 #include "clouddriveitem.h"
+#include "dropboxclient.h"
 
 class CloudDriveModel : public QDeclarativeItem
 {
@@ -34,15 +36,46 @@ public:
     Q_INVOKABLE QString getItemHash(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE QString getItemRemotePath(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE QString getItemListJson(QString localPath);
+    Q_INVOKABLE QString getDefaultLocalFilePath(const QString &remoteFilePath);
+    Q_INVOKABLE QString getDefaultRemoteFilePath(const QString &localFilePath);
+    Q_INVOKABLE bool isAuthorized();
+    Q_INVOKABLE bool isAuthorized(CloudDriveModel::ClientTypes type);
+    Q_INVOKABLE QStringList getStoredUidList(CloudDriveModel::ClientTypes type);
+
+    Q_INVOKABLE void requestToken(CloudDriveModel::ClientTypes type);
+    Q_INVOKABLE void authorize(CloudDriveModel::ClientTypes type);
+    Q_INVOKABLE void accessToken(CloudDriveModel::ClientTypes type);
+    Q_INVOKABLE void accountInfo(CloudDriveModel::ClientTypes type, QString uid);
+
+    Q_INVOKABLE void fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString localFilePath);
+    Q_INVOKABLE void filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath);
+    Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
 signals:
-    
+    void requestTokenReplySignal(int err, QString errMsg, QString msg);
+    void authorizeRedirectSignal(QString url);
+    void accessTokenReplySignal(int err, QString errMsg, QString msg);
+    void accountInfoReplySignal(int err, QString errMsg, QString msg);
+
+    void fileGetReplySignal(int err, QString errMsg, QString msg);
+    void filePutReplySignal(int err, QString errMsg, QString msg);
+    void metadataReplySignal(int err, QString errMsg, QString msg);
+    void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
+    void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
 public slots:
-    
+//    void requestTokenReplyFinished(QNetworkReply *reply);
+//    void accessTokenReplyFinished(QNetworkReply *reply);
+//    void accountInfoReplyFinished(QNetworkReply *reply);
+
+//    void fileGetReplyFinished(QNetworkReply *reply);
+//    void filePutReplyFinished(QNetworkReply *reply);
+//    void metadataReplyFinished(QNetworkReply *reply);
 private:
     QMultiMap<QString, CloudDriveItem> m_cloudDriveItems;
+    DropboxClient *dbClient;
 
     void loadCloudDriveItems();
     void saveCloudDriveItems();
+    void initializeDropboxClient();
 };
 
 #endif // CLOUDDRIVEMODEL_H
