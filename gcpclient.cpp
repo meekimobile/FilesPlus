@@ -330,6 +330,7 @@ void GCPClient::search(QString q)
 //    authHeader.append("OAuth ");  // Works!
 //    authHeader.append("GoogleLogin auth=");  // Works!
     authHeader.append(m_paramMap["access_token"]);
+    qDebug() << "GCPClient::search authHeader " << authHeader;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);

@@ -8,6 +8,7 @@ ContextMenu {
 
     signal resetCache();
     signal resetCloudPrint();
+    signal resetCloudDrive();
 
     content: MenuLayout {
         MenuItem {
@@ -15,6 +16,14 @@ ContextMenu {
             text: "Reset CloudPrint"
             onClicked: {
                 resetCloudPrint();
+            }
+        }
+
+        MenuItem {
+            id: menuResetCloudDrive
+            text: "Reset CloudDrive"
+            onClicked: {
+                resetCloudDrive();
             }
         }
 

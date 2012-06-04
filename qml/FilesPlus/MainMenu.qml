@@ -1,5 +1,6 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
+import CloudDriveModel 1.0
 
 Menu {
     id: mainMenu
@@ -22,7 +23,7 @@ Menu {
         MenuItem {
             text: "New Dropbox user"
             onClicked: {
-                dbClient.requestToken();
+                cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
             }
         }
 

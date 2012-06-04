@@ -4,7 +4,6 @@ import Charts 1.0
 import FolderSizeItemListModel 1.0
 import GCPClient 1.0
 import CloudDriveModel 1.0
-import DropboxClient 1.0
 import "Utility.js" as Utility
 
 Page {
@@ -105,7 +104,14 @@ Page {
         onResetCloudPrint: {
             popupToolPanel.selectedFilePath = "";
             popupToolPanel.selectedFileIndex = -1;
-            gcpClient.refreshAccessToken();
+//            gcpClient.refreshAccessToken();
+            gcpClient.authorize();
+        }
+        onResetCloudDrive: {
+            popupToolPanel.selectedFilePath = "";
+            popupToolPanel.selectedFileIndex = -1;
+//            gcpClient.refreshAccessToken();
+            cloudDriveModel.authorize(CloudDriveModel.GoogleDrive);
         }
     }
 
@@ -144,6 +150,8 @@ Page {
 
     function printFileSlot(srcFilePath) {
         console.debug("folderPage printFileSlot srcFilePath=" + srcFilePath);
+        if (srcFilePath == "") return;
+
         if (gcpClient.getContentType(srcFilePath) == "") {
             console.debug("folderPage printFileSlot File type is not supported. (" + srcFilePath + ")");
 
@@ -186,24 +194,43 @@ Page {
         }
     }
 
+    function setGCDClientAuthCode(code) {
+        var res = cloudDriveModel.parseAuthorizationCode(CloudDriveModel.GoogleDrive, code);
+        if (res) {
+            cloudDriveModel.accessToken(CloudDriveModel.GoogleDrive);
+        }
+    }
+
     function syncFileSlot(srcFilePath) {
         console.debug("folderPage syncFileSlot srcFilePath=" + srcFilePath);
-        if (!cloudDriveModel.isAuthorized()) {
+
+        if (!cloudDriveModel.isAuthorized(CloudDriveModel.GoogleDrive)) {
             // TODO implement for other cloud drive.
-            messageDialog.message = "Files+ sync your files via Dropbox service.\
+            messageDialog.message = "Files+ sync your files via Google Drive service.\
 \nYou will redirect to authorization page.";
-            messageDialog.titleText = "Sync with Dropbox";
+            messageDialog.titleText = "Sync with Google Drive";
             messageDialog.open();
 
-            cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
+            cloudDriveModel.authorize(CloudDriveModel.GoogleDrive);
         } else {
-            // TODO
-            // [/] impl. in DropboxClient to store item(DropboxClient, uid, filePath, jsonObj(msg).rev) [Done on FilePutRely]
-            // [/] On next metadata fetching. If rev is changed, sync to newer rev either put or get.
-            // [ ] Syncing folder must queue each get/put jobs (by using ThreadPool).
-            uidDialog.localPath = srcFilePath;
-            uidDialog.open();
+            cloudDriveModel.filePut(CloudDriveModel.GoogleDrive, "1", srcFilePath, cloudDriveModel.getDefaultRemoteFilePath(srcFilePath));
         }
+//        if (!cloudDriveModel.isAuthorized()) {
+//            // TODO implement for other cloud drive.
+//            messageDialog.message = "Files+ sync your files via Dropbox service.\
+//\nYou will redirect to authorization page.";
+//            messageDialog.titleText = "Sync with Dropbox";
+//            messageDialog.open();
+
+//            cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
+//        } else {
+//            // TODO
+//            // [/] impl. in DropboxClient to store item(DropboxClient, uid, filePath, jsonObj(msg).rev) [Done on FilePutRely]
+//            // [/] On next metadata fetching. If rev is changed, sync to newer rev either put or get.
+//            // [ ] Syncing folder must queue each get/put jobs (by using ThreadPool).
+//            uidDialog.localPath = srcFilePath;
+//            uidDialog.open();
+//        }
     }
 
     function dropboxAccessTokenSlot() {
@@ -726,7 +753,7 @@ Page {
 
         onAuthorizeRedirectSignal: {
             console.debug("folderPage gcpClient onAuthorizeRedirectSignal " + url);
-            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url });
+            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: "GCPClient" });
         }
 
         onAccessTokenReplySignal: {
@@ -846,8 +873,8 @@ Page {
         }
 
         onAuthorizeRedirectSignal: {
-            console.debug("folderPage cloudDriveModel onAuthorizeRedirectSignal " + url);
-            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url });
+            console.debug("folderPage cloudDriveModel onAuthorizeRedirectSignal " + url + " redirectFrom " + redirectFrom);
+            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: redirectFrom });
         }
 
         onAccessTokenReplySignal: {

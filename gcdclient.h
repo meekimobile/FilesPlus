@@ -44,10 +44,10 @@ public:
     Q_INVOKABLE QString getContentType(QString fileName);
 
     Q_INVOKABLE void metadata();
-    Q_INVOKABLE void fileGet();
-    Q_INVOKABLE void filePut();
+    Q_INVOKABLE void fileGet(QString uid, QString remoteFilePath, QString localFilePath);
+    Q_INVOKABLE void filePut(QString uid, QString localFilePath, QString remoteFilePath);
 signals:
-    void authorizeRedirectSignal(QString url);
+    void authorizeRedirectSignal(QString url, QString redirectFrom);
     void accessTokenReplySignal(int err, QString errMsg, QString msg);
     void refreshAccessTokenReplySignal(int err, QString errMsg, QString msg);
     void accountInfoReplySignal(int err, QString errMsg, QString msg);

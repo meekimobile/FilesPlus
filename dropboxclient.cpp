@@ -199,7 +199,7 @@ void DropboxClient::authorize()
     queryString.append("&display=mobile");
 
     // Send signal to redirect to URL.
-    emit authorizeRedirectSignal(authorizeURI + "?" + queryString);
+    emit authorizeRedirectSignal(authorizeURI + "?" + queryString, "DropboxClient");
 }
 
 void DropboxClient::accessToken()

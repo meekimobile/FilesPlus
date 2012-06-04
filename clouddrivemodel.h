@@ -8,6 +8,7 @@
 #include <QAbstractListModel>
 #include "clouddriveitem.h"
 #include "dropboxclient.h"
+#include "gcdclient.h"
 
 class CloudDriveModel : public QDeclarativeItem
 {
@@ -44,6 +45,7 @@ public:
 
     Q_INVOKABLE void requestToken(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE void authorize(CloudDriveModel::ClientTypes type);
+    Q_INVOKABLE bool parseAuthorizationCode(CloudDriveModel::ClientTypes type, QString text);
     Q_INVOKABLE void accessToken(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE void accountInfo(CloudDriveModel::ClientTypes type, QString uid);
 
@@ -52,7 +54,7 @@ public:
     Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
 signals:
     void requestTokenReplySignal(int err, QString errMsg, QString msg);
-    void authorizeRedirectSignal(QString url);
+    void authorizeRedirectSignal(QString url, QString redirectFrom);
     void accessTokenReplySignal(int err, QString errMsg, QString msg);
     void accountInfoReplySignal(int err, QString errMsg, QString msg);
 
@@ -62,20 +64,16 @@ signals:
     void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
 public slots:
-//    void requestTokenReplyFinished(QNetworkReply *reply);
-//    void accessTokenReplyFinished(QNetworkReply *reply);
-//    void accountInfoReplyFinished(QNetworkReply *reply);
 
-//    void fileGetReplyFinished(QNetworkReply *reply);
-//    void filePutReplyFinished(QNetworkReply *reply);
-//    void metadataReplyFinished(QNetworkReply *reply);
 private:
     QMultiMap<QString, CloudDriveItem> m_cloudDriveItems;
     DropboxClient *dbClient;
+    GCDClient *gcdClient;
 
     void loadCloudDriveItems();
     void saveCloudDriveItems();
     void initializeDropboxClient();
+    void initializeGCDClient();
 };
 
 #endif // CLOUDDRIVEMODEL_H

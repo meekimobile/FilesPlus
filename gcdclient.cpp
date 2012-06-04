@@ -48,12 +48,13 @@ void GCDClient::loadParamMap() {
 }
 
 void GCDClient::saveParamMap() {
+    qDebug() << "GCDClient::saveParamMap " << m_paramMap;
     QFile file(KeyStoreFilePath);
     if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);   // we will serialize the data into the file
         out << m_paramMap;
 
-//        qDebug() << "GCDClient::saveParamMap " << m_paramMap;
+        qDebug() << "GCDClient::saveParamMap " << m_paramMap;
     }
 }
 
@@ -198,13 +199,13 @@ void GCDClient::authorize()
     sortMap["response_type"] = "code";
     sortMap["client_id"] = consumerKey;
     sortMap["redirect_uri"] = "urn:ietf:wg:oauth:2.0:oob";
-    sortMap["scope"] = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/cloudprint";
+    sortMap["scope"] = authorizationScope;
     sortMap["state"] = createNonce();
     QString queryString = createQueryString(sortMap);
     qDebug() << "queryString " << queryString;
 
     // Send signal to redirect to URL.
-    emit authorizeRedirectSignal(authorizeURI + "?" + queryString);
+    emit authorizeRedirectSignal(authorizeURI + "?" + queryString, "GCDClient");
 }
 
 bool GCDClient::parseAuthorizationCode(QString text)
@@ -217,6 +218,9 @@ bool GCDClient::parseAuthorizationCode(QString text)
             QStringList c = s.split('=');
             m_paramMap[c.at(0)] = c.at(1);
         }
+
+        qDebug() << "GCDClient::parseAuthorizationCode " << m_paramMap;
+
         return true;
     } else {
         return false;
@@ -323,9 +327,9 @@ void GCDClient::metadata()
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
-void GCDClient::fileGet()
+void GCDClient::fileGet(QString uid, QString remoteFilePath, QString localFilePath)
 {
-    qDebug() << "----- GCDClient::accountInfo -----";
+    qDebug() << "----- GCDClient::fileGet -----";
 
     QString uri = accountInfoURI;
 
@@ -339,18 +343,82 @@ void GCDClient::fileGet()
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
-void GCDClient::filePut()
+void GCDClient::filePut(QString uid, QString localFilePath, QString remoteFilePath)
 {
-    qDebug() << "----- GCDClient::accountInfo -----";
+    qDebug() << "----- GCDClient::filePut -----";
 
-    QString uri = accountInfoURI;
+    QString uri = insertURI;
+
+    // TODO insert below JSON content to get fileId. Then upload content with fileId.
+    /*
+{
+  "kind": "drive#file",
+  "id": string,
+  "etag": etag,
+  "selfLink": string,
+  "title": string,
+  "mimeType": string,
+  "description": string,
+  "labels": {
+    "starred": boolean,
+    "hidden": boolean,
+    "trashed": boolean
+  },
+  "createdDate": datetime,
+  "modifiedDate": datetime,
+  "modifiedByMeDate": datetime,
+  "lastViewedDate": datetime,
+  "parentsCollection": [
+    {
+      "id": string,
+      "parentLink": string
+    }
+  ],
+  "downloadUrl": string,
+  "indexableText": {
+    "text": string
+  },
+  "userPermission": {
+    "kind": "drive#permission",
+    "etag": etag,
+    "role": string,
+    "additionalRoles": [
+      string
+    ],
+    "type": string
+  },
+  "fileExtension": string,
+  "md5Checksum": string,
+  "fileSize": long
+}
+     */
+    QString contentType = getContentType(localFilePath);
+
+    QByteArray authHeader;
+    authHeader.append("Bearer ");
+    authHeader.append(m_paramMap["access_token"]);
+
+    // Requires to submit job with multipart/form-data.
+    QString boundary = "----------" + createNonce();
+    QByteArray postData;
+    QMap<QString, QString> paramMap;
+    paramMap["contentType"] = contentType;
+    paramMap["title"] = remoteFilePath;
+    QFile file(localFilePath);
+    if (file.open(QIODevice::ReadOnly)) {
+        postData = encodeMultiPart(boundary, paramMap, "content", file.fileName(), file.readAll(), contentType);
+    }
+//    qDebug() << "postData " << postData;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
-    req.setRawHeader("Authorization", QByteArray().append("Bearer ").append(m_paramMap["access_token"]));
-    QNetworkReply *reply = manager->get(req);
+    req.setRawHeader("Authorization", authHeader) ;
+    req.setRawHeader("X-CloudPrint-Proxy", "Chrome");
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "multipart/form-data;boundary=" + boundary);
+    req.setHeader(QNetworkRequest::ContentLengthHeader, postData.length());
+    QNetworkReply *reply = manager->post(req, postData);
     connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }

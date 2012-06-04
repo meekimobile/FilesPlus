@@ -7,6 +7,7 @@ Page {
     id: authPage
 
     property alias url: webView.url
+    property string redirectFrom
 
     tools: ToolBarLayout {
         id: toolBarLayout
@@ -44,7 +45,6 @@ Page {
 
         onLoadStarted: {
             webViewBusy.running = true;
-            console.debug("webView.url " + url);
         }
 
         onLoadFinished: {
@@ -53,35 +53,51 @@ Page {
 
             webViewBusy.running = false;
 
-            // GCPClient handler.
-            console.debug("webView.title = " + webView.title);
-            if (webView.title.match("^Success")) {
-                var p = pageStack.find(function(page) {
-                    console.debug("pageStack.find page.name=" + page.name);
-                    return (page.name == "folderPage");
-                });
-                // TODO Remove dependency to make authPage reusable for other REST API.
-                if (p) p.setGCPClientAuthCode(webView.title);
-                pageStack.pop();
-            }
+            if (authPage.redirectFrom == "GCPClient") {
+                // GCPClient handler.
+                console.debug("GCPClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom + " title = " + title);
+                if (title.match("^Success")) {
+                    var p = pageStack.find(function(page) {
+                        return (page.name == "folderPage");
+                    });
+                    // TODO Remove dependency to make authPage reusable for other REST API.
+                    if (p) p.setGCPClientAuthCode(title);
+                    pageStack.pop();
+                }
 
-            if (webView.title.match("^Denied")) {
-                pageStack.pop();
-            }
+                if (title.match("^Denied")) {
+                    pageStack.pop();
+                }
+            } else if (authPage.redirectFrom == "GCDClient") {
+                // GCDClient handler.
+                console.debug("GCDClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom + " title = " + title);
+                if (title.match("^Success")) {
+                    var p = pageStack.find(function(page) {
+                        return (page.name == "folderPage");
+                    });
+                    // TODO Remove dependency to make authPage reusable for other REST API.
+                    if (p) p.setGCDClientAuthCode(title);
+                    pageStack.pop();
+                }
 
-            // DropboxClient handler
-            var uidIndex = html.indexOf("uid:");
-            if (uidIndex != -1) {
-                console.debug("found uid! at " + uidIndex);
-                console.debug(html);
+                if (title.match("^Denied")) {
+                    pageStack.pop();
+                }
+            } else if (authPage.redirectFrom == "DropboxClient") {
+                // DropboxClient handler
+                console.debug("DropboxClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom);
+                var uidIndex = html.indexOf("uid:");
+                if (uidIndex != -1) {
+                    console.debug("found uid! at " + uidIndex);
+                    console.debug(html);
 
-                var p = pageStack.find(function(page) {
-                    console.debug("pageStack.find page.name=" + page.name);
-                    return (page.name == "folderPage");
-                });
-                // TODO Remove dependency to make authPage reusable for other REST API.
-                if (p) p.dropboxAccessTokenSlot();
-                pageStack.pop();
+                    var p = pageStack.find(function(page) {
+                        return (page.name == "folderPage");
+                    });
+                    // TODO Remove dependency to make authPage reusable for other REST API.
+                    if (p) p.dropboxAccessTokenSlot();
+                    pageStack.pop();
+                }
             }
         }
     }

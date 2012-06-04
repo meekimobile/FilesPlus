@@ -49,7 +49,7 @@ public:
     Q_INVOKABLE void metadata(QString uid, QString remoteFilePath);
 signals:
     void requestTokenReplySignal(int err, QString errMsg, QString msg);
-    void authorizeRedirectSignal(QString url);
+    void authorizeRedirectSignal(QString url, QString redirectForm);
     void accessTokenReplySignal(int err, QString errMsg, QString msg);
     void accountInfoReplySignal(int err, QString errMsg, QString msg);
 

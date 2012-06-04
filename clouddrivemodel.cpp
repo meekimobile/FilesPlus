@@ -10,6 +10,7 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
 
     // Initialize cloud drive clients.
     initializeDropboxClient();
+    initializeGCDClient();
 }
 
 CloudDriveModel::~CloudDriveModel()
@@ -36,16 +37,28 @@ void CloudDriveModel::saveCloudDriveItems() {
 }
 
 void CloudDriveModel::initializeDropboxClient() {
-    dbClient = new DropboxClient();
+    dbClient = new DropboxClient(this);
     connect(dbClient, SIGNAL(uploadProgress(qint64,qint64)), SIGNAL(uploadProgress(qint64,qint64)) );
     connect(dbClient, SIGNAL(downloadProgress(qint64,qint64)), SIGNAL(downloadProgress(qint64,qint64)) );
     connect(dbClient, SIGNAL(requestTokenReplySignal(int,QString,QString)), SIGNAL(requestTokenReplySignal(int,QString,QString)) );
-    connect(dbClient, SIGNAL(authorizeRedirectSignal(QString)), SIGNAL(authorizeRedirectSignal(QString)) );
+    connect(dbClient, SIGNAL(authorizeRedirectSignal(QString,QString)), SIGNAL(authorizeRedirectSignal(QString,QString)) );
     connect(dbClient, SIGNAL(accessTokenReplySignal(int,QString,QString)), SIGNAL(accessTokenReplySignal(int,QString,QString)) );
     connect(dbClient, SIGNAL(accountInfoReplySignal(int,QString,QString)), SIGNAL(accountInfoReplySignal(int,QString,QString)) );
     connect(dbClient, SIGNAL(fileGetReplySignal(int,QString,QString)), SIGNAL(fileGetReplySignal(int,QString,QString)) );
     connect(dbClient, SIGNAL(filePutReplySignal(int,QString,QString)), SIGNAL(filePutReplySignal(int,QString,QString)) );
     connect(dbClient, SIGNAL(metadataReplySignal(int,QString,QString)), SIGNAL(metadataReplySignal(int,QString,QString)) );
+}
+
+void CloudDriveModel::initializeGCDClient() {
+    gcdClient = new GCDClient(this);
+    connect(gcdClient, SIGNAL(uploadProgress(qint64,qint64)), SIGNAL(uploadProgress(qint64,qint64)) );
+    connect(gcdClient, SIGNAL(downloadProgress(qint64,qint64)), SIGNAL(downloadProgress(qint64,qint64)) );
+    connect(gcdClient, SIGNAL(authorizeRedirectSignal(QString,QString)), SIGNAL(authorizeRedirectSignal(QString,QString)) );
+    connect(gcdClient, SIGNAL(accessTokenReplySignal(int,QString,QString)), SIGNAL(accessTokenReplySignal(int,QString,QString)) );
+    connect(gcdClient, SIGNAL(accountInfoReplySignal(int,QString,QString)), SIGNAL(accountInfoReplySignal(int,QString,QString)) );
+    connect(gcdClient, SIGNAL(fileGetReplySignal(int,QString,QString)), SIGNAL(fileGetReplySignal(int,QString,QString)) );
+    connect(gcdClient, SIGNAL(filePutReplySignal(int,QString,QString)), SIGNAL(filePutReplySignal(int,QString,QString)) );
+    connect(gcdClient, SIGNAL(metadataReplySignal(int,QString,QString)), SIGNAL(metadataReplySignal(int,QString,QString)) );
 }
 
 CloudDriveItem CloudDriveModel::getItem(QString localPath, ClientTypes type, QString uid)
@@ -152,6 +165,8 @@ bool CloudDriveModel::isAuthorized(CloudDriveModel::ClientTypes type)
     switch (type) {
     case Dropbox:
         return dbClient->isAuthorized();
+    case GoogleDrive:
+        return gcdClient->isAuthorized();
     }
 
     return false;
@@ -180,6 +195,18 @@ void CloudDriveModel::authorize(CloudDriveModel::ClientTypes type)
     switch (type) {
     case Dropbox:
         dbClient->authorize();
+        break;
+    case GoogleDrive:
+        gcdClient->authorize();
+        break;
+    }
+}
+
+bool CloudDriveModel::parseAuthorizationCode(CloudDriveModel::ClientTypes type, QString text)
+{
+    switch (type) {
+    case GoogleDrive:
+        return gcdClient->parseAuthorizationCode(text);
     }
 }
 
@@ -188,6 +215,10 @@ void CloudDriveModel::accessToken(CloudDriveModel::ClientTypes type)
     switch (type) {
     case Dropbox:
         dbClient->accessToken();
+        break;
+    case GoogleDrive:
+        gcdClient->accessToken();
+        break;
     }
 }
 
@@ -212,6 +243,10 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
     switch (type) {
     case Dropbox:
         dbClient->filePut(uid, localFilePath, remoteFilePath);
+        break;
+    case GoogleDrive:
+        gcdClient->filePut(uid, localFilePath, remoteFilePath);
+        break;
     }
 }
 
