@@ -12,7 +12,7 @@ public:
     static const QString KeyStoreFilePath;
     static const QString consumerKey;
     static const QString consumerSecret;
-    static const qstring authorizationScope;
+    static const QString authorizationScope;
 
     static const QString authorizeURI;
     static const QString accessTokenURI;
