@@ -7,13 +7,6 @@
 class CloudDriveItem
 {
 public:
-    enum ClientTypes {
-        Dropbox,
-        GoogleDrive,
-        SkyDrive,
-        SugarSync
-    };
-
     CloudDriveItem();
     CloudDriveItem(int type, QString uid, QString localPath, QString remotePath, QString hash);
 

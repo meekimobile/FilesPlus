@@ -65,7 +65,9 @@ SOURCES += main.cpp \
     dropboxclient.cpp \
     clouddrivemodel.cpp \
     clouddriveitem.cpp \
-    gcdclient.cpp
+    gcdclient.cpp \
+    clouddrivejob.cpp \
+    qnetworkreplywrapper.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -84,7 +86,9 @@ HEADERS += \
     dropboxclient.h \
     clouddrivemodel.h \
     clouddriveitem.h \
-    gcdclient.h
+    gcdclient.h \
+    clouddrivejob.h \
+    qnetworkreplywrapper.h
 
 OTHER_FILES +=
 

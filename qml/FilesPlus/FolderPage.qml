@@ -378,6 +378,7 @@ Page {
                             verticalAlignment: Text.AlignVCenter
                         }
                         ListItemText {
+                            id: listItemSubTitle
                             mode: listItem.mode
                             role: "SubTitle"
                             text: {
@@ -390,6 +391,12 @@ Page {
                             }
                             width: parent.width
                             verticalAlignment: Text.AlignVCenter
+                        }
+                        ProgressBar {
+                            id: syncProgressBar
+                            width: parent.width
+                            indeterminate: false
+                            visible: false
                         }
                     }
                     ListItemText {
@@ -429,6 +436,32 @@ Page {
                         parent.mouseX = mouseX;
                         parent.mouseY = mouseY;
                         mouse.accepted = false;
+                    }
+                }
+
+                Timer {
+                    id: syncProgressBarTimer
+                    interval: 1000
+                    repeat: true
+                    running: cloudDriveModel.isSyncing(absolutePath)
+                    triggeredOnStart: true
+
+                    onTriggered: {
+                        var jsonText = cloudDriveModel.getFirstJobJson(absolutePath);
+                        if (jsonText != "") {
+                            var json = JSON.parse(jsonText);
+                            listItemSubTitle.visible = !json.is_running;
+                            syncProgressBar.visible = json.is_running;
+                            syncProgressBar.value = json.bytes;
+                            syncProgressBar.maximumValue = json.bytes_total;
+                        }
+                    }
+
+                    onRunningChanged: {
+                        if (!running) {
+                            listItemSubTitle.visible = true;
+                            syncProgressBar.visible = false;
+                        }
                     }
                 }
             }
@@ -552,7 +585,7 @@ Page {
             onPressAndHold: {
                 if (folderPage.state == "list") {
                     popupToolPanel.forFile = false;
-                    popupToolPanel.syncPath = currentPath.text
+                    popupToolPanel.selectedFilePath = currentPath.text
                     popupToolPanel.pastePath = currentPath.text;
                     var panelX = currentPath.x + mouseX;
                     var panelY = currentPath.y + mouseY;
@@ -905,45 +938,51 @@ Page {
             console.debug("folderPage cloudDriveModel onFileGetReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
-                var jsonObj = Utility.createJsonObj(msg);
-                var uid = uidDialog.selectedUid;
-                var localPath = popupToolPanel.selectedFilePath; // TODO remove dependency.
-                var localPathHash = cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, uid);
-                var remotePath;
-                if (localPathHash == "") {
-                    remotePath = cloudDriveModel.getDefaultRemoteFilePath(localPath);
-                } else {
-                    remotePath = cloudDriveModel.getItemRemotePath(localPath, CloudDriveModel.Dropbox, uid);
-                }
-                cloudDriveModel.addItem(CloudDriveModel.Dropbox, uid, localPath, remotePath, jsonObj.rev);
+//                var jsonObj = Utility.createJsonObj(msg);
+//                var uid = uidDialog.selectedUid;
+//                var localPath = popupToolPanel.selectedFilePath; // TODO remove dependency.
+//                var localPathHash = cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, uid);
+//                var remotePath;
+//                if (localPathHash == "") {
+//                    remotePath = cloudDriveModel.getDefaultRemoteFilePath(localPath);
+//                } else {
+//                    remotePath = cloudDriveModel.getItemRemotePath(localPath, CloudDriveModel.Dropbox, uid);
+//                }
+//                cloudDriveModel.addItem(CloudDriveModel.Dropbox, uid, localPath, remotePath, jsonObj.rev);
             } else {
                 messageDialog.titleText = "CloudDrive File Get"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
+
+            // Force refresh list view.
+            fsModel.refreshItems();
         }
 
         onFilePutReplySignal: {
             console.debug("folderPage cloudDriveModel onFilePutReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
-                var jsonObj = Utility.createJsonObj(msg);
-                var uid = uidDialog.selectedUid;
-                var localPath = popupToolPanel.selectedFilePath; // TODO remove dependency.
-                var localPathHash = cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, uid);
-                var remotePath;
+//                var jsonObj = Utility.createJsonObj(msg);
+//                var uid = uidDialog.selectedUid;
+//                var localPath = popupToolPanel.selectedFilePath; // TODO remove dependency.
+//                var localPathHash = cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, uid);
+//                var remotePath;
 
-                if (localPathHash == "") {
-                    remotePath = cloudDriveModel.getDefaultRemoteFilePath(localPath);
-                } else {
-                    remotePath = cloudDriveModel.getItemRemotePath(localPath, CloudDriveModel.Dropbox, uid);
-                }
-                cloudDriveModel.addItem(CloudDriveModel.Dropbox, uid, localPath, remotePath, jsonObj.rev);
+//                if (localPathHash == "") {
+//                    remotePath = cloudDriveModel.getDefaultRemoteFilePath(localPath);
+//                } else {
+//                    remotePath = cloudDriveModel.getItemRemotePath(localPath, CloudDriveModel.Dropbox, uid);
+//                }
+//                cloudDriveModel.addItem(CloudDriveModel.Dropbox, uid, localPath, remotePath, jsonObj.rev);
             } else {
                 messageDialog.titleText = "CloudDrive File Put"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
+
+            // Force refresh list view.
+            fsModel.refreshItems();
         }
 
         onMetadataReplySignal: {
@@ -976,8 +1015,11 @@ Page {
                             if (item.is_dir) {
                                 // TODO invoke metadata
                                 // This flow will trigger recursive metadata calling.
+                                console.debug("dir item = " + item);
                             } else {
                                 // TODO invoke metadata
+                                console.debug("file item = " + item);
+//                                cloudDriveModel.metadata(CloudDriveModel.Dropbox, )
                             }
                         }
                     }
@@ -1000,32 +1042,35 @@ Page {
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
+
+            // Force refresh list view.
+            fsModel.refreshItems();
         }
 
         onDownloadProgress: {
-//            console.debug("sandBox gcpClient onDownloadProgress " + bytesReceived + " / " + bytesTotal);
+            console.debug("folderPage cloudDriveModel onDownloadProgress " + nonce + " " + bytesReceived + " / " + bytesTotal);
 
             // Shows in progress bar.
-            if (downloadProgressDialog.status != DialogStatus.Open) {
-                downloadProgressDialog.indeterminate = false;
-                downloadProgressDialog.open();
-            }
-            downloadProgressDialog.min = 0;
-            downloadProgressDialog.max = bytesTotal;
-            downloadProgressDialog.value = bytesReceived;
+//            if (downloadProgressDialog.status != DialogStatus.Open) {
+//                downloadProgressDialog.indeterminate = false;
+//                downloadProgressDialog.open();
+//            }
+//            downloadProgressDialog.min = 0;
+//            downloadProgressDialog.max = bytesTotal;
+//            downloadProgressDialog.value = bytesReceived;
         }
 
         onUploadProgress: {
-//            console.debug("sandBox gcpClient onUploadProgress " + bytesSent + " / " + bytesTotal);
+            console.debug("folderPage cloudDriveModel onUploadProgress " + nonce + " " + bytesSent + " / " + bytesTotal);
 
             // Shows in progress bar.
-            if (uploadProgressDialog.status != DialogStatus.Open) {
-                uploadProgressDialog.indeterminate = false;
-                uploadProgressDialog.open();
-            }
-            uploadProgressDialog.min = 0;
-            uploadProgressDialog.max = bytesTotal;
-            uploadProgressDialog.value = bytesSent;
+//            if (uploadProgressDialog.status != DialogStatus.Open) {
+//                uploadProgressDialog.indeterminate = false;
+//                uploadProgressDialog.open();
+//            }
+//            uploadProgressDialog.min = 0;
+//            uploadProgressDialog.max = bytesTotal;
+//            uploadProgressDialog.value = bytesSent;
         }
     }
 
@@ -1104,8 +1149,9 @@ Page {
             // TODO Proceed for GoogleDrive
             // Proceed for Dropbox
             console.debug("uidDialog.selectedIndex " + uidDialog.selectedIndex);
-            console.debug("uidDialog type " + uidDialog.selectedCloudType + " uid " + uidDialog.selectedUid);
+            console.debug("uidDialog type " + uidDialog.selectedCloudType + " uid " + uidDialog.selectedUid + " localPath " + localPath);
             var remoteFilePath = cloudDriveModel.getDefaultRemoteFilePath(localPath);
+            console.debug("uidDialog remoteFilePath " + remoteFilePath);
             cloudDriveModel.metadata(uidDialog.selectedCloudType, uidDialog.selectedUid, remoteFilePath);
         }
 

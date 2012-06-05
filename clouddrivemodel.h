@@ -7,6 +7,7 @@
 #include <QMultiHash>
 #include <QAbstractListModel>
 #include "clouddriveitem.h"
+#include "clouddrivejob.h"
 #include "dropboxclient.h"
 #include "gcdclient.h"
 
@@ -24,6 +25,11 @@ public:
         SugarSync
     };
 
+    enum Operations {
+        FileGet,
+        FilePut
+    };
+
     explicit CloudDriveModel(QDeclarativeItem *parent = 0);
     ~CloudDriveModel();
 
@@ -32,6 +38,8 @@ public:
     CloudDriveItem getItem(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
 
     Q_INVOKABLE bool isConnected(QString localPath);
+    Q_INVOKABLE bool isSyncing(QString localPath);
+    Q_INVOKABLE QString getFirstJobJson(QString localPath);
     Q_INVOKABLE void addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash);
     Q_INVOKABLE void removeItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE QString getItemHash(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
@@ -61,19 +69,25 @@ signals:
     void fileGetReplySignal(int err, QString errMsg, QString msg);
     void filePutReplySignal(int err, QString errMsg, QString msg);
     void metadataReplySignal(int err, QString errMsg, QString msg);
-    void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
-    void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+    void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
+    void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
 public slots:
-
+    void fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void metadataReplyFilter(int err, QString errMsg, QString msg);
+    void uploadProgressFilter(QString nonce, qint64 bytesSent, qint64 bytesTotal);
+    void downloadProgressFilter(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
 private:
     QMultiMap<QString, CloudDriveItem> m_cloudDriveItems;
     DropboxClient *dbClient;
     GCDClient *gcdClient;
+    QHash<QString, CloudDriveJob> m_cloudDriveJobs;
 
     void loadCloudDriveItems();
     void saveCloudDriveItems();
     void initializeDropboxClient();
     void initializeGCDClient();
+    QString createNonce();
 };
 
 #endif // CLOUDDRIVEMODEL_H

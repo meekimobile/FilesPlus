@@ -162,6 +162,11 @@ void FolderSizeItemListModel::setSortFlag(const int sortFlag)
     }
 }
 
+void FolderSizeItemListModel::refreshItems()
+{
+    emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, 0));
+}
+
 bool FolderSizeItemListModel::removeRow(int row, const QModelIndex &parent)
 {
     return removeRows(row, 1, parent);

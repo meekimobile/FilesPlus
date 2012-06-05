@@ -57,6 +57,8 @@ public:
     Q_INVOKABLE int getSortFlag() const;
     Q_INVOKABLE void setSortFlag(const int sortFlag);
 
+    Q_INVOKABLE void refreshItems();
+
     Q_INVOKABLE bool removeRow(int row, const QModelIndex & parent = QModelIndex());
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
     Q_INVOKABLE bool deleteFile(const QString absPath);

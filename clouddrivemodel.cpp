@@ -1,5 +1,7 @@
 #include "clouddrivemodel.h"
 #include <QFile>
+#include <QScriptEngine>
+#include <QScriptValue>
 
 const QString CloudDriveModel::HashFilePath = "C:/CloudDriveModel.dat";
 
@@ -38,27 +40,44 @@ void CloudDriveModel::saveCloudDriveItems() {
 
 void CloudDriveModel::initializeDropboxClient() {
     dbClient = new DropboxClient(this);
-    connect(dbClient, SIGNAL(uploadProgress(qint64,qint64)), SIGNAL(uploadProgress(qint64,qint64)) );
-    connect(dbClient, SIGNAL(downloadProgress(qint64,qint64)), SIGNAL(downloadProgress(qint64,qint64)) );
+//    connect(dbClient, SIGNAL(uploadProgress(qint64,qint64)), SIGNAL(uploadProgress(qint64,qint64)) );
+//    connect(dbClient, SIGNAL(downloadProgress(qint64,qint64)), SIGNAL(downloadProgress(qint64,qint64)) );
+    connect(dbClient, SIGNAL(uploadProgress(QString,qint64,qint64)), SLOT(uploadProgressFilter(QString,qint64,qint64)) );
+    connect(dbClient, SIGNAL(downloadProgress(QString,qint64,qint64)), SLOT(downloadProgressFilter(QString,qint64,qint64)) );
     connect(dbClient, SIGNAL(requestTokenReplySignal(int,QString,QString)), SIGNAL(requestTokenReplySignal(int,QString,QString)) );
     connect(dbClient, SIGNAL(authorizeRedirectSignal(QString,QString)), SIGNAL(authorizeRedirectSignal(QString,QString)) );
     connect(dbClient, SIGNAL(accessTokenReplySignal(int,QString,QString)), SIGNAL(accessTokenReplySignal(int,QString,QString)) );
     connect(dbClient, SIGNAL(accountInfoReplySignal(int,QString,QString)), SIGNAL(accountInfoReplySignal(int,QString,QString)) );
-    connect(dbClient, SIGNAL(fileGetReplySignal(int,QString,QString)), SIGNAL(fileGetReplySignal(int,QString,QString)) );
-    connect(dbClient, SIGNAL(filePutReplySignal(int,QString,QString)), SIGNAL(filePutReplySignal(int,QString,QString)) );
-    connect(dbClient, SIGNAL(metadataReplySignal(int,QString,QString)), SIGNAL(metadataReplySignal(int,QString,QString)) );
+//    connect(dbClient, SIGNAL(fileGetReplySignal(int,QString,QString)), SIGNAL(fileGetReplySignal(int,QString,QString)) );
+//    connect(dbClient, SIGNAL(filePutReplySignal(int,QString,QString)), SIGNAL(filePutReplySignal(int,QString,QString)) );
+//    connect(dbClient, SIGNAL(metadataReplySignal(int,QString,QString)), SIGNAL(metadataReplySignal(int,QString,QString)) );
+    connect(dbClient, SIGNAL(fileGetReplySignal(QString,int,QString,QString)), SLOT(fileGetReplyFilter(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SLOT(filePutReplyFilter(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(metadataReplySignal(int,QString,QString)), SLOT(metadataReplyFilter(int,QString,QString)) );
 }
 
 void CloudDriveModel::initializeGCDClient() {
     gcdClient = new GCDClient(this);
-    connect(gcdClient, SIGNAL(uploadProgress(qint64,qint64)), SIGNAL(uploadProgress(qint64,qint64)) );
-    connect(gcdClient, SIGNAL(downloadProgress(qint64,qint64)), SIGNAL(downloadProgress(qint64,qint64)) );
+//    connect(gcdClient, SIGNAL(uploadProgress(qint64,qint64)), SIGNAL(uploadProgress(qint64,qint64)) );
+//    connect(gcdClient, SIGNAL(downloadProgress(qint64,qint64)), SIGNAL(downloadProgress(qint64,qint64)) );
     connect(gcdClient, SIGNAL(authorizeRedirectSignal(QString,QString)), SIGNAL(authorizeRedirectSignal(QString,QString)) );
     connect(gcdClient, SIGNAL(accessTokenReplySignal(int,QString,QString)), SIGNAL(accessTokenReplySignal(int,QString,QString)) );
     connect(gcdClient, SIGNAL(accountInfoReplySignal(int,QString,QString)), SIGNAL(accountInfoReplySignal(int,QString,QString)) );
     connect(gcdClient, SIGNAL(fileGetReplySignal(int,QString,QString)), SIGNAL(fileGetReplySignal(int,QString,QString)) );
     connect(gcdClient, SIGNAL(filePutReplySignal(int,QString,QString)), SIGNAL(filePutReplySignal(int,QString,QString)) );
     connect(gcdClient, SIGNAL(metadataReplySignal(int,QString,QString)), SIGNAL(metadataReplySignal(int,QString,QString)) );
+}
+
+QString CloudDriveModel::createNonce() {
+    QString ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    QString nonce;
+
+    for(int i = 0; i <= 16; ++i)
+    {
+        nonce += ALPHANUMERIC.at( qrand() % ALPHANUMERIC.length() );
+    }
+
+    return nonce;
 }
 
 CloudDriveItem CloudDriveModel::getItem(QString localPath, ClientTypes type, QString uid)
@@ -82,6 +101,36 @@ QList<CloudDriveItem> CloudDriveModel::getItemList(QString localPath) {
 bool CloudDriveModel::isConnected(QString localPath)
 {
     return m_cloudDriveItems.contains(localPath);
+}
+
+bool CloudDriveModel::isSyncing(QString localPath)
+{
+    foreach (CloudDriveJob job, m_cloudDriveJobs.values()) {
+        if (job.localFilePath == localPath) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+QString CloudDriveModel::getFirstJobJson(QString localPath)
+{
+    foreach (CloudDriveJob job, m_cloudDriveJobs.values()) {
+        if (job.localFilePath == localPath) {
+            QString jsonText;
+            jsonText.append("{ ");
+            jsonText.append(QString("\"job_id\": \"%1\", ").arg(job.jobId));
+            jsonText.append(QString("\"is_running\": %1, ").arg( (job.isRunning)?"true":"false" ));
+            jsonText.append(QString("\"bytes\": %1, ").arg(job.bytes));
+            jsonText.append(QString("\"bytes_total\": %1 ").arg(job.bytesTotal));
+            jsonText.append(" }");
+
+            return jsonText;
+        }
+    }
+
+    return "";
 }
 
 void CloudDriveModel::addItem(QString localPath, CloudDriveItem item)
@@ -136,7 +185,7 @@ QString CloudDriveModel::getItemHash(QString localPath, CloudDriveModel::ClientT
 
 QString CloudDriveModel::getDefaultLocalFilePath(const QString &remoteFilePath)
 {
-    QRegExp rx("^([C-F])(/.+)$");
+    QRegExp rx("^([C-F])(.+)$");
     rx.indexIn(remoteFilePath);
     if (rx.captureCount() == 2) {
         return rx.cap(1).append(":").append(rx.cap(2));
@@ -146,7 +195,7 @@ QString CloudDriveModel::getDefaultLocalFilePath(const QString &remoteFilePath)
 
 QString CloudDriveModel::getDefaultRemoteFilePath(const QString &localFilePath)
 {
-    QRegExp rx("^([C-F])(:)(/.+)$");
+    QRegExp rx("^([C-F])(:)(.+)$");
     rx.indexIn(localFilePath);
     if (rx.captureCount() == 3) {
         return rx.cap(1).append(rx.cap(3));
@@ -232,20 +281,30 @@ void CloudDriveModel::accountInfo(CloudDriveModel::ClientTypes type, QString uid
 
 void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString localFilePath)
 {
+    QString nonce = createNonce();
+
     switch (type) {
     case Dropbox:
-        dbClient->fileGet(uid, remoteFilePath, localFilePath);
+        CloudDriveJob job(nonce, FileGet, type, uid, localFilePath, remoteFilePath);
+        job.isRunning = true;
+        m_cloudDriveJobs[nonce] = job;
+
+        dbClient->fileGet(nonce, uid, remoteFilePath, localFilePath);
+        break;
     }
 }
 
 void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath)
 {
+    QString nonce = createNonce();
+
     switch (type) {
     case Dropbox:
-        dbClient->filePut(uid, localFilePath, remoteFilePath);
-        break;
-    case GoogleDrive:
-        gcdClient->filePut(uid, localFilePath, remoteFilePath);
+        CloudDriveJob job(nonce, FilePut, type, uid, localFilePath, remoteFilePath);
+        job.isRunning = true;
+        m_cloudDriveJobs[nonce] = job;
+
+        dbClient->filePut(nonce, uid, localFilePath, remoteFilePath);
         break;
     }
 }
@@ -256,4 +315,74 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
     case Dropbox:
         dbClient->metadata(uid, remoteFilePath);
     }
+}
+
+
+void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    if (err == 0) {
+        CloudDriveJob job = m_cloudDriveJobs[nonce];
+
+        // TODO generalize to support other clouds.
+        QScriptEngine engine;
+        QScriptValue sc;
+        sc = engine.evaluate("(" + msg + ")");
+        QString hash = sc.property("rev").toString();
+
+        // TODO handle other clouds.
+        if (job.type == Dropbox) {
+            addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
+        }
+
+        m_cloudDriveJobs.remove(nonce);
+    }
+
+    emit fileGetReplySignal(err, errMsg, msg);
+}
+
+void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    if (err == 0) {
+        CloudDriveJob job = m_cloudDriveJobs[nonce];
+
+        // TODO generalize to support other clouds.
+        QScriptEngine engine;
+        QScriptValue sc;
+        sc = engine.evaluate("(" + msg + ")");
+        QString hash = sc.property("rev").toString();
+
+        // TODO handle other clouds.
+        if (job.type == Dropbox) {
+            addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
+        }
+
+        m_cloudDriveJobs.remove(nonce);
+    }
+
+    emit filePutReplySignal(err, errMsg, msg);
+}
+
+void CloudDriveModel::metadataReplyFilter(int err, QString errMsg, QString msg)
+{
+    emit metadataReplySignal(err, errMsg, msg);
+}
+
+void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint64 bytesTotal)
+{
+    CloudDriveJob job = m_cloudDriveJobs[nonce];
+    job.bytes = bytesSent;
+    job.bytesTotal = bytesTotal;
+    m_cloudDriveJobs[nonce] = job;
+
+    emit uploadProgress(nonce, bytesSent, bytesTotal);
+}
+
+void CloudDriveModel::downloadProgressFilter(QString nonce, qint64 bytesReceived, qint64 bytesTotal)
+{
+    CloudDriveJob job = m_cloudDriveJobs[nonce];
+    job.bytes = bytesReceived;
+    job.bytesTotal = bytesTotal;
+    m_cloudDriveJobs[nonce] = job;
+
+    emit downloadProgress(nonce, bytesReceived, bytesTotal);
 }

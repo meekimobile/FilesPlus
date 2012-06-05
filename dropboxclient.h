@@ -4,6 +4,7 @@
 #include <QDeclarativeItem>
 #include <QtNetwork>
 #include "tokenpair.h"
+#include "qnetworkreplywrapper.h"
 
 class DropboxClient : public QDeclarativeItem
 {
@@ -42,9 +43,9 @@ public:
     Q_INVOKABLE QStringList getStoredUidList();
     Q_INVOKABLE void accountInfo(QString uid);
 
-    Q_INVOKABLE void fileGet(QString uid, QString remoteFilePath, QString localFilePath);
+    Q_INVOKABLE void fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
     Q_INVOKABLE QString getDefaultLocalFilePath(const QString &remoteFilePath);
-    Q_INVOKABLE void filePut(QString uid, QString localFilePath, QString remoteFilePath);
+    Q_INVOKABLE void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
     Q_INVOKABLE QString getDefaultRemoteFilePath(const QString &localFilePath);
     Q_INVOKABLE void metadata(QString uid, QString remoteFilePath);
 signals:
@@ -53,11 +54,13 @@ signals:
     void accessTokenReplySignal(int err, QString errMsg, QString msg);
     void accountInfoReplySignal(int err, QString errMsg, QString msg);
 
-    void fileGetReplySignal(int err, QString errMsg, QString msg);
-    void filePutReplySignal(int err, QString errMsg, QString msg);
+    void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplySignal(int err, QString errMsg, QString msg);
     void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+    void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
+    void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
 public slots:
     void requestTokenReplyFinished(QNetworkReply *reply);
     void accessTokenReplyFinished(QNetworkReply *reply);

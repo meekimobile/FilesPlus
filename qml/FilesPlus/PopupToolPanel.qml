@@ -9,7 +9,6 @@ Rectangle {
     property int selectedFileIndex
     property bool isCopy
     property string pastePath
-    property string syncPath
     property alias timeout: popupTimer.interval
     
     signal printFile(string srcFilePath, int srcItemIndex)
