@@ -31,7 +31,7 @@ Column {
         width: parent.width
         text: "File+ will provide extended functionalities beyond bundled file manager.\
 \nPrint via Google® CloudPrint.\
-\nSync via Google® Drive or Dropbox®.\
+\nSync via Dropbox®.\
 \nView images in folder."
         horizontalAlignment: Text.AlignHCenter
         anchors.horizontalCenter: parent.horizontalCenter

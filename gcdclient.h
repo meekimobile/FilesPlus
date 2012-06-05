@@ -20,6 +20,7 @@ public:
 
     static const QString metadataURI;
     static const QString insertURI;
+    static const QString uploadURI;
     static const QString patchMetadataURI;
     static const QString updateMetadataURI;
 
@@ -70,6 +71,8 @@ private:
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;
     QHash<QString, QString> m_contentTypeHash;
+    QFile *localSourcefile;
+    QFile *localTargetfile;
 
     void loadParamMap();
     void saveParamMap();

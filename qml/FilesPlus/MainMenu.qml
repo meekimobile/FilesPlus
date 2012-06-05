@@ -21,13 +21,6 @@ Menu {
         }
 
         MenuItem {
-            text: "New Dropbox user"
-            onClicked: {
-                cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
-            }
-        }
-
-        MenuItem {
             id: sortByMenuItem
             text: "Sort by"
             platformSubItemIndicator: true

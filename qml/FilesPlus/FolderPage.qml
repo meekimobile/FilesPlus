@@ -113,6 +113,9 @@ Page {
 //            gcpClient.refreshAccessToken();
             cloudDriveModel.authorize(CloudDriveModel.GoogleDrive);
         }
+        onRegisterDropboxUser: {
+            cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
+        }
     }
 
     ConfirmDialog {
@@ -204,33 +207,22 @@ Page {
     function syncFileSlot(srcFilePath) {
         console.debug("folderPage syncFileSlot srcFilePath=" + srcFilePath);
 
-        if (!cloudDriveModel.isAuthorized(CloudDriveModel.GoogleDrive)) {
+        if (!cloudDriveModel.isAuthorized()) {
             // TODO implement for other cloud drive.
-            messageDialog.message = "Files+ sync your files via Google Drive service.\
+            messageDialog.message = "Files+ sync your files via Dropbox service.\
 \nYou will redirect to authorization page.";
-            messageDialog.titleText = "Sync with Google Drive";
+            messageDialog.titleText = "Sync with Dropbox";
             messageDialog.open();
 
-            cloudDriveModel.authorize(CloudDriveModel.GoogleDrive);
+            cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
         } else {
-            cloudDriveModel.filePut(CloudDriveModel.GoogleDrive, "1", srcFilePath, cloudDriveModel.getDefaultRemoteFilePath(srcFilePath));
+            // TODO
+            // [/] impl. in DropboxClient to store item(DropboxClient, uid, filePath, jsonObj(msg).rev) [Done on FilePutRely]
+            // [/] On next metadata fetching. If rev is changed, sync to newer rev either put or get.
+            // [ ] Syncing folder must queue each get/put jobs (by using ThreadPool).
+            uidDialog.localPath = srcFilePath;
+            uidDialog.open();
         }
-//        if (!cloudDriveModel.isAuthorized()) {
-//            // TODO implement for other cloud drive.
-//            messageDialog.message = "Files+ sync your files via Dropbox service.\
-//\nYou will redirect to authorization page.";
-//            messageDialog.titleText = "Sync with Dropbox";
-//            messageDialog.open();
-
-//            cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
-//        } else {
-//            // TODO
-//            // [/] impl. in DropboxClient to store item(DropboxClient, uid, filePath, jsonObj(msg).rev) [Done on FilePutRely]
-//            // [/] On next metadata fetching. If rev is changed, sync to newer rev either put or get.
-//            // [ ] Syncing folder must queue each get/put jobs (by using ThreadPool).
-//            uidDialog.localPath = srcFilePath;
-//            uidDialog.open();
-//        }
     }
 
     function dropboxAccessTokenSlot() {
@@ -866,7 +858,7 @@ Page {
                 // TODO how to check if app has been authorized by user.
                 cloudDriveModel.authorize(CloudDriveModel.Dropbox);
             } else {
-                messageDialog.titleText = "Dropbox Request Token"
+                messageDialog.titleText = "CloudDrive Request Token"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
@@ -885,12 +877,12 @@ Page {
                     syncFileSlot(popupToolPanel.selectedFilePath);
                 } else {
                     // TODO Get account info and show in dialog.
-                    messageDialog.titleText = "Dropbox Access Token"
+                    messageDialog.titleText = "CloudDrive Access Token"
                     messageDialog.message = "New user is authorized";
                     messageDialog.open();
                 }
             } else {
-                messageDialog.titleText = "Dropbox Access Token"
+                messageDialog.titleText = "CloudDrive Access Token"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
@@ -903,7 +895,7 @@ Page {
                 var jsonObj = Utility.createJsonObj(msg);
                 console.debug("jsonObj.email " + jsonObj.email);
             } else {
-                messageDialog.titleText = "Dropbox Account Info"
+                messageDialog.titleText = "CloudDrive Account Info"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
@@ -925,7 +917,7 @@ Page {
                 }
                 cloudDriveModel.addItem(CloudDriveModel.Dropbox, uid, localPath, remotePath, jsonObj.rev);
             } else {
-                messageDialog.titleText = "Dropbox File Get"
+                messageDialog.titleText = "CloudDrive File Get"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
@@ -948,7 +940,7 @@ Page {
                 }
                 cloudDriveModel.addItem(CloudDriveModel.Dropbox, uid, localPath, remotePath, jsonObj.rev);
             } else {
-                messageDialog.titleText = "Dropbox File Put"
+                messageDialog.titleText = "CloudDrive File Put"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }

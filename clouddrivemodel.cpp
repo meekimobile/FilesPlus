@@ -10,7 +10,7 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
 
     // Initialize cloud drive clients.
     initializeDropboxClient();
-    initializeGCDClient();
+//    initializeGCDClient();
 }
 
 CloudDriveModel::~CloudDriveModel()

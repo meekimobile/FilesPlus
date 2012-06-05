@@ -54,7 +54,7 @@ void GCPClient::saveParamMap() {
         QDataStream out(&file);   // we will serialize the data into the file
         out << m_paramMap;
 
-//        qDebug() << "GCPClient::saveParamMap " << m_paramMap;
+        qDebug() << "GCPClient::saveParamMap " << m_paramMap;
     }
 }
 

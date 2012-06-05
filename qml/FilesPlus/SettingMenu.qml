@@ -1,6 +1,5 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
-import FolderSizeItemListModel 1.0
 
 ContextMenu {
     id: settingMenu
@@ -9,6 +8,7 @@ ContextMenu {
     signal resetCache();
     signal resetCloudPrint();
     signal resetCloudDrive();
+    signal registerDropboxUser();
 
     content: MenuLayout {
         MenuItem {
@@ -20,10 +20,9 @@ ContextMenu {
         }
 
         MenuItem {
-            id: menuResetCloudDrive
-            text: "Reset CloudDrive"
+            text: "Register Dropbox user"
             onClicked: {
-                resetCloudDrive();
+                registerDropboxUser();
             }
         }
 

@@ -56,6 +56,8 @@ void DropboxClient::saveAccessPairMap() {
     if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);   // we will serialize the data into the file
         out << accessTokenPairMap;
+
+        qDebug() << "DropboxClient::saveAccessPairMap " << accessTokenPairMap;
     }
 }
 
