@@ -10,7 +10,8 @@ Rectangle {
     property bool isCopy
     property string pastePath
     property alias timeout: popupTimer.interval
-    
+    property variant roots: ["C:/","D:/","E:/","F:/","G:/"]
+
     signal printFile(string srcFilePath, int srcItemIndex)
     signal syncFile(string srcFilePath, int srcItemIndex)
 
@@ -52,6 +53,10 @@ Rectangle {
     
     onVisibleChanged: {
         if (visible) {
+            // Disable sync if selectedFilePath is root.
+//            console.debug("popupToolPanel isRoot " + roots.indexOf(selectedFilePath));
+            syncButton.visible = (roots.indexOf(selectedFilePath) == -1);
+
             popupTimer.restart();
             popupToolPanel.width = getPopupToolPanelWidth();
             popupToolPanel.height = getPopupToolPanelHeight();
