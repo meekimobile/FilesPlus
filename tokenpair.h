@@ -11,6 +11,9 @@ public:
 
     QString token;
     QString secret;
+    QString email;
+
+    QString toJsonText();
 };
 
 QDataStream &operator<<(QDataStream &out, const TokenPair &t);

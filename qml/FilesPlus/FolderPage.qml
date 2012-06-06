@@ -1146,9 +1146,12 @@ Page {
 
         for (var i=0; i<dbUidList.length; ++i)
         {
-            model.append({ type: CloudDriveModel.Dropbox,
-                             uid: dbUidList[i],
-                             hash: cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, dbUidList[i])
+            var json = JSON.parse(dbUidList[i]);
+            model.append({
+                             type: CloudDriveModel.Dropbox,
+                             uid: json.uid,
+                             email: json.email,
+                             hash: cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, json.uid)
                          });
         }
 
@@ -1166,6 +1169,7 @@ Page {
 
     SelectionDialog {
         id: uidDialog
+        height: 200
 
         property string localPath
         property int selectedCloudType
@@ -1177,22 +1181,26 @@ Page {
             id: uidDialogListViewItem
             Row {
                 anchors.fill: uidDialogListViewItem.paddingItem
+                spacing: 2
                 Image {
-                    width: 48
-                    height: 48
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 30
+                    height: 30
                     source: getCloudIcon(type)
                 }
                 ListItemText {
-                    width: parent.width - 120
-                    mode: uidDialogListViewItem.mode
-                    role: "SubTitle"
-                    text: uid
-                }
-                ListItemText {
-                    width: 60
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width - 64
                     mode: uidDialogListViewItem.mode
                     role: "Title"
-                    text: (hash != "") ? "Sync" : ""
+                    text: email
+                }
+                Image {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 30
+                    height: 30
+                    source: "refresh.svg"
+                    visible: (hash != "")
                 }
             }
 

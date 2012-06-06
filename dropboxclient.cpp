@@ -2,6 +2,7 @@
 #include <QtGlobal>
 #include <QCryptographicHash>
 #include <QCoreApplication>
+#include <QScriptEngine>
 
 const QString DropboxClient::KeyStoreFilePath = "C:/DropboxClient.dat";
 
@@ -248,7 +249,14 @@ QStringList DropboxClient::getStoredUidList()
 {
     QStringList list;
     foreach (QString s, accessTokenPairMap.keys()) {
-        list.append(s);
+        TokenPair t = accessTokenPairMap[s];
+
+        QString jsonText = "{ ";
+        jsonText.append( QString("\"uid\": \"%1\", ").arg(s) );
+        jsonText.append( QString("\"email\": \"%1\"").arg(t.email) );
+        jsonText.append(" }");
+
+        list.append(jsonText);
     }
     return list;
 }
@@ -435,6 +443,9 @@ void DropboxClient::accessTokenReplyFinished(QNetworkReply *reply)
 
         qDebug() << "m_paramMap " << m_paramMap;
         qDebug() << "accessTokenPairMap " << accessTokenPairMap;
+
+        // Get email from accountInfo
+        accountInfo(uid);
     }
 
     emit accessTokenReplySignal(reply->error(), reply->errorString(), replyBody );
@@ -445,6 +456,16 @@ void DropboxClient::accountInfoReplyFinished(QNetworkReply *reply)
     qDebug() << "DropboxClient::accountInfoReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString replyBody = QString(reply->readAll());
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue sc;
+        sc = engine.evaluate("(" + replyBody + ")");
+        QString uid = sc.property("uid").toString();
+        QString email = sc.property("email").toString();
+
+        accessTokenPairMap[uid].email = email;
+    }
 
     emit accountInfoReplySignal(reply->error(), reply->errorString(), replyBody );
 }
