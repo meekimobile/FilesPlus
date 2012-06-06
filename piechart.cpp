@@ -144,19 +144,19 @@ bool PieChart::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
 
 void PieChart::modelDataChanged(QModelIndex topLeft, QModelIndex bottomRight)
 {
-    qDebug() << QTime::currentTime() << "PieChart::modelDataChanged " << topLeft << ", " << bottomRight;
+//    qDebug() << QTime::currentTime() << "PieChart::modelDataChanged " << topLeft << ", " << bottomRight;
 
     refreshItems();
 }
 
 void PieChart::classBegin()
 {
-    qDebug() <<  QTime::currentTime() << "PieChart::classBegin";
+//    qDebug() <<  QTime::currentTime() << "PieChart::classBegin";
 }
 
 void PieChart::componentComplete()
 {
-    qDebug() <<  QTime::currentTime() << "PieChart::componentComplete scene = " << scene();
+//    qDebug() <<  QTime::currentTime() << "PieChart::componentComplete scene = " << scene();
 }
 
 QAbstractListModel *PieChart::model() const

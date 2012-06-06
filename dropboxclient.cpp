@@ -17,10 +17,10 @@ const QString DropboxClient::requestTokenURI = "https://api.dropbox.com/1/oauth/
 const QString DropboxClient::authorizeURI = "https://www.dropbox.com/1/oauth/authorize";
 const QString DropboxClient::accessTokenURI = "https://api.dropbox.com/1/oauth/access_token";
 const QString DropboxClient::accountInfoURI = "https://api.dropbox.com/1/account/info";
-const QString DropboxClient::fileGetURI = "https://api-content.dropbox.com/1/files/%1/%2";
-const QString DropboxClient::filePutURI = "https://api-content.dropbox.com/1/files_put/%1/%2"; // Parameter if any needs to be appended here. ?param=val
+const QString DropboxClient::fileGetURI = "https://api-content.dropbox.com/1/files/%1%2";
+const QString DropboxClient::filePutURI = "https://api-content.dropbox.com/1/files_put/%1%2"; // Parameter if any needs to be appended here. ?param=val
 const QString DropboxClient::createFolderURI = "https://api.dropbox.com/1/fileops/create_folder";
-const QString DropboxClient::metadataURI = "https://api.dropbox.com/1/metadata/%1/%2";
+const QString DropboxClient::metadataURI = "https://api.dropbox.com/1/metadata/%1%2";
 
 DropboxClient::DropboxClient(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
@@ -320,9 +320,11 @@ void DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, 
 
 QString DropboxClient::getDefaultLocalFilePath(const QString &remoteFilePath)
 {
-    QRegExp rx("^([C-F])(/.+)$");
+    QRegExp rx("^(/*)([C-F])(.+)$");
     rx.indexIn(remoteFilePath);
-    if (rx.captureCount() == 2) {
+    if (rx.captureCount() == 3) {
+        return rx.cap(2).append(":").append(rx.cap(3));
+    } else if (rx.captureCount() == 2) {
         return rx.cap(1).append(":").append(rx.cap(2));
     }
     return "";
@@ -359,7 +361,7 @@ QString DropboxClient::getDefaultRemoteFilePath(const QString &localFilePath)
     QRegExp rx("^([C-F])(:)(/.+)$");
     rx.indexIn(localFilePath);
     if (rx.captureCount() == 3) {
-        return rx.cap(1).append(rx.cap(3));
+        return "/" + rx.cap(1).append(rx.cap(3));
     }
     return "";
 }

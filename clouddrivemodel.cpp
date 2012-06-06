@@ -160,7 +160,7 @@ QString CloudDriveModel::getItemListJson(QString localPath)
     QString jsonText;
     foreach (CloudDriveItem item, list) {
         if (jsonText != "") jsonText.append(", ");
-        jsonText.append( QString("{ \"type\": \"%1\", \"uid\": \"%2\", \"hash\": \"%3\" }").arg(item.type).arg(item.uid).arg(item.hash) );
+        jsonText.append( item.toJsonText() );
     }
 
     return "[ " + jsonText + " ]";
@@ -180,9 +180,11 @@ QString CloudDriveModel::getItemHash(QString localPath, CloudDriveModel::ClientT
 
 QString CloudDriveModel::getDefaultLocalFilePath(const QString &remoteFilePath)
 {
-    QRegExp rx("^([C-F])(.+)$");
+    QRegExp rx("^(/*)([C-F])(.+)$");
     rx.indexIn(remoteFilePath);
-    if (rx.captureCount() == 2) {
+    if (rx.captureCount() == 3) {
+        return rx.cap(2).append(":").append(rx.cap(3));
+    } else if (rx.captureCount() == 2) {
         return rx.cap(1).append(":").append(rx.cap(2));
     }
     return "";
@@ -193,7 +195,7 @@ QString CloudDriveModel::getDefaultRemoteFilePath(const QString &localFilePath)
     QRegExp rx("^([C-F])(:)(.+)$");
     rx.indexIn(localFilePath);
     if (rx.captureCount() == 3) {
-        return rx.cap(1).append(rx.cap(3));
+        return "/" + rx.cap(1).append(rx.cap(3));
     }
     return "";
 }
@@ -252,6 +254,8 @@ bool CloudDriveModel::parseAuthorizationCode(CloudDriveModel::ClientTypes type, 
     case GoogleDrive:
         return gcdClient->parseAuthorizationCode(text);
     }
+
+    return false;
 }
 
 void CloudDriveModel::accessToken(CloudDriveModel::ClientTypes type)
@@ -379,9 +383,10 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
         QString hash = sc.property("rev").toString();
 
         // TODO handle other clouds.
-        if (job.type == Dropbox) {
-            addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
-        }
+        // Don't update hash to item yet. Hash will be updated by fileGet/filePut.
+//        if (job.type == Dropbox) {
+//            addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
+//        }
 
         job.isRunning = false;
         m_cloudDriveJobs[nonce] = job;

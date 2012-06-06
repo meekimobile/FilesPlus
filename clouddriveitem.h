@@ -17,6 +17,8 @@ public:
     QString localPath;
     QString remotePath;
     QString hash;
+
+    QString toJsonText();
 };
 
 QDataStream &operator<<(QDataStream &out, const CloudDriveItem &item);

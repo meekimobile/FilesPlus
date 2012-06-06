@@ -18,6 +18,19 @@ bool CloudDriveItem::operator==(const CloudDriveItem &item)
     return (type == item.type && uid == item.uid && localPath == item.localPath);
 }
 
+QString CloudDriveItem::toJsonText()
+{
+    QString jsonText = "{ ";
+    jsonText.append( QString("\"type\": \"%1\", ").arg(type) );
+    jsonText.append( QString("\"uid\": \"%1\", ").arg(uid) );
+    jsonText.append( QString("\"local_path\": \"%1\", ").arg(localPath) );
+    jsonText.append( QString("\"remote_path\": \"%1\", ").arg(remotePath) );
+    jsonText.append( QString("\"hash\": \"%1\"").arg(hash) );
+    jsonText.append(" }");
+
+    return jsonText;
+}
+
 QDataStream &operator<<(QDataStream &out, const CloudDriveItem &item)
 {
         out << item.type << item.uid << item.localPath << item.remotePath << item.hash;
