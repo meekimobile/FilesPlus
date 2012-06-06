@@ -475,6 +475,9 @@ void DropboxClient::filePutReplyFinished(QNetworkReply *reply) {
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
+    // TODO close source file.
+    localSourcefile->close();
+
     emit filePutReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 }
 

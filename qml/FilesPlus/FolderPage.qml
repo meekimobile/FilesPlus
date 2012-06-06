@@ -987,9 +987,24 @@ Page {
                 if (localPathHash == "") {
                     remotePath = cloudDriveModel.getDefaultRemoteFilePath(localPath);
                 } else {
-                    remotePath = cloudDriveModel.getItemRemotePath(localPath, CloudDriveModel.Dropbox, uid);
+                    remotePath = cloudDriveModel.getItemRemotePath(localPath, type, uid);
                 }
                 console.debug("cloudDriveModel onMetadataReplySignal folder localPathHash " + localPathHash + " localPath " + localPath + " remotePath " + remotePath);
+
+                // If remotePath was deleted, remove link from localPath.
+                if (jsonObj.is_deleted) {
+                    cloudDriveModel.removeItem(type, uid, localPath);
+                    // Update ProgressBar on listItem.
+                    if (modelIndex > -1) {
+                        fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                    }
+
+                    // Notify removed link.
+                    messageDialog.titleText = "Dropbox message"
+                    messageDialog.message = "File " + localPath + " was removed remotely.\nLink will be removed.";
+                    messageDialog.open();
+                    return;
+                }
 
                 if (jsonObj.is_dir) {
                     // Sync folder.
