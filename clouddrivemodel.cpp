@@ -4,6 +4,7 @@
 #include <QScriptValue>
 
 const QString CloudDriveModel::HashFilePath = "C:/CloudDriveModel.dat";
+const int CloudDriveModel::MaxRunningJobCount = 5;
 
 CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
@@ -282,46 +283,37 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
 {
     QString nonce = createNonce();
 
-    switch (type) {
-    case Dropbox:
-        CloudDriveJob job(nonce, FileGet, type, uid, localFilePath, remoteFilePath, modelIndex);
-        job.isRunning = true;
-        m_cloudDriveJobs[nonce] = job;
+    CloudDriveJob job(nonce, FileGet, type, uid, localFilePath, remoteFilePath, modelIndex);
+    job.isRunning = true;
+    m_cloudDriveJobs[nonce] = job;
+    m_jobQueue.enqueue(nonce);
 
-        dbClient->fileGet(nonce, uid, remoteFilePath, localFilePath);
-        break;
-    }
+    proceedNextJob();
 }
 
 void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex)
 {
     QString nonce = createNonce();
 
-    switch (type) {
-    case Dropbox:
-        CloudDriveJob job(nonce, FilePut, type, uid, localFilePath, remoteFilePath, modelIndex);
-        job.isRunning = true;
-        m_cloudDriveJobs[nonce] = job;
+    CloudDriveJob job(nonce, FilePut, type, uid, localFilePath, remoteFilePath, modelIndex);
+    job.isRunning = true;
+    m_cloudDriveJobs[nonce] = job;
+    m_jobQueue.enqueue(nonce);
 
-        dbClient->filePut(nonce, uid, localFilePath, remoteFilePath);
-        break;
-    }
+    proceedNextJob();
 }
 
 void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex)
 {
     QString nonce = createNonce();
 
-    switch (type) {
-    case Dropbox:
-        CloudDriveJob job(nonce, Metadata, type, uid, localFilePath, remoteFilePath, modelIndex);
-        job.isRunning = true;
-        m_cloudDriveJobs[nonce] = job;
+    CloudDriveJob job(nonce, Metadata, type, uid, localFilePath, remoteFilePath, modelIndex);
+    job.isRunning = true;
+    m_cloudDriveJobs[nonce] = job;
+    m_jobQueue.enqueue(nonce);
 
-        dbClient->metadata(nonce, uid, remoteFilePath);
-    }
+    proceedNextJob();
 }
-
 
 void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
@@ -341,8 +333,10 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
 
         job.isRunning = false;
         m_cloudDriveJobs[nonce] = job;
-//        m_cloudDriveJobs.remove(nonce);
     }
+
+    // Notify job done.
+    jobDone();
 
     emit fileGetReplySignal(nonce, err, errMsg, msg);
 }
@@ -365,8 +359,10 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
 
         job.isRunning = false;
         m_cloudDriveJobs[nonce] = job;
-//        m_cloudDriveJobs.remove(nonce);
     }
+
+    // Notify job done.
+    jobDone();
 
     emit filePutReplySignal(nonce, err, errMsg, msg);
 }
@@ -382,16 +378,14 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
         sc = engine.evaluate("(" + msg + ")");
         QString hash = sc.property("rev").toString();
 
-        // TODO handle other clouds.
         // Don't update hash to item yet. Hash will be updated by fileGet/filePut.
-//        if (job.type == Dropbox) {
-//            addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
-//        }
 
         job.isRunning = false;
         m_cloudDriveJobs[nonce] = job;
-//        m_cloudDriveJobs.remove(nonce);
     }
+
+    // Notify job done.
+    jobDone();
 
     emit metadataReplySignal(nonce, err, errMsg, msg);
 }
@@ -414,4 +408,39 @@ void CloudDriveModel::downloadProgressFilter(QString nonce, qint64 bytesReceived
     m_cloudDriveJobs[nonce] = job;
 
     emit downloadProgress(nonce, bytesReceived, bytesTotal);
+}
+
+void CloudDriveModel::jobDone() {
+    runningJobCount--;
+    proceedNextJob();
+}
+
+void CloudDriveModel::proceedNextJob() {
+    // TODO Proceed next job in queue.
+    qDebug() << "CloudDriveModel::proceedNextJob runningJobCount " << runningJobCount << " m_jobQueue " << m_jobQueue.count();
+    if (runningJobCount >= MaxRunningJobCount || m_jobQueue.isEmpty()) {
+        return;
+    }
+
+    QString nonce = m_jobQueue.dequeue();
+    CloudDriveJob job = m_cloudDriveJobs[nonce];
+
+    switch (job.type) {
+    case Dropbox:
+        switch (job.operation) {
+        case FileGet:
+            dbClient->fileGet(job.jobId, job.uid, job.remoteFilePath, job.localFilePath);
+            break;
+        case FilePut:
+            dbClient->filePut(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
+            break;
+        case Metadata:
+            dbClient->metadata(job.jobId, job.uid, job.remoteFilePath);
+        }
+        break;
+    }
+
+    runningJobCount++;
+
+    proceedNextJob();
 }

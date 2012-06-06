@@ -118,23 +118,29 @@ bool FolderSizeItemListModel::isReady()
 
 QVariant FolderSizeItemListModel::getProperty(const int index, FolderSizeItemListModel::FolderSizeItemRoles role)
 {
-    return data(createIndex(index,0), role);
+    if (isReady() && index >= 0 && index < rowCount()) {
+        return data(createIndex(index,0), role);
+    }
+
+    return QVariant();
 }
 
 void FolderSizeItemListModel::setProperty(const int index, FolderSizeItemListModel::FolderSizeItemRoles role, QVariant value)
 {
-    // Update to limited properties.
-    FolderSizeItem item = m.getItem(index);
-    if (role == IsRunningRole)
-        item.isRunning = value.toBool();
-    else if (role == RunningValueRole)
-        item.runningValue = value.toLongLong();
-    else if (role == RunningMaxValueRole)
-        item.runningMaxValue = value.toLongLong();
+    if (isReady() && index >= 0 && index < rowCount()) {
+        // Update to limited properties.
+        FolderSizeItem item = m.getItem(index);
+        if (role == IsRunningRole)
+            item.isRunning = value.toBool();
+        else if (role == RunningValueRole)
+            item.runningValue = value.toLongLong();
+        else if (role == RunningMaxValueRole)
+            item.runningMaxValue = value.toLongLong();
 
-    m.updateItem(index, item);
+        m.updateItem(index, item);
 
-    emit dataChanged(createIndex(index,0), createIndex(index, columnCount()));
+        emit dataChanged(createIndex(index,0), createIndex(index, columnCount()));
+    }
 }
 
 QString FolderSizeItemListModel::formatFileSize(double size)
@@ -288,6 +294,13 @@ bool FolderSizeItemListModel::isDir(const QString absFilePath)
     return fileInfo.isDir();
 }
 
+bool FolderSizeItemListModel::isFile(const QString absFilePath)
+{
+    QFileInfo fileInfo(absFilePath);
+
+    return fileInfo.isFile();
+}
+
 QString FolderSizeItemListModel::getDirContentJson(const QString dirPath)
 {
     QList<FolderSizeItem> itemList = m.getDirContent(dirPath);
@@ -300,6 +313,23 @@ QString FolderSizeItemListModel::getDirContentJson(const QString dirPath)
     jsonText.append(" ]");
 
     return jsonText;
+}
+
+int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
+{
+    bool isOnCurrentDir = false;
+    if (getDirPath(absFilePath) == currentDir()) {
+        isOnCurrentDir = true;
+        int i=0;
+        foreach (FolderSizeItem item, m.getDirContent()) {
+            if (item.absolutePath == absFilePath) {
+                return i;
+            }
+            i++;
+        }
+    }
+
+    return (isOnCurrentDir)?-2:-1;
 }
 
 void FolderSizeItemListModel::checkRunnable()

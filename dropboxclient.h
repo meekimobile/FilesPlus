@@ -74,8 +74,7 @@ private:
     QMap<QString, TokenPair> accessTokenPairMap;
     TokenPair requestTokenPair;
     QString localPath;
-    QFile *localSourcefile;
-    QFile *localTargetfile;
+    QHash<QString, QFile*> m_localFileHash;
 
     void loadAccessPairMap();
     void saveAccessPairMap();

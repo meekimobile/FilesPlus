@@ -8,18 +8,8 @@ Menu {
 
     property variant disabledMenus: []
 
-    signal syncFolder()
-        
     content: MenuLayout {
         id: mainMenuLayout
-
-        MenuItem {
-            text: "Sync folder (WIP)"
-            onClicked: {
-                // TODO implement metadata to get file list and verify each file hash with stored file hash map.
-                syncFolder();
-            }
-        }
 
         MenuItem {
             id: sortByMenuItem

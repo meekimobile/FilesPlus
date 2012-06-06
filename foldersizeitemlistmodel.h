@@ -77,7 +77,9 @@ public:
 
     Q_INVOKABLE QString getDirPath(const QString absFilePath);
     Q_INVOKABLE bool isDir(const QString absFilePath);
+    Q_INVOKABLE bool isFile(const QString absFilePath);
     Q_INVOKABLE QString getDirContentJson(const QString dirPath);
+    Q_INVOKABLE int getIndexOnCurrentDir(const QString absFilePath);
 
     void classBegin();
     void componentComplete();

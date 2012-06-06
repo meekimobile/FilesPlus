@@ -17,6 +17,7 @@ class CloudDriveModel : public QDeclarativeItem
     Q_ENUMS(ClientTypes)
 public:
     static const QString HashFilePath;
+    static const int MaxRunningJobCount;
 
     enum ClientTypes {
         Dropbox,
@@ -84,12 +85,16 @@ private:
     DropboxClient *dbClient;
     GCDClient *gcdClient;
     QHash<QString, CloudDriveJob> m_cloudDriveJobs;
+    QQueue<QString> m_jobQueue;
+    int runningJobCount;
 
     void loadCloudDriveItems();
     void saveCloudDriveItems();
     void initializeDropboxClient();
     void initializeGCDClient();
     QString createNonce();
+    void jobDone();
+    void proceedNextJob();
 };
 
 #endif // CLOUDDRIVEMODEL_H

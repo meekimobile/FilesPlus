@@ -78,10 +78,6 @@ Page {
 
     MainMenu {
         id: mainMenu
-
-        onSyncFolder: {
-            syncFolderSlot(currentPath.text);
-        }
     }
 
     SortByMenu {
@@ -932,9 +928,12 @@ Page {
             var isRunning = json.is_running;
 
             if (err == 0) {
-                // TODO update ProgressBar on listItem.
+                // Update ProgressBar on listItem.
+                modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
                 if (modelIndex > -1) {
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                } else if (modelIndex == -2) {
+                    fsModel.refreshItems();
                 }
             } else {
                 messageDialog.titleText = "CloudDrive File Get"
@@ -954,9 +953,12 @@ Page {
             var isRunning = json.is_running;
 
             if (err == 0) {
-                // TODO update ProgressBar on listItem.
+                // Update ProgressBar on listItem.
+                modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
                 if (modelIndex > -1) {
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                } else if (modelIndex == -2) {
+                    fsModel.refreshItems();
                 }
             } else {
                 messageDialog.titleText = "CloudDrive File Put"
@@ -1039,7 +1041,7 @@ Page {
                 } else {
                     // Sync file.
                     console.debug("cloudDriveModel onMetadataReplySignal file jsonObj.rev " + jsonObj.rev + " localPathHash " + localPathHash);
-                    if (jsonObj.rev > localPathHash) {
+                    if (jsonObj.rev > localPathHash || !fsModel.isFile(localPath)) {
                         // TODO it should be specified with localPath instead of always use defaultLocalPath.
                         cloudDriveModel.fileGet(type, uid, remotePath, localPath, modelIndex);
                     } else if (jsonObj.rev < localPathHash) {
@@ -1060,8 +1062,11 @@ Page {
             }
 
             // TODO update ProgressBar on listItem.
+            modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
             if (modelIndex > -1) {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+            } else if (modelIndex == -2) {
+                fsModel.refreshItems();
             }
         }
 
@@ -1074,13 +1079,14 @@ Page {
             var json = JSON.parse(jsonText);
             var modelIndex = json.model_index;
             var isRunning = json.is_running
+            modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
             if (modelIndex > -1) {
                 // TODO update ProgressBar on listItem.
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesReceived);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
-            } else {
-                // TODO find matched index from model.
+            } else if (modelIndex == -2) {
+                fsModel.refreshItems();
             }
         }
 
@@ -1093,13 +1099,14 @@ Page {
             var json = JSON.parse(jsonText);
             var modelIndex = json.model_index;
             var isRunning = json.is_running
+            modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
             if (modelIndex > -1) {
                 // TODO update ProgressBar on listItem.
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesSent);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
-            } else {
-                // TODO find matched index from model.
+            } else if (modelIndex == -2) {
+                fsModel.refreshItems();
             }
         }
     }
