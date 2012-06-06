@@ -11,9 +11,11 @@ class FolderSizeItemListModel : public QAbstractListModel, public QDeclarativePa
 {
     Q_OBJECT
     Q_ENUMS(SortFlags)
+    Q_ENUMS(FolderSizeItemRoles)
     Q_INTERFACES(QDeclarativeParserStatus)
     Q_PROPERTY(QString currentDir READ currentDir WRITE setCurrentDir NOTIFY currentDirChanged)
     Q_PROPERTY(int sortFlag READ getSortFlag WRITE setSortFlag)
+    Q_PROPERTY(int count READ rowCount)
 public:
     static const int TimerInterval;
 
@@ -31,13 +33,18 @@ public:
         LastModifiedRole,
         IsDirRole,
         SubDirCountRole,
-        SubFileCountRole
+        SubFileCountRole,
+        FileTypeRole,
+        IsRunningRole,
+        RunningValueRole,
+        RunningMaxValueRole
     };
 
     explicit FolderSizeItemListModel(QObject *parent = 0);
     ~FolderSizeItemListModel();
 
     int rowCount(const QModelIndex & parent = QModelIndex()) const;
+    int columnCount(const QModelIndex & parent = QModelIndex()) const;
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
 
     QString currentDir() const;
@@ -46,6 +53,9 @@ public:
     void saveDirSizeCache();
     bool isDirSizeCacheExisting();
     bool isReady();
+
+    Q_INVOKABLE QVariant getProperty(const int index, FolderSizeItemRoles role);
+    Q_INVOKABLE void setProperty(const int index, FolderSizeItemRoles role, QVariant value);
 
     Q_INVOKABLE QStringList getDriveList();
     Q_INVOKABLE QString formatFileSize(double size);
@@ -58,6 +68,7 @@ public:
     Q_INVOKABLE void setSortFlag(const int sortFlag);
 
     Q_INVOKABLE void refreshItems();
+    Q_INVOKABLE void refreshItem(const int index);
 
     Q_INVOKABLE bool removeRow(int row, const QModelIndex & parent = QModelIndex());
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());

@@ -4,7 +4,7 @@ CloudDriveJob::CloudDriveJob()
 {
 }
 
-CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid, QString localFilePath, QString remoteFilePath)
+CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex)
 {
     this->jobId = jobId;
     this->operation = operation;
@@ -13,4 +13,5 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->localFilePath = localFilePath;
     this->remoteFilePath = remoteFilePath;
     this->isRunning = false;
+    this->modelIndex = modelIndex;
 }

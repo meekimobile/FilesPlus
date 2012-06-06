@@ -16,6 +16,9 @@ FolderSizeItem::FolderSizeItem(const QString &name, const QString &absolutePath,
     this->subFileCount = subFileCount;
 
     setFileType();
+    this->isRunning = false;
+    this->runningValue = 0;
+    this->runningMaxValue = 0;
 }
 
 void FolderSizeItem::setFileType()

@@ -80,7 +80,7 @@ QString PieChart::formatFileSize(double size, int len) {
 
 void PieChart::refreshItems()
 {
-    if (isActive()) {
+    if (isActive() && visible()) {
         removeAllExistingItems();
         createItemFromModel();
         createLabelFromSlices();
@@ -174,6 +174,16 @@ void PieChart::setModel(QAbstractListModel *model)
             this, SLOT(modelDataChanged(QModelIndex,QModelIndex)));
 
     refreshItems();
+}
+
+bool PieChart::visible() const
+{
+    return m_visible;
+}
+
+void PieChart::setVisible(const bool visible)
+{
+    m_visible = visible;
 }
 
 void PieChart::paint(QPainter *painter, const QStyleOptionGraphicsItem * o, QWidget * w)

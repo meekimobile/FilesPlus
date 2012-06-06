@@ -7,6 +7,8 @@ Menu {
     z: 2
 
     property variant disabledMenus: []
+
+    signal syncFolder()
         
     content: MenuLayout {
         id: mainMenuLayout
@@ -15,8 +17,7 @@ Menu {
             text: "Sync folder (WIP)"
             onClicked: {
                 // TODO implement metadata to get file list and verify each file hash with stored file hash map.
-//                uidDialog.open();
-                dbClient.metadata("34040982", dbClient.getDefaultRemoteFilePath(currentPath.text));
+                syncFolder();
             }
         }
 

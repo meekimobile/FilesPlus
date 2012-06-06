@@ -47,7 +47,7 @@ public:
     Q_INVOKABLE QString getDefaultLocalFilePath(const QString &remoteFilePath);
     Q_INVOKABLE void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
     Q_INVOKABLE QString getDefaultRemoteFilePath(const QString &localFilePath);
-    Q_INVOKABLE void metadata(QString uid, QString remoteFilePath);
+    Q_INVOKABLE void metadata(QString nonce, QString uid, QString remoteFilePath);
 signals:
     void requestTokenReplySignal(int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString url, QString redirectForm);
@@ -56,7 +56,7 @@ signals:
 
     void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void metadataReplySignal(int err, QString errMsg, QString msg);
+    void metadataReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);

@@ -39,6 +39,9 @@ public:
     bool changeDir(const QString dirName);
     void removeItem(const int index);
 
+    FolderSizeItem getItem(const int index);
+    void updateItem(const int index, FolderSizeItem &item);
+
     bool isReady();
     bool isRoot();
 

@@ -301,6 +301,16 @@ void FolderSizeModel::removeItem(const int index)
     itemList.removeAt(index);
 }
 
+FolderSizeItem FolderSizeModel::getItem(const int index)
+{
+    return itemList.at(index);
+}
+
+void FolderSizeModel::updateItem(const int index, FolderSizeItem &item)
+{
+    itemList.replace(index, item);
+}
+
 bool FolderSizeModel::isReady()
 {
     return m_isReady;

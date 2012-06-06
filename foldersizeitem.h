@@ -19,6 +19,10 @@ public:
     double subFileCount;
 
     QString fileType;
+
+    bool isRunning;
+    qint64 runningValue;
+    qint64 runningMaxValue;
 private:
     void setFileType();
 };

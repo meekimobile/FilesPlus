@@ -8,6 +8,7 @@ const int FolderSizeItemListModel::TimerInterval = 100;
 FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     : QAbstractListModel(parent)
 {
+    // This map will be used when populating property to delegate.
     QHash<int, QByteArray> roles;
     roles[NameRole] = "name";
     roles[AbsolutePathRole] = "absolutePath";
@@ -16,6 +17,10 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     roles[IsDirRole] = "isDir";
     roles[SubDirCountRole] = "subDirCount";
     roles[SubFileCountRole] = "subFileCount";
+    roles[FileTypeRole] = "fileType";
+    roles[IsRunningRole] = "isRunning";
+    roles[RunningValueRole] = "runningValue";
+    roles[RunningMaxValueRole] = "runningMaxValue";
     setRoleNames(roles);
 
     // Load cache
@@ -32,6 +37,11 @@ int FolderSizeItemListModel::rowCount(const QModelIndex & parent) const {
 //    qDebug() << "FolderSizeItemListModel::rowCount " + QString("%1").arg(m.getDirContent().count());
 
     return m.getDirContent().count();
+}
+
+int FolderSizeItemListModel::columnCount(const QModelIndex &parent) const
+{
+    return roleNames().count();
 }
 
 QVariant FolderSizeItemListModel::data(const QModelIndex & index, int role) const {
@@ -55,6 +65,14 @@ QVariant FolderSizeItemListModel::data(const QModelIndex & index, int role) cons
         return item.subDirCount;
     else if (role == SubFileCountRole)
         return item.subFileCount;
+    else if (role == FileTypeRole)
+        return item.fileType;
+    else if (role == IsRunningRole)
+        return item.isRunning;
+    else if (role == RunningValueRole)
+        return item.runningValue;
+    else if (role == RunningMaxValueRole)
+        return item.runningMaxValue;
     return QVariant();
 }
 
@@ -96,6 +114,27 @@ bool FolderSizeItemListModel::isDirSizeCacheExisting()
 bool FolderSizeItemListModel::isReady()
 {
     return m.isReady();
+}
+
+QVariant FolderSizeItemListModel::getProperty(const int index, FolderSizeItemListModel::FolderSizeItemRoles role)
+{
+    return data(createIndex(index,0), role);
+}
+
+void FolderSizeItemListModel::setProperty(const int index, FolderSizeItemListModel::FolderSizeItemRoles role, QVariant value)
+{
+    // Update to limited properties.
+    FolderSizeItem item = m.getItem(index);
+    if (role == IsRunningRole)
+        item.isRunning = value.toBool();
+    else if (role == RunningValueRole)
+        item.runningValue = value.toLongLong();
+    else if (role == RunningMaxValueRole)
+        item.runningMaxValue = value.toLongLong();
+
+    m.updateItem(index, item);
+
+    emit dataChanged(createIndex(index,0), createIndex(index, columnCount()));
 }
 
 QString FolderSizeItemListModel::formatFileSize(double size)
@@ -165,6 +204,11 @@ void FolderSizeItemListModel::setSortFlag(const int sortFlag)
 void FolderSizeItemListModel::refreshItems()
 {
     emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, 0));
+}
+
+void FolderSizeItemListModel::refreshItem(const int index)
+{
+    emit dataChanged(createIndex(index,0), createIndex(index, 0));
 }
 
 bool FolderSizeItemListModel::removeRow(int row, const QModelIndex &parent)
