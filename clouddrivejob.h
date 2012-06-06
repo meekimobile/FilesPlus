@@ -19,6 +19,8 @@ public:
     int modelIndex;
     qint64 bytes;
     qint64 bytesTotal;
+
+    QString toJsonText();
 };
 
 #endif // CLOUDDRIVEJOB_H

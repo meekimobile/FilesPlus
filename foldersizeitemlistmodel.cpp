@@ -281,6 +281,27 @@ QString FolderSizeItemListModel::getDirPath(const QString absFilePath)
     return fileInfo.absolutePath();
 }
 
+bool FolderSizeItemListModel::isDir(const QString absFilePath)
+{
+    QFileInfo fileInfo(absFilePath);
+
+    return fileInfo.isDir();
+}
+
+QString FolderSizeItemListModel::getDirContentJson(const QString dirPath)
+{
+    QList<FolderSizeItem> itemList = m.getDirContent(dirPath);
+    QString jsonText = "[ ";
+    for (int i=0; i<itemList.length(); i++) {
+        FolderSizeItem item = itemList.at(i);
+        if (i>0) jsonText.append(", ");
+        jsonText.append(item.toJsonText());
+    }
+    jsonText.append(" ]");
+
+    return jsonText;
+}
+
 void FolderSizeItemListModel::checkRunnable()
 {
     if (m.isReady()) {

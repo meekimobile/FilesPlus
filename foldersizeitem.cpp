@@ -21,6 +21,25 @@ FolderSizeItem::FolderSizeItem(const QString &name, const QString &absolutePath,
     this->runningMaxValue = 0;
 }
 
+QString FolderSizeItem::toJsonText()
+{
+    QString jsonText("{ ");
+    jsonText.append(QString("\"name\": \"%1\", ").arg(name));
+    jsonText.append(QString("\"absolute_path\": \"%1\", ").arg(absolutePath));
+    jsonText.append(QString("\"last_modified\": \"%1\", ").arg(lastModified.toString()));
+    jsonText.append(QString("\"size\": %1, ").arg(size));
+    jsonText.append(QString("\"is_dir\": \"%1\", ").arg((isDir)?"true":"false"));
+    jsonText.append(QString("\"sub_dir_count\": %1, ").arg(subDirCount));
+    jsonText.append(QString("\"sub_file_count\": %1, ").arg(subFileCount));
+    jsonText.append(QString("\"file_type\": \"%1\", ").arg(fileType));
+    jsonText.append(QString("\"is_running\": \"%1\", ").arg((isRunning)?"true":"false"));
+    jsonText.append(QString("\"running_value\": %1, ").arg(runningValue));
+    jsonText.append(QString("\"running_max_value\": %1 ").arg(runningMaxValue));
+    jsonText.append("}");
+
+    return jsonText;
+}
+
 void FolderSizeItem::setFileType()
 {
     // Get file extension.

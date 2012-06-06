@@ -125,21 +125,8 @@ QString CloudDriveModel::getFirstJobJson(QString localPath)
 QString CloudDriveModel::getJobJson(QString jobId)
 {
     CloudDriveJob job = m_cloudDriveJobs[jobId];
-    QString jsonText;
-    jsonText.append("{ ");
-    jsonText.append(QString("\"job_id\": \"%1\", ").arg(job.jobId));
-    jsonText.append(QString("\"is_running\": %1, ").arg( (job.isRunning)?"true":"false" ));
-    jsonText.append(QString("\"uid\": \"%1\", ").arg(job.uid));
-    jsonText.append(QString("\"type\": %1, ").arg(job.type));
-    jsonText.append(QString("\"operation\": %1, ").arg(job.operation));
-    jsonText.append(QString("\"local_file_path\": \"%1\", ").arg(job.localFilePath));
-    jsonText.append(QString("\"remote_file_path\": \"%1\", ").arg(job.remoteFilePath));
-    jsonText.append(QString("\"model_index\": %1, ").arg(job.modelIndex));
-    jsonText.append(QString("\"bytes\": %1, ").arg(job.bytes));
-    jsonText.append(QString("\"bytes_total\": %1 ").arg(job.bytesTotal));
-    jsonText.append(" }");
 
-    return jsonText;
+    return job.toJsonText();
 }
 
 void CloudDriveModel::addItem(QString localPath, CloudDriveItem item)

@@ -186,7 +186,7 @@ QString FolderSizeModel::formatFileSize(double size) {
     return fileSize;
 }
 
-void FolderSizeModel::sortItemList() {
+void FolderSizeModel::sortItemList(QList<FolderSizeItem> &itemList) {
     switch (m_sortFlag) {
     case SortByName:
         qSort(itemList.begin(), itemList.end(), nameLessThan);
@@ -206,6 +206,44 @@ void FolderSizeModel::sortItemList() {
 QList<FolderSizeItem> FolderSizeModel::getDirContent() const
 {
     return itemList;
+}
+
+QList<FolderSizeItem> FolderSizeModel::getDirContent(const QString dirPath)
+{
+    // Get only contents in directory (not recursive).
+    m_isReady = false;
+    QList<FolderSizeItem> tempList;
+
+    QDir dir;
+    dir = QDir(dirPath);
+    dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
+
+    QFileInfoList list = dir.entryInfoList();
+    for (int i = 0; i < list.size(); ++i) {
+        QFileInfo fileInfo = list.at(i);
+        QString fileName = fileInfo.fileName();
+
+        if (fileName == ".") {
+            // skip current directory '.'
+            continue;
+        } else if (fileName == "..") {
+            // skip current directory '.'
+            continue;
+        } else if (fileInfo.isDir()) {
+            // drilldown to get dir content.
+            tempList.append(getCachedDir(fileInfo));
+        } else {
+            // do nothing
+            tempList.append(getFileItem(fileInfo));
+        }
+    }
+
+    // Sort itemList as current sortFlag.
+    sortItemList(tempList);
+
+    m_isReady = true;
+
+    return tempList;
 }
 
 void FolderSizeModel::fetchDirSize(const bool clearCache) {
@@ -239,7 +277,7 @@ void FolderSizeModel::fetchDirSize(const bool clearCache) {
     }
 
     // Sort itemList as current sortFlag.
-    sortItemList();
+    sortItemList(itemList);
 
     // Refresh Cache for the currentDir.
     QFileInfo dirInfo(m_currentDir);
@@ -276,7 +314,7 @@ bool FolderSizeModel::setSortFlag(int sortFlag)
     if (m_sortFlag != sortFlag) {
         m_sortFlag = sortFlag;
 
-        sortItemList();
+        sortItemList(itemList);
         return true;
     } else {
         return false;

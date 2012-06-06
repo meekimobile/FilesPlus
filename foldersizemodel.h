@@ -31,6 +31,7 @@ public:
     QStringList getDriveList();
     void fetchDirSize(const bool clearCache = false);
     QList<FolderSizeItem> getDirContent() const;
+    QList<FolderSizeItem> getDirContent(const QString dirPath);
     void loadDirSizeCache();
     void saveDirSizeCache();
     bool isDirSizeCacheExisting();
@@ -52,7 +53,7 @@ public:
 private:
     FolderSizeItem getCachedDir(const QFileInfo dir, const bool clearCache = false);
     FolderSizeItem getFileItem(const QFileInfo fileInfo);
-    void sortItemList();
+    void sortItemList(QList<FolderSizeItem> &itemList);
 
     QHash<QString, FolderSizeItem> dirSizeCache;
     QList<FolderSizeItem> itemList;
