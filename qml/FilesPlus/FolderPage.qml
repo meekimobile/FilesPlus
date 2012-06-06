@@ -208,18 +208,6 @@ Page {
         }
     }
 
-    function syncFolderSlot(srcFolderPath) {
-        console.debug("folderPage syncFolderSlot " + fsModel.count);
-        console.debug("folderPage syncFolderSlot " + fsModel.getProperty(0, FolderSizeItemListModel.AbsolutePathRole));
-        // TODO uidDialog
-        var uid = "34040982";
-        for (var i=0; i<fsModel.count; i++) {
-            var localFilePath = fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole);
-            var remoteFilePath = cloudDriveModel.getDefaultRemoteFilePath(localFilePath);
-            cloudDriveModel.metadata(CloudDriveModel.Dropbox, uid, localFilePath, remoteFilePath, -1);
-        }
-    }
-
     function syncFileSlot(srcFilePath, selectedIndex) {
         console.debug("folderPage syncFileSlot srcFilePath=" + srcFilePath);
 
@@ -981,16 +969,18 @@ Page {
 
             var json = JSON.parse(jsonText);
             var uid = json.uid;
+            var type = json.type;
             var localPath = json.local_file_path;
             var remotePath = json.remote_file_path;
             var modelIndex = json.model_index;
             var isRunning = json.is_running;
 
             if (err == 0) {
+                // Found metadata.
                 var jsonObj = Utility.createJsonObj(msg);
-                var localPathHash = cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, uid);
+                var localPathHash = cloudDriveModel.getItemHash(localPath, type, uid);
 
-                // localPath is already connected if localPathHash exists.
+                // Get remotePath if localPath is already connected if localPathHash exists. Otherwise getDefaultRemoteFilePath().
                 if (localPathHash == "") {
                     remotePath = cloudDriveModel.getDefaultRemoteFilePath(localPath);
                 } else {
@@ -998,8 +988,20 @@ Page {
                 }
 
                 // TODO Implement sync folder.
+                // TODO Sync from local if metadata not found.
                 if (jsonObj.is_dir) {
                     // Sync folder.
+
+                    // TODO Sync based on local contents.
+//                    var uid = "34040982";
+//                    for (var i=0; i<fsModel.count; i++) {
+//                        var localFilePath = fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole);
+//                        var remoteFilePath = cloudDriveModel.getDefaultRemoteFilePath(localFilePath);
+//                        cloudDriveModel.metadata(CloudDriveModel.Dropbox, uid, localFilePath, remoteFilePath, -1);
+//                    }
+
+                    // TODO Sync based on remote contents.
+
                     console.debug("cloudDriveModel onMetadataReplySignal folder jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
                     if (jsonObj.hash != localPathHash) {
                         var i;
@@ -1013,7 +1015,6 @@ Page {
                             } else {
                                 // TODO invoke metadata
                                 console.debug("file item = " + item);
-//                                cloudDriveModel.metadata(CloudDriveModel.Dropbox, )
                             }
                         }
                     }
@@ -1028,9 +1029,9 @@ Page {
                     }
                 }
             } else if (err == 203) {
-                // TODO If metadata is not found, put it to cloud right away.
-                remotePath = cloudDriveModel.getDefaultRemoteFilePath(localPath);
-                cloudDriveModel.filePut(CloudDriveModel.Dropbox, uid, localPath, remotePath, modelIndex);
+                // If metadata is not found, put it to cloud right away.
+                // TODO recursively put dirs/files.
+                syncFromLocal(type, uid, localPath, remotePath, modelIndex);
             } else {
                 messageDialog.titleText = "Dropbox Metadata"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
@@ -1039,6 +1040,31 @@ Page {
 
             // TODO update ProgressBar on listItem.
             fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+        }
+
+        function syncFromLocal(type, uid, localPath, remotePath, modelIndex) {
+            // TODO Use WorkerScript.
+            console.debug("syncFromLocal " + type + " " + uid + " " + localPath + " " + remotePath + " " + modelIndex);
+
+            if (fsModel.isDir(localPath)) {
+                // Sync based on local contents.
+                // TODO list dir/file directly from file system. Because fsModel has only currentDir's content.
+                var jsonText = fsModel.getDirContentJson(localPath);
+//                console.debug("syncFromLocal jsonText " + jsonText);
+                var json = JSON.parse(jsonText);
+                for(var i=0; i<json.length; i++) {
+                    var localFilePath = json[i].absolute_path;
+                    var remoteFilePath = cloudDriveModel.getDefaultRemoteFilePath(localFilePath);
+                    syncFromLocal(type, uid, localFilePath, remoteFilePath, -1);
+                }
+            } else {
+                remotePath = cloudDriveModel.getDefaultRemoteFilePath(localPath);
+                cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+            }
+
+            // TODO create dir on cloud. then get its metadata.
+            // TODO create cloudDriveItem for current localPath.
+            cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
         }
 
         onDownloadProgress: {
@@ -1050,11 +1076,14 @@ Page {
             var json = JSON.parse(jsonText);
             var modelIndex = json.model_index;
             var isRunning = json.is_running
-
-            // TODO update ProgressBar on listItem.
-            fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-            fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesReceived);
-            fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+            if (modelIndex > -1) {
+                // TODO update ProgressBar on listItem.
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesReceived);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+            } else {
+                // TODO find matched index from model.
+            }
         }
 
         onUploadProgress: {
@@ -1066,11 +1095,14 @@ Page {
             var json = JSON.parse(jsonText);
             var modelIndex = json.model_index;
             var isRunning = json.is_running
-
-            // TODO update ProgressBar on listItem.
-            fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-            fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesSent);
-            fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+            if (modelIndex > -1) {
+                // TODO update ProgressBar on listItem.
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesSent);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+            } else {
+                // TODO find matched index from model.
+            }
         }
     }
 
