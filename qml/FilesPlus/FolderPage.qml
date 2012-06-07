@@ -1073,7 +1073,7 @@ Page {
 
             // Update ProgressBar on listItem.
             fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
-            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.RunningValueRole, bytesSent);
+            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.RunningValueRole, bytesReceived);
             fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
         }
 
