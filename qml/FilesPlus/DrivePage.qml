@@ -52,7 +52,7 @@ Page {
                     'import QtQuick 1.1; ListModel {}', drivePage);
         var drives = storageInfo.logicalDrives;
 
-        for (var i=0; i<drives.length; ++i)
+        for (var i=0; i<drives.length; i++)
         {
             // Workaround for QtSimulator
             var driveName = drives[i];

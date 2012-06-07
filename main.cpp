@@ -1,4 +1,5 @@
 #include <QtGui/QApplication>
+#include <QDeclarativeEngine>
 #include "qmlapplicationviewer.h"
 #include "piechart.h"
 #include "foldersizeitemlistmodel.h"
@@ -7,6 +8,7 @@
 #include "clouddrivemodel.h"
 #include "dropboxclient.h"
 #include <QAbstractListModel>
+#include "localfileimageprovider.h"
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -25,6 +27,9 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     viewer.showExpanded();
     // *** viewer.rootContext() can't support setContextProperty in Qt Creator
     // *** So I decide to implement PieChart with QDeclarativeItem.
+
+    QDeclarativeEngine *engine = viewer.engine();
+    engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider());
 
     return app->exec();
 }

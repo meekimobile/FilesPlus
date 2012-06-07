@@ -46,5 +46,6 @@
         <file>qml/FilesPlus/refresh.svg</file>
         <file>qml/FilesPlus/drive_icon.png</file>
         <file>qml/FilesPlus/dropbox_icon.png</file>
+        <file>qml/FilesPlus/ImageViewPage.qml</file>
     </qresource>
 </RCC>

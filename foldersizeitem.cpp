@@ -5,7 +5,7 @@ FolderSizeItem::FolderSizeItem()
 {
 }
 
-FolderSizeItem::FolderSizeItem(const QString &name, const QString &absolutePath, const QDateTime &lastModified, const double &size, const bool isDir, const double &subDirCount, const double &subFileCount)
+FolderSizeItem::FolderSizeItem(const QString &name, const QString &absolutePath, const QDateTime &lastModified, const qint64 &size, const bool isDir, const qint64 &subDirCount, const qint64 &subFileCount)
 {
     this->name = name;
     this->absolutePath = absolutePath;
@@ -28,11 +28,11 @@ QString FolderSizeItem::toJsonText()
     jsonText.append(QString("\"absolute_path\": \"%1\", ").arg(absolutePath));
     jsonText.append(QString("\"last_modified\": \"%1\", ").arg(lastModified.toString()));
     jsonText.append(QString("\"size\": %1, ").arg(size));
-    jsonText.append(QString("\"is_dir\": \"%1\", ").arg((isDir)?"true":"false"));
+    jsonText.append(QString("\"is_dir\": %1, ").arg((isDir)?"true":"false"));
     jsonText.append(QString("\"sub_dir_count\": %1, ").arg(subDirCount));
     jsonText.append(QString("\"sub_file_count\": %1, ").arg(subFileCount));
     jsonText.append(QString("\"file_type\": \"%1\", ").arg(fileType));
-    jsonText.append(QString("\"is_running\": \"%1\", ").arg((isRunning)?"true":"false"));
+    jsonText.append(QString("\"is_running\": %1, ").arg((isRunning)?"true":"false"));
     jsonText.append(QString("\"running_value\": %1, ").arg(runningValue));
     jsonText.append(QString("\"running_max_value\": %1 ").arg(runningMaxValue));
     jsonText.append("}");
@@ -64,9 +64,9 @@ QDataStream &operator>>(QDataStream &in, FolderSizeItem &item)
     QString name;
     QString absolutePath;
     QDateTime lastModified;
-    double size;
-    double subDirCount;
-    double subFileCount;
+    qint64 size;
+    qint64 subDirCount;
+    qint64 subFileCount;
 
     // Load to dir.
     in >> name >> absolutePath >> lastModified >> size >> subDirCount >> subFileCount;

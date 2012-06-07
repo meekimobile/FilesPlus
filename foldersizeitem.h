@@ -8,15 +8,15 @@ class FolderSizeItem
 {
 public:
     FolderSizeItem();
-    FolderSizeItem(const QString &name, const QString &absolutePath, const QDateTime &lastModified, const double &size, const bool isDir, const double &subDirCount, const double &subFileCount);
+    FolderSizeItem(const QString &name, const QString &absolutePath, const QDateTime &lastModified, const qint64 &size, const bool isDir, const qint64 &subDirCount, const qint64 &subFileCount);
 
     QString name;
     QString absolutePath;
-    double size;
+    qint64 size;
     QDateTime lastModified;
     bool isDir;
-    double subDirCount;
-    double subFileCount;
+    qint64 subDirCount;
+    qint64 subFileCount;
 
     QString fileType;
 

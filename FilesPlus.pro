@@ -67,7 +67,8 @@ SOURCES += main.cpp \
     clouddriveitem.cpp \
     gcdclient.cpp \
     clouddrivejob.cpp \
-    qnetworkreplywrapper.cpp
+    qnetworkreplywrapper.cpp \
+    localfileimageprovider.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -88,7 +89,8 @@ HEADERS += \
     clouddriveitem.h \
     gcdclient.h \
     clouddrivejob.h \
-    qnetworkreplywrapper.h
+    qnetworkreplywrapper.h \
+    localfileimageprovider.h
 
 OTHER_FILES +=
 

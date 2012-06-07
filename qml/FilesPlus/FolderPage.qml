@@ -434,12 +434,14 @@ Page {
                     if (isDir) {
                         fsModel.changeDir(name);
                     } else {
-                        // TODO Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
-//                        if (gcpClient.getContentType(name) != "") {
-//                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), { imageSource: absolutePath });
-//                        } else {
+                        // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
+                        var viewableFileTypes = ["JPG", "PNG", "SVG"];
+                        if (viewableFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
+                                           { sources: fsModel.getDirContentJson(fsModel.currentDir, false), fileName: name });
+                        } else {
                             Qt.openUrlExternally(fsModel.getUrl(absolutePath));
-//                        }
+                        }
                     }
                 }
 
@@ -1125,7 +1127,7 @@ Page {
         var model = Qt.createQmlObject(
                     'import QtQuick 1.1; ListModel {}', folderPage);
 
-        for (var i=0; i<dbUidList.length; ++i)
+        for (var i=0; i<dbUidList.length; i++)
         {
             var json = JSON.parse(dbUidList[i]);
             model.append({
