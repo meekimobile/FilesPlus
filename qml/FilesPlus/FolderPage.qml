@@ -475,6 +475,50 @@ Page {
         }
     }
 
+    TitlePanel {
+        id: currentPath
+
+        MouseArea {
+            anchors.fill: parent
+
+            onPressAndHold: {
+                if (folderPage.state == "list") {
+                    popupToolPanel.forFile = false;
+                    popupToolPanel.selectedFilePath = currentPath.text
+                    popupToolPanel.pastePath = currentPath.text;
+                    var panelX = currentPath.x + mouseX;
+                    var panelY = currentPath.y + mouseY;
+                    popupToolPanel.x = panelX;
+                    popupToolPanel.y = panelY;
+                    popupToolPanel.visible = true;
+                }
+            }
+        }
+    }
+
+    CommonDialog {
+        id: messageDialog
+
+        property alias message: contentText.text
+
+        titleIcon: "FilesPlusIcon.svg"
+        buttonTexts: ["Ok"]
+        content: Text {
+            id: contentText
+            width: parent.width - 8
+            color: "white"
+            wrapMode: Text.WordWrap
+            height: implicitHeight
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+
+        onStatusChanged: {
+            if (status == DialogStatus.Closed) {
+                message = "";
+            }
+        }
+    }
+
     PopupToolPanel {
         id: popupToolPanel
 
@@ -537,50 +581,6 @@ Page {
                             + "The file is existing on target path.";
                     messageDialog.open();
                     popupToolPanel.pastePath = "";
-                }
-            }
-        }
-    }
-
-    CommonDialog {
-        id: messageDialog
-
-        property alias message: contentText.text
-
-        titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: ["Ok"]
-        content: Text {
-            id: contentText
-            width: parent.width - 8
-            color: "white"
-            wrapMode: Text.WordWrap
-            height: implicitHeight
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
-
-        onStatusChanged: {
-            if (status == DialogStatus.Closed) {
-                message = "";
-            }
-        }
-    }
-
-    TitlePanel {
-        id: currentPath
-
-        MouseArea {
-            anchors.fill: parent
-
-            onPressAndHold: {
-                if (folderPage.state == "list") {
-                    popupToolPanel.forFile = false;
-                    popupToolPanel.selectedFilePath = currentPath.text
-                    popupToolPanel.pastePath = currentPath.text;
-                    var panelX = currentPath.x + mouseX;
-                    var panelY = currentPath.y + mouseY;
-                    popupToolPanel.x = panelX;
-                    popupToolPanel.y = panelY;
-                    popupToolPanel.visible = true;
                 }
             }
         }

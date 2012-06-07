@@ -34,7 +34,6 @@
         <file>qml/FilesPlus/FolderPieInfo.qml</file>
         <file>qml/FilesPlus/main.qml</file>
         <file>qml/FilesPlus/MainMenu.qml</file>
-        <file>qml/FilesPlus/MainPage.qml</file>
         <file>qml/FilesPlus/MoreApps.qml</file>
         <file>qml/FilesPlus/PopupMenu.qml</file>
         <file>qml/FilesPlus/PopupToolPanel.qml</file>
