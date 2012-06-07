@@ -97,6 +97,18 @@ Page {
                     // TODO Remove dependency to make authPage reusable for other REST API.
                     if (p) p.dropboxAccessTokenSlot();
                     pageStack.pop();
+                } else if (title.match("^API Request Authorized")) {
+                    console.debug("title = " + title);
+
+                    var p = pageStack.find(function(page) {
+                        return (page.name == "folderPage");
+                    });
+                    // TODO Remove dependency to make authPage reusable for other REST API.
+                    if (p) p.dropboxAccessTokenSlot();
+                    pageStack.pop();
+                } else {
+                    console.debug("title = " + title);
+                    console.debug(html);
                 }
             }
         }
