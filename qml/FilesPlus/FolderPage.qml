@@ -435,7 +435,11 @@ Page {
                         fsModel.changeDir(name);
                     } else {
                         // TODO Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
-                        Qt.openUrlExternally(fsModel.getUrl(absolutePath));
+//                        if (gcpClient.getContentType(name) != "") {
+//                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), { imageSource: absolutePath });
+//                        } else {
+                            Qt.openUrlExternally(fsModel.getUrl(absolutePath));
+//                        }
                     }
                 }
 
@@ -890,7 +894,7 @@ Page {
 
             if (err == 0) {
                 if (popupToolPanel.selectedFilePath) {
-                    syncFileSlot(popupToolPanel.selectedFilePath);
+                    syncFileSlot(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
                 } else {
                     // TODO Get account info and show in dialog.
                     messageDialog.titleText = "CloudDrive Access Token"
@@ -929,12 +933,7 @@ Page {
 
             if (err == 0) {
                 // Update ProgressBar on listItem.
-                modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
-                if (modelIndex > -1) {
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                } else if (modelIndex == -2) {
-                    fsModel.refreshItems();
-                }
+                fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
             } else {
                 messageDialog.titleText = "CloudDrive File Get"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
@@ -954,12 +953,7 @@ Page {
 
             if (err == 0) {
                 // Update ProgressBar on listItem.
-                modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
-                if (modelIndex > -1) {
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                } else if (modelIndex == -2) {
-                    fsModel.refreshItems();
-                }
+                fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
             } else {
                 messageDialog.titleText = "CloudDrive File Put"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
@@ -1008,6 +1002,7 @@ Page {
                     return;
                 }
 
+                // Sync starts from itself.
                 if (jsonObj.is_dir) {
                     // Sync folder.
                     // Sync based on remote contents.
@@ -1037,7 +1032,6 @@ Page {
 
                     // TODO Sync based on local contents. [Pending]
                     // It needs to implement out of this metadataReply.
-//                    syncFromLocal(type, uid, localPath, remotePath, modelIndex);
                 } else {
                     // Sync file.
                     console.debug("cloudDriveModel onMetadataReplySignal file jsonObj.rev " + jsonObj.rev + " localPathHash " + localPathHash);
@@ -1061,13 +1055,8 @@ Page {
                 messageDialog.open();
             }
 
-            // TODO update ProgressBar on listItem.
-            modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
-            if (modelIndex > -1) {
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-            } else if (modelIndex == -2) {
-                fsModel.refreshItems();
-            }
+            // Update ProgressBar on listItem.
+            fsModel.setProperty(localPath, FolderSizeItemListModel.IsRunningRole, isRunning);
         }
 
         onDownloadProgress: {
@@ -1079,15 +1068,11 @@ Page {
             var json = JSON.parse(jsonText);
             var modelIndex = json.model_index;
             var isRunning = json.is_running
-            modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
-            if (modelIndex > -1) {
-                // TODO update ProgressBar on listItem.
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesReceived);
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
-            } else if (modelIndex == -2) {
-                fsModel.refreshItems();
-            }
+
+            // Update ProgressBar on listItem.
+            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
+            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.RunningValueRole, bytesSent);
+            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
         }
 
         onUploadProgress: {
@@ -1099,15 +1084,11 @@ Page {
             var json = JSON.parse(jsonText);
             var modelIndex = json.model_index;
             var isRunning = json.is_running
-            modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
-            if (modelIndex > -1) {
-                // TODO update ProgressBar on listItem.
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesSent);
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
-            } else if (modelIndex == -2) {
-                fsModel.refreshItems();
-            }
+
+            // Update ProgressBar on listItem.
+            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
+            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.RunningValueRole, bytesSent);
+            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
         }
     }
 
@@ -1171,6 +1152,7 @@ Page {
         id: uidDialog
         height: 200
 
+        property int operation
         property string localPath
         property int selectedCloudType
         property string selectedUid
@@ -1179,6 +1161,7 @@ Page {
         titleText: "Please select Cloud Account"
         delegate: ListItem {
             id: uidDialogListViewItem
+            height: 60
             Row {
                 anchors.fill: uidDialogListViewItem.paddingItem
                 spacing: 2

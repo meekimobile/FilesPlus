@@ -140,6 +140,21 @@ void FolderSizeItemListModel::setProperty(const int index, FolderSizeItemListMod
         m.updateItem(index, item);
 
         emit dataChanged(createIndex(index,0), createIndex(index, columnCount()));
+    } else {
+
+    }
+}
+
+void FolderSizeItemListModel::setProperty(const QString localPath, FolderSizeItemListModel::FolderSizeItemRoles role, QVariant value)
+{
+    // Find index for localPath on currentDir.
+    int modelIndex = getIndexOnCurrentDir(localPath);
+    if (modelIndex > -1) {
+        setProperty(modelIndex, role, value);
+    } else if (modelIndex == -1) {
+        // Do nothing as it's not on currentDir.
+    } else if (modelIndex == -2) {
+        refreshItems();
     }
 }
 

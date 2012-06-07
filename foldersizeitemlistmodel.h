@@ -56,6 +56,7 @@ public:
 
     Q_INVOKABLE QVariant getProperty(const int index, FolderSizeItemRoles role);
     Q_INVOKABLE void setProperty(const int index, FolderSizeItemRoles role, QVariant value);
+    Q_INVOKABLE void setProperty(const QString localPath, FolderSizeItemRoles role, QVariant value);
 
     Q_INVOKABLE QStringList getDriveList();
     Q_INVOKABLE QString formatFileSize(double size);

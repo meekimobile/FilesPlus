@@ -417,12 +417,13 @@ void CloudDriveModel::jobDone() {
 
 void CloudDriveModel::proceedNextJob() {
     // TODO Proceed next job in queue.
-    qDebug() << "CloudDriveModel::proceedNextJob runningJobCount " << runningJobCount << " m_jobQueue " << m_jobQueue.count();
     if (runningJobCount >= MaxRunningJobCount || m_jobQueue.isEmpty()) {
+        qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount " << runningJobCount << " m_jobQueue " << m_jobQueue.count();
         return;
     }
 
     QString nonce = m_jobQueue.dequeue();
+    qDebug() << "CloudDriveModel::proceedNextJob jobId " << nonce;
     CloudDriveJob job = m_cloudDriveJobs[nonce];
 
     switch (job.type) {
