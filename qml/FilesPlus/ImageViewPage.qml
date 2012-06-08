@@ -16,13 +16,13 @@ Page {
             name: "grid"
             when: showGrid
             PropertyChanges { target: imageGrid; visible: true }
-            PropertyChanges { target: imageFlick; visible: false }
+            PropertyChanges { target: imageFlick; visible: false; showFit: true }
         },
         State {
             name: "flick"
             when: !showGrid
             PropertyChanges { target: imageGrid; visible: false }
-            PropertyChanges { target: imageFlick; visible: true }
+            PropertyChanges { target: imageFlick; visible: true; showFit: true }
         }
     ]
 
@@ -57,7 +57,7 @@ Page {
 
                 onClicked: {
                     var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-                    if (p) p.printFileSlot(source, -1);
+                    if (p) p.printFileSlot(imageGrid.getViewFilePath(), -1);
                 }
             }
         }
@@ -76,7 +76,7 @@ Page {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             color: "white"
-            text: "fileName"
+            text: imageGrid.getViewFilePath()
         }
     }
 
@@ -122,6 +122,40 @@ Page {
         flow: GridView.TopToBottom
         snapMode: GridView.SnapOneRow
         delegate: imageViewDelegate
+        focus: true
+
+        property int viewIndex: getViewIndex()
+
+        function getViewIndex() {
+            var cx = contentX + parent.width / 2;
+            var cy = contentY + parent.height / 2;
+            return indexAt(cx, cy);
+        }
+
+        function getViewFilePath() {
+            var i = imageGrid.getViewIndex();
+            if (i > -1) {
+                    return imageGrid.model.get(i).absolutePath;
+            }
+            return "";
+        }
+
+        onFlickEnded: {
+            console.debug("imageGrid onFlickEnded index " + viewIndex);
+        }
+    }
+
+    Component {
+        id: highlight
+        Rectangle {
+            width: imageGrid.cellWidth
+            height: imageGrid.cellHeight
+            color: "lightsteelblue"; radius: 5
+            x: imageGrid.currentItem.x
+            y: imageGrid.currentItem.y
+            Behavior on x { SpringAnimation { spring: 3; damping: 0.2 } }
+            Behavior on y { SpringAnimation { spring: 3; damping: 0.2 } }
+        }
     }
 
     Component {
@@ -145,9 +179,11 @@ Page {
             }
 
             onStatusChanged: {
-                if (status == Image.Loading) {
+                if (status == Image.Ready) {
                     if (isSelected) {
-                        imageGrid.currentIndex = index;
+                        console.debug("isSelected index=" + index);
+                        imageGrid.positionViewAtIndex(index, GridView.Visible);
+                        imageGrid.currentIndex = imageGrid.viewIndex
                     }
                 }
             }
@@ -160,6 +196,10 @@ Page {
                     imageViewToolBar.visible = !imageViewToolBar.visible;
                     imageLabel.visible = !imageLabel.visible;
                 }
+
+                onDoubleClicked: {
+                    imageViewPage.showGrid = false;
+                }
             }
         }
     }
@@ -170,23 +210,7 @@ Page {
         width: parent.width
         height: parent.height
 
-        Image {
-            id: imageFlickView
-            width: parent.width
-            height: parent.height
-            source: imageGrid.model.get(imageGrid.currentIndex).absolutePath
-            fillMode: Image.PreserveAspectFit
-
-            BusyIndicator {
-                id: imageViewBusy
-                width: 80
-                height: 80
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
-                visible: (parent.progress < 1 && parent.status == Image.Loading)
-                running: visible
-            }
-        }
+        property bool showFit: true
 
         onStateChanged: {
             console.debug("------------------- " + state + "---------------------");
@@ -203,9 +227,22 @@ Page {
         states: [
             State {
                 name: "fit"
+                when: imageFlick.showFit
+                PropertyChanges {
+                    target: imageFlickView
+                    fillMode: Image.PreserveAspectFit
+                    width: parent.width
+                    height: parent.height
+                }
+                PropertyChanges {
+                    target: imageFlick
+                    contentWidth: width
+                    contentHeight: height
+                }
             },
             State {
                 name: "actual"
+                when: !imageFlick.showFit
                 PropertyChanges {
                     target: imageFlickView
                     fillMode: Image.Null
@@ -220,27 +257,66 @@ Page {
             }
         ]
 
-        PinchArea {
-            id: imagePinchArea
-            anchors.fill: parent
-            pinch.dragAxis: Pinch.XandYAxis
+        Image {
+            id: imageFlickView
+            width: parent.width
+            height: parent.height
+            source: imageGrid.getViewFilePath()
+            fillMode: Image.PreserveAspectFit
 
-            onPinchStarted: {
-                console.debug("imagePinchArea onPinchStarted");
+            BusyIndicator {
+                id: imageViewBusy
+                width: 80
+                height: 80
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+                visible: (parent.progress < 1 && parent.status == Image.Loading)
+                running: visible
             }
-            onPinchFinished: {
-                console.debug("imagePinchArea onPinchFinished");
-            }
-            onPinchUpdated: {
-                console.debug("imagePinchArea onPinchUpdated pinch.scale " + pinch.scale);
-                var newWidth = Math.round(imageFlickView.width * pinch.scale);
-                newWidth = Utility.limit(newWidth, imageFlick.width, imageFlickView.sourceSize.width);
-                var newHeight = Math.round(imageFlickView.height * pinch.scale);
-                newHeight = Utility.limit(newHeight, imageFlick.height, imageFlickView.sourceSize.height);
 
-                imageFlickView.width = newWidth;
-                imageFlickView.height = newHeight;
-                // TODO adjust x,y to keep current center of image.
+            PinchArea {
+                id: imagePinchArea
+                anchors.fill: parent
+                pinch.dragAxis: Pinch.XandYAxis
+
+                onPinchStarted: {
+                    console.debug("imagePinchArea onPinchStarted");
+                    imageViewPage.showGrid = false;
+                }
+                onPinchFinished: {
+                    console.debug("imagePinchArea onPinchFinished");
+                    var isPortrait = imageFlick.width < imageFlick.height;
+                    var isViewPortrait = imageFlickView.width < imageFlickView.height;
+
+                    // TODO if image size == fit size, change state to grid.
+                    // Show grid if width or height of image fit to flick view.
+                    imageViewPage.showGrid = (imageFlick.width == imageFlickView.width || imageFlick.height == imageFlickView.height);
+                }
+                onPinchUpdated: {
+                    // TODO image can be shrink to smaller than fit size. it will be enlarged back to fit.
+                    // TODO image can be enlarged to larger than actual size. it will be shrink back to actual.
+                    console.debug("imagePinchArea onPinchUpdated pinch.scale " + pinch.scale);
+                    var newWidth = Math.round(imageFlickView.width * pinch.scale);
+                    newWidth = Utility.limit(newWidth, imageFlick.width, imageFlickView.sourceSize.width);
+                    var newHeight = Math.round(imageFlickView.height * pinch.scale);
+                    newHeight = Utility.limit(newHeight, imageFlick.height, imageFlickView.sourceSize.height);
+
+                    imageFlickView.width = newWidth;
+                    imageFlickView.height = newHeight;
+                    // TODO adjust x,y to keep current center of image.
+
+                    // TODO if image size == fit size, change state to grid.
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+
+                    onDoubleClicked: {
+                        console.debug("imageFlick onDoubleClicked");
+                        imageFlick.showFit = !imageFlick.showFit;
+                        imageViewPage.showGrid = imageFlick.showFit;
+                    }
+                }
             }
         }
     }
