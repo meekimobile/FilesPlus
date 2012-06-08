@@ -12,6 +12,8 @@
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
+    qDebug() << QTime::currentTime() << "main started.";
+
     qmlRegisterType<PieChart>("Charts", 1, 0, "PieChart");
     qmlRegisterType<FolderSizeItemListModel>("FolderSizeItemListModel", 1, 0, "FolderSizeItemListModel");
     qmlRegisterType<SystemInfoHelper>("SystemInfoHelper", 1, 0, "SystemInfoHelper");

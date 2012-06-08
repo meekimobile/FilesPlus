@@ -113,6 +113,9 @@ PageStackWindow {
     }
 
     Component.onCompleted: {
+        var now = Qt.formatDateTime(new Date(), "d MMM yyyy h:mm:ss ap");
+        console.debug(now + " window onCompleted");
+
         // Load folderPage then push drivePage to increase performance.
         pageStack.push(Qt.resolvedUrl("DrivePage.qml"));
     }

@@ -19,8 +19,11 @@ Rectangle {
         id: splashTimer
         interval: 10000
         running: true
-        onTriggered: {
+        onTriggered: {            
             hideSplashScreen.start();
+
+            var now = Qt.formatDateTime(new Date(), "d MMM yyyy h:mm:ss ap");
+            console.debug(now + " splashScreen hideSplashScreen.start()");
         }
     }
 

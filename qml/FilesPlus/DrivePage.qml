@@ -100,4 +100,9 @@ Page {
             driveGrid.currentIndex = -1;
         }
     }
+
+    Component.onCompleted: {
+        var now = Qt.formatDateTime(new Date(), "d MMM yyyy h:mm:ss ap");
+        console.debug(now + " drivePage onCompleted");
+    }
 }

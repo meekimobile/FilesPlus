@@ -9,11 +9,11 @@ const int CloudDriveModel::MaxRunningJobCount = 5;
 CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
 {
-    loadCloudDriveItems();
+    // Load cloud drive items.
+    QFuture<void> loadDataFuture = QtConcurrent::run(this, &CloudDriveModel::loadCloudDriveItems);
 
     // Initialize cloud drive clients.
-    initializeDropboxClient();
-//    initializeGCDClient();
+    QFuture<void> initializeCloudFuture = QtConcurrent::run(this, &CloudDriveModel::initializaCloudDriveClients);
 }
 
 CloudDriveModel::~CloudDriveModel()
@@ -29,6 +29,8 @@ void CloudDriveModel::loadCloudDriveItems() {
 
         qDebug() << "CloudDriveModel::loadCloudDriveItems " << m_cloudDriveItems;
     }
+
+    emit dataLoadedSignal();
 }
 
 void CloudDriveModel::saveCloudDriveItems() {
@@ -37,6 +39,11 @@ void CloudDriveModel::saveCloudDriveItems() {
         QDataStream out(&file);   // we will serialize the data into the file
         out << m_cloudDriveItems;
     }
+}
+
+void CloudDriveModel::initializaCloudDriveClients() {
+    initializeDropboxClient();
+//    initializeGCDClient();
 }
 
 void CloudDriveModel::initializeDropboxClient() {
@@ -134,14 +141,14 @@ void CloudDriveModel::addItem(QString localPath, CloudDriveItem item)
 {
     m_cloudDriveItems.insert(localPath, item);
 
-//    qDebug() << "CloudDriveModel::addItem m_cloudDriveItems " << m_cloudDriveItems;
+    qDebug() << "CloudDriveModel::addItem " << item;
 }
 
 void CloudDriveModel::addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash)
 {
     CloudDriveItem item = getItem(localPath, type, uid);
     if (item.localPath != "") {
-        qDebug() << "CloudDriveModel::addItem remove " << item;
+        qDebug() << "CloudDriveModel::addItem remove for update " << item;
         removeItem(type, uid, localPath);
     }
     item = CloudDriveItem(type, uid, localPath, remotePath, hash);

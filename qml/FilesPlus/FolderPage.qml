@@ -30,6 +30,11 @@ Page {
         }
     }
 
+    Component.onCompleted: {
+        var now = Qt.formatDateTime(new Date(), "d MMM yyyy h:mm:ss ap");
+        console.debug(now + " folderPage onCompleted");
+    }
+
     tools: toolBarLayout
 
     ToolBarLayout {

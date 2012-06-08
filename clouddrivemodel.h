@@ -64,6 +64,7 @@ public:
     Q_INVOKABLE void filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
     Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
 signals:
+    void dataLoadedSignal();
     void requestTokenReplySignal(int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString url, QString redirectFrom);
     void accessTokenReplySignal(int err, QString errMsg, QString msg);
@@ -90,6 +91,7 @@ private:
 
     void loadCloudDriveItems();
     void saveCloudDriveItems();
+    void initializaCloudDriveClients();
     void initializeDropboxClient();
     void initializeGCDClient();
     QString createNonce();
