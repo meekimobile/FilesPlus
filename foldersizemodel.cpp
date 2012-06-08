@@ -23,8 +23,19 @@ bool typeLessThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
         // If file before dir, return false;
         return false;
     } else {
-        // If both the same, compare size.
-        return o1.fileType < o2.fileType && o1.name < o2.name;
+        // If both are dir, compare name.
+        // If both are file, compare type and name.
+        if (o1.isDir && o2.isDir) {
+            return o1.name < o2.name;
+        } else {
+            if (o1.fileType == o2.fileType) {
+                return o1.name < o2.name;
+            } else if (o1.fileType < o2.fileType) {
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 }
 
