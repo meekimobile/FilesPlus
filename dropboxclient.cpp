@@ -480,15 +480,32 @@ void DropboxClient::fileGetReplyFinished(QNetworkReply *reply) {
         metadata.append(reply->rawHeader("x-dropbox-metadata"));
         qDebug() << "x-dropbox-metadata " << metadata;
 
-        // TODO stream replyBody to a file on localPath.
-        QFile *localSourceFile = m_localFileHash[nonce];
-        if (localSourceFile->open(QIODevice::WriteOnly)) {
-            QDataStream out(localSourceFile);   // we will serialize the data into the file
-            out << reply->readAll();
+        // Stream replyBody to a file on localPath.
+        qint64 totalBytes = 0;
+        char buf[1024];
+        QFile *localTargetFile = m_localFileHash[nonce];
+        if (localTargetFile->open(QIODevice::WriteOnly)) {
+            // Issue: Writing to file with QDataStream << QByteArray will automatically prepend with 4-bytes prefix(size).
+            // Solution: Use QIODevice to write directly.
+
+            // Read first buffer.
+            qint64 c = reply->read(buf, sizeof(buf));
+            while (c > 0) {
+                localTargetFile->write(buf, c);
+                totalBytes += c;
+
+                // Tell event loop to process event before it will process time consuming task.
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+
+                // Read next buffer.
+                c = reply->read(buf, sizeof(buf));
+            }
         }
 
+        qDebug() << "DropboxClient::fileGetReplyFinished reply totalBytes=" << totalBytes;
+
         // Close target file.
-        localSourceFile->close();
+        localTargetFile->close();
         m_localFileHash.remove(nonce);
 
         emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), metadata);

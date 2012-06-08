@@ -993,9 +993,7 @@ Page {
                 if (jsonObj.is_deleted) {
                     cloudDriveModel.removeItem(type, uid, localPath);
                     // Update ProgressBar on listItem.
-                    if (modelIndex > -1) {
-                        fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                    }
+                    fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
 
                     // Notify removed link.
                     messageDialog.titleText = "Dropbox message"
@@ -1008,7 +1006,7 @@ Page {
                 if (jsonObj.is_dir) {
                     // Sync folder.
                     // Sync based on remote contents.
-                    console.debug("cloudDriveModel onMetadataReplySignal folder jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
+                    console.debug("cloudDriveModel onMetadataReplySignal folder jsonObj.rev " + jsonObj.rev + " jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
                     if (jsonObj.hash != localPathHash) {
                         for(var i=0; i<jsonObj.contents.length; i++) {
                             var item = jsonObj.contents[i];
