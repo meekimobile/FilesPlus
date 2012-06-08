@@ -440,10 +440,15 @@ Page {
                         fsModel.changeDir(name);
                     } else {
                         // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
-                        var viewableFileTypes = ["JPG", "PNG", "SVG"];
-                        if (viewableFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                        var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
+                        var viewableTextFileTypes = ["TXT", "HTML"];
+                        if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
-                                           { sources: fsModel.getDirContentJson(fsModel.currentDir, false), fileName: name });
+                                           { sources: fsModel.getDirContentJson(fsModel.currentDir, false),
+                                               fileName: name });
+                        } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                            pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
+                                           { filePath: absolutePath });
                         } else {
                             Qt.openUrlExternally(fsModel.getUrl(absolutePath));
                         }

@@ -1,5 +1,6 @@
 #include <QDir>
 #include "systeminfohelper.h"
+#include <QDebug>
 
 SystemInfoHelper::SystemInfoHelper(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
@@ -66,4 +67,21 @@ QStringList SystemInfoHelper::getDriveList() {
     }
 
     return driveList;
+}
+
+QString SystemInfoHelper::getFileContent(const QString &localPath)
+{
+    qDebug() << "SystemInfoHelper::getFileContent localPath " << localPath;
+
+    if (localPath.isEmpty()) return "";
+
+    QString text;
+    QFile file(localPath);
+    if (file.open(QIODevice::ReadOnly)) {
+        text.append(file.readAll());
+    }
+
+    qDebug() << "SystemInfoHelper::getFileContent text.length() " << text.length();
+
+    return text;
 }

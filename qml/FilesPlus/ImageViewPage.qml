@@ -8,6 +8,23 @@ Page {
     property string name: "imageViewPage"
     property string sources
     property string fileName
+    property bool showGrid: true
+
+    state: "grid"
+    states: [
+        State {
+            name: "grid"
+            when: showGrid
+            PropertyChanges { target: imageGrid; visible: true }
+            PropertyChanges { target: imageFlick; visible: false }
+        },
+        State {
+            name: "flick"
+            when: !showGrid
+            PropertyChanges { target: imageGrid; visible: false }
+            PropertyChanges { target: imageFlick; visible: true }
+        }
+    ]
 
     ToolBar {
         id: imageViewToolBar
@@ -26,6 +43,15 @@ Page {
             }
 
             ToolButton {
+                id: switchButton
+                iconSource: "toolbar-refresh"
+
+                onClicked: {
+                    imageViewPage.showGrid = !imageViewPage.showGrid;
+                }
+            }
+
+            ToolButton {
                 id: printButton
                 iconSource: "print.svg"
 
@@ -34,6 +60,23 @@ Page {
                     if (p) p.printFileSlot(source, -1);
                 }
             }
+        }
+    }
+
+    Rectangle {
+        id: imageLabel
+        anchors.top: parent.top
+        width: parent.width
+        height: 40
+        color: "black"
+        opacity: 0.7
+        visible: false
+
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+            color: "white"
+            text: "fileName"
         }
     }
 
@@ -91,31 +134,14 @@ Page {
             height: imageGrid.cellHeight
             fillMode: Image.PreserveAspectFit
 
-            Rectangle {
-                id: imageLabel
-                anchors.top: parent.top
-                width: parent.width
-                height: 40
-                color: "black"
-                opacity: 0.7
-                visible: false
-
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: "white"
-                    text: name
-                }
-            }
-
             BusyIndicator {
                 id: imageViewBusy
                 width: 80
                 height: 80
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                visible: (parent.progress < 1)
-                running: (parent.progress < 1)
+                visible: (parent.progress < 1 && parent.status == Image.Loading)
+                running: visible
             }
 
             onStatusChanged: {
@@ -126,13 +152,6 @@ Page {
                 }
             }
 
-//            Component.onCompleted: {
-//                console.debug("imageView index " + index + " absolutePath " + absolutePath + " name " + name + " isSelected " + isSelected + " -----------------------------");
-//                console.debug("imageView.fillMode " + imageView.fillMode + " mouseX " + imageMouseArea.mouseX + " mouseY " + imageMouseArea.mouseY);
-//                console.debug("imageView.width " + imageView.width + " imageView.height " + imageView.height);
-//                console.debug("imageView.sourceSize.width " + imageView.sourceSize.width + " imageView.sourceSize.height " + imageView.sourceSize.height);
-//            }
-
             MouseArea {
                 id: imageMouseArea
                 anchors.fill: parent
@@ -141,50 +160,88 @@ Page {
                     imageViewToolBar.visible = !imageViewToolBar.visible;
                     imageLabel.visible = !imageLabel.visible;
                 }
-
-                onDoubleClicked: {
-//                    if (imageFlick.state == "fit") {
-//                        imageFlick.state = "actual";
-//                    } else {
-//                        imageFlick.state = "fit";
-//                    }
-                }
             }
         }
     }
 
-//    Flickable {
-//        id: imageFlick
-//        visible: false
-//        width: parent.width
-//        height: parent.height
+    Flickable {
+        id: imageFlick
+        visible: false
+        width: parent.width
+        height: parent.height
 
-//        onStateChanged: {
-//            console.debug("------------------- " + state + "---------------------");
-//            console.debug("imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
-//            console.debug("imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
-//            console.debug("imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
-//        }
+        Image {
+            id: imageFlickView
+            width: parent.width
+            height: parent.height
+            source: imageGrid.model.get(imageGrid.currentIndex).absolutePath
+            fillMode: Image.PreserveAspectFit
 
-//        state: "fit"
-//        states: [
-//            State {
-//                name: "fit"
-//            },
-//            State {
-//                name: "actual"
-//                PropertyChanges {
-//                    target: imageView
-//                    fillMode: Image.Null
-//                    width: sourceSize.width
-//                    height: sourceSize.height
-//                }
-//                PropertyChanges {
-//                    target: imageFlick
-//                    contentWidth: imageView.sourceSize.width
-//                    contentHeight: imageView.sourceSize.height
-//                }
-//            }
-//        ]
-//    }
+            BusyIndicator {
+                id: imageViewBusy
+                width: 80
+                height: 80
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+                visible: (parent.progress < 1 && parent.status == Image.Loading)
+                running: visible
+            }
+        }
+
+        onStateChanged: {
+            console.debug("------------------- " + state + "---------------------");
+            console.debug("imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
+            console.debug("imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
+            console.debug("imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
+//            console.debug("imageView index " + index + " absolutePath " + absolutePath + " name " + name + " isSelected " + isSelected + " -----------------------------");
+//            console.debug("imageView.fillMode " + imageView.fillMode + " mouseX " + imageMouseArea.mouseX + " mouseY " + imageMouseArea.mouseY);
+//            console.debug("imageView.width " + imageView.width + " imageView.height " + imageView.height);
+//            console.debug("imageView.sourceSize.width " + imageView.sourceSize.width + " imageView.sourceSize.height " + imageView.sourceSize.height);
+        }
+
+        state: "fit"
+        states: [
+            State {
+                name: "fit"
+            },
+            State {
+                name: "actual"
+                PropertyChanges {
+                    target: imageFlickView
+                    fillMode: Image.Null
+                    width: sourceSize.width
+                    height: sourceSize.height
+                }
+                PropertyChanges {
+                    target: imageFlick
+                    contentWidth: imageFlickView.sourceSize.width
+                    contentHeight: imageFlickView.sourceSize.height
+                }
+            }
+        ]
+
+        PinchArea {
+            id: imagePinchArea
+            anchors.fill: parent
+            pinch.dragAxis: Pinch.XandYAxis
+
+            onPinchStarted: {
+                console.debug("imagePinchArea onPinchStarted");
+            }
+            onPinchFinished: {
+                console.debug("imagePinchArea onPinchFinished");
+            }
+            onPinchUpdated: {
+                console.debug("imagePinchArea onPinchUpdated pinch.scale " + pinch.scale);
+                var newWidth = Math.round(imageFlickView.width * pinch.scale);
+                newWidth = Utility.limit(newWidth, imageFlick.width, imageFlickView.sourceSize.width);
+                var newHeight = Math.round(imageFlickView.height * pinch.scale);
+                newHeight = Utility.limit(newHeight, imageFlick.height, imageFlickView.sourceSize.height);
+
+                imageFlickView.width = newWidth;
+                imageFlickView.height = newHeight;
+                // TODO adjust x,y to keep current center of image.
+            }
+        }
+    }
 }

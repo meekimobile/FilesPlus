@@ -14,6 +14,8 @@ public:
     
     Q_INVOKABLE int getDriveTypeInt(const QString &drive);
     Q_INVOKABLE QStringList getDriveList();
+
+    Q_INVOKABLE QString getFileContent(const QString &localPath);
 signals:
     
 public slots:

@@ -37,3 +37,9 @@ function createJsonObj(jsonText) {
     var jsonObj = eval('(' + jsonText + ')');
     return jsonObj;
 }
+
+function limit(v, min, max) {
+    var newValue = v;
+    newValue = Math.min(Math.max(v, min), max);
+    return newValue;
+}
