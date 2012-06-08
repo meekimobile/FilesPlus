@@ -2,6 +2,7 @@
 #include <QFile>
 #include <QScriptEngine>
 #include <QScriptValue>
+#include <QThread>
 
 const QString CloudDriveModel::HashFilePath = "C:/CloudDriveModel.dat";
 const int CloudDriveModel::MaxRunningJobCount = 5;
@@ -9,11 +10,15 @@ const int CloudDriveModel::MaxRunningJobCount = 5;
 CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
 {
+    // Issue: Qt on Belle doesn't support QtConcurrent and QFuture.
+    // TODO: ???
     // Load cloud drive items.
-    QFuture<void> loadDataFuture = QtConcurrent::run(this, &CloudDriveModel::loadCloudDriveItems);
+//    QFuture<void> loadDataFuture = QtConcurrent::run(this, &CloudDriveModel::loadCloudDriveItems);
+    loadCloudDriveItems();
 
     // Initialize cloud drive clients.
-    QFuture<void> initializeDropboxFuture = QtConcurrent::run(this, &CloudDriveModel::initializeDropboxClient, dbClient);
+//    QFuture<void> initializeDropboxFuture = QtConcurrent::run(this, &CloudDriveModel::initializeDropboxClient, dbClient);
+    initializeDropboxClient(dbClient);
 }
 
 CloudDriveModel::~CloudDriveModel()
