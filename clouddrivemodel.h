@@ -91,9 +91,8 @@ private:
 
     void loadCloudDriveItems();
     void saveCloudDriveItems();
-    void initializaCloudDriveClients();
-    void initializeDropboxClient();
-    void initializeGCDClient();
+    void initializeDropboxClient(DropboxClient *dbClient);
+    void initializeGCDClient(GCDClient *gcdClient);
     QString createNonce();
     void jobDone();
     void proceedNextJob();
