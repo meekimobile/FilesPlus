@@ -252,11 +252,19 @@ Page {
         visible: false
         width: parent.width
         height: parent.height
+        contentWidth: imageFlickView.width
+        contentHeight: imageFlickView.height
 
         property int gridMouseX
         property int gridMouseY
         property int gridPaintedWidth
         property int gridPaintedHeight
+
+        property real pinchScaleFactor: 1.0
+        property int startX
+        property int startY
+        property int startWidth
+        property int startHeight
 
         onVisibleChanged: {
 //            if (visible) {
@@ -283,9 +291,7 @@ Page {
 
         Image {
             id: imageFlickView
-//            width: parent.width
-//            height: parent.height
-//            fillMode: Image.PreserveAspectFit
+            fillMode: Image.PreserveAspectFit
             source: (parent.visible) ? imageGrid.getViewFilePath() : ""
 
             onStatusChanged: {
@@ -315,31 +321,54 @@ Page {
 
                 onPinchStarted: {
                     console.debug("imagePinchArea onPinchStarted");
+                    console.debug("imagePinchArea onPinchStarted imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
                     imageViewPage.showGrid = false;
+                    imageFlick.startWidth = imageFlickView.width;
+                    imageFlick.startHeight = imageFlickView.height;
+                    imageFlick.startX = imageFlick.contentX + (imageFlick.width / 2);
+                    imageFlick.startY = imageFlick.contentY + (imageFlick.height / 2);
+                    console.debug("imagePinchArea onPinchStarted imageFlick.startWidth " + imageFlick.startWidth + " imageFlick.startHeight " + imageFlick.startHeight);
                 }
                 onPinchFinished: {
                     console.debug("imagePinchArea onPinchFinished");
                     var isPortrait = imageFlick.width < imageFlick.height;
                     var isViewPortrait = imageFlickView.width < imageFlickView.height;
 
+                    imageFlick.contentWidth = imageFlickView.width;
+                    imageFlick.contentHeight = imageFlickView.height;
+
                     // TODO if image size == fit size, change state to grid.
                     // Show grid if width or height of image fit to flick view.
                     imageViewPage.showGrid = (imageFlick.width == imageFlickView.width || imageFlick.height == imageFlickView.height);
                 }
                 onPinchUpdated: {
+                    console.debug("imagePinchArea onPinchUpdated pinch.scale " + pinch.scale);
+
                     // TODO image can be shrink to smaller than fit size. it will be enlarged back to fit.
                     // TODO image can be enlarged to larger than actual size. it will be shrink back to actual.
-                    console.debug("imagePinchArea onPinchUpdated pinch.scale " + pinch.scale);
-                    var newWidth = Math.round(imageFlickView.width * pinch.scale);
-                    newWidth = Utility.limit(newWidth, imageFlick.width, imageFlickView.sourceSize.width);
-                    var newHeight = Math.round(imageFlickView.height * pinch.scale);
-                    newHeight = Utility.limit(newHeight, imageFlick.height, imageFlickView.sourceSize.height);
+                    var newWidth = Math.round(imageFlick.startWidth * pinch.scale * imageFlick.pinchScaleFactor);
+                    var newHeight = Math.round(imageFlick.startHeight * pinch.scale * imageFlick.pinchScaleFactor);
+
+                    if (newWidth < imageFlick.gridPaintedWidth || newHeight < imageFlick.gridPaintedHeight) {
+                        newWidth = imageFlick.gridPaintedWidth;
+                        newHeight = imageFlick.gridPaintedHeight
+                    } else if (newWidth > imageFlickView.sourceSize.width || newHeight > imageFlickView.sourceSize.height) {
+                        newWidth = imageFlickView.sourceSize.width;
+                        newHeight = imageFlickView.sourceSize.height;
+                    }
 
                     imageFlickView.width = newWidth;
                     imageFlickView.height = newHeight;
-                    // TODO adjust x,y to keep current center of image.
+                    console.debug("imagePinchArea onPinchUpdated imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
+                    console.debug("imagePinchArea onPinchUpdated imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
 
-                    // TODO if image size == fit size, change state to grid.
+                    var actualCenterX = imageFlick.startX * (imageFlickView.width / imageFlick.startWidth);
+                    var actualCenterY = imageFlick.startY * (imageFlickView.height / imageFlick.startHeight);
+                    console.debug("imagePinchArea onPinchUpdated actualCenterX " + actualCenterX + " actualCenterY " + actualCenterY);
+
+                    imageFlick.contentX = Utility.limit(actualCenterX - (imageFlick.width / 2), 0, imageFlickView.width - imageFlick.width);
+                    imageFlick.contentY = Utility.limit(actualCenterY - (imageFlick.height / 2), 0, imageFlickView.height - imageFlick.height);
+                    console.debug("imagePinchArea onPinchUpdated imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
                 }
 
                 MouseArea {
