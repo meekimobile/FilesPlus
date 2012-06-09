@@ -22,18 +22,23 @@ const char * LocalFileImageProvider::getFileFormat(const QString &fileName) {
 
 QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
 {
-    //    QFile imageFile(id);
-    //    if (imageFile.open(QIODevice::ReadOnly)) {
-    //    }
-    //    imageFile.close();
+    // TODO Implement thumbnail cache.
 
-    // TODO it works with some image. Ex. C:/fierce_bear.jpg
-    // TODO To be figured out.
+    qDebug() << "LocalFileImageProvider::requestImage request id " << id << " size " << size->width() << "," << size->height() << " requestedSize " << requestedSize;
+
     QImage image;
-    if (id == "") {
+    if (id != "") {
         QImageReader ir(id);
         image = ir.read();
-        qDebug() << "read err " << ir.error() << " " << ir.errorString();
+        if (ir.error() != 0) {
+            qDebug() << "LocalFileImageProvider::requestImage read err " << ir.error() << " " << ir.errorString();
+        } else {
+            size->setWidth(image.size().width());
+            size->setHeight(image.size().height());
+        }
     }
+
+    qDebug() << "LocalFileImageProvider::requestImage reply id " << id << " size " << size->width() << "," << size->height() << " requestedSize " << requestedSize;
+
     return image;
 }

@@ -273,6 +273,37 @@ Page {
         }
     }
 
+    function getImageSourcesModel(jsonText, fileName) {
+//        console.debug("getImageSourcesModel jsonText " + jsonText + " fileName " + fileName);
+
+        var supportedFileTypes = ["JPG", "PNG", "SVG"];
+
+        // Construct model.
+        var model = Qt.createQmlObject(
+                    'import QtQuick 1.1; ListModel {}', folderPage);
+
+        if (jsonText != "") {
+            var json = JSON.parse(jsonText);
+
+            for (var i=0; i<json.length; i++)
+            {
+//                console.debug("getImageSourcesModel i = " + i + " json[i].absolute_path " + json[i].absolute_path);
+                if (json[i].is_dir) {
+                    // skip dir
+                } else if (supportedFileTypes.indexOf(json[i].file_type.toUpperCase()) != -1) {
+                    console.debug("getImageSourcesModel model.append " + json[i].absolute_path);
+                    model.append({
+                                     name: json[i].name,
+                                     absolutePath: json[i].absolute_path,
+                                     isSelected: (fileName == json[i].name)
+                                 });
+                }
+            }
+        }
+
+        return model;
+    }
+
     Flipable {
         id: flipable1
         width: parent.width
@@ -443,9 +474,10 @@ Page {
                         var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
                         var viewableTextFileTypes = ["TXT", "HTML"];
                         if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
-                                           { sources: fsModel.getDirContentJson(fsModel.currentDir, false),
-                                               fileName: name });
+                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), {
+                                               model: getImageSourcesModel(fsModel.getDirContentJson(fsModel.currentDir, false), name),
+                                               fileName: name
+                                           });
                         } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
                                            { filePath: absolutePath });

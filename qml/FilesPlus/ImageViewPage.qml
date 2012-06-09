@@ -6,7 +6,7 @@ Page {
     id: imageViewPage
 
     property string name: "imageViewPage"
-    property string sources
+    property alias model: imageGrid.model
     property string fileName
     property bool showGrid: true
 
@@ -25,6 +25,10 @@ Page {
             PropertyChanges { target: imageFlick; visible: true; showFit: true }
         }
     ]
+
+    Component.onCompleted: {
+        console.debug("imageViewPage onCompleted imageGrid.currentIndex " + imageGrid.currentIndex);
+    }
 
     ToolBar {
         id: imageViewToolBar
@@ -80,42 +84,10 @@ Page {
         }
     }
 
-    function getImageSourcesModel(jsonText, fileName) {
-        console.debug("getImageSourcesModel jsonText " + jsonText + " fileName " + fileName);
-
-        var supportedFileTypes = ["JPG", "PNG", "SVG"];
-
-        // Construct model.
-        var model = Qt.createQmlObject(
-                    'import QtQuick 1.1; ListModel {}', imageViewPage);
-
-        if (jsonText != "") {
-            var json = JSON.parse(jsonText);
-
-            for (var i=0; i<json.length; i++)
-            {
-                console.debug("i = " + i + " json[i].absolute_path " + json[i].absolute_path);
-                if (json[i].is_dir) {
-                    // skip dir
-                } else if (supportedFileTypes.indexOf(json[i].file_type.toUpperCase()) != -1) {
-                    console.debug("model.append " + json[i].absolute_path);
-                    model.append({
-                                     name: json[i].name,
-                                     absolutePath: json[i].absolute_path,
-                                     isSelected: (fileName == json[i].name)
-                                 });
-                }
-            }
-        }
-
-        return model;
-    }
-
     GridView {
         id: imageGrid
         width: parent.width
         height: parent.height
-        model: getImageSourcesModel(sources, fileName)
         cellWidth: parent.width
         cellHeight: parent.height
         cacheBuffer: cellWidth * 3
@@ -123,6 +95,7 @@ Page {
         snapMode: GridView.SnapOneRow
         delegate: imageViewDelegate
         focus: true
+        pressDelay: 100
 
         property int viewIndex: getViewIndex()
 
@@ -135,13 +108,29 @@ Page {
         function getViewFilePath() {
             var i = imageGrid.getViewIndex();
             if (i > -1) {
-                    return imageGrid.model.get(i).absolutePath;
+                return imageGrid.model.get(i).absolutePath;
             }
             return "";
         }
 
+        Component.onCompleted: {
+            console.debug("imageGrid onCompleted currentIndex " + currentIndex);
+        }
+
+        onMovementEnded: {
+            imageGrid.currentIndex = viewIndex;
+            console.debug("imageGrid onMovementEnded viewIndex " + viewIndex);
+            console.debug("imageGrid onMovementEnded currentIndex " + currentIndex);
+            console.debug("imageGrid onMovementEnded currentItem.width " + currentItem.width + " currentItem.height " + currentItem.height);
+            console.debug("imageGrid onMovementEnded currentItem.sourceSize.width " + currentItem.sourceSize.width + " currentItem.sourceSize.height " + currentItem.sourceSize.height);
+        }
+
         onFlickEnded: {
-            console.debug("imageGrid onFlickEnded index " + viewIndex);
+            imageGrid.currentIndex = viewIndex;
+            console.debug("imageGrid onFlickEnded viewIndex " + viewIndex);
+            console.debug("imageGrid onFlickEnded currentIndex " + currentIndex);
+            console.debug("imageGrid onFlickEnded currentItem.width " + currentItem.width + " currentItem.height " + currentItem.height);
+            console.debug("imageGrid onFlickEnded currentItem.sourceSize.width " + currentItem.sourceSize.width + " currentItem.sourceSize.height " + currentItem.sourceSize.height);
         }
     }
 
@@ -163,7 +152,9 @@ Page {
 
         Image {
             id: imageView
-            source: absolutePath
+            source: "image://local/" + absolutePath
+            sourceSize.width: imageGrid.cellWidth
+            sourceSize.height: imageGrid.cellHeight
             width: imageGrid.cellWidth
             height: imageGrid.cellHeight
             fillMode: Image.PreserveAspectFit
@@ -181,9 +172,11 @@ Page {
             onStatusChanged: {
                 if (status == Image.Ready) {
                     if (isSelected) {
-                        console.debug("isSelected index=" + index);
-                        imageGrid.positionViewAtIndex(index, GridView.Visible);
+                        console.debug("imageView onStatusChanged isSelected index=" + index);
+                        console.debug("imageView onStatusChanged imageView.width " + imageView.width + " imageView.height " + imageView.height);
+                        console.debug("imageView onStatusChanged imageView.sourceSize.width " + imageView.sourceSize.width + " imageView.sourceSize.height " + imageView.sourceSize.height);
                         imageGrid.currentIndex = imageGrid.viewIndex
+                        imageGrid.positionViewAtIndex(imageGrid.currentIndex, GridView.Visible);
                     }
                 }
             }
@@ -198,6 +191,7 @@ Page {
                 }
 
                 onDoubleClicked: {
+                    console.debug("imageView mouseX " + mouseX + " mouseY " + mouseY)
                     imageViewPage.showGrid = false;
                 }
             }
