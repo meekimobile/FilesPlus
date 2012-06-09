@@ -103,6 +103,15 @@ Page {
         }
     }
 
+    Timer {
+        id: clickDelayTimer
+        interval: 300
+        onTriggered: {
+            imageViewToolBar.visible = !imageViewToolBar.visible;
+            imageLabel.visible = !imageLabel.visible;
+        }
+    }
+
     GridView {
         id: imageGrid
         anchors.fill: parent
@@ -112,7 +121,7 @@ Page {
         flow: GridView.TopToBottom
         snapMode: GridView.SnapOneRow
         delegate: imageViewDelegate
-        pressDelay: 100
+        pressDelay: 0
 
         property int viewIndex: getViewIndex()
 
@@ -199,28 +208,40 @@ Page {
                 }
             }
 
-            MouseArea {
-                id: imageMouseArea
+            PinchArea {
                 anchors.fill: parent
+                pinch.dragAxis: Pinch.XandYAxis
 
-                onClicked: {
-                    imageViewToolBar.visible = !imageViewToolBar.visible;
-                    imageLabel.visible = !imageLabel.visible;
+                onPinchStarted: {
+                    console.debug("imagePinchArea onPinchStarted");
+                    imageViewPage.showGrid = false;
                 }
 
-                onDoubleClicked: {
-                    // TODO Send relative mouseX, mouseY, paintedWidth, paintedHeight to flick.
-                    console.debug("imageView onDoubleClicked mouseX " + mouseX + " mouseY " + mouseY)
-                    var left = (imageView.width / 2) - (imageView.paintedWidth / 2);
-                    var right = (imageView.width / 2) + (imageView.paintedWidth / 2);
-                    var top = (imageView.height / 2) - (imageView.paintedHeight / 2);
-                    var bottom = (imageView.height / 2) + (imageView.paintedHeight / 2);
-                    console.debug("imageView onDoubleClicked left " + left + " right " + right + " top " + top + " bottom " + bottom);
-                    imageFlick.gridMouseX = Utility.limit(mouseX, left, right) - left;
-                    imageFlick.gridMouseY = Utility.limit(mouseY, top, bottom) - top;
-                    imageFlick.gridPaintedWidth = parent.paintedWidth;
-                    imageFlick.gridPaintedHeight = parent.paintedHeight;
-                    imageViewPage.showGrid = false;
+                MouseArea {
+                    anchors.fill: parent
+
+
+                    onClicked: {
+                        console.debug("imageView onClicked mouseX " + mouseX + " mouseY " + mouseY)
+                        clickDelayTimer.restart();
+                    }
+
+                    onDoubleClicked: {
+                        console.debug("imageView onDoubleClicked mouseX " + mouseX + " mouseY " + mouseY)
+                        clickDelayTimer.stop();
+
+                        // TODO Send relative mouseX, mouseY, paintedWidth, paintedHeight to flick.
+                        var left = (imageView.width / 2) - (imageView.paintedWidth / 2);
+                        var right = (imageView.width / 2) + (imageView.paintedWidth / 2);
+                        var top = (imageView.height / 2) - (imageView.paintedHeight / 2);
+                        var bottom = (imageView.height / 2) + (imageView.paintedHeight / 2);
+                        console.debug("imageView onDoubleClicked left " + left + " right " + right + " top " + top + " bottom " + bottom);
+                        imageFlick.gridMouseX = Utility.limit(mouseX, left, right) - left;
+                        imageFlick.gridMouseY = Utility.limit(mouseY, top, bottom) - top;
+                        imageFlick.gridPaintedWidth = imageView.paintedWidth;
+                        imageFlick.gridPaintedHeight = imageView.paintedHeight;
+                        imageViewPage.showGrid = false;
+                    }
                 }
             }
         }
@@ -238,16 +259,26 @@ Page {
         property int gridPaintedHeight
 
         onVisibleChanged: {
-            if (visible) {
-                console.debug("-------------------onVisibleChanged---------------------");
-                console.debug("imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
-                console.debug("imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
-                console.debug("imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
-                console.debug("imageFlickView.fillMode " + imageFlickView.fillMode);
-                console.debug("imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
-                console.debug("imageFlickView.sourceSize.width " + imageFlickView.sourceSize.width + " imageFlickView.sourceSize.height " + imageFlickView.sourceSize.height);
-                console.debug("imageFlickView.paintedWidth " + imageFlickView.paintedWidth + " imageFlickView.paintedHeight " + imageFlickView.paintedHeight);
-            }
+//            if (visible) {
+//                console.debug("-------------------onVisibleChanged---------------------");
+//                console.debug("imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
+//                console.debug("imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
+//                console.debug("imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
+//                console.debug("imageFlickView.fillMode " + imageFlickView.fillMode);
+//                console.debug("imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
+//                console.debug("imageFlickView.sourceSize.width " + imageFlickView.sourceSize.width + " imageFlickView.sourceSize.height " + imageFlickView.sourceSize.height);
+//                console.debug("imageFlickView.paintedWidth " + imageFlickView.paintedWidth + " imageFlickView.paintedHeight " + imageFlickView.paintedHeight);
+//            }
+        }
+
+        BusyIndicator {
+            id: imageViewBusy
+            width: 80
+            height: 80
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+            visible: (imageFlickView.progress < 1 && imageFlickView.status == Image.Loading)
+            running: visible
         }
 
         Image {
@@ -259,32 +290,22 @@ Page {
 
             onStatusChanged: {
                 if (status == Image.Ready) {
-                    console.debug("------------------onStatusChanged----------------------");
-                    console.debug("imageFlick.gridMouseX " + imageFlick.gridMouseX + " imageFlick.gridMouseY " + imageFlick.gridMouseY);
-                    console.debug("imageFlick.gridPaintedWidth " + imageFlick.gridPaintedWidth + " imageFlick.gridPaintedHeight " + imageFlick.gridPaintedHeight);
-                    console.debug("imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
-                    console.debug("imageFlickView.fillMode " + imageFlickView.fillMode);
-                    console.debug("imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
-                    console.debug("imageFlickView.sourceSize.width " + imageFlickView.sourceSize.width + " imageFlickView.sourceSize.height " + imageFlickView.sourceSize.height);
-                    console.debug("imageFlickView.paintedWidth " + imageFlickView.paintedWidth + " imageFlickView.paintedHeight " + imageFlickView.paintedHeight);
+//                    console.debug("------------------onStatusChanged----------------------");
+//                    console.debug("imageFlick.gridMouseX " + imageFlick.gridMouseX + " imageFlick.gridMouseY " + imageFlick.gridMouseY);
+//                    console.debug("imageFlick.gridPaintedWidth " + imageFlick.gridPaintedWidth + " imageFlick.gridPaintedHeight " + imageFlick.gridPaintedHeight);
+//                    console.debug("imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
+//                    console.debug("imageFlickView.fillMode " + imageFlickView.fillMode);
+//                    console.debug("imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
+//                    console.debug("imageFlickView.sourceSize.width " + imageFlickView.sourceSize.width + " imageFlickView.sourceSize.height " + imageFlickView.sourceSize.height);
+//                    console.debug("imageFlickView.paintedWidth " + imageFlickView.paintedWidth + " imageFlickView.paintedHeight " + imageFlickView.paintedHeight);
 
                     var actualCenterX = imageFlick.gridMouseX * (imageFlickView.sourceSize.width / imageFlick.gridPaintedWidth);
                     var actualCenterY = imageFlick.gridMouseY * (imageFlickView.sourceSize.height / imageFlick.gridPaintedHeight);
-                    console.debug("imageFlickView onStatusChanged actualCenterX " + actualCenterX + " actualCenterY " + actualCenterY);
+//                    console.debug("imageFlickView onStatusChanged actualCenterX " + actualCenterX + " actualCenterY " + actualCenterY);
                     imageFlick.contentX = Utility.limit(actualCenterX - (imageFlick.width / 2), 0, imageFlickView.sourceSize.width - imageFlick.width);
                     imageFlick.contentY = Utility.limit(actualCenterY - (imageFlick.height / 2), 0, imageFlickView.sourceSize.height - imageFlick.height);
-                    console.debug("imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
+//                    console.debug("imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
                 }
-            }
-
-            BusyIndicator {
-                id: imageViewBusy
-                width: 80
-                height: 80
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
-                visible: (parent.progress < 1 && parent.status == Image.Loading)
-                running: visible
             }
 
             PinchArea {
@@ -325,12 +346,13 @@ Page {
                     anchors.fill: parent
 
                     onClicked: {
-                        imageViewToolBar.visible = !imageViewToolBar.visible;
-                        imageLabel.visible = !imageLabel.visible;
+                        console.debug("imageFlick onClicked");
+                        clickDelayTimer.restart();
                     }
 
                     onDoubleClicked: {
                         console.debug("imageFlick onDoubleClicked");
+                        clickDelayTimer.stop();
                         imageViewPage.showGrid = true;
                     }
                 }
