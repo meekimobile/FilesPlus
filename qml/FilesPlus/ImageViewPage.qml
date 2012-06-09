@@ -22,7 +22,7 @@ Page {
             name: "flick"
             when: !showGrid
             PropertyChanges { target: imageGrid; visible: false }
-            PropertyChanges { target: imageFlick; visible: true; showFit: true }
+            PropertyChanges { target: imageFlick; visible: true; showFit: false }
         }
     ]
 
@@ -86,16 +86,13 @@ Page {
 
     GridView {
         id: imageGrid
-        width: parent.width
-        height: parent.height
-        cellWidth: parent.width
-        cellHeight: parent.height
+        anchors.fill: parent
+        cellWidth: width
+        cellHeight: height
         cacheBuffer: cellWidth * 3
         flow: GridView.TopToBottom
         snapMode: GridView.SnapOneRow
         delegate: imageViewDelegate
-        focus: true
-        pressDelay: 100
 
         property int viewIndex: getViewIndex()
 
@@ -114,7 +111,17 @@ Page {
         }
 
         Component.onCompleted: {
-            console.debug("imageGrid onCompleted currentIndex " + currentIndex);
+            console.debug("imageGrid onCompleted");
+        }
+
+        onWidthChanged: {
+            console.debug("imageGrid onWidthChanged width " + width);
+            console.debug("imageGrid onWidthChanged cellWidth " + cellWidth);
+        }
+
+        onHeightChanged: {
+            console.debug("imageGrid onHeightChanged height " + height);
+            console.debug("imageGrid onHeightChanged cellHeight " + cellHeight);
         }
 
         onMovementEnded: {
@@ -135,24 +142,11 @@ Page {
     }
 
     Component {
-        id: highlight
-        Rectangle {
-            width: imageGrid.cellWidth
-            height: imageGrid.cellHeight
-            color: "lightsteelblue"; radius: 5
-            x: imageGrid.currentItem.x
-            y: imageGrid.currentItem.y
-            Behavior on x { SpringAnimation { spring: 3; damping: 0.2 } }
-            Behavior on y { SpringAnimation { spring: 3; damping: 0.2 } }
-        }
-    }
-
-    Component {
         id: imageViewDelegate
 
         Image {
             id: imageView
-            source: "image://local/" + absolutePath
+            source: (imageViewPage.status == PageStatus.Active) ? ("image://local/" + absolutePath) : ""
             sourceSize.width: imageGrid.cellWidth
             sourceSize.height: imageGrid.cellHeight
             width: imageGrid.cellWidth
@@ -171,12 +165,13 @@ Page {
 
             onStatusChanged: {
                 if (status == Image.Ready) {
+                    console.debug("imageView onStatusChanged isSelected index " + index + " Ready");
+
                     if (isSelected) {
-                        console.debug("imageView onStatusChanged isSelected index=" + index);
-                        console.debug("imageView onStatusChanged imageView.width " + imageView.width + " imageView.height " + imageView.height);
-                        console.debug("imageView onStatusChanged imageView.sourceSize.width " + imageView.sourceSize.width + " imageView.sourceSize.height " + imageView.sourceSize.height);
-                        imageGrid.currentIndex = imageGrid.viewIndex
-                        imageGrid.positionViewAtIndex(imageGrid.currentIndex, GridView.Visible);
+                        imageGrid.currentIndex = index;
+                        console.debug("imageView onStatusChanged imageGrid.currentIndex " + imageGrid.currentIndex + " imageGrid.count " + imageGrid.count);
+                        // *** Issue: Code below cause application crash if index is out of bound.
+                        imageGrid.positionViewAtIndex(index, GridView.Contain);
                     }
                 }
             }
@@ -255,7 +250,7 @@ Page {
             id: imageFlickView
             width: parent.width
             height: parent.height
-            source: imageGrid.getViewFilePath()
+            source: (parent.visible) ? imageGrid.getViewFilePath() : ""
             fillMode: Image.PreserveAspectFit
 
             BusyIndicator {

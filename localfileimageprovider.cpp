@@ -4,6 +4,8 @@
 #include <QRegExp>
 #include <QImageReader>
 
+const int LocalFileImageProvider::MAX_CACHE_COST = 10;
+
 LocalFileImageProvider::LocalFileImageProvider() : QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
 {
 }
@@ -24,21 +26,41 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
 {
     // TODO Implement thumbnail cache.
 
-    qDebug() << "LocalFileImageProvider::requestImage request id " << id << " size " << size->width() << "," << size->height() << " requestedSize " << requestedSize;
+    qDebug() << "LocalFileImageProvider::requestImage request id " << id
+             << " size " << size->width() << "," << size->height()
+             << " requestedSize " << requestedSize;
 
+    if (id == "") {
+        qDebug() << "LocalFileImageProvider::requestImage id is empty.";
+        return QImage();
+    }
+
+    bool isCached;
     QImage image;
-    if (id != "") {
+
+    if (m_thumbnailHash.contains(id)) {
+        isCached = true;
+        image = m_thumbnailHash[id];
+    } else {
+        isCached = false;
         QImageReader ir(id);
-        image = ir.read();
+        QImage loadedImage = ir.read();
         if (ir.error() != 0) {
             qDebug() << "LocalFileImageProvider::requestImage read err " << ir.error() << " " << ir.errorString();
         } else {
-            size->setWidth(image.size().width());
-            size->setHeight(image.size().height());
+            size->setWidth(loadedImage.size().width());
+            size->setHeight(loadedImage.size().height());
+
+            // Create thumbnail.
+            image = loadedImage.scaled(requestedSize, Qt::KeepAspectRatio);
+            m_thumbnailHash.insert(id, image);
         }
     }
 
-    qDebug() << "LocalFileImageProvider::requestImage reply id " << id << " size " << size->width() << "," << size->height() << " requestedSize " << requestedSize;
-
+    qDebug() << "LocalFileImageProvider::requestImage reply id " << id
+             << " size " << size->width() << "," << size->height()
+             << " requestedSize " << requestedSize
+             << " image size " << image.size()
+             << " isCached " << isCached;
     return image;
 }
