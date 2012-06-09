@@ -16,13 +16,31 @@ Page {
             name: "grid"
             when: showGrid
             PropertyChanges { target: imageGrid; visible: true }
-            PropertyChanges { target: imageFlick; visible: false; showFit: true }
+            PropertyChanges { target: imageFlick
+                visible: false
+                contentWidth: width
+                contentHeight: height
+            }
+            PropertyChanges { target: imageFlickView
+                fillMode: Image.PreserveAspectFit
+                width: parent.width
+                height: parent.height
+            }
         },
         State {
             name: "flick"
             when: !showGrid
             PropertyChanges { target: imageGrid; visible: false }
-            PropertyChanges { target: imageFlick; visible: true; showFit: false }
+            PropertyChanges { target: imageFlick;
+                visible: true
+                contentWidth: imageFlickView.sourceSize.width
+                contentHeight: imageFlickView.sourceSize.height
+            }
+            PropertyChanges { target: imageFlickView
+                fillMode: Image.Null
+                width: sourceSize.width
+                height: sourceSize.height
+            }
         }
     ]
 
@@ -72,6 +90,7 @@ Page {
         anchors.top: parent.top
         width: parent.width
         height: 40
+        z: 2
         color: "black"
         opacity: 0.7
         visible: false
@@ -93,6 +112,7 @@ Page {
         flow: GridView.TopToBottom
         snapMode: GridView.SnapOneRow
         delegate: imageViewDelegate
+        pressDelay: 100
 
         property int viewIndex: getViewIndex()
 
@@ -166,6 +186,9 @@ Page {
             onStatusChanged: {
                 if (status == Image.Ready) {
                     console.debug("imageView onStatusChanged isSelected index " + index + " Ready");
+                    console.debug("imageView onStatusChanged width " + width + " height " + height);
+                    console.debug("imageView onStatusChanged sourceSize.width " + sourceSize.width + " sourceSize.height " + sourceSize.height);
+                    console.debug("imageView onStatusChanged paintedWidth " + paintedWidth + " paintedHeight " + paintedHeight);
 
                     if (isSelected) {
                         imageGrid.currentIndex = index;
@@ -186,7 +209,9 @@ Page {
                 }
 
                 onDoubleClicked: {
-                    console.debug("imageView mouseX " + mouseX + " mouseY " + mouseY)
+                    console.debug("imageView onDoubleClicked mouseX " + mouseX + " mouseY " + mouseY)
+                    // TODO Calculate click center and contentX, contentY
+
                     imageViewPage.showGrid = false;
                 }
             }
@@ -199,8 +224,6 @@ Page {
         width: parent.width
         height: parent.height
 
-        property bool showFit: true
-
         onStateChanged: {
             console.debug("------------------- " + state + "---------------------");
             console.debug("imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
@@ -211,40 +234,6 @@ Page {
 //            console.debug("imageView.width " + imageView.width + " imageView.height " + imageView.height);
 //            console.debug("imageView.sourceSize.width " + imageView.sourceSize.width + " imageView.sourceSize.height " + imageView.sourceSize.height);
         }
-
-        state: "fit"
-        states: [
-            State {
-                name: "fit"
-                when: imageFlick.showFit
-                PropertyChanges {
-                    target: imageFlickView
-                    fillMode: Image.PreserveAspectFit
-                    width: parent.width
-                    height: parent.height
-                }
-                PropertyChanges {
-                    target: imageFlick
-                    contentWidth: width
-                    contentHeight: height
-                }
-            },
-            State {
-                name: "actual"
-                when: !imageFlick.showFit
-                PropertyChanges {
-                    target: imageFlickView
-                    fillMode: Image.Null
-                    width: sourceSize.width
-                    height: sourceSize.height
-                }
-                PropertyChanges {
-                    target: imageFlick
-                    contentWidth: imageFlickView.sourceSize.width
-                    contentHeight: imageFlickView.sourceSize.height
-                }
-            }
-        ]
 
         Image {
             id: imageFlickView
@@ -300,10 +289,14 @@ Page {
                 MouseArea {
                     anchors.fill: parent
 
+                    onClicked: {
+                        imageViewToolBar.visible = !imageViewToolBar.visible;
+                        imageLabel.visible = !imageLabel.visible;
+                    }
+
                     onDoubleClicked: {
                         console.debug("imageFlick onDoubleClicked");
-                        imageFlick.showFit = !imageFlick.showFit;
-                        imageViewPage.showGrid = imageFlick.showFit;
+                        imageViewPage.showGrid = true;
                     }
                 }
             }
