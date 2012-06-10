@@ -50,36 +50,29 @@ Page {
         }
     ]
 
-    Component.onCompleted: {
-        console.debug("imageViewPage onCompleted imageGrid.currentIndex " + imageGrid.currentIndex);
-    }
+    tools: ToolBarLayout {
+        ToolButton {
+            id: backButton
+            iconSource: "toolbar-back"
 
-    ToolBar {
-        id: imageViewToolBar
-        anchors.bottom: parent.bottom
-        z: 2
-        visible: false
-
-        tools: ToolBarLayout {
-            ToolButton {
-                id: backButton
-                iconSource: "toolbar-back"
-
-                onClicked: {
-                    pageStack.pop();
-                }
-            }
-
-            ToolButton {
-                id: printButton
-                iconSource: "print.svg"
-
-                onClicked: {
-                    var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-                    if (p) p.printFileSlot(imageGrid.getViewFilePath(), -1);
-                }
+            onClicked: {
+                pageStack.pop();
             }
         }
+
+        ToolButton {
+            id: printButton
+            iconSource: "print.svg"
+
+            onClicked: {
+                var p = pageStack.find(function (page) { return page.name == "folderPage"; });
+                if (p) p.printFileSlot(imageGrid.getViewFilePath(), -1);
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        console.debug("imageViewPage onCompleted imageGrid.currentIndex " + imageGrid.currentIndex);
     }
 
     Rectangle {
@@ -104,7 +97,6 @@ Page {
         id: clickDelayTimer
         interval: 300
         onTriggered: {
-            imageViewToolBar.visible = !imageViewToolBar.visible;
             imageLabel.visible = !imageLabel.visible;
         }
     }
@@ -112,8 +104,8 @@ Page {
     GridView {
         id: imageGrid
         anchors.fill: parent
-        cellWidth: width
-        cellHeight: height
+        cellWidth: parent.width
+        cellHeight: parent.height
         cacheBuffer: cellWidth * 3
         flow: GridView.TopToBottom
         snapMode: GridView.SnapOneRow
@@ -136,8 +128,26 @@ Page {
             return "";
         }
 
+        function getImageModelIndex(fileName) {
+            for (var i=0; i<imageGrid.model.count; i++) {
+                var name = imageGrid.model.get(i).name;
+                if (name == fileName) {
+                    console.debug("getImageModelIndex " + i + " name " + name)
+                    return i;
+                }
+            }
+            return -1;
+        }
+
         Component.onCompleted: {
             console.debug("imageGrid onCompleted");
+            var index = getImageModelIndex(imageViewPage.fileName);
+            // TODO
+            imageGrid.positionViewAtIndex(index, GridView.Visible);
+        }
+
+        onModelChanged: {
+            console.debug("imageGrid onModelChanged");
         }
 
         onWidthChanged: {
@@ -201,7 +211,8 @@ Page {
                         console.debug("imageView onStatusChanged imageGrid.currentIndex " + imageGrid.currentIndex + " imageGrid.count " + imageGrid.count);
                         // *** Issue: Code below cause application crash if index is out of bound.
                         // *** If selected image is not loaded yet, position won't work.
-                        imageGrid.positionViewAtIndex(index, GridView.Contain);
+//                        imageGrid.positionViewAtIndex(index, GridView.Contain);
+                        console.debug("imageView onStatusChanged done.");
                     }
                 }
             }
