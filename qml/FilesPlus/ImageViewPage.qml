@@ -211,7 +211,6 @@ Page {
                 pinch.dragAxis: Pinch.XandYAxis
 
                 onPinchStarted: {
-                    console.debug("imageView onPinchStarted");
                     console.debug("imageView onPinchStarted imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
 
                     // TODO pinch cell image until finish, then show flick.
@@ -231,7 +230,6 @@ Page {
                 MouseArea {
                     anchors.fill: parent
 
-
                     onClicked: {
                         console.debug("imageView onClicked mouseX " + mouseX + " mouseY " + mouseY)
                         clickDelayTimer.restart();
@@ -241,12 +239,11 @@ Page {
                         console.debug("imageView onDoubleClicked mouseX " + mouseX + " mouseY " + mouseY)
                         clickDelayTimer.stop();
 
-                        // TODO Send relative mouseX, mouseY, paintedWidth, paintedHeight to flick.
+                        // TODO Send relative mouseX, mouseY, painted size to flick.
                         var left = (imageView.width / 2) - (imageView.paintedWidth / 2);
                         var right = (imageView.width / 2) + (imageView.paintedWidth / 2);
                         var top = (imageView.height / 2) - (imageView.paintedHeight / 2);
                         var bottom = (imageView.height / 2) + (imageView.paintedHeight / 2);
-                        console.debug("imageView onDoubleClicked left " + left + " right " + right + " top " + top + " bottom " + bottom);
                         imageFlick.gridMouseX = mouseX - left;
                         imageFlick.gridMouseY = mouseY - top;
                         imageFlick.gridPaintedWidth = imageView.paintedWidth;
@@ -352,16 +349,13 @@ Page {
                 }
                 onPinchFinished: {
                     console.debug("imagePinchArea onPinchFinished");
-//                    var isPortrait = imageFlick.width < imageFlick.height;
-//                    var isViewPortrait = imageFlickView.width < imageFlickView.height;
-
                     console.debug("imagePinchArea onPinchFinished imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
                     console.debug("imagePinchArea onPinchFinished imageFlickView.sourceSize.width " + imageFlickView.sourceSize.width + " imageFlickView.sourceSize.height " + imageFlickView.sourceSize.height);
                     console.debug("imagePinchArea onPinchFinished imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
                     console.debug("imagePinchArea onPinchFinished imageFlick.gridPaintedWidth " + imageFlick.gridPaintedWidth + " imageFlick.gridPaintedHeight " + imageFlick.gridPaintedHeight);
                     console.debug("imagePinchArea onPinchFinished imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
 
-                    // TODO Adjust size.
+                    // Adjust size.
                     if (imageFlickView.width < imageFlick.gridPaintedWidth || imageFlickView.height < imageFlick.gridPaintedHeight) {
                         // Issue: gridW,H should keep original grid size.
                         imageFlickView.width = imageFlick.gridPaintedWidth;
@@ -378,7 +372,6 @@ Page {
                     console.debug("imagePinchArea onPinchFinished after imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
                     console.debug("imagePinchArea onPinchFinished imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
 
-                    // TODO if image size == fit size, change state to grid.
                     // Show grid if width or height of image fit to flick view.
                     if (imageFlickView.width == imageFlick.width || imageFlickView.height == imageFlick.height) {
                         imageViewPage.state = "grid";
@@ -397,8 +390,8 @@ Page {
                 onPinchUpdated: {
                     console.debug("imagePinchArea onPinchUpdated pinch.scale " + pinch.scale);
 
-                    // TODO image can be shrink to smaller than fit size. it will be enlarged back to fit.
-                    // TODO image can be enlarged to larger than actual size. it will be shrink back to actual.
+                    // Image can be shrink to smaller than fit size. it will be enlarged back to fit.
+                    // Image can be enlarged to larger than actual size. it will be shrink back to actual.
                     var newWidth = Math.round(imageFlick.startWidth * pinch.scale * imageFlick.pinchScaleFactor);
                     var newHeight = Math.round(imageFlick.startHeight * pinch.scale * imageFlick.pinchScaleFactor);
 
