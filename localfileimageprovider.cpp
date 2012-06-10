@@ -4,7 +4,8 @@
 #include <QRegExp>
 #include <QImageReader>
 
-const int LocalFileImageProvider::MAX_CACHE_COST = 10;
+//const int LocalFileImageProvider::MAX_CACHE_COST = 10;
+//const QString LocalFileImageProvider::DEFAULT_CACHE_PATH = "C:/LocalFileImageProvider";
 
 LocalFileImageProvider::LocalFileImageProvider() : QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
 {
@@ -22,10 +23,52 @@ const char * LocalFileImageProvider::getFileFormat(const QString &fileName) {
     return format;
 }
 
+//QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
+//{
+//    // TODO Implement thumbnail cache.
+
+//    qDebug() << "LocalFileImageProvider::requestImage request id " << id
+//             << " size " << size->width() << "," << size->height()
+//             << " requestedSize " << requestedSize;
+
+//    if (id == "") {
+//        qDebug() << "LocalFileImageProvider::requestImage id is empty.";
+//        return QImage();
+//    }
+
+//    bool isCached;
+//    QImage image;
+
+//    if (m_thumbnailHash.contains(id)) {
+//        isCached = true;
+//        image = m_thumbnailHash[id];
+//    } else {
+//        isCached = false;
+//        QImageReader ir(id);
+//        QImage loadedImage = ir.read();
+//        if (ir.error() != 0) {
+//            qDebug() << "LocalFileImageProvider::requestImage read err " << ir.error() << " " << ir.errorString();
+//        } else {
+//            size->setWidth(loadedImage.size().width());
+//            size->setHeight(loadedImage.size().height());
+
+//            // Create thumbnail.
+//            image = loadedImage.scaled(requestedSize, Qt::KeepAspectRatio);
+//            m_thumbnailHash.insert(id, image);
+//        }
+//    }
+
+//    qDebug() << "LocalFileImageProvider::requestImage reply id " << id
+//             << " size " << size->width() << "," << size->height()
+//             << " requestedSize " << requestedSize
+//             << " image size " << image.size()
+//             << " isCached " << isCached;
+//    return image;
+//}
+
 QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
 {
-    // TODO Implement thumbnail cache.
-
+    // No cache. Let QML(UI) grid manage image cache.
     qDebug() << "LocalFileImageProvider::requestImage request id " << id
              << " size " << size->width() << "," << size->height()
              << " requestedSize " << requestedSize;
@@ -35,32 +78,23 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
         return QImage();
     }
 
-    bool isCached;
     QImage image;
 
-    if (m_thumbnailHash.contains(id)) {
-        isCached = true;
-        image = m_thumbnailHash[id];
+    QImageReader ir(id);
+    QImage loadedImage = ir.read();
+    if (ir.error() != 0) {
+        qDebug() << "LocalFileImageProvider::requestImage read err " << ir.error() << " " << ir.errorString();
     } else {
-        isCached = false;
-        QImageReader ir(id);
-        QImage loadedImage = ir.read();
-        if (ir.error() != 0) {
-            qDebug() << "LocalFileImageProvider::requestImage read err " << ir.error() << " " << ir.errorString();
-        } else {
-            size->setWidth(loadedImage.size().width());
-            size->setHeight(loadedImage.size().height());
+        size->setWidth(loadedImage.size().width());
+        size->setHeight(loadedImage.size().height());
 
-            // Create thumbnail.
-            image = loadedImage.scaled(requestedSize, Qt::KeepAspectRatio);
-            m_thumbnailHash.insert(id, image);
-        }
+        // Create thumbnail.
+        image = loadedImage.scaled(requestedSize, Qt::KeepAspectRatio);
     }
 
     qDebug() << "LocalFileImageProvider::requestImage reply id " << id
              << " size " << size->width() << "," << size->height()
              << " requestedSize " << requestedSize
-             << " image size " << image.size()
-             << " isCached " << isCached;
+             << " image size " << image.size();
     return image;
 }
