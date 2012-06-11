@@ -1,5 +1,6 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
+import SystemInfoHelper 1.0
 import "Utility.js" as Utility
 
 Page {
@@ -70,9 +71,9 @@ Page {
 
         ToolButton {
             id: testButton
-            iconSource: "arrow-up.svg"
+            iconSource: "photos.svg"
             onClicked: {
-                Qt.openUrlExternally(Qt.resolvedUrl(imageGrid.getViewFilePath()));
+                Qt.openUrlExternally(helper.getUrl(imageGrid.getViewFilePath()));
             }
         }
 
@@ -93,6 +94,10 @@ Page {
 
     onFileNameChanged: {
         console.debug("imageViewPage onFileNameChanged fileName " + fileName);
+    }
+
+    SystemInfoHelper {
+        id: helper
     }
 
     Rectangle {

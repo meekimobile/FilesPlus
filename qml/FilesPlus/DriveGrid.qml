@@ -17,7 +17,7 @@ Rectangle {
         id: driveGrid
         anchors.fill: parent
         cellWidth: parent.width
-        cellHeight: 60
+        cellHeight: 65
         delegate: driveCell
         highlight: Rectangle {
             border.color: "blue"
@@ -69,16 +69,40 @@ Rectangle {
                         width: parent.width
                         height: 29
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: "blue" }
-                            GradientStop { position: 1.0; color: "darkblue" }
+                            GradientStop {
+                                position: 0
+                                color: "#141414"
+                            }
+
+                            GradientStop {
+                                position: 0.510
+                                color: "#4d4d4d"
+                            }
+
+                            GradientStop {
+                                position: 1
+                                color: "#141414"
+                            }
                         }
 
                         Rectangle {
-                            width: (model.availableSpace / model.totalSpace) * parent.width
+                            width: (model.totalSpace - model.availableSpace) / model.totalSpace * parent.width
                             height: parent.height
                             gradient: Gradient {
-                                GradientStop { position: 0.0; color: "white" }
-                                GradientStop { position: 1.0; color: "#00AAFF" }
+                                GradientStop {
+                                    position: 0
+                                    color: "#0091d9"
+                                }
+
+                                GradientStop {
+                                    position: 0.500
+                                    color: "#00aaff"
+                                }
+
+                                GradientStop {
+                                    position: 1
+                                    color: "#001f3c"
+                                }
                             }
                         }
                         Text {

@@ -85,3 +85,9 @@ QString SystemInfoHelper::getFileContent(const QString &localPath)
 
     return text;
 }
+
+QString SystemInfoHelper::getUrl(const QString absPath)
+{
+    return QUrl::fromLocalFile(absPath).toString();
+}
+

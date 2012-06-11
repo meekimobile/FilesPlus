@@ -47,5 +47,6 @@
         <file>qml/FilesPlus/dropbox_icon.png</file>
         <file>qml/FilesPlus/ImageViewPage.qml</file>
         <file>qml/FilesPlus/TextViewPage.qml</file>
+        <file>qml/FilesPlus/photos.svg</file>
     </qresource>
 </RCC>
