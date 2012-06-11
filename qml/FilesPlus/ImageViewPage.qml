@@ -30,7 +30,11 @@ Page {
             PropertyChanges { target: imageGrid; visible: false }
             PropertyChanges { target: imageFlickView
                 fillMode: Image.PreserveAspectFit
-                source: imageGrid.getViewFilePath()
+                width: imageFlick.width
+                height: imageFlick.height
+                sourceSize.width: 1280  // Requested size for LocalFileImageProvider
+                sourceSize.height: 1280  // Requested size for LocalFileImageProvider
+                source: "image://local/" + imageGrid.getViewFilePath()
             }
             PropertyChanges { target: imageFlick;
                 visible: true
@@ -41,8 +45,12 @@ Page {
             PropertyChanges { target: imageViewPage; showGrid: false }
             PropertyChanges { target: imageGrid; visible: false }
             PropertyChanges { target: imageFlickView
-                fillMode: Image.Null
-                source: imageGrid.getViewFilePath()
+                fillMode: Image.PreserveAspectFit
+                width: 1280
+                height: 1280
+                sourceSize.width: 1280  // Requested size for LocalFileImageProvider
+                sourceSize.height: 1280  // Requested size for LocalFileImageProvider
+                source: "image://local/" + imageGrid.getViewFilePath()
             }
             PropertyChanges { target: imageFlick;
                 visible: true
@@ -60,16 +68,13 @@ Page {
             }
         }
 
-//        ToolButton {
-//            id: testButton
-//            iconSource: "toolbar-search"
-//            onClicked: {
-//                // Go to selected image.
-//                var index = imageGrid.getImageModelIndex(imageViewPage.fileName);
-////                imageGrid.currentIndex = index;
-//                imageGrid.positionViewAtIndex(index, GridView.Contain);
-//            }
-//        }
+        ToolButton {
+            id: testButton
+            iconSource: "arrow-up.svg"
+            onClicked: {
+                Qt.openUrlExternally(Qt.resolvedUrl(imageGrid.getViewFilePath()));
+            }
+        }
 
         ToolButton {
             id: printButton
@@ -344,13 +349,16 @@ Page {
 
             onStatusChanged: {
                 if (status == Image.Ready && source != "") {
-                    if (imageViewPage.state == "actual") {
-                        imageFlickView.width = imageFlickView.sourceSize.width;
-                        imageFlickView.height = imageFlickView.sourceSize.height;
-                    } else {
-                        imageFlickView.width = imageFlick.gridPaintedWidth;
-                        imageFlickView.height = imageFlick.gridPaintedHeight;
-                    }
+//                    if (imageViewPage.state == "actual") {
+//                        imageFlickView.width = imageFlickView.sourceSize.width;
+//                        imageFlickView.height = imageFlickView.sourceSize.height;
+//                    } else {
+//                        imageFlickView.width = imageFlick.gridPaintedWidth;
+//                        imageFlickView.height = imageFlick.gridPaintedHeight;
+//                    }
+
+                    imageFlickView.width = imageFlickView.paintedWidth;
+                    imageFlickView.height = imageFlickView.paintedHeight;
 
                     console.debug("------------------onStatusChanged status " + status + " source " + source);
                     console.debug("imageFlick.gridMouseX " + imageFlick.gridMouseX + " imageFlick.gridMouseY " + imageFlick.gridMouseY);
@@ -392,6 +400,7 @@ Page {
                     console.debug("imagePinchArea onPinchFinished");
                     console.debug("imagePinchArea onPinchFinished imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
                     console.debug("imagePinchArea onPinchFinished imageFlickView.sourceSize.width " + imageFlickView.sourceSize.width + " imageFlickView.sourceSize.height " + imageFlickView.sourceSize.height);
+                    console.debug("imagePinchArea onPinchFinished imageFlickView.paintedWidth " + imageFlickView.paintedWidth + " imageFlickView.paintedHeight " + imageFlickView.paintedHeight);
                     console.debug("imagePinchArea onPinchFinished imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
                     console.debug("imagePinchArea onPinchFinished imageFlick.gridPaintedWidth " + imageFlick.gridPaintedWidth + " imageFlick.gridPaintedHeight " + imageFlick.gridPaintedHeight);
                     console.debug("imagePinchArea onPinchFinished imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
@@ -408,10 +417,8 @@ Page {
 
                     imageFlick.contentWidth = imageFlickView.width;
                     imageFlick.contentHeight = imageFlickView.height;
-
                     console.debug("imagePinchArea onPinchFinished after imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
                     console.debug("imagePinchArea onPinchFinished after imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
-                    console.debug("imagePinchArea onPinchFinished imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
 
                     // Show grid if width or height of image fit to flick view.
                     if (imageFlickView.width == imageFlick.width || imageFlickView.height == imageFlick.height) {
@@ -435,9 +442,9 @@ Page {
                     // Image can be enlarged to larger than actual size. it will be shrink back to actual.
                     var newWidth = Math.round(imageFlick.startWidth * pinch.scale * imageFlick.pinchScaleFactor);
                     var newHeight = Math.round(imageFlick.startHeight * pinch.scale * imageFlick.pinchScaleFactor);
-
                     imageFlickView.width = newWidth;
                     imageFlickView.height = newHeight;
+
                     imageFlick.contentWidth = imageFlickView.width;
                     imageFlick.contentHeight = imageFlickView.height;
                     console.debug("imagePinchArea onPinchUpdated imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);

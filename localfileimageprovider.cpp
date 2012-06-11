@@ -35,6 +35,11 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
         return QImage();
     }
 
+    if (requestedSize.width() <= 0 || requestedSize.height() <= 0) {
+        qDebug() << "LocalFileImageProvider::requestImage requestSize is invalid. " << requestedSize;
+        return QImage();
+    }
+
     QFile file(id);
     QByteArray format = getFileFormat(id).toLatin1();
     QImage image;
@@ -42,12 +47,8 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
     ir.setAutoDetectImageFormat(false);
 
     if (ir.canRead()) {
-        // Return actual size.
-        size->setWidth(ir.size().width());
-        size->setHeight(ir.size().height());
-
         // Calculate new thumbnail size with KeepAspectRatio.
-        if (size->width() > requestedSize.width() || size->height() > requestedSize.height()) {
+        if (ir.size().width() > requestedSize.width() || ir.size().height() > requestedSize.height()) {
             QSize newSize = ir.size();
             newSize.scale(requestedSize, Qt::KeepAspectRatio);
             ir.setScaledSize(newSize);
@@ -55,6 +56,10 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
 
         // Read into image.
         image = ir.read();
+
+        // Return scaled size as requested.
+        size->setWidth(image.size().width());
+        size->setHeight(image.size().height());
 
         if (ir.error() != 0) {
             qDebug() << "LocalFileImageProvider::requestImage read err " << ir.error() << " " << ir.errorString();

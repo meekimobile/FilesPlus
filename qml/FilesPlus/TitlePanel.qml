@@ -7,7 +7,7 @@ Rectangle {
     id: titlePanel
     anchors.top: parent.top
     width: parent.width
-    height: 40
+    height: 30
     gradient: Gradient {
         GradientStop {
             position: 0
