@@ -18,7 +18,7 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
 
     // Initialize cloud drive clients.
 //    QFuture<void> initializeDropboxFuture = QtConcurrent::run(this, &CloudDriveModel::initializeDropboxClient, dbClient);
-    initializeDropboxClient(dbClient);
+    initializeDropboxClient();
 }
 
 CloudDriveModel::~CloudDriveModel()
@@ -46,7 +46,7 @@ void CloudDriveModel::saveCloudDriveItems() {
     }
 }
 
-void CloudDriveModel::initializeDropboxClient(DropboxClient *dbClient) {
+void CloudDriveModel::initializeDropboxClient() {
     dbClient = new DropboxClient(this);
     connect(dbClient, SIGNAL(uploadProgress(QString,qint64,qint64)), SLOT(uploadProgressFilter(QString,qint64,qint64)) );
     connect(dbClient, SIGNAL(downloadProgress(QString,qint64,qint64)), SLOT(downloadProgressFilter(QString,qint64,qint64)) );
@@ -59,7 +59,7 @@ void CloudDriveModel::initializeDropboxClient(DropboxClient *dbClient) {
     connect(dbClient, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
 }
 
-void CloudDriveModel::initializeGCDClient(GCDClient *gcdClient) {
+void CloudDriveModel::initializeGCDClient() {
     gcdClient = new GCDClient(this);
 //    connect(gcdClient, SIGNAL(uploadProgress(qint64,qint64)), SIGNAL(uploadProgress(qint64,qint64)) );
 //    connect(gcdClient, SIGNAL(downloadProgress(qint64,qint64)), SIGNAL(downloadProgress(qint64,qint64)) );
