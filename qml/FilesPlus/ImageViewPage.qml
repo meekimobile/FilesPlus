@@ -240,7 +240,7 @@ Page {
 //                    console.debug("imageView onStatusChanged paintedWidth " + paintedWidth + " paintedHeight " + paintedHeight);
 
                     // Position selected image.
-                    if (index == imageGrid.selectedIndex) {
+                    if (index == imageGrid.currentIndex) {
                         imageGrid.positionViewAtIndex(index, GridView.Contain);
                         console.debug("imageView onStatusChanged positionViewAtIndex index " + index);
                     }
