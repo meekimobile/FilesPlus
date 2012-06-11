@@ -295,6 +295,12 @@ bool FolderSizeItemListModel::copyFile(const QString sourceAbsFilePath, const QS
     return res;
 }
 
+bool FolderSizeItemListModel::createDir(const QString name)
+{
+    QDir dir(currentDir());
+    return dir.mkdir(name);
+}
+
 QString FolderSizeItemListModel::getDirPath(const QString absFilePath)
 {
     QFileInfo fileInfo(absFilePath);

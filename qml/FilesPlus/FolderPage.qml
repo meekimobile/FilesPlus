@@ -629,6 +629,38 @@ Page {
         }
     }
 
+    CommonDialog {
+        id: newFolderDialog
+        titleText: "New Folder"
+        titleIcon: "FilesPlusIcon.svg"
+        buttonTexts: ["Ok", "Cancel"]
+        content: Rectangle {
+            anchors.margins: 3
+            anchors.fill: parent
+            color: "transparent"
+
+            TextField {
+                id: folderName
+                anchors.verticalCenter: parent.verticalCenter
+                width: parent.width
+                placeholderText: "Please input folder name."
+            }
+        }
+
+        onStatusChanged: {
+            if (status == DialogStatus.Closed) {
+                folderName.text = "";
+            }
+        }
+
+        onButtonClicked: {
+            if (index === 0) {
+                var res = fsModel.createDir(folderName.text);
+                refreshSlot();
+            }
+        }
+    }
+
     SelectionDialog {
         id: printerSelectionDialog
 

@@ -12,6 +12,14 @@ Menu {
         id: mainMenuLayout
 
         MenuItem {
+            id: newFolderMenuItem
+            text: "New Folder"
+            onClicked: {
+                newFolderDialog.open();
+            }
+        }
+
+        MenuItem {
             id: sortByMenuItem
             text: "Sort by"
             platformSubItemIndicator: true
@@ -55,6 +63,7 @@ Menu {
         if (status == DialogStatus.Opening) {
             sortByMenuItem.visible = (disabledMenus.indexOf(sortByMenuItem.text) == -1);
             settingMenuItem.visible = (disabledMenus.indexOf(settingMenuItem.text) == -1);
+            newFolderMenuItem.visible = (disabledMenus.indexOf(newFolderMenuItem.text) == -1);
         }
     }
 }

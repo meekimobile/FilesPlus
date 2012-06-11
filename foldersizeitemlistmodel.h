@@ -75,6 +75,7 @@ public:
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
     Q_INVOKABLE bool deleteFile(const QString absPath);
     Q_INVOKABLE bool copyFile(const QString sourceAbsFilePath, const QString targetPath);
+    Q_INVOKABLE bool createDir(const QString name);
 
     Q_INVOKABLE QString getDirPath(const QString absFilePath);
     Q_INVOKABLE bool isDir(const QString absFilePath);
