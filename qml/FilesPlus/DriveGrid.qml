@@ -42,102 +42,143 @@ Rectangle {
             width: driveGrid.cellWidth
             height: driveGrid.cellHeight
 
-            Row {
-                anchors.fill: parent
-                spacing: 2
-                Image {
-                    id: driveIcon
-                    width: 67
-                    height: 57
-                    source: driveIcons[model.driveType]
+            Gradient {
+                id: highlightGradient
+                GradientStop {
+                    position: 0
+                    color: "#00aaff"
                 }
 
-                Column {
-                    width: parent.width - driveIcon.width - 4
-                    height: parent.height
-                    spacing: 0
-                    Text {
-                        width: parent.width
-                        height: 29
-                        color: "white"
-                        font.family: "Century Gothic"
-                        font.pixelSize: 18
-                        text: model.logicalDrive + ": " + driveTypeTexts[model.driveType]
-                    }
-
-                    Rectangle {
-                        width: parent.width
-                        height: 29
-                        gradient: Gradient {
-                            GradientStop {
-                                position: 0
-                                color: "#141414"
-                            }
-
-                            GradientStop {
-                                position: 0.510
-                                color: "#4d4d4d"
-                            }
-
-                            GradientStop {
-                                position: 1
-                                color: "#141414"
-                            }
-                        }
-
-                        Rectangle {
-                            width: (model.totalSpace - model.availableSpace) / model.totalSpace * parent.width
-                            height: parent.height
-                            gradient: Gradient {
-                                GradientStop {
-                                    position: 0
-                                    color: "#0091d9"
-                                }
-
-                                GradientStop {
-                                    position: 0.500
-                                    color: "#00aaff"
-                                }
-
-                                GradientStop {
-                                    position: 1
-                                    color: "#001f3c"
-                                }
-                            }
-                        }
-                        Text {
-                            width: parent.width
-                            height: parent.height
-                            color: "white"
-                            font.family: "Century Gothic"
-                            verticalAlignment: Text.AlignVCenter
-                            horizontalAlignment: Text.AlignHCenter
-                            style: Text.Outline
-                            font.pixelSize:16
-                            text: "Free: " + Utility.formatFileSize(model.availableSpace, 1)
-                                  + " / Total: " + Utility.formatFileSize(model.totalSpace, 1)
-                        }
-                    }
+                GradientStop {
+                    position: 1
+                    color: "#7ed6ff"
                 }
             }
 
             Rectangle {
-                width: parent.width
-                height: 1
-                color: "grey"
-                anchors.bottom: parent.bottom
-            }
-
-            MouseArea {
+                id: driveCellItemPanel
                 anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
+                color: "transparent"
 
-                onClicked: {
-                    console.debug("driveCellItem clicked " + (parent.x + mouseX) + ", " + (parent.y + mouseY) );
-                    var index = driveGrid.indexAt(parent.x + mouseX, parent.y + mouseY);
-                    driveGrid.currentDriveName = model.logicalDrive;
-                    driveGrid.currentIndex = index;
-                    driveGridRect.driveSelected(model.logicalDrive);
+                state: "normal"
+                states: [
+                    State {
+                        name: "highlight"
+                        PropertyChanges {
+                            target: driveCellItemPanel
+                            gradient: highlightGradient
+                        }
+                    },
+                    State {
+                        name: "normal"
+                    }
+                ]
+
+                Row {
+                    anchors.fill: parent
+                    spacing: 2
+                    Image {
+                        id: driveIcon
+                        width: 67
+                        height: 57
+                        source: driveIcons[model.driveType]
+                    }
+
+                    Column {
+                        width: parent.width - driveIcon.width - 4
+                        height: parent.height
+                        spacing: 0
+                        Text {
+                            width: parent.width
+                            height: 29
+                            color: "white"
+                            font.family: "Century Gothic"
+                            font.pixelSize: 18
+                            text: model.logicalDrive + ": " + driveTypeTexts[model.driveType]
+                        }
+
+                        Rectangle {
+                            width: parent.width
+                            height: 29
+                            gradient: Gradient {
+                                GradientStop {
+                                    position: 0
+                                    color: "#141414"
+                                }
+
+                                GradientStop {
+                                    position: 0.510
+                                    color: "#4d4d4d"
+                                }
+
+                                GradientStop {
+                                    position: 1
+                                    color: "#141414"
+                                }
+                            }
+
+                            Rectangle {
+                                width: (model.totalSpace - model.availableSpace) / model.totalSpace * parent.width
+                                height: parent.height
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0
+                                        color: "#0091d9"
+                                    }
+
+                                    GradientStop {
+                                        position: 0.500
+                                        color: "#00aaff"
+                                    }
+
+                                    GradientStop {
+                                        position: 1
+                                        color: "#001f3c"
+                                    }
+                                }
+                            }
+                            Text {
+                                width: parent.width
+                                height: parent.height
+                                color: "white"
+                                font.family: "Century Gothic"
+                                verticalAlignment: Text.AlignVCenter
+                                horizontalAlignment: Text.AlignHCenter
+                                style: Text.Outline
+                                font.pixelSize:16
+                                text: "Free: " + Utility.formatFileSize(model.availableSpace, 1)
+                                      + " / Total: " + Utility.formatFileSize(model.totalSpace, 1)
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    width: parent.width
+                    height: 1
+                    color: "grey"
+                    anchors.bottom: parent.bottom
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton
+
+                    onPressed: {
+                        driveCellItemPanel.state = "highlight";
+                    }
+
+                    onReleased: {
+                        driveCellItemPanel.state = "normal";
+                    }
+
+                    onClicked: {
+                        console.debug("driveCellItem clicked " + (parent.x + mouseX) + ", " + (parent.y + mouseY) );
+                        var index = driveGrid.indexAt(parent.x + mouseX, parent.y + mouseY);
+                        driveGrid.currentDriveName = model.logicalDrive;
+                        driveGrid.currentIndex = index;
+                        driveGridRect.driveSelected(model.logicalDrive);
+                    }
                 }
             }
         }
