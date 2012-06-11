@@ -475,8 +475,8 @@ Page {
                         var viewableTextFileTypes = ["TXT", "HTML"];
                         if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), {
-                                               model: getImageSourcesModel(fsModel.getDirContentJson(fsModel.currentDir, false), name),
-                                               fileName: name
+                                               fileName: name,
+                                               model: getImageSourcesModel(fsModel.getDirContentJson(fsModel.currentDir, false), name)
                                            });
                         } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),

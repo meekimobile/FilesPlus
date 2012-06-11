@@ -60,6 +60,17 @@ Page {
             }
         }
 
+//        ToolButton {
+//            id: testButton
+//            iconSource: "toolbar-search"
+//            onClicked: {
+//                // Go to selected image.
+//                var index = imageGrid.getImageModelIndex(imageViewPage.fileName);
+////                imageGrid.currentIndex = index;
+//                imageGrid.positionViewAtIndex(index, GridView.Contain);
+//            }
+//        }
+
         ToolButton {
             id: printButton
             iconSource: "print.svg"
@@ -75,6 +86,10 @@ Page {
         console.debug("imageViewPage onCompleted imageGrid.currentIndex " + imageGrid.currentIndex);
     }
 
+    onFileNameChanged: {
+        console.debug("imageViewPage onFileNameChanged fileName " + fileName);
+    }
+
     Rectangle {
         id: imageLabel
         anchors.top: parent.top
@@ -83,7 +98,7 @@ Page {
         z: 2
         color: "black"
         opacity: 0.7
-        visible: false
+        visible: true
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -113,6 +128,7 @@ Page {
         pressDelay: 200
 
         property int viewIndex: getViewIndex()
+        property int selectedIndex: -1
 
         function getViewIndex() {
             var cx = contentX + parent.width / 2;
@@ -129,6 +145,7 @@ Page {
         }
 
         function getImageModelIndex(fileName) {
+            console.debug("getImageModelIndex model.count " + model.count);
             for (var i=0; i<imageGrid.model.count; i++) {
                 var name = imageGrid.model.get(i).name;
                 if (name == fileName) {
@@ -141,13 +158,13 @@ Page {
 
         Component.onCompleted: {
             console.debug("imageGrid onCompleted");
-            var index = getImageModelIndex(imageViewPage.fileName);
-            // TODO
-            imageGrid.positionViewAtIndex(index, GridView.Visible);
+            // Model is not set, positionViewAtIndex() won't work.
         }
 
         onModelChanged: {
-            console.debug("imageGrid onModelChanged");
+            console.debug("imageGrid onModelChanged count " + model.count + " imageViewPage.fileName " + imageViewPage.fileName);
+            // GridView item is not set, positionViewAtIndex() won't work.
+            selectedIndex = getImageModelIndex(imageViewPage.fileName);
         }
 
         onWidthChanged: {
@@ -183,6 +200,7 @@ Page {
         Image {
             id: imageView
             source: (imageViewPage.status == PageStatus.Active) ? ("image://local/" + absolutePath) : ""
+            asynchronous: true
             sourceSize.width: imageGrid.cellWidth
             sourceSize.height: imageGrid.cellHeight
             width: imageGrid.cellWidth
@@ -200,19 +218,31 @@ Page {
             }
 
             onStatusChanged: {
-                if (status == Image.Ready) {
-                    console.debug("imageView onStatusChanged isSelected index " + index + " Ready");
-                    console.debug("imageView onStatusChanged width " + width + " height " + height);
-                    console.debug("imageView onStatusChanged sourceSize.width " + sourceSize.width + " sourceSize.height " + sourceSize.height);
-                    console.debug("imageView onStatusChanged paintedWidth " + paintedWidth + " paintedHeight " + paintedHeight);
+                if (status == Image.Null) {
+                    console.debug("imageView onStatusChanged index " + index + " status " + status + " isSelected " + isSelected + " absolutePath " + absolutePath);
+                    console.debug("imageView onStatusChanged imageGrid.currentIndex " + imageGrid.currentIndex);
+                    console.debug("imageView onStatusChanged imageGrid.selectedIndex " + imageGrid.selectedIndex);
+                    // Issue: Position at index still not work if selected index is not covered by cache.
 
-                    if (isSelected) {
-                        imageGrid.currentIndex = index;
-                        console.debug("imageView onStatusChanged imageGrid.currentIndex " + imageGrid.currentIndex + " imageGrid.count " + imageGrid.count);
-                        // *** Issue: Code below cause application crash if index is out of bound.
-                        // *** If selected image is not loaded yet, position won't work.
-//                        imageGrid.positionViewAtIndex(index, GridView.Contain);
-                        console.debug("imageView onStatusChanged done.");
+                    // Set currentIndex to skip image loading to selected image.
+                    if (imageGrid.currentIndex != imageGrid.selectedIndex) {
+                        imageGrid.currentIndex = imageGrid.selectedIndex;
+                        console.debug("imageView onStatusChanged set imageGrid.currentIndex " + imageGrid.currentIndex);
+                    }
+                }
+
+                if (status == Image.Ready) {
+                    console.debug("imageView onStatusChanged index " + index + " status " + status + " isSelected " + isSelected + " absolutePath " + absolutePath);
+//                    console.debug("imageView onStatusChanged imageGrid.currentIndex " + imageGrid.currentIndex);
+//                    console.debug("imageView onStatusChanged imageGrid.selectedIndex " + imageGrid.selectedIndex);
+//                    console.debug("imageView onStatusChanged width " + width + " height " + height);
+//                    console.debug("imageView onStatusChanged sourceSize.width " + sourceSize.width + " sourceSize.height " + sourceSize.height);
+//                    console.debug("imageView onStatusChanged paintedWidth " + paintedWidth + " paintedHeight " + paintedHeight);
+
+                    // Position selected image.
+                    if (index == imageGrid.selectedIndex) {
+                        imageGrid.positionViewAtIndex(index, GridView.Contain);
+                        console.debug("imageView onStatusChanged positionViewAtIndex index " + index);
                     }
                 }
             }
@@ -285,7 +315,7 @@ Page {
         property int startWidth
         property int startHeight
 
-        onVisibleChanged: {
+//        onVisibleChanged: {
 //            if (visible) {
 //                console.debug("-------------------onVisibleChanged---------------------");
 //                console.debug("imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
@@ -296,7 +326,7 @@ Page {
 //                console.debug("imageFlickView.sourceSize.width " + imageFlickView.sourceSize.width + " imageFlickView.sourceSize.height " + imageFlickView.sourceSize.height);
 //                console.debug("imageFlickView.paintedWidth " + imageFlickView.paintedWidth + " imageFlickView.paintedHeight " + imageFlickView.paintedHeight);
 //            }
-        }
+//        }
 
         BusyIndicator {
             id: imageViewBusy

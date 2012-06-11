@@ -109,7 +109,7 @@ PageStackWindow {
 
     Splash {
         id: splashScreen
-        interval: 5000
+        interval: 3000
     }
 
     Component.onCompleted: {
