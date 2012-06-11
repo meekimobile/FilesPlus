@@ -158,6 +158,9 @@ Page {
 
     function printFileSlot(srcFilePath, selectedIndex) {
         console.debug("folderPage printFileSlot srcFilePath=" + srcFilePath);
+
+        // Set source file to GCPClient.
+        gcpClient.selectedFilePath = srcFilePath;
         if (srcFilePath == "") return;
 
         if (gcpClient.getContentType(srcFilePath) == "") {
@@ -703,12 +706,12 @@ Page {
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignRight
             }
-            Rectangle {
-                color: "grey"
-                width: parent.width
-                height: 1
-                visible: (uploadMessage.text != "")
-            }
+//            Rectangle {
+//                color: "grey"
+//                width: parent.width
+//                height: 1
+//                visible: (uploadMessage.text != "")
+//            }
             Text {
                 id: uploadMessage
                 width: parent.width
@@ -807,6 +810,8 @@ Page {
     GCPClient {
         id: gcpClient
 
+        property string selectedFilePath
+
         onAuthorizeRedirectSignal: {
             console.debug("folderPage gcpClient onAuthorizeRedirectSignal " + url);
             pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: "GCPClient" });
@@ -817,7 +822,7 @@ Page {
 
             if (err == 0) {
                 // Resume printing
-                printFileSlot(popupToolPanel.selectedFilePath);
+                printFileSlot(gcpClient.selectedFilePath);
             } else {
                 gcpClient.refreshAccessToken();
             }
@@ -828,8 +833,8 @@ Page {
 
             if (err == 0) {
                 // Resume printing if selectedFilePath exists.
-                if (popupToolPanel.selectedFilePath != "") {
-                    printFileSlot(popupToolPanel.selectedFilePath);
+                if (gcpClient.selectedFilePath != "") {
+                    printFileSlot(gcpClient.selectedFilePath);
                 } else {
                     messageDialog.titleText = "Reset CloudPrint"
                     messageDialog.message = "Resetting is done.";
@@ -853,7 +858,7 @@ Page {
             if (err == 0) {
                 // Once search done, open printerSelectionDialog
                 // TODO any case that error=0 but no printers returned.
-                printFileSlot(popupToolPanel.selectedFilePath);
+                printFileSlot(gcpClient.selectedFilePath);
             } else {
                 gcpClient.refreshAccessToken();
             }
@@ -881,6 +886,7 @@ Page {
             uploadProgressDialog.message = message;
 
             // Reset popupToolPanel selectedFile.
+            gcpClient.selectedFilePath = "";
             popupToolPanel.selectedFilePath = "";
             popupToolPanel.selectedFileIndex = -1;
         }
