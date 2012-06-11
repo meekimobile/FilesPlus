@@ -11,15 +11,15 @@ LocalFileImageProvider::LocalFileImageProvider() : QDeclarativeImageProvider(QDe
 {
 }
 
-const char * LocalFileImageProvider::getFileFormat(const QString &fileName) {
+QString LocalFileImageProvider::getFileFormat(const QString &fileName) {
     // Parse fileName with RegExp
     QRegExp rx("(.+)(\\.)(\\w{3,4})$");
     rx.indexIn(fileName);
-    for(int i=0; i<=rx.captureCount(); i++) {
-        qDebug() << "i=" << i << " rx.cap=" << rx.cap(i);
-    }
+//    for(int i=0; i<=rx.captureCount(); i++) {
+//        qDebug() << "i=" << i << " rx.cap=" << rx.cap(i);
+//    }
 
-    const char * format = rx.cap(3).toLower().toStdString().c_str();
+    QString format = rx.cap(3).toUpper();
     return format;
 }
 
@@ -35,19 +35,32 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
         return QImage();
     }
 
-    QImageReader ir(id);
-    QImage image = ir.read();
-    if (ir.error() != 0) {
-        qDebug() << "LocalFileImageProvider::requestImage read err " << ir.error() << " " << ir.errorString();
-    } else {
-        // Return actual size.
-        size->setWidth(image.size().width());
-        size->setHeight(image.size().height());
+    QFile file(id);
+    QByteArray format = getFileFormat(id).toLatin1();
+    QImage image;
+    QImageReader ir(&file, format);
+    ir.setAutoDetectImageFormat(false);
 
-        // Create thumbnail and return.
+    if (ir.canRead()) {
+        // Return actual size.
+        size->setWidth(ir.size().width());
+        size->setHeight(ir.size().height());
+
+        // Calculate new thumbnail size with KeepAspectRatio.
         if (size->width() > requestedSize.width() || size->height() > requestedSize.height()) {
-            image = image.scaled(requestedSize, Qt::KeepAspectRatio);
+            QSize newSize = ir.size();
+            newSize.scale(requestedSize, Qt::KeepAspectRatio);
+            ir.setScaledSize(newSize);
         }
+
+        // Read into image.
+        image = ir.read();
+
+        if (ir.error() != 0) {
+            qDebug() << "LocalFileImageProvider::requestImage read err " << ir.error() << " " << ir.errorString();
+        }
+    } else {
+        qDebug() << "LocalFileImageProvider::requestImage can't read from file. Invalid file content.";
     }
 
     qDebug() << "LocalFileImageProvider::requestImage reply id " << id

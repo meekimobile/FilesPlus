@@ -10,7 +10,7 @@ public:
     LocalFileImageProvider();
 
     QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize);
-    const char *getFileFormat(const QString &fileName);
+    QString getFileFormat(const QString &fileName);
 private:
 };
 
