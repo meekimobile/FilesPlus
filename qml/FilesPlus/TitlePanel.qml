@@ -7,7 +7,7 @@ Rectangle {
     id: titlePanel
     anchors.top: parent.top
     width: parent.width
-    height: 30
+    height: 32
     gradient: Gradient {
         GradientStop {
             position: 0
@@ -15,12 +15,7 @@ Rectangle {
         }
 
         GradientStop {
-            position: 0.050
-            color: "#303030"
-        }
-
-        GradientStop {
-            position: 0.950
+            position: 0.790
             color: "#202020"
         }
 
@@ -33,7 +28,7 @@ Rectangle {
     Text {
         id: headerText
         anchors.fill: parent
-        anchors.margins: 4
+        anchors.margins: 3
         anchors.verticalCenter: parent.verticalCenter
         color: "white"
     }

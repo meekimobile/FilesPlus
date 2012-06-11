@@ -462,11 +462,9 @@ Page {
                     popupToolPanel.selectedFileIndex = index;
                     popupToolPanel.forFile = !isDir;
                     popupToolPanel.pastePath = (isDir) ? absolutePath : currentPath.text;
-                    var panelX = x + mouseX - fsListView.contentX + 30;
+                    var panelX = x + mouseX - fsListView.contentX;
                     var panelY = y + mouseY - fsListView.contentY;
-                    popupToolPanel.x = panelX;
-                    popupToolPanel.y = panelY;
-                    popupToolPanel.visible = true;
+                    popupToolPanel.open(panelX, panelY);
                 }
 
                 onClicked: {
@@ -523,22 +521,22 @@ Page {
     TitlePanel {
         id: currentPath
 
-        MouseArea {
-            anchors.fill: parent
+//        MouseArea {
+//            anchors.fill: parent
 
-            onPressAndHold: {
-                if (folderPage.state == "list") {
-                    popupToolPanel.forFile = false;
-                    popupToolPanel.selectedFilePath = currentPath.text
-                    popupToolPanel.pastePath = currentPath.text;
-                    var panelX = currentPath.x + mouseX;
-                    var panelY = currentPath.y + mouseY;
-                    popupToolPanel.x = panelX;
-                    popupToolPanel.y = panelY;
-                    popupToolPanel.visible = true;
-                }
-            }
-        }
+//            onPressAndHold: {
+//                if (folderPage.state == "list") {
+//                    popupToolPanel.forFile = false;
+//                    popupToolPanel.selectedFilePath = currentPath.text
+//                    popupToolPanel.pastePath = currentPath.text;
+//                    var panelX = currentPath.x + mouseX;
+//                    var panelY = currentPath.y + mouseY;
+//                    popupToolPanel.x = panelX;
+//                    popupToolPanel.y = panelY;
+//                    popupToolPanel.visible = true;
+//                }
+//            }
+//        }
     }
 
     CommonDialog {

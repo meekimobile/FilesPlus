@@ -35,6 +35,28 @@ Rectangle {
         return h;
     }
     
+    function open(panelX, panelY) {
+        popupToolPanel.visible = true;
+
+        syncButton.visible = (roots.indexOf(selectedFilePath) == -1);
+
+        popupToolPanel.width = getPopupToolPanelWidth();
+        popupToolPanel.height = getPopupToolPanelHeight();
+
+        popupToolPanel.x = panelX - 30;
+        popupToolPanel.y = panelY - (popupToolPanel.height / 2);
+
+        if (popupToolPanel.x > (parent.width - popupToolPanel.width) ) {
+            popupToolPanel.x = (parent.width - popupToolPanel.width);
+        } else if (popupToolPanel.x < 0) {
+            popupToolPanel.x = 0;
+        }
+
+        if (popupToolPanel.y < 0) {
+            popupToolPanel.y = 0;
+        }
+    }
+
     id: popupToolPanel
     x: 0; y: 0; z: 2;
     radius: 9
@@ -55,18 +77,18 @@ Rectangle {
         if (visible) {
             // Disable sync if selectedFilePath is root.
 //            console.debug("popupToolPanel isRoot " + roots.indexOf(selectedFilePath));
-            syncButton.visible = (roots.indexOf(selectedFilePath) == -1);
+//            syncButton.visible = (roots.indexOf(selectedFilePath) == -1);
 
             popupTimer.restart();
-            popupToolPanel.width = getPopupToolPanelWidth();
-            popupToolPanel.height = getPopupToolPanelHeight();
+//            popupToolPanel.width = getPopupToolPanelWidth();
+//            popupToolPanel.height = getPopupToolPanelHeight();
 //            console.debug("popupToolPanel WH " + popupToolPanel.width + ", " + popupToolPanel.height);
 //            console.debug("popupToolPanel parent.width " + parent.width);
-            if (popupToolPanel.x > (parent.width - popupToolPanel.width) ) {
-                popupToolPanel.x = (parent.width - popupToolPanel.width);
-            } else if (popupToolPanel.x < 0) {
-                popupToolPanel.x = 0;
-            }
+//            if (popupToolPanel.x > (parent.width - popupToolPanel.width) ) {
+//                popupToolPanel.x = (parent.width - popupToolPanel.width);
+//            } else if (popupToolPanel.x < 0) {
+//                popupToolPanel.x = 0;
+//            }
         }
     }
     
@@ -86,8 +108,8 @@ Rectangle {
         Button {
             id: pasteButton
             visible: (popupToolPanel.srcFilePath != "")
-            width: 60
-            height: 60
+            width: 57
+            height: 57
             iconSource: "paste.svg"
             onClicked: {
                 popupToolPanel.visible = false;
@@ -99,8 +121,8 @@ Rectangle {
         Button {
             id: cutButton
             visible: popupToolPanel.forFile
-            width: 60
-            height: 60
+            width: 57
+            height: 57
             iconSource: "trim.svg"
             onClicked: {
                 popupToolPanel.visible = false;
@@ -113,8 +135,8 @@ Rectangle {
         Button {
             id: copyButton
             visible: popupToolPanel.forFile
-            width: 60
-            height: 60
+            width: 57
+            height: 57
             iconSource: "copy.svg"
             onClicked: {
                 popupToolPanel.visible = false;
@@ -127,8 +149,8 @@ Rectangle {
         Button {
             id: printButton
             visible: popupToolPanel.forFile
-            width: 60
-            height: 60
+            width: 57
+            height: 57
             iconSource: "print.svg"
             onClicked: {
                 popupToolPanel.visible = false;
@@ -141,8 +163,8 @@ Rectangle {
         Button {
             id: deleteButton
             visible: popupToolPanel.forFile
-            width: 60
-            height: 60
+            width: 57
+            height: 57
             iconSource: "delete.svg"
             onClicked: {
                 popupToolPanel.visible = false;
@@ -154,8 +176,8 @@ Rectangle {
         Button {
             id: syncButton
             visible: true
-            width: 60
-            height: 60
+            width: 57
+            height: 57
             iconSource: "refresh.svg"
             onClicked: {
                 popupToolPanel.visible = false;

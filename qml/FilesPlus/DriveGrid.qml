@@ -17,7 +17,7 @@ Rectangle {
         id: driveGrid
         anchors.fill: parent
         cellWidth: parent.width
-        cellHeight: 65
+        cellHeight: 64
         delegate: driveCell
         highlight: Rectangle {
             border.color: "blue"
