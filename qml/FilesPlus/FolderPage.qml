@@ -620,13 +620,20 @@ Page {
         buttonTexts: ["Ok", "Cancel"]
         content: Text {
             color: "white"
-            wrapMode: Text.WordWrap
+            wrapMode: Text.WrapAnywhere
             text: ((popupToolPanel.isCopy) ? "Copy " : "Move ") + popupToolPanel.srcFilePath + " to " + popupToolPanel.pastePath + " ?"
         }
 
         onButtonClicked: {
             if (index === 0) {
                 console.debug("fileActionDialog OK isCopy " + popupToolPanel.isCopy + " from " + popupToolPanel.srcFilePath + " to " + popupToolPanel.pastePath);
+
+                if (!fsModel.canCopy(popupToolPanel.srcFilePath, popupToolPanel.pastePath)) {
+                    fileOverwriteDialog.sourcePath = popupToolPanel.srcFilePath;
+                    fileOverwriteDialog.targetPath = popupToolPanel.pastePath;
+                    fileOverwriteDialog.isCopy = popupToolPanel.isCopy;
+                    fileOverwriteDialog.open();
+                }
 
                 var res = false;
                 if (popupToolPanel.isCopy) {
@@ -682,6 +689,51 @@ Page {
             if (index === 0) {
                 var res = fsModel.createDir(folderName.text);
                 refreshSlot();
+            }
+        }
+    }
+
+    CommonDialog {
+        id: fileOverwriteDialog
+        titleText: "File overwrite"
+        titleIcon: "FilesPlusIcon.svg"
+        buttonTexts: ["Ok", "Cancel"]
+        content: Rectangle {
+            anchors.margins: 3
+            anchors.fill: parent
+            color: "transparent"
+
+            TextField {
+                id: fileName
+                anchors.verticalCenter: parent.verticalCenter
+                width: parent.width
+            }
+        }
+
+        property bool isCopy
+        property string sourcePath
+        property string targetPath
+
+        onStatusChanged: {
+            if (status == DialogStatus.Open) {
+                fileName.forceActiveFocus();
+                fileName.text = fsModel.getNewFileName(sourcePath);
+            }
+
+            if (status == DialogStatus.Closed) {
+                fileName.text = "";
+            }
+        }
+
+        onButtonClicked: {
+            // targetPath is ended with / already.
+            if (index === 0) {
+                var res = false;
+                if (isCopy) {
+                    res = fsModel.copyFile(sourcePath, targetPath + fileName.text);
+                } else {
+                    res = fsModel.moveFile(sourcePath, targetPath + fileName.text);
+                }
             }
         }
     }

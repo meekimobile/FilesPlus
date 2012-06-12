@@ -125,10 +125,16 @@ bool FolderSizeModel::copyFile(int method, const QString sourcePath, const QStri
         targetAbsFilePath = targetPath;
     }
 
+    qDebug() << "FolderSizeModel::copyFile method" << method << "sourceAbsFilePath" << sourceAbsFilePath << "targetAbsFilePath" << targetAbsFilePath;
+
+    if (sourceAbsFilePath == targetAbsFilePath) {
+        qDebug() << "FolderSizeModel::copyFile Error method" << method << "sourceFile" << sourceAbsFilePath << "targetFile" << targetAbsFilePath;
+        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Both source/target files can't be the same file.");
+        return false;
+    }
+
     QFile sourceFile(sourceAbsFilePath);
     QFile targetFile(targetAbsFilePath);
-
-//    qDebug() << "FolderSizeModel::copyFile method" << method << "sourceAbsFilePath" << sourceAbsFilePath << "targetAbsFilePath" << targetAbsFilePath;
 
     // TODO copy with feedback progress to QML.
     bool res = false;
@@ -154,6 +160,7 @@ bool FolderSizeModel::copyFile(int method, const QString sourcePath, const QStri
     } else {
         qDebug() << "FolderSizeModel::copyFile Error method" << method << "sourceFile" << sourceAbsFilePath << "targetFile" << targetAbsFilePath;
         emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Both source/target files can't be read/written.");
+        return false;
     }
 
     if (res) {

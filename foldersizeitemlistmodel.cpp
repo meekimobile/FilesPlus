@@ -1,7 +1,4 @@
 #include "foldersizeitemlistmodel.h"
-#include <QDebug>
-#include <QThreadPool>
-#include <QUrl>
 
 const int FolderSizeItemListModel::TimerInterval = 100;
 
@@ -332,6 +329,60 @@ bool FolderSizeItemListModel::isFile(const QString absFilePath)
     QFileInfo fileInfo(absFilePath);
 
     return fileInfo.isFile();
+}
+
+bool FolderSizeItemListModel::canCopy(const QString sourceAbsFilePath, const QString targetPath)
+{
+    QString targetAbsFilePath;
+    QFileInfo sourceFileInfo(sourceAbsFilePath);
+    QFileInfo targetFileInfo(targetPath);
+    if (targetFileInfo.isDir()) {
+        targetAbsFilePath = QDir(targetFileInfo.absoluteFilePath()).absoluteFilePath(sourceFileInfo.fileName());
+    } else {
+        targetAbsFilePath = targetPath;
+    }
+    targetFileInfo = QFileInfo(targetAbsFilePath);
+
+    return !targetFileInfo.exists();
+}
+
+QString FolderSizeItemListModel::getFileName(const QString absFilePath)
+{
+    QFileInfo fileInfo(absFilePath);
+
+    return fileInfo.fileName();
+}
+
+QString FolderSizeItemListModel::getNewFileName(const QString absFilePath)
+{
+    // TODO need to fix to get new name as *Copy.* , *Copy 2.*, ...
+    QFileInfo file(absFilePath);
+    int i = 1;
+    while (file.exists()) {
+        QStringList caps = splitFileName(file.absoluteFilePath());
+        QString newFilePath;
+        if (i == 1) {
+            newFilePath = caps.at(0) + " Copy." + caps.at(1);
+        } else {
+            newFilePath = caps.at(0) + QString(" %2").arg(i) + "." + caps.at(1);
+        }
+        file = QFileInfo(newFilePath);
+        i++;
+    }
+
+    return file.fileName();
+}
+
+QStringList FolderSizeItemListModel::splitFileName(const QString fileName)
+{
+    // Parse fileName with RegExp
+    QRegExp rx("(.+)(\\.)(\\w{3,4})$");
+    rx.indexIn(fileName);
+
+    QStringList caps;
+    caps << rx.cap(1) << rx.cap(3);
+
+    return caps;
 }
 
 QString FolderSizeItemListModel::getDirContentJson(const QString dirPath)

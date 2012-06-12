@@ -4,6 +4,11 @@
 #include <QAbstractListModel>
 #include <QTimer>
 #include <QtCore>
+#include <QDebug>
+#include <QThreadPool>
+#include <QUrl>
+#include <QDir>
+#include <QFileInfo>
 #include "foldersizeitem.h"
 #include "foldersizemodel.h"
 
@@ -77,6 +82,9 @@ public:
     Q_INVOKABLE QString getDirPath(const QString absFilePath);
     Q_INVOKABLE bool isDir(const QString absFilePath);
     Q_INVOKABLE bool isFile(const QString absFilePath);
+    Q_INVOKABLE bool canCopy(const QString sourceAbsFilePath, const QString targetPath);
+    Q_INVOKABLE QString getFileName(const QString absFilePath);
+    Q_INVOKABLE QString getNewFileName(const QString absFilePath);
 private:
     Q_DISABLE_COPY(FolderSizeItemListModel)
     FolderSizeModel m;
@@ -84,6 +92,7 @@ private:
 
     bool isDirSizeCacheExisting();
     bool isReady();
+    QStringList splitFileName(const QString fileName);
 public slots:
     void postLoadSlot();
     void postFetchSlot();
