@@ -239,25 +239,40 @@ bool FolderSizeItemListModel::removeRow(int row, const QModelIndex &parent)
 
 bool FolderSizeItemListModel::removeRows(int row, int count, const QModelIndex &parent)
 {
-    beginRemoveRows(parent, row, row + count - 1);
-
     bool res = true;
     for (int i = row; i < row+count; i++) {
-        QFile file(data(this->index(i,0), AbsolutePathRole).toString());
-        QFileInfo fileInfo(file);
-        // Remove file from file system.
-        bool iRes = file.remove();
+        QString filePath = data(this->index(i,0), AbsolutePathRole).toString();
+        bool iRes = false;
+        QFileInfo fileInfo(filePath);
+
+        if (fileInfo.isFile()) {
+            // Remove file.
+            QFile file(fileInfo.absoluteFilePath());
+            iRes = file.remove();
+        } else if (fileInfo.isDir()) {
+            // Remove dir.
+            QDir parentDir = fileInfo.dir();
+            iRes = parentDir.rmdir(fileInfo.fileName());
+        }
+
         // Remove item from model's itemList.
         if (iRes) {
+            beginRemoveRows(parent, i, i);
+
+            // Remote item from itemList.
             m.removeItem(i);
             // Remove deleted file path cache.
             m.removeDirSizeCache(fileInfo.absolutePath());
+
+            endRemoveRows();
+
+            qDebug() << "FolderSizeItemListModel::removeRows" << fileInfo.absoluteFilePath() << " has been removed.";
+        } else {
+            qDebug() << "FolderSizeItemListModel::removeRows" << fileInfo.absoluteFilePath() << " can't' be removed because it's not empty.";
         }
 
         res = res && iRes;
     }
-
-    endRemoveRows();
 
     return res;
 }

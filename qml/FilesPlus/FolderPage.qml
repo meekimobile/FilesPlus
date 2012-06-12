@@ -576,7 +576,7 @@ Page {
 
     CommonDialog {
         id: fileDeleteDialog
-        titleText: "Delete file"
+        titleText: "Delete"
         titleIcon: "FilesPlusIcon.svg"
         buttonTexts: ["Ok", "Cancel"]
         content: Text {
@@ -588,7 +588,12 @@ Page {
         onButtonClicked: {
             if (index === 0) {
                 console.debug("fileDeleteDialog OK delete index " + popupToolPanel.selectedFileIndex);
-                fsModel.removeRow(popupToolPanel.selectedFileIndex);
+                var res = fsModel.removeRow(popupToolPanel.selectedFileIndex);
+                if (!res) {
+                    messageDialog.titleText = "Delete"
+                    messageDialog.message = popupToolPanel.selectedFilePath + " can't be deleted because it's not empty.";
+                    messageDialog.open();
+                }
             }
         }
     }
@@ -648,6 +653,10 @@ Page {
         }
 
         onStatusChanged: {
+            if (status == DialogStatus.Open) {
+                folderName.forceActiveFocus();
+            }
+
             if (status == DialogStatus.Closed) {
                 folderName.text = "";
             }

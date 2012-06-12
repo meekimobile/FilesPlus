@@ -38,6 +38,8 @@ Rectangle {
     function open(panelX, panelY) {
         popupToolPanel.visible = true;
 
+        // Disable sync if selectedFilePath is root.
+//            console.debug("popupToolPanel isRoot " + roots.indexOf(selectedFilePath));
         syncButton.visible = (roots.indexOf(selectedFilePath) == -1);
 
         popupToolPanel.width = getPopupToolPanelWidth();
@@ -75,20 +77,7 @@ Rectangle {
     
     onVisibleChanged: {
         if (visible) {
-            // Disable sync if selectedFilePath is root.
-//            console.debug("popupToolPanel isRoot " + roots.indexOf(selectedFilePath));
-//            syncButton.visible = (roots.indexOf(selectedFilePath) == -1);
-
             popupTimer.restart();
-//            popupToolPanel.width = getPopupToolPanelWidth();
-//            popupToolPanel.height = getPopupToolPanelHeight();
-//            console.debug("popupToolPanel WH " + popupToolPanel.width + ", " + popupToolPanel.height);
-//            console.debug("popupToolPanel parent.width " + parent.width);
-//            if (popupToolPanel.x > (parent.width - popupToolPanel.width) ) {
-//                popupToolPanel.x = (parent.width - popupToolPanel.width);
-//            } else if (popupToolPanel.x < 0) {
-//                popupToolPanel.x = 0;
-//            }
         }
     }
     
@@ -162,7 +151,8 @@ Rectangle {
 
         Button {
             id: deleteButton
-            visible: popupToolPanel.forFile
+            visible: true
+//            visible: popupToolPanel.forFile
             width: 57
             height: 57
             iconSource: "delete.svg"
