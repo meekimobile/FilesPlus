@@ -1,35 +1,43 @@
-// import QtQuick 1.0 // to target S60 5th Edition or Maemo 5
 import QtQuick 1.1
+import "Utility.js" as Utility
 
 Rectangle {
     id: splashScreen
 
-    property alias interval: splashTimer.interval
+    property int interval
+
+    signal loaded()
 
     z: 3
-    width: parent.width
-    height: parent.height
+    anchors.fill: parent
     color: "black"
+
+    Component.onCompleted: {
+        console.debug(Utility.nowText() + " splashScreen onCompleted");
+    }
 
     FilesPlusInfo {
         id: appInfo
+        version: "v1.0.0"
     }
 
     Timer {
         id: splashTimer
-        interval: 10000
+        interval: 100
         running: true
-        onTriggered: {            
-            hideSplashScreen.start();
 
-            var now = Qt.formatDateTime(new Date(), "d MMM yyyy h:mm:ss ap");
-            console.debug(now + " splashScreen hideSplashScreen.start()");
+        onTriggered: {
+            console.debug(Utility.nowText() + " splashScreen is loaded.");
+            hideSplashScreen.start();
+            loaded();
+            console.debug(Utility.nowText() + " splashScreen hideSplashScreen.start()");
         }
     }
 
     SequentialAnimation {
         id: hideSplashScreen
 
+        PauseAnimation { duration: interval-500 }
         NumberAnimation { target: splashScreen; property: "opacity"; to: 0; duration: 500; easing.type: Easing.Linear }
         ScriptAction { script: { splashScreen.destroy(); } }
     }

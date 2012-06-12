@@ -43,3 +43,11 @@ function limit(v, min, max) {
     newValue = Math.min(Math.max(v, min), max);
     return newValue;
 }
+
+function now() {
+    return (new Date());
+}
+
+function nowText() {
+    return Qt.formatDateTime(now(), "d MMM yyyy h:mm:ss ap");
+}

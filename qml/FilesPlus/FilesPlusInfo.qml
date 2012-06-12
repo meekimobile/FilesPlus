@@ -6,6 +6,8 @@ Column {
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.verticalCenter: parent.verticalCenter
 
+    property string version
+
     Image {
         id: icon
         width: 180
@@ -17,7 +19,7 @@ Column {
     Text {
         id: title
         color: "white"
-        text: qsTr("Files+ " + window.version)
+        text: qsTr("Files+" + ((version=="")?"":(" "+version)))
         anchors.horizontalCenter: parent.horizontalCenter
         horizontalAlignment: Text.AlignLeft
         font.bold: true

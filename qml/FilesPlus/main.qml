@@ -1,9 +1,9 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
+import "Utility.js" as Utility
 
 PageStackWindow {
     id: window
-    initialPage: FolderPage { id: folderPage; }
     showStatusBar: true
     showToolBar: true
 
@@ -26,7 +26,7 @@ PageStackWindow {
     ]
 
     onStateChanged: {
-        console.debug("window onStateChanged " + state);
+        console.debug(Utility.nowText() + " window onStateChanged " + state);
     }
 
     onOrientationChangeFinished: {
@@ -114,13 +114,19 @@ PageStackWindow {
     Splash {
         id: splashScreen
         interval: 3000
+
+        onLoaded: {
+            // Load folderPage then push drivePage to increase performance.
+            pageStack.push(Qt.resolvedUrl("FolderPage.qml"));
+            pageStack.push(Qt.resolvedUrl("DrivePage.qml"));
+        }
     }
 
     Component.onCompleted: {
-        var now = Qt.formatDateTime(new Date(), "d MMM yyyy h:mm:ss ap");
-        console.debug(now + " window onCompleted");
+        console.debug(Utility.nowText() + " window onCompleted");
 
-        // Load folderPage then push drivePage to increase performance.
-        pageStack.push(Qt.resolvedUrl("DrivePage.qml"));
+//        // Load folderPage then push drivePage to increase performance.
+//        pageStack.push(Qt.resolvedUrl("FolderPage.qml"));
+//        pageStack.push(Qt.resolvedUrl("DrivePage.qml"));
     }
 }

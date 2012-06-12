@@ -16,5 +16,6 @@ Page {
 
     FolderPieInfo {
         id: appInfo
+        version: "v1.0.2"
     }
 }

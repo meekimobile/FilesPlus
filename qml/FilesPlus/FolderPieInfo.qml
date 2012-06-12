@@ -7,6 +7,8 @@ Column {
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.verticalCenter: parent.verticalCenter
 
+    property string version
+
     Image {
         id: icon
         width: 180
@@ -18,7 +20,7 @@ Column {
     Text {
         id: title
         color: "white"
-        text: qsTr("FolderPie 1.0.2")
+        text: qsTr("FolderPie" + ((version=="")?"":(" "+version)))
         anchors.horizontalCenter: parent.horizontalCenter
         horizontalAlignment: Text.AlignLeft
         font.bold: true
