@@ -4,10 +4,11 @@
 #include "foldersizeitem.h"
 #include <QDir>
 #include <QHash>
-#include <QRunnable>
+#include <QThread>
 
-class FolderSizeModel : public QRunnable
+class FolderSizeModel : public QThread
 {
+    Q_OBJECT
 public:
     static const QString CACHE_FILE_PATH;
     static const QString DEFAULT_CURRENT_DIR;
@@ -19,37 +20,42 @@ public:
         SortByType
     };
 
-    FolderSizeModel();
-    FolderSizeModel(QString currentDir);
+    enum RunnableMethods {
+        FetchDirSize,
+        LoadDirSizeCache
+    };
+
+    FolderSizeModel(QObject *parent = 0);
 
     QString currentDir() const;
     void setCurrentDir(const QString currentDir);
-
     int sortFlag() const;
     bool setSortFlag(int sortFlag);
-
-    QStringList getDriveList();
-    void fetchDirSize(const bool clearCache = false);
-    QList<FolderSizeItem> getDirContent() const;
-    QList<FolderSizeItem> getDirContent(const QString dirPath);
-    void loadDirSizeCache();
-    void saveDirSizeCache();
-    bool isDirSizeCacheExisting();
-    void removeDirSizeCache(const QString key);
-    QString formatFileSize(double size);
-    bool changeDir(const QString dirName);
-    void removeItem(const int index);
-
-    FolderSizeItem getItem(const int index);
-    void updateItem(const int index, FolderSizeItem &item);
-
-    bool isReady();
-    bool isRoot();
-
     bool clearCache();
     void setClearCache(bool clearCache);
 
+    void fetchDirSize(const bool clearCache = false);
+    void loadDirSizeCache();
+    void saveDirSizeCache();
+    QList<FolderSizeItem> getDirContent() const;
+    QList<FolderSizeItem> getDirContent(const QString dirPath);
+    bool isDirSizeCacheExisting();
+    void removeDirSizeCache(const QString key);
+    bool changeDir(const QString dirName);
+    void removeItem(const int index);
+    FolderSizeItem getItem(const int index);
+    void updateItem(const int index, FolderSizeItem &item);
+
+    QString formatFileSize(double size);
+    QStringList getDriveList();
+    bool isReady();
+    bool isRoot();
+
+    void setRunMethod(int method);
     void run();
+signals:
+    void loadDirSizeCacheFinished();
+    void fetchDirSizeFinished();
 private:
     FolderSizeItem getCachedDir(const QFileInfo dir, const bool clearCache = false);
     FolderSizeItem getFileItem(const QFileInfo fileInfo);
@@ -61,6 +67,8 @@ private:
     bool m_isReady;
     bool m_clearCache;
     int m_sortFlag;
+
+    int m_runMethod;
 };
 
 #endif // FOLDERSIZEMODEL_H

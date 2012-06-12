@@ -56,15 +56,8 @@ bool sizeGreaterThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
 const QString FolderSizeModel::CACHE_FILE_PATH = "C:/FolderPieCache.dat";
 const QString FolderSizeModel::DEFAULT_CURRENT_DIR = "C:/";
 
-FolderSizeModel::FolderSizeModel() : QRunnable()
+FolderSizeModel::FolderSizeModel(QObject *parent) : QThread(parent), m_isReady(true)
 {
-    m_isReady = true;
-}
-
-FolderSizeModel::FolderSizeModel(QString currentDir) : QRunnable()
-{
-    m_currentDir = currentDir;
-    m_isReady = true;
 }
 
 QString FolderSizeModel::currentDir() const
@@ -84,6 +77,8 @@ QStringList FolderSizeModel::getDriveList() {
 }
 
 void FolderSizeModel::loadDirSizeCache() {
+    m_isReady = false;
+
     // TODO load caches from file.
     QFile file(CACHE_FILE_PATH);
     if (file.open(QIODevice::ReadOnly)) {
@@ -91,10 +86,16 @@ void FolderSizeModel::loadDirSizeCache() {
         in >> dirSizeCache;
 
         qDebug() << "FolderSizeModel::loadDirSizeCache " << dirSizeCache.count();
+
+        emit loadDirSizeCacheFinished();
     }
+
+    m_isReady = true;
 }
 
 void FolderSizeModel::saveDirSizeCache() {
+    m_isReady = false;
+
     // TODO save caches from file.
     QFile file(CACHE_FILE_PATH);
     if (file.open(QIODevice::WriteOnly)) {
@@ -103,6 +104,8 @@ void FolderSizeModel::saveDirSizeCache() {
 
         qDebug() << "FolderSizeModel::saveDirSizeCache " << dirSizeCache.count();
     }
+
+    m_isReady = true;
 }
 
 bool FolderSizeModel::isDirSizeCacheExisting()
@@ -258,7 +261,8 @@ QList<FolderSizeItem> FolderSizeModel::getDirContent(const QString dirPath)
 }
 
 void FolderSizeModel::fetchDirSize(const bool clearCache) {
-//    qDebug() << QTime::currentTime() << "FolderSizeModel::fetchDirSize started " << currentDir;
+    qDebug() << QTime::currentTime() << "FolderSizeModel::fetchDirSize started " << currentDir() << " clearCache " << clearCache;
+
     m_isReady = false;
 
     QDir dir;
@@ -292,11 +296,15 @@ void FolderSizeModel::fetchDirSize(const bool clearCache) {
 
     // Refresh Cache for the currentDir.
     QFileInfo dirInfo(m_currentDir);
-//    qDebug() << "Refresh cache dirInfo.absoluteFilePath() " << dirInfo.absoluteFilePath();
-//    dirSizeCache.remove(dirInfo.absoluteFilePath());
     getCachedDir(dirInfo, clearCache);
 
+    // Reset after fetch.
+    m_clearCache = false;
     m_isReady = true;
+
+    emit fetchDirSizeFinished();
+
+    qDebug() << QTime::currentTime() << "FolderSizeModel::fetchDirSize is done " << currentDir();
 }
 
 FolderSizeItem FolderSizeModel::getFileItem(const QFileInfo fileInfo) {
@@ -381,7 +389,25 @@ void FolderSizeModel::setClearCache(bool clearCache)
     m_clearCache = clearCache;
 }
 
+void FolderSizeModel::setRunMethod(int method)
+{
+    m_runMethod = method;
+}
+
 void FolderSizeModel::run()
 {
-    fetchDirSize(m_clearCache);
+    qDebug() << "FolderSizeModel::run m_runMethod" << m_runMethod;
+
+    if (isReady()) {
+        switch (m_runMethod) {
+        case FetchDirSize:
+            fetchDirSize(m_clearCache);
+            break;
+        case LoadDirSizeCache:
+            loadDirSizeCache();
+            break;
+        }
+    } else {
+        qDebug() << "FolderSizeModel::run is not ready.";
+    }
 }

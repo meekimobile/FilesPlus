@@ -25,6 +25,10 @@ PageStackWindow {
         }
     ]
 
+    onStateChanged: {
+        console.debug("window onStateChanged " + state);
+    }
+
     onOrientationChangeFinished: {
         console.debug("window onOrientationChangeFinished");
         var p = pageStack.find(function(page) { return (page.name == "folderPage")});

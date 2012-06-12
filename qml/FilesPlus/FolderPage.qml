@@ -26,7 +26,7 @@ Page {
     onStateChanged: {
         console.debug("folderPage onStateChanged state=" + folderPage.state);
         if (state == "chart") {
-            fsModel.setSortFlag(FolderSizeItemListModel.SortBySize);
+            fsModel.sortFlag = FolderSizeItemListModel.SortBySize;
         }
     }
 
@@ -90,13 +90,13 @@ Page {
 
         onSelectSort: {
             console.debug("sortByMenu setSortFlag flag=" + flag);
-            fsModel.setSortFlag(flag);
+            fsModel.sortFlag = flag;
         }
 
         onStatusChanged: {
             if (status == DialogStatus.Open) {
-                // TODO remove dependency
-                sortFlag = fsModel.getSortFlag();
+                // TODO set sortFlag before status=Open
+                sortFlag = fsModel.sortFlag;
             }
         }
     }
@@ -245,8 +245,6 @@ Page {
         onCurrentDirChanged: {
             console.debug("QML FolderSizeItemListModel::currentDirChanged");
             currentPath.text = fsModel.currentDir;
-
-            refreshSlot();
         }
 
         onRefreshBegin: {
@@ -255,7 +253,7 @@ Page {
         }
 
         onDataChanged: {
-//            console.debug("QML FolderSizeItemListModel::dataChanged");
+            console.debug("QML FolderSizeItemListModel::dataChanged");
         }
 
         onRefreshCompleted: {
@@ -356,7 +354,6 @@ Page {
             }
             onSceneActivated: {
                 console.debug("QML pieChart1.onSceneActivated");
-                refreshSlot();
             }
             onSwipe: {
                 console.debug("QML pieChart1.onSwipe " + swipeAngle);

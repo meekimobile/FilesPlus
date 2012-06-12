@@ -173,7 +173,7 @@ Rectangle {
                     }
 
                     onClicked: {
-                        console.debug("driveCellItem clicked " + (parent.x + mouseX) + ", " + (parent.y + mouseY) );
+//                        console.debug("driveCellItem clicked " + (parent.x + mouseX) + ", " + (parent.y + mouseY) );
                         var index = driveGrid.indexAt(parent.x + mouseX, parent.y + mouseY);
                         driveGrid.currentDriveName = model.logicalDrive;
                         driveGrid.currentIndex = index;

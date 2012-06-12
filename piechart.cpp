@@ -166,14 +166,18 @@ QAbstractListModel *PieChart::model() const
 
 void PieChart::setModel(QAbstractListModel *model)
 {
-    qDebug() << QTime::currentTime() << "PieChart::setModel rowCount " << model->rowCount();
+    if (model) {
+        qDebug() << QTime::currentTime() << "PieChart::setModel rowCount " << model->rowCount();
 
-    m_model = model;
+        m_model = model;
 
-    connect(m_model, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
-            this, SLOT(modelDataChanged(QModelIndex,QModelIndex)));
+        connect(m_model, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
+                this, SLOT(modelDataChanged(QModelIndex,QModelIndex)));
 
-    refreshItems();
+        refreshItems();
+    } else {
+        qDebug() << QTime::currentTime() << "PieChart::setModel model is not available.";
+    }
 }
 
 bool PieChart::visible() const

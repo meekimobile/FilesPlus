@@ -24,7 +24,10 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     setRoleNames(roles);
 
     // Load cache
-    m.loadDirSizeCache();
+    connect(&m, SIGNAL(loadDirSizeCacheFinished()), this, SLOT(postLoadSlot()) );
+    connect(&m, SIGNAL(fetchDirSizeFinished()), this, SLOT(postFetchSlot()) );
+    m.setRunMethod(m.LoadDirSizeCache);
+    m.start();
 }
 
 FolderSizeItemListModel::~FolderSizeItemListModel()
@@ -87,6 +90,9 @@ void FolderSizeItemListModel::setCurrentDir(const QString &path)
         m.setCurrentDir(path);
 
         emit currentDirChanged();
+
+        // Invoke background refresh
+        refreshDir(false);
     }
     qDebug() << QTime::currentTime() << "FolderSizeItemListModel::setCurrentDir";
 }
@@ -94,16 +100,6 @@ void FolderSizeItemListModel::setCurrentDir(const QString &path)
 QStringList FolderSizeItemListModel::getDriveList()
 {
     return m.getDriveList();
-}
-
-void FolderSizeItemListModel::loadDirSizeCache()
-{
-    m.loadDirSizeCache();
-}
-
-void FolderSizeItemListModel::saveDirSizeCache()
-{
-    m.saveDirSizeCache();
 }
 
 bool FolderSizeItemListModel::isDirSizeCacheExisting()
@@ -178,24 +174,18 @@ void FolderSizeItemListModel::changeDir(const QString &name)
 
 void FolderSizeItemListModel::refreshDir(const bool clearCache)
 {
-    if (!clearCache && !isDirSizeCacheExisting()) {
-        // If UI invoke general refresh but there is no existing cache, ask user for confirmation.
-        emit requestResetCache();
-    } else {
-        // If UI invoke reset cache or their is existing cache, proceed as user requested.
-        if (isReady()) {
-            emit refreshBegin();
+    if (isReady()) {
+        if (!clearCache && !isDirSizeCacheExisting()) {
+            // If UI invoke general refresh but there is no existing cache, ask user for confirmation.
+            emit requestResetCache();
+        } else {
+            // If UI invoke reset cache or their is existing cache, proceed as user requested.
             m.setClearCache(clearCache);
-            m.setAutoDelete(false);
-            QThreadPool::globalInstance()->start(&m);
-
-            // Set polling timer
-            if (!timer) {
-                timer = new QTimer();
-                connect(timer, SIGNAL(timeout()), this, SLOT(checkRunnable()));
-            }
-            timer->start(FolderSizeItemListModel::TimerInterval);
+            m.setRunMethod(m.FetchDirSize);
+            m.start();
         }
+    } else {
+        qDebug() << "FolderSizeItemListModel::refreshDir is not ready.";
     }
 }
 
@@ -368,27 +358,14 @@ int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
     return (isOnCurrentDir)?-2:-1;
 }
 
-void FolderSizeItemListModel::checkRunnable()
+void FolderSizeItemListModel::postLoadSlot()
 {
-    if (m.isReady()) {
-        qDebug() << QTime::currentTime() << "FolderSizeItemListModel::checkRunnable m.isReady " << m.isReady();
-
-        timer->stop();
-        m.setClearCache(false);
-        emit refreshCompleted();
-
-        reset();
-        emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, 0));
-    }
+    refreshDir();
 }
 
-void FolderSizeItemListModel::classBegin()
+void FolderSizeItemListModel::postFetchSlot()
 {
-    qDebug() <<  QTime::currentTime() << "FolderSizeItemListModel::classBegin";
+    emit refreshCompleted();
+    reset();
+    emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, columnCount()-1));
 }
-
-void FolderSizeItemListModel::componentComplete()
-{
-    qDebug() <<  QTime::currentTime() << "FolderSizeItemListModel::componentComplete";
-}
-
