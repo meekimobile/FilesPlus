@@ -3,6 +3,8 @@
 
 #include "foldersizeitem.h"
 #include <QDir>
+#include <QFile>
+#include <QFileInfo>
 #include <QHash>
 #include <QThread>
 
@@ -22,7 +24,9 @@ public:
 
     enum RunnableMethods {
         FetchDirSize,
-        LoadDirSizeCache
+        LoadDirSizeCache,
+        CopyFile,
+        MoveFile
     };
 
     FolderSizeModel(QObject *parent = 0);
@@ -52,10 +56,14 @@ public:
     bool isRoot();
 
     void setRunMethod(int method);
+    void setCopyPath(const QString sourcePath, const QString targetPath);
+    bool copyFile(int method, const QString sourcePath, const QString targetPath);
     void run();
 signals:
     void loadDirSizeCacheFinished();
     void fetchDirSizeFinished();
+    void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
+    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg);
 private:
     FolderSizeItem getCachedDir(const QFileInfo dir, const bool clearCache = false);
     FolderSizeItem getFileItem(const QFileInfo fileInfo);
@@ -69,6 +77,8 @@ private:
     int m_sortFlag;
 
     int m_runMethod;
+    QString m_sourcePath;
+    QString m_targetPath;
 };
 
 #endif // FOLDERSIZEMODEL_H

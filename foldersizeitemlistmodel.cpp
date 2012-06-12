@@ -23,9 +23,13 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     roles[RunningMaxValueRole] = "runningMaxValue";
     setRoleNames(roles);
 
-    // Load cache
+    // Connect model class with listModel.
     connect(&m, SIGNAL(loadDirSizeCacheFinished()), this, SLOT(postLoadSlot()) );
     connect(&m, SIGNAL(fetchDirSizeFinished()), this, SLOT(postFetchSlot()) );
+    connect(&m, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)), this, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)) );
+    connect(&m, SIGNAL(copyFinished(int,QString,QString,QString)), this, SIGNAL(copyFinished(int,QString,QString,QString)) );
+
+    // Load cache
     m.setRunMethod(m.LoadDirSizeCache);
     m.start();
 }
@@ -145,6 +149,8 @@ void FolderSizeItemListModel::setProperty(const QString localPath, FolderSizeIte
 {
     // Find index for localPath on currentDir.
     int modelIndex = getIndexOnCurrentDir(localPath);
+//    qDebug() << "FolderSizeItemListModel::setProperty" << modelIndex;
+
     if (modelIndex > -1) {
         setProperty(modelIndex, role, value);
     } else if (modelIndex == -1) {
@@ -285,19 +291,20 @@ bool FolderSizeItemListModel::deleteFile(const QString absPath)
 
 bool FolderSizeItemListModel::copyFile(const QString sourceAbsFilePath, const QString targetPath)
 {
-    QFile sourceFile(sourceAbsFilePath);
-    QFileInfo sourceFileInfo(sourceAbsFilePath);
-    QString targetAbsFilePath = targetPath + "/" + sourceFileInfo.fileName();
+    m.setRunMethod(m.CopyFile);
+    m.setCopyPath(sourceAbsFilePath, targetPath);
+    m.start();
 
-    // TODO copy with feedback progress to QML.
-    bool res = sourceFile.copy(targetAbsFilePath);
+    return true;
+}
 
-    if (res) {
-        // Remove target path cache.
-        m.removeDirSizeCache(targetPath);
-    }
+bool FolderSizeItemListModel::moveFile(const QString sourceAbsFilePath, const QString targetPath)
+{
+    m.setRunMethod(m.MoveFile);
+    m.setCopyPath(sourceAbsFilePath, targetPath);
+    m.start();
 
-    return res;
+    return true;
 }
 
 bool FolderSizeItemListModel::createDir(const QString name)

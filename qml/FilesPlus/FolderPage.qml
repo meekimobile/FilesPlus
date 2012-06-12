@@ -31,8 +31,7 @@ Page {
     }
 
     Component.onCompleted: {
-        var now = Qt.formatDateTime(new Date(), "d MMM yyyy h:mm:ss ap");
-        console.debug(now + " folderPage onCompleted");
+        console.debug(Utility.nowText() + " folderPage onCompleted");
     }
 
     tools: toolBarLayout
@@ -272,6 +271,25 @@ Page {
 
             resetCacheSlot();
         }
+
+        onCopyProgress: {
+//            console.debug("folderPage fsModel onCopyProgress " + fileAction + " from " + sourcePath + " to " + targetPath + " " + bytes + " / " + bytesTotal);
+
+            // Update ProgressBar on listItem.
+            fsModel.setProperty(sourcePath, FolderSizeItemListModel.IsRunningRole, true);
+            fsModel.setProperty(sourcePath, FolderSizeItemListModel.RunningValueRole, bytes);
+            fsModel.setProperty(sourcePath, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+            fsModel.setProperty(targetPath, FolderSizeItemListModel.IsRunningRole, true);
+            fsModel.setProperty(targetPath, FolderSizeItemListModel.RunningValueRole, bytes);
+            fsModel.setProperty(targetPath, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+        }
+
+        onCopyFinished: {
+            console.debug("folderPage fsModel onCopyFinished " + fileAction + " from " + sourcePath + " to " + targetPath + " " + msg);
+            fsModel.setProperty(sourcePath, FolderSizeItemListModel.IsRunningRole, false);
+            fsModel.setProperty(targetPath, FolderSizeItemListModel.IsRunningRole, false);
+            refreshSlot();
+        }
     }
 
     function getImageSourcesModel(jsonText, fileName) {
@@ -438,7 +456,7 @@ Page {
                         ProgressBar {
                             id: syncProgressBar
                             width: parent.width
-                            indeterminate: isDir
+                            indeterminate: isRunning && (isDir || (runningValue == runningMaxValue))
                             visible: isRunning
                             value: runningValue
                             maximumValue: runningMaxValue
@@ -609,15 +627,16 @@ Page {
         onButtonClicked: {
             if (index === 0) {
                 console.debug("fileActionDialog OK isCopy " + popupToolPanel.isCopy + " from " + popupToolPanel.srcFilePath + " to " + popupToolPanel.pastePath);
-                var res = fsModel.copyFile(popupToolPanel.srcFilePath, popupToolPanel.pastePath);
+
+                var res = false;
+                if (popupToolPanel.isCopy) {
+                    res = fsModel.copyFile(popupToolPanel.srcFilePath, popupToolPanel.pastePath);
+                } else {
+                    res = fsModel.moveFile(popupToolPanel.srcFilePath, popupToolPanel.pastePath);
+                }
                 if (res) {
-                    // TODO if paste on currentPath's subFolder, it should use fsModel.removeRow.
-                    if (!popupToolPanel.isCopy) fsModel.deleteFile(popupToolPanel.srcFilePath);
                     popupToolPanel.srcFilePath = "";
                     popupToolPanel.pastePath = "";
-
-                    refreshSlot();
-                    // TODO Remove folderSizeCache for source file's path and target path.
                 } else {
                     messageDialog.titleText = (popupToolPanel.isCopy) ? "Copy" : "Move";
                     messageDialog.message = "I can't " + ((popupToolPanel.isCopy) ? "copy" : "move")

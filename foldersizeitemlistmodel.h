@@ -3,6 +3,7 @@
 
 #include <QAbstractListModel>
 #include <QTimer>
+#include <QtCore>
 #include "foldersizeitem.h"
 #include "foldersizemodel.h"
 
@@ -67,6 +68,7 @@ public:
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
     Q_INVOKABLE bool deleteFile(const QString absPath);
     Q_INVOKABLE bool copyFile(const QString sourceAbsFilePath, const QString targetPath);
+    Q_INVOKABLE bool moveFile(const QString sourceAbsFilePath, const QString targetPath);
     Q_INVOKABLE bool createDir(const QString name);
 
     // Informative methods which don't use FolderSizeModel.
@@ -90,6 +92,8 @@ Q_SIGNALS:
     void refreshBegin();
     void refreshCompleted();
     void requestResetCache();
+    void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
+    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg);
 };
 
 #endif // FOLDERSIZEITEMLISTMODEL_H

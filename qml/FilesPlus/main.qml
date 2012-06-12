@@ -124,9 +124,5 @@ PageStackWindow {
 
     Component.onCompleted: {
         console.debug(Utility.nowText() + " window onCompleted");
-
-//        // Load folderPage then push drivePage to increase performance.
-//        pageStack.push(Qt.resolvedUrl("FolderPage.qml"));
-//        pageStack.push(Qt.resolvedUrl("DrivePage.qml"));
     }
 }

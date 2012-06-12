@@ -110,6 +110,78 @@ void FolderSizeModel::saveDirSizeCache() {
     m_isReady = true;
 }
 
+bool FolderSizeModel::copyFile(int method, const QString sourcePath, const QString targetPath)
+{
+    qDebug() << "FolderSizeModel::copyFile method" << method << "sourceFile" << sourcePath << "targetFile" << targetPath;
+
+    QFileInfo sourceFileInfo(sourcePath);
+    QFileInfo targetFileInfo(targetPath);
+    QString sourceAbsFilePath = sourcePath;
+    QString targetAbsFilePath;
+
+    if (targetFileInfo.isDir()) {
+        targetAbsFilePath = QDir(targetFileInfo.absoluteFilePath()).absoluteFilePath(sourceFileInfo.fileName());
+    } else {
+        targetAbsFilePath = targetPath;
+    }
+
+    QFile sourceFile(sourceAbsFilePath);
+    QFile targetFile(targetAbsFilePath);
+
+//    qDebug() << "FolderSizeModel::copyFile method" << method << "sourceAbsFilePath" << sourceAbsFilePath << "targetAbsFilePath" << targetAbsFilePath;
+
+    // TODO copy with feedback progress to QML.
+    bool res = false;
+    if (sourceFile.open(QFile::ReadOnly) && targetFile.open(QFile::WriteOnly)) {
+        qint64 totalBytes = 0;
+        char buf[4096];
+        qint64 c = sourceFile.read(buf, sizeof(buf));
+        while (c > 0) {
+            targetFile.write(buf, c);
+            totalBytes += c;
+
+            // Emit copy progress.
+            emit copyProgress(method, sourceAbsFilePath, targetAbsFilePath, totalBytes, sourceFile.size());
+
+            // Tell event loop to process event before it will process time consuming task.
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+
+            // Read next buffer.
+            c = sourceFile.read(buf, sizeof(buf));
+        }
+
+        res = true;
+    } else {
+        qDebug() << "FolderSizeModel::copyFile Error method" << method << "sourceFile" << sourceAbsFilePath << "targetFile" << targetAbsFilePath;
+        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Both source/target files can't be read/written.");
+    }
+
+    if (res) {
+        // Remove target path cache.
+        removeDirSizeCache(targetPath);
+
+        // Delete source file if method is MoveFile.
+        if (method == MoveFile) {
+            // Remove file from file system.
+            res = sourceFile.remove();
+
+            if (res) {
+                // Remove deleted file path cache.
+                removeDirSizeCache(sourceFileInfo.absolutePath());
+            }
+        }
+    }
+
+    // Reset copy method parameters
+    m_sourcePath = "";
+    m_targetPath = "";
+
+    // TODO should emit signal as finish.
+    emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Action is done successfully.");
+
+    return res;
+}
+
 bool FolderSizeModel::isDirSizeCacheExisting()
 {
     return (dirSizeCache.count() > 0);
@@ -396,6 +468,12 @@ void FolderSizeModel::setRunMethod(int method)
     m_runMethod = method;
 }
 
+void FolderSizeModel::setCopyPath(const QString sourcePath, const QString targetPath)
+{
+    m_sourcePath = sourcePath;
+    m_targetPath = targetPath;
+}
+
 void FolderSizeModel::run()
 {
     qDebug() << "FolderSizeModel::run m_runMethod" << m_runMethod;
@@ -407,6 +485,12 @@ void FolderSizeModel::run()
             break;
         case LoadDirSizeCache:
             loadDirSizeCache();
+            break;
+        case CopyFile:
+            copyFile(m_runMethod, m_sourcePath, m_targetPath);
+            break;
+        case MoveFile:
+            copyFile(m_runMethod, m_sourcePath, m_targetPath);
             break;
         }
     } else {
