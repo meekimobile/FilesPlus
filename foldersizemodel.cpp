@@ -85,7 +85,7 @@ void FolderSizeModel::loadDirSizeCache() {
         QDataStream in(&file);    // read the data serialized from the file
         in >> dirSizeCache;
 
-        qDebug() << "FolderSizeModel::loadDirSizeCache " << dirSizeCache.count();
+        qDebug() << QTime::currentTime() << "FolderSizeModel::loadDirSizeCache " << dirSizeCache.count();
 
         emit loadDirSizeCacheFinished();
     }
@@ -96,13 +96,15 @@ void FolderSizeModel::loadDirSizeCache() {
 void FolderSizeModel::saveDirSizeCache() {
     m_isReady = false;
 
-    // TODO save caches from file.
-    QFile file(CACHE_FILE_PATH);
-    if (file.open(QIODevice::WriteOnly)) {
-        QDataStream out(&file);   // we will serialize the data into the file
-        out << dirSizeCache;
+    if (!dirSizeCache.isEmpty()) {
+        // TODO save caches from file.
+        QFile file(CACHE_FILE_PATH);
+        if (file.open(QIODevice::WriteOnly)) {
+            QDataStream out(&file);   // we will serialize the data into the file
+            out << dirSizeCache;
 
-        qDebug() << "FolderSizeModel::saveDirSizeCache " << dirSizeCache.count();
+            qDebug() << "FolderSizeModel::saveDirSizeCache " << dirSizeCache.count();
+        }
     }
 
     m_isReady = true;

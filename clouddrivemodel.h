@@ -5,9 +5,11 @@
 #include <QtNetwork>
 #include <QHash>
 #include <QMultiHash>
+#include <QThread>
 #include <QAbstractListModel>
 #include "clouddriveitem.h"
 #include "clouddrivejob.h"
+#include "clouddrivemodelthread.h"
 #include "dropboxclient.h"
 #include "gcdclient.h"
 
@@ -65,6 +67,7 @@ public:
     Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
 signals:
     void dataLoadedSignal();
+
     void requestTokenReplySignal(int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString url, QString redirectFrom);
     void accessTokenReplySignal(int err, QString errMsg, QString msg);
@@ -76,6 +79,8 @@ signals:
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
 public slots:
+    void dataLoadedFilter();
+
     void fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplyFilter(QString nonce, int err, QString errMsg, QString msg);
@@ -88,6 +93,7 @@ private:
     QHash<QString, CloudDriveJob> m_cloudDriveJobs;
     QQueue<QString> m_jobQueue;
     int runningJobCount;
+    CloudDriveModelThread m_thread;
 
     void loadCloudDriveItems();
     void saveCloudDriveItems();

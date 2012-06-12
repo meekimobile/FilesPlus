@@ -253,7 +253,7 @@ Page {
         }
 
         onDataChanged: {
-            console.debug("QML FolderSizeItemListModel::dataChanged");
+//            console.debug("QML FolderSizeItemListModel::dataChanged");
         }
 
         onRefreshCompleted: {

@@ -45,13 +45,15 @@ void DropboxClient::loadAccessPairMap() {
         QDataStream in(&file);    // read the data serialized from the file
         in >> accessTokenPairMap;
 
-        qDebug() << "DropboxClient::loadAccessPairMap " << accessTokenPairMap;
+        qDebug() << QTime::currentTime() << "DropboxClient::loadAccessPairMap " << accessTokenPairMap;
     }
 }
 
 void DropboxClient::saveAccessPairMap() {
     // TODO workaround fix to remove tokenPair with key="".
     accessTokenPairMap.remove("");
+
+    if (accessTokenPairMap.isEmpty()) return;
 
     QFile file(KeyStoreFilePath);
     if (file.open(QIODevice::WriteOnly)) {

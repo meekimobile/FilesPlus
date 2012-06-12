@@ -48,12 +48,13 @@ void GCDClient::loadParamMap() {
         QDataStream in(&file);    // read the data serialized from the file
         in >> m_paramMap;
 
-        qDebug() << "GCDClient::loadParamMap " << m_paramMap;
+        qDebug() << QTime::currentTime() << "GCDClient::loadParamMap " << m_paramMap;
     }
 }
 
 void GCDClient::saveParamMap() {
-    qDebug() << "GCDClient::saveParamMap " << m_paramMap;
+    if (m_paramMap.isEmpty()) return;
+
     QFile file(KeyStoreFilePath);
     if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);   // we will serialize the data into the file

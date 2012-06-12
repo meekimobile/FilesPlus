@@ -11,13 +11,12 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
 {
     // Issue: Qt on Belle doesn't support QtConcurrent and QFuture.
-    // TODO: ???
+    // Example code: QFuture<void> loadDataFuture = QtConcurrent::run(this, &CloudDriveModel::loadCloudDriveItems);
+
     // Load cloud drive items.
-//    QFuture<void> loadDataFuture = QtConcurrent::run(this, &CloudDriveModel::loadCloudDriveItems);
     loadCloudDriveItems();
 
     // Initialize cloud drive clients.
-//    QFuture<void> initializeDropboxFuture = QtConcurrent::run(this, &CloudDriveModel::initializeDropboxClient, dbClient);
     initializeDropboxClient();
 }
 
@@ -27,23 +26,22 @@ CloudDriveModel::~CloudDriveModel()
 }
 
 void CloudDriveModel::loadCloudDriveItems() {
-    QFile file(HashFilePath);
-    if (file.open(QIODevice::ReadOnly)) {
-        QDataStream in(&file);    // read the data serialized from the file
-        in >> m_cloudDriveItems;
-
-        qDebug() << "CloudDriveModel::loadCloudDriveItems " << m_cloudDriveItems;
-    }
-
-    emit dataLoadedSignal();
+    // Start loading thread.
+    connect(&m_thread, SIGNAL(dataLoadedSignal()), this, SLOT(dataLoadedFilter()) );
+    m_thread.setHashFilePath(HashFilePath);
+    m_thread.start();
 }
 
 void CloudDriveModel::saveCloudDriveItems() {
+    if (m_cloudDriveItems.isEmpty()) return;
+
     QFile file(HashFilePath);
     if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);   // we will serialize the data into the file
         out << m_cloudDriveItems;
     }
+
+    qDebug() << "CloudDriveModel::saveCloudDriveItems" << m_cloudDriveItems.size();
 }
 
 void CloudDriveModel::initializeDropboxClient() {
@@ -451,4 +449,15 @@ void CloudDriveModel::proceedNextJob() {
     runningJobCount++;
 
     proceedNextJob();
+}
+
+
+void CloudDriveModel::dataLoadedFilter()
+{
+    // Copy thread map to member map.
+    m_cloudDriveItems = m_thread.getCloudDriveItems();
+
+    m_thread.getCloudDriveItems().clear();
+
+    emit dataLoadedSignal();
 }
