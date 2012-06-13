@@ -88,7 +88,7 @@ QByteArray DropboxClient::createBaseString(QString method, QString uri, QString 
     baseString.append("&");
     baseString.append(QUrl::toPercentEncoding(uri));
     baseString.append("&");
-    baseString.append(QUrl::toPercentEncoding(queryString));
+    baseString.append(QUrl::toPercentEncoding(queryString, "", "()"));
 
     return baseString;
 }
@@ -276,7 +276,9 @@ QByteArray DropboxClient::createOAuthHeaderForUid(QString uid, QString method, Q
     qDebug() << "queryString " << queryString;
 
     // Construct baseString for creating signature.
-    QByteArray baseString = createBaseString(method, QUrl(uri).toEncoded(), queryString);
+    QString encodedURI = QUrl(uri).toEncoded().replace("(", "%28").replace(")", "%29");
+    qDebug() << "encodedURI " << encodedURI;
+    QByteArray baseString = createBaseString(method, encodedURI, queryString);
     qDebug() << "baseString " << baseString;
 
     // Construct key for HMACSHA1 by using consumer 'Secret' and request token secret.
@@ -384,7 +386,7 @@ void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "----- DropboxClient::metadata -----";
 
     // TODO root dropbox(Full access) or sandbox(App folder access)
-    QString uri = metadataURI.arg(dropboxRoot, remoteFilePath);
+    QString uri = metadataURI.arg(dropboxRoot).arg(remoteFilePath);
     qDebug() << "DropboxClient::metadata uri " << uri;
 
     // Send request.
