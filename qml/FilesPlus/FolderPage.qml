@@ -698,15 +698,35 @@ Page {
         titleText: "File overwrite"
         titleIcon: "FilesPlusIcon.svg"
         buttonTexts: ["Ok", "Cancel"]
-        content: Rectangle {
-            anchors.margins: 3
-            anchors.fill: parent
-            color: "transparent"
+        content: Column {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width - 10
+            spacing: 3
+
+            Text {
+                text: "Please input new file name"
+                color: "white"
+                height: 48
+                verticalAlignment: Text.AlignVCenter
+            }
 
             TextField {
                 id: fileName
-                anchors.verticalCenter: parent.verticalCenter
                 width: parent.width
+            }
+
+            CheckBox {
+                id: overwriteFile
+                text: "Overwrite existing file"
+                checked: false
+
+                onClicked: {
+                    if (checked) {
+                        fileName.text = fsModel.getFileName(fileOverwriteDialog.sourcePath);
+                    } else {
+                        fileName.text = fsModel.getNewFileName(fileOverwriteDialog.sourcePath);
+                    }
+                }
             }
         }
 
