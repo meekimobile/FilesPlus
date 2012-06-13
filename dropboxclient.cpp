@@ -263,6 +263,12 @@ QStringList DropboxClient::getStoredUidList()
     return list;
 }
 
+QString DropboxClient::encodeURI(const QString uri) {
+    // Example: https://api.dropbox.com/1/metadata/sandbox/C/B/NES/Solomon's Key (E) [!].nes
+    // All non-alphanumeric except : and / must be encoded.
+    return QUrl::toPercentEncoding(uri, ":/");
+}
+
 QByteArray DropboxClient::createOAuthHeaderForUid(QString uid, QString method, QString uri, QMap<QString, QString> addParamMap) {
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
@@ -276,7 +282,7 @@ QByteArray DropboxClient::createOAuthHeaderForUid(QString uid, QString method, Q
     qDebug() << "queryString " << queryString;
 
     // Construct baseString for creating signature.
-    QString encodedURI = QUrl(uri).toEncoded().replace("(", "%28").replace(")", "%29").replace("+", "%2B");
+    QString encodedURI = encodeURI(uri);
     qDebug() << "encodedURI " << encodedURI;
     QByteArray baseString = createBaseString(method, encodedURI, queryString);
     qDebug() << "baseString " << baseString;
