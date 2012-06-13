@@ -276,7 +276,7 @@ QByteArray DropboxClient::createOAuthHeaderForUid(QString uid, QString method, Q
     qDebug() << "queryString " << queryString;
 
     // Construct baseString for creating signature.
-    QString encodedURI = QUrl(uri).toEncoded().replace("(", "%28").replace(")", "%29");
+    QString encodedURI = QUrl(uri).toEncoded().replace("(", "%28").replace(")", "%29").replace("+", "%2B");
     qDebug() << "encodedURI " << encodedURI;
     QByteArray baseString = createBaseString(method, encodedURI, queryString);
     qDebug() << "baseString " << baseString;
