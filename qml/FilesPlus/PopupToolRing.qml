@@ -4,6 +4,12 @@ import "Utility.js" as Utility
 
 Rectangle {
     id: popupToolPanel
+    x: 0; y: 0; z: 2;
+    radius: ringRadius
+    color: "transparent"
+    border.color: "grey"
+    border.width: 5
+    visible: false
 
     property bool forFile
     property string srcFilePath
@@ -14,57 +20,46 @@ Rectangle {
     property alias timeout: popupTimer.interval
     property variant roots: ["C:/","D:/","E:/","F:/","G:/"]
 
-    property alias ringRadius: buttonRing.radius
+    property int ringRadius: 60
+    property int buttonRadius: 27
 
+    signal opened()
+    signal closed()
+    signal copyFile(string sourcePath, string targetPath)
+    signal moveFile(string sourcePath, string targetPath)
+    signal deleteFile(string sourcePath)
     signal printFile(string srcFilePath, int srcItemIndex)
     signal syncFile(string srcFilePath, int srcItemIndex)
     
     function open(panelX, panelY) {
-        popupToolPanel.ringRadius = 60;
+//        console.debug("popupToolRing open panelX " + panelX + " panelY " + panelY);
 
-        console.debug("popupToolRing open panelX " + panelX + " panelY " + panelY);
-
-        // Disable sync if selectedFilePath is root.
-        syncButton.visible = (roots.indexOf(selectedFilePath) == -1);
-
-        popupToolPanel.width = popupToolPanel.ringRadius + 30;
-        popupToolPanel.height = popupToolPanel.ringRadius + 30;
+        popupToolPanel.width = popupToolPanel.ringRadius * 2;
+        popupToolPanel.height = popupToolPanel.ringRadius * 2;
         popupToolPanel.x = panelX - (popupToolPanel.width / 2);
         popupToolPanel.y = panelY - (popupToolPanel.height / 2);
 
-        if (popupToolPanel.x > (parent.width - popupToolPanel.width) ) {
-            popupToolPanel.x = (parent.width - popupToolPanel.width);
-        } else if (popupToolPanel.x < 0) {
-            popupToolPanel.x = 0;
+        if (popupToolPanel.x > (parent.width - popupToolPanel.width - popupToolPanel.buttonRadius) ) {
+            popupToolPanel.x = (parent.width - popupToolPanel.width - popupToolPanel.buttonRadius);
+        } else if (popupToolPanel.x < popupToolPanel.buttonRadius) {
+            popupToolPanel.x = popupToolPanel.buttonRadius;
         }
 
-        if (popupToolPanel.y > (parent.width - popupToolPanel.height) ) {
-            popupToolPanel.y = (parent.height - popupToolPanel.height);
-        } else if (popupToolPanel.y < 0) {
-            popupToolPanel.y = 0;
+        if (popupToolPanel.y > (parent.height - popupToolPanel.height - popupToolPanel.buttonRadius) ) {
+            popupToolPanel.y = (parent.height - popupToolPanel.height - popupToolPanel.buttonRadius);
+        } else if (popupToolPanel.y < popupToolPanel.buttonRadius) {
+            popupToolPanel.y = popupToolPanel.buttonRadius;
         }
 
         popupToolPanel.visible = true;
     }
-
-    x: 0; y: 0; z: 2;
-    radius: 9
-    gradient: Gradient {
-        GradientStop {
-            position: 0
-            color: "#808080"
-        }
-        
-        GradientStop {
-            position: 1
-            color: "#505050"
-        }
-    }
-    visible: false
     
     onVisibleChanged: {
         if (visible) {
+            opened();
             popupTimer.restart();
+        } else {
+            closed();
         }
     }
     
@@ -75,139 +70,80 @@ Rectangle {
         onTriggered: parent.visible = false
     }
     
-    Row {
-        id: buttonRow
-        anchors.fill: parent
-        anchors.margins: 3
-        spacing: 3
-        visible: false
-        
-        Button {
-            id: pasteButton
-            visible: (popupToolPanel.srcFilePath != "")
-            width: 57
-            height: 57
-            iconSource: "paste.svg"
-            onClicked: {
-                popupToolPanel.visible = false;
-                // TODO to avoid directly refer to external element.
-                fileActionDialog.open();
-            }
-        }
-        
-        Button {
-            id: cutButton
-            visible: popupToolPanel.forFile
-            width: 57
-            height: 57
-            iconSource: "trim.svg"
-            onClicked: {
-                popupToolPanel.visible = false;
-                // TODO to avoid directly refer to external element.
-                popupToolPanel.srcFilePath = selectedFilePath;
-                popupToolPanel.isCopy = false;
-            }
-        }
-        
-        Button {
-            id: copyButton
-            visible: popupToolPanel.forFile
-            width: 57
-            height: 57
-            iconSource: "copy.svg"
-            onClicked: {
-                popupToolPanel.visible = false;
-                // TODO to avoid directly refer to external element.
-                popupToolPanel.srcFilePath = selectedFilePath;
-                popupToolPanel.isCopy = true;
-            }
-        }
-
-        Button {
-            id: printButton
-            visible: popupToolPanel.forFile
-            width: 57
-            height: 57
-            iconSource: "print.svg"
-            onClicked: {
-                popupToolPanel.visible = false;
-                // TODO to avoid directly refer to external element.
-                console.debug("popupToolPanel print " + selectedFilePath + ", " + selectedFileIndex);
-                popupToolPanel.printFile(selectedFilePath, selectedFileIndex);
-            }
-        }
-
-        Button {
-            id: deleteButton
-            visible: true
-//            visible: popupToolPanel.forFile
-            width: 57
-            height: 57
-            iconSource: "delete.svg"
-            onClicked: {
-                popupToolPanel.visible = false;
-                // TODO to avoid directly refer to external element.
-                fileDeleteDialog.open();
-            }
-        }
-
-        Button {
-            id: syncButton
-            visible: true
-            width: 57
-            height: 57
-            iconSource: "refresh.svg"
-            onClicked: {
-                popupToolPanel.visible = false;
-                // TODO to avoid directly refer to external element.
-                console.debug("popupToolPanel sync " + selectedFilePath + ", " + selectedFileIndex);
-                popupToolPanel.syncFile(selectedFilePath, selectedFileIndex);
-            }
-        }
-    }
-
     ListModel {
         id: buttonModel
-        ListElement { name: "paste"; icon: "paste.svg" }
-        ListElement { name: "cut"; icon: "trim.svg" }
-        ListElement { name: "copy"; icon: "copy.svg" }
-        ListElement { name: "print"; icon: "print.svg" }
-        ListElement { name: "delete"; icon: "delete.svg" }
-        ListElement { name: "sync"; icon: "refresh.svg" }
+        ListElement { buttonName: "copy"; icon: "copy.svg" }
+        ListElement { buttonName: "paste"; icon: "paste.svg" }
+        ListElement { buttonName: "print"; icon: "print.svg" }
+        ListElement { buttonName: "sync"; icon: "refresh.svg" }
+        ListElement { buttonName: "delete"; icon: "delete.svg" }
+        ListElement { buttonName: "cut"; icon: "trim.svg" }
     }
 
     Component {
         id: buttonDelegate
         Button {
-            id: name
-            visible: true
-            width: 57
-            height: 57
+            enabled: isButtonVisible(buttonName)
+            width: popupToolPanel.buttonRadius * 2
+            height: popupToolPanel.buttonRadius * 2
             iconSource: icon
-            onClicked: {
-                console.debug("button " + index);
-            }
+            onClicked: buttonHandler(buttonName, index)
         }
+    }
+
+    function isButtonVisible(buttonName) {
+        if (buttonName === "sync") {
+            return (roots.indexOf(selectedFilePath) == -1);
+        } else if (buttonName === "copy" || buttonName === "cut") {
+            return forFile;
+        } else if (buttonName === "paste") {
+            return (srcFilePath != "");
+        }
+
+        return true;
+    }
+
+    function buttonHandler(buttonName, index) {
+        console.debug("button " + index + " buttonName " + buttonName);
+        if (buttonName == "paste") {
+            if (isCopy) {
+                popupToolPanel.copyFile(srcFilePath, pastePath);
+            } else {
+                popupToolPanel.moveFile(srcFilePath, pastePath);
+            }
+        } else if (buttonName == "cut") {
+            popupToolPanel.srcFilePath = selectedFilePath;
+            popupToolPanel.isCopy = false;
+        } else if (buttonName == "copy") {
+            popupToolPanel.srcFilePath = selectedFilePath;
+            popupToolPanel.isCopy = true;
+        } else if (buttonName == "print") {
+//                    console.debug("popupToolPanel print " + selectedFilePath + ", " + selectedFileIndex);
+            popupToolPanel.printFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "delete") {
+            popupToolPanel.deleteFile(selectedFilePath);
+        } else if (buttonName == "sync") {
+//                    console.debug("popupToolPanel sync " + selectedFilePath + ", " + selectedFileIndex);
+            popupToolPanel.syncFile(selectedFilePath, selectedFileIndex);
+        }
+        popupToolPanel.visible = false;
     }
 
     PathView {
         id: buttonRing
-
-        property int radius: 60
-
-        anchors.fill: parent
-        anchors.margins: 30
+        width: parent.width
+        height: parent.height
         focus: true
         model: buttonModel
         delegate: buttonDelegate
-        visible: false
+        visible: true
         path: Path {
             startX: buttonRing.width / 2
-            startY: buttonRing.top
-            PathQuad { x: buttonRing.right; y: buttonRing.height / 2; controlX: buttonRing.right; controlY: buttonRing.top }
-            PathQuad { x: buttonRing.width /  2; y: buttonRing.bottom; controlX: buttonRing.right; controlY: buttonRing.bottom }
-            PathQuad { x: buttonRing.left; y: buttonRing.height / 2; controlX: buttonRing.left; controlY: buttonRing.bottom }
-            PathQuad { x: buttonRing.width / 2; y: buttonRing.top; controlX: buttonRing.left; controlY: buttonRing.top }
+            startY: buttonRing.y
+            PathQuad { x: buttonRing.width; y: buttonRing.height / 2; controlX: buttonRing.width; controlY: buttonRing.y }
+            PathQuad { x: buttonRing.width /  2; y: buttonRing.height; controlX: buttonRing.width; controlY: buttonRing.height }
+            PathQuad { x: buttonRing.x; y: buttonRing.height / 2; controlX: buttonRing.x; controlY: buttonRing.height }
+            PathQuad { x: buttonRing.width / 2; y: buttonRing.y; controlX: buttonRing.x; controlY: buttonRing.y }
         }
     }
 }

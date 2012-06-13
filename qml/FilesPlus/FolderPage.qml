@@ -258,6 +258,9 @@ Page {
         onRefreshCompleted: {
             console.debug("QML FolderSizeItemListModel::refreshCompleted");
             window.state = "ready";
+
+            // Reset ListView currentIndex.
+            fsListView.currentIndex = -1;
         }
 
         onRequestResetCache: {
@@ -338,8 +341,23 @@ Page {
             y: 0
             anchors.fill: parent
             highlightRangeMode: ListView.NoHighlightRange
-            highlightFollowsCurrentItem: false
-            highlight: Rectangle { color: "#00AAFF" }
+            highlightFollowsCurrentItem: true
+            highlightMoveDuration: -1
+            highlightMoveSpeed: 1000
+            highlight: Rectangle {
+                gradient: Gradient {
+                    id: highlightGradient
+                    GradientStop {
+                        position: 0
+                        color: "#0080D0"
+                    }
+
+                    GradientStop {
+                        position: 1
+                        color: "#2FAFFF"
+                    }
+                }
+            }
             snapMode: ListView.SnapToItem
             clip: true
             focus: true
@@ -478,8 +496,10 @@ Page {
                     popupToolPanel.forFile = !isDir;
                     popupToolPanel.pastePath = (isDir) ? absolutePath : currentPath.text;
                     var panelX = x + mouseX - fsListView.contentX;
-                    var panelY = y + mouseY - fsListView.contentY;
+                    var panelY = y + mouseY - fsListView.contentY + flipable1.y;
                     popupToolPanel.open(panelX, panelY);
+
+                    // TODO stay highlight until popupToolPanel is hidden.
                 }
 
                 onClicked: {
@@ -579,6 +599,19 @@ Page {
 
     PopupToolRing {
         id: popupToolPanel
+        buttonRadius: 27
+
+        onCopyFile: {
+            fileActionDialog.open();
+        }
+
+        onMoveFile: {
+            fileActionDialog.open();
+        }
+
+        onDeleteFile: {
+            fileDeleteDialog.open();
+        }
 
         onPrintFile: {
             printFileSlot(srcFilePath, popupToolPanel.selectedFileIndex);

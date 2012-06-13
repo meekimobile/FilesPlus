@@ -46,12 +46,12 @@ Rectangle {
                 id: highlightGradient
                 GradientStop {
                     position: 0
-                    color: "#00aaff"
+                    color: "#0080D0"
                 }
 
                 GradientStop {
                     position: 1
-                    color: "#7ed6ff"
+                    color: "#2FAFFF"
                 }
             }
 

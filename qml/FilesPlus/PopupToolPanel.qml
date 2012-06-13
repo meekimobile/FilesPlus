@@ -12,6 +12,13 @@ Rectangle {
     property alias timeout: popupTimer.interval
     property variant roots: ["C:/","D:/","E:/","F:/","G:/"]
 
+    // Dummy property to be compatible with PopupToolRing.
+    property int ringRadius
+    property int buttonRadius
+
+    signal copyFile(string sourcePath, string targetPath)
+    signal moveFile(string sourcePath, string targetPath)
+    signal deleteFile(string sourcePath)
     signal printFile(string srcFilePath, int srcItemIndex)
     signal syncFile(string srcFilePath, int srcItemIndex)
 
@@ -47,7 +54,7 @@ Rectangle {
         popupToolPanel.height = getPopupToolPanelHeight();
 
         popupToolPanel.x = panelX - (popupToolPanel.width / 2);
-        popupToolPanel.y = panelY - (popupToolPanel.height / 2);
+        popupToolPanel.y = panelY - (popupToolPanel.height * 1.5);
 
         if (popupToolPanel.x > (parent.width - popupToolPanel.width) ) {
             popupToolPanel.x = (parent.width - popupToolPanel.width);
