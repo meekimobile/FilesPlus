@@ -507,6 +507,9 @@ Page {
                     if (isDir) {
                         fsModel.changeDir(name);
                     } else {
+                        // If file is running, disable preview.
+                        if (isRunning) return;
+
                         // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
                         var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
                         var viewableTextFileTypes = ["TXT", "HTML"];
@@ -604,12 +607,14 @@ Page {
 
         onOpened: {
             console.debug("popupToolRing onOpened");
+            fsListView.highlightFollowsCurrentItem = true;
         }
 
         onClosed: {
             console.debug("popupToolRing onClosed");
             // Workaround to hide highlight.
             fsListView.currentIndex = -1;
+            fsListView.highlightFollowsCurrentItem = false;
         }
 
         onCopyFile: {
