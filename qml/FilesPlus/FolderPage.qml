@@ -345,8 +345,8 @@ Page {
             anchors.fill: parent
             highlightRangeMode: ListView.NoHighlightRange
             highlightFollowsCurrentItem: true
-            highlightMoveDuration: -1
-            highlightMoveSpeed: 1000
+            highlightMoveDuration: 1
+            highlightMoveSpeed: 4000
             highlight: Rectangle {
                 gradient: Gradient {
                     id: highlightGradient
@@ -357,7 +357,7 @@ Page {
 
                     GradientStop {
                         position: 1
-                        color: "#2FAFFF"
+                        color: "#53A3E6"
                     }
                 }
             }
@@ -501,8 +501,6 @@ Page {
                     var panelX = x + mouseX - fsListView.contentX;
                     var panelY = y + mouseY - fsListView.contentY + flipable1.y;
                     popupToolPanel.open(panelX, panelY);
-
-                    // TODO stay highlight until popupToolPanel is hidden.
                 }
 
                 onClicked: {
@@ -586,7 +584,7 @@ Page {
         buttonTexts: ["Ok"]
         content: Text {
             id: contentText
-            width: parent.width - 8
+            width: parent.width - 10
             color: "white"
             wrapMode: Text.WordWrap
             height: implicitHeight
@@ -603,6 +601,16 @@ Page {
     PopupToolRing {
         id: popupToolPanel
         buttonRadius: 27
+
+        onOpened: {
+            console.debug("popupToolRing onOpened");
+        }
+
+        onClosed: {
+            console.debug("popupToolRing onClosed");
+            // Workaround to hide highlight.
+            fsListView.currentIndex = -1;
+        }
 
         onCopyFile: {
             fileActionDialog.open();
@@ -708,7 +716,7 @@ Page {
         titleIcon: "FilesPlusIcon.svg"
         buttonTexts: ["Ok", "Cancel"]
         content: Rectangle {
-            anchors.margins: 3
+            anchors.margins: 5
             anchors.fill: parent
             color: "transparent"
 
@@ -809,7 +817,7 @@ Page {
 
         property string srcFilePath
 
-        titleText: "Print " + srcFilePath + " to"
+        titleText: "Print " + fsModel.getFileName(srcFilePath) + " to"
         titleIcon: "FilesPlusIcon.svg"
 
         onAccepted: {
