@@ -355,16 +355,20 @@ QString FolderSizeItemListModel::getFileName(const QString absFilePath)
 
 QString FolderSizeItemListModel::getNewFileName(const QString absFilePath)
 {
-    // TODO need to fix to get new name as *Copy.* , *Copy 2.*, ...
+    // Get new name as *Copy.* , *Copy 2.*, ...
     QFileInfo file(absFilePath);
+    QStringList caps = splitFileName(file.absoluteFilePath());
+    int copyIndex = caps.at(0).lastIndexOf("Copy");
+    QString originalFileName = (copyIndex != -1) ? caps.at(0).left(copyIndex) : caps.at(0);
+    QString originalFileExtension = caps.at(1);
+
     int i = 1;
     while (file.exists()) {
-        QStringList caps = splitFileName(file.absoluteFilePath());
         QString newFilePath;
         if (i == 1) {
-            newFilePath = caps.at(0) + " Copy." + caps.at(1);
+            newFilePath = originalFileName + QString(" %1.").arg("Copy") + originalFileExtension;
         } else {
-            newFilePath = caps.at(0) + QString(" %2").arg(i) + "." + caps.at(1);
+            newFilePath = originalFileName + QString(" Copy %1.").arg(i) + originalFileExtension;
         }
         file = QFileInfo(newFilePath);
         i++;
