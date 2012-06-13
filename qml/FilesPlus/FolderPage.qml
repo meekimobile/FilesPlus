@@ -591,13 +591,15 @@ Page {
 
     CommonDialog {
         id: fileDeleteDialog
-        titleText: "Delete"
+        titleText: "Delete file"
         titleIcon: "FilesPlusIcon.svg"
         buttonTexts: ["Ok", "Cancel"]
         content: Text {
+            anchors.margins: 5
+            anchors.fill: parent
             color: "white"
             wrapMode: Text.WordWrap
-            text: "Delete " + popupToolPanel.selectedFilePath + " ?"
+            text: "Delete " + fsModel.getFileName(popupToolPanel.selectedFilePath) + " ?"
         }
 
         onButtonClicked: {
@@ -619,9 +621,13 @@ Page {
         titleIcon: "FilesPlusIcon.svg"
         buttonTexts: ["Ok", "Cancel"]
         content: Text {
+            width: parent.width - 10
             color: "white"
+            anchors.horizontalCenter: parent.horizontalCenter
             wrapMode: Text.WrapAnywhere
-            text: ((popupToolPanel.isCopy) ? "Copy " : "Move ") + popupToolPanel.srcFilePath + " to " + popupToolPanel.pastePath + " ?"
+            text: ((popupToolPanel.isCopy) ? "Copy " : "Move ")
+                  + "\nfile " + popupToolPanel.srcFilePath
+                  + "\nto " + popupToolPanel.pastePath + " ?"
         }
 
         onButtonClicked: {
@@ -647,9 +653,9 @@ Page {
                 } else {
                     messageDialog.titleText = (popupToolPanel.isCopy) ? "Copy" : "Move";
                     messageDialog.message = "I can't " + ((popupToolPanel.isCopy) ? "copy" : "move")
-                            + " file " + popupToolPanel.srcFilePath
-                            + " to " + popupToolPanel.pastePath + "\n"
-                            + "The file is existing on target path.";
+                            + "\nfile " + popupToolPanel.srcFilePath
+                            + "\nto " + popupToolPanel.pastePath
+                            + "\nThe file is existing on target path.";
                     messageDialog.open();
                     popupToolPanel.pastePath = "";
                 }
