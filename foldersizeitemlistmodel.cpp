@@ -377,6 +377,12 @@ QString FolderSizeItemListModel::getNewFileName(const QString absFilePath)
     return file.fileName();
 }
 
+QString FolderSizeItemListModel::getAbsolutePath(const QString dirPath, const QString fileName)
+{
+    QDir dir(dirPath);
+    return dir.absoluteFilePath(fileName);
+}
+
 QStringList FolderSizeItemListModel::splitFileName(const QString fileName)
 {
     // Parse fileName with RegExp
@@ -418,6 +424,11 @@ int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
     }
 
     return (isOnCurrentDir)?-2:-1;
+}
+
+void FolderSizeItemListModel::removeCache(const QString absPath)
+{
+    m.removeDirSizeCache(absPath);
 }
 
 void FolderSizeItemListModel::postLoadSlot()

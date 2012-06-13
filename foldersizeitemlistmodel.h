@@ -67,6 +67,7 @@ public:
     Q_INVOKABLE bool isRoot();
     Q_INVOKABLE QString getDirContentJson(const QString dirPath);
     Q_INVOKABLE int getIndexOnCurrentDir(const QString absFilePath);
+    Q_INVOKABLE void removeCache(const QString absPath);
 
     // File/Dir manipulation methods.
     Q_INVOKABLE bool removeRow(int row, const QModelIndex & parent = QModelIndex());
@@ -85,6 +86,7 @@ public:
     Q_INVOKABLE bool canCopy(const QString sourceAbsFilePath, const QString targetPath);
     Q_INVOKABLE QString getFileName(const QString absFilePath);
     Q_INVOKABLE QString getNewFileName(const QString absFilePath);
+    Q_INVOKABLE QString getAbsolutePath(const QString dirPath, const QString fileName);
 private:
     Q_DISABLE_COPY(FolderSizeItemListModel)
     FolderSizeModel m;

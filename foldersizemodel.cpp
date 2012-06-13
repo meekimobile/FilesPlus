@@ -196,7 +196,16 @@ bool FolderSizeModel::isDirSizeCacheExisting()
 
 void FolderSizeModel::removeDirSizeCache(const QString key)
 {
-    dirSizeCache.remove(key);
+    qDebug() << "FolderSizeModel::removeDirSizeCache started from" << key;
+
+    QDir dir(key);
+    bool canCdup = true;
+    while (canCdup) {
+        dirSizeCache.remove(dir.absolutePath());
+        qDebug() << "FolderSizeModel::removeDirSizeCache remove cache for " << dir.absolutePath();
+
+        canCdup = dir.cdUp();
+    }
 }
 
 FolderSizeItem FolderSizeModel::getCachedDir(const QFileInfo dir, const bool clearCache) {

@@ -291,6 +291,9 @@ Page {
             console.debug("folderPage fsModel onCopyFinished " + fileAction + " from " + sourcePath + " to " + targetPath + " " + msg);
             fsModel.setProperty(sourcePath, FolderSizeItemListModel.IsRunningRole, false);
             fsModel.setProperty(targetPath, FolderSizeItemListModel.IsRunningRole, false);
+
+            // Cache for changed files has been removed by FolderSizeItemModel internally.
+            // Refresh list view.
             refreshSlot();
         }
     }
@@ -667,11 +670,14 @@ Page {
             if (index === 0) {
                 console.debug("fileActionDialog OK isCopy " + popupToolPanel.isCopy + " from " + popupToolPanel.srcFilePath + " to " + popupToolPanel.pastePath);
 
+                // Check if there is existing file on target folder. Then show overwrite dialog.
                 if (!fsModel.canCopy(popupToolPanel.srcFilePath, popupToolPanel.pastePath)) {
                     fileOverwriteDialog.sourcePath = popupToolPanel.srcFilePath;
                     fileOverwriteDialog.targetPath = popupToolPanel.pastePath;
                     fileOverwriteDialog.isCopy = popupToolPanel.isCopy;
                     fileOverwriteDialog.open();
+
+                    return;
                 }
 
                 var res = false;
@@ -785,13 +791,14 @@ Page {
         }
 
         onButtonClicked: {
-            // targetPath is ended with / already.
+            // If paste to current folder, targetPath is ended with / already.
+            // If paste to selected folder, targetPath is not ended with /.
             if (index === 0) {
                 var res = false;
                 if (isCopy) {
-                    res = fsModel.copyFile(sourcePath, targetPath + fileName.text);
+                    res = fsModel.copyFile(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
                 } else {
-                    res = fsModel.moveFile(sourcePath, targetPath + fileName.text);
+                    res = fsModel.moveFile(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
                 }
             }
         }
@@ -1149,7 +1156,14 @@ Page {
 
             if (err == 0) {
                 // Update ProgressBar on listItem.
+                // TODO also show running on its parents.
                 fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
+
+                // Remove cache on target folders and its parents.
+                fsModel.removeCache(json.local_file_path);
+
+                // Refresh
+                refreshSlot();
             } else {
                 messageDialog.titleText = "CloudDrive File Get"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
