@@ -577,7 +577,7 @@ Page {
         }
     }
 
-    PopupToolPanel {
+    PopupToolRing {
         id: popupToolPanel
 
         onPrintFile: {

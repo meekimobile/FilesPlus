@@ -48,5 +48,6 @@
         <file>qml/FilesPlus/ImageViewPage.qml</file>
         <file>qml/FilesPlus/TextViewPage.qml</file>
         <file>qml/FilesPlus/photos.svg</file>
+        <file>qml/FilesPlus/PopupToolRing.qml</file>
     </qresource>
 </RCC>
