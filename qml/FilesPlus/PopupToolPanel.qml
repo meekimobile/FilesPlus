@@ -17,20 +17,22 @@ Rectangle {
 
     function getPopupToolPanelWidth() {
         var w = 0;
-        w += (pasteButton.visible || cutButton.visible || copyButton.visible || deleteButton.visible || syncButton.visible) ? 3 : 0;
-        w += (pasteButton.visible) ? (pasteButton.width + 3) : 0;
-        w += (cutButton.visible) ? (cutButton.width + 3) : 0;
-        w += (copyButton.visible) ? (copyButton.width + 3) : 0;
-        w += (printButton.visible) ? (printButton.width + 3) : 0;
-        w += (deleteButton.visible) ? (deleteButton.width + 3) : 0;
-        w += (syncButton.visible) ? (syncButton.width + 3) : 0;
+        var spacing = buttonRow.spacing;
+        w += (pasteButton.visible || cutButton.visible || copyButton.visible || printButton.visible || deleteButton.visible || syncButton.visible) ? spacing : 0;
+        w += (pasteButton.visible) ? (pasteButton.width + spacing) : 0;
+        w += (cutButton.visible) ? (cutButton.width + spacing) : 0;
+        w += (copyButton.visible) ? (copyButton.width + spacing) : 0;
+        w += (printButton.visible) ? (printButton.width + spacing) : 0;
+        w += (deleteButton.visible) ? (deleteButton.width + spacing) : 0;
+        w += (syncButton.visible) ? (syncButton.width + spacing) : 0;
 
         return w;
     }
     
     function getPopupToolPanelHeight() {
         var h = 0;
-        h += (pasteButton.visible || cutButton.visible || copyButton.visible || printButton.visible || deleteButton.visible || syncButton.visible) ? (pasteButton.height + 6) : 0;
+        var spacing = buttonRow.spacing;
+        h += (pasteButton.visible || cutButton.visible || copyButton.visible || printButton.visible || deleteButton.visible || syncButton.visible) ? (pasteButton.height + spacing + spacing) : 0;
         
         return h;
     }
@@ -39,13 +41,12 @@ Rectangle {
         popupToolPanel.visible = true;
 
         // Disable sync if selectedFilePath is root.
-//            console.debug("popupToolPanel isRoot " + roots.indexOf(selectedFilePath));
         syncButton.visible = (roots.indexOf(selectedFilePath) == -1);
 
         popupToolPanel.width = getPopupToolPanelWidth();
         popupToolPanel.height = getPopupToolPanelHeight();
 
-        popupToolPanel.x = panelX - 30;
+        popupToolPanel.x = panelX - (popupToolPanel.width / 2);
         popupToolPanel.y = panelY - (popupToolPanel.height / 2);
 
         if (popupToolPanel.x > (parent.width - popupToolPanel.width) ) {
@@ -91,22 +92,9 @@ Rectangle {
     Row {
         id: buttonRow
         anchors.fill: parent
-        anchors.margins: 3
-        spacing: 3
-        
-        Button {
-            id: pasteButton
-            visible: (popupToolPanel.srcFilePath != "")
-            width: 57
-            height: 57
-            iconSource: "paste.svg"
-            onClicked: {
-                popupToolPanel.visible = false;
-                // TODO to avoid directly refer to external element.
-                fileActionDialog.open();
-            }
-        }
-        
+        anchors.margins: 2
+        spacing: 2
+
         Button {
             id: cutButton
             visible: popupToolPanel.forFile
@@ -132,6 +120,19 @@ Rectangle {
                 // TODO to avoid directly refer to external element.
                 popupToolPanel.srcFilePath = selectedFilePath;
                 popupToolPanel.isCopy = true;
+            }
+        }
+
+        Button {
+            id: pasteButton
+            visible: (popupToolPanel.srcFilePath != "")
+            width: 57
+            height: 57
+            iconSource: "paste.svg"
+            onClicked: {
+                popupToolPanel.visible = false;
+                // TODO to avoid directly refer to external element.
+                fileActionDialog.open();
             }
         }
 
