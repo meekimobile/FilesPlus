@@ -136,6 +136,11 @@ QString CloudDriveModel::getJobJson(QString jobId)
     return job.toJsonText();
 }
 
+void CloudDriveModel::removeJob(QString nonce)
+{
+    m_cloudDriveJobs.remove(nonce);
+}
+
 void CloudDriveModel::addItem(QString localPath, CloudDriveItem item)
 {
     m_cloudDriveItems.insert(localPath, item);
@@ -389,7 +394,8 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
         job.isRunning = false;
         m_cloudDriveJobs[nonce] = job;
     } else if (err == 202) {
-        // TODO handle 202 Nonce already in used.
+        // Issue: handle 202 Nonce already in used.
+        // Solution: let QML handle retry.
     }
 
     // Notify job done.
@@ -426,7 +432,7 @@ void CloudDriveModel::jobDone() {
 void CloudDriveModel::proceedNextJob() {
     // TODO Proceed next job in queue.
     if (runningJobCount >= MaxRunningJobCount || m_jobQueue.isEmpty()) {
-        qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount " << runningJobCount << " m_jobQueue " << m_jobQueue.count();
+        qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue.count() << "m_cloudDriveJobs" << m_cloudDriveJobs.count();
         return;
     }
 

@@ -45,6 +45,7 @@ public:
     Q_INVOKABLE bool isSyncing(QString localPath);
     Q_INVOKABLE QString getFirstJobJson(QString localPath);
     Q_INVOKABLE QString getJobJson(QString jobId);
+    Q_INVOKABLE void removeJob(QString nonce);
     Q_INVOKABLE void addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash);
     Q_INVOKABLE void removeItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE QString getItemHash(QString localPath, CloudDriveModel::ClientTypes type, QString uid);

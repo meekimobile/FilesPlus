@@ -43,7 +43,7 @@ Rectangle {
 
         GradientStop {
             position: 1
-            color: "#2FAFFF"
+            color: "#53A3E6"
         }
     }
 

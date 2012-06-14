@@ -7,8 +7,8 @@ Rectangle {
     x: 0; y: 0; z: 2;
     radius: ringRadius
     color: "transparent"
-    border.color: "grey"
-    border.width: 5
+//    border.color: "grey"
+//    border.width: 5
     visible: false
 
     property bool forFile
@@ -21,7 +21,7 @@ Rectangle {
     property variant roots: ["C:/","D:/","E:/","F:/","G:/"]
 
     property int ringRadius: 60
-    property int buttonRadius: 27
+    property int buttonRadius: 25
 
     signal opened()
     signal closed()

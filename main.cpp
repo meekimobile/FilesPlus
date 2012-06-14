@@ -9,6 +9,7 @@
 #include "dropboxclient.h"
 #include <QAbstractListModel>
 #include "localfileimageprovider.h"
+#include "monitoring.h"
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -34,12 +35,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider());
 
 #ifdef Q_OS_SYMBIAN
-    // TODO Show available heap on Symbian.
-    qDebug() << "User::CountAllocCells()" << User::CountAllocCells();
-    qDebug() << "User::Heap().Count()" << User::Heap().Count();
-    qDebug() << "User::Heap().Size()" << User::Heap().Size();
-    qDebug() << "User::Heap().MaxLength()" << User::Heap().MaxLength();
-    qDebug() << "RThread::GetCpuTime()" << RThread::GetCpuTime();
+    Monitoring mon;
 #endif
 
     return app->exec();

@@ -73,7 +73,8 @@ SOURCES += main.cpp \
     qnetworkreplywrapper.cpp \
     localfileimageprovider.cpp \
     clouddrivemodelthread.cpp \
-    foldersizemodelthread.cpp
+    foldersizemodelthread.cpp \
+    monitoring.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -96,7 +97,8 @@ HEADERS += \
     qnetworkreplywrapper.h \
     localfileimageprovider.h \
     clouddrivemodelthread.h \
-    foldersizemodelthread.h
+    foldersizemodelthread.h \
+    monitoring.h
 
 OTHER_FILES +=
 

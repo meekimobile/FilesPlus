@@ -313,6 +313,7 @@ Page {
 
         onFetchDirSizeStarted: {
             refreshButton.checkable = true;
+            refreshButton.checked = true;
         }
 
         onFetchDirSizeFinished: {
@@ -626,15 +627,15 @@ Page {
 
     PopupToolRing {
         id: popupToolPanel
-        buttonRadius: 27
+        buttonRadius: 25
 
         onOpened: {
-            console.debug("popupToolRing onOpened");
+//            console.debug("popupToolRing onOpened");
             fsListView.highlightFollowsCurrentItem = true;
         }
 
         onClosed: {
-            console.debug("popupToolRing onClosed");
+//            console.debug("popupToolRing onClosed");
             // Workaround to hide highlight.
             fsListView.currentIndex = -1;
             fsListView.highlightFollowsCurrentItem = false;
@@ -1186,6 +1187,9 @@ Page {
             var jsonText = cloudDriveModel.getJobJson(nonce);
             console.debug("folderPage cloudDriveModel jsonText " + jsonText);
 
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+
             var json = JSON.parse(jsonText);
             var modelIndex = json.model_index;
             var isRunning = json.is_running;
@@ -1198,7 +1202,7 @@ Page {
                 // Remove cache on target folders and its parents.
                 fsModel.removeCache(json.local_file_path);
 
-                // Refresh
+                // Refresh to add gotten file to listview.
                 refreshSlot();
             } else {
                 messageDialog.titleText = "CloudDrive File Get"
@@ -1213,12 +1217,16 @@ Page {
             var jsonText = cloudDriveModel.getJobJson(nonce);
             console.debug("folderPage cloudDriveModel jsonText " + jsonText);
 
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+
             var json = JSON.parse(jsonText);
             var modelIndex = json.model_index;
             var isRunning = json.is_running;
 
             if (err == 0) {
                 // Update ProgressBar on listItem.
+                // TODO also show running on its parents.
                 fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
             } else {
                 messageDialog.titleText = "CloudDrive File Put"
@@ -1239,6 +1247,9 @@ Page {
             var remotePath = json.remote_file_path;
             var modelIndex = json.model_index;
             var isRunning = json.is_running;
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
 
             if (err == 0) {
                 // Found metadata.
@@ -1313,6 +1324,12 @@ Page {
                 } else {
                     cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
                 }
+            } else if (err == 202) {
+                // Nonce already in used.
+                console.debug("MetadataReply Error " + err + " " + errMsg + " " + msg + ". I will retry again.");
+
+                // Retry request metadata as
+                metadata(type, uid, localPath, remotePath, modelIndex);
             } else {
                 messageDialog.titleText = "Dropbox Metadata"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
