@@ -22,9 +22,11 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
 
     // Connect model class with listModel.
     connect(&m, SIGNAL(loadDirSizeCacheFinished()), this, SLOT(postLoadSlot()) );
+    connect(&m, SIGNAL(fetchDirSizeStarted()), this, SIGNAL(fetchDirSizeStarted()) );
     connect(&m, SIGNAL(fetchDirSizeFinished()), this, SLOT(postFetchSlot()) );
     connect(&m, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)), this, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)) );
     connect(&m, SIGNAL(copyFinished(int,QString,QString,QString)), this, SIGNAL(copyFinished(int,QString,QString,QString)) );
+    connect(&m, SIGNAL(fetchDirSizeUpdated(QString)), this, SIGNAL(fetchDirSizeUpdated(QString)) );
 
     // Load cache
     m.setRunMethod(m.LoadDirSizeCache);
@@ -40,7 +42,7 @@ FolderSizeItemListModel::~FolderSizeItemListModel()
 int FolderSizeItemListModel::rowCount(const QModelIndex & parent) const {
 //    qDebug() << "FolderSizeItemListModel::rowCount " + QString("%1").arg(m.getDirContent().count());
 
-    return m.getDirContent().count();
+    return m.getItemList().count();
 }
 
 int FolderSizeItemListModel::columnCount(const QModelIndex &parent) const
@@ -51,10 +53,10 @@ int FolderSizeItemListModel::columnCount(const QModelIndex &parent) const
 QVariant FolderSizeItemListModel::data(const QModelIndex & index, int role) const {
 //    qDebug() << "FolderSizeItemListModel::data " + QString("%1 %2").arg(index.row()).arg(role);
 
-    if (index.row() < 0 || index.row() > m.getDirContent().count())
+    if (index.row() < 0 || index.row() > m.getItemList().count())
         return QVariant();
 
-    const FolderSizeItem &item = m.getDirContent().at(index.row());
+    const FolderSizeItem &item = m.getItemList().at(index.row());
     if (role == NameRole)
         return item.name;
     else if (role == AbsolutePathRole)
@@ -87,20 +89,30 @@ QString FolderSizeItemListModel::currentDir() const
 
 void FolderSizeItemListModel::setCurrentDir(const QString &path)
 {
-    if (isReady()) {
-        m.setCurrentDir(path);
+    m.setCurrentDir(path);
 
-        emit currentDirChanged();
+    // Emit to update currentDir on UI.
+    emit currentDirChanged();
 
-        // Invoke background refresh
-        refreshDir(false);
-    }
+    // Invoke background refresh
+    refreshDir(false);
+
+    // Invoke refreshItems to emit dataChanged.
+    refreshItems();
+
     qDebug() << QTime::currentTime() << "FolderSizeItemListModel::setCurrentDir";
 }
 
 QStringList FolderSizeItemListModel::getDriveList()
 {
-    return m.getDriveList();
+    QFileInfoList drives = QDir::drives();
+    QStringList driveList;
+
+    for (int i=0; i<drives.length(); i++) {
+        driveList.append(drives.at(i).absolutePath());
+    }
+
+    return driveList;
 }
 
 bool FolderSizeItemListModel::isDirSizeCacheExisting()
@@ -110,12 +122,12 @@ bool FolderSizeItemListModel::isDirSizeCacheExisting()
 
 bool FolderSizeItemListModel::isReady()
 {
-    return m.isReady();
+    return !m.isRunning();
 }
 
 QVariant FolderSizeItemListModel::getProperty(const int index, FolderSizeItemListModel::FolderSizeItemRoles role)
 {
-    if (isReady() && index >= 0 && index < rowCount()) {
+    if (index >= 0 && index < rowCount()) {
         return data(createIndex(index,0), role);
     }
 
@@ -124,7 +136,7 @@ QVariant FolderSizeItemListModel::getProperty(const int index, FolderSizeItemLis
 
 void FolderSizeItemListModel::setProperty(const int index, FolderSizeItemListModel::FolderSizeItemRoles role, QVariant value)
 {
-    if (isReady() && index >= 0 && index < rowCount()) {
+    if (index >= 0 && index < rowCount()) {
         // Update to limited properties.
         FolderSizeItem item = m.getItem(index);
         if (role == IsRunningRole)
@@ -134,11 +146,11 @@ void FolderSizeItemListModel::setProperty(const int index, FolderSizeItemListMod
         else if (role == RunningMaxValueRole)
             item.runningMaxValue = value.toLongLong();
 
-        m.updateItem(index, item);
+        m.setItem(index, item);
 
-        emit dataChanged(createIndex(index,0), createIndex(index, columnCount()));
+        refreshItem(index);
     } else {
-
+        // TODO do nothing.
     }
 }
 
@@ -159,24 +171,46 @@ void FolderSizeItemListModel::setProperty(const QString localPath, FolderSizeIte
 
 QString FolderSizeItemListModel::formatFileSize(double size)
 {
-    return m.formatFileSize(size);
+    const uint KB = 1024;
+    const uint MB = 1048576;
+    const uint GB = 1073741824;
+
+    QString fileSize;
+
+    if (size >= GB) {
+        fileSize = QString("%1 GB").arg( int(size/GB) );
+    } else if (size >= MB) {
+        fileSize = QString("%1 MB").arg( int(size/MB) );
+    } else if (size >= 1024) {
+        fileSize = QString("%1 KB").arg( int(size/KB) );
+    } else {
+        fileSize = QString("%1").arg( size );
+    }
+
+    return fileSize;
 }
 
 void FolderSizeItemListModel::changeDir(const QString &name)
 {
-    if (isReady()) {
-        bool isDirChanged = m.changeDir(name);
-        if (isDirChanged) {
-            emit currentDirChanged();
+    // m.changeDir() reuses m.setCurrentDir().
+    bool isDirChanged = m.changeDir(name);
 
-            // Invoke background refresh
-            refreshDir(false);
-        }
+    if (isDirChanged) {
+        // Emit to update currentDir on UI.
+        emit currentDirChanged();
+
+        // Invoke background refresh
+        refreshDir(false);
+
+        // Invoke refreshItems to emit dataChanged.
+        refreshItems();
     }
 }
 
 void FolderSizeItemListModel::refreshDir(const bool clearCache)
 {
+    qDebug() << "FolderSizeItemListModel::refreshDir clearCache" << clearCache;
+
     if (isReady()) {
         if (!clearCache && !isDirSizeCacheExisting()) {
             // If UI invoke general refresh but there is no existing cache, ask user for confirmation.
@@ -188,8 +222,11 @@ void FolderSizeItemListModel::refreshDir(const bool clearCache)
             m.start();
         }
     } else {
-        qDebug() << "FolderSizeItemListModel::refreshDir is not ready.";
+        qDebug() << "FolderSizeItemListModel::refreshDir is not ready. Refresh itemList as-is.";
     }
+
+    // Populate and sort directory content to itemList. Then respond to UI.
+    m.refreshItemList();
 }
 
 QString FolderSizeItemListModel::getUrl(const QString absPath)
@@ -199,7 +236,8 @@ QString FolderSizeItemListModel::getUrl(const QString absPath)
 
 bool FolderSizeItemListModel::isRoot()
 {
-    return m.isRoot();
+    QDir dir(m.currentDir());
+    return (dir.isRoot());
 }
 
 int FolderSizeItemListModel::getSortFlag() const
@@ -210,19 +248,21 @@ int FolderSizeItemListModel::getSortFlag() const
 void FolderSizeItemListModel::setSortFlag(const int sortFlag)
 {
     if (m.setSortFlag(sortFlag)) {
-        // If itemList is actually sorted, emit dataChanged.
-        emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, 0));
+        // If itemList is actually sorted, refreshItems to emit dataChanged.
+        refreshItems();
     }
 }
 
 void FolderSizeItemListModel::refreshItems()
 {
-    emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, 0));
+    beginResetModel();
+    emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, columnCount()-1));
+    endResetModel();
 }
 
 void FolderSizeItemListModel::refreshItem(const int index)
 {
-    emit dataChanged(createIndex(index,0), createIndex(index, 0));
+    emit dataChanged(createIndex(index,0), createIndex(index, columnCount()-1));
 }
 
 bool FolderSizeItemListModel::removeRow(int row, const QModelIndex &parent)
@@ -415,7 +455,7 @@ int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
     if (getDirPath(absFilePath) == currentDir()) {
         isOnCurrentDir = true;
         int i=0;
-        foreach (FolderSizeItem item, m.getDirContent()) {
+        foreach (FolderSizeItem item, m.getItemList()) {
             if (item.absolutePath == absFilePath) {
                 return i;
             }
@@ -431,6 +471,11 @@ void FolderSizeItemListModel::removeCache(const QString absPath)
     m.removeDirSizeCache(absPath);
 }
 
+bool FolderSizeItemListModel::isRunning()
+{
+    return m.isRunning();
+}
+
 void FolderSizeItemListModel::postLoadSlot()
 {
     refreshDir();
@@ -439,6 +484,6 @@ void FolderSizeItemListModel::postLoadSlot()
 void FolderSizeItemListModel::postFetchSlot()
 {
     emit refreshCompleted();
-    reset();
-    emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, columnCount()-1));
+    refreshItems();
+    emit fetchDirSizeFinished();
 }

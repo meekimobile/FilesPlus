@@ -10,7 +10,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include "foldersizeitem.h"
-#include "foldersizemodel.h"
+#include "foldersizemodelthread.h"
 
 class FolderSizeItemListModel : public QAbstractListModel
 {
@@ -59,8 +59,6 @@ public:
     Q_INVOKABLE void setProperty(const int index, FolderSizeItemRoles role, QVariant value);
     Q_INVOKABLE void setProperty(const QString localPath, FolderSizeItemRoles role, QVariant value);
 
-    Q_INVOKABLE QStringList getDriveList();
-    Q_INVOKABLE QString formatFileSize(double size);
     Q_INVOKABLE void refreshDir(const bool clearCache = false);
     Q_INVOKABLE void changeDir(const QString &name);
     Q_INVOKABLE QString getUrl(const QString absPath);
@@ -68,6 +66,7 @@ public:
     Q_INVOKABLE QString getDirContentJson(const QString dirPath);
     Q_INVOKABLE int getIndexOnCurrentDir(const QString absFilePath);
     Q_INVOKABLE void removeCache(const QString absPath);
+    Q_INVOKABLE bool isRunning();
 
     // File/Dir manipulation methods.
     Q_INVOKABLE bool removeRow(int row, const QModelIndex & parent = QModelIndex());
@@ -87,9 +86,11 @@ public:
     Q_INVOKABLE QString getFileName(const QString absFilePath);
     Q_INVOKABLE QString getNewFileName(const QString absFilePath);
     Q_INVOKABLE QString getAbsolutePath(const QString dirPath, const QString fileName);
+    Q_INVOKABLE QStringList getDriveList();
+    Q_INVOKABLE QString formatFileSize(double size);
 private:
     Q_DISABLE_COPY(FolderSizeItemListModel)
-    FolderSizeModel m;
+    FolderSizeModelThread m;
     QTimer *timer;
 
     bool isDirSizeCacheExisting();
@@ -105,6 +106,9 @@ Q_SIGNALS:
     void requestResetCache();
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg);
+    void fetchDirSizeStarted();
+    void fetchDirSizeFinished();
+    void fetchDirSizeUpdated(QString dirPath);
 };
 
 #endif // FOLDERSIZEITEMLISTMODEL_H

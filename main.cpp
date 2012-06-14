@@ -33,5 +33,14 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QDeclarativeEngine *engine = viewer.engine();
     engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider());
 
+#ifdef Q_OS_SYMBIAN
+    // TODO Show available heap on Symbian.
+    qDebug() << "User::CountAllocCells()" << User::CountAllocCells();
+    qDebug() << "User::Heap().Count()" << User::Heap().Count();
+    qDebug() << "User::Heap().Size()" << User::Heap().Size();
+    qDebug() << "User::Heap().MaxLength()" << User::Heap().MaxLength();
+    qDebug() << "RThread::GetCpuTime()" << RThread::GetCpuTime();
+#endif
+
     return app->exec();
 }

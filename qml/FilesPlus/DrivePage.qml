@@ -36,6 +36,10 @@ Page {
     MainMenu {
         id: mainMenu
         disabledMenus: ["Sort by", "Settings", "New Folder"]
+
+        onQuit: {
+            Qt.quit();
+        }
     }
 
     StorageInfo {

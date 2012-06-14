@@ -3,9 +3,10 @@
 #include <QScriptEngine>
 #include <QScriptValue>
 #include <QThread>
+#include <QDebug>
 
 const QString CloudDriveModel::HashFilePath = "C:/CloudDriveModel.dat";
-const int CloudDriveModel::MaxRunningJobCount = 5;
+const int CloudDriveModel::MaxRunningJobCount = 3;
 
 CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
@@ -387,6 +388,8 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
 
         job.isRunning = false;
         m_cloudDriveJobs[nonce] = job;
+    } else if (err == 202) {
+        // TODO handle 202 Nonce already in used.
     }
 
     // Notify job done.

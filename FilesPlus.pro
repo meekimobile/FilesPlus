@@ -26,7 +26,8 @@ symbian:DEPLOYMENT.installer_header = 0x2002CCCF
 symbian:TARGET.CAPABILITY += NetworkServices Location SwEvent
 
 # Set heap size. min 8M max 32M.
-#symbian:TARGET.EPOCHEAPSIZE = 0x800000 0x2000000
+symbian:TARGET.EPOCHEAPSIZE = 0x800000 0x2000000
+#symbian:TARGET.EPOCSTACKSIZE  0x14000
 
 # If your application uses the Qt Mobility libraries, uncomment the following
 # lines and add the respective components to the MOBILITY variable.
@@ -57,7 +58,6 @@ symbian {
 # The .cpp file which was generated for your project. Feel free to hack it.
 SOURCES += main.cpp \
     piechart.cpp \
-    foldersizemodel.cpp \
     foldersizeitem.cpp \
     foldersizeitemlistmodel.cpp \
     pieslice.cpp \
@@ -72,7 +72,8 @@ SOURCES += main.cpp \
     clouddrivejob.cpp \
     qnetworkreplywrapper.cpp \
     localfileimageprovider.cpp \
-    clouddrivemodelthread.cpp
+    clouddrivemodelthread.cpp \
+    foldersizemodelthread.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -80,7 +81,6 @@ qtcAddDeployment()
 
 HEADERS += \
     piechart.h \
-    foldersizemodel.h \
     foldersizeitem.h \
     foldersizeitemlistmodel.h \
     pieslice.h \
@@ -95,7 +95,8 @@ HEADERS += \
     clouddrivejob.h \
     qnetworkreplywrapper.h \
     localfileimageprovider.h \
-    clouddrivemodelthread.h
+    clouddrivemodelthread.h \
+    foldersizemodelthread.h
 
 OTHER_FILES +=
 

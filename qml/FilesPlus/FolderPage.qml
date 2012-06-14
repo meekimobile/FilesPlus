@@ -82,6 +82,16 @@ Page {
 
     MainMenu {
         id: mainMenu
+
+        onQuit: {
+            if (fsModel.isRunning()) {
+                messageDialog.titleText = "Notify";
+                messageDialog.message = "Reset Cache is running. Please wait until it's done.";
+                messageDialog.open();
+            } else {
+                Qt.quit();
+            }
+        }
     }
 
     SortByMenu {
@@ -295,6 +305,19 @@ Page {
             // Cache for changed files has been removed by FolderSizeItemModel internally.
             // Refresh list view.
             refreshSlot();
+        }
+
+        onFetchDirSizeUpdated: {
+            if (!refreshButton.checked) refreshButton.checked = true;
+        }
+
+        onFetchDirSizeStarted: {
+            refreshButton.checkable = true;
+        }
+
+        onFetchDirSizeFinished: {
+            refreshButton.checkable = false;
+            refreshButton.checked = false;
         }
     }
 

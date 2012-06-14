@@ -8,6 +8,8 @@ Menu {
 
     property variant disabledMenus: []
 
+    signal quit()
+
     content: MenuLayout {
         id: mainMenuLayout
 
@@ -54,7 +56,7 @@ Menu {
         MenuItem {
             text: "Exit"
             onClicked: {
-                Qt.quit();
+                quit();
             }
         }
     }
