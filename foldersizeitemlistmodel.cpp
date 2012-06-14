@@ -219,7 +219,7 @@ void FolderSizeItemListModel::refreshDir(const bool clearCache)
             // If UI invoke reset cache or their is existing cache, proceed as user requested.
             m.setClearCache(clearCache);
             m.setRunMethod(m.FetchDirSize);
-            m.start();
+            m.start(QThread::LowPriority);
         }
     } else {
         qDebug() << "FolderSizeItemListModel::refreshDir is not ready. Refresh itemList as-is.";
