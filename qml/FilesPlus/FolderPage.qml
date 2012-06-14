@@ -319,16 +319,17 @@ Page {
 
         onFetchDirSizeUpdated: {
             if (!refreshButton.checked) refreshButton.checked = true;
+            refreshButton.rotation = 360 + (refreshButton.rotation - 6);
+
         }
 
         onFetchDirSizeStarted: {
-            refreshButton.checkable = true;
-            refreshButton.checked = true;
+//            refreshButton.checkable = true;
+//            refreshButton.checked = true;
         }
 
         onFetchDirSizeFinished: {
-            refreshButton.checkable = false;
-            refreshButton.checked = false;
+            refreshButton.rotation = 0;
         }
     }
 
