@@ -289,18 +289,28 @@ Page {
 //            console.debug("folderPage fsModel onCopyProgress " + fileAction + " from " + sourcePath + " to " + targetPath + " " + bytes + " / " + bytesTotal);
 
             // Update ProgressBar on listItem.
-            fsModel.setProperty(sourcePath, FolderSizeItemListModel.IsRunningRole, true);
-            fsModel.setProperty(sourcePath, FolderSizeItemListModel.RunningValueRole, bytes);
-            fsModel.setProperty(sourcePath, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
-            fsModel.setProperty(targetPath, FolderSizeItemListModel.IsRunningRole, true);
-            fsModel.setProperty(targetPath, FolderSizeItemListModel.RunningValueRole, bytes);
-            fsModel.setProperty(targetPath, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+            var sourceIndex = fsModel.getIndexOnCurrentDir(sourcePath);
+            var targetIndex = fsModel.getIndexOnCurrentDir(targetPath);
+            if (sourceIndex > -1) {
+                fsModel.setProperty(sourceIndex, FolderSizeItemListModel.IsRunningRole, true);
+                fsModel.setProperty(sourceIndex, FolderSizeItemListModel.RunningValueRole, bytes);
+                fsModel.setProperty(sourceIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+            }
+            if (targetIndex > -1) {
+                fsModel.setProperty(targetIndex, FolderSizeItemListModel.IsRunningRole, true);
+                fsModel.setProperty(targetIndex, FolderSizeItemListModel.RunningValueRole, bytes);
+                fsModel.setProperty(targetIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+            }
         }
 
         onCopyFinished: {
             console.debug("folderPage fsModel onCopyFinished " + fileAction + " from " + sourcePath + " to " + targetPath + " " + msg);
             fsModel.setProperty(sourcePath, FolderSizeItemListModel.IsRunningRole, false);
             fsModel.setProperty(targetPath, FolderSizeItemListModel.IsRunningRole, false);
+
+            // Reset popupToolPanel
+            popupToolPanel.srcFilePath = "";
+            popupToolPanel.pastePath = "";
 
             // Cache for changed files has been removed by FolderSizeItemModel internally.
             // Refresh list view.
