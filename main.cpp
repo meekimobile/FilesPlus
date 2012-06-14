@@ -35,7 +35,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider());
 
 #ifdef Q_OS_SYMBIAN
-    Monitoring mon;
+//    Monitoring mon;
 #endif
 
     return app->exec();
