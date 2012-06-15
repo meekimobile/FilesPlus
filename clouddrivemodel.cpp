@@ -117,7 +117,7 @@ bool CloudDriveModel::isDirty(QString localPath)
     if (isConnected(localPath)) {
         foreach (CloudDriveItem item, m_cloudDriveItems.values(localPath)) {
             if (item.hash == DirtyHash) {
-                qDebug() << "CloudDriveModel::isDirty item" << item.localPath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
+//                qDebug() << "CloudDriveModel::isDirty item" << item.localPath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
                 return true;
             }
         }

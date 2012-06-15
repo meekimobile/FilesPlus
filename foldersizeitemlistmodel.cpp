@@ -348,6 +348,25 @@ bool FolderSizeItemListModel::createDir(const QString name)
     return res;
 }
 
+bool FolderSizeItemListModel::renameFile(const QString fileName, const QString newFileName)
+{
+    if (fileName == newFileName) return false;
+
+    QDir::setCurrent(currentDir());
+    QFileInfo sourceFileInfo(fileName);
+    if (!sourceFileInfo.isFile()) return false;
+
+    int res = QFile::rename(fileName, newFileName);
+    qDebug() << "FolderSizeItemListModel::renameFile res" << res << "fileName" << fileName << "newFileName" << newFileName;
+    if (res) {
+        // Emit signal to change CloudDriveItem.
+        emit deleteFinished(QDir::current().absoluteFilePath(fileName));
+        emit createFinished(QDir::current().absoluteFilePath(newFileName));
+    }
+
+    return res;
+}
+
 QString FolderSizeItemListModel::getDirPath(const QString absFilePath)
 {
     QFileInfo fileInfo(absFilePath);

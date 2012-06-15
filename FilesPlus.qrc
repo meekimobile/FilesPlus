@@ -51,5 +51,7 @@
         <file>qml/FilesPlus/PopupToolRing.qml</file>
         <file>qml/FilesPlus/cloud_dirty.svg</file>
         <file>qml/FilesPlus/cloud.svg</file>
+        <file>qml/FilesPlus/toolbar_extension.svg</file>
+        <file>qml/FilesPlus/ToolMenu.qml</file>
     </qresource>
 </RCC>

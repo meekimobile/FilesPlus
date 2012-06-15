@@ -132,6 +132,17 @@ Page {
         }
     }
 
+    ToolMenu {
+        id: toolMenu
+        onNewFolder: {
+            newFolderDialog.open();
+        }
+        onRenameFile: {
+            renameDialog.sourcePath = popupToolPanel.selectedFilePath;
+            renameDialog.open();
+        }
+    }
+
     ConfirmDialog {
         id: resetCacheConfirmation
         titleText: "Reset Cache"
@@ -701,6 +712,10 @@ Page {
         onSyncFile: {
             syncFileSlot(srcFilePath, popupToolPanel.selectedFileIndex);
         }
+
+        onShowTools: {
+            toolMenu.open();
+        }
     }
 
     CommonDialog {
@@ -811,6 +826,49 @@ Page {
         onButtonClicked: {
             if (index === 0) {
                 var res = fsModel.createDir(folderName.text);
+                refreshSlot();
+            }
+        }
+    }
+
+    CommonDialog {
+        id: renameDialog
+
+        property string sourcePath
+
+        titleText: "Rename"
+        titleIcon: "FilesPlusIcon.svg"
+        buttonTexts: ["Ok", "Cancel"]
+        content: Column {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width - 10
+            spacing: 3
+
+            Text {
+                text: fsModel.getFileName(renameDialog.sourcePath);
+                color: "white"
+            }
+
+            TextField {
+                id: newName
+                width: parent.width
+                placeholderText: "Please input new name."
+            }
+        }
+
+        onStatusChanged: {
+            if (status == DialogStatus.Open) {
+                newName.forceActiveFocus();
+            }
+
+            if (status == DialogStatus.Closed) {
+                newName.text = "";
+            }
+        }
+
+        onButtonClicked: {
+            if (index === 0) {
+                var res = fsModel.renameFile(fsModel.getFileName(renameDialog.sourcePath), newName.text);
                 refreshSlot();
             }
         }

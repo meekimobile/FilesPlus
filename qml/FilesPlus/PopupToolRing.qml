@@ -30,6 +30,7 @@ Rectangle {
     signal deleteFile(string sourcePath)
     signal printFile(string srcFilePath, int srcItemIndex)
     signal syncFile(string srcFilePath, int srcItemIndex)
+    signal showTools()
     
     function open(panelX, panelY) {
 //        console.debug("popupToolRing open panelX " + panelX + " panelY " + panelY);
@@ -144,6 +145,18 @@ Rectangle {
             PathQuad { x: buttonRing.width /  2; y: buttonRing.height; controlX: buttonRing.width; controlY: buttonRing.height }
             PathQuad { x: buttonRing.x; y: buttonRing.height / 2; controlX: buttonRing.x; controlY: buttonRing.height }
             PathQuad { x: buttonRing.width / 2; y: buttonRing.y; controlX: buttonRing.x; controlY: buttonRing.y }
+        }
+    }
+
+    Button {
+        id: toolButton
+        anchors.centerIn: parent
+        width: popupToolPanel.buttonRadius * 2
+        height: popupToolPanel.buttonRadius * 2
+        iconSource: "toolbar_extension.svg"
+        onClicked: {
+            showTools();
+            popupToolPanel.visible = false;
         }
     }
 }

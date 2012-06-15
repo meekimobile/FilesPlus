@@ -75,6 +75,7 @@ public:
     Q_INVOKABLE bool copyFile(const QString sourceAbsFilePath, const QString targetPath);
     Q_INVOKABLE bool moveFile(const QString sourceAbsFilePath, const QString targetPath);
     Q_INVOKABLE bool createDir(const QString name);
+    Q_INVOKABLE bool renameFile(const QString fileName, const QString newFileName);
 
     // Informative methods which don't use FolderSizeModel.
     Q_INVOKABLE void refreshItems();
