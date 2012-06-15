@@ -320,7 +320,6 @@ Page {
         onFetchDirSizeUpdated: {
             if (!refreshButton.checked) refreshButton.checked = true;
             refreshButton.rotation = 360 + (refreshButton.rotation - 6);
-
         }
 
         onFetchDirSizeStarted: {
@@ -379,10 +378,11 @@ Page {
             y: 0
             anchors.fill: parent
             highlightRangeMode: ListView.NoHighlightRange
-            highlightFollowsCurrentItem: true
+            highlightFollowsCurrentItem: false
             highlightMoveDuration: 1
             highlightMoveSpeed: 4000
             highlight: Rectangle {
+                width: parent.width
                 gradient: Gradient {
                     id: highlightGradient
                     GradientStop {

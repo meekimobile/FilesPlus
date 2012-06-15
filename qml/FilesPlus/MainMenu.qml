@@ -14,6 +14,14 @@ Menu {
         id: mainMenuLayout
 
         MenuItem {
+            id: pasteMenuItem
+            text: "Paste"
+            onClicked: {
+                fileActionDialog.open();
+            }
+        }
+
+        MenuItem {
             id: newFolderMenuItem
             text: "New Folder"
             onClicked: {
@@ -46,12 +54,12 @@ Menu {
             }
         }
                 
-        MenuItem {
-            text: "More Apps"
-            onClicked: {
-                pageStack.push(Qt.resolvedUrl("MoreApps.qml"));
-            }
-        }
+//        MenuItem {
+//            text: "More Apps"
+//            onClicked: {
+//                pageStack.push(Qt.resolvedUrl("MoreApps.qml"));
+//            }
+//        }
         
         MenuItem {
             text: "Exit"
@@ -66,6 +74,7 @@ Menu {
             sortByMenuItem.visible = (disabledMenus.indexOf(sortByMenuItem.text) == -1);
             settingMenuItem.visible = (disabledMenus.indexOf(settingMenuItem.text) == -1);
             newFolderMenuItem.visible = (disabledMenus.indexOf(newFolderMenuItem.text) == -1);
+            pasteMenuItem.visible = (popupToolPanel.srcFilePath != "");
         }
     }
 }
