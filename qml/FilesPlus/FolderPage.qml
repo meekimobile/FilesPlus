@@ -316,7 +316,7 @@ Page {
             var paths = fsModel.getPathToRoot(targetPath);
             for (var i=0; i<paths.length; i++) {
                 console.debug("folderPage fsModel onCopyFinished updateItems paths[" + i + "] " + paths[i]);
-                cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], "FFFFFFFFFF");
+                cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], cloudDriveModel.dirtyHash);
             }
 
             // Cache for changed files has been removed by FolderSizeItemModel internally.
@@ -330,7 +330,7 @@ Page {
             var paths = fsModel.getPathToRoot(targetPath);
             for (var i=0; i<paths.length; i++) {
                 console.debug("folderPage fsModel onDeleteFinished updateItems paths[" + i + "] " + paths[i]);
-                cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], "FFFFFFFFFF");
+                cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], cloudDriveModel.dirtyHash);
             }
         }
 
@@ -341,7 +341,7 @@ Page {
             var paths = fsModel.getPathToRoot(targetPath);
             for (var i=0; i<paths.length; i++) {
                 console.debug("folderPage fsModel onCreateFinished updateItems paths[" + i + "] " + paths[i]);
-                cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], "FFFFFFFFFF");
+                cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], cloudDriveModel.dirtyHash);
             }
         }
 
@@ -488,32 +488,33 @@ Page {
                     source: (popupToolPanel.isCopy) ? "copy.svg" : "trim.svg"
                 }
 
-                Image {
-                    id: syncIcon
-                    x: 0
-                    z: 1
-                    width: 32
-                    height: 32
-                    anchors.left: listItem.left
-                    anchors.bottom: listItem.bottom
-                    visible: cloudDriveModel.isConnected(absolutePath);
-                    source: "refresh.svg"
-                }
-
                 Row {
                     id: listDelegateRow
                     anchors.fill: listItem.paddingItem
                     spacing: 5
-                    Image {
-                        id: icon1
+                    Rectangle {
+                        id: iconRect
                         width: 48
                         height: 48
-                        sourceSize.width: 48
-                        sourceSize.height: 48
-                        source: (isDir) ? "folder.svg" : "notes.svg"
+                        color: "transparent"
+                        Image {
+                            id: icon1
+                            anchors.centerIn: parent
+                            source: (isDir) ? "folder.svg" : "notes.svg"
+                        }
+
+                        Image {
+                            id: syncIcon
+                            anchors.centerIn: parent
+                            width: 32
+                            height: 32
+                            z: 1
+                            visible: cloudDriveModel.isConnected(absolutePath);
+                            source: (cloudDriveModel.isDirty(absolutePath)) ? "cloud_dirty.svg" : "cloud.svg"
+                        }
                     }
                     Column {
-                        width: parent.width - icon1.width - 72
+                        width: parent.width - icon1.width - sizeText.width
                         ListItemText {
                             mode: listItem.mode
                             role: "Title"
@@ -547,6 +548,7 @@ Page {
                         }
                     }
                     ListItemText {
+                        id: sizeText
                         mode: listItem.mode
                         role: "Subtitle"
                         text: Utility.formatFileSize(size, 1)
@@ -845,7 +847,7 @@ Page {
                     if (checked) {
                         fileName.text = fsModel.getFileName(fileOverwriteDialog.sourcePath);
                     } else {
-                        fileName.text = fsModel.getNewFileName(fileOverwriteDialog.sourcePath);
+                        fileName.text = fsModel.getNewFileName(fileOverwriteDialog.sourcePath, fileOverwriteDialog.targetPath);
                     }
                 }
             }
@@ -858,7 +860,7 @@ Page {
         onStatusChanged: {
             if (status == DialogStatus.Open) {
                 fileName.forceActiveFocus();
-                fileName.text = fsModel.getNewFileName(sourcePath);
+                fileName.text = fsModel.getNewFileName(sourcePath, targetPath);
             }
 
             if (status == DialogStatus.Closed) {

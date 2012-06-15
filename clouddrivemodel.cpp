@@ -7,6 +7,7 @@
 
 const QString CloudDriveModel::HashFilePath = "C:/CloudDriveModel.dat";
 const int CloudDriveModel::MaxRunningJobCount = 3;
+const QString CloudDriveModel::DirtyHash = "FFFFFFFF";
 
 CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
@@ -24,6 +25,11 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
 CloudDriveModel::~CloudDriveModel()
 {
     saveCloudDriveItems();
+}
+
+QString CloudDriveModel::dirtyHash() const
+{
+    return DirtyHash;
 }
 
 void CloudDriveModel::loadCloudDriveItems() {
@@ -105,6 +111,20 @@ bool CloudDriveModel::isConnected(QString localPath)
     return m_cloudDriveItems.contains(localPath);
 }
 
+bool CloudDriveModel::isDirty(QString localPath)
+{
+//    qDebug() << "CloudDriveModel::isDirty localPath" << localPath;
+    if (isConnected(localPath)) {
+        foreach (CloudDriveItem item, m_cloudDriveItems.values(localPath)) {
+            if (item.hash == DirtyHash) {
+                qDebug() << "CloudDriveModel::isDirty item" << item.localPath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool CloudDriveModel::isSyncing(QString localPath)
 {
     foreach (CloudDriveJob job, m_cloudDriveJobs.values()) {
@@ -173,7 +193,7 @@ void CloudDriveModel::updateItems(CloudDriveModel::ClientTypes type, QString loc
         m_cloudDriveItems.replace(item.localPath, item);
     }
 
-//    qDebug() << "CloudDriveModel::updateItems items" << getItemList(localPath);
+    qDebug() << "CloudDriveModel::updateItems items" << getItemList(localPath);
 }
 
 QString CloudDriveModel::getItemListJson(QString localPath)

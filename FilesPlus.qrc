@@ -49,5 +49,7 @@
         <file>qml/FilesPlus/TextViewPage.qml</file>
         <file>qml/FilesPlus/photos.svg</file>
         <file>qml/FilesPlus/PopupToolRing.qml</file>
+        <file>qml/FilesPlus/cloud_dirty.svg</file>
+        <file>qml/FilesPlus/cloud.svg</file>
     </qresource>
 </RCC>

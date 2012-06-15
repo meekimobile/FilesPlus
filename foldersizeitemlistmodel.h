@@ -85,7 +85,7 @@ public:
     Q_INVOKABLE bool isFile(const QString absFilePath);
     Q_INVOKABLE bool canCopy(const QString sourceAbsFilePath, const QString targetPath);
     Q_INVOKABLE QString getFileName(const QString absFilePath);
-    Q_INVOKABLE QString getNewFileName(const QString absFilePath);
+    Q_INVOKABLE QString getNewFileName(const QString absFilePath, const QString targetPath);
     Q_INVOKABLE QString getAbsolutePath(const QString dirPath, const QString fileName);
     Q_INVOKABLE QStringList getDriveList();
     Q_INVOKABLE QString formatFileSize(double size);

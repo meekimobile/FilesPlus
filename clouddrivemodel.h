@@ -17,9 +17,11 @@ class CloudDriveModel : public QDeclarativeItem
 {
     Q_OBJECT
     Q_ENUMS(ClientTypes)
+    Q_PROPERTY(QString dirtyHash READ dirtyHash CONSTANT)
 public:
     static const QString HashFilePath;
     static const int MaxRunningJobCount;
+    static const QString DirtyHash;
 
     enum ClientTypes {
         Dropbox,
@@ -37,11 +39,14 @@ public:
     explicit CloudDriveModel(QDeclarativeItem *parent = 0);
     ~CloudDriveModel();
 
+    QString dirtyHash() const;
+
     void addItem(QString localPath, CloudDriveItem item);
     QList<CloudDriveItem> getItemList(QString localPath);
     CloudDriveItem getItem(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
 
     Q_INVOKABLE bool isConnected(QString localPath);
+    Q_INVOKABLE bool isDirty(QString localPath);
     Q_INVOKABLE bool isSyncing(QString localPath);
     Q_INVOKABLE QString getFirstJobJson(QString localPath);
     Q_INVOKABLE QString getJobJson(QString jobId);
