@@ -15,6 +15,9 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     // Issue: Qt on Belle doesn't support QtConcurrent and QFuture.
     // Example code: QFuture<void> loadDataFuture = QtConcurrent::run(this, &CloudDriveModel::loadCloudDriveItems);
 
+    // Connect job queue chain.
+    connect(this, SIGNAL(proceedNextJobSignal()), SLOT(proceedNextJob()) );
+
     // Load cloud drive items.
     loadCloudDriveItems();
 
@@ -469,11 +472,12 @@ void CloudDriveModel::downloadProgressFilter(QString nonce, qint64 bytesReceived
 
 void CloudDriveModel::jobDone() {
     runningJobCount--;
-    proceedNextJob();
+
+    emit proceedNextJobSignal();
 }
 
 void CloudDriveModel::proceedNextJob() {
-    // TODO Proceed next job in queue.
+    // Proceed next job in queue.
     if (runningJobCount >= MaxRunningJobCount || m_jobQueue.isEmpty()) {
         qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue.count() << "m_cloudDriveJobs" << m_cloudDriveJobs.count();
         return;
@@ -500,7 +504,7 @@ void CloudDriveModel::proceedNextJob() {
 
     runningJobCount++;
 
-    proceedNextJob();
+    emit proceedNextJobSignal();
 }
 
 

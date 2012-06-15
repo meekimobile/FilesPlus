@@ -269,7 +269,7 @@ QString DropboxClient::encodeURI(const QString uri) {
     return QUrl::toPercentEncoding(uri, ":/");
 }
 
-QByteArray DropboxClient::createOAuthHeaderForUid(QString uid, QString method, QString uri, QMap<QString, QString> addParamMap) {
+QByteArray DropboxClient::createOAuthHeaderForUid(QString nonce, QString uid, QString method, QString uri, QMap<QString, QString> addParamMap) {
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
     sortMap["oauth_consumer_key"] = consumerKey;
@@ -309,7 +309,7 @@ void DropboxClient::accountInfo(QString uid)
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
-    req.setRawHeader("Authorization", createOAuthHeaderForUid(uid, "GET", uri));
+    req.setRawHeader("Authorization", createOAuthHeaderForUid(createNonce(), uid, "GET", uri));
     QNetworkReply *reply = manager->get(req);
     connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
@@ -331,7 +331,7 @@ void DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, 
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", createOAuthHeaderForUid(uid, "GET", uri));
+    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
     QNetworkReply *reply = manager->get(req);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
@@ -367,7 +367,7 @@ void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, Q
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)));
         QNetworkRequest req = QNetworkRequest(QUrl(uri));
         req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-        req.setRawHeader("Authorization", createOAuthHeaderForUid(uid, "PUT", uri));
+        req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "PUT", uri));
         req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize);
         QNetworkReply *reply = manager->put(req, localSourceFile);
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
@@ -400,7 +400,7 @@ void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath)
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(metadataReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", createOAuthHeaderForUid(uid, "GET", uri));
+    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
     QNetworkReply *reply = manager->get(req);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));

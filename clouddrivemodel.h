@@ -74,6 +74,7 @@ public:
     Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
 signals:
     void dataLoadedSignal();
+    void proceedNextJobSignal();
     void localChangedSignal(QString localPath);
 
     void requestTokenReplySignal(int err, QString errMsg, QString msg);
@@ -88,6 +89,7 @@ signals:
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
 public slots:
     void dataLoadedFilter();
+    void proceedNextJob();
 
     void fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg);
@@ -109,7 +111,6 @@ private:
     void initializeGCDClient();
     QString createNonce();
     void jobDone();
-    void proceedNextJob();
 };
 
 #endif // CLOUDDRIVEMODEL_H

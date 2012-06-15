@@ -34,7 +34,7 @@ public:
     QString createSignatureWithHMACSHA1(QString consumerSecret, QString tokenSecret, QByteArray baseString);
     QByteArray createPostData(QString signature, QString queryString);
     QByteArray createOAuthHeaderString(QMap<QString, QString> sortMap);
-    QByteArray createOAuthHeaderForUid(QString uid, QString method, QString uri, QMap<QString, QString> addParamMap = QMap<QString, QString>());
+    QByteArray createOAuthHeaderForUid(QString nonce, QString uid, QString method, QString uri, QMap<QString, QString> addParamMap = QMap<QString, QString>());
     QString encodeURI(const QString uri);
 
     Q_INVOKABLE void requestToken();
