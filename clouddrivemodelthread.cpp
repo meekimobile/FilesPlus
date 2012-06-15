@@ -31,7 +31,7 @@ void CloudDriveModelThread::loadCloudDriveItems() {
         QDataStream in(&file);    // read the data serialized from the file
         in >> m_cloudDriveItems;
 
-        qDebug() << QTime::currentTime() << "CloudDriveModel::loadCloudDriveItems " << m_cloudDriveItems;
+        qDebug() << QTime::currentTime() << "CloudDriveModel::loadCloudDriveItems " << m_cloudDriveItems.size();
 
         emit dataLoadedSignal();
     }

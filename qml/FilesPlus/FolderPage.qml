@@ -382,7 +382,7 @@ Page {
             highlightMoveDuration: 1
             highlightMoveSpeed: 4000
             highlight: Rectangle {
-                width: parent.width
+                width: fsListView.width
                 gradient: Gradient {
                     id: highlightGradient
                     GradientStop {

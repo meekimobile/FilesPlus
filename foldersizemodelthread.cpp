@@ -241,6 +241,9 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
             } else {
                 dirSize += fileInfo.size();
                 subFileCount++;
+
+                // Emit signal on file is count.
+                emit fetchDirSizeUpdated(fileInfo.absoluteFilePath());
             }
         }
 
@@ -249,7 +252,8 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
         dirSizeCache.insert(dir.absoluteFilePath(), cachedDir);
     }
 
-    emit fetchDirSizeUpdated(dir.absoluteFilePath());
+//    // Emit signal on dir is cached.
+//    emit fetchDirSizeUpdated(dir.absoluteFilePath());
 
 //    qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir done " + cachedDir.name + ", " + QString("%1").arg(cachedDir.size);
 
