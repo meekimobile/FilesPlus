@@ -22,6 +22,9 @@ private:
     QTimer monitorTimer;
     QFile *monitorFile;
     QTextStream out;
+#ifdef Q_OS_SYMBIAN
+    TTimeIntervalMicroSeconds lastCpuTime;
+#endif
 };
 
 #endif // MONITORING_H

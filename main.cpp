@@ -10,6 +10,7 @@
 #include <QAbstractListModel>
 #include "localfileimageprovider.h"
 #include "monitoring.h"
+#include <QSettings>
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -35,7 +36,9 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider());
 
 #ifdef Q_OS_SYMBIAN
-//    Monitoring mon;
+//    QSettings m_Settings(QApplication::applicationDirPath() + "/MySoft.conf");
+
+    Monitoring mon;
 #endif
 
     return app->exec();

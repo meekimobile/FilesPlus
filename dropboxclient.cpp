@@ -427,6 +427,10 @@ void DropboxClient::requestTokenReplyFinished(QNetworkReply *reply)
     }
 
     emit requestTokenReplySignal(reply->error(), reply->errorString(), replyBody );
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void DropboxClient::accessTokenReplyFinished(QNetworkReply *reply)
@@ -459,6 +463,10 @@ void DropboxClient::accessTokenReplyFinished(QNetworkReply *reply)
     }
 
     emit accessTokenReplySignal(reply->error(), reply->errorString(), replyBody );
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void DropboxClient::accountInfoReplyFinished(QNetworkReply *reply)
@@ -478,6 +486,10 @@ void DropboxClient::accountInfoReplyFinished(QNetworkReply *reply)
     }
 
     emit accountInfoReplySignal(reply->error(), reply->errorString(), replyBody );
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void DropboxClient::fileGetReplyFinished(QNetworkReply *reply) {
@@ -522,6 +534,10 @@ void DropboxClient::fileGetReplyFinished(QNetworkReply *reply) {
     } else {
         emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
     }
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void DropboxClient::filePutReplyFinished(QNetworkReply *reply) {
@@ -535,6 +551,10 @@ void DropboxClient::filePutReplyFinished(QNetworkReply *reply) {
     m_localFileHash.remove(nonce);
 
     emit filePutReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
@@ -543,6 +563,10 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
     emit metadataReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 

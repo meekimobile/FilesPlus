@@ -13,12 +13,15 @@ Monitoring::Monitoring(QObject *parent) :
     monitorFile = new QFile(filePath);
     if (monitorFile->open(QFile::WriteOnly | QIODevice::Text)) {
     out.setDevice(monitorFile);
-    out << "Time,UserCountAllocCells,FreeCells,UserHeapCount,UserHeapSize,UserHeapMaxLength,UserAvailable,RThreadGetCpuTime\n";
+    out << "Time,UserCountAllocCells,FreeCells,UserHeapCount,UserHeapSize,UserHeapMaxLength,UserAvailable,CpuDelta\n";
     } else {
         qDebug() << "Monitoring::Monitoring I can't open" << monitorFile->fileName();
     }
 
-    // TODO monitor heap.
+    // Initialize.
+    lastCpuTime = 0;
+
+    // Start timer.
     monitorTimer.setInterval(2000);
     monitorTimer.setSingleShot(false);
     connect(&monitorTimer, SIGNAL(timeout()), this, SLOT(log()) );
@@ -40,6 +43,7 @@ void Monitoring::log()
     TTimeIntervalMicroSeconds cpuTime;
 
     RThread().GetCpuTime(cpuTime);
+    TInt64 cpuDelta = cpuTime.Int64() - lastCpuTime.Int64();
 
     // TODO Show available heap on Symbian.
     QString logMessage = QString("%1,%2,%3,%4,%5,%6,%7,%8\n")
@@ -50,11 +54,13 @@ void Monitoring::log()
             .arg(User::Heap().Size())
             .arg(User::Heap().MaxLength())
             .arg(User::Available(biggestBlock))
-            .arg(cpuTime.Int64());
+            .arg(cpuDelta);
 
     qDebug() << logMessage;
 
     out << logMessage;
     out.flush();
+
+    lastCpuTime = cpuTime;
 #endif
 }

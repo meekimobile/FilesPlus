@@ -6,6 +6,7 @@ QNetworkReplyWrapper::QNetworkReplyWrapper(QNetworkReply *reply, QObject *parent
     m_reply = reply;
     connect(m_reply, SIGNAL(uploadProgress(qint64,qint64)), this, SLOT(uploadProgressFilter(qint64,qint64)) );
     connect(m_reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgressFilter(qint64,qint64)) );
+    connect(m_reply, SIGNAL(destroyed()), this, SIGNAL(destroyed()) );
 }
 
 void QNetworkReplyWrapper::uploadProgressFilter(qint64 bytesSent, qint64 bytesTotal)

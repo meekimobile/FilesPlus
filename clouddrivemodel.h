@@ -45,6 +45,7 @@ public:
     QList<CloudDriveItem> getItemList(QString localPath);
     CloudDriveItem getItem(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
 
+    // CloudDriveItem management.
     Q_INVOKABLE bool isConnected(QString localPath);
     Q_INVOKABLE bool isDirty(QString localPath, QDateTime lastModified);
     Q_INVOKABLE bool isSyncing(QString localPath);
@@ -63,12 +64,14 @@ public:
     Q_INVOKABLE bool isAuthorized(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE QStringList getStoredUidList(CloudDriveModel::ClientTypes type);
 
+    // Service Proxy
     Q_INVOKABLE void requestToken(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE void authorize(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE bool parseAuthorizationCode(CloudDriveModel::ClientTypes type, QString text);
     Q_INVOKABLE void accessToken(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE void accountInfo(CloudDriveModel::ClientTypes type, QString uid);
 
+    // Service Proxy with Job Queuing.
     Q_INVOKABLE void fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString localFilePath, int modelIndex);
     Q_INVOKABLE void filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
     Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
