@@ -521,7 +521,7 @@ Page {
                             height: 32
                             z: 1
                             visible: cloudDriveModel.isConnected(absolutePath);
-                            source: (cloudDriveModel.isDirty(absolutePath)) ? "cloud_dirty.svg" : "cloud.svg"
+                            source: (cloudDriveModel.isDirty(absolutePath, lastModified)) ? "cloud_dirty.svg" : "cloud.svg"
                         }
                     }
                     Column {
@@ -1476,6 +1476,15 @@ Page {
             fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
             fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.RunningValueRole, bytesSent);
             fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+        }
+
+        onLocalChangedSignal: {
+            // Reset CloudDriveItem hash upto root.
+            var paths = fsModel.getPathToRoot(localPath);
+            for (var i=0; i<paths.length; i++) {
+                console.debug("folderPage cloudDriveModel onLocalChangedSignal updateItems paths[" + i + "] " + paths[i]);
+                cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], cloudDriveModel.dirtyHash);
+            }
         }
     }
 

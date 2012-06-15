@@ -2,13 +2,14 @@
 #define CloudDriveItem_H
 
 #include <QDataStream>
+#include <QDateTime>
 #include <QDebug>
 
 class CloudDriveItem
 {
 public:
     CloudDriveItem();
-    CloudDriveItem(int type, QString uid, QString localPath, QString remotePath, QString hash);
+    CloudDriveItem(int type, QString uid, QString localPath, QString remotePath, QString hash, QDateTime lastModified);
 
     bool operator==(const CloudDriveItem &item);
 
@@ -17,6 +18,7 @@ public:
     QString localPath;
     QString remotePath;
     QString hash;
+    QDateTime lastModified;
 
     QString toJsonText();
 };

@@ -111,7 +111,7 @@ bool CloudDriveModel::isConnected(QString localPath)
     return m_cloudDriveItems.contains(localPath);
 }
 
-bool CloudDriveModel::isDirty(QString localPath)
+bool CloudDriveModel::isDirty(QString localPath, QDateTime lastModified)
 {
 //    qDebug() << "CloudDriveModel::isDirty localPath" << localPath;
     if (isConnected(localPath)) {
@@ -119,9 +119,20 @@ bool CloudDriveModel::isDirty(QString localPath)
             if (item.hash == DirtyHash) {
 //                qDebug() << "CloudDriveModel::isDirty item" << item.localPath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
                 return true;
+            } else if (lastModified > item.lastModified) {
+                // It's also dirty if file/folder 's lastModified is newer. (It's changed.)
+                // Signal will be emitted onyl once, next time it will be catched by item.hash==DirtyHash block above.
+                qDebug() << "CloudDriveModel::isDirty item" << item.localPath << "type" << item.type << "uid" << item.uid << "lastModified" << item.lastModified << "file.lastModified" << lastModified;
+
+                // TODO Emit signal to update item's hash.
+                emit localChangedSignal(localPath);
+
+                return true;
             }
+
         }
     }
+
     return false;
 }
 
@@ -175,7 +186,8 @@ void CloudDriveModel::addItem(CloudDriveModel::ClientTypes type, QString uid, QS
         qDebug() << "CloudDriveModel::addItem remove for update " << item;
         removeItem(type, uid, localPath);
     }
-    item = CloudDriveItem(type, uid, localPath, remotePath, hash);
+    // Use latest datetime.
+    item = CloudDriveItem(type, uid, localPath, remotePath, hash, QDateTime::currentDateTime());
     addItem(localPath, item);
 }
 

@@ -46,7 +46,7 @@ public:
     CloudDriveItem getItem(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
 
     Q_INVOKABLE bool isConnected(QString localPath);
-    Q_INVOKABLE bool isDirty(QString localPath);
+    Q_INVOKABLE bool isDirty(QString localPath, QDateTime lastModified);
     Q_INVOKABLE bool isSyncing(QString localPath);
     Q_INVOKABLE QString getFirstJobJson(QString localPath);
     Q_INVOKABLE QString getJobJson(QString jobId);
@@ -74,6 +74,7 @@ public:
     Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
 signals:
     void dataLoadedSignal();
+    void localChangedSignal(QString localPath);
 
     void requestTokenReplySignal(int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString url, QString redirectFrom);
