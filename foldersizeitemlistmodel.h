@@ -80,6 +80,7 @@ public:
     Q_INVOKABLE void refreshItems();
     Q_INVOKABLE void refreshItem(const int index);
     Q_INVOKABLE QString getDirPath(const QString absFilePath);
+    Q_INVOKABLE QStringList getPathToRoot(const QString absFilePath);
     Q_INVOKABLE bool isDir(const QString absFilePath);
     Q_INVOKABLE bool isFile(const QString absFilePath);
     Q_INVOKABLE bool canCopy(const QString sourceAbsFilePath, const QString targetPath);
@@ -106,6 +107,8 @@ Q_SIGNALS:
     void requestResetCache();
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg);
+    void deleteFinished(QString targetPath);
+    void createFinished(QString targetPath);
     void fetchDirSizeStarted();
     void fetchDirSizeFinished();
     void fetchDirSizeUpdated(QString dirPath);

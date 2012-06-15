@@ -312,9 +312,37 @@ Page {
             popupToolPanel.srcFilePath = "";
             popupToolPanel.pastePath = "";
 
+            // Reset cloudDriveModel hash.
+            var paths = fsModel.getPathToRoot(targetPath);
+            for (var i=0; i<paths.length; i++) {
+                console.debug("folderPage fsModel onCopyFinished updateItems paths[" + i + "] " + paths[i]);
+                cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], "FFFFFFFFFF");
+            }
+
             // Cache for changed files has been removed by FolderSizeItemModel internally.
             // Refresh list view.
             refreshSlot();
+        }
+
+        onDeleteFinished: {
+            console.debug("folderPage fsModel onDeleteFinished " + targetPath);
+            // Reset cloudDriveModel hash on parent.
+            var paths = fsModel.getPathToRoot(targetPath);
+            for (var i=0; i<paths.length; i++) {
+                console.debug("folderPage fsModel onDeleteFinished updateItems paths[" + i + "] " + paths[i]);
+                cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], "FFFFFFFFFF");
+            }
+        }
+
+        onCreateFinished: {
+            console.debug("folderPage fsModel onCreateFinished " + targetPath);
+            // Reset cloudDriveModel hash on parent.
+            // TODO reset has upto root.
+            var paths = fsModel.getPathToRoot(targetPath);
+            for (var i=0; i<paths.length; i++) {
+                console.debug("folderPage fsModel onCreateFinished updateItems paths[" + i + "] " + paths[i]);
+                cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], "FFFFFFFFFF");
+            }
         }
 
         onFetchDirSizeUpdated: {
@@ -835,6 +863,7 @@ Page {
 
             if (status == DialogStatus.Closed) {
                 fileName.text = "";
+                overwriteFile.checked = false;
             }
         }
 

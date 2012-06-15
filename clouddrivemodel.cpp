@@ -165,6 +165,17 @@ void CloudDriveModel::removeItem(CloudDriveModel::ClientTypes type, QString uid,
     m_cloudDriveItems.remove(localPath, item);
 }
 
+void CloudDriveModel::updateItems(CloudDriveModel::ClientTypes type, QString localPath, QString hash)
+{
+    QList<CloudDriveItem> items = getItemList(localPath);
+    foreach (CloudDriveItem item, items) {
+        item.hash = hash;
+        m_cloudDriveItems.replace(item.localPath, item);
+    }
+
+//    qDebug() << "CloudDriveModel::updateItems items" << getItemList(localPath);
+}
+
 QString CloudDriveModel::getItemListJson(QString localPath)
 {
     QList<CloudDriveItem> list = getItemList(localPath);

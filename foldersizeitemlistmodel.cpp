@@ -294,8 +294,11 @@ bool FolderSizeItemListModel::removeRows(int row, int count, const QModelIndex &
 
             // Remote item from itemList.
             m.removeItem(i);
-            // Remove deleted file path cache.
+            // Remove deleted parent cache.
             m.removeDirSizeCache(fileInfo.absolutePath());
+
+            // Emit deleteFinished
+            emit deleteFinished(fileInfo.absoluteFilePath());
 
             endRemoveRows();
 
@@ -312,18 +315,9 @@ bool FolderSizeItemListModel::removeRows(int row, int count, const QModelIndex &
 
 bool FolderSizeItemListModel::deleteFile(const QString absPath)
 {
-    QFile file(absPath);
-    QFileInfo fileInfo(file);
+    int index = getIndexOnCurrentDir(absPath);
 
-    // Remove file from file system.
-    bool res = file.remove();
-
-    if (res) {
-        // Remove deleted file path cache.
-        m.removeDirSizeCache(fileInfo.absolutePath());
-    }
-
-    return res;
+    return removeRow(index);
 }
 
 bool FolderSizeItemListModel::copyFile(const QString sourceAbsFilePath, const QString targetPath)
@@ -347,7 +341,11 @@ bool FolderSizeItemListModel::moveFile(const QString sourceAbsFilePath, const QS
 bool FolderSizeItemListModel::createDir(const QString name)
 {
     QDir dir(currentDir());
-    return dir.mkdir(name);
+    bool res = dir.mkdir(name);
+    if (res) {
+        emit createFinished(dir.absoluteFilePath(name));
+    }
+    return res;
 }
 
 QString FolderSizeItemListModel::getDirPath(const QString absFilePath)
@@ -355,6 +353,20 @@ QString FolderSizeItemListModel::getDirPath(const QString absFilePath)
     QFileInfo fileInfo(absFilePath);
 
     return fileInfo.absolutePath();
+}
+
+QStringList FolderSizeItemListModel::getPathToRoot(const QString absFilePath)
+{
+    QStringList paths;
+    QDir dir(absFilePath);
+
+    while (!dir.isRoot()) {
+        paths << dir.absolutePath();
+        dir.cdUp();
+    }
+    paths << dir.absolutePath();
+
+    return paths;
 }
 
 bool FolderSizeItemListModel::isDir(const QString absFilePath)
