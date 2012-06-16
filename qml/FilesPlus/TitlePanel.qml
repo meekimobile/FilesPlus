@@ -3,6 +3,7 @@ import "Utility.js" as Utility
 
 Rectangle {
     property alias text: headerText.text
+    property alias clipboardCount: clipboardText.text
 
     id: titlePanel
     anchors.top: parent.top
@@ -28,6 +29,14 @@ Rectangle {
     Text {
         id: headerText
         anchors.fill: parent
+        anchors.margins: 3
+        anchors.verticalCenter: parent.verticalCenter
+        color: "white"
+    }
+
+    Text {
+        id: clipboardText
+        anchors.right: parent.right
         anchors.margins: 3
         anchors.verticalCenter: parent.verticalCenter
         color: "white"

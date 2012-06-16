@@ -53,5 +53,6 @@
         <file>qml/FilesPlus/cloud.svg</file>
         <file>qml/FilesPlus/toolbar_extension.svg</file>
         <file>qml/FilesPlus/ToolMenu.qml</file>
+        <file>qml/FilesPlus/ClipboardModel.qml</file>
     </qresource>
 </RCC>

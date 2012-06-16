@@ -25,8 +25,9 @@ Rectangle {
 
     signal opened()
     signal closed()
-    signal copyFile(string sourcePath, string targetPath)
-    signal moveFile(string sourcePath, string targetPath)
+    signal cutClicked(string sourcePath);
+    signal copyClicked(string sourcePath);
+    signal pasteClicked(string targetPath)
     signal deleteFile(string sourcePath)
     signal printFile(string srcFilePath, int srcItemIndex)
     signal syncFile(string srcFilePath, int srcItemIndex)
@@ -105,27 +106,23 @@ Rectangle {
     }
 
     function buttonHandler(buttonName, index) {
-        console.debug("button " + index + " buttonName " + buttonName);
+//        console.debug("button " + index + " buttonName " + buttonName);
         if (buttonName == "paste") {
-            if (isCopy) {
-                popupToolPanel.copyFile(srcFilePath, pastePath);
-            } else {
-                popupToolPanel.moveFile(srcFilePath, pastePath);
-            }
+            pasteClicked(pastePath);
         } else if (buttonName == "cut") {
+            cutClicked(selectedFilePath);
             popupToolPanel.srcFilePath = selectedFilePath;
             popupToolPanel.isCopy = false;
         } else if (buttonName == "copy") {
+            copyClicked(selectedFilePath);
             popupToolPanel.srcFilePath = selectedFilePath;
             popupToolPanel.isCopy = true;
         } else if (buttonName == "print") {
-//                    console.debug("popupToolPanel print " + selectedFilePath + ", " + selectedFileIndex);
-            popupToolPanel.printFile(selectedFilePath, selectedFileIndex);
+            printFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "delete") {
-            popupToolPanel.deleteFile(selectedFilePath);
+            deleteFile(selectedFilePath);
         } else if (buttonName == "sync") {
-//                    console.debug("popupToolPanel sync " + selectedFilePath + ", " + selectedFileIndex);
-            popupToolPanel.syncFile(selectedFilePath, selectedFileIndex);
+            syncFile(selectedFilePath, selectedFileIndex);
         }
         popupToolPanel.visible = false;
     }

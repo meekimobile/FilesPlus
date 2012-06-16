@@ -677,6 +677,14 @@ Page {
         }
     }
 
+    ClipboardModel {
+        id: clipboard
+
+        onCountChanged: {
+            currentPath.clipboardCount = count;
+        }
+    }
+
     PopupToolRing {
         id: popupToolPanel
         buttonRadius: 25
@@ -693,11 +701,16 @@ Page {
             fsListView.highlightFollowsCurrentItem = false;
         }
 
-        onCopyFile: {
-            fileActionDialog.open();
+        onCutClicked: {
+            clipboard.append({ "action": "cut", "sourcePath": sourcePath });
         }
 
-        onMoveFile: {
+        onCopyClicked: {
+            clipboard.append({ "action": "copy", "sourcePath": sourcePath });
+        }
+
+        onPasteClicked: {
+            fileActionDialog.targetPath = targetPath;
             fileActionDialog.open();
         }
 
@@ -746,7 +759,10 @@ Page {
 
     CommonDialog {
         id: fileActionDialog
-        titleText: (popupToolPanel.isCopy) ? "Copy file" : "Move file"
+
+        property string targetPath
+
+        titleText: fileActionDialog.getTitleText()
         titleIcon: "FilesPlusIcon.svg"
         buttonTexts: ["Ok", "Cancel"]
         content: Text {
@@ -754,42 +770,86 @@ Page {
             color: "white"
             anchors.horizontalCenter: parent.horizontalCenter
             wrapMode: Text.WrapAnywhere
-            text: ((popupToolPanel.isCopy) ? "Copy " : "Move ")
-                  + "\nfile " + popupToolPanel.srcFilePath
-                  + "\nto " + popupToolPanel.pastePath + " ?"
+            text: fileActionDialog.getText()
+        }
+
+        function getTitleText() {
+            var text = "";
+            if (clipboard.count == 1) {
+                text = clipboard.get(0).action + " file";
+            } else {
+                text = "Multiple copy/move";
+            }
+
+            return text;
+        }
+
+        function getText() {
+            var text = "";
+            if (clipboard.count == 1) {
+                // { "action": "cut", "sourcePath": sourcePath }
+                text = (clipboard.get(0).action)
+                        + "\nfile " + clipboard.get(0).sourcePath
+                        + "\nto " + targetPath + " ?";
+            } else {
+                var moveCount = 0;
+                var copyCount = 0;
+                for (var i=0; i<clipboard.count; i++) {
+                    console.debug("clipboard " + i + " " + clipboard.get(i).action + " " + clipboard.get(i).sourcePath);
+                    if (clipboard.get(i).action == "copy") {
+                        copyCount++;
+                    } else if (clipboard.get(i).action == "move") {
+                        moveCount++;
+                    }
+                }
+
+                text = "Copy " + copyCount + " file(s),"
+                        + "\nMove " + moveCount + " file(s)"
+                        + "\nto " + targetPath + " ?";
+            }
+
+            return text;
         }
 
         onButtonClicked: {
             if (index === 0) {
-                console.debug("fileActionDialog OK isCopy " + popupToolPanel.isCopy + " from " + popupToolPanel.srcFilePath + " to " + popupToolPanel.pastePath);
+                if (clipboard.count == 1) {
+                    // Copy/Move first file from clipboard.
+                    // Check if there is existing file on target folder. Then show overwrite dialog.
+                    if (!fsModel.canCopy(clipboard.get(0).sourcePath, targetPath)) {
+                        fileOverwriteDialog.sourcePath = clipboard.get(0).sourcePath;
+                        fileOverwriteDialog.targetPath = targetPath;
+                        fileOverwriteDialog.isCopy = (clipboard.get(0).action == "copy");
+                        fileOverwriteDialog.open();
+                        return;
+                    }
 
-                // Check if there is existing file on target folder. Then show overwrite dialog.
-                if (!fsModel.canCopy(popupToolPanel.srcFilePath, popupToolPanel.pastePath)) {
-                    fileOverwriteDialog.sourcePath = popupToolPanel.srcFilePath;
-                    fileOverwriteDialog.targetPath = popupToolPanel.pastePath;
-                    fileOverwriteDialog.isCopy = popupToolPanel.isCopy;
-                    fileOverwriteDialog.open();
+                    var res = false;
+                    if (clipboard.get(0).action == "copy") {
+                        res = fsModel.copyFile(clipboard.get(0).sourcePath, targetPath);
+                    } else {
+                        res = fsModel.moveFile(clipboard.get(0).sourcePath, targetPath);
+                    }
+                    if (res) {
+                        // Reset both source and target.
+                        clipboard.clear();
+                        targetPath = "";
+                        popupToolPanel.srcFilePath = "";
+                        popupToolPanel.pastePath = "";
+                    } else {
+                        messageDialog.titleText = (clipboard.get(0).action == "copy") ? "Copy" : "Move";
+                        messageDialog.message = "I can't " + ((clipboard.get(0).action == "copy") ? "copy" : "move")
+                                + "\nfile " + clipboard.get(0).sourcePath
+                                + "\nto " + targetPath
+                                + "\nThe file is existing on target path.";
+                        messageDialog.open();
 
-                    return;
-                }
-
-                var res = false;
-                if (popupToolPanel.isCopy) {
-                    res = fsModel.copyFile(popupToolPanel.srcFilePath, popupToolPanel.pastePath);
+                        // Reset target only.
+                        targetPath = "";
+                        popupToolPanel.pastePath = "";
+                    }
                 } else {
-                    res = fsModel.moveFile(popupToolPanel.srcFilePath, popupToolPanel.pastePath);
-                }
-                if (res) {
-                    popupToolPanel.srcFilePath = "";
-                    popupToolPanel.pastePath = "";
-                } else {
-                    messageDialog.titleText = (popupToolPanel.isCopy) ? "Copy" : "Move";
-                    messageDialog.message = "I can't " + ((popupToolPanel.isCopy) ? "copy" : "move")
-                            + "\nfile " + popupToolPanel.srcFilePath
-                            + "\nto " + popupToolPanel.pastePath
-                            + "\nThe file is existing on target path.";
-                    messageDialog.open();
-                    popupToolPanel.pastePath = "";
+                    // Copy/Move all files from clipboard.
                 }
             }
         }
