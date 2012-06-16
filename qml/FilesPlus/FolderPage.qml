@@ -411,207 +411,10 @@ Page {
 
         property bool flipped: false
 
-        front: ListView {
-            id: fsListView
-            x: 0
-            y: 0
-            anchors.fill: parent
-            highlightRangeMode: ListView.NoHighlightRange
-            highlightFollowsCurrentItem: false
-            highlightMoveDuration: 1
-            highlightMoveSpeed: 4000
-            highlight: Rectangle {
-                width: fsListView.width
-                gradient: Gradient {
-                    id: highlightGradient
-                    GradientStop {
-                        position: 0
-                        color: "#0080D0"
-                    }
-
-                    GradientStop {
-                        position: 1
-                        color: "#53A3E6"
-                    }
-                }
-            }
-            snapMode: ListView.SnapToItem
-            clip: true
-            focus: true
-            model: fsModel
-            delegate: listDelegate
-        }
-
-        back: PieChart {
-            id: pieChart1
-            x: 0
-            y: 0
-            width: parent.width - 4
-            height: parent.height
-            anchors.horizontalCenter: parent.horizontalCenter
-            model: fsModel
-            visible: (folderPage.state == "chart")
-
-            onChartClicked: {
-                console.debug("QML pieChart1.onChartClicked");
-            }
-            onSliceClicked: {
-                console.debug("QML pieChart1.onSliceClicked " + text + ", index=" + index + ", isDir=" + isDir);
-                if (isDir)
-                    fsModel.changeDir(text);
-                else
-                    fsModel.refreshDir(false);
-            }
-            onActiveFocusChanged: {
-                console.debug("QML pieChart1.onActiveFocusChanged");
-            }
-            onSceneActivated: {
-                console.debug("QML pieChart1.onSceneActivated");
-            }
-            onSwipe: {
-                console.debug("QML pieChart1.onSwipe " + swipeAngle);
-                flipSlot();
-            }
-        }
-
+        front: fsListView
+        back: pieChartView
         onStateChanged: {
             fsModel.refreshItems();
-        }
-
-        Component {
-            id: listDelegate
-
-            ListItem {
-                id: listItem
-                property real mouseX: 0
-                property real mouseY: 0
-                property string fileName: name
-                property string filePath: absolutePath
-
-                Image {
-                    id: cutCopyIcon
-                    x: 0
-                    y: 0
-                    z: 1
-                    width: 32
-                    height: 32
-                    visible: (popupToolPanel.srcFilePath == absolutePath);
-                    source: (popupToolPanel.isCopy) ? "copy.svg" : "trim.svg"
-                }
-
-                Row {
-                    id: listDelegateRow
-                    anchors.fill: listItem.paddingItem
-                    spacing: 5
-                    Rectangle {
-                        id: iconRect
-                        width: 48
-                        height: 48
-                        color: "transparent"
-                        Image {
-                            id: icon1
-                            anchors.centerIn: parent
-                            source: (isDir) ? "folder.svg" : "notes.svg"
-                        }
-
-                        Image {
-                            id: syncIcon
-                            anchors.centerIn: parent
-                            width: 32
-                            height: 32
-                            z: 1
-                            visible: cloudDriveModel.isConnected(absolutePath);
-                            source: (cloudDriveModel.isDirty(absolutePath, lastModified)) ? "cloud_dirty.svg" : "cloud.svg"
-                        }
-                    }
-                    Column {
-                        width: parent.width - icon1.width - sizeText.width
-                        ListItemText {
-                            mode: listItem.mode
-                            role: "Title"
-                            text: name
-                            width: parent.width
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        ListItemText {
-                            id: listItemSubTitle
-                            mode: listItem.mode
-                            role: "SubTitle"
-                            text: {
-                                var sub = ""
-                                if (subDirCount > 0) sub += subDirCount + " dir" + ((subDirCount > 1) ? "s" : "");
-                                if (subFileCount > 0) sub += ((sub == "") ? "" : " ") + subFileCount + " file" + ((subFileCount > 1) ? "s" : "");
-                                sub += ((sub == "") ? "" : ", ") + "last modified " + Qt.formatDateTime(lastModified, "d MMM yyyy h:mm:ss ap");
-
-                                return sub;
-                            }
-                            width: parent.width
-                            verticalAlignment: Text.AlignVCenter
-                            visible: !isRunning
-                        }
-                        ProgressBar {
-                            id: syncProgressBar
-                            width: parent.width
-                            indeterminate: isRunning && (isDir || (runningValue == runningMaxValue))
-                            visible: isRunning
-                            value: runningValue
-                            maximumValue: runningMaxValue
-                        }
-                    }
-                    ListItemText {
-                        id: sizeText
-                        mode: listItem.mode
-                        role: "Subtitle"
-                        text: Utility.formatFileSize(size, 1)
-                        width: 72
-                        horizontalAlignment: Text.AlignRight
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                }
-
-                onPressAndHold: {
-                    popupToolPanel.selectedFilePath = absolutePath;
-                    popupToolPanel.selectedFileIndex = index;
-                    popupToolPanel.forFile = !isDir;
-                    popupToolPanel.pastePath = (isDir) ? absolutePath : currentPath.text;
-                    var panelX = x + mouseX - fsListView.contentX;
-                    var panelY = y + mouseY - fsListView.contentY + flipable1.y;
-                    popupToolPanel.open(panelX, panelY);
-                }
-
-                onClicked: {
-                    if (isDir) {
-                        fsModel.changeDir(name);
-                    } else {
-                        // If file is running, disable preview.
-                        if (isRunning) return;
-
-                        // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
-                        var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-                        var viewableTextFileTypes = ["TXT", "HTML"];
-                        if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), {
-                                               fileName: name,
-                                               model: getImageSourcesModel(fsModel.getDirContentJson(fsModel.currentDir, false), name)
-                                           });
-                        } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                            pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
-                                           { filePath: absolutePath });
-                        } else {
-                            Qt.openUrlExternally(fsModel.getUrl(absolutePath));
-                        }
-                    }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    onPressed: {
-                        parent.mouseX = mouseX;
-                        parent.mouseY = mouseY;
-                        mouse.accepted = false;
-                    }
-                }
-            }
         }
 
         transform: Rotation {
@@ -630,6 +433,205 @@ Page {
 
         transitions: Transition {
             NumberAnimation { target: rotation; property: "angle"; duration: 500 }
+        }
+    }
+
+    PieChart {
+        id: pieChartView
+        x: 0
+        y: 0
+        width: parent.width - 4
+        height: parent.height
+        anchors.horizontalCenter: parent.horizontalCenter
+        model: fsModel
+        visible: (folderPage.state == "chart")
+
+        onChartClicked: {
+            console.debug("QML pieChart1.onChartClicked");
+        }
+        onSliceClicked: {
+            console.debug("QML pieChart1.onSliceClicked " + text + ", index=" + index + ", isDir=" + isDir);
+            if (isDir)
+                fsModel.changeDir(text);
+            else
+                fsModel.refreshDir(false);
+        }
+        onActiveFocusChanged: {
+            console.debug("QML pieChart1.onActiveFocusChanged");
+        }
+        onSceneActivated: {
+            console.debug("QML pieChart1.onSceneActivated");
+        }
+        onSwipe: {
+            console.debug("QML pieChart1.onSwipe " + swipeAngle);
+            flipSlot();
+        }
+    }
+
+    ListView {
+        id: fsListView
+        x: 0
+        y: 0
+        anchors.fill: parent
+        highlightRangeMode: ListView.NoHighlightRange
+        highlightFollowsCurrentItem: false
+        highlightMoveDuration: 1
+        highlightMoveSpeed: 4000
+        highlight: Rectangle {
+            width: fsListView.width
+            gradient: Gradient {
+                id: highlightGradient
+                GradientStop {
+                    position: 0
+                    color: "#0080D0"
+                }
+
+                GradientStop {
+                    position: 1
+                    color: "#53A3E6"
+                }
+            }
+        }
+        snapMode: ListView.SnapToItem
+        clip: true
+        focus: true
+        model: fsModel
+        delegate: listDelegate
+    }
+
+    Component {
+        id: listDelegate
+
+        ListItem {
+            id: listItem
+            property real mouseX: 0
+            property real mouseY: 0
+            property string fileName: name
+            property string filePath: absolutePath
+
+            Image {
+                id: cutCopyIcon
+                x: 0
+                y: 0
+                z: 1
+                width: 32
+                height: 32
+                visible: (popupToolPanel.srcFilePath == absolutePath);
+                source: (popupToolPanel.isCopy) ? "copy.svg" : "trim.svg"
+            }
+
+            Row {
+                id: listDelegateRow
+                anchors.fill: listItem.paddingItem
+                spacing: 5
+                Rectangle {
+                    id: iconRect
+                    width: 48
+                    height: 48
+                    color: "transparent"
+                    Image {
+                        id: icon1
+                        anchors.centerIn: parent
+                        source: (isDir) ? "folder.svg" : "notes.svg"
+                    }
+
+                    Image {
+                        id: syncIcon
+                        anchors.centerIn: parent
+                        width: 32
+                        height: 32
+                        z: 1
+                        visible: cloudDriveModel.isConnected(absolutePath);
+                        source: (cloudDriveModel.isDirty(absolutePath, lastModified)) ? "cloud_dirty.svg" : "cloud.svg"
+                    }
+                }
+                Column {
+                    width: parent.width - icon1.width - sizeText.width
+                    ListItemText {
+                        mode: listItem.mode
+                        role: "Title"
+                        text: name
+                        width: parent.width
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    ListItemText {
+                        id: listItemSubTitle
+                        mode: listItem.mode
+                        role: "SubTitle"
+                        text: {
+                            var sub = ""
+                            if (subDirCount > 0) sub += subDirCount + " dir" + ((subDirCount > 1) ? "s" : "");
+                            if (subFileCount > 0) sub += ((sub == "") ? "" : " ") + subFileCount + " file" + ((subFileCount > 1) ? "s" : "");
+                            sub += ((sub == "") ? "" : ", ") + "last modified " + Qt.formatDateTime(lastModified, "d MMM yyyy h:mm:ss ap");
+
+                            return sub;
+                        }
+                        width: parent.width
+                        verticalAlignment: Text.AlignVCenter
+                        visible: !isRunning
+                    }
+                    ProgressBar {
+                        id: syncProgressBar
+                        width: parent.width
+                        indeterminate: isRunning && (isDir || (runningValue == runningMaxValue))
+                        visible: isRunning
+                        value: runningValue
+                        maximumValue: runningMaxValue
+                    }
+                }
+                ListItemText {
+                    id: sizeText
+                    mode: listItem.mode
+                    role: "Subtitle"
+                    text: Utility.formatFileSize(size, 1)
+                    width: 72
+                    horizontalAlignment: Text.AlignRight
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
+
+            onPressAndHold: {
+                popupToolPanel.selectedFilePath = absolutePath;
+                popupToolPanel.selectedFileIndex = index;
+                popupToolPanel.forFile = !isDir;
+                popupToolPanel.pastePath = (isDir) ? absolutePath : currentPath.text;
+                var panelX = x + mouseX - fsListView.contentX;
+                var panelY = y + mouseY - fsListView.contentY + flipable1.y;
+                popupToolPanel.open(panelX, panelY);
+            }
+
+            onClicked: {
+                if (isDir) {
+                    fsModel.changeDir(name);
+                } else {
+                    // If file is running, disable preview.
+                    if (isRunning) return;
+
+                    // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
+                    var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
+                    var viewableTextFileTypes = ["TXT", "HTML"];
+                    if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                        pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), {
+                                           fileName: name,
+                                           model: getImageSourcesModel(fsModel.getDirContentJson(fsModel.currentDir, false), name)
+                                       });
+                    } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                        pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
+                                       { filePath: absolutePath });
+                    } else {
+                        Qt.openUrlExternally(fsModel.getUrl(absolutePath));
+                    }
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onPressed: {
+                    parent.mouseX = mouseX;
+                    parent.mouseY = mouseY;
+                    mouse.accepted = false;
+                }
+            }
         }
     }
 
@@ -849,7 +851,7 @@ Page {
                         popupToolPanel.pastePath = "";
                     }
                 } else {
-                    // Copy/Move all files from clipboard.
+                    // TODO Copy/Move all files from clipboard.
                 }
             }
         }
