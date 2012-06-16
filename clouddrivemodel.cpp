@@ -345,7 +345,7 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
     m_cloudDriveJobs[nonce] = job;
     m_jobQueue.enqueue(nonce);
 
-    proceedNextJob();
+    emit proceedNextJobSignal();
 }
 
 void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex)
@@ -357,7 +357,7 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
     m_cloudDriveJobs[nonce] = job;
     m_jobQueue.enqueue(nonce);
 
-    proceedNextJob();
+    emit proceedNextJobSignal();
 }
 
 void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex)
@@ -369,7 +369,7 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
     m_cloudDriveJobs[nonce] = job;
     m_jobQueue.enqueue(nonce);
 
-    proceedNextJob();
+    emit proceedNextJobSignal();
 }
 
 void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg)

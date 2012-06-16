@@ -14,6 +14,7 @@ class Monitoring : public QObject
 public:
     explicit Monitoring(QObject *parent = 0);
     ~Monitoring();
+    void start();
 signals:
     
 public slots:

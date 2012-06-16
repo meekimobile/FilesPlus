@@ -35,10 +35,15 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QDeclarativeEngine *engine = viewer.engine();
     engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider());
 
-#ifdef Q_OS_SYMBIAN
-//    QSettings m_Settings(QApplication::applicationDirPath() + "/MySoft.conf");
+    // Check settings if monitoring is enabled.
+    QSettings m_Settings(QApplication::applicationDirPath() + "/" + QApplication::applicationName() + ".conf");
+    bool monitoringEnabled = m_Settings.value("Monitoring.enabled", false).toBool();
 
-    Monitoring mon;
+#ifdef Q_OS_SYMBIAN
+    if (monitoringEnabled) {
+        Monitoring mon;
+        mon.start();
+    }
 #endif
 
     return app->exec();

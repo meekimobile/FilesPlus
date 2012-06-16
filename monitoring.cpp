@@ -18,8 +18,10 @@ Monitoring::Monitoring(QObject *parent) :
         qDebug() << "Monitoring::Monitoring I can't open" << monitorFile->fileName();
     }
 
+#ifdef Q_OS_SYMBIAN
     // Initialize.
     lastCpuTime = 0;
+#endif
 
     // Start timer.
     monitorTimer.setInterval(2000);
@@ -63,4 +65,8 @@ void Monitoring::log()
 
     lastCpuTime = cpuTime;
 #endif
+}
+
+void Monitoring::start() {
+    monitorTimer.start();
 }
