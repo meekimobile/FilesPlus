@@ -73,8 +73,8 @@ public:
     Q_INVOKABLE bool removeRow(int row, const QModelIndex & parent = QModelIndex());
     Q_INVOKABLE bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
     Q_INVOKABLE bool deleteFile(const QString absPath);
-    Q_INVOKABLE bool copyFile(const QString sourceAbsFilePath, const QString targetPath);
-    Q_INVOKABLE bool moveFile(const QString sourceAbsFilePath, const QString targetPath);
+    Q_INVOKABLE bool copy(const QString sourcePath, const QString targetPath);
+    Q_INVOKABLE bool move(const QString sourcePath, const QString targetPath);
     Q_INVOKABLE bool createDir(const QString name);
     Q_INVOKABLE bool renameFile(const QString fileName, const QString newFileName);
 
@@ -85,7 +85,7 @@ public:
     Q_INVOKABLE QStringList getPathToRoot(const QString absFilePath);
     Q_INVOKABLE bool isDir(const QString absFilePath);
     Q_INVOKABLE bool isFile(const QString absFilePath);
-    Q_INVOKABLE bool canCopy(const QString sourceAbsFilePath, const QString targetPath);
+    Q_INVOKABLE bool canCopy(const QString sourcePath, const QString targetPath);
     Q_INVOKABLE QString getFileName(const QString absFilePath);
     Q_INVOKABLE QString getNewFileName(const QString absFilePath, const QString targetPath);
     Q_INVOKABLE QString getAbsolutePath(const QString dirPath, const QString fileName);
@@ -102,6 +102,7 @@ private:
 public slots:
     void postLoadSlot();
     void postFetchSlot();
+    void deleteFinishedFilter(QString targetPath);
 Q_SIGNALS:
     void currentDirChanged();
     void refreshBegin();

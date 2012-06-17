@@ -28,6 +28,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)), this, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)) );
     connect(&m, SIGNAL(copyFinished(int,QString,QString,QString)), this, SIGNAL(copyFinished(int,QString,QString,QString)) );
     connect(&m, SIGNAL(fetchDirSizeUpdated(QString)), this, SIGNAL(fetchDirSizeUpdated(QString)) );
+    connect(&m, SIGNAL(deleteFinished(QString)), this, SLOT(deleteFinishedFilter(QString)) );
 
     // Load cache
     m.setRunMethod(m.LoadDirSizeCache);
@@ -283,15 +284,7 @@ bool FolderSizeItemListModel::removeRows(int row, int count, const QModelIndex &
         bool iRes = false;
         QFileInfo fileInfo(filePath);
 
-        if (fileInfo.isFile()) {
-            // Remove file.
-            QFile file(fileInfo.absoluteFilePath());
-            iRes = file.remove();
-        } else if (fileInfo.isDir()) {
-            // Remove dir.
-            QDir parentDir = fileInfo.dir();
-            iRes = parentDir.rmdir(fileInfo.fileName());
-        }
+        iRes = m.deleteDir(filePath);
 
         // Remove item from model's itemList.
         if (iRes) {
@@ -299,8 +292,8 @@ bool FolderSizeItemListModel::removeRows(int row, int count, const QModelIndex &
 
             // Remote item from itemList.
             m.removeItem(i);
-            // Remove deleted parent cache.
-            m.removeDirSizeCache(fileInfo.absolutePath());
+
+            // Remove cache is done in m.deleteDir()
 
             // Emit deleteFinished
             emit deleteFinished(fileInfo.absoluteFilePath());
@@ -322,22 +315,26 @@ bool FolderSizeItemListModel::deleteFile(const QString absPath)
 {
     int index = getIndexOnCurrentDir(absPath);
 
-    return removeRow(index);
+    if (index >= 0) {
+        return removeRow(index);
+    } else {
+        return m.deleteDir(absPath);
+    }
 }
 
-bool FolderSizeItemListModel::copyFile(const QString sourceAbsFilePath, const QString targetPath)
+bool FolderSizeItemListModel::copy(const QString sourcePath, const QString targetPath)
 {
     m.setRunMethod(m.CopyFile);
-    m.setCopyPath(sourceAbsFilePath, targetPath);
+    m.setCopyPath(sourcePath, targetPath);
     m.start();
 
     return true;
 }
 
-bool FolderSizeItemListModel::moveFile(const QString sourceAbsFilePath, const QString targetPath)
+bool FolderSizeItemListModel::move(const QString sourcePath, const QString targetPath)
 {
     m.setRunMethod(m.MoveFile);
-    m.setCopyPath(sourceAbsFilePath, targetPath);
+    m.setCopyPath(sourcePath, targetPath);
     m.start();
 
     return true;
@@ -407,17 +404,10 @@ bool FolderSizeItemListModel::isFile(const QString absFilePath)
     return fileInfo.isFile();
 }
 
-bool FolderSizeItemListModel::canCopy(const QString sourceAbsFilePath, const QString targetPath)
+bool FolderSizeItemListModel::canCopy(const QString sourcePath, const QString targetPath)
 {
-    QString targetAbsFilePath;
-    QFileInfo sourceFileInfo(sourceAbsFilePath);
-    QFileInfo targetFileInfo(targetPath);
-    if (targetFileInfo.isDir()) {
-        targetAbsFilePath = QDir(targetFileInfo.absoluteFilePath()).absoluteFilePath(sourceFileInfo.fileName());
-    } else {
-        targetAbsFilePath = targetPath;
-    }
-    targetFileInfo = QFileInfo(targetAbsFilePath);
+    QFileInfo sourceFileInfo(sourcePath);
+    QFileInfo targetFileInfo(QDir(targetPath).absoluteFilePath(sourceFileInfo.fileName()));
 
     return !targetFileInfo.exists();
 }
@@ -442,9 +432,9 @@ QString FolderSizeItemListModel::getNewFileName(const QString absFilePath, const
     while (file.exists()) {
         QString newFilePath;
         if (i == 1) {
-            newFilePath = originalFileName + QString(" %1.").arg("Copy") + originalFileExtension;
+            newFilePath = originalFileName + QString(" %1").arg("Copy") + (originalFileExtension.isEmpty()?"":("."+originalFileExtension));
         } else {
-            newFilePath = originalFileName + QString(" Copy %1.").arg(i) + originalFileExtension;
+            newFilePath = originalFileName + QString(" Copy %1").arg(i) + (originalFileExtension.isEmpty()?"":("."+originalFileExtension));
         }
         file = QFileInfo(newFilePath);
         i++;
@@ -461,12 +451,26 @@ QString FolderSizeItemListModel::getAbsolutePath(const QString dirPath, const QS
 
 QStringList FolderSizeItemListModel::splitFileName(const QString fileName)
 {
+    qDebug() << "FolderSizeItemListModel::splitFileName fileName" << fileName;
+
     // Parse fileName with RegExp
     QRegExp rx("(.+)(\\.)(\\w{3,4})$");
-    rx.indexIn(fileName);
+    int pos = rx.indexIn(fileName);
 
     QStringList caps;
-    caps << rx.cap(1) << rx.cap(3);
+    if (pos > -1) {
+        for(int i=0; i<=rx.captureCount(); i++) {
+            qDebug() << "FolderSizeItemListModel::splitFileName caps" << i << "=" << rx.cap(i);
+        }
+
+        if (rx.captureCount() == 3) {
+            caps << rx.cap(1) << rx.cap(3);
+        } else {
+            caps << fileName << "";
+        }
+    } else {
+        caps << fileName << "";
+    }
 
     return caps;
 }
@@ -522,4 +526,22 @@ void FolderSizeItemListModel::postFetchSlot()
     emit refreshCompleted();
     refreshItems();
     emit fetchDirSizeFinished();
+}
+
+void FolderSizeItemListModel::deleteFinishedFilter(QString targetPath)
+{
+    // Remove item from ListView.
+    int i = getIndexOnCurrentDir(targetPath);
+
+    if (i >= 0) {
+        beginRemoveRows(createIndex(0,0), i, i);
+
+        // Remote item from itemList.
+        m.removeItem(i);
+
+        // Emit deleteFinished
+        emit deleteFinished(targetPath);
+
+        endRemoveRows();
+    }
 }

@@ -43,6 +43,8 @@ public:
     void loadDirSizeCache();
     void saveDirSizeCache();
     bool copyFile(int method, const QString sourcePath, const QString targetPath);
+    bool copy(int method, const QString sourcePath, const QString targetPath);
+    bool deleteDir(const QString targetPath);
 
     void refreshItemList();
     QList<FolderSizeItem> getItemList() const;
@@ -64,6 +66,7 @@ signals:
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg);
     void fetchDirSizeUpdated(QString dirPath);
+    void deleteFinished(QString localPath);
 private:
     FolderSizeItem getCachedDir(const QFileInfo dir, const bool clearCache = false);
     FolderSizeItem getFileItem(const QFileInfo fileInfo);

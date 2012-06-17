@@ -941,10 +941,11 @@ Page {
                     }
 
                     var res = false;
+                    var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(clipboard.get(0).sourcePath));
                     if (clipboard.get(0).action == "copy") {
-                        res = fsModel.copyFile(clipboard.get(0).sourcePath, targetPath);
+                        res = fsModel.copy(clipboard.get(0).sourcePath, actualTargetPath);
                     } else {
-                        res = fsModel.moveFile(clipboard.get(0).sourcePath, targetPath);
+                        res = fsModel.move(clipboard.get(0).sourcePath, actualTargetPath);
                     }
                     if (res) {
                         // Reset both source and target.
@@ -1109,9 +1110,9 @@ Page {
             if (index === 0) {
                 var res = false;
                 if (isCopy) {
-                    res = fsModel.copyFile(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
+                    res = fsModel.copy(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
                 } else {
-                    res = fsModel.moveFile(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
+                    res = fsModel.move(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
                 }
             }
         }

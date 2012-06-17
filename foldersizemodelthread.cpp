@@ -91,6 +91,48 @@ void FolderSizeModelThread::saveDirSizeCache() {
     }
 }
 
+bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QString targetPath)
+{
+    // targetPath is always actual file/folder name, not parent folder.
+
+    qDebug() << "FolderSizeModelThread::copy method" << method << "sourceFile" << sourcePath << "targetFile" << targetPath;
+
+    QFileInfo sourceFileInfo(sourcePath);
+    QFileInfo targetFileInfo(targetPath);
+
+    bool res = false;
+
+    // Copy dir.
+    if (sourceFileInfo.isDir()) {
+        // Create dir on targetPath.
+        if (!targetFileInfo.exists()) {
+            if (!targetFileInfo.dir().mkdir(sourceFileInfo.fileName())) {
+                qDebug() << "FolderSizeModelThread::copy can't create folder" << targetFileInfo.absoluteFilePath() << "It already exists.";
+            }
+        }
+
+        // List sourceDir's contents. Then invoke copy recursively.
+        QDir dir(sourceFileInfo.absoluteFilePath());
+        dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
+        foreach (QFileInfo item, dir.entryInfoList()) {
+            res = copy(method, item.absoluteFilePath(), QDir(targetFileInfo.absoluteFilePath()).absoluteFilePath(item.fileName()) );
+
+            // Break if it returns false.
+            if (!res) break;
+        }
+    } else {
+        // Method copyFile.
+        res = copyFile(method, sourcePath, targetPath);
+    }
+
+    if (res) {
+        // Remove cache.
+        removeDirSizeCache(targetPath);
+    }
+
+    return res;
+}
+
 bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const QString targetPath)
 {
     qDebug() << "FolderSizeModelThread::copyFile method" << method << "sourceFile" << sourcePath << "targetFile" << targetPath;
@@ -100,6 +142,7 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
     QString sourceAbsFilePath = sourcePath;
     QString targetAbsFilePath;
 
+    // Verify targetPath is file or folder. It will be prepared to file path.
     if (targetFileInfo.isDir()) {
         targetAbsFilePath = QDir(targetFileInfo.absoluteFilePath()).absoluteFilePath(sourceFileInfo.fileName());
     } else {
@@ -109,7 +152,7 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
     qDebug() << "FolderSizeModelThread::copyFile method" << method << "sourceAbsFilePath" << sourceAbsFilePath << "targetAbsFilePath" << targetAbsFilePath;
 
     if (sourceAbsFilePath == targetAbsFilePath) {
-        qDebug() << "FolderSizeModelThread::copyFile Error method" << method << "sourceFile" << sourceAbsFilePath << "targetFile" << targetAbsFilePath;
+        qDebug() << "FolderSizeModelThread::copyFile Error sourceFile" << sourceAbsFilePath << "targetFile" << targetAbsFilePath;
         emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Both source/target files can't be the same file.");
         return false;
     }
@@ -144,28 +187,46 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
         return false;
     }
 
-    if (res) {
-        // Remove target path cache.
-        removeDirSizeCache(targetPath);
-
-        // Delete source file if method is MoveFile.
-        if (method == MoveFile) {
-            // Remove file from file system.
-            res = sourceFile.remove();
-
-            if (res) {
-                // Remove deleted file path cache.
-                removeDirSizeCache(sourceFileInfo.absolutePath());
-            }
-        }
-    }
-
-    // Reset copy method parameters
-    m_sourcePath = "";
-    m_targetPath = "";
-
     // TODO should emit signal as finish.
     emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Action is done successfully.");
+
+    return res;
+}
+
+bool FolderSizeModelThread::deleteDir(const QString targetPath)
+{
+    qDebug() << "FolderSizeModelThread::deleteDir targetPath" << targetPath;
+
+    bool res = true;
+    QFileInfo targetFileInfo(targetPath);
+
+    // Delete dir.
+    if (targetFileInfo.isDir()) {
+        // List sourceDir's contents. Then delete recursively.
+        QDir dir(targetPath);
+        dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
+        foreach (QFileInfo item, dir.entryInfoList()) {
+            res = res && deleteDir(item.absoluteFilePath());
+
+            if (!res) break;
+        }
+
+        // Delete dir.
+        res = res && targetFileInfo.dir().rmdir(targetFileInfo.fileName());
+    } else {
+        // Delete file.
+        QFile targetFile(targetPath);
+        res = targetFile.remove();
+    }
+
+    if (!res) {
+        qDebug() << "FolderSizeModelThread::deleteDir targetPath" << targetPath << "failed.";
+    } else {
+        qDebug() << "FolderSizeModelThread::deleteDir targetPath" << targetPath << "done.";
+
+        // Remove cache up to parent.
+        removeDirSizeCache(targetPath);
+    }
 
     return res;
 }
@@ -180,7 +241,20 @@ void FolderSizeModelThread::removeDirSizeCache(const QString key)
 {
     qDebug() << "FolderSizeModelThread::removeDirSizeCache started from" << key;
 
-    QDir dir(key);
+    QFileInfo fileInfo(key);
+    QDir dir;
+    if (!fileInfo.isDir()) {
+        dir = fileInfo.absoluteDir();
+    } else {
+        dir = QDir(key);
+    }
+
+    // Return if cache doesn't contain key.
+    if (!dirSizeCache.contains(dir.absolutePath())) {
+        qDebug() << "FolderSizeModelThread::removeDirSizeCache key" << dir.absolutePath() << "is nor found. It may have been removed.";
+        return;
+    }
+
     bool canCdup = true;
     while (canCdup) {
         dirSizeCache.remove(dir.absolutePath());
@@ -466,10 +540,20 @@ void FolderSizeModelThread::run()
         loadDirSizeCache();
         break;
     case CopyFile:
-        copyFile(m_runMethod, m_sourcePath, m_targetPath);
+        if (copy(m_runMethod, m_sourcePath, m_targetPath)) {
+            // Reset copy method parameters
+            m_sourcePath = "";
+            m_targetPath = "";
+        }
         break;
     case MoveFile:
-        copyFile(m_runMethod, m_sourcePath, m_targetPath);
+        if (copy(m_runMethod, m_sourcePath, m_targetPath)) {
+            deleteDir(m_sourcePath);
+
+            // Reset copy method parameters
+            m_sourcePath = "";
+            m_targetPath = "";
+        }
         break;
     }
 }

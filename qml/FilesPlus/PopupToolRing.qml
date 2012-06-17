@@ -95,8 +95,8 @@ Rectangle {
     function isButtonVisible(buttonName) {
         if (buttonName === "sync") {
             return (roots.indexOf(selectedFilePath) == -1);
-        } else if (buttonName === "copy" || buttonName === "cut") {
-            return forFile;
+//        } else if (buttonName === "copy" || buttonName === "cut") {
+//            return forFile;
         } else if (buttonName === "paste") {
             return (clipboardCount > 0);
         }
