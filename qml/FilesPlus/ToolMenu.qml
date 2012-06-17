@@ -5,10 +5,19 @@ ContextMenu {
     id: toolMenu
     z: 2
 
-    signal newFolder();
-    signal renameFile();
+    signal newFolder()
+    signal renameFile()
+    signal markClicked()
 
     content: MenuLayout {
+        MenuItem {
+            id: markMenuItem
+            text: "Mark"
+            onClicked: {
+                markClicked();
+            }
+        }
+
         MenuItem {
             id: newFolderMenuItem
             text: "New Folder"

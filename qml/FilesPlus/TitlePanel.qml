@@ -40,5 +40,13 @@ Rectangle {
         anchors.margins: 3
         anchors.verticalCenter: parent.verticalCenter
         color: "white"
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                // TODO remove dependency
+                clipboard.clear();
+            }
+        }
     }
 }

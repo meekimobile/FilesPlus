@@ -44,9 +44,13 @@ Page {
             id: backButton
             iconSource: "toolbar-back"
             flat: true
-
-            Component.onCompleted: {
-                backButton.clicked.connect(goUpSlot);
+            onClicked: {
+                if (fsListView.state == "mark") {
+                    fsListView.state = "";
+                    fsListView.unmarkAll();
+                } else {
+                    goUpSlot();
+                }
             }
         }
 
@@ -54,6 +58,7 @@ Page {
             id: refreshButton
             iconSource: "toolbar-refresh"
             flat: true
+            visible: (fsListView.state == "")
 
             Component.onCompleted: {
                 refreshButton.clicked.connect(refreshSlot);
@@ -64,6 +69,7 @@ Page {
             id: flipButton
             iconSource: (folderPage.state != "list") ? "list.svg" : "chart.svg"
             flat: true
+            visible: (fsListView.state == "")
 
             Component.onCompleted: {
                 flipButton.clicked.connect(flipSlot);
@@ -75,7 +81,11 @@ Page {
             iconSource: "toolbar-menu"
             flat: true
             onClicked: {
-                mainMenu.open();
+                if (fsListView.state == "mark") {
+                    markMenu.open();
+                } else {
+                    mainMenu.open();
+                }
             }
         }
     }
@@ -141,6 +151,15 @@ Page {
             renameDialog.sourcePath = popupToolPanel.selectedFilePath;
             renameDialog.open();
         }
+        onMarkClicked: {
+            fsListView.state = "mark";
+            fsListView.currentIndex = popupToolPanel.selectedFileIndex;
+            fsModel.setProperty(fsListView.currentIndex, FolderSizeItemListModel.IsCheckedRole, true);
+        }
+    }
+
+    MarkMenu {
+        id: markMenu
     }
 
     ConfirmDialog {
@@ -323,6 +342,9 @@ Page {
             popupToolPanel.srcFilePath = "";
             popupToolPanel.pastePath = "";
 
+            // TODO Remove finished sourcePath from clipboard.
+            clipboard.clear();
+
             // Reset cloudDriveModel hash.
             var paths = fsModel.getPathToRoot(targetPath);
             for (var i=0; i<paths.length; i++) {
@@ -497,6 +519,68 @@ Page {
         focus: true
         model: fsModel
         delegate: listDelegate
+        states: [
+            State {
+                name: "mark"
+            }
+        ]
+
+        function isAnyItemChecked() {
+            for (var i=0; i<model.count; i++) {
+                var checked = model.getProperty(i, FolderSizeItemListModel.IsCheckedRole);
+                if (checked) {
+                    console.debug("fsListView isAnyItemChecked item"
+                                  + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
+                                  + " isChecked " + checked);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function markAll() {
+            for (var i=0; i<model.count; i++) {
+                if (!model.getProperty(i, FolderSizeItemListModel.IsDirRole)) {
+                    model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, true);
+                }
+            }
+        }
+
+        function unmarkAll() {
+            for (var i=0; i<model.count; i++) {
+                model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
+            }
+        }
+
+        function cutMarkedItems() {
+            for (var i=0; i<model.count; i++) {
+                if (model.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
+                    console.debug("fsListView cutMarkedItems item"
+                                  + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
+                                  + " isChecked " + model.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
+
+                    clipboard.append({ "action": "cut", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
+                }
+
+                // Reset isChecked.
+                model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
+            }
+        }
+
+        function copyMarkedItems() {
+            for (var i=0; i<model.count; i++) {
+                if (model.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
+                    console.debug("fsListView copyMarkedItems item"
+                                  + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
+                                  + " isChecked " + model.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
+
+                    clipboard.append({ "action": "copy", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
+                }
+
+                // Reset isChecked.
+                model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
+            }
+        }
     }
 
     Component {
@@ -508,6 +592,7 @@ Page {
             property real mouseY: 0
             property string fileName: name
             property string filePath: absolutePath
+            property int clipboardIndex: clipboard.getModelIndex(absolutePath)
 
             Image {
                 id: cutCopyIcon
@@ -516,14 +601,26 @@ Page {
                 z: 1
                 width: 32
                 height: 32
-                visible: (popupToolPanel.srcFilePath == absolutePath);
-                source: (popupToolPanel.isCopy) ? "copy.svg" : "trim.svg"
+                visible: (listItem.clipboardIndex != -1)
+                source: clipboard.getActionIcon(listItem.clipboardIndex)
             }
 
             Row {
                 id: listDelegateRow
                 anchors.fill: listItem.paddingItem
                 spacing: 5
+
+                CheckBox {
+                    id: listItemCheckbox
+                    enabled: false
+                    visible: (fsListView.state == "mark" && !isDir)
+                    checked: isChecked
+//                    onClicked: {
+//                        console.debug("listItemCheckbox onClicked checked " + checked);
+//                        // Use onClicked to avoid Binding loop as it's bound to isChecked.
+//                        fsModel.setProperty(index, FolderSizeItemListModel.IsCheckedRole, checked);
+//                    }
+                }
                 Rectangle {
                     id: iconRect
                     width: 48
@@ -546,7 +643,7 @@ Page {
                     }
                 }
                 Column {
-                    width: parent.width - icon1.width - sizeText.width
+                    width: parent.width - icon1.width - sizeText.width - ((listItemCheckbox.visible)?(listItemCheckbox.width+listDelegateRow.spacing):0)
                     ListItemText {
                         mode: listItem.mode
                         role: "Title"
@@ -591,6 +688,7 @@ Page {
             }
 
             onPressAndHold: {
+                fsListView.currentIndex = index;
                 popupToolPanel.selectedFilePath = absolutePath;
                 popupToolPanel.selectedFileIndex = index;
                 popupToolPanel.forFile = !isDir;
@@ -601,25 +699,29 @@ Page {
             }
 
             onClicked: {
-                if (isDir) {
-                    fsModel.changeDir(name);
+                if (fsListView.state == "mark") {
+                    fsModel.setProperty(index, FolderSizeItemListModel.IsCheckedRole, !isChecked);
                 } else {
-                    // If file is running, disable preview.
-                    if (isRunning) return;
-
-                    // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
-                    var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-                    var viewableTextFileTypes = ["TXT", "HTML"];
-                    if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                        pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), {
-                                           fileName: name,
-                                           model: getImageSourcesModel(fsModel.getDirContentJson(fsModel.currentDir, false), name)
-                                       });
-                    } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                        pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
-                                       { filePath: absolutePath });
+                    if (isDir) {
+                        fsModel.changeDir(name);
                     } else {
-                        Qt.openUrlExternally(fsModel.getUrl(absolutePath));
+                        // If file is running, disable preview.
+                        if (isRunning) return;
+
+                        // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
+                        var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
+                        var viewableTextFileTypes = ["TXT", "HTML"];
+                        if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), {
+                                               fileName: name,
+                                               model: getImageSourcesModel(fsModel.getDirContentJson(fsModel.currentDir, false), name)
+                                           });
+                        } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                            pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
+                                           { filePath: absolutePath });
+                        } else {
+                            Qt.openUrlExternally(fsModel.getUrl(absolutePath));
+                        }
                     }
                 }
             }
@@ -690,6 +792,7 @@ Page {
     PopupToolRing {
         id: popupToolPanel
         buttonRadius: 25
+        clipboardCount: clipboard.count
 
         onOpened: {
 //            console.debug("popupToolRing onOpened");
@@ -721,14 +824,15 @@ Page {
         }
 
         onPrintFile: {
-            printFileSlot(srcFilePath, popupToolPanel.selectedFileIndex);
+            printFileSlot(srcFilePath, srcItemIndex);
         }
 
         onSyncFile: {
-            syncFileSlot(srcFilePath, popupToolPanel.selectedFileIndex);
+            syncFileSlot(srcFilePath, srcItemIndex);
         }
 
         onShowTools: {
+            fsListView.currentIndex = srcItemIndex;
             toolMenu.open();
         }
     }
@@ -764,15 +868,14 @@ Page {
 
         property string targetPath
 
-        titleText: fileActionDialog.getTitleText()
         titleIcon: "FilesPlusIcon.svg"
         buttonTexts: ["Ok", "Cancel"]
         content: Text {
+            id: fileActionDialogText
             width: parent.width - 10
             color: "white"
             anchors.horizontalCenter: parent.horizontalCenter
             wrapMode: Text.WrapAnywhere
-            text: fileActionDialog.getText()
         }
 
         function getTitleText() {
@@ -797,7 +900,6 @@ Page {
                 var moveCount = 0;
                 var copyCount = 0;
                 for (var i=0; i<clipboard.count; i++) {
-                    console.debug("clipboard " + i + " " + clipboard.get(i).action + " " + clipboard.get(i).sourcePath);
                     if (clipboard.get(i).action == "copy") {
                         copyCount++;
                     } else if (clipboard.get(i).action == "move") {
@@ -811,6 +913,18 @@ Page {
             }
 
             return text;
+        }
+
+        onStatusChanged: {
+            if (status == DialogStatus.Opening) {
+                titleText = fileActionDialog.getTitleText();
+                fileActionDialogText.text = fileActionDialog.getText();
+            }
+
+            if (status == DialogStatus.Closed) {
+                titleText = "";
+                fileActionDialogText.text = "";
+            }
         }
 
         onButtonClicked: {

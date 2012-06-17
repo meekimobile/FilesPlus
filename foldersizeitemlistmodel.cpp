@@ -18,6 +18,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     roles[IsRunningRole] = "isRunning";
     roles[RunningValueRole] = "runningValue";
     roles[RunningMaxValueRole] = "runningMaxValue";
+    roles[IsCheckedRole] = "isChecked";
     setRoleNames(roles);
 
     // Connect model class with listModel.
@@ -79,6 +80,8 @@ QVariant FolderSizeItemListModel::data(const QModelIndex & index, int role) cons
         return item.runningValue;
     else if (role == RunningMaxValueRole)
         return item.runningMaxValue;
+    else if (role == IsCheckedRole)
+        return item.isChecked;
     return QVariant();
 }
 
@@ -145,6 +148,8 @@ void FolderSizeItemListModel::setProperty(const int index, FolderSizeItemListMod
             item.runningValue = value.toLongLong();
         else if (role == RunningMaxValueRole)
             item.runningMaxValue = value.toLongLong();
+        else if (role == IsCheckedRole)
+            item.isChecked = value.toBool();
 
         m.setItem(index, item);
 

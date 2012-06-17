@@ -24,6 +24,8 @@ public:
     qint64 runningValue;
     qint64 runningMaxValue;
 
+    bool isChecked;
+
     QString toJsonText();
 private:
     void setFileType();

@@ -41,7 +41,8 @@ public:
         FileTypeRole,
         IsRunningRole,
         RunningValueRole,
-        RunningMaxValueRole
+        RunningMaxValueRole,
+        IsCheckedRole
     };
 
     explicit FolderSizeItemListModel(QObject *parent = 0);

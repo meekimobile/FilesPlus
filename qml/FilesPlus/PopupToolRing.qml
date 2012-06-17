@@ -7,8 +7,6 @@ Rectangle {
     x: 0; y: 0; z: 2;
     radius: ringRadius
     color: "transparent"
-//    border.color: "grey"
-//    border.width: 5
     visible: false
 
     property bool forFile
@@ -17,6 +15,7 @@ Rectangle {
     property int selectedFileIndex
     property bool isCopy
     property string pastePath
+    property int clipboardCount
     property alias timeout: popupTimer.interval
     property variant roots: ["C:/","D:/","E:/","F:/","G:/"]
 
@@ -25,13 +24,13 @@ Rectangle {
 
     signal opened()
     signal closed()
-    signal cutClicked(string sourcePath);
-    signal copyClicked(string sourcePath);
+    signal cutClicked(string sourcePath)
+    signal copyClicked(string sourcePath)
     signal pasteClicked(string targetPath)
     signal deleteFile(string sourcePath)
     signal printFile(string srcFilePath, int srcItemIndex)
     signal syncFile(string srcFilePath, int srcItemIndex)
-    signal showTools()
+    signal showTools(string srcFilePath, int srcItemIndex)
     
     function open(panelX, panelY) {
 //        console.debug("popupToolRing open panelX " + panelX + " panelY " + panelY);
@@ -99,7 +98,7 @@ Rectangle {
         } else if (buttonName === "copy" || buttonName === "cut") {
             return forFile;
         } else if (buttonName === "paste") {
-            return (srcFilePath != "");
+            return (clipboardCount > 0);
         }
 
         return true;
@@ -152,7 +151,7 @@ Rectangle {
         height: popupToolPanel.buttonRadius * 2
         iconSource: "toolbar_extension.svg"
         onClicked: {
-            showTools();
+            showTools(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
             popupToolPanel.visible = false;
         }
     }
