@@ -64,7 +64,7 @@ signals:
     void fetchDirSizeStarted();
     void fetchDirSizeFinished();
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
-    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg);
+    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void fetchDirSizeUpdated(QString dirPath);
     void deleteFinished(QString localPath);
 private:

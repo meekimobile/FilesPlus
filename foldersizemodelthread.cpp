@@ -153,7 +153,7 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
 
     if (sourceAbsFilePath == targetAbsFilePath) {
         qDebug() << "FolderSizeModelThread::copyFile Error sourceFile" << sourceAbsFilePath << "targetFile" << targetAbsFilePath;
-        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Both source/target files can't be the same file.");
+        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Both source/target files can't be the same file.", -1);
         return false;
     }
 
@@ -183,12 +183,12 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
         res = true;
     } else {
         qDebug() << "FolderSizeModelThread::copyFile Error method" << method << "sourceFile" << sourceAbsFilePath << "targetFile" << targetAbsFilePath;
-        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Both source/target files can't be read/written.");
+        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Both source/target files can't be read/written.", -2);
         return false;
     }
 
     // TODO should emit signal as finish.
-    emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Action is done successfully.");
+    emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Action is done successfully.", 0);
 
     return res;
 }

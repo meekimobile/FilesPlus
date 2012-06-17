@@ -26,7 +26,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(fetchDirSizeStarted()), this, SIGNAL(fetchDirSizeStarted()) );
     connect(&m, SIGNAL(fetchDirSizeFinished()), this, SLOT(postFetchSlot()) );
     connect(&m, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)), this, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)) );
-    connect(&m, SIGNAL(copyFinished(int,QString,QString,QString)), this, SIGNAL(copyFinished(int,QString,QString,QString)) );
+    connect(&m, SIGNAL(copyFinished(int,QString,QString,QString,int)), this, SIGNAL(copyFinished(int,QString,QString,QString,int)) );
     connect(&m, SIGNAL(fetchDirSizeUpdated(QString)), this, SIGNAL(fetchDirSizeUpdated(QString)) );
     connect(&m, SIGNAL(deleteFinished(QString)), this, SLOT(deleteFinishedFilter(QString)) );
 
@@ -324,6 +324,12 @@ bool FolderSizeItemListModel::deleteFile(const QString absPath)
 
 bool FolderSizeItemListModel::copy(const QString sourcePath, const QString targetPath)
 {
+    if (sourcePath == targetPath) {
+        emit copyFinished(m.CopyFile, sourcePath, targetPath, "Source and Target path can't be the same.", -3);
+    } else if (targetPath.indexOf(sourcePath) != -1) {
+        emit copyFinished(m.CopyFile, sourcePath, targetPath, "Target path can't be inside source path.", -4);
+    }
+
     m.setRunMethod(m.CopyFile);
     m.setCopyPath(sourcePath, targetPath);
     m.start();
@@ -333,6 +339,12 @@ bool FolderSizeItemListModel::copy(const QString sourcePath, const QString targe
 
 bool FolderSizeItemListModel::move(const QString sourcePath, const QString targetPath)
 {
+    if (sourcePath == targetPath) {
+        emit copyFinished(m.MoveFile, sourcePath, targetPath, "Source and Target path can't be the same.", -3);
+    } else if (targetPath.indexOf(sourcePath) != -1) {
+        emit copyFinished(m.MoveFile, sourcePath, targetPath, "Target path can't be inside source path.", -4);
+    }
+
     m.setRunMethod(m.MoveFile);
     m.setCopyPath(sourcePath, targetPath);
     m.start();

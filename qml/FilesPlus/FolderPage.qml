@@ -334,7 +334,15 @@ Page {
         }
 
         onCopyFinished: {
-            console.debug("folderPage fsModel onCopyFinished " + fileAction + " from " + sourcePath + " to " + targetPath + " " + msg);
+            console.debug("folderPage fsModel onCopyFinished " + fileAction + " from " + sourcePath + " to " + targetPath + " " + err + " " + msg);
+
+            // Show message if error.
+            if (err < 0) {
+                messageDialog.titleText = "Copy/Move Error";
+                messageDialog.message = msg;
+                messageDialog.open();
+            }
+
             fsModel.setProperty(sourcePath, FolderSizeItemListModel.IsRunningRole, false);
             fsModel.setProperty(targetPath, FolderSizeItemListModel.IsRunningRole, false);
 

@@ -109,7 +109,7 @@ Q_SIGNALS:
     void refreshCompleted();
     void requestResetCache();
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
-    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg);
+    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void deleteFinished(QString targetPath);
     void createFinished(QString targetPath);
     void fetchDirSizeStarted();
