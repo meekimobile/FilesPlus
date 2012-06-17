@@ -106,7 +106,7 @@ bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QSt
     if (sourceFileInfo.isDir()) {
         // Create dir on targetPath.
         if (!targetFileInfo.exists()) {
-            if (!targetFileInfo.dir().mkdir(sourceFileInfo.fileName())) {
+            if (!targetFileInfo.dir().mkdir(targetFileInfo.fileName())) {
                 qDebug() << "FolderSizeModelThread::copy can't create folder" << targetFileInfo.absoluteFilePath() << "It already exists.";
             }
         }
@@ -249,11 +249,11 @@ void FolderSizeModelThread::removeDirSizeCache(const QString key)
         dir = QDir(key);
     }
 
-    // Return if cache doesn't contain key.
-    if (!dirSizeCache.contains(dir.absolutePath())) {
-        qDebug() << "FolderSizeModelThread::removeDirSizeCache key" << dir.absolutePath() << "is nor found. It may have been removed.";
-        return;
-    }
+//    // Return if cache doesn't contain key.
+//    if (!dirSizeCache.contains(dir.absolutePath())) {
+//        qDebug() << "FolderSizeModelThread::removeDirSizeCache key" << dir.absolutePath() << "is not found. It may have been removed.";
+//        return;
+//    }
 
     bool canCdup = true;
     while (canCdup) {

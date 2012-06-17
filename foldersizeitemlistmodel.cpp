@@ -432,9 +432,9 @@ QString FolderSizeItemListModel::getNewFileName(const QString absFilePath, const
     while (file.exists()) {
         QString newFilePath;
         if (i == 1) {
-            newFilePath = originalFileName + QString(" %1").arg("Copy") + (originalFileExtension.isEmpty()?"":("."+originalFileExtension));
+            newFilePath = originalFileName + QString("_%1").arg("Copy") + (originalFileExtension.isEmpty()?"":("."+originalFileExtension));
         } else {
-            newFilePath = originalFileName + QString(" Copy %1").arg(i) + (originalFileExtension.isEmpty()?"":("."+originalFileExtension));
+            newFilePath = originalFileName + QString("_Copy%1").arg(i) + (originalFileExtension.isEmpty()?"":("."+originalFileExtension));
         }
         file = QFileInfo(newFilePath);
         i++;
