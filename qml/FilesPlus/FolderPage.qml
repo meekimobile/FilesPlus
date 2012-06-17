@@ -905,19 +905,19 @@ Page {
                         + "\nfile " + clipboard.get(0).sourcePath
                         + "\nto " + targetPath + " ?";
             } else {
-                var moveCount = 0;
+                var cutCount = 0;
                 var copyCount = 0;
                 for (var i=0; i<clipboard.count; i++) {
                     if (clipboard.get(i).action == "copy") {
                         copyCount++;
-                    } else if (clipboard.get(i).action == "move") {
-                        moveCount++;
+                    } else if (clipboard.get(i).action == "cut") {
+                        cutCount++;
                     }
                 }
 
-                text = "Copy " + copyCount + " file(s),"
-                        + "\nMove " + moveCount + " file(s)"
-                        + "\nto " + targetPath + " ?";
+                text = text + ((copyCount>0) ? ("Copy " + copyCount + " file(s)\n") : "");
+                text = text + ((cutCount>0) ? ("Move " + cutCount + " file(s)\n") : "");
+                text = text + "to " + targetPath + " ?";
             }
 
             return text;
@@ -975,6 +975,10 @@ Page {
                     }
                 } else {
                     // TODO Copy/Move all files from clipboard.
+                    for (var i=0; i<clipboard.count; i++) {
+                        console.debug("clipboard action " + clipboard.get(i).action
+                                      + " sourcePath " + clipboard.get(i).sourcePath);
+                    }
                 }
             }
         }

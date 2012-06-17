@@ -74,7 +74,7 @@ Menu {
             sortByMenuItem.visible = (disabledMenus.indexOf(sortByMenuItem.text) == -1);
             settingMenuItem.visible = (disabledMenus.indexOf(settingMenuItem.text) == -1);
             newFolderMenuItem.visible = (disabledMenus.indexOf(newFolderMenuItem.text) == -1);
-            pasteMenuItem.visible = (popupToolPanel.srcFilePath != "");
+            pasteMenuItem.visible = (disabledMenus.indexOf(pasteMenuItem.text) == -1) && (clipboard.count > 0);
         }
     }
 }
