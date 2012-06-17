@@ -1,7 +1,7 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
 
-ContextMenu {
+Menu {
     id: settingMenu
     z: 2
 

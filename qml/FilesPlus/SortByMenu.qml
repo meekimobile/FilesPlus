@@ -2,7 +2,7 @@ import QtQuick 1.1
 import com.nokia.symbian 1.1
 import FolderSizeItemListModel 1.0
 
-ContextMenu {
+Menu {
     id: sortByMenu
     z: 2
 
