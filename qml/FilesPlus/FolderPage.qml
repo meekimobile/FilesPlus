@@ -865,7 +865,7 @@ Page {
 
     CommonDialog {
         id: fileDeleteDialog
-        titleText: "Delete file"
+        titleText: "Delete"
         titleIcon: "FilesPlusIcon.svg"
         buttonTexts: ["Ok", "Cancel"]
         content: Text {
