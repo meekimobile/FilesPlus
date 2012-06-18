@@ -38,9 +38,6 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     // Check settings if monitoring is enabled.
     QApplication::setOrganizationName("MeekiMobile");
     QApplication::setApplicationName("FilesPlus");
-//    QString settingsPath = QApplication::applicationDirPath() + "/" + QApplication::applicationName() + ".conf";
-//    qDebug() << "main settingsPath" << settingsPath;
-//    QSettings m_settings(settingsPath);
     QSettings m_settings;
     qDebug() << "main m_settings fileName()" << m_settings.fileName();
 //    m_settings.setValue("Monitoring.enabled", true);
@@ -50,7 +47,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     bool monitoringEnabled = m_settings.value("Monitoring.enabled", false).toBool();
     qDebug() << "main monitoringEnabled" << monitoringEnabled;
     if (monitoringEnabled) {
-        Monitoring *mon;
+        Monitoring *mon = new Monitoring(app.data());
         mon->start();
     }
 #endif
