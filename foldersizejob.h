@@ -7,12 +7,13 @@ class FolderSizeJob
 {
 public:
     FolderSizeJob();
-    FolderSizeJob(QString jobId, int operation, QString sourcePath, QString targetPath);
+    FolderSizeJob(QString jobId, int operation, QString sourcePath, QString targetPath, bool clearCache = false);
 
     QString jobId;
     int operation;
     QString sourcePath;
     QString targetPath;
+    bool clearCache;
     bool isRunning;
     qint64 bytes;
     qint64 bytesTotal;

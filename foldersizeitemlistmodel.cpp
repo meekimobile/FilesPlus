@@ -35,9 +35,15 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(deleteFinished(QString)), this, SLOT(deleteFinishedFilter(QString)) );
     connect(&m, SIGNAL(finished()), this, SLOT(jobDone()) );
 
-    // Load cache
-    m.setRunMethod(m.LoadDirSizeCache);
-    m.start();
+//    // Load cache
+//    m.setRunMethod(m.LoadDirSizeCache);
+//    m.start();
+
+    // Enqueue job.
+    FolderSizeJob job(createNonce(), FolderSizeModelThread::LoadDirSizeCache, "", "");
+    m_jobQueue.enqueue(job);
+
+    emit proceedNextJobSignal();
 }
 
 FolderSizeItemListModel::~FolderSizeItemListModel()
@@ -247,9 +253,11 @@ void FolderSizeItemListModel::refreshDir(const bool clearCache)
             emit requestResetCache();
         } else {
             // If UI invoke reset cache or their is existing cache, proceed as user requested.
-            m.setClearCache(clearCache);
-            m.setRunMethod(m.FetchDirSize);
-            m.start(QThread::LowPriority);
+            // Enqueue job.
+            FolderSizeJob job(createNonce(), FolderSizeModelThread::FetchDirSize, "", "", clearCache);
+            m_jobQueue.enqueue(job);
+
+            emit proceedNextJobSignal();
         }
     } else {
         qDebug() << "FolderSizeItemListModel::refreshDir is not ready. Refresh itemList as-is.";
@@ -619,7 +627,8 @@ void FolderSizeItemListModel::proceedNextJob()
 
     runningJobCount++;
 
-    qDebug() << "QThreadPool::globalInstance() active / max" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount();
+    qDebug() << "QThreadPool::globalInstance() active / max" << QThreadPool::globalInstance()->activeThreadCount()
+             << "/" << QThreadPool::globalInstance()->maxThreadCount() << "runningJobCount" << runningJobCount;
 
     emit proceedNextJobSignal();
 }
