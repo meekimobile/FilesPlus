@@ -52,6 +52,16 @@ Menu {
                 fsListView.state = "";
             }
         }
+
+        MenuItem {
+            id: deleteMarked
+            text: "Delete marked items"
+            onClicked: {
+                // TODO
+                fsListView.deleteMarkedItems();
+                fsListView.state = "";
+            }
+        }
     }
 
     onStatusChanged: {
@@ -61,6 +71,7 @@ Menu {
             copyMarked.visible = isAnyChecked;
             cutMarked.visible = isAnyChecked;
             syncMarked.visible = isAnyChecked;
+            deleteMarked.visible = isAnyChecked;
         }
     }
 }

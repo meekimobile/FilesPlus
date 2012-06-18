@@ -11,6 +11,7 @@
 #include <QFileInfo>
 #include "foldersizeitem.h"
 #include "foldersizemodelthread.h"
+#include "foldersizejob.h"
 
 class FolderSizeItemListModel : public QAbstractListModel
 {
@@ -22,6 +23,7 @@ class FolderSizeItemListModel : public QAbstractListModel
     Q_PROPERTY(int count READ rowCount)
 public:
     static const int TimerInterval;
+    static const int MaxRunningJobCount;
 
     enum SortFlags {
         SortByName,
@@ -96,6 +98,10 @@ private:
     FolderSizeModelThread m;
     QTimer *timer;
 
+    QQueue<FolderSizeJob> m_jobQueue;
+    int runningJobCount;
+    QString createNonce();
+
     bool isDirSizeCacheExisting();
     bool isReady();
     QStringList splitFileName(const QString fileName);
@@ -103,6 +109,8 @@ public slots:
     void postLoadSlot();
     void postFetchSlot();
     void deleteFinishedFilter(QString targetPath);
+    void proceedNextJob();
+    void jobDone();
 Q_SIGNALS:
     void currentDirChanged();
     void refreshBegin();
@@ -115,6 +123,7 @@ Q_SIGNALS:
     void fetchDirSizeStarted();
     void fetchDirSizeFinished();
     void fetchDirSizeUpdated(QString dirPath);
+    void proceedNextJobSignal();
 };
 
 #endif // FOLDERSIZEITEMLISTMODEL_H

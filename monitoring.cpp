@@ -27,7 +27,6 @@ Monitoring::Monitoring(QObject *parent) :
     monitorTimer.setInterval(2000);
     monitorTimer.setSingleShot(false);
     connect(&monitorTimer, SIGNAL(timeout()), this, SLOT(log()) );
-    monitorTimer.start();
 }
 
 Monitoring::~Monitoring()

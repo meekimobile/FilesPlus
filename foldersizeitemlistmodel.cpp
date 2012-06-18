@@ -1,6 +1,7 @@
 #include "foldersizeitemlistmodel.h"
 
 const int FolderSizeItemListModel::TimerInterval = 100;
+const int FolderSizeItemListModel::MaxRunningJobCount = 1;
 
 FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -21,6 +22,9 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     roles[IsCheckedRole] = "isChecked";
     setRoleNames(roles);
 
+    // Connect job queue chain.
+    connect(this, SIGNAL(proceedNextJobSignal()), SLOT(proceedNextJob()) );
+
     // Connect model class with listModel.
     connect(&m, SIGNAL(loadDirSizeCacheFinished()), this, SLOT(postLoadSlot()) );
     connect(&m, SIGNAL(fetchDirSizeStarted()), this, SIGNAL(fetchDirSizeStarted()) );
@@ -29,6 +33,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(copyFinished(int,QString,QString,QString,int)), this, SIGNAL(copyFinished(int,QString,QString,QString,int)) );
     connect(&m, SIGNAL(fetchDirSizeUpdated(QString)), this, SIGNAL(fetchDirSizeUpdated(QString)) );
     connect(&m, SIGNAL(deleteFinished(QString)), this, SLOT(deleteFinishedFilter(QString)) );
+    connect(&m, SIGNAL(finished()), this, SLOT(jobDone()) );
 
     // Load cache
     m.setRunMethod(m.LoadDirSizeCache);
@@ -196,6 +201,25 @@ QString FolderSizeItemListModel::formatFileSize(double size)
     return fileSize;
 }
 
+QString FolderSizeItemListModel::createNonce() {
+    QString ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    QString nonce;
+
+    for(int i = 0; i <= 16; ++i)
+    {
+        nonce += ALPHANUMERIC.at( qrand() % ALPHANUMERIC.length() );
+    }
+
+    return nonce;
+}
+
+void FolderSizeItemListModel::jobDone()
+{
+    runningJobCount--;
+
+    emit proceedNextJobSignal();
+}
+
 void FolderSizeItemListModel::changeDir(const QString &name)
 {
     // m.changeDir() reuses m.setCurrentDir().
@@ -325,14 +349,16 @@ bool FolderSizeItemListModel::deleteFile(const QString absPath)
 bool FolderSizeItemListModel::copy(const QString sourcePath, const QString targetPath)
 {
     if (sourcePath == targetPath) {
-        emit copyFinished(m.CopyFile, sourcePath, targetPath, "Source and Target path can't be the same.", -3);
+        emit copyFinished(FolderSizeModelThread::CopyFile, sourcePath, targetPath, "Source and Target path can't be the same.", -3);
     } else if (targetPath.indexOf(sourcePath) != -1) {
-        emit copyFinished(m.CopyFile, sourcePath, targetPath, "Target path can't be inside source path.", -4);
+        emit copyFinished(FolderSizeModelThread::CopyFile, sourcePath, targetPath, "Target path can't be inside source path.", -4);
     }
 
-    m.setRunMethod(m.CopyFile);
-    m.setCopyPath(sourcePath, targetPath);
-    m.start();
+    // Enqueue job.
+    FolderSizeJob job(createNonce(), FolderSizeModelThread::CopyFile, sourcePath, targetPath);
+    m_jobQueue.enqueue(job);
+
+    emit proceedNextJobSignal();
 
     return true;
 }
@@ -340,14 +366,16 @@ bool FolderSizeItemListModel::copy(const QString sourcePath, const QString targe
 bool FolderSizeItemListModel::move(const QString sourcePath, const QString targetPath)
 {
     if (sourcePath == targetPath) {
-        emit copyFinished(m.MoveFile, sourcePath, targetPath, "Source and Target path can't be the same.", -3);
+        emit copyFinished(FolderSizeModelThread::MoveFile, sourcePath, targetPath, "Source and Target path can't be the same.", -3);
     } else if (targetPath.indexOf(sourcePath) != -1) {
-        emit copyFinished(m.MoveFile, sourcePath, targetPath, "Target path can't be inside source path.", -4);
+        emit copyFinished(FolderSizeModelThread::MoveFile, sourcePath, targetPath, "Target path can't be inside source path.", -4);
     }
 
-    m.setRunMethod(m.MoveFile);
-    m.setCopyPath(sourcePath, targetPath);
-    m.start();
+    // Enqueue job.
+    FolderSizeJob job(createNonce(), FolderSizeModelThread::MoveFile, sourcePath, targetPath);
+    m_jobQueue.enqueue(job);
+
+    emit proceedNextJobSignal();
 
     return true;
 }
@@ -556,4 +584,42 @@ void FolderSizeItemListModel::deleteFinishedFilter(QString targetPath)
 
         endRemoveRows();
     }
+}
+
+void FolderSizeItemListModel::proceedNextJob()
+{
+    if (m.isRunning()) return;
+
+    // Proceed next job in queue.
+    if (runningJobCount >= MaxRunningJobCount || m_jobQueue.isEmpty()) {
+        qDebug() << "FolderSizeItemListModel::proceedNextJob waiting runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue.count();
+        return;
+    }
+
+    // Dequeue job and create job thread with signal/slot connections.
+    FolderSizeJob job = m_jobQueue.dequeue();
+
+    // Load cache
+    m.setRunMethod(job.operation);
+    m.setCopyPath(job.sourcePath, job.targetPath);
+    m.start();
+
+//    FolderSizeModelThread *t;
+//    t->setRunMethod(job.operation);
+//    t->setCopyPath(job.sourcePath, job.targetPath);
+//    connect(&t, SIGNAL(loadDirSizeCacheFinished()), this, SLOT(postLoadSlot()) );
+//    connect(&t, SIGNAL(fetchDirSizeStarted()), this, SIGNAL(fetchDirSizeStarted()) );
+//    connect(&t, SIGNAL(fetchDirSizeFinished()), this, SLOT(postFetchSlot()) );
+//    connect(&t, SIGNAL(fetchDirSizeUpdated(QString)), this, SIGNAL(fetchDirSizeUpdated(QString)) );
+//    connect(t, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)), this, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)) );
+//    connect(t, SIGNAL(copyFinished(int,QString,QString,QString,int)), this, SIGNAL(copyFinished(int,QString,QString,QString,int)) );
+//    connect(t, SIGNAL(deleteFinished(QString)), this, SLOT(deleteFinishedFilter(QString)) );
+//    qDebug() << "FolderSizeItemListModel::proceedNextJob t " << t->currentThreadId();
+//    t->start();
+
+    runningJobCount++;
+
+    qDebug() << "QThreadPool::globalInstance() active / max" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount();
+
+    emit proceedNextJobSignal();
 }

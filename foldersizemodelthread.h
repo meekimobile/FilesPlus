@@ -42,8 +42,8 @@ public:
     void fetchDirSize(const bool clearCache = false);
     void loadDirSizeCache();
     void saveDirSizeCache();
-    bool copyFile(int method, const QString sourcePath, const QString targetPath);
     bool copy(int method, const QString sourcePath, const QString targetPath);
+    bool copyFile(int method, const QString sourcePath, const QString targetPath);
     bool deleteDir(const QString targetPath);
 
     void refreshItemList();

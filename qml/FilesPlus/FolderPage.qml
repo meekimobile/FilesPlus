@@ -589,6 +589,24 @@ Page {
                 model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
             }
         }
+
+        function deleteMarkedItems() {
+            for (var i=0; i<model.count; i++) {
+                if (model.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
+                    console.debug("fsListView deleteMarkedItems item"
+                                  + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
+                                  + " isChecked " + model.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
+
+                    clipboard.append({ "action": "delete", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
+                }
+
+                // Reset isChecked.
+                model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
+            }
+
+            // Open confirmation dialog.
+            fileActionDialog.open();
+        }
     }
 
     Component {
@@ -891,33 +909,48 @@ Page {
             if (clipboard.count == 1) {
                 text = clipboard.get(0).action + " file";
             } else {
-                text = "Multiple copy/move";
+                // TODO if all copy, show "Multiple copy".
+                text = "Multiple actions";
             }
 
             return text;
         }
 
+        function getActionName(action) {
+            if (action == "copy") return "Copy";
+            else if (action == "cut") return "Move";
+            else if (action == "delete") return "Delete";
+            else return "Invalid action";
+        }
+
         function getText() {
+            // Exmaple of clipboard entry { "action": "cut", "sourcePath": sourcePath }
             var text = "";
             if (clipboard.count == 1) {
-                // { "action": "cut", "sourcePath": sourcePath }
-                text = (clipboard.get(0).action)
+                text = getActionName(clipboard.get(0).action)
                         + "\nfile " + clipboard.get(0).sourcePath
-                        + "\nto " + targetPath + " ?";
+                        + ((clipboard.get(0).action == "delete")?"":("\nto " + targetPath))
+                        + " ?";
             } else {
                 var cutCount = 0;
                 var copyCount = 0;
+                var deleteCount = 0;
                 for (var i=0; i<clipboard.count; i++) {
+                    console.debug("fileActionDialog getText clipboard i " + i + " action " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
                     if (clipboard.get(i).action == "copy") {
                         copyCount++;
                     } else if (clipboard.get(i).action == "cut") {
                         cutCount++;
+                    } else if (clipboard.get(i).action == "delete") {
+                        deleteCount++;
                     }
                 }
 
-                text = text + ((copyCount>0) ? ("Copy " + copyCount + " file(s)\n") : "");
-                text = text + ((cutCount>0) ? ("Move " + cutCount + " file(s)\n") : "");
-                text = text + "to " + targetPath + " ?";
+                if (deleteCount>0) text = text + ("Delete " + deleteCount + " file(s)\n");
+                if (copyCount>0) text = text + ("Copy " + copyCount + " file(s)\n");
+                if (cutCount>0) text = text + ("Move " + cutCount + " file(s)\n");
+                if (copyCount>0 || cutCount>0) text = text + "to " + targetPath;
+                text = text + " ?";
             }
 
             return text;
@@ -932,15 +965,18 @@ Page {
             if (status == DialogStatus.Closed) {
                 titleText = "";
                 fileActionDialogText.text = "";
+
+                // Always clear clipboard's delete actions.
+                clipboard.clearDeleteActions();
             }
         }
 
         onButtonClicked: {
             if (index === 0) {
                 if (clipboard.count == 1) {
-                    // Copy/Move first file from clipboard.
+                    // Copy/Move/Delete first file from clipboard.
                     // Check if there is existing file on target folder. Then show overwrite dialog.
-                    if (!fsModel.canCopy(clipboard.get(0).sourcePath, targetPath)) {
+                    if (clipboard.get(0).action != "delete" && !fsModel.canCopy(clipboard.get(0).sourcePath, targetPath)) {
                         fileOverwriteDialog.sourcePath = clipboard.get(0).sourcePath;
                         fileOverwriteDialog.targetPath = targetPath;
                         fileOverwriteDialog.isCopy = (clipboard.get(0).action == "copy");
@@ -952,8 +988,10 @@ Page {
                     var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(clipboard.get(0).sourcePath));
                     if (clipboard.get(0).action == "copy") {
                         res = fsModel.copy(clipboard.get(0).sourcePath, actualTargetPath);
-                    } else {
+                    } else if (clipboard.get(0).action == "cut") {
                         res = fsModel.move(clipboard.get(0).sourcePath, actualTargetPath);
+                    } else if (clipboard.get(0).action == "delete") {
+                        res = fsModel.deleteFile(clipboard.get(0).sourcePath);
                     }
                     if (res) {
                         // Reset both source and target.
@@ -962,11 +1000,10 @@ Page {
                         popupToolPanel.srcFilePath = "";
                         popupToolPanel.pastePath = "";
                     } else {
-                        messageDialog.titleText = (clipboard.get(0).action == "copy") ? "Copy" : "Move";
-                        messageDialog.message = "I can't " + ((clipboard.get(0).action == "copy") ? "copy" : "move")
+                        messageDialog.titleText = getActionName(clipboard.get(0).action);
+                        messageDialog.message = "I can't " + getActionName(clipboard.get(0).action).toLowerCase()
                                 + "\nfile " + clipboard.get(0).sourcePath
-                                + "\nto " + targetPath
-                                + "\nThe file is existing on target path.";
+                                + "\nto " + targetPath;
                         messageDialog.open();
 
                         // Reset target only.
@@ -974,12 +1011,28 @@ Page {
                         popupToolPanel.pastePath = "";
                     }
                 } else {
-                    // TODO Copy/Move all files from clipboard.
+                    // TODO Copy/Move/Delete all files from clipboard.
+                    // Action is {copy, cut, delete}
                     for (var i=0; i<clipboard.count; i++) {
-                        console.debug("clipboard action " + clipboard.get(i).action
-                                      + " sourcePath " + clipboard.get(i).sourcePath);
+                        var action = clipboard.get(i).action;
+                        var sourcePath = clipboard.get(i).sourcePath;
+                        var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(sourcePath));
+
+                        console.debug("folderPage fileActionDialog onButtonClicked clipboard action " + action + " sourcePath " + sourcePath);
+                        if (action == "copy") {
+                            fsModel.copy(sourcePath, actualTargetPath);
+                        } else if (action == "cut") {
+                            fsModel.move(sourcePath, actualTargetPath);
+                        } else if (action == "delete") {
+                            fsModel.deleteFile(sourcePath);
+                        } else {
+                            console.debug("folderPage fileActionDialog onButtonClicked invalid action " + action);
+                        }
                     }
                 }
+
+                // Clear clipboard as they should have been processed.
+                clipboard.clear();
             }
         }
     }

@@ -36,13 +36,22 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider());
 
     // Check settings if monitoring is enabled.
-    QSettings m_Settings(QApplication::applicationDirPath() + "/" + QApplication::applicationName() + ".conf");
-    bool monitoringEnabled = m_Settings.value("Monitoring.enabled", false).toBool();
+    QApplication::setOrganizationName("MeekiMobile");
+    QApplication::setApplicationName("FilesPlus");
+//    QString settingsPath = QApplication::applicationDirPath() + "/" + QApplication::applicationName() + ".conf";
+//    qDebug() << "main settingsPath" << settingsPath;
+//    QSettings m_settings(settingsPath);
+    QSettings m_settings;
+    qDebug() << "main m_settings fileName()" << m_settings.fileName();
+//    m_settings.setValue("Monitoring.enabled", true);
+//    m_settings.sync();
 
 #ifdef Q_OS_SYMBIAN
+    bool monitoringEnabled = m_settings.value("Monitoring.enabled", false).toBool();
+    qDebug() << "main monitoringEnabled" << monitoringEnabled;
     if (monitoringEnabled) {
-        Monitoring mon;
-        mon.start();
+        Monitoring *mon;
+        mon->start();
     }
 #endif
 

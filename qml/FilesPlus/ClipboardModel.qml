@@ -22,4 +22,16 @@ ListModel {
         }
         return "";
     }
+
+    function clearDeleteActions() {
+        var i = 0;
+        while (i<clipboard.count) {
+            if (clipboard.get(i).action == "delete") {
+                // Remove current entry will make next entry takeover current index. It needs not increase index.
+                clipboard.remove(i);
+            } else {
+                i++;
+            }
+        }
+    }
 }
