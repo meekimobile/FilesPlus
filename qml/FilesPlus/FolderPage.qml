@@ -1824,7 +1824,7 @@ Page {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 30
                     height: 30
-                    source: "refresh.svg"
+                    source: "cloud.svg"
                     visible: (hash != "")
                 }
             }

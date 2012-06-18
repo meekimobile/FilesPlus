@@ -58,13 +58,14 @@ Page {
 
         onPinchStarted: {
             console.debug("textView onPinchStarted textView.cursorPosition " + textView.cursorPosition);
+            textView.startFontSize = textView.font.pointSize;
         }
         onPinchFinished: {
             console.debug("textView onPinchFinished textView.cursorPosition" + textView.cursorPosition);
         }
         onPinchUpdated: {
             console.debug("textView onPinchUpdated pinch.scale " + pinch.scale);
-            var newFontSize = Math.round(textView.font.pointSize * pinch.scale);
+            var newFontSize = Math.round(textView.startFontSize * pinch.scale);
             newFontSize = Utility.limit(newFontSize, 4, 14);
 
             textView.font.pointSize = newFontSize;
@@ -73,13 +74,15 @@ Page {
         TextArea {
             id: textView
             enabled: true
-            readOnly: false
+            readOnly: true
             anchors.fill: parent
             font.family: "Helvetica"
             font.pointSize: 6
             wrapMode: TextEdit.WordWrap
             textFormat: TextEdit.AutoText
             text: helper.getFileContent(textViewPage.filePath)
+
+            property int startFontSize
         }
     }
 
