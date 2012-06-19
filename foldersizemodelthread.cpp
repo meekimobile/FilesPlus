@@ -273,22 +273,22 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
 
     // Get cached dirSize if any and clearCache==false
     if (!clearCache && dirSizeCache.contains(dir.absoluteFilePath())) {
-//        qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir found " + dir.absoluteFilePath();
+        qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir found " + dir.absoluteFilePath();
 
         cachedDir = dirSizeCache.value(dir.absoluteFilePath());
         if (cachedDir.lastModified >= dir.lastModified()) {
             // cachedDir is still valid, just return it.
-//            qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir %1 >= %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
+            qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir %1 >= %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
             isFound = true;
         } else {
-//            qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir %1 < %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
+            qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir %1 < %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
         }
     }
 
     // If (cache is invalidated or not found) and FolderSizeModelThread is ready, get cache recursively.
     // Otherwise return dummy dir item with 0 byte.
     if (!isFound) {
-//        qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir NOT found " + dir.absoluteFilePath();
+        qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir NOT found " + dir.absoluteFilePath();
 
         // Tell event loop to process event before it will process time consuming task.
         QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
@@ -319,6 +319,8 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
                 // Emit signal on file is count.
                 emit fetchDirSizeUpdated(fileInfo.absoluteFilePath());
             }
+
+            qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir path" << fileInfo.absoluteFilePath() << "dirSize" << dirSize << "subDirCount" << subDirCount << "subFileCount" << subFileCount;
         }
 
         // Put calculated dirSize to cache.
@@ -329,7 +331,7 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
 //    // Emit signal on dir is cached.
 //    emit fetchDirSizeUpdated(dir.absoluteFilePath());
 
-//    qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir done " + cachedDir.name + ", " + QString("%1").arg(cachedDir.size);
+    qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir done " + cachedDir.name + ", " + QString("%1").arg(cachedDir.size);
 
     return cachedDir;
 }
@@ -351,24 +353,35 @@ void FolderSizeModelThread::sortItemList(QList<FolderSizeItem> &itemList) {
     }
 }
 
-QList<FolderSizeItem> FolderSizeModelThread::getItemList() const
+void FolderSizeModelThread::getDirContent(const QString dirPath, QList<FolderSizeItem> &itemList)
 {
-    return itemList;
-}
+    // TODO Issue: so many files caused application crash.
 
-QList<FolderSizeItem> FolderSizeModelThread::getDirContent(const QString dirPath)
-{
     // Get only contents in directory (not recursive).
-    QList<FolderSizeItem> tempList;
-
     QDir dir;
     dir = QDir(dirPath);
     dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
+    switch (m_sortFlag) {
+    case SortByName:
+        dir.setSorting(QDir::Name);
+        break;
+    case SortBySize:
+        dir.setSorting(QDir::Size | QDir::DirsFirst);
+        break;
+    case SortByTime:
+        dir.setSorting(QDir::Time);
+        break;
+    case SortByType:
+        dir.setSorting(QDir::Type);
+        break;
+    }
 
     QFileInfoList list = dir.entryInfoList();
     for (int i = 0; i < list.size(); ++i) {
         QFileInfo fileInfo = list.at(i);
         QString fileName = fileInfo.fileName();
+
+//        qDebug() << "FolderSizeModelThread::getDirContent fileInfo.absoluteFilePath()" << fileInfo.absoluteFilePath();
 
         if (fileName == ".") {
             // skip current directory '.'
@@ -379,16 +392,16 @@ QList<FolderSizeItem> FolderSizeModelThread::getDirContent(const QString dirPath
         } else if (fileInfo.isDir()) {
             // If running, return cache or dummy item.
             // If not running, drilldown to get dir content.
-            tempList.append(getDirItem(fileInfo));
+            itemList.append(getDirItem(fileInfo));
         } else {
-            tempList.append(getFileItem(fileInfo));
+            itemList.append(getFileItem(fileInfo));
         }
     }
 
-    // Sort itemList as current sortFlag.
-    sortItemList(tempList);
-
-    return tempList;
+    // Sort itemList if sortFlag == SortBySize. To sort folder size.
+    if (m_sortFlag == SortBySize) {
+        sortItemList(itemList);
+    }
 }
 
 void FolderSizeModelThread::fetchDirSize(const bool clearCache) {
@@ -403,44 +416,41 @@ void FolderSizeModelThread::fetchDirSize(const bool clearCache) {
     // Reset after fetch.
     m_clearCache = false;
 
-    // Populate and sort directory content to itemList.
-    refreshItemList();
-
     emit fetchDirSizeFinished();
 
     qDebug() << QTime::currentTime() << "FolderSizeModelThread::fetchDirSize is done " << currentDir();
 }
 
-void FolderSizeModelThread::refreshItemList()
-{
-    qDebug() << "FolderSizeModelThread::refreshDirSize";
-
-    // Populate dir content to itemList.
-    itemList = getDirContent(m_currentDir);
-
-    // Sort itemList as current sortFlag.
-    sortItemList(itemList);
+FolderSizeItem FolderSizeModelThread::getItem(const QFileInfo fileInfo) const {
+    if (fileInfo.isDir()) {
+        return getDirItem(fileInfo);
+    } else if (fileInfo.isFile()){
+        return getFileItem(fileInfo);
+    } else {
+        return FolderSizeItem();
+    }
 }
 
-FolderSizeItem FolderSizeModelThread::getFileItem(const QFileInfo fileInfo) {
+FolderSizeItem FolderSizeModelThread::getFileItem(const QFileInfo fileInfo) const {
     // FileItem always get isDir=false, subDirCount=0 and subFileCount=0
-    FolderSizeItem item = FolderSizeItem(fileInfo.fileName(),
-                                         fileInfo.absoluteFilePath(),
-                                         fileInfo.lastModified(),
-                                         fileInfo.size(),
-                                         false, 0, 0);
+    FolderSizeItem item(fileInfo.fileName(),
+                        fileInfo.absoluteFilePath(),
+                        fileInfo.lastModified(),
+                        fileInfo.size(),
+                        false, 0, 0);
+
     return item;
 }
 
-FolderSizeItem FolderSizeModelThread::getDirItem(const QFileInfo dirInfo) {
+FolderSizeItem FolderSizeModelThread::getDirItem(const QFileInfo dirInfo) const {
     FolderSizeItem item;
     if (dirSizeCache.contains(dirInfo.absoluteFilePath())) {
-        if (isRunning()) {
+//        if (isRunning()) {
             item = dirSizeCache.value(dirInfo.absoluteFilePath());
-        } else {
-            // TODO This call may cause blocking. To be moved to thread.
-            item = getCachedDir(dirInfo, false);
-        }
+//        } else {
+//            // TODO This call may cause blocking. To be moved to thread.
+//            item = getCachedDir(dirInfo, false);
+//        }
     } else {
         // DirItem always get isDir=true, subDirCount=0 and subFileCount=0
         item = FolderSizeItem(dirInfo.fileName(),
@@ -468,8 +478,6 @@ bool FolderSizeModelThread::setSortFlag(int sortFlag)
     qDebug() << "FolderSizeModelThread::setSortFlag m_sortFlag " << m_sortFlag << " sortFlag " << sortFlag;
     if (m_sortFlag != sortFlag) {
         m_sortFlag = sortFlag;
-
-        sortItemList(itemList);
         return true;
     } else {
         return false;
@@ -487,21 +495,6 @@ bool FolderSizeModelThread::changeDir(const QString dirName)
         setCurrentDir(dir.absolutePath());
         return true;
     }
-}
-
-void FolderSizeModelThread::removeItem(const int index)
-{
-    itemList.removeAt(index);
-}
-
-FolderSizeItem FolderSizeModelThread::getItem(const int index)
-{
-    return itemList.at(index);
-}
-
-void FolderSizeModelThread::setItem(const int index, FolderSizeItem &item)
-{
-    itemList.replace(index, item);
 }
 
 bool FolderSizeModelThread::clearCache()

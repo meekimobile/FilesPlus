@@ -77,4 +77,10 @@ QDataStream &operator>>(QDataStream &in, FolderSizeItem &item)
     return in;
 }
 
+QDebug &operator<<(QDebug &out, const FolderSizeItem &item)
+{
+    out << "FolderSizeItem(" << item.name << "," << item.absolutePath << "," << item.lastModified << "," << item.size << "," << item.isDir << ")";
+
+    return out;
+}
 

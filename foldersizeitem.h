@@ -3,6 +3,7 @@
 
 #include <QDateTime>
 #include <QDataStream>
+#include <QDebug>
 
 class FolderSizeItem
 {
@@ -33,5 +34,6 @@ private:
 
 QDataStream &operator<<(QDataStream &out, const FolderSizeItem &item);
 QDataStream &operator>>(QDataStream &in, FolderSizeItem &item);
+QDebug &operator<<(QDebug &out, const FolderSizeItem &t);
 
 #endif // FOLDERSIZEITEM_H

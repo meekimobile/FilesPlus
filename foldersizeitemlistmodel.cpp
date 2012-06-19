@@ -55,7 +55,7 @@ FolderSizeItemListModel::~FolderSizeItemListModel()
 int FolderSizeItemListModel::rowCount(const QModelIndex & parent) const {
 //    qDebug() << "FolderSizeItemListModel::rowCount " + QString("%1").arg(m.getDirContent().count());
 
-    return m.getItemList().count();
+    return getItemList().count();
 }
 
 int FolderSizeItemListModel::columnCount(const QModelIndex &parent) const
@@ -65,11 +65,13 @@ int FolderSizeItemListModel::columnCount(const QModelIndex &parent) const
 
 QVariant FolderSizeItemListModel::data(const QModelIndex & index, int role) const {
 //    qDebug() << "FolderSizeItemListModel::data " + QString("%1 %2").arg(index.row()).arg(role);
+    // TODO refactor to avoid populating whole folder's content which costs more heap.
 
-    if (index.row() < 0 || index.row() > m.getItemList().count())
-        return QVariant();
+    // This code causes error on QML because undefined is assigned to int, bool, ...
+//    if (index.row() < 0 || index.row() > m.getItemList().count())
+//        return QVariant();
 
-    const FolderSizeItem &item = m.getItemList().at(index.row());
+    const FolderSizeItem &item = getItemList().at(index.row());
     if (role == NameRole)
         return item.name;
     else if (role == AbsolutePathRole)
@@ -153,7 +155,7 @@ void FolderSizeItemListModel::setProperty(const int index, FolderSizeItemListMod
 {
     if (index >= 0 && index < rowCount()) {
         // Update to limited properties.
-        FolderSizeItem item = m.getItem(index);
+        FolderSizeItem item = getItem(index);
         if (role == IsRunningRole)
             item.isRunning = value.toBool();
         else if (role == RunningValueRole)
@@ -163,7 +165,7 @@ void FolderSizeItemListModel::setProperty(const int index, FolderSizeItemListMod
         else if (role == IsCheckedRole)
             item.isChecked = value.toBool();
 
-        m.setItem(index, item);
+        setItem(index, item);
 
         refreshItem(index);
     } else {
@@ -205,6 +207,11 @@ QString FolderSizeItemListModel::formatFileSize(double size)
     }
 
     return fileSize;
+}
+
+QList<FolderSizeItem> FolderSizeItemListModel::getItemList() const
+{
+    return itemList;
 }
 
 QString FolderSizeItemListModel::createNonce() {
@@ -264,7 +271,7 @@ void FolderSizeItemListModel::refreshDir(const bool clearCache)
     }
 
     // Populate and sort directory content to itemList. Then respond to UI.
-    m.refreshItemList();
+    refreshItemList();
 }
 
 QString FolderSizeItemListModel::getUrl(const QString absPath)
@@ -286,6 +293,8 @@ int FolderSizeItemListModel::getSortFlag() const
 void FolderSizeItemListModel::setSortFlag(const int sortFlag)
 {
     if (m.setSortFlag(sortFlag)) {
+        m.sortItemList(itemList);
+
         // If itemList is actually sorted, refreshItems to emit dataChanged.
         refreshItems();
     }
@@ -323,7 +332,7 @@ bool FolderSizeItemListModel::removeRows(int row, int count, const QModelIndex &
             beginRemoveRows(parent, i, i);
 
             // Remote item from itemList.
-            m.removeItem(i);
+            removeItem(i);
 
             // Remove cache is done in m.deleteDir()
 
@@ -525,7 +534,8 @@ QStringList FolderSizeItemListModel::splitFileName(const QString fileName)
 
 QString FolderSizeItemListModel::getDirContentJson(const QString dirPath)
 {
-    QList<FolderSizeItem> itemList = m.getDirContent(dirPath);
+    QList<FolderSizeItem> itemList;
+    m.getDirContent(dirPath, itemList);
     QString jsonText = "[ ";
     for (int i=0; i<itemList.length(); i++) {
         FolderSizeItem item = itemList.at(i);
@@ -543,7 +553,7 @@ int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
     if (getDirPath(absFilePath) == currentDir()) {
         isOnCurrentDir = true;
         int i=0;
-        foreach (FolderSizeItem item, m.getItemList()) {
+        foreach (FolderSizeItem item, getItemList()) {
             if (item.absolutePath == absFilePath) {
                 return i;
             }
@@ -562,6 +572,32 @@ void FolderSizeItemListModel::removeCache(const QString absPath)
 bool FolderSizeItemListModel::isRunning()
 {
     return m.isRunning();
+}
+
+void FolderSizeItemListModel::refreshItemList()
+{
+    qDebug() << "FolderSizeModelThread::refreshDirSize";
+
+    // Clear existing itemList.
+    itemList.clear();
+
+    // Populate dir content to itemList. m.getDirContent() also sort itemList as current sortFlag.
+    m.getDirContent(currentDir(), itemList);
+}
+
+void FolderSizeItemListModel::removeItem(const int index)
+{
+    itemList.removeAt(index);
+}
+
+FolderSizeItem FolderSizeItemListModel::getItem(const int index)
+{
+    return itemList.at(index);
+}
+
+void FolderSizeItemListModel::setItem(const int index, FolderSizeItem &item)
+{
+    itemList.replace(index, item);
 }
 
 void FolderSizeItemListModel::postLoadSlot()
@@ -585,7 +621,7 @@ void FolderSizeItemListModel::deleteFinishedFilter(QString targetPath)
         beginRemoveRows(createIndex(0,0), i, i);
 
         // Remote item from itemList.
-        m.removeItem(i);
+        removeItem(i);
 
         // Emit deleteFinished
         emit deleteFinished(targetPath);

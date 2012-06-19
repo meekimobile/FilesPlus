@@ -46,15 +46,11 @@ public:
     bool copyFile(int method, const QString sourcePath, const QString targetPath);
     bool deleteDir(const QString targetPath);
 
-    void refreshItemList();
-    QList<FolderSizeItem> getItemList() const;
-    QList<FolderSizeItem> getDirContent(const QString dirPath);
+    void getDirContent(const QString dirPath, QList<FolderSizeItem> &itemList);
+    void sortItemList(QList<FolderSizeItem> &itemList);
     bool isDirSizeCacheExisting();
     void removeDirSizeCache(const QString key);
     bool changeDir(const QString dirName);
-    FolderSizeItem getItem(const int index);
-    void setItem(const int index, FolderSizeItem &item);
-    void removeItem(const int index);
 
     void setRunMethod(int method);
     void setCopyPath(const QString sourcePath, const QString targetPath);
@@ -69,12 +65,11 @@ signals:
     void deleteFinished(QString localPath);
 private:
     FolderSizeItem getCachedDir(const QFileInfo dir, const bool clearCache = false);
-    FolderSizeItem getFileItem(const QFileInfo fileInfo);
-    FolderSizeItem getDirItem(const QFileInfo dirInfo);
-    void sortItemList(QList<FolderSizeItem> &itemList);
+    FolderSizeItem getItem(const QFileInfo fileInfo) const;
+    FolderSizeItem getFileItem(const QFileInfo fileInfo) const;
+    FolderSizeItem getDirItem(const QFileInfo dirInfo) const;
 
     QHash<QString, FolderSizeItem> dirSizeCache;
-    QList<FolderSizeItem> itemList;
     QString m_currentDir;
     bool m_clearCache;
     int m_sortFlag;

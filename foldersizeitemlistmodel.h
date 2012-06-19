@@ -70,6 +70,7 @@ public:
     Q_INVOKABLE int getIndexOnCurrentDir(const QString absFilePath);
     Q_INVOKABLE void removeCache(const QString absPath);
     Q_INVOKABLE bool isRunning();
+    void refreshItemList();
 
     // File/Dir manipulation methods.
     Q_INVOKABLE bool removeRow(int row, const QModelIndex & parent = QModelIndex());
@@ -93,6 +94,11 @@ public:
     Q_INVOKABLE QString getAbsolutePath(const QString dirPath, const QString fileName);
     Q_INVOKABLE QStringList getDriveList();
     Q_INVOKABLE QString formatFileSize(double size);
+
+    QList<FolderSizeItem> getItemList() const;
+    void removeItem(const int index);
+    FolderSizeItem getItem(const int index);
+    void setItem(const int index, FolderSizeItem &item);
 private:
     Q_DISABLE_COPY(FolderSizeItemListModel)
     FolderSizeModelThread m;
@@ -101,6 +107,8 @@ private:
     QQueue<FolderSizeJob> m_jobQueue;
     int runningJobCount;
     QString createNonce();
+
+    QList<FolderSizeItem> itemList;
 
     bool isDirSizeCacheExisting();
     bool isReady();
