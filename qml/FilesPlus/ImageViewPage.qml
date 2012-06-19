@@ -117,10 +117,10 @@ Page {
         visible: true
 
         Text {
+            id: imageLabelText
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             color: "white"
-            text: imageGrid.getViewFilePath()
         }
     }
 
@@ -186,29 +186,31 @@ Page {
         }
 
         onWidthChanged: {
-            console.debug("imageGrid onWidthChanged width " + width);
-            console.debug("imageGrid onWidthChanged cellWidth " + cellWidth);
+//            console.debug("imageGrid onWidthChanged width " + width);
+//            console.debug("imageGrid onWidthChanged cellWidth " + cellWidth);
         }
 
         onHeightChanged: {
-            console.debug("imageGrid onHeightChanged height " + height);
-            console.debug("imageGrid onHeightChanged cellHeight " + cellHeight);
+//            console.debug("imageGrid onHeightChanged height " + height);
+//            console.debug("imageGrid onHeightChanged cellHeight " + cellHeight);
         }
 
         onMovementEnded: {
             imageGrid.currentIndex = viewIndex;
-            console.debug("imageGrid onMovementEnded viewIndex " + viewIndex);
-            console.debug("imageGrid onMovementEnded currentIndex " + currentIndex);
-            console.debug("imageGrid onMovementEnded currentItem.width " + currentItem.width + " currentItem.height " + currentItem.height);
-            console.debug("imageGrid onMovementEnded currentItem.sourceSize.width " + currentItem.sourceSize.width + " currentItem.sourceSize.height " + currentItem.sourceSize.height);
+//            console.debug("imageGrid onMovementEnded viewIndex " + viewIndex);
+//            console.debug("imageGrid onMovementEnded currentIndex " + currentIndex);
+//            console.debug("imageGrid onMovementEnded currentItem.width " + currentItem.width + " currentItem.height " + currentItem.height);
+//            console.debug("imageGrid onMovementEnded currentItem.sourceSize.width " + currentItem.sourceSize.width + " currentItem.sourceSize.height " + currentItem.sourceSize.height);
+            imageLabelText.text = getViewFilePath();
         }
 
         onFlickEnded: {
             imageGrid.currentIndex = viewIndex;
-            console.debug("imageGrid onFlickEnded viewIndex " + viewIndex);
-            console.debug("imageGrid onFlickEnded currentIndex " + currentIndex);
-            console.debug("imageGrid onFlickEnded currentItem.width " + currentItem.width + " currentItem.height " + currentItem.height);
-            console.debug("imageGrid onFlickEnded currentItem.sourceSize.width " + currentItem.sourceSize.width + " currentItem.sourceSize.height " + currentItem.sourceSize.height);
+//            console.debug("imageGrid onFlickEnded viewIndex " + viewIndex);
+//            console.debug("imageGrid onFlickEnded currentIndex " + currentIndex);
+//            console.debug("imageGrid onFlickEnded currentItem.width " + currentItem.width + " currentItem.height " + currentItem.height);
+//            console.debug("imageGrid onFlickEnded currentItem.sourceSize.width " + currentItem.sourceSize.width + " currentItem.sourceSize.height " + currentItem.sourceSize.height);
+            imageLabelText.text = getViewFilePath();
         }
     }
 
@@ -220,10 +222,10 @@ Page {
 
             property bool isImage: isSupportedImageFormat(fileType)
 
-            source: getImageSource(absolutePath, isDir)
+            source: getImageSource()
             asynchronous: true
-            sourceSize.width: imageGrid.cellWidth
-            sourceSize.height: imageGrid.cellHeight
+            sourceSize.width: (fileType.toUpperCase() == "SVG") ? paintedWidth : imageGrid.cellWidth
+            sourceSize.height: (fileType.toUpperCase() == "SVG") ? paintedHeight : imageGrid.cellHeight
             width: imageGrid.cellWidth
             height: imageGrid.cellHeight
             fillMode: Image.PreserveAspectFit
@@ -232,9 +234,13 @@ Page {
                 return (supportedFileType.indexOf(fileType.toUpperCase()) != -1);
             }
 
-            function getImageSource(absolutePath, isDir) {
+            function getImageSource() {
                 if (imageViewPage.status == PageStatus.Active && isImage) {
-                    return "image://local/" + absolutePath;
+                    if (fileType.toUpperCase() == "SVG") {
+                        return absolutePath;
+                    } else {
+                        return "image://local/" + absolutePath;
+                    }
                 } else {
                     return "";
                 }
@@ -275,6 +281,7 @@ Page {
                     // Position selected image.
                     if (index == imageGrid.currentIndex) {
                         imageGrid.positionViewAtIndex(index, GridView.Contain);
+                        imageLabelText.text = absolutePath;
                         console.debug("imageView onStatusChanged positionViewAtIndex index " + index);
                     }
                 }
