@@ -61,35 +61,39 @@ Page {
         }
     ]
 
-    tools: ToolBarLayout {
-        ToolButton {
-            id: backButton
-            iconSource: "toolbar-back"
+    ToolBar {
+        id: toolBar
+        anchors.bottom: parent.bottom
+        opacity: 0.5
+        z: 2
+        tools: ToolBarLayout {
+            ToolButton {
+                id: backButton
+                iconSource: "toolbar-back"
 
-            onClicked: {
-                var p = pageStack.find(function (page) {
-                    return (page.name == "folderPage");
-                });
-                if (p) p.refreshSlot();
-                pageStack.pop();
+                onClicked: {
+                    var p = pageStack.find(function (page) { return page.name == "folderPage"; });
+                    if (p) p.refreshSlot();
+                    pageStack.pop();
+                }
             }
-        }
 
-        ToolButton {
-            id: openButton
-            iconSource: "photos.svg"
-            onClicked: {
-                Qt.openUrlExternally(helper.getUrl(imageGrid.getViewFilePath()));
+            ToolButton {
+                id: openButton
+                iconSource: "photos.svg"
+                onClicked: {
+                    Qt.openUrlExternally(helper.getUrl(imageGrid.getViewFilePath()));
+                }
             }
-        }
 
-        ToolButton {
-            id: printButton
-            iconSource: "print.svg"
+            ToolButton {
+                id: printButton
+                iconSource: "print.svg"
 
-            onClicked: {
-                var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-                if (p) p.printFileSlot(imageGrid.getViewFilePath(), -1);
+                onClicked: {
+                    var p = pageStack.find(function (page) { return page.name == "folderPage"; });
+                    if (p) p.printFileSlot(imageGrid.getViewFilePath(), -1);
+                }
             }
         }
     }
@@ -113,7 +117,7 @@ Page {
         height: 40
         z: 2
         color: "black"
-        opacity: 0.7
+        opacity: 0.5
         visible: true
 
         Text {
@@ -499,10 +503,10 @@ Page {
                 MouseArea {
                     anchors.fill: parent
 
-                    onClicked: {
-                        console.debug("imageFlick onClicked");
-                        clickDelayTimer.restart();
-                    }
+//                    onClicked: {
+//                        console.debug("imageFlick onClicked");
+//                        clickDelayTimer.restart();
+//                    }
 
                     onDoubleClicked: {
                         console.debug("imageFlick onDoubleClicked");
