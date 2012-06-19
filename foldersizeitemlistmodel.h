@@ -21,6 +21,7 @@ class FolderSizeItemListModel : public QAbstractListModel
     Q_PROPERTY(QString currentDir READ currentDir WRITE setCurrentDir NOTIFY currentDirChanged)
     Q_PROPERTY(int sortFlag READ getSortFlag WRITE setSortFlag)
     Q_PROPERTY(int count READ rowCount)
+    Q_PROPERTY(QStringList nameFilters READ getNameFilters WRITE setNameFilters)
 public:
     static const int TimerInterval;
     static const int MaxRunningJobCount;
@@ -58,6 +59,8 @@ public:
     void setCurrentDir(const QString &path);
     int getSortFlag() const;
     void setSortFlag(const int sortFlag);
+    QStringList getNameFilters() const;
+    void setNameFilters(const QStringList nameFilters);
     Q_INVOKABLE QVariant getProperty(const int index, FolderSizeItemRoles role);
     Q_INVOKABLE void setProperty(const int index, FolderSizeItemRoles role, QVariant value);
     Q_INVOKABLE void setProperty(const QString localPath, FolderSizeItemRoles role, QVariant value);

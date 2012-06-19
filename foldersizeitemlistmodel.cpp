@@ -300,6 +300,16 @@ void FolderSizeItemListModel::setSortFlag(const int sortFlag)
     }
 }
 
+QStringList FolderSizeItemListModel::getNameFilters() const
+{
+    return m.nameFilters();
+}
+
+void FolderSizeItemListModel::setNameFilters(const QStringList nameFilters)
+{
+    m.setNameFilters(nameFilters);
+}
+
 void FolderSizeItemListModel::refreshItems()
 {
     beginResetModel();

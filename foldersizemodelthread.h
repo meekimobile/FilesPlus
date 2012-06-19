@@ -35,6 +35,8 @@ public:
     void setCurrentDir(const QString currentDir);
     int sortFlag() const;
     bool setSortFlag(int sortFlag);
+    QStringList nameFilters() const;
+    void setNameFilters(const QStringList nameFilters);
     bool clearCache();
     void setClearCache(bool clearCache);
 
@@ -73,6 +75,7 @@ private:
     QString m_currentDir;
     bool m_clearCache;
     int m_sortFlag;
+    QStringList m_nameFilters;
 
     int m_runMethod;
     QString m_sourcePath;

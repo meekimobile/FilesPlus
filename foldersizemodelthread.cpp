@@ -361,6 +361,7 @@ void FolderSizeModelThread::getDirContent(const QString dirPath, QList<FolderSiz
     QDir dir;
     dir = QDir(dirPath);
     dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
+    dir.setNameFilters(m_nameFilters);
     switch (m_sortFlag) {
     case SortByName:
         dir.setSorting(QDir::Name);
@@ -482,6 +483,16 @@ bool FolderSizeModelThread::setSortFlag(int sortFlag)
     } else {
         return false;
     }
+}
+
+QStringList FolderSizeModelThread::nameFilters() const
+{
+    return m_nameFilters;
+}
+
+void FolderSizeModelThread::setNameFilters(const QStringList nameFilters)
+{    
+    m_nameFilters = nameFilters;
 }
 
 bool FolderSizeModelThread::changeDir(const QString dirName)

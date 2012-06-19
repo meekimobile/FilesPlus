@@ -1,5 +1,6 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
+import FolderSizeItemListModel 1.0
 import SystemInfoHelper 1.0
 import "Utility.js" as Utility
 
@@ -10,6 +11,7 @@ Page {
     property alias model: imageGrid.model
     property string fileName
     property bool showGrid: true
+    property variant supportedFileType: ["JPG", "PNG", "SVG"]
 
     state: "grid"
     states: [
@@ -65,12 +67,16 @@ Page {
             iconSource: "toolbar-back"
 
             onClicked: {
+                var p = pageStack.find(function (page) {
+                    return (page.name == "folderPage");
+                });
+                if (p) p.refreshSlot();
                 pageStack.pop();
             }
         }
 
         ToolButton {
-            id: testButton
+            id: openButton
             iconSource: "photos.svg"
             onClicked: {
                 Qt.openUrlExternally(helper.getUrl(imageGrid.getViewFilePath()));
@@ -121,6 +127,7 @@ Page {
     Timer {
         id: clickDelayTimer
         interval: 300
+        running: false
         onTriggered: {
             imageLabel.visible = !imageLabel.visible;
         }
@@ -149,20 +156,21 @@ Page {
         function getViewFilePath() {
             var i = imageGrid.getViewIndex();
             if (i > -1) {
-                return imageGrid.model.get(i).absolutePath;
+                return imageGrid.model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole);
             }
             return "";
         }
 
         function getImageModelIndex(fileName) {
-            console.debug("getImageModelIndex model.count " + model.count);
             for (var i=0; i<imageGrid.model.count; i++) {
-                var name = imageGrid.model.get(i).name;
+                var name = imageGrid.model.getProperty(i, FolderSizeItemListModel.NameRole);
                 if (name == fileName) {
                     console.debug("getImageModelIndex " + i + " name " + name)
                     return i;
                 }
             }
+//            console.debug("getImageModelIndex model.count " + model.count);
+//            console.debug("getImageModelIndex found index " + i);
             return -1;
         }
 
@@ -209,13 +217,28 @@ Page {
 
         Image {
             id: imageView
-            source: (imageViewPage.status == PageStatus.Active) ? ("image://local/" + absolutePath) : ""
+
+            property bool isImage: isSupportedImageFormat(fileType)
+
+            source: getImageSource(absolutePath, isDir)
             asynchronous: true
             sourceSize.width: imageGrid.cellWidth
             sourceSize.height: imageGrid.cellHeight
             width: imageGrid.cellWidth
             height: imageGrid.cellHeight
             fillMode: Image.PreserveAspectFit
+
+            function isSupportedImageFormat(fileType) {
+                return (supportedFileType.indexOf(fileType.toUpperCase()) != -1);
+            }
+
+            function getImageSource(absolutePath, isDir) {
+                if (imageViewPage.status == PageStatus.Active && isImage) {
+                    return "image://local/" + absolutePath;
+                } else {
+                    return "";
+                }
+            }
 
             BusyIndicator {
                 id: imageViewBusy
@@ -229,7 +252,7 @@ Page {
 
             onStatusChanged: {
                 if (status == Image.Null) {
-                    console.debug("imageView onStatusChanged index " + index + " status " + status + " isSelected " + isSelected + " absolutePath " + absolutePath);
+                    console.debug("imageView onStatusChanged index " + index + " status " + status + " absolutePath " + absolutePath);
                     console.debug("imageView onStatusChanged imageGrid.currentIndex " + imageGrid.currentIndex);
                     console.debug("imageView onStatusChanged imageGrid.selectedIndex " + imageGrid.selectedIndex);
                     // Issue: Position at index still not work if selected index is not covered by cache.
@@ -242,7 +265,7 @@ Page {
                 }
 
                 if (status == Image.Ready) {
-                    console.debug("imageView onStatusChanged index " + index + " status " + status + " isSelected " + isSelected + " absolutePath " + absolutePath);
+                    console.debug("imageView onStatusChanged index " + index + " status " + status + " absolutePath " + absolutePath);
 //                    console.debug("imageView onStatusChanged imageGrid.currentIndex " + imageGrid.currentIndex);
 //                    console.debug("imageView onStatusChanged imageGrid.selectedIndex " + imageGrid.selectedIndex);
 //                    console.debug("imageView onStatusChanged width " + width + " height " + height);
@@ -281,10 +304,10 @@ Page {
                 MouseArea {
                     anchors.fill: parent
 
-                    onClicked: {
-                        console.debug("imageView onClicked mouseX " + mouseX + " mouseY " + mouseY)
-                        clickDelayTimer.restart();
-                    }
+//                    onClicked: {
+//                        console.debug("imageView onClicked mouseX " + mouseX + " mouseY " + mouseY)
+//                        clickDelayTimer.restart();
+//                    }
 
                     onDoubleClicked: {
                         console.debug("imageView onDoubleClicked mouseX " + mouseX + " mouseY " + mouseY)

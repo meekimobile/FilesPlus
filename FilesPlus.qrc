@@ -56,5 +56,7 @@
         <file>qml/FilesPlus/ClipboardModel.qml</file>
         <file>qml/FilesPlus/check_mark.svg</file>
         <file>qml/FilesPlus/MarkMenu.qml</file>
+        <file>qml/FilesPlus/folder-icon46.png</file>
+        <file>qml/FilesPlus/file-icon46.png</file>
     </qresource>
 </RCC>
