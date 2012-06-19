@@ -23,6 +23,14 @@ Menu {
         }
 
         MenuItem {
+            id: clearClipboardMenuItem
+            text: "Clear Clipboard"
+            onClicked: {
+                clipboard.clear();
+            }
+        }
+
+        MenuItem {
             id: newFolderMenuItem
             text: "New Folder"
             onClicked: {
@@ -76,6 +84,7 @@ Menu {
             settingMenuItem.visible = (disabledMenus.indexOf(settingMenuItem.text) == -1);
             newFolderMenuItem.visible = (disabledMenus.indexOf(newFolderMenuItem.text) == -1);
             pasteMenuItem.visible = (disabledMenus.indexOf(pasteMenuItem.text) == -1) && (clipboard.count > 0);
+            clearClipboardMenuItem.visible = (disabledMenus.indexOf(clearClipboardMenuItem.text) == -1) && (clipboard.count > 0);
         }
     }
 }

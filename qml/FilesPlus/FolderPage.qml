@@ -632,22 +632,22 @@ Page {
                 source: clipboard.getActionIcon(listItem.clipboardIndex)
             }
 
+            Image {
+                id: markIcon
+                x: 0
+                y: 0
+                z: 1
+                width: 32
+                height: 32
+                visible: (fsListView.state == "mark" && isChecked)
+                source: "check_mark.svg"
+            }
+
             Row {
                 id: listDelegateRow
                 anchors.fill: listItem.paddingItem
                 spacing: 5
 
-                CheckBox {
-                    id: listItemCheckbox
-                    enabled: false
-                    visible: (fsListView.state == "mark" && !isDir)
-                    checked: isChecked
-//                    onClicked: {
-//                        console.debug("listItemCheckbox onClicked checked " + checked);
-//                        // Use onClicked to avoid Binding loop as it's bound to isChecked.
-//                        fsModel.setProperty(index, FolderSizeItemListModel.IsCheckedRole, checked);
-//                    }
-                }
                 Rectangle {
                     id: iconRect
                     width: 48
@@ -670,7 +670,7 @@ Page {
                     }
                 }
                 Column {
-                    width: parent.width - icon1.width - sizeText.width - ((listItemCheckbox.visible)?(listItemCheckbox.width+listDelegateRow.spacing):0)
+                    width: parent.width - icon1.width - sizeText.width
                     ListItemText {
                         mode: listItem.mode
                         role: "Title"
@@ -812,10 +812,6 @@ Page {
 
     ClipboardModel {
         id: clipboard
-
-        onCountChanged: {
-            currentPath.clipboardCount = count;
-        }
     }
 
     PopupToolRing {

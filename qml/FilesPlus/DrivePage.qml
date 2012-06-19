@@ -35,7 +35,7 @@ Page {
 
     MainMenu {
         id: mainMenu
-        disabledMenus: ["Sort by", "Settings", "New Folder", "Paste"]
+        disabledMenus: ["Sort by", "Settings", "New Folder", "Paste", "Clear Clipboard"]
 
         onQuit: {
             Qt.quit();
