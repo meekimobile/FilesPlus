@@ -412,11 +412,34 @@ void GCPClient::jobs(QString printerId)
     authHeader.append("Bearer ");
     authHeader.append(m_paramMap["access_token"]);
 
-    qDebug() << "GCPClient::search authHeader " << authHeader;
+    qDebug() << "GCPClient::jobs authHeader " << authHeader;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(jobsReplyFinished(QNetworkReply*)));
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setRawHeader("Authorization", authHeader) ;
+    req.setRawHeader("X-CloudPrint-Proxy", "Chrome");
+    QNetworkReply *reply = manager->get(req);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
+}
+
+void GCPClient::deletejob(QString jobId)
+{
+    qDebug() << "----- GCPClient::deletejob -----";
+
+    QString uri = deletejobURI + "?jobid=" + jobId;
+
+    QByteArray authHeader;
+    authHeader.append("Bearer ");
+    authHeader.append(m_paramMap["access_token"]);
+
+    qDebug() << "GCPClient::deletejob authHeader " << authHeader;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deletejobReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setRawHeader("Authorization", authHeader) ;
     req.setRawHeader("X-CloudPrint-Proxy", "Chrome");
@@ -462,6 +485,9 @@ void GCPClient::refreshAccessTokenReplyFinished(QNetworkReply *reply)
     if (reply->error() == QNetworkReply::NoError) {
         QMap<QString, QString> map = createMapFromJson(replyBody);
         m_paramMap["access_token"] = map["access_token"];
+
+        // Save parameters.
+        saveParamMap();
     }
 
     emit refreshAccessTokenReplySignal(reply->error(), reply->errorString(), replyBody );
@@ -513,6 +539,15 @@ void GCPClient::jobsReplyFinished(QNetworkReply *reply)
     QString replyBody = QString(reply->readAll());
 
     emit jobsReplySignal(reply->error(), reply->errorString(), replyBody );
+}
+
+void GCPClient::deletejobReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "GCPClient::deletejobReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString replyBody = QString(reply->readAll());
+
+    emit deletejobReplySignal(reply->error(), reply->errorString(), replyBody );
 }
 
 
