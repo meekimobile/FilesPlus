@@ -48,6 +48,7 @@ public:
     Q_INVOKABLE QStringList getStoredPrinterList();
     Q_INVOKABLE void submit(QString printerId, QString title, QString capabilities, QString contentPath, QString contentType, QString tag);
     Q_INVOKABLE void submit(QString printerId, QString contentPath); // Simplify submit method
+    Q_INVOKABLE void jobs(QString printerId);
 signals:
     void authorizeRedirectSignal(QString url);
     void accessTokenReplySignal(int err, QString errMsg, QString msg);
@@ -55,6 +56,7 @@ signals:
     void accountInfoReplySignal(int err, QString errMsg, QString msg);
     void searchReplySignal(int err, QString errMsg, QString msg);
     void submitReplySignal(int err, QString errMsg, QString msg);
+    void jobsReplySignal(int err, QString errMsg, QString msg);
 
     void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
@@ -64,6 +66,7 @@ public slots:
     void accountInfoReplyFinished(QNetworkReply *reply);
     void searchReplyFinished(QNetworkReply *reply);
     void submitReplyFinished(QNetworkReply *reply);
+    void jobsReplyFinished(QNetworkReply *reply);
 private:
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;

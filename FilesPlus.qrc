@@ -58,5 +58,6 @@
         <file>qml/FilesPlus/MarkMenu.qml</file>
         <file>qml/FilesPlus/folder-icon46.png</file>
         <file>qml/FilesPlus/file-icon46.png</file>
+        <file>qml/FilesPlus/PrintJobsPage.qml</file>
     </qresource>
 </RCC>

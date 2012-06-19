@@ -128,7 +128,6 @@ Page {
         onResetCloudPrint: {
             popupToolPanel.selectedFilePath = "";
             popupToolPanel.selectedFileIndex = -1;
-//            gcpClient.refreshAccessToken();
             gcpClient.authorize();
         }
         onResetCloudDrive: {
@@ -139,6 +138,9 @@ Page {
         }
         onRegisterDropboxUser: {
             cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
+        }
+        onShowCloudPrintJobs: {
+            pageStack.push(Qt.resolvedUrl("PrintJobsPage.qml"));
         }
     }
 

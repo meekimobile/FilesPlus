@@ -402,6 +402,29 @@ void GCPClient::submit(QString printerId, QString contentPath)
     }
 }
 
+void GCPClient::jobs(QString printerId)
+{
+    qDebug() << "----- GCPClient::jobs -----";
+
+    QString uri = jobsURI;
+
+    QByteArray authHeader;
+    authHeader.append("Bearer ");
+    authHeader.append(m_paramMap["access_token"]);
+
+    qDebug() << "GCPClient::search authHeader " << authHeader;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(jobsReplyFinished(QNetworkReply*)));
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setRawHeader("Authorization", authHeader) ;
+    req.setRawHeader("X-CloudPrint-Proxy", "Chrome");
+    QNetworkReply *reply = manager->get(req);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
+}
+
 QString GCPClient::getContentType(QString fileName) {
     // Parse fileName with RegExp
     QRegExp rx("(.+)(\\.)(\\w{3,4})$");
@@ -481,6 +504,15 @@ void GCPClient::submitReplyFinished(QNetworkReply *reply)
     QString replyBody = QString(reply->readAll());
 
     emit submitReplySignal(reply->error(), reply->errorString(), replyBody );
+}
+
+void GCPClient::jobsReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "GCPClient::jobsReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString replyBody = QString(reply->readAll());
+
+    emit jobsReplySignal(reply->error(), reply->errorString(), replyBody );
 }
 
 

@@ -5,12 +5,21 @@ Menu {
     id: settingMenu
     z: 2
 
-    signal resetCache();
-    signal resetCloudPrint();
-    signal resetCloudDrive();
-    signal registerDropboxUser();
+    signal resetCache()
+    signal resetCloudPrint()
+    signal resetCloudDrive()
+    signal registerDropboxUser()
+    signal showCloudPrintJobs()
 
     content: MenuLayout {
+        MenuItem {
+            id: menuPrintJobs
+            text: "Show CloudPrint Jobs"
+            onClicked: {
+                showCloudPrintJobs();
+            }
+        }
+
         MenuItem {
             id: menuResetCloudPrint
             text: "Reset CloudPrint"
