@@ -17,6 +17,7 @@ Menu {
             id: pasteMenuItem
             text: "Paste"
             onClicked: {
+                fileActionDialog.targetPath = fsModel.currentDir;
                 fileActionDialog.open();
             }
         }
