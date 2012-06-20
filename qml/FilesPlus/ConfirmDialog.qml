@@ -14,14 +14,24 @@ CommonDialog {
         color: "white"
         font.pixelSize: 18
         wrapMode: Text.Wrap
-        width: parent.width - 8
+        width: parent.width - 20
         height: implicitHeight
         anchors.horizontalCenter: parent.horizontalCenter
     }
     
     signal confirm()
+    signal closed()
+    signal opening()
     
     onButtonClicked: {
         if (index === 0) confirm();
+    }
+
+    onStatusChanged: {
+        if (status == DialogStatus.Opening) {
+            opening();
+        } else if (status == DialogStatus.Closed) {
+            closed();
+        }
     }
 }

@@ -60,6 +60,10 @@ Rectangle {
             opened();
             popupTimer.restart();
         } else {
+            selectedFilePath = "";
+            selectedFileIndex = -1;
+            srcFilePath = "";
+            pastePath = "";
             closed();
         }
     }

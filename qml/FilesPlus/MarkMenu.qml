@@ -45,20 +45,18 @@ Menu {
         }
 
         MenuItem {
-            id: syncMarked
-            text: "Sync marked items"
+            id: deleteMarked
+            text: "Delete marked items"
             onClicked: {
-                // TODO
+                fsListView.deleteMarkedItems();
                 fsListView.state = "";
             }
         }
 
         MenuItem {
-            id: deleteMarked
-            text: "Delete marked items"
+            id: syncMarked
+            text: "Sync marked items"
             onClicked: {
-                // TODO
-                fsListView.deleteMarkedItems();
                 fsListView.state = "";
             }
         }

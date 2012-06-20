@@ -59,5 +59,8 @@
         <file>qml/FilesPlus/folder-icon46.png</file>
         <file>qml/FilesPlus/file-icon46.png</file>
         <file>qml/FilesPlus/PrintJobsPage.qml</file>
+        <file>qml/FilesPlus/UploadProgressDialog.qml</file>
+        <file>qml/FilesPlus/DownloadProgressDialog.qml</file>
+        <file>qml/FilesPlus/MessageDialog.qml</file>
     </qresource>
 </RCC>
