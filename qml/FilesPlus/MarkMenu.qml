@@ -57,6 +57,7 @@ Menu {
             id: syncMarked
             text: "Sync marked items"
             onClicked: {
+                fsListView.syncMarkedItems();
                 fsListView.state = "";
             }
         }

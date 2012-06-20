@@ -146,17 +146,20 @@ Page {
 
     ToolMenu {
         id: toolMenu
+
+        property int selectedIndex
+        property string selectedFilePath
+
         onNewFolder: {
             newFolderDialog.open();
         }
         onRenameFile: {
-            renameDialog.sourcePath = popupToolPanel.selectedFilePath;
+            renameDialog.sourcePath = selectedFilePath;
             renameDialog.open();
         }
         onMarkClicked: {
             fsListView.state = "mark";
-            fsListView.currentIndex = popupToolPanel.selectedFileIndex;
-            fsModel.setProperty(fsListView.currentIndex, FolderSizeItemListModel.IsCheckedRole, true);
+            fsModel.setProperty(selectedIndex, FolderSizeItemListModel.IsCheckedRole, true);
         }
     }
 
@@ -625,6 +628,25 @@ Page {
             // Open confirmation dialog.
             fileActionDialog.open();
         }
+
+        function syncMarkedItems() {
+            for (var i=0; i<model.count; i++) {
+                if (model.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
+                    console.debug("fsListView deleteMarkedItems item"
+                                  + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
+                                  + " isChecked " + model.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
+
+                    clipboard.append({ "action": "sync", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
+                }
+
+                // Reset isChecked.
+                model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
+            }
+
+            // Invoke CloudDriveModel syncClipboard
+            cloudDriveModel.syncClipboardItems();
+        }
+
     }
 
     Component {
@@ -678,12 +700,21 @@ Page {
 
                     Image {
                         id: syncIcon
-                        anchors.centerIn: parent
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
                         width: 32
                         height: 32
                         z: 1
                         visible: cloudDriveModel.isConnected(absolutePath);
-                        source: (cloudDriveModel.isDirty(absolutePath, lastModified)) ? "cloud_dirty.svg" : "cloud.svg"
+                        source: {
+                            if (cloudDriveModel.isSyncing(absolutePath)) {
+                                return "clock.svg"
+                            } else if (cloudDriveModel.isDirty(absolutePath, lastModified)) {
+                                return "cloud_dirty.svg";
+                            } else {
+                                return "cloud.svg";
+                            }
+                        }
                     }
                 }
                 Column {
@@ -881,6 +912,8 @@ Page {
 
         onShowTools: {
             fsListView.currentIndex = srcItemIndex;
+            toolMenu.selectedIndex = srcItemIndex;
+            toolMenu.selectedFilePath = srcFilePath;
             toolMenu.open();
         }
     }
@@ -1332,6 +1365,11 @@ Page {
     CloudDriveModel {
         id: cloudDriveModel
 
+        function syncClipboardItems() {
+            uidDialog.localPath = "";
+            uidDialog.open();
+        }
+
         onRequestTokenReplySignal: {
             console.debug("folderPage cloudDriveModel onRequestTokenReplySignal " + err + " " + errMsg + " " + msg);
 
@@ -1705,10 +1743,31 @@ Page {
 
         onAccepted: {
             // TODO Proceed for GoogleDrive
+
             // Proceed for Dropbox
-            var remoteFilePath = cloudDriveModel.getDefaultRemoteFilePath(localPath);
-            console.debug("uidDialog.selectedIndex " + uidDialog.selectedIndex + " type " + uidDialog.selectedCloudType + " uid " + uidDialog.selectedUid + " localPath " + localPath + " remoteFilePath " + remoteFilePath);
-            cloudDriveModel.metadata(uidDialog.selectedCloudType, uidDialog.selectedUid, localPath, remoteFilePath, selectedModelIndex);
+            if (uidDialog.localPath != "") {
+                // sync localPath.
+                var remoteFilePath = cloudDriveModel.getDefaultRemoteFilePath(uidDialog.localPath);
+                console.debug("uidDialog.selectedIndex " + uidDialog.selectedIndex + " type " + uidDialog.selectedCloudType + " uid " + uidDialog.selectedUid + " localPath " + uidDialog.localPath + " remoteFilePath " + remoteFilePath);
+                cloudDriveModel.metadata(uidDialog.selectedCloudType, uidDialog.selectedUid, uidDialog.localPath, remoteFilePath, selectedModelIndex);
+            } else if (clipboard.count > 0){
+                // Sync from clipboard.
+                for (var i=0; i<clipboard.count; i++) {
+                    if (clipboard.get(i).action == "sync") {
+                        console.debug("uidDialog onAccepted clipboard item i " + i + " " + clipboard.get(i).action + " " + clipboard.get(i).sourcePath);
+
+                        var sourcePath = clipboard.get(i).sourcePath;
+                        var remotePath = cloudDriveModel.getItemRemotePath(sourcePath, uidDialog.selectedCloudType, uidDialog.selectedUid);
+                        if (remotePath == "") {
+                            remotePath = cloudDriveModel.getDefaultRemoteFilePath(sourcePath);
+                        }
+                        cloudDriveModel.metadata(uidDialog.selectedCloudType, uidDialog.selectedUid, sourcePath, remotePath, -1);
+                    }
+                }
+
+                // Clear clipboard.
+                clipboard.clear();
+            }
         }
 
         onStatusChanged: {

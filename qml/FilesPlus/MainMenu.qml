@@ -39,6 +39,14 @@ Menu {
         }
 
         MenuItem {
+            id: markMenuItem
+            text: "Mark multiple items"
+            onClicked: {
+                fsListView.state = "mark";
+            }
+        }
+
+        MenuItem {
             id: sortByMenuItem
             text: "Sort by"
             platformSubItemIndicator: true
@@ -85,6 +93,7 @@ Menu {
             newFolderMenuItem.visible = (disabledMenus.indexOf(newFolderMenuItem.text) == -1);
             pasteMenuItem.visible = (disabledMenus.indexOf(pasteMenuItem.text) == -1) && (clipboard.count > 0);
             clearClipboardMenuItem.visible = (disabledMenus.indexOf(clearClipboardMenuItem.text) == -1) && (clipboard.count > 0);
+            markMenuItem.visible = (disabledMenus.indexOf(markMenuItem.text) == -1) && (fsListView.state != "mark");
         }
     }
 }

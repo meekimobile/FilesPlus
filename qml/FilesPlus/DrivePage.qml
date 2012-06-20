@@ -35,7 +35,8 @@ Page {
 
     MainMenu {
         id: mainMenu
-        disabledMenus: ["Sort by", "Settings", "New Folder", "Paste", "Clear Clipboard"]
+        // TODO refactor to use id.
+        disabledMenus: ["Sort by", "Settings", "New Folder", "Paste", "Clear Clipboard", "Mark multiple items"]
 
         onQuit: {
             Qt.quit();
