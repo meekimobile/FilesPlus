@@ -353,7 +353,7 @@ Page {
             popupToolPanel.srcFilePath = "";
             popupToolPanel.pastePath = "";
 
-            // TODO Remove finished sourcePath from clipboard.
+            // Remove finished sourcePath from clipboard.
             clipboard.clear();
 
             // Reset cloudDriveModel hash.
@@ -365,7 +365,7 @@ Page {
 
             // Cache for changed files has been removed by FolderSizeItemModel internally.
             // Refresh list view.
-            refreshSlot();
+            fsModel.refreshItem(targetPath);
         }
 
         onDeleteFinished: {
@@ -392,11 +392,6 @@ Page {
         onFetchDirSizeUpdated: {
             if (!refreshButton.checked) refreshButton.checked = true;
             refreshButton.rotation = 360 + (refreshButton.rotation - 6);
-        }
-
-        onFetchDirSizeStarted: {
-//            refreshButton.checkable = true;
-//            refreshButton.checked = true;
         }
 
         onFetchDirSizeFinished: {
@@ -789,27 +784,8 @@ Page {
 //        }
     }
 
-    CommonDialog {
+    MessageDialog {
         id: messageDialog
-
-        property alias message: contentText.text
-
-        titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: ["Ok"]
-        content: Text {
-            id: contentText
-            width: parent.width - 10
-            color: "white"
-            wrapMode: Text.WordWrap
-            height: implicitHeight
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
-
-        onStatusChanged: {
-            if (status == DialogStatus.Closed) {
-                message = "";
-            }
-        }
     }
 
     ClipboardModel {
@@ -847,6 +823,7 @@ Page {
         }
 
         onDeleteFile: {
+            fileDeleteDialog.sourcePath = sourcePath;
             fileDeleteDialog.open();
         }
 
@@ -864,51 +841,38 @@ Page {
         }
     }
 
-    CommonDialog {
+    ConfirmDialog {
         id: fileDeleteDialog
-        titleText: "Delete"
-        titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: ["Ok", "Cancel"]
-        content: Text {
-            anchors.margins: 5
-            anchors.fill: parent
-            color: "white"
-            wrapMode: Text.WordWrap
-            text: "Delete " + fsModel.getFileName(popupToolPanel.selectedFilePath) + " ?"
-        }
 
-        onButtonClicked: {
-            if (index === 0) {
-                console.debug("fileDeleteDialog OK delete index " + popupToolPanel.selectedFileIndex);
-                var res = fsModel.removeRow(popupToolPanel.selectedFileIndex);
-                if (!res) {
-                    messageDialog.titleText = "Delete"
-                    messageDialog.message = popupToolPanel.selectedFilePath + " can't be deleted because it's not empty.";
-                    messageDialog.open();
-                }
+        property string sourcePath
+
+        titleText: "Delete"
+        contentText: "Delete " + fsModel.getFileName(fileDeleteDialog.sourcePath) + " ?"
+
+        onConfirm: {
+            var sourceIndex = fsModel.getIndexOnCurrentDir(sourcePath);
+            console.debug("fileDeleteDialog OK delete index " + sourceIndex);
+            var res = fsModel.removeRow(sourceIndex);
+            if (!res) {
+                messageDialog.titleText = "Delete"
+                messageDialog.message = sourcePath + " can't be deleted because it's not empty.";
+                messageDialog.open();
             }
         }
     }
 
-    CommonDialog {
+    ConfirmDialog {
         id: fileActionDialog
 
         property string targetPath
 
-        titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: ["Ok", "Cancel"]
-        content: Text {
-            id: fileActionDialogText
-            width: parent.width - 10
-            color: "white"
-            anchors.horizontalCenter: parent.horizontalCenter
-            wrapMode: Text.WrapAnywhere
-        }
+        titleText: fileActionDialog.getTitleText()
+        contentText: fileActionDialog.getText()
 
         function getTitleText() {
             var text = "";
             if (clipboard.count == 1) {
-                text = clipboard.get(0).action + " file";
+                text = getActionName(clipboard.get(0).action);
             } else {
                 // TODO if all copy, show "Multiple copy".
                 text = "Multiple actions";
@@ -947,9 +911,9 @@ Page {
                     }
                 }
 
-                if (deleteCount>0) text = text + ("Delete " + deleteCount + " file(s)\n");
-                if (copyCount>0) text = text + ("Copy " + copyCount + " file(s)\n");
-                if (cutCount>0) text = text + ("Move " + cutCount + " file(s)\n");
+                if (deleteCount>0) text = text + ("Delete " + deleteCount + " file" + ((deleteCount>1)?"s":"") + "\n");
+                if (copyCount>0) text = text + ("Copy " + copyCount + " file" + ((copyCount>1)?"s":"") + "\n");
+                if (cutCount>0) text = text + ("Move " + cutCount + " file" + ((cutCount>1)?"s":"") + "\n");
                 if (copyCount>0 || cutCount>0) text = text + "to " + targetPath;
                 text = text + " ?";
             }
@@ -957,84 +921,72 @@ Page {
             return text;
         }
 
-        onStatusChanged: {
-            if (status == DialogStatus.Opening) {
-                titleText = fileActionDialog.getTitleText();
-                fileActionDialogText.text = fileActionDialog.getText();
-            }
-
-            if (status == DialogStatus.Closed) {
-                titleText = "";
-                fileActionDialogText.text = "";
-
-                // Always clear clipboard's delete actions.
-                clipboard.clearDeleteActions();
-            }
-        }
-
-        onButtonClicked: {
-            if (index === 0) {
-                if (clipboard.count == 1) {
-                    // Copy/Move/Delete first file from clipboard.
-                    // Check if there is existing file on target folder. Then show overwrite dialog.
-                    if (clipboard.get(0).action != "delete" && !fsModel.canCopy(clipboard.get(0).sourcePath, targetPath)) {
-                        fileOverwriteDialog.sourcePath = clipboard.get(0).sourcePath;
-                        fileOverwriteDialog.targetPath = targetPath;
-                        fileOverwriteDialog.isCopy = (clipboard.get(0).action == "copy");
-                        fileOverwriteDialog.open();
-                        return;
-                    }
-
-                    var res = false;
-                    var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(clipboard.get(0).sourcePath));
-                    if (clipboard.get(0).action == "copy") {
-                        res = fsModel.copy(clipboard.get(0).sourcePath, actualTargetPath);
-                    } else if (clipboard.get(0).action == "cut") {
-                        res = fsModel.move(clipboard.get(0).sourcePath, actualTargetPath);
-                    } else if (clipboard.get(0).action == "delete") {
-                        res = fsModel.deleteFile(clipboard.get(0).sourcePath);
-                    }
-                    if (res) {
-                        // Reset both source and target.
-                        clipboard.clear();
-                        targetPath = "";
-                        popupToolPanel.srcFilePath = "";
-                        popupToolPanel.pastePath = "";
-                    } else {
-                        messageDialog.titleText = getActionName(clipboard.get(0).action);
-                        messageDialog.message = "I can't " + getActionName(clipboard.get(0).action).toLowerCase()
-                                + "\nfile " + clipboard.get(0).sourcePath
-                                + "\nto " + targetPath;
-                        messageDialog.open();
-
-                        // Reset target only.
-                        targetPath = "";
-                        popupToolPanel.pastePath = "";
-                    }
-                } else {
-                    // TODO Copy/Move/Delete all files from clipboard.
-                    // Action is {copy, cut, delete}
-                    for (var i=0; i<clipboard.count; i++) {
-                        var action = clipboard.get(i).action;
-                        var sourcePath = clipboard.get(i).sourcePath;
-                        var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(sourcePath));
-
-                        console.debug("folderPage fileActionDialog onButtonClicked clipboard action " + action + " sourcePath " + sourcePath);
-                        if (action == "copy") {
-                            fsModel.copy(sourcePath, actualTargetPath);
-                        } else if (action == "cut") {
-                            fsModel.move(sourcePath, actualTargetPath);
-                        } else if (action == "delete") {
-                            fsModel.deleteFile(sourcePath);
-                        } else {
-                            console.debug("folderPage fileActionDialog onButtonClicked invalid action " + action);
-                        }
-                    }
+        onConfirm: {
+            if (clipboard.count == 1) {
+                // Copy/Move/Delete first file from clipboard.
+                // Check if there is existing file on target folder. Then show overwrite dialog.
+                if (clipboard.get(0).action != "delete" && !fsModel.canCopy(clipboard.get(0).sourcePath, targetPath)) {
+                    fileOverwriteDialog.sourcePath = clipboard.get(0).sourcePath;
+                    fileOverwriteDialog.targetPath = targetPath;
+                    fileOverwriteDialog.isCopy = (clipboard.get(0).action == "copy");
+                    fileOverwriteDialog.open();
+                    return;
                 }
 
-                // Clear clipboard as they should have been processed.
-                clipboard.clear();
+                var res = false;
+                var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(clipboard.get(0).sourcePath));
+                if (clipboard.get(0).action == "copy") {
+                    res = fsModel.copy(clipboard.get(0).sourcePath, actualTargetPath);
+                } else if (clipboard.get(0).action == "cut") {
+                    res = fsModel.move(clipboard.get(0).sourcePath, actualTargetPath);
+                } else if (clipboard.get(0).action == "delete") {
+                    res = fsModel.deleteFile(clipboard.get(0).sourcePath);
+                }
+                if (res) {
+                    // Reset both source and target.
+                    clipboard.clear();
+                    targetPath = "";
+                    popupToolPanel.srcFilePath = "";
+                    popupToolPanel.pastePath = "";
+                } else {
+                    messageDialog.titleText = getActionName(clipboard.get(0).action);
+                    messageDialog.message = "I can't " + getActionName(clipboard.get(0).action).toLowerCase()
+                            + "\nfile " + clipboard.get(0).sourcePath
+                            + "\nto " + targetPath;
+                    messageDialog.open();
+
+                    // Reset target only.
+                    targetPath = "";
+                    popupToolPanel.pastePath = "";
+                }
+            } else {
+                // TODO Copy/Move/Delete all files from clipboard.
+                // Action is {copy, cut, delete}
+                for (var i=0; i<clipboard.count; i++) {
+                    var action = clipboard.get(i).action;
+                    var sourcePath = clipboard.get(i).sourcePath;
+                    var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(sourcePath));
+
+                    console.debug("folderPage fileActionDialog onButtonClicked clipboard action " + action + " sourcePath " + sourcePath);
+                    if (action == "copy") {
+                        fsModel.copy(sourcePath, actualTargetPath);
+                    } else if (action == "cut") {
+                        fsModel.move(sourcePath, actualTargetPath);
+                    } else if (action == "delete") {
+                        fsModel.deleteFile(sourcePath);
+                    } else {
+                        console.debug("folderPage fileActionDialog onButtonClicked invalid action " + action);
+                    }
+                }
             }
+
+            // Clear clipboard as they should have been processed.
+            clipboard.clear();
+        }
+
+        onClosed: {
+            // Always clear clipboard's delete actions.
+            clipboard.clearDeleteActions();
         }
     }
 
@@ -1214,150 +1166,12 @@ Page {
         }
     }
 
-    CommonDialog {
+    UploadProgressDialog {
         id: uploadProgressDialog
-
-        property alias srcFilePath: uploadFilePath.text
-        property alias message: uploadMessage.text
-        property alias min: uploadProgressBar.minimumValue
-        property alias max: uploadProgressBar.maximumValue
-        property alias value: uploadProgressBar.value
-        property alias indeterminate: uploadProgressBar.indeterminate
-        property bool autoClose: true
-
-        titleText: "Uploading"
-        titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: ["OK"]
-        content: Column {
-            width: parent.width - 8
-            spacing: 4
-            anchors.horizontalCenter: parent.horizontalCenter
-
-            Text {
-                id: uploadFilePath
-                width: parent.width
-                color: "white"
-                wrapMode: Text.WordWrap
-            }
-            ProgressBar {
-                id: uploadProgressBar
-                width: parent.width
-
-                onValueChanged: {
-                    uploadProgressText.text = value + " / " + maximumValue;
-                    if (uploadProgressDialog.autoClose && value == maximumValue) {
-                        uploadProgressDialog.close();
-                    } else if (value == maximumValue) {
-                        indeterminate = true;
-                    }
-                }
-            }
-            Text {
-                id: uploadProgressText
-                width: parent.width
-                color: "grey"
-                wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignRight
-            }
-//            Rectangle {
-//                color: "grey"
-//                width: parent.width
-//                height: 1
-//                visible: (uploadMessage.text != "")
-//            }
-            Text {
-                id: uploadMessage
-                width: parent.width
-                color: "white"
-                wrapMode: Text.WordWrap
-            }
-        }
-
-        onButtonClicked: {
-            uploadProgressDialog.close();
-        }
-
-        onStatusChanged: {
-            if (status == DialogStatus.Closed) {
-                srcFilePath = "";
-                autoClose = true;
-                message = "";
-                indeterminate = false;
-            }
-        }
     }
 
-    CommonDialog {
+    DownloadProgressDialog {
         id: downloadProgressDialog
-
-        property alias targetFilePath: targetFilePath.text
-        property alias message: downloadMessage.text
-        property alias min: downloadProgressBar.minimumValue
-        property alias max: downloadProgressBar.maximumValue
-        property alias value: downloadProgressBar.value
-        property alias indeterminate: downloadProgressBar.indeterminate
-        property bool autoClose: true
-
-        titleText: "Downloading"
-        titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: ["OK"]
-        content: Column {
-            width: parent.width - 8
-            spacing: 4
-            anchors.horizontalCenter: parent.horizontalCenter
-
-            Text {
-                id: targetFilePath
-                width: parent.width
-                color: "white"
-                wrapMode: Text.WordWrap
-            }
-            ProgressBar {
-                id: downloadProgressBar
-                width: parent.width
-
-                onValueChanged: {
-                    downloadProgressText.text = value + " / " + maximumValue;
-                    if (downloadProgressDialog.autoClose && value == maximumValue) {
-                        downloadProgressDialog.close();
-                    } else if (value == maximumValue) {
-                        indeterminate = true;
-                    }
-                }
-            }
-            Text {
-                id: downloadProgressText
-                width: parent.width
-                color: "grey"
-                wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignRight
-            }
-            Rectangle {
-                color: "grey"
-                width: parent.width
-                height: 1
-                visible: (downloadMessage.text != "")
-            }
-            Text {
-                id: downloadMessage
-                width: parent.width
-                color: "white"
-                wrapMode: Text.WordWrap
-            }
-        }
-
-        onButtonClicked: {
-            downloadProgressDialog.close();
-        }
-
-        onStatusChanged: {
-            if (status == DialogStatus.Closed) {
-                targetFilePath = "";
-                autoClose = true;
-                message = "";
-                indeterminate = false;
-            }
-        }
     }
 
     GCPClient {
