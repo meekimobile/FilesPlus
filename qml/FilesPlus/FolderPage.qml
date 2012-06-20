@@ -539,20 +539,34 @@ Page {
             for (var i=0; i<model.count; i++) {
                 var checked = model.getProperty(i, FolderSizeItemListModel.IsCheckedRole);
                 if (checked) {
-                    console.debug("fsListView isAnyItemChecked item"
-                                  + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
-                                  + " isChecked " + checked);
+//                    console.debug("fsListView isAnyItemChecked item"
+//                                  + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
+//                                  + " isChecked " + checked);
                     return true;
                 }
             }
             return false;
         }
 
+        function areAllItemChecked() {
+            for (var i=0; i<model.count; i++) {
+                var checked = model.getProperty(i, FolderSizeItemListModel.IsCheckedRole);
+                if (!checked) {
+//                    console.debug("fsListView areAllItemChecked item"
+//                                  + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
+//                                  + " isChecked " + checked);
+                    return false;
+                }
+            }
+            return (model.count > 0);
+        }
+
         function markAll() {
             for (var i=0; i<model.count; i++) {
-                if (!model.getProperty(i, FolderSizeItemListModel.IsDirRole)) {
+                // Enable all as FolderSizeItemListModel and CloudDriveModel can support sourcePath as files/folders.
+//                if (!model.getProperty(i, FolderSizeItemListModel.IsDirRole)) {
                     model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, true);
-                }
+//                }
             }
         }
 
@@ -724,8 +738,9 @@ Page {
                         visible: isRunning
                         Image {
                             id: runningIcon
-                            width: 16
-                            height: 16
+                            width: 24
+                            height: 24
+                            anchors.verticalCenter: parent.verticalCenter
                             source: {
                                 switch (runningOperation) {
                                 case FolderSizeItemListModel.ReadOperation:
@@ -745,6 +760,7 @@ Page {
                         ProgressBar {
                             id: syncProgressBar
                             width: parent.width - runningIcon.width
+                            anchors.verticalCenter: parent.verticalCenter
                             indeterminate: isRunning && (isDir || (runningValue == runningMaxValue))
                             visible: isRunning
                             value: runningValue
@@ -925,13 +941,13 @@ Page {
         }
 
         onRenameFile: {
-            renameDialog.sourcePath = selectedFilePath;
+            renameDialog.sourcePath = srcFilePath;
             renameDialog.open();
         }
 
         onMarkClicked: {
             fsListView.state = "mark";
-            fsModel.setProperty(selectedIndex, FolderSizeItemListModel.IsCheckedRole, true);
+            fsModel.setProperty(srcItemIndex, FolderSizeItemListModel.IsCheckedRole, true);
         }
     }
 

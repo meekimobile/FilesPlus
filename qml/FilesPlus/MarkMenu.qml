@@ -12,17 +12,17 @@ Menu {
 
         MenuItem {
             id: markAll
-            text: "Mark all"
-            onClicked: {
-                fsListView.markAll();
-            }
-        }
 
-        MenuItem {
-            id: unmarkAll
-            text: "Unmark all"
+            property bool isMarkAll: true
+
+            text: (isMarkAll) ? "Mark all" : "Unmark all"
             onClicked: {
-                fsListView.unmarkAll();
+                if (isMarkAll) {
+                    fsListView.markAll();
+                } else {
+                    fsListView.unmarkAll();
+                }
+                isMarkAll = !isMarkAll;
             }
         }
 
@@ -71,6 +71,7 @@ Menu {
             cutMarked.visible = isAnyChecked;
             syncMarked.visible = isAnyChecked;
             deleteMarked.visible = isAnyChecked;
+            markAll.isMarkAll = !fsListView.areAllItemChecked();
         }
     }
 }
