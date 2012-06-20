@@ -6,6 +6,7 @@ import "Utility.js" as Utility
 
 Page {
     id: imageViewPage
+    tools: null
 
     property string name: "imageViewPage"
     property alias model: imageGrid.model
@@ -66,6 +67,7 @@ Page {
         anchors.bottom: parent.bottom
         opacity: 0.5
         z: 2
+        visible: false
         tools: ToolBarLayout {
             ToolButton {
                 id: backButton
@@ -118,7 +120,7 @@ Page {
         z: 2
         color: "black"
         opacity: 0.5
-        visible: true
+        visible: false
 
         Text {
             id: imageLabelText
@@ -287,6 +289,12 @@ Page {
                         imageGrid.positionViewAtIndex(index, GridView.Contain);
                         imageLabelText.text = absolutePath;
                         console.debug("imageView onStatusChanged positionViewAtIndex index " + index);
+                    }
+
+                    // Show toolbar and label.
+                    if (!toolBar.visible) {
+                        toolBar.visible = true;
+                        imageLabel.visible = true;
                     }
                 }
             }
