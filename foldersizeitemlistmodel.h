@@ -18,6 +18,7 @@ class FolderSizeItemListModel : public QAbstractListModel
     Q_OBJECT
     Q_ENUMS(SortFlags)
     Q_ENUMS(FolderSizeItemRoles)
+    Q_ENUMS(RunningOperations)
     Q_PROPERTY(QString currentDir READ currentDir WRITE setCurrentDir NOTIFY currentDirChanged)
     Q_PROPERTY(int sortFlag READ getSortFlag WRITE setSortFlag)
     Q_PROPERTY(int count READ rowCount)
@@ -43,9 +44,18 @@ public:
         SubFileCountRole,
         FileTypeRole,
         IsRunningRole,
+        RunningOperationRole,
         RunningValueRole,
         RunningMaxValueRole,
         IsCheckedRole
+    };
+
+    enum RunningOperations {
+        NoOperation,
+        ReadOperation,
+        WriteOperation,
+        UploadOperation,
+        DownloadOperation
     };
 
     explicit FolderSizeItemListModel(QObject *parent = 0);

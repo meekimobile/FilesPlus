@@ -17,6 +17,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     roles[SubFileCountRole] = "subFileCount";
     roles[FileTypeRole] = "fileType";
     roles[IsRunningRole] = "isRunning";
+    roles[RunningOperationRole] = "runningOperation";
     roles[RunningValueRole] = "runningValue";
     roles[RunningMaxValueRole] = "runningMaxValue";
     roles[IsCheckedRole] = "isChecked";
@@ -91,6 +92,8 @@ QVariant FolderSizeItemListModel::data(const QModelIndex & index, int role) cons
         return item.fileType;
     else if (role == IsRunningRole)
         return item.isRunning;
+    else if (role == RunningOperationRole)
+        return item.runningOperation;
     else if (role == RunningValueRole)
         return item.runningValue;
     else if (role == RunningMaxValueRole)
@@ -159,6 +162,8 @@ void FolderSizeItemListModel::setProperty(const int index, FolderSizeItemListMod
         FolderSizeItem item = getItem(index);
         if (role == IsRunningRole)
             item.isRunning = value.toBool();
+        else if (role == RunningOperationRole)
+            item.runningOperation = value.toInt();
         else if (role == RunningValueRole)
             item.runningValue = value.toLongLong();
         else if (role == RunningMaxValueRole)

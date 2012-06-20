@@ -62,5 +62,8 @@
         <file>qml/FilesPlus/UploadProgressDialog.qml</file>
         <file>qml/FilesPlus/DownloadProgressDialog.qml</file>
         <file>qml/FilesPlus/MessageDialog.qml</file>
+        <file>qml/FilesPlus/upload.svg</file>
+        <file>qml/FilesPlus/back.svg</file>
+        <file>qml/FilesPlus/download.svg</file>
     </qresource>
 </RCC>

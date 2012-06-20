@@ -321,8 +321,16 @@ Page {
         onCopyStarted: {
             console.debug("folderPage fsModel onCopyStarted " + fileAction + " from " + sourcePath + " to " + targetPath + " " + err + " " + msg);
 
-            fsModel.setProperty(sourcePath, FolderSizeItemListModel.IsRunningRole, true);
-            fsModel.setProperty(targetPath, FolderSizeItemListModel.IsRunningRole, true);
+            var sourceIndex = fsModel.getIndexOnCurrentDir(sourcePath);
+            var targetIndex = fsModel.getIndexOnCurrentDir(targetPath);
+            if (sourceIndex > -1) {
+                fsModel.setProperty(sourceIndex, FolderSizeItemListModel.IsRunningRole, true);
+                fsModel.setProperty(sourceIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.ReadOperation);
+            }
+            if (targetIndex > -1) {
+                fsModel.setProperty(targetIndex, FolderSizeItemListModel.IsRunningRole, true);
+                fsModel.setProperty(targetIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.WriteOperation);
+            }
         }
 
         onCopyProgress: {
@@ -333,11 +341,13 @@ Page {
             var targetIndex = fsModel.getIndexOnCurrentDir(targetPath);
             if (sourceIndex > -1) {
                 fsModel.setProperty(sourceIndex, FolderSizeItemListModel.IsRunningRole, true);
+                fsModel.setProperty(sourceIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.ReadOperation);
                 fsModel.setProperty(sourceIndex, FolderSizeItemListModel.RunningValueRole, bytes);
                 fsModel.setProperty(sourceIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
             }
             if (targetIndex > -1) {
                 fsModel.setProperty(targetIndex, FolderSizeItemListModel.IsRunningRole, true);
+                fsModel.setProperty(targetIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.WriteOperation);
                 fsModel.setProperty(targetIndex, FolderSizeItemListModel.RunningValueRole, bytes);
                 fsModel.setProperty(targetIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
             }
@@ -701,13 +711,37 @@ Page {
                         verticalAlignment: Text.AlignVCenter
                         visible: !isRunning
                     }
-                    ProgressBar {
-                        id: syncProgressBar
+                    Row {
                         width: parent.width
-                        indeterminate: isRunning && (isDir || (runningValue == runningMaxValue))
                         visible: isRunning
-                        value: runningValue
-                        maximumValue: runningMaxValue
+                        Image {
+                            id: runningIcon
+                            width: 16
+                            height: 16
+                            source: {
+                                switch (runningOperation) {
+                                case FolderSizeItemListModel.ReadOperation:
+                                    return "next.svg"
+                                case FolderSizeItemListModel.WriteOperation:
+                                    return "back.svg"
+                                case FolderSizeItemListModel.UploadOperation:
+                                    return "upload.svg"
+                                case FolderSizeItemListModel.DownloadOperation:
+                                    return "download.svg"
+                                default:
+                                    return ""
+                                }
+                            }
+                            visible: (isRunning && runningOperation != FolderSizeItemListModel.NoOperation)
+                        }
+                        ProgressBar {
+                            id: syncProgressBar
+                            width: parent.width - runningIcon.width
+                            indeterminate: isRunning && (isDir || (runningValue == runningMaxValue))
+                            visible: isRunning
+                            value: runningValue
+                            maximumValue: runningMaxValue
+                        }
                     }
                 }
                 ListItemText {
@@ -1521,13 +1555,16 @@ Page {
 //            console.debug("folderPage cloudDriveModel jsonText " + jsonText);
 
             var json = JSON.parse(jsonText);
-            var modelIndex = json.model_index;
             var isRunning = json.is_running
 
             // Update ProgressBar on listItem.
-            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
-            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.RunningValueRole, bytesReceived);
-            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+            var modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
+            if (modelIndex > -1) {
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.DownloadOperation);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesReceived);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+            }
         }
 
         onUploadProgress: {
@@ -1537,13 +1574,16 @@ Page {
 //            console.debug("folderPage cloudDriveModel jsonText " + jsonText);
 
             var json = JSON.parse(jsonText);
-            var modelIndex = json.model_index;
             var isRunning = json.is_running
 
             // Update ProgressBar on listItem.
-            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
-            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.RunningValueRole, bytesSent);
-            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+            var modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
+            if (modelIndex > -1) {
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.UploadOperation);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesSent);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+            }
         }
 
         onLocalChangedSignal: {

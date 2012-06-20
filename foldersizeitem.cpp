@@ -17,6 +17,7 @@ FolderSizeItem::FolderSizeItem(const QString &name, const QString &absolutePath,
 
     setFileType();
     this->isRunning = false;
+    this->runningOperation = 0;
     this->runningValue = 0;
     this->runningMaxValue = 0;
     this->isChecked = false;
@@ -34,6 +35,7 @@ QString FolderSizeItem::toJsonText()
     jsonText.append(QString("\"sub_file_count\": %1, ").arg(subFileCount));
     jsonText.append(QString("\"file_type\": \"%1\", ").arg(fileType));
     jsonText.append(QString("\"is_running\": %1, ").arg((isRunning)?"true":"false"));
+    jsonText.append(QString("\"running_operation\": %1, ").arg(runningOperation));
     jsonText.append(QString("\"running_value\": %1, ").arg(runningValue));
     jsonText.append(QString("\"running_max_value\": %1, ").arg(runningMaxValue));
     jsonText.append(QString("\"is_checked\": %1 ").arg(isChecked));

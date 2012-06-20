@@ -24,6 +24,7 @@ public:
     bool isRunning;
     qint64 runningValue;
     qint64 runningMaxValue;
+    int runningOperation;
 
     bool isChecked;
 
