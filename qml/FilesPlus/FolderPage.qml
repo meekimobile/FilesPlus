@@ -660,65 +660,61 @@ Page {
             property string filePath: absolutePath
             property int clipboardIndex: clipboard.getModelIndex(absolutePath)
 
-            Image {
-                id: cutCopyIcon
-                x: 0
-                y: 0
-                z: 1
-                width: 32
-                height: 32
-                visible: (listItem.clipboardIndex != -1)
-                source: clipboard.getActionIcon(listItem.clipboardIndex)
-            }
+            function getIconSource() {
+                var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
+                var viewableTextFileTypes = ["TXT", "HTML"];
 
-            Image {
-                id: markIcon
-                x: 0
-                y: 0
-                z: 1
-                width: 32
-                height: 32
-                visible: (fsListView.state == "mark" && isChecked)
-                source: "check_mark.svg"
+                if (isDir) {
+                    return "folder.svg";
+                } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                    return "photos.svg";
+                } else {
+                    return "notes.svg";
+                }
             }
 
             Row {
                 id: listDelegateRow
-                anchors.fill: listItem.paddingItem
-                spacing: 5
+                anchors.fill: parent
+                anchors.margins: 4
 
                 Rectangle {
                     id: iconRect
-                    width: 48
-                    height: 48
+                    width: 60
+                    height: parent.height
                     color: "transparent"
-                    Image {
-                        id: icon1
-                        anchors.centerIn: parent
-                        source: (isDir) ? "folder.svg" : "notes.svg"
-                    }
 
                     Image {
-                        id: syncIcon
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
+                        id: cutCopyIcon
+                        z: 1
                         width: 32
                         height: 32
+                        visible: (listItem.clipboardIndex != -1)
+                        source: clipboard.getActionIcon(listItem.clipboardIndex)
+                    }
+                    Image {
+                        id: markIcon
                         z: 1
-                        visible: cloudDriveModel.isConnected(absolutePath);
-                        source: {
-                            if (cloudDriveModel.isSyncing(absolutePath)) {
-                                return "clock.svg"
-                            } else if (cloudDriveModel.isDirty(absolutePath, lastModified)) {
-                                return "cloud_dirty.svg";
-                            } else {
-                                return "cloud.svg";
-                            }
-                        }
+                        width: 32
+                        height: 32
+                        anchors.left: parent.left
+                        anchors.bottom: parent.bottom
+                        visible: (fsListView.state == "mark" && isChecked)
+                        source: "check_mark.svg"
+                    }
+                    Image {
+                        id: icon1
+                        width: 48
+                        height: 48
+                        fillMode: Image.PreserveAspectFit
+                        anchors.centerIn: parent
+                        source: listItem.getIconSource()
                     }
                 }
                 Column {
-                    width: parent.width - icon1.width - sizeText.width
+                    width: parent.width - iconRect.width - rightColumn.width
+                    height: parent.height
+                    spacing: 4
                     ListItemText {
                         mode: listItem.mode
                         role: "Title"
@@ -775,31 +771,56 @@ Page {
                         }
                     }
                 }
-                ListItemText {
-                    id: sizeText
-                    mode: listItem.mode
-                    role: "Subtitle"
-                    text: Utility.formatFileSize(size, 1)
+                Column {
+                    id: rightColumn
                     width: 72
-                    horizontalAlignment: Text.AlignRight
-                    verticalAlignment: Text.AlignVCenter
+                    height: parent.height
+                    spacing: 4
+                    ListItemText {
+                        id: sizeText
+                        mode: listItem.mode
+                        role: "Subtitle"
+                        text: Utility.formatFileSize(size, 1)
+                        width: parent.width
+                        horizontalAlignment: Text.AlignRight
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    Image {
+                        id: syncIcon
+                        anchors.right: parent.right
+                        width: 32
+                        height: 32
+                        z: 1
+                        visible: cloudDriveModel.isConnected(absolutePath);
+                        source: {
+                            if (cloudDriveModel.isDirty(absolutePath, lastModified)) {
+                                return "cloud_dirty.svg";
+                            } else {
+                                return "cloud.svg";
+                            }
+                        }
+                    }
                 }
             }
 
             onPressAndHold: {
-                fsListView.currentIndex = index;
-                popupToolPanel.selectedFilePath = absolutePath;
-                popupToolPanel.selectedFileIndex = index;
-                popupToolPanel.forFile = !isDir;
-                popupToolPanel.pastePath = (isDir) ? absolutePath : currentPath.text;
-                var panelX = x + mouseX - fsListView.contentX;
-                var panelY = y + mouseY - fsListView.contentY + flipable1.y;
-                popupToolPanel.open(panelX, panelY);
+                if (fsListView.state != "mark") {
+                    fsListView.currentIndex = index;
+                    popupToolPanel.selectedFilePath = absolutePath;
+                    popupToolPanel.selectedFileIndex = index;
+                    popupToolPanel.forFile = !isDir;
+                    popupToolPanel.pastePath = (isDir) ? absolutePath : currentPath.text;
+                    var panelX = x + mouseX - fsListView.contentX;
+                    var panelY = y + mouseY - fsListView.contentY + flipable1.y;
+                    popupToolPanel.open(panelX, panelY);
+                }
             }
 
             onClicked: {
                 if (fsListView.state == "mark") {
-                    fsModel.setProperty(index, FolderSizeItemListModel.IsCheckedRole, !isChecked);
+                    if (listItem.clipboardIndex == -1) {
+                        fsModel.setProperty(index, FolderSizeItemListModel.IsCheckedRole, !isChecked);
+                    }
                 } else {
                     if (isDir) {
                         fsModel.changeDir(name);

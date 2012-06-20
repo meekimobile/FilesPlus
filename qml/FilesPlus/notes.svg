@@ -32,12 +32,12 @@
    guidetolerance="10"
    inkscape:pageopacity="0"
    inkscape:pageshadow="2"
-   inkscape:window-width="1024"
-   inkscape:window-height="673"
+   inkscape:window-width="1920"
+   inkscape:window-height="955"
    id="namedview30"
    showgrid="false"
    inkscape:zoom="4.1403509"
-   inkscape:cx="4.6377119"
+   inkscape:cx="-24.224576"
    inkscape:cy="28.5"
    inkscape:window-x="-4"
    inkscape:window-y="-4"
@@ -86,7 +86,7 @@
 
 <g
    id="g3009"
-   transform="translate(-9.5,4.5)"><path
+   transform="matrix(1.2777778,0,0,1.2777778,-18.805556,-0.9166671)"><path
      style="opacity:0.3"
      inkscape:connector-curvature="0"
      id="path7"
