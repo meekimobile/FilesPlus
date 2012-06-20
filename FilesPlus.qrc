@@ -52,7 +52,6 @@
         <file>qml/FilesPlus/cloud_dirty.svg</file>
         <file>qml/FilesPlus/cloud.svg</file>
         <file>qml/FilesPlus/toolbar_extension.svg</file>
-        <file>qml/FilesPlus/ToolMenu.qml</file>
         <file>qml/FilesPlus/ClipboardModel.qml</file>
         <file>qml/FilesPlus/check_mark.svg</file>
         <file>qml/FilesPlus/MarkMenu.qml</file>
