@@ -1441,6 +1441,7 @@ Page {
                     // Notify removed link.
                     messageDialog.titleText = "Dropbox message"
                     messageDialog.message = "File " + localPath + " was removed remotely.\nLink will be removed.";
+                    messageDialog.autoClosed = true;
                     messageDialog.open();
                     return;
                 }

@@ -6,9 +6,11 @@ CommonDialog {
     id: messageDialog
     
     property alias message: contentText.text
-    
+    property bool autoClosed: false
+
     titleIcon: "FilesPlusIcon.svg"
     buttonTexts: ["Ok"]
+    opacity: 1.0
     content: Text {
         id: contentText
         width: parent.width - 20
@@ -18,7 +20,26 @@ CommonDialog {
         anchors.horizontalCenter: parent.horizontalCenter
     }
     
+    SequentialAnimation {
+        id: hideAction
+
+        PauseAnimation { duration: 2800 }
+        PropertyAnimation {
+            target: messageDialog
+            duration: 200
+            property: opacity
+            to: 0
+        }
+        ScriptAction {
+            script: close();
+        }
+    }
+
     onStatusChanged: {
+        if (status == DialogStatus.Open) {
+            if (autoClosed) hideAction.restart();
+        }
+
         if (status == DialogStatus.Closed) {
             titleText = "";
             message = "";
