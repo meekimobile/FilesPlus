@@ -104,6 +104,8 @@ bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QSt
 
     // Copy dir.
     if (sourceFileInfo.isDir()) {
+        emit copyStarted(method, sourcePath, targetPath, "", 0);
+
         // Create dir on targetPath.
         if (!targetFileInfo.exists()) {
             if (!targetFileInfo.dir().mkdir(targetFileInfo.fileName())) {
@@ -120,8 +122,11 @@ bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QSt
             // Break if it returns false.
             if (!res) break;
         }
+
+        // Emit signal as dir copying is finished.
+        emit copyFinished(method, sourcePath, targetPath, "Action is done successfully.", 0);
     } else {
-        // Method copyFile.
+        // Method copyFile. Method copyFile will emit copyFinished once it's done.
         res = copyFile(method, sourcePath, targetPath);
     }
 
@@ -130,11 +135,15 @@ bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QSt
         removeDirSizeCache(targetPath);
     }
 
+    qDebug() << "FolderSizeModelThread::copy method" << method << "sourceFile" << sourcePath << "targetFile" << targetPath << "is done.";
+
     return res;
 }
 
 bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const QString targetPath)
 {
+    emit copyStarted(method, sourcePath, targetPath, "", 0);
+
     qDebug() << "FolderSizeModelThread::copyFile method" << method << "sourceFile" << sourcePath << "targetFile" << targetPath;
 
     QFileInfo sourceFileInfo(sourcePath);
@@ -153,7 +162,7 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
 
     if (sourceAbsFilePath == targetAbsFilePath) {
         qDebug() << "FolderSizeModelThread::copyFile Error sourceFile" << sourceAbsFilePath << "targetFile" << targetAbsFilePath;
-        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Both source/target files can't be the same file.", -1);
+        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Both source/target path can't be the same file.", -1);
         return false;
     }
 
@@ -187,7 +196,11 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
         return false;
     }
 
-    // TODO should emit signal as finish.
+    // Close files.
+    sourceFile.close();
+    targetFile.close();
+
+    // Emit signal as finish.
     emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, "Action is done successfully.", 0);
 
     return res;
@@ -260,7 +273,11 @@ void FolderSizeModelThread::removeDirSizeCache(const QString key)
         dirSizeCache.remove(dir.absolutePath());
         qDebug() << "FolderSizeModelThread::removeDirSizeCache remove cache for " << dir.absolutePath();
 
-        canCdup = dir.cdUp();
+        if (dir.isRoot()) {
+            canCdup = false;
+        } else {
+            canCdup = dir.cdUp();
+        }
     }
 }
 
@@ -273,22 +290,22 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
 
     // Get cached dirSize if any and clearCache==false
     if (!clearCache && dirSizeCache.contains(dir.absoluteFilePath())) {
-        qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir found " + dir.absoluteFilePath();
+//        qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir found " + dir.absoluteFilePath();
 
         cachedDir = dirSizeCache.value(dir.absoluteFilePath());
         if (cachedDir.lastModified >= dir.lastModified()) {
             // cachedDir is still valid, just return it.
-            qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir %1 >= %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
+//            qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir %1 >= %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
             isFound = true;
         } else {
-            qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir %1 < %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
+//            qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir %1 < %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
         }
     }
 
     // If (cache is invalidated or not found) and FolderSizeModelThread is ready, get cache recursively.
     // Otherwise return dummy dir item with 0 byte.
     if (!isFound) {
-        qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir NOT found " + dir.absoluteFilePath();
+//        qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir NOT found " + dir.absoluteFilePath();
 
         // Tell event loop to process event before it will process time consuming task.
         QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
@@ -320,7 +337,7 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
                 emit fetchDirSizeUpdated(fileInfo.absoluteFilePath());
             }
 
-            qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir path" << fileInfo.absoluteFilePath() << "dirSize" << dirSize << "subDirCount" << subDirCount << "subFileCount" << subFileCount;
+//            qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir path" << fileInfo.absoluteFilePath() << "dirSize" << dirSize << "subDirCount" << subDirCount << "subFileCount" << subFileCount;
         }
 
         // Put calculated dirSize to cache.
@@ -331,7 +348,7 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
 //    // Emit signal on dir is cached.
 //    emit fetchDirSizeUpdated(dir.absoluteFilePath());
 
-    qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir done " + cachedDir.name + ", " + QString("%1").arg(cachedDir.size);
+//    qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir done " + cachedDir.name + ", " + QString("%1").arg(cachedDir.size);
 
     return cachedDir;
 }

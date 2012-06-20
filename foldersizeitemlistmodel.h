@@ -73,7 +73,6 @@ public:
     Q_INVOKABLE int getIndexOnCurrentDir(const QString absFilePath);
     Q_INVOKABLE void removeCache(const QString absPath);
     Q_INVOKABLE bool isRunning();
-    void refreshItemList();
 
     // File/Dir manipulation methods.
     Q_INVOKABLE bool removeRow(int row, const QModelIndex & parent = QModelIndex());
@@ -87,6 +86,7 @@ public:
     // Informative methods which don't use FolderSizeModel.
     Q_INVOKABLE void refreshItems();
     Q_INVOKABLE void refreshItem(const int index);
+    Q_INVOKABLE void refreshItem(const QString localPath);
     Q_INVOKABLE QString getDirPath(const QString absFilePath);
     Q_INVOKABLE QStringList getPathToRoot(const QString absFilePath);
     Q_INVOKABLE bool isDir(const QString absFilePath);
@@ -112,13 +112,15 @@ private:
     QString createNonce();
 
     QList<FolderSizeItem> itemList;
+    void refreshItemList();
 
     bool isDirSizeCacheExisting();
     bool isReady();
     QStringList splitFileName(const QString fileName);
 public slots:
-    void postLoadSlot();
-    void postFetchSlot();
+    void loadDirSizeCacheFinishedFilter();
+    void fetchDirSizeFinishedFilter();
+    void copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void deleteFinishedFilter(QString targetPath);
     void proceedNextJob();
     void jobDone();
@@ -127,6 +129,7 @@ Q_SIGNALS:
     void refreshBegin();
     void refreshCompleted();
     void requestResetCache();
+    void copyStarted(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void deleteFinished(QString targetPath);

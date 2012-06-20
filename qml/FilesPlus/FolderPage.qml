@@ -318,6 +318,13 @@ Page {
             resetCacheSlot();
         }
 
+        onCopyStarted: {
+            console.debug("folderPage fsModel onCopyStarted " + fileAction + " from " + sourcePath + " to " + targetPath + " " + err + " " + msg);
+
+            fsModel.setProperty(sourcePath, FolderSizeItemListModel.IsRunningRole, true);
+            fsModel.setProperty(targetPath, FolderSizeItemListModel.IsRunningRole, true);
+        }
+
         onCopyProgress: {
 //            console.debug("folderPage fsModel onCopyProgress " + fileAction + " from " + sourcePath + " to " + targetPath + " " + bytes + " / " + bytesTotal);
 
@@ -365,7 +372,7 @@ Page {
 
             // Cache for changed files has been removed by FolderSizeItemModel internally.
             // Refresh list view.
-            fsModel.refreshItem(targetPath);
+            refreshSlot();
         }
 
         onDeleteFinished: {
@@ -396,6 +403,9 @@ Page {
 
         onFetchDirSizeFinished: {
             refreshButton.rotation = 0;
+
+            // Refresh itemList to show changes on ListView.
+            fsModel.refreshItems();
         }
     }
 
