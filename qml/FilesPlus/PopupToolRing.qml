@@ -9,6 +9,25 @@ Rectangle {
     color: "transparent"
     visible: false
 
+    state: "main"
+    states: [
+        State {
+            name: "main"
+            PropertyChanges {
+                target: buttonRing
+                model: mainButtonModel
+            }
+        },
+        State {
+            name: "tools"
+            PropertyChanges {
+                target: buttonRing
+                model: toolsButtonModel
+            }
+        }
+
+    ]
+
     property bool forFile
     property string srcFilePath
     property string selectedFilePath
@@ -31,7 +50,10 @@ Rectangle {
     signal printFile(string srcFilePath, int srcItemIndex)
     signal syncFile(string srcFilePath, int srcItemIndex)
     signal showTools(string srcFilePath, int srcItemIndex)
-    
+    signal newFolder(string srcFilePath, int srcItemIndex)
+    signal markClicked(string srcFilePath, int srcItemIndex)
+    signal renameFile(string srcFilePath, int srcItemIndex)
+
     function open(panelX, panelY) {
 //        console.debug("popupToolRing open panelX " + panelX + " panelY " + panelY);
 
@@ -64,6 +86,7 @@ Rectangle {
             selectedFileIndex = -1;
             srcFilePath = "";
             pastePath = "";
+            state = "main";
             closed();
         }
     }
@@ -76,13 +99,20 @@ Rectangle {
     }
     
     ListModel {
-        id: buttonModel
+        id: mainButtonModel
         ListElement { buttonName: "copy"; icon: "copy.svg" }
         ListElement { buttonName: "paste"; icon: "paste.svg" }
         ListElement { buttonName: "print"; icon: "print.svg" }
         ListElement { buttonName: "sync"; icon: "cloud.svg" }
         ListElement { buttonName: "delete"; icon: "delete.svg" }
         ListElement { buttonName: "cut"; icon: "trim.svg" }
+    }
+
+    ListModel {
+        id: toolsButtonModel
+        ListElement { buttonName: "mark"; icon: "check_mark.svg" }
+        ListElement { buttonName: "newFolder"; icon: "folder_add.svg" }
+        ListElement { buttonName: "rename"; icon: "rename.svg" }
     }
 
     Component {
@@ -99,8 +129,6 @@ Rectangle {
     function isButtonVisible(buttonName) {
         if (buttonName === "sync") {
             return (roots.indexOf(selectedFilePath) == -1);
-//        } else if (buttonName === "copy" || buttonName === "cut") {
-//            return forFile;
         } else if (buttonName === "paste") {
             return (clipboardCount > 0);
         }
@@ -126,6 +154,12 @@ Rectangle {
             deleteFile(selectedFilePath);
         } else if (buttonName == "sync") {
             syncFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "newFolder") {
+            newFolder(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "mark") {
+            markClicked(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "rename") {
+            renameFile(selectedFilePath, selectedFileIndex);
         }
         popupToolPanel.visible = false;
     }
@@ -135,7 +169,6 @@ Rectangle {
         width: parent.width
         height: parent.height
         focus: true
-        model: buttonModel
         delegate: buttonDelegate
         visible: true
         path: Path {
@@ -155,8 +188,17 @@ Rectangle {
         height: popupToolPanel.buttonRadius * 2
         iconSource: "toolbar_extension.svg"
         onClicked: {
-            showTools(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
-            popupToolPanel.visible = false;
+            if (popupToolPanel.state == "main") {
+                popupToolPanel.state = "tools";
+            } else {
+                popupToolPanel.state = "main";
+            }
+
+            // Restart timer
+            popupTimer.restart();
+
+//            showTools(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
+//            popupToolPanel.visible = false;
         }
     }
 }

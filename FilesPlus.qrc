@@ -66,5 +66,7 @@
         <file>qml/FilesPlus/back.svg</file>
         <file>qml/FilesPlus/download.svg</file>
         <file>qml/FilesPlus/clock.svg</file>
+        <file>qml/FilesPlus/rename.svg</file>
+        <file>qml/FilesPlus/folder_add.svg</file>
     </qresource>
 </RCC>

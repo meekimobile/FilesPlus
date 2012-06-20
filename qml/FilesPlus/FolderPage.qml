@@ -144,25 +144,6 @@ Page {
         }
     }
 
-    ToolMenu {
-        id: toolMenu
-
-        property int selectedIndex
-        property string selectedFilePath
-
-        onNewFolder: {
-            newFolderDialog.open();
-        }
-        onRenameFile: {
-            renameDialog.sourcePath = selectedFilePath;
-            renameDialog.open();
-        }
-        onMarkClicked: {
-            fsListView.state = "mark";
-            fsModel.setProperty(selectedIndex, FolderSizeItemListModel.IsCheckedRole, true);
-        }
-    }
-
     MarkMenu {
         id: markMenu
     }
@@ -890,6 +871,7 @@ Page {
 
     PopupToolRing {
         id: popupToolPanel
+        ringRadius: 65
         buttonRadius: 25
         clipboardCount: clipboard.count
 
@@ -936,6 +918,20 @@ Page {
             toolMenu.selectedIndex = srcItemIndex;
             toolMenu.selectedFilePath = srcFilePath;
             toolMenu.open();
+        }
+
+        onNewFolder: {
+            newFolderDialog.open();
+        }
+
+        onRenameFile: {
+            renameDialog.sourcePath = selectedFilePath;
+            renameDialog.open();
+        }
+
+        onMarkClicked: {
+            fsListView.state = "mark";
+            fsModel.setProperty(selectedIndex, FolderSizeItemListModel.IsCheckedRole, true);
         }
     }
 
