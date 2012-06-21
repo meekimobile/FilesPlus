@@ -53,6 +53,7 @@ Rectangle {
     signal newFolder(string srcFilePath, int srcItemIndex)
     signal markClicked(string srcFilePath, int srcItemIndex)
     signal renameFile(string srcFilePath, int srcItemIndex)
+    signal uploadFile(string srcFilePath, int srcItemIndex)
 
     function open(panelX, panelY) {
 //        console.debug("popupToolRing open panelX " + panelX + " panelY " + panelY);
@@ -112,6 +113,7 @@ Rectangle {
         id: toolsButtonModel
         ListElement { buttonName: "mark"; icon: "check_mark.svg" }
         ListElement { buttonName: "newFolder"; icon: "folder_add.svg" }
+        ListElement { buttonName: "upload"; icon: "upload.svg" }
         ListElement { buttonName: "rename"; icon: "rename.svg" }
     }
 
@@ -160,6 +162,8 @@ Rectangle {
             markClicked(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "rename") {
             renameFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "upload") {
+            uploadFile(selectedFilePath, selectedFileIndex);
         }
         popupToolPanel.visible = false;
     }

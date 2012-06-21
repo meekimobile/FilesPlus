@@ -179,19 +179,27 @@ void CloudDriveModel::addItem(QString localPath, CloudDriveItem item)
 {
     m_cloudDriveItems.insert(localPath, item);
 
-    qDebug() << "CloudDriveModel::addItem " << item;
+    qDebug() << "CloudDriveModel::addItem" << item;
 }
 
-void CloudDriveModel::addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash)
+void CloudDriveModel::addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash, bool addOnly)
 {
     CloudDriveItem item = getItem(localPath, type, uid);
     if (item.localPath != "") {
-        qDebug() << "CloudDriveModel::addItem remove for update " << item;
-        removeItem(type, uid, localPath);
+        // Found existing item. Remove then add.
+        if (!addOnly) {
+            qDebug() << "CloudDriveModel::addItem remove for update" << item;
+            removeItem(type, uid, localPath);
+            item = CloudDriveItem(type, uid, localPath, remotePath, hash, QDateTime::currentDateTime());
+            addItem(localPath, item);
+        } else {
+            qDebug() << "CloudDriveModel::addItem suppress remove" << item << "addOnly=" << addOnly;
+        }
+    } else {
+        // Not found, add it right away.
+        item = CloudDriveItem(type, uid, localPath, remotePath, hash, QDateTime::currentDateTime());
+        addItem(localPath, item);
     }
-    // Use latest datetime.
-    item = CloudDriveItem(type, uid, localPath, remotePath, hash, QDateTime::currentDateTime());
-    addItem(localPath, item);
 }
 
 void CloudDriveModel::removeItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
@@ -401,6 +409,12 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
     m_cloudDriveJobs[nonce] = job;
     m_jobQueue.enqueue(nonce);
 
+    // Add item with dirtyHash to avoid duplicate sync job.
+    // TODO handle other clouds.
+    if (job.type == Dropbox) {
+        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+    }
+
     emit proceedNextJobSignal();
 }
 
@@ -413,6 +427,12 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
     m_cloudDriveJobs[nonce] = job;
     m_jobQueue.enqueue(nonce);
 
+    // Add item with dirtyHash to avoid duplicate sync job.
+    // TODO handle other clouds.
+    if (job.type == Dropbox) {
+        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+    }
+
     emit proceedNextJobSignal();
 }
 
@@ -424,6 +444,12 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
     job.isRunning = true;
     m_cloudDriveJobs[nonce] = job;
     m_jobQueue.enqueue(nonce);
+
+    // Add item with dirtyHash to avoid duplicate sync job.
+    // TODO handle other clouds.
+    if (job.type == Dropbox) {
+        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+    }
 
     emit proceedNextJobSignal();
 }

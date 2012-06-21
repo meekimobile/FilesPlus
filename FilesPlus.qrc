@@ -35,8 +35,6 @@
         <file>qml/FilesPlus/main.qml</file>
         <file>qml/FilesPlus/MainMenu.qml</file>
         <file>qml/FilesPlus/MoreApps.qml</file>
-        <file>qml/FilesPlus/PopupMenu.qml</file>
-        <file>qml/FilesPlus/PopupToolPanel.qml</file>
         <file>qml/FilesPlus/SortByMenu.qml</file>
         <file>qml/FilesPlus/SettingMenu.qml</file>
         <file>qml/FilesPlus/play.svg</file>
@@ -68,5 +66,6 @@
         <file>qml/FilesPlus/rename.svg</file>
         <file>qml/FilesPlus/folder_add.svg</file>
         <file>qml/FilesPlus/cloud_wait.svg</file>
+        <file>qml/FilesPlus/CloudDriveUsersDialog.qml</file>
     </qresource>
 </RCC>

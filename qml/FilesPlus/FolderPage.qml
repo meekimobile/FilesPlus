@@ -238,8 +238,11 @@ Page {
         }
     }
 
-    function syncFileSlot(srcFilePath, selectedIndex) {
+    function syncFileSlot(srcFilePath, selectedIndex, operation) {
         console.debug("folderPage syncFileSlot srcFilePath=" + srcFilePath);
+
+        // Default operation = CloudDriveModel.Metadata
+        if (!operation) operation = CloudDriveModel.Metadata;
 
         if (!cloudDriveModel.isAuthorized()) {
             // TODO implement for other cloud drive.
@@ -250,14 +253,19 @@ Page {
 
             cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
         } else {
-            // TODO
             // [/] impl. in DropboxClient to store item(DropboxClient, uid, filePath, jsonObj(msg).rev) [Done on FilePutRely]
             // [/] On next metadata fetching. If rev is changed, sync to newer rev either put or get.
-            // [ ] Syncing folder must queue each get/put jobs (by using ThreadPool).
+            // [/] Syncing folder must queue each get/put jobs (by using ThreadPool).
             uidDialog.localPath = srcFilePath;
             uidDialog.selectedModelIndex = selectedIndex;
+            uidDialog.operation = operation;
             uidDialog.open();
         }
+    }
+
+    function uploadFileSlot(srcFilePath, selectedIndex) {
+        console.debug("folderPage uploadFileSlot srcFilePath=" + srcFilePath);
+        syncFileSlot(srcFilePath, selectedIndex, CloudDriveModel.FilePut);
     }
 
     function dropboxAccessTokenSlot() {
@@ -698,16 +706,6 @@ Page {
                         source: "check_mark.svg"
                     }
                     Image {
-                        id: syncingIcon
-                        z: 1
-                        width: 32
-                        height: 32
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        visible: cloudDriveModel.isSyncing(absolutePath)
-                        source: "cloud_wait.svg"
-                    }
-                    Image {
                         id: icon1
                         width: 48
                         height: 48
@@ -802,7 +800,9 @@ Page {
                         z: 1
                         visible: cloudDriveModel.isConnected(absolutePath);
                         source: {
-                            if (cloudDriveModel.isDirty(absolutePath, lastModified)) {
+                            if (cloudDriveModel.isSyncing(absolutePath)) {
+                                return "cloud_wait.svg";
+                            } else if (cloudDriveModel.isDirty(absolutePath, lastModified)) {
                                 return "cloud_dirty.svg";
                             } else {
                                 return "cloud.svg";
@@ -960,6 +960,10 @@ Page {
         onMarkClicked: {
             fsListView.state = "mark";
             fsModel.setProperty(srcItemIndex, FolderSizeItemListModel.IsCheckedRole, true);
+        }
+
+        onUploadFile: {
+            uploadFileSlot(srcFilePath, srcItemIndex);
         }
     }
 
@@ -1412,6 +1416,7 @@ Page {
 
         function syncClipboardItems() {
             uidDialog.localPath = "";
+            uidDialog.operation = CloudDriveModel.Metadata;
             uidDialog.open();
         }
 
@@ -1450,8 +1455,10 @@ Page {
             console.debug("folderPage cloudDriveModel onAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
+                // TODO find better way to proceed after got accessToken.
                 if (popupToolPanel.selectedFilePath) {
-                    syncFileSlot(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
+                    uidDialog.proceedPendingOperation();
+//                    syncFileSlot(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
                 } else {
                     // TODO Get account info and show in dialog.
                     messageDialog.titleText = "CloudDrive Access Token"
@@ -1499,7 +1506,7 @@ Page {
                 // Remove cache on target folders and its parents.
                 fsModel.removeCache(json.local_file_path);
 
-                // Refresh to add gotten file to listview.
+                // TODO Does it need to refresh to add gotten file to listview ?
                 refreshSlot();
             } else {
                 messageDialog.titleText = "CloudDrive File Get"
@@ -1553,6 +1560,7 @@ Page {
                 var jsonObj = Utility.createJsonObj(msg);
                 var localPathHash = cloudDriveModel.getItemHash(localPath, type, uid);
 
+                // TODO why don't it use json.remote_file_path ?
                 // Get remotePath if localPath is already connected if localPathHash exists. Otherwise getDefaultRemoteFilePath().
                 if (localPathHash == "") {
                     remotePath = cloudDriveModel.getDefaultRemoteFilePath(localPath);
@@ -1582,7 +1590,7 @@ Page {
                     // Sync based on remote contents.
                     console.debug("cloudDriveModel onMetadataReplySignal folder jsonObj.rev " + jsonObj.rev + " jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
                     if (jsonObj.hash != localPathHash) {
-                        //
+                        // Sync all json(remote)'s contents.
                         for(var i=0; i<jsonObj.contents.length; i++) {
                             var item = jsonObj.contents[i];
                             var itemLocalPath = cloudDriveModel.getDefaultLocalFilePath(item.path);
@@ -1695,7 +1703,7 @@ Page {
     function syncFromLocal(type, uid, localPath, remotePath, modelIndex) {
         // TODO Use WorkerScript.
         // This method is invoked from dir only as file which is not found will be put right away.
-        console.debug("syncFromLocal " + type + " " + uid + " " + localPath + " " + remotePath + " " + modelIndex);
+        console.debug("folderPage syncFromLocal " + type + " " + uid + " " + localPath + " " + remotePath + " " + modelIndex);
 
         if (fsModel.isDir(localPath)) {
             // Sync based on local contents.
@@ -1703,14 +1711,19 @@ Page {
             // If invoke metadata on each items.
             var jsonText = fsModel.getDirContentJson(localPath);
             var json = JSON.parse(jsonText);
+
+            // TODO create remote directory if no content.
+
             for(var i=0; i<json.length; i++) {
                 var localFilePath = json[i].absolute_path;
-                var localPathHash = cloudDriveModel.getItemHash(localPathHash, type, uid);
+                var localHash = cloudDriveModel.getItemHash(localFilePath, type, uid);
+//                console.debug("folderPage syncFromLocal local item " + type + " " + uid + " " + localFilePath + " " + localHash);
 
                 // TODO if dir/file already have localHash, means it's synced. Just skip.
-                if (localPathHash == "") {
+                if (localHash == "") {
                     var remoteFilePath = cloudDriveModel.getDefaultRemoteFilePath(localFilePath);
                     // Sync dir/file then it will decide whether get/put/do nothing by metadataReply.
+                    console.debug("folderPage syncFromLocal new local item " + type + " " + uid + " " + localFilePath + " " + remoteFilePath);
                     cloudDriveModel.metadata(type, uid, localFilePath, remoteFilePath, -1);
                 }
             }
@@ -1752,51 +1765,29 @@ Page {
         }
     }
 
-    SelectionDialog {
+    CloudDriveUsersDialog {
         id: uidDialog
-        height: 200
 
-        property int operation
-        property string localPath
-        property int selectedCloudType
-        property string selectedUid
-        property int selectedModelIndex
+        function proceedPendingOperation() {
+            // TODO
+        }
 
-        titleText: "Please select Cloud Account"
-        delegate: ListItem {
-            id: uidDialogListViewItem
-            height: 60
-            Row {
-                anchors.fill: uidDialogListViewItem.paddingItem
-                spacing: 2
-                Image {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 30
-                    height: 30
-                    source: getCloudIcon(type)
-                }
-                ListItemText {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width - 64
-                    mode: uidDialogListViewItem.mode
-                    role: "Title"
-                    text: email
-                }
-                Image {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 30
-                    height: 30
-                    source: "cloud.svg"
-                    visible: (hash != "")
-                }
+        function proceedOperation(type, uid, localPath, remotePath, modelIndex) {
+            switch (operation) {
+            case CloudDriveModel.Metadata:
+                cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
+                break;
+            case CloudDriveModel.FilePut:
+                cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                break;
+            case CloudDriveModel.FileGet:
+                cloudDriveModel.fileGet(type, uid, localPath, remotePath, modelIndex);
+                break;
             }
+        }
 
-            onClicked: {
-                uidDialog.selectedIndex = index;
-                uidDialog.selectedCloudType = uidDialog.model.get(uidDialog.selectedIndex).type;
-                uidDialog.selectedUid = uidDialog.model.get(uidDialog.selectedIndex).uid;
-                uidDialog.accept();
-            }
+        onOpened: {
+            uidDialog.model = getUidListModel(localPath);
         }
 
         onAccepted: {
@@ -1807,7 +1798,7 @@ Page {
                 // sync localPath.
                 var remoteFilePath = cloudDriveModel.getDefaultRemoteFilePath(uidDialog.localPath);
                 console.debug("uidDialog.selectedIndex " + uidDialog.selectedIndex + " type " + uidDialog.selectedCloudType + " uid " + uidDialog.selectedUid + " localPath " + uidDialog.localPath + " remoteFilePath " + remoteFilePath);
-                cloudDriveModel.metadata(uidDialog.selectedCloudType, uidDialog.selectedUid, uidDialog.localPath, remoteFilePath, selectedModelIndex);
+                proceedOperation(uidDialog.selectedCloudType, uidDialog.selectedUid, uidDialog.localPath, remoteFilePath, selectedModelIndex);
             } else if (clipboard.count > 0){
                 // Sync from clipboard.
                 for (var i=0; i<clipboard.count; i++) {
@@ -1819,18 +1810,12 @@ Page {
                         if (remotePath == "") {
                             remotePath = cloudDriveModel.getDefaultRemoteFilePath(sourcePath);
                         }
-                        cloudDriveModel.metadata(uidDialog.selectedCloudType, uidDialog.selectedUid, sourcePath, remotePath, -1);
+                        proceedOperation(uidDialog.selectedCloudType, uidDialog.selectedUid, sourcePath, remotePath, -1);
                     }
                 }
 
                 // Clear clipboard.
                 clipboard.clear();
-            }
-        }
-
-        onStatusChanged: {
-            if (status == DialogStatus.Open) {
-                uidDialog.model = getUidListModel(localPath);
             }
         }
     }

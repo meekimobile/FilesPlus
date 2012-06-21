@@ -7,6 +7,7 @@ CommonDialog {
     
     property alias message: contentText.text
     property bool autoClosed: false
+    property int autoClosedInterval: 3000
 
     titleIcon: "FilesPlusIcon.svg"
     buttonTexts: ["Ok"]
@@ -23,7 +24,7 @@ CommonDialog {
     SequentialAnimation {
         id: hideAction
 
-        PauseAnimation { duration: 2800 }
+        PauseAnimation { duration: autoClosedInterval - 200 }
         PropertyAnimation {
             target: messageDialog
             duration: 200
