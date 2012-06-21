@@ -54,6 +54,7 @@ public:
         NoOperation,
         ReadOperation,
         WriteOperation,
+        SyncOperation,
         UploadOperation,
         DownloadOperation
     };

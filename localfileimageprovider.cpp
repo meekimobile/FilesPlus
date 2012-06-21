@@ -51,6 +51,7 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
         if (ir.size().width() > requestedSize.width() || ir.size().height() > requestedSize.height()) {
             QSize newSize = ir.size();
             newSize.scale(requestedSize, Qt::KeepAspectRatio);
+            qDebug() << "LocalFileImageProvider::requestImage requestedSize" << requestedSize << "newSize" << newSize;
             ir.setScaledSize(newSize);
         }
 

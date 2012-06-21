@@ -36,7 +36,7 @@ Page {
     MainMenu {
         id: mainMenu
         // TODO refactor to use id.
-        disabledMenus: ["Sort by", "Settings", "New Folder", "Paste", "Clear Clipboard", "Mark multiple items"]
+        enabledMenus: ["About", "More Apps", "Exit"]
 
         onQuit: {
             Qt.quit();

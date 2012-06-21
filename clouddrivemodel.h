@@ -63,6 +63,12 @@ public:
     Q_INVOKABLE bool isAuthorized();
     Q_INVOKABLE bool isAuthorized(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE QStringList getStoredUidList(CloudDriveModel::ClientTypes type);
+    void cleanItems();
+    bool cleanItem(const CloudDriveItem &item);
+
+    // Sync all items.
+    Q_INVOKABLE void syncItems();
+    Q_INVOKABLE void syncFolder(const QString localFilePath);
 
     // Service Proxy
     Q_INVOKABLE void requestToken(CloudDriveModel::ClientTypes type);

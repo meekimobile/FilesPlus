@@ -6,7 +6,7 @@ Menu {
     id: mainMenu
     z: 2
 
-    property variant disabledMenus: []
+    property variant enabledMenus: []
 
     signal quit()
 
@@ -43,6 +43,23 @@ Menu {
             text: "Mark multiple items"
             onClicked: {
                 fsListView.state = "mark";
+            }
+        }
+
+        MenuItem {
+            id: syncFolderMenuItem
+            text: "Sync current folder"
+            onClicked: {
+                console.debug("mainMenu syncFolderMenuItem fsModel.currentDir " + fsModel.currentDir);
+                cloudDriveModel.syncFolder(fsModel.currentDir);
+            }
+        }
+
+        MenuItem {
+            id: syncAllMenuItem
+            text: "Sync all connected items"
+            onClicked: {
+                cloudDriveModel.syncItems();
             }
         }
 
@@ -86,14 +103,23 @@ Menu {
         }
     }
 
+    function isEnabled(menuName) {
+        if (enabledMenus.length > 0) {
+            return (enabledMenus.indexOf(menuName) != -1);
+        }
+        return true;
+    }
+
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
-            sortByMenuItem.visible = (disabledMenus.indexOf(sortByMenuItem.text) == -1);
-            settingMenuItem.visible = (disabledMenus.indexOf(settingMenuItem.text) == -1);
-            newFolderMenuItem.visible = (disabledMenus.indexOf(newFolderMenuItem.text) == -1);
-            pasteMenuItem.visible = (disabledMenus.indexOf(pasteMenuItem.text) == -1) && (clipboard.count > 0);
-            clearClipboardMenuItem.visible = (disabledMenus.indexOf(clearClipboardMenuItem.text) == -1) && (clipboard.count > 0);
-            markMenuItem.visible = (disabledMenus.indexOf(markMenuItem.text) == -1) && (fsListView.state != "mark");
+            sortByMenuItem.visible = isEnabled(sortByMenuItem.text);
+            settingMenuItem.visible = isEnabled(settingMenuItem.text);
+            newFolderMenuItem.visible = isEnabled(newFolderMenuItem.text);
+            pasteMenuItem.visible = isEnabled(pasteMenuItem.text) && (clipboard.count > 0);
+            clearClipboardMenuItem.visible = isEnabled(clearClipboardMenuItem.text) && (clipboard.count > 0);
+            markMenuItem.visible = isEnabled(markMenuItem.text) && (fsListView.state != "mark");
+            syncFolderMenuItem.visible = isEnabled(syncFolderMenuItem.text) && (!fsModel.isRoot());
+            syncAllMenuItem.visible = isEnabled(syncAllMenuItem.text);
         }
     }
 }

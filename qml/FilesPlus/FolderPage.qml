@@ -747,6 +747,8 @@ Page {
                                     return "next.svg"
                                 case FolderSizeItemListModel.WriteOperation:
                                     return "back.svg"
+                                case FolderSizeItemListModel.SyncOperation:
+                                    return "refresh.svg"
                                 case FolderSizeItemListModel.UploadOperation:
                                     return "upload.svg"
                                 case FolderSizeItemListModel.DownloadOperation:
@@ -1403,6 +1405,19 @@ Page {
             uidDialog.open();
         }
 
+        function mapToFolderSizeListModelOperation(cloudDriveModelOperation) {
+            switch (cloudDriveModelOperation) {
+            case CloudDriveModel.Metadata:
+                return FolderSizeItemListModel.SyncOperation;
+            case CloudDriveModel.FileGet:
+                return FolderSizeItemListModel.DownloadOperation;
+            case CloudDriveModel.FilePut:
+                return FolderSizeItemListModel.UploadOperation;
+            default:
+                return FolderSizeItemListModel.NoOperation;
+            }
+        }
+
         onRequestTokenReplySignal: {
             console.debug("folderPage cloudDriveModel onRequestTokenReplySignal " + err + " " + errMsg + " " + msg);
 
@@ -1632,7 +1647,7 @@ Page {
             var modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
             if (modelIndex > -1) {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.DownloadOperation);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, mapToFolderSizeListModelOperation(json.operation) );
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesReceived);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
             }
@@ -1651,7 +1666,7 @@ Page {
             var modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
             if (modelIndex > -1) {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.UploadOperation);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, mapToFolderSizeListModelOperation(json.operation) );
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesSent);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
             }
