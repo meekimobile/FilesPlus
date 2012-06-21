@@ -456,9 +456,9 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
 
 void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
-    if (err == 0) {
-        CloudDriveJob job = m_cloudDriveJobs[nonce];
+    CloudDriveJob job = m_cloudDriveJobs[nonce];
 
+    if (err == 0) {
         // TODO generalize to support other clouds.
         QScriptEngine engine;
         QScriptValue sc;
@@ -482,9 +482,9 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
 
 void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
-    if (err == 0) {
-        CloudDriveJob job = m_cloudDriveJobs[nonce];
+    CloudDriveJob job = m_cloudDriveJobs[nonce];
 
+    if (err == 0) {
         // TODO generalize to support other clouds.
         QScriptEngine engine;
         QScriptValue sc;
@@ -498,6 +498,11 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
 
         job.isRunning = false;
         m_cloudDriveJobs[nonce] = job;
+    } else if (err == -1) {
+        // Remove failed item.
+        if (job.type == Dropbox) {
+            removeItem(Dropbox, job.uid, job.localFilePath);
+        }
     }
 
     // Notify job done.
@@ -508,9 +513,9 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
 
 void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
-    if (err == 0) {
-        CloudDriveJob job = m_cloudDriveJobs[nonce];
+    CloudDriveJob job = m_cloudDriveJobs[nonce];
 
+    if (err == 0) {
         // TODO generalize to support other clouds.
         QScriptEngine engine;
         QScriptValue sc;

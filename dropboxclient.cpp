@@ -356,7 +356,6 @@ void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, Q
     QString uri = filePutURI.arg(dropboxRoot, remoteFilePath);
     qDebug() << "DropboxClient::filePut uri " << uri;
 
-    ;
     m_localFileHash[nonce] = new QFile(localFilePath);
     QFile *localSourceFile = m_localFileHash[nonce];
     if (localSourceFile->open(QIODevice::ReadOnly)) {
@@ -375,6 +374,9 @@ void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, Q
         connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
         qDebug() << "DropboxClient::filePut put file " << localFilePath << " to dropbox " << remoteFilePath;
+    } else {
+        qDebug() << "DropboxClient::filePut file " << localFilePath << " can't be opened.";
+        emit filePutReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");
     }
 }
 
