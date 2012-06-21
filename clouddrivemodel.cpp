@@ -6,7 +6,7 @@
 #include <QDebug>
 
 const QString CloudDriveModel::HashFilePath = "C:/CloudDriveModel.dat";
-const int CloudDriveModel::MaxRunningJobCount = 3;
+const int CloudDriveModel::MaxRunningJobCount = 1;
 const QString CloudDriveModel::DirtyHash = "FFFFFFFF";
 
 CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
@@ -19,7 +19,7 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     connect(this, SIGNAL(proceedNextJobSignal()), SLOT(proceedNextJob()) );
 
     // Connect with permanent thread.
-    connect(&m_thread, SIGNAL(ddataLoadedSignal()), this, SLOT(dataLoadedFilter()) );
+    connect(&m_thread, SIGNAL(dataLoadedSignal()), this, SLOT(dataLoadedFilter()) );
     connect(&m_thread, SIGNAL(uploadProgress(QString,qint64,qint64)), SLOT(uploadProgressFilter(QString,qint64,qint64)) );
     connect(&m_thread, SIGNAL(downloadProgress(QString,qint64,qint64)), SLOT(downloadProgressFilter(QString,qint64,qint64)) );
     connect(&m_thread, SIGNAL(requestTokenReplySignal(int,QString,QString)), SIGNAL(requestTokenReplySignal(int,QString,QString)) );
