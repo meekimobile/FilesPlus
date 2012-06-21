@@ -65,6 +65,7 @@ void CloudDriveModel::initializeDropboxClient() {
     connect(dbClient, SIGNAL(fileGetReplySignal(QString,int,QString,QString)), SLOT(fileGetReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SLOT(filePutReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(createFolderReplySignal(QString,int,QString,QString)), SLOT(createFolderReplyFilter(QString,int,QString,QString)) );
 }
 
 void CloudDriveModel::initializeGCDClient() {
@@ -454,6 +455,72 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
     emit proceedNextJobSignal();
 }
 
+void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex, bool forcePut)
+{
+    // This method is invoked from dir only as file which is not found will be put right away.
+    qDebug() << "CloudDriveModel::syncFromLocal" << type << uid << localPath << remotePath << modelIndex << "forcePut" << forcePut;
+
+    QFileInfo info(localPath);
+    if (info.isDir()) {
+        // Sync based on local contents.
+
+        // TODO create remote directory if no content.
+        createFolder(type, uid, localPath, remotePath, modelIndex);
+
+        QDir dir(info.absoluteFilePath());
+        dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
+        foreach (QFileInfo item, dir.entryInfoList()) {
+            QString localFilePath = item.absoluteFilePath();
+            QString localHash = getItemHash(localFilePath, type, uid);
+            qDebug() << "CloudDriveModel::syncFromLocal item" << type << uid << localFilePath << localHash;
+
+            // If dir/file don't have localHash which means it's not synced, put it right away.
+            // If forcePut, put it right away.
+            if (forcePut || localHash == "") {
+                QString remoteFilePath = getDefaultRemoteFilePath(localFilePath);
+                // Sync dir/file then it will decide whether get/put/do nothing by metadataReply.
+                qDebug() << "CloudDriveModel::syncFromLocal new local item" << type << uid << localFilePath << remoteFilePath << localHash;
+
+                if (forcePut) {
+                    if (item.isDir()) {
+                        // Drilldown local dir recursively.
+                        syncFromLocal(type, uid, localFilePath, remoteFilePath, -1, forcePut);
+                    } else {
+                        filePut(type, uid, localFilePath, remoteFilePath, -1);
+                    }
+                } else {
+                    metadata(type, uid, localFilePath, remoteFilePath, -1);
+                }
+            } else {
+                // Skip any items that already have CloudDriveItem and 's localHash.
+            }
+        }
+
+        // TODO avoid having below line. It caused infinite loop.
+        // Update hash for itself will be requested from QML externally.
+    } else {
+        qDebug() << "CloudDriveModel::syncFromLocal file is not supported." << type << uid << localPath << remotePath << modelIndex << "forcePut" << forcePut;
+    }
+}
+
+void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex)
+{
+    QString nonce = createNonce();
+
+    CloudDriveJob job(nonce, CreateFolder, type, uid, localPath, remotePath, modelIndex);
+    job.isRunning = true;
+    m_cloudDriveJobs[nonce] = job;
+    m_jobQueue.enqueue(nonce);
+
+    // Add item with dirtyHash to avoid duplicate sync job.
+    // TODO handle other clouds.
+    if (job.type == Dropbox) {
+        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+    }
+
+    emit proceedNextJobSignal();
+}
+
 void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs[nonce];
@@ -537,6 +604,38 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
     emit metadataReplySignal(nonce, err, errMsg, msg);
 }
 
+void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    CloudDriveJob job = m_cloudDriveJobs[nonce];
+
+    if (err == 0) {
+        // TODO generalize to support other clouds.
+        QScriptEngine engine;
+        QScriptValue sc;
+        sc = engine.evaluate("(" + msg + ")");
+        QString hash = sc.property("rev").toString();
+
+        // TODO handle other clouds.
+        if (job.type == Dropbox) {
+            addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
+        }
+    } else if (err == -1) {
+        // Remove failed item.
+        if (job.type == Dropbox) {
+            removeItem(Dropbox, job.uid, job.localFilePath);
+        }
+    }
+
+    // Stop running.
+    job.isRunning = false;
+    m_cloudDriveJobs[nonce] = job;
+
+    // Notify job done.
+    jobDone();
+
+    emit createFolderReplySignal(nonce, err, errMsg, msg);
+}
+
 void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint64 bytesTotal)
 {
     CloudDriveJob job = m_cloudDriveJobs[nonce];
@@ -585,6 +684,10 @@ void CloudDriveModel::proceedNextJob() {
             break;
         case Metadata:
             dbClient->metadata(job.jobId, job.uid, job.remoteFilePath);
+            break;
+        case CreateFolder:
+            dbClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
+            break;
         }
         break;
     }

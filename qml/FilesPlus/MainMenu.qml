@@ -51,7 +51,7 @@ Menu {
             text: "Sync current folder"
             onClicked: {
                 console.debug("mainMenu syncFolderMenuItem fsModel.currentDir " + fsModel.currentDir);
-                cloudDriveModel.syncFolder(fsModel.currentDir);
+                syncFileSlot(fsModel.currentDir, -1);
             }
         }
 

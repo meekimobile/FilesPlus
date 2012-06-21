@@ -34,7 +34,8 @@ public:
     enum Operations {
         FileGet,
         FilePut,
-        Metadata
+        Metadata,
+        CreateFolder
     };
 
     explicit CloudDriveModel(QDeclarativeItem *parent = 0);
@@ -67,7 +68,7 @@ public:
     void cleanItems();
     bool cleanItem(const CloudDriveItem &item);
 
-    // Sync all items.
+    // Sync items.
     Q_INVOKABLE void syncItems();
     Q_INVOKABLE void syncFolder(const QString localFilePath);
 
@@ -82,6 +83,8 @@ public:
     Q_INVOKABLE void fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString localFilePath, int modelIndex);
     Q_INVOKABLE void filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
     Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
+    Q_INVOKABLE void syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex, bool forcePut = false);
+    Q_INVOKABLE void createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex);
 signals:
     void dataLoadedSignal();
     void proceedNextJobSignal();
@@ -95,6 +98,7 @@ signals:
     void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void createFolderReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
 public slots:
@@ -104,6 +108,7 @@ public slots:
     void fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void createFolderReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void uploadProgressFilter(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgressFilter(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
 private:

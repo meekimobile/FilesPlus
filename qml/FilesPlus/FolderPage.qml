@@ -1509,7 +1509,7 @@ Page {
                 // TODO Does it need to refresh to add gotten file to listview ?
                 refreshSlot();
             } else {
-                messageDialog.titleText = "CloudDrive File Get"
+                messageDialog.titleText = getCloudName(job.type) + " File Get";
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
@@ -1533,7 +1533,7 @@ Page {
                 // TODO also show running on its parents.
                 fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
             } else {
-                messageDialog.titleText = "CloudDrive File Put"
+                messageDialog.titleText = getCloudName(json.type) + " File Put";
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
@@ -1577,7 +1577,8 @@ Page {
                     fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
 
                     // Notify removed link.
-                    messageDialog.titleText = "Dropbox message"
+
+                    messageDialog.titleText = getCloudName(type) + " Metadata";
                     messageDialog.message = "File " + localPath + " was removed remotely.\nLink will be removed.";
                     messageDialog.autoClosed = true;
                     messageDialog.open();
@@ -1613,7 +1614,7 @@ Page {
 
                     // TODO Sync based on local contents. [Pending]
                     // It needs to implement out of this metadataReply.
-                    syncFromLocal(type, uid, localPath, remotePath, modelIndex);
+                    cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex);
                 } else {
                     // Sync file.
                     console.debug("cloudDriveModel onMetadataReplySignal file jsonObj.rev " + jsonObj.rev + " localPathHash " + localPathHash);
@@ -1627,12 +1628,13 @@ Page {
             } else if (err == 203) {
                 // If metadata is not found, put it to cloud right away recursively.
                 if (fsModel.isDir(localPath)) {
-                    syncFromLocal(type, uid, localPath, remotePath, modelIndex);
+                    // Remote folder will be created in syncFromLocal if it's required.
+                    cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex);
 
                     // Request metadata for current dir.
                     // Once it got reply, it should get hash already.
                     // Because its sub files/dirs are in prior queue.
-                    cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
+//                    cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
                 } else {
                     cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
                 }
@@ -1643,13 +1645,40 @@ Page {
                 // Retry request metadata as
                 metadata(type, uid, localPath, remotePath, modelIndex);
             } else {
-                messageDialog.titleText = "Dropbox Metadata"
+                messageDialog.titleText = getCloudName(type) + " Metadata";
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
 
             // Update ProgressBar on listItem.
             fsModel.setProperty(localPath, FolderSizeItemListModel.IsRunningRole, isRunning);
+        }
+
+        onCreateFolderReplySignal: {
+            console.debug("folderPage cloudDriveModel onCreateFolderReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
+
+            var jsonText = cloudDriveModel.getJobJson(nonce);
+            console.debug("folderPage cloudDriveModel jsonText " + jsonText);
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+
+            var json = JSON.parse(jsonText);
+            var modelIndex = json.model_index;
+            var isRunning = json.is_running;
+
+            if (err == 0) {
+                // Do nothing.
+            } else {
+                messageDialog.titleText = getCloudName(json.type) + " Create Folder";
+                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.autoClosed = true;
+                messageDialog.open();
+            }
+
+            // Update ProgressBar on listItem.
+            // TODO also show running on its parents.
+            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
         }
 
         onDownloadProgress: {
@@ -1700,35 +1729,35 @@ Page {
         }
     }
 
-    function syncFromLocal(type, uid, localPath, remotePath, modelIndex) {
-        // TODO Use WorkerScript.
-        // This method is invoked from dir only as file which is not found will be put right away.
-        console.debug("folderPage syncFromLocal " + type + " " + uid + " " + localPath + " " + remotePath + " " + modelIndex);
+//    function syncFromLocal(type, uid, localPath, remotePath, modelIndex) {
+//        // TODO Use WorkerScript.
+//        // This method is invoked from dir only as file which is not found will be put right away.
+//        console.debug("folderPage syncFromLocal " + type + " " + uid + " " + localPath + " " + remotePath + " " + modelIndex);
 
-        if (fsModel.isDir(localPath)) {
-            // Sync based on local contents.
-            // List dir/file directly from file system. Because fsModel has only currentDir's content.
-            // If invoke metadata on each items.
-            var jsonText = fsModel.getDirContentJson(localPath);
-            var json = JSON.parse(jsonText);
+//        if (fsModel.isDir(localPath)) {
+//            // Sync based on local contents.
+//            // List dir/file directly from file system. Because fsModel has only currentDir's content.
+//            // If invoke metadata on each items.
+//            var jsonText = fsModel.getDirContentJson(localPath);
+//            var json = JSON.parse(jsonText);
 
-            // TODO create remote directory if no content.
+//            // TODO create remote directory if no content.
 
-            for(var i=0; i<json.length; i++) {
-                var localFilePath = json[i].absolute_path;
-                var localHash = cloudDriveModel.getItemHash(localFilePath, type, uid);
-//                console.debug("folderPage syncFromLocal local item " + type + " " + uid + " " + localFilePath + " " + localHash);
+//            for(var i=0; i<json.length; i++) {
+//                var localFilePath = json[i].absolute_path;
+//                var localHash = cloudDriveModel.getItemHash(localFilePath, type, uid);
+////                console.debug("folderPage syncFromLocal local item " + type + " " + uid + " " + localFilePath + " " + localHash);
 
-                // TODO if dir/file already have localHash, means it's synced. Just skip.
-                if (localHash == "") {
-                    var remoteFilePath = cloudDriveModel.getDefaultRemoteFilePath(localFilePath);
-                    // Sync dir/file then it will decide whether get/put/do nothing by metadataReply.
-                    console.debug("folderPage syncFromLocal new local item " + type + " " + uid + " " + localFilePath + " " + remoteFilePath);
-                    cloudDriveModel.metadata(type, uid, localFilePath, remoteFilePath, -1);
-                }
-            }
-        }
-    }
+//                // TODO if dir/file already have localHash, means it's synced. Just skip.
+//                if (localHash == "") {
+//                    var remoteFilePath = cloudDriveModel.getDefaultRemoteFilePath(localFilePath);
+//                    // Sync dir/file then it will decide whether get/put/do nothing by metadataReply.
+//                    console.debug("folderPage syncFromLocal new local item " + type + " " + uid + " " + localFilePath + " " + remoteFilePath);
+//                    cloudDriveModel.metadata(type, uid, localFilePath, remoteFilePath, -1);
+//                }
+//            }
+//        }
+//    }
 
     function getUidListModel(localPath) {
         console.debug("getUidListModel localPath " + localPath);
@@ -1765,6 +1794,15 @@ Page {
         }
     }
 
+    function getCloudName(type) {
+        switch (type) {
+        case CloudDriveModel.Dropbox:
+            return "Dropbox";
+        case CloudDriveModel.GoogleDrive:
+            return "GoogleDrive";
+        }
+    }
+
     CloudDriveUsersDialog {
         id: uidDialog
 
@@ -1778,7 +1816,13 @@ Page {
                 cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
                 break;
             case CloudDriveModel.FilePut:
-                cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                if (fsModel.isDir(localPath)) {
+                    cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex, true);
+                    // Get metadata for newly sync'd folder.
+                    cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
+                } else {
+                    cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                }
                 break;
             case CloudDriveModel.FileGet:
                 cloudDriveModel.fileGet(type, uid, localPath, remotePath, modelIndex);

@@ -49,6 +49,7 @@ public:
     Q_INVOKABLE void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
     Q_INVOKABLE QString getDefaultRemoteFilePath(const QString &localFilePath);
     Q_INVOKABLE void metadata(QString nonce, QString uid, QString remoteFilePath);
+    Q_INVOKABLE void createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
 signals:
     void requestTokenReplySignal(int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString url, QString redirectForm);
@@ -58,6 +59,7 @@ signals:
     void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void createFolderReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
@@ -70,6 +72,7 @@ public slots:
     void fileGetReplyFinished(QNetworkReply *reply);
     void filePutReplyFinished(QNetworkReply *reply);
     void metadataReplyFinished(QNetworkReply *reply);
+    void createFolderReplyFinished(QNetworkReply *reply);
 private:
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;
