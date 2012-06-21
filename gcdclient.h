@@ -5,7 +5,7 @@
 #include <QtNetwork>
 #include "tokenpair.h"
 
-class GCDClient : public QDeclarativeItem
+class GCDClient : public QObject
 {
     Q_OBJECT
 public:

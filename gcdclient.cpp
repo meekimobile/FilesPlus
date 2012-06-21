@@ -24,7 +24,7 @@ const QString GCDClient::patchMetadataURI = "https://www.googleapis.com/drive/v1
 const QString GCDClient::updateMetadataURI = "https://www.googleapis.com/drive/v1/files/%1";
 
 GCDClient::GCDClient(QDeclarativeItem *parent) :
-    QDeclarativeItem(parent)
+    QObject(parent)
 {
     loadParamMap();
 

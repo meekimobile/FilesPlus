@@ -3,6 +3,8 @@
 CloudDriveModelThread::CloudDriveModelThread(QObject *parent) :
     QThread(parent)
 {
+    initializeDropboxClient();
+//    initializeGCDClient();
 }
 
 QString CloudDriveModelThread::getHashFilePath() const
@@ -80,29 +82,27 @@ void CloudDriveModelThread::setRunMethod(int method)
 }
 
 void CloudDriveModelThread::initializeDropboxClient() {
-    dbClient = new DropboxClient();
     connect(dbClient, SIGNAL(uploadProgress(QString,qint64,qint64)), SIGNAL(uploadProgress(QString,qint64,qint64)) );
     connect(dbClient, SIGNAL(downloadProgress(QString,qint64,qint64)), SIGNAL(downloadProgress(QString,qint64,qint64)) );
     connect(dbClient, SIGNAL(requestTokenReplySignal(int,QString,QString)), SIGNAL(requestTokenReplySignal(int,QString,QString)) );
     connect(dbClient, SIGNAL(authorizeRedirectSignal(QString,QString)), SIGNAL(authorizeRedirectSignal(QString,QString)) );
     connect(dbClient, SIGNAL(accessTokenReplySignal(int,QString,QString)), SIGNAL(accessTokenReplySignal(int,QString,QString)) );
     connect(dbClient, SIGNAL(accountInfoReplySignal(int,QString,QString)), SIGNAL(accountInfoReplySignal(int,QString,QString)) );
-    connect(dbClient, SIGNAL(fileGetReplySignal(QString,int,QString,QString)), SLOT(fileGetReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SLOT(filePutReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(createFolderReplySignal(QString,int,QString,QString)), SLOT(createFolderReplyFilter(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(fileGetReplySignal(QString,int,QString,QString)), SIGNAL(fileGetReplySignal(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SIGNAL(filePutReplySignal(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SIGNAL(metadataReplySignal(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(createFolderReplySignal(QString,int,QString,QString)), SIGNAL(createFolderReplySignal(QString,int,QString,QString)) );
 }
 
 void CloudDriveModelThread::initializeGCDClient() {
-    gcdClient = new GCDClient();
 //    connect(gcdClient, SIGNAL(uploadProgress(qint64,qint64)), SIGNAL(uploadProgress(qint64,qint64)) );
 //    connect(gcdClient, SIGNAL(downloadProgress(qint64,qint64)), SIGNAL(downloadProgress(qint64,qint64)) );
 //    connect(gcdClient, SIGNAL(authorizeRedirectSignal(QString,QString)), SIGNAL(authorizeRedirectSignal(QString,QString)) );
 //    connect(gcdClient, SIGNAL(accessTokenReplySignal(int,QString,QString)), SIGNAL(accessTokenReplySignal(int,QString,QString)) );
 //    connect(gcdClient, SIGNAL(accountInfoReplySignal(int,QString,QString)), SIGNAL(accountInfoReplySignal(int,QString,QString)) );
-    connect(gcdClient, SIGNAL(fileGetReplySignal(int,QString,QString)), SIGNAL(fileGetReplySignal(int,QString,QString)) );
-    connect(gcdClient, SIGNAL(filePutReplySignal(int,QString,QString)), SIGNAL(filePutReplySignal(int,QString,QString)) );
-    connect(gcdClient, SIGNAL(metadataReplySignal(int,QString,QString)), SIGNAL(metadataReplySignal(int,QString,QString)) );
+//    connect(gcdClient, SIGNAL(fileGetReplySignal(int,QString,QString)), SIGNAL(fileGetReplySignal(int,QString,QString)) );
+//    connect(gcdClient, SIGNAL(filePutReplySignal(int,QString,QString)), SIGNAL(filePutReplySignal(int,QString,QString)) );
+//    connect(gcdClient, SIGNAL(metadataReplySignal(int,QString,QString)), SIGNAL(metadataReplySignal(int,QString,QString)) );
 }
 
 void CloudDriveModelThread::run()

@@ -6,7 +6,7 @@
 #include "tokenpair.h"
 #include "qnetworkreplywrapper.h"
 
-class DropboxClient : public QDeclarativeItem
+class DropboxClient : public QObject
 {
     Q_OBJECT
 public:

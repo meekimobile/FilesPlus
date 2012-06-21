@@ -24,7 +24,7 @@ const QString DropboxClient::createFolderURI = "https://api.dropbox.com/1/fileop
 const QString DropboxClient::metadataURI = "https://api.dropbox.com/1/metadata/%1%2";
 
 DropboxClient::DropboxClient(QDeclarativeItem *parent) :
-    QDeclarativeItem(parent)
+    QObject(parent)
 {
     // Load accessTokenPair from file
     loadAccessPairMap();
