@@ -23,6 +23,14 @@ Menu {
         }
 
         MenuItem {
+            id: markMenuItem
+            text: "Mark multiple items"
+            onClicked: {
+                fsListView.state = "mark";
+            }
+        }
+
+        MenuItem {
             id: clearClipboardMenuItem
             text: "Clear Clipboard"
             onClicked: {
@@ -35,14 +43,6 @@ Menu {
             text: "New Folder"
             onClicked: {
                 newFolderDialog.open();
-            }
-        }
-
-        MenuItem {
-            id: markMenuItem
-            text: "Mark multiple items"
-            onClicked: {
-                fsListView.state = "mark";
             }
         }
 

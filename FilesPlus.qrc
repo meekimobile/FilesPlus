@@ -67,5 +67,6 @@
         <file>qml/FilesPlus/clock.svg</file>
         <file>qml/FilesPlus/rename.svg</file>
         <file>qml/FilesPlus/folder_add.svg</file>
+        <file>qml/FilesPlus/cloud_wait.svg</file>
     </qresource>
 </RCC>

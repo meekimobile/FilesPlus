@@ -698,6 +698,16 @@ Page {
                         source: "check_mark.svg"
                     }
                     Image {
+                        id: syncingIcon
+                        z: 1
+                        width: 32
+                        height: 32
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        visible: cloudDriveModel.isSyncing(absolutePath)
+                        source: "cloud_wait.svg"
+                    }
+                    Image {
                         id: icon1
                         width: 48
                         height: 48
