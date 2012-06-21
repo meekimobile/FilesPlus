@@ -25,6 +25,7 @@ public:
     static const QString DirtyHash;
 
     enum ClientTypes {
+        AnyClient,
         Dropbox,
         GoogleDrive,
         SkyDrive,
@@ -35,7 +36,12 @@ public:
         FileGet,
         FilePut,
         Metadata,
-        CreateFolder
+        CreateFolder,
+        RequestToken,
+        Authorize,
+        AccessToken,
+        AccountInfo,
+        LoadCloudDriveItems
     };
 
     explicit CloudDriveModel(QDeclarativeItem *parent = 0);
@@ -46,6 +52,9 @@ public:
     void addItem(QString localPath, CloudDriveItem item);
     QList<CloudDriveItem> getItemList(QString localPath);
     CloudDriveItem getItem(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
+    QList<CloudDriveItem> findItemList(QString pattern);
+    void cleanItems();
+    bool cleanItem(const CloudDriveItem &item);
 
     // CloudDriveItem management.
     Q_INVOKABLE bool isConnected(QString localPath);
@@ -65,8 +74,6 @@ public:
     Q_INVOKABLE bool isAuthorized();
     Q_INVOKABLE bool isAuthorized(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE QStringList getStoredUidList(CloudDriveModel::ClientTypes type);
-    void cleanItems();
-    bool cleanItem(const CloudDriveItem &item);
 
     // Sync items.
     Q_INVOKABLE void syncItems();
@@ -113,19 +120,20 @@ public slots:
     void downloadProgressFilter(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
 private:
     QMultiMap<QString, CloudDriveItem> m_cloudDriveItems;
-    DropboxClient *dbClient;
-    GCDClient *gcdClient;
     QHash<QString, CloudDriveJob> m_cloudDriveJobs;
     QQueue<QString> m_jobQueue;
     int runningJobCount;
+
     CloudDriveModelThread m_thread;
+
+    QMutex m_mutex;
 
     void loadCloudDriveItems();
     void saveCloudDriveItems();
-    void initializeDropboxClient();
-    void initializeGCDClient();
     QString createNonce();
     void jobDone();
+    CloudDriveModelThread::ClientTypes mapToThreadClientTypes(CloudDriveModel::ClientTypes type);
+    CloudDriveModelThread::ClientTypes mapToThreadClientTypes(int type);
 };
 
 #endif // CLOUDDRIVEMODEL_H
