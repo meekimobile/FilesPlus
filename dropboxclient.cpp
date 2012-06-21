@@ -279,22 +279,22 @@ QByteArray DropboxClient::createOAuthHeaderForUid(QString nonce, QString uid, QS
     sortMap["oauth_nonce"] = createNonce();
     sortMap.unite(addParamMap);
     QString queryString = createNormalizedQueryString(sortMap);
-    qDebug() << "queryString " << queryString;
+//    qDebug() << "queryString " << queryString;
 
     // Construct baseString for creating signature.
     QString encodedURI = encodeURI(uri);
-    qDebug() << "encodedURI " << encodedURI;
+//    qDebug() << "encodedURI " << encodedURI;
     QByteArray baseString = createBaseString(method, encodedURI, queryString);
-    qDebug() << "baseString " << baseString;
+//    qDebug() << "baseString " << baseString;
 
     // Construct key for HMACSHA1 by using consumer 'Secret' and request token secret.
     QString signature = createSignatureWithHMACSHA1(consumerSecret, accessTokenPairMap[uid].secret, baseString);
-    qDebug() << "signature " << signature;
+//    qDebug() << "signature " << signature;
 
     // Set Authorization header with added signature.
     sortMap["oauth_signature"] = signature;
     QByteArray authHeader = createOAuthHeaderString(sortMap);
-    qDebug() << "authHeader " << authHeader;
+//    qDebug() << "authHeader " << authHeader;
 
     return authHeader;
 }

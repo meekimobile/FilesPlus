@@ -11,7 +11,6 @@ CommonDialog {
 
     titleIcon: "FilesPlusIcon.svg"
     buttonTexts: ["Ok"]
-    opacity: 1.0
     content: Text {
         id: contentText
         width: parent.width - 20
@@ -24,13 +23,7 @@ CommonDialog {
     SequentialAnimation {
         id: hideAction
 
-        PauseAnimation { duration: autoClosedInterval - 200 }
-        PropertyAnimation {
-            target: messageDialog
-            duration: 200
-            property: opacity
-            to: 0
-        }
+        PauseAnimation { duration: autoClosedInterval }
         ScriptAction {
             script: close();
         }
@@ -42,6 +35,7 @@ CommonDialog {
         }
 
         if (status == DialogStatus.Closed) {
+            hideAction.stop();
             titleText = "";
             message = "";
         }

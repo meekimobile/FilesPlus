@@ -671,8 +671,8 @@ void FolderSizeItemListModel::proceedNextJob()
     if (m.isRunning()) return;
 
     // Proceed next job in queue.
+    qDebug() << "FolderSizeItemListModel::proceedNextJob waiting runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue.count();
     if (runningJobCount >= MaxRunningJobCount || m_jobQueue.isEmpty()) {
-        qDebug() << "FolderSizeItemListModel::proceedNextJob waiting runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue.count();
         return;
     }
 
