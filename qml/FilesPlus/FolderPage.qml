@@ -1666,6 +1666,8 @@ Page {
 
             if (err == 0) {
                 // Do nothing.
+            } else if (err == 202) { // Folder already exists.
+                // Do nothing.
             } else {
                 messageDialog.titleText = getCloudName(json.type) + " Create Folder";
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;

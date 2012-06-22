@@ -11,7 +11,7 @@
 #include "clouddrivejob.h"
 #include "clouddrivemodelthread.h"
 #include "dropboxclient.h"
-#include "gcdclient.h"
+//#include "gcdclient.h"
 
 class CloudDriveModel : public QDeclarativeItem
 {
@@ -24,8 +24,9 @@ public:
     static const int MaxRunningJobCount;
     static const QString DirtyHash;
 
+    // ClientTypes is stored on m_cloudDriveItems. Its sequence shouldn't be changed.
+    // AnyClient is technically never stored. It should be the last type.
     enum ClientTypes {
-        AnyClient,
         Dropbox,
         GoogleDrive,
         SkyDrive,
@@ -33,6 +34,7 @@ public:
     };
 
     enum Operations {
+        LoadCloudDriveItems,
         FileGet,
         FilePut,
         Metadata,
@@ -40,8 +42,7 @@ public:
         RequestToken,
         Authorize,
         AccessToken,
-        AccountInfo,
-        LoadCloudDriveItems
+        AccountInfo
     };
 
     explicit CloudDriveModel(QDeclarativeItem *parent = 0);
@@ -79,21 +80,19 @@ public:
     Q_INVOKABLE void syncItems();
     Q_INVOKABLE void syncFolder(const QString localFilePath);
 
-    // Service Proxy
+    // Service Proxy with Job Queuing.
     Q_INVOKABLE void requestToken(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE void authorize(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE bool parseAuthorizationCode(CloudDriveModel::ClientTypes type, QString text);
     Q_INVOKABLE void accessToken(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE void accountInfo(CloudDriveModel::ClientTypes type, QString uid);
-
-    // Service Proxy with Job Queuing.
     Q_INVOKABLE void fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString localFilePath, int modelIndex);
     Q_INVOKABLE void filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
     Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
     Q_INVOKABLE void syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex, bool forcePut = false);
     Q_INVOKABLE void createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex);
 signals:
-    void dataLoadedSignal();
+    void loadCloudDriveItemsFinished(QString nonce);
     void proceedNextJobSignal();
     void localChangedSignal(QString localPath);
 
@@ -109,9 +108,10 @@ signals:
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
 public slots:
-    void dataLoadedFilter();
     void proceedNextJob();
 
+    void threadFinishedFilter();
+    void loadCloudDriveItemsFilter(QString nonce);
     void fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplyFilter(QString nonce, int err, QString errMsg, QString msg);
@@ -124,16 +124,19 @@ private:
     QQueue<QString> m_jobQueue;
     int runningJobCount;
 
+    DropboxClient *dbClient;
+//    GCDClient *gcdClient;
     CloudDriveModelThread m_thread;
 
-    QMutex m_mutex;
+    QMutex mutex;
 
     void loadCloudDriveItems();
     void saveCloudDriveItems();
+    void initializeDropboxClient();
     QString createNonce();
     void jobDone();
-    CloudDriveModelThread::ClientTypes mapToThreadClientTypes(CloudDriveModel::ClientTypes type);
-    CloudDriveModelThread::ClientTypes mapToThreadClientTypes(int type);
+//    CloudDriveModelThread::ClientTypes mapToThreadClientTypes(CloudDriveModel::ClientTypes type);
+//    CloudDriveModelThread::ClientTypes mapToThreadClientTypes(int type);
 };
 
 #endif // CLOUDDRIVEMODEL_H
