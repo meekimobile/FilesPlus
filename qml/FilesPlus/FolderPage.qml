@@ -717,102 +717,113 @@ Page {
                     }
                 }
                 Column {
-                    width: parent.width - iconRect.width - rightColumn.width
+                    width: parent.width - iconRect.width
                     height: parent.height
-                    spacing: 4
-                    ListItemText {
-                        mode: listItem.mode
-                        role: "Title"
-                        text: name
-                        width: parent.width
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    ListItemText {
-                        id: listItemSubTitle
-                        mode: listItem.mode
-                        role: "SubTitle"
-                        text: {
-                            var sub = ""
-                            if (subDirCount > 0) sub += subDirCount + " dir" + ((subDirCount > 1) ? "s" : "");
-                            if (subFileCount > 0) sub += ((sub == "") ? "" : " ") + subFileCount + " file" + ((subFileCount > 1) ? "s" : "");
-                            sub += ((sub == "") ? "" : ", ") + "last modified " + Qt.formatDateTime(lastModified, "d MMM yyyy h:mm:ss ap");
 
-                            return sub;
-                        }
+                    Row {
                         width: parent.width
-                        verticalAlignment: Text.AlignVCenter
-                        visible: !isRunning
+                        height: parent.height / 2
+                        ListItemText {
+                            mode: listItem.mode
+                            role: "Title"
+                            text: name
+                            width: parent.width - sizeText.width
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        ListItemText {
+                            id: sizeText
+                            mode: listItem.mode
+                            role: "Subtitle"
+                            text: Utility.formatFileSize(size, 1)
+                            width: 120
+                            horizontalAlignment: Text.AlignRight
+                            verticalAlignment: Text.AlignVCenter
+                        }
                     }
                     Row {
                         width: parent.width
-                        visible: isRunning
-                        Image {
-                            id: runningIcon
-                            width: 24
-                            height: 24
-                            anchors.verticalCenter: parent.verticalCenter
-                            source: {
-                                switch (runningOperation) {
-                                case FolderSizeItemListModel.ReadOperation:
-                                    return "next.svg"
-                                case FolderSizeItemListModel.WriteOperation:
-                                    return "back.svg"
-                                case FolderSizeItemListModel.SyncOperation:
-                                    return "refresh.svg"
-                                case FolderSizeItemListModel.UploadOperation:
-                                    return "upload.svg"
-                                case FolderSizeItemListModel.DownloadOperation:
-                                    return "download.svg"
-                                default:
-                                    return ""
+                        height: parent.height / 2
+                        spacing: 2
+                        Rectangle {
+                            width: parent.width - syncIcon.width - parent.spacing
+                            height: parent.height
+                            color: "transparent"
+                            ListItemText {
+                                id: listItemSubTitle
+                                mode: listItem.mode
+                                role: "SubTitle"
+                                text: {
+                                    var sub = ""
+                                    if (subDirCount > 0) sub += subDirCount + " dir" + ((subDirCount > 1) ? "s" : "");
+                                    if (subFileCount > 0) sub += ((sub == "") ? "" : " ") + subFileCount + " file" + ((subFileCount > 1) ? "s" : "");
+                                    sub += ((sub == "") ? "" : ", ") + "last modified " + Qt.formatDateTime(lastModified, "d MMM yyyy h:mm:ss ap");
+
+                                    return sub;
+                                }
+                                width: parent.width
+                                height: parent.height
+                                verticalAlignment: Text.AlignVCenter
+                                visible: !isRunning
+                            }
+                            Row {
+                                width: parent.width
+                                height: parent.height
+                                visible: isRunning
+                                anchors.verticalCenter: parent.verticalCenter
+                                Image {
+                                    id: runningIcon
+                                    width: 24
+                                    height: 24
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    source: {
+                                        switch (runningOperation) {
+                                        case FolderSizeItemListModel.ReadOperation:
+                                            return "next.svg"
+                                        case FolderSizeItemListModel.WriteOperation:
+                                            return "back.svg"
+                                        case FolderSizeItemListModel.SyncOperation:
+                                            return "refresh.svg"
+                                        case FolderSizeItemListModel.UploadOperation:
+                                            return "upload.svg"
+                                        case FolderSizeItemListModel.DownloadOperation:
+                                            return "download.svg"
+                                        default:
+                                            return ""
+                                        }
+                                    }
+                                    visible: (runningOperation != FolderSizeItemListModel.NoOperation)
+                                }
+                                ProgressBar {
+                                    id: syncProgressBar
+                                    width: parent.width - runningIcon.width
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    indeterminate: isRunning && (isDir || (runningValue == runningMaxValue))
+                                    value: runningValue
+                                    maximumValue: runningMaxValue
                                 }
                             }
-                            visible: (isRunning && runningOperation != FolderSizeItemListModel.NoOperation)
                         }
-                        ProgressBar {
-                            id: syncProgressBar
-                            width: parent.width - runningIcon.width
-                            anchors.verticalCenter: parent.verticalCenter
-                            indeterminate: isRunning && (isDir || (runningValue == runningMaxValue))
-                            visible: isRunning
-                            value: runningValue
-                            maximumValue: runningMaxValue
-                        }
-                    }
-                }
-                Column {
-                    id: rightColumn
-                    width: 72
-                    height: parent.height
-                    spacing: 4
-                    ListItemText {
-                        id: sizeText
-                        mode: listItem.mode
-                        role: "Subtitle"
-                        text: Utility.formatFileSize(size, 1)
-                        width: parent.width
-                        horizontalAlignment: Text.AlignRight
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    Image {
-                        id: syncIcon
-                        anchors.right: parent.right
-                        width: 32
-                        height: 32
-                        z: 1
-                        visible: cloudDriveModel.isConnected(absolutePath);
-                        source: {
-                            if (cloudDriveModel.isSyncing(absolutePath)) {
-                                return "cloud_wait.svg";
-                            } else if (cloudDriveModel.isDirty(absolutePath, lastModified)) {
-                                return "cloud_dirty.svg";
-                            } else {
-                                return "cloud.svg";
+                        Image {
+                            id: syncIcon
+                            width: 32
+                            height: parent.height
+                            fillMode: Image.PreserveAspectFit
+                            z: 1
+                            visible: cloudDriveModel.isConnected(absolutePath);
+                            source: {
+                                if (cloudDriveModel.isSyncing(absolutePath)) {
+                                    return "cloud_wait.svg";
+                                } else if (cloudDriveModel.isDirty(absolutePath, lastModified)) {
+                                    return "cloud_dirty.svg";
+                                } else {
+                                    return "cloud.svg";
+                                }
                             }
                         }
                     }
                 }
             }
+
 
             onPressAndHold: {
                 if (fsListView.state != "mark") {

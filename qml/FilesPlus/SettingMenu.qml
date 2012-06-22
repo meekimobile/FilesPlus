@@ -14,7 +14,7 @@ Menu {
     content: MenuLayout {
         MenuItem {
             id: menuPrintJobs
-            text: "Show CloudPrint Jobs"
+            text: "Show CloudPrint jobs"
             onClicked: {
                 showCloudPrintJobs();
             }
@@ -29,7 +29,7 @@ Menu {
         }
 
         MenuItem {
-            text: "Register Dropbox user"
+            text: "Register new Dropbox account"
             onClicked: {
                 registerDropboxUser();
             }
@@ -37,7 +37,7 @@ Menu {
 
         MenuItem {
             id: menuResetCache
-            text: "Reset Cache"
+            text: "Reset current folder cache"
 
             onClicked: {
                 resetCache();

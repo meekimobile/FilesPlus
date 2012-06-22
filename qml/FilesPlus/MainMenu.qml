@@ -32,7 +32,7 @@ Menu {
 
         MenuItem {
             id: clearClipboardMenuItem
-            text: "Clear Clipboard"
+            text: "Clear clipboard"
             onClicked: {
                 clipboard.clear();
             }
@@ -40,7 +40,7 @@ Menu {
 
         MenuItem {
             id: newFolderMenuItem
-            text: "New Folder"
+            text: "New folder"
             onClicked: {
                 newFolderDialog.open();
             }
