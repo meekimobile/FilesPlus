@@ -9,8 +9,7 @@
 #include "dropboxclient.h"
 #include <QAbstractListModel>
 #include "localfileimageprovider.h"
-#include "monitoring.h"
-#include <QSettings>
+#include "appinfo.h"
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -23,6 +22,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qmlRegisterType<CloudDriveModel>("CloudDriveModel", 1, 0, "CloudDriveModel");
     qmlRegisterType<DropboxClient>("DropboxClient", 1, 0, "DropboxClient");
     qmlRegisterType<QAbstractListModel>();
+    qmlRegisterType<AppInfo>("AppInfo", 1, 0, "AppInfo");
 
     QScopedPointer<QApplication> app(createApplication(argc, argv));
 
@@ -34,23 +34,6 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 
     QDeclarativeEngine *engine = viewer.engine();
     engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider());
-
-    // Check settings if monitoring is enabled.
-    QApplication::setOrganizationName("MeekiMobile");
-    QApplication::setApplicationName("FilesPlus");
-    QSettings m_settings;
-    qDebug() << "main m_settings fileName()" << m_settings.fileName();
-//    m_settings.setValue("Monitoring.enabled", true);
-//    m_settings.sync();
-
-#ifdef Q_OS_SYMBIAN
-    bool monitoringEnabled = m_settings.value("Monitoring.enabled", false).toBool();
-    qDebug() << "main monitoringEnabled" << monitoringEnabled;
-    if (monitoringEnabled) {
-        Monitoring *mon = new Monitoring(app.data());
-        mon->start();
-    }
-#endif
 
     return app->exec();
 }

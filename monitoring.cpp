@@ -9,15 +9,6 @@ Monitoring::Monitoring(QObject *parent) :
 {
     qDebug() << "Monitoring is constructed.";
 
-    QString filePath = QString("E:/FilesPlus_Heap_%1.csv").arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
-    monitorFile = new QFile(filePath);
-    if (monitorFile->open(QFile::WriteOnly | QIODevice::Text)) {
-    out.setDevice(monitorFile);
-    out << "Time,UserCountAllocCells,FreeCells,UserHeapCount,UserHeapSize,UserHeapMaxLength,UserAvailable,CpuDelta\n";
-    } else {
-        qDebug() << "Monitoring::Monitoring I can't open" << monitorFile->fileName();
-    }
-
 #ifdef Q_OS_SYMBIAN
     // Initialize.
     lastCpuTime = 0;
@@ -33,6 +24,7 @@ Monitoring::~Monitoring()
 {
     qDebug() << "Monitoring is destroyed.";
 
+    qDebug() << "monitorFile" << monitorFile;
     monitorFile->flush();
     monitorFile->close();
 }
@@ -66,6 +58,27 @@ void Monitoring::log()
 #endif
 }
 
-void Monitoring::start() {
-    monitorTimer.start();
+void Monitoring::start()
+{
+    QString filePath = QString("E:/FilesPlus_Heap_%1.csv").arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
+    monitorFile = new QFile(filePath);
+    if (monitorFile->open(QFile::WriteOnly | QIODevice::Text)) {
+        qDebug() << "Monitoring::Monitoring open file" << monitorFile->fileName();
+        out.setDevice(monitorFile);
+        out << "Time,UserCountAllocCells,FreeCells,UserHeapCount,UserHeapSize,UserHeapMaxLength,UserAvailable,CpuDelta\n";
+        monitorTimer.start();
+    } else {
+        qDebug() << "Monitoring::Monitoring I can't open" << monitorFile->fileName();
+    }
+}
+
+void Monitoring::stop()
+{
+    monitorTimer.stop();
+
+    qDebug() << "monitorFile" << monitorFile;
+    if (monitorFile == 0 || monitorFile->isOpen()) {
+        monitorFile->flush();
+        monitorFile->close();
+    }
 }

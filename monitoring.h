@@ -15,6 +15,7 @@ public:
     explicit Monitoring(QObject *parent = 0);
     ~Monitoring();
     void start();
+    void stop();
 signals:
     
 public slots:

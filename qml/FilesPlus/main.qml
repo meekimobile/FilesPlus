@@ -1,6 +1,7 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
 import "Utility.js" as Utility
+import AppInfo 1.0
 
 PageStackWindow {
     id: window
@@ -33,6 +34,12 @@ PageStackWindow {
         console.debug("window onOrientationChangeFinished");
         var p = pageStack.find(function(page) { return (page.name == "folderPage")});
         if (p) p.orientationChangeSlot();
+    }
+
+    AppInfo {
+        id: appInfo
+        domain: "MeekiMobile"
+        app: "FilesPlus"
     }
 
     Text {

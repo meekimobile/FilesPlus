@@ -77,7 +77,8 @@ SOURCES += main.cpp \
     clouddrivemodelthread.cpp \
     foldersizemodelthread.cpp \
     monitoring.cpp \
-    foldersizejob.cpp
+    foldersizejob.cpp \
+    appinfo.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -102,7 +103,8 @@ HEADERS += \
     clouddrivemodelthread.h \
     foldersizemodelthread.h \
     monitoring.h \
-    foldersizejob.h
+    foldersizejob.h \
+    appinfo.h
 
 OTHER_FILES +=
 
