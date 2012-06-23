@@ -10,6 +10,33 @@
 #include <QAbstractListModel>
 #include "localfileimageprovider.h"
 #include "appinfo.h"
+#include <QDebug>
+
+void customMessageHandler(QtMsgType type, const char *msg)
+{
+    QString txt;
+    switch (type) {
+    case QtDebugMsg:
+        txt = QString("Debug: %1").arg(msg);
+        break;
+    case QtWarningMsg:
+        txt = QString("Warning: %1").arg(msg);
+        break;
+    case QtCriticalMsg:
+        txt = QString("Critical: %1").arg(msg);
+        break;
+    case QtFatalMsg:
+        txt = QString("Fatal: %1").arg(msg);
+        abort();
+    }
+
+    // Append to file.
+    QString filePath = QString("E:/FilesPlus_Debug_%1.log").arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
+    QFile outFile(filePath);
+    outFile.open(QIODevice::WriteOnly | QIODevice::Append);
+    QTextStream ts(&outFile);
+    ts << txt << endl;
+}
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
@@ -23,6 +50,25 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qmlRegisterType<DropboxClient>("DropboxClient", 1, 0, "DropboxClient");
     qmlRegisterType<QAbstractListModel>();
     qmlRegisterType<AppInfo>("AppInfo", 1, 0, "AppInfo");
+
+    // Set properties for QSettings.
+    QCoreApplication::setOrganizationName("MeekiMobile");
+    QCoreApplication::setApplicationName("FilesPlus");
+
+#ifdef Q_OS_SYMBIAN
+    // Check settings if logging is enabled.
+    QSettings *m_settings = new QSettings();
+//    m_settings->setValue("Logging.enabled", false);
+//    m_settings->setValue("Monitoring.enabled", true);
+//    m_settings->sync();
+    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
+    if (m_settings->value("Logging.enabled", false).toBool()) {
+        qDebug() << "main m_settings Logging.enabled=true";
+        qInstallMsgHandler(customMessageHandler);
+    } else {
+        qDebug() << "main m_settings Logging.enabled=false";
+    }
+#endif
 
     QScopedPointer<QApplication> app(createApplication(argc, argv));
 
