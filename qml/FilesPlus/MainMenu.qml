@@ -77,7 +77,8 @@ Menu {
             text: "Settings"
             platformSubItemIndicator: true
             onClicked: {
-                settingMenu.open();
+//                settingMenu.open();
+                pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
             }
         }
 

@@ -40,6 +40,10 @@ PageStackWindow {
         id: appInfo
         domain: "MeekiMobile"
         app: "FilesPlus"
+
+        Component.onCompleted: {
+            appInfo.startMonitoring();
+        }
     }
 
     Text {

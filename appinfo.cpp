@@ -36,7 +36,29 @@ void AppInfo::setMonitoring(const bool flag)
     m_settings->sync();
 }
 
-void AppInfo::manageMonitoring()
+QVariant AppInfo::getSettingValue(const QString key, const QVariant defaultValue)
+{
+    // Initialize if it's not done.
+    init();
+
+    // Sync to backend.
+    m_settings->sync();
+
+    return m_settings->value(key, defaultValue);
+}
+
+void AppInfo::setSettingValue(const QString key, const QVariant v)
+{
+    m_settings->setValue(key, v);
+
+    // Sync to backend.
+    m_settings->sync();
+
+    // Call startMonitoring.
+    startMonitoring();
+}
+
+void AppInfo::startMonitoring()
 {
 #ifdef Q_OS_SYMBIAN
     qDebug() << "AppInfo m_settings isMonitoring()" << isMonitoring();
@@ -49,13 +71,17 @@ void AppInfo::manageMonitoring()
 #endif
 }
 
-void AppInfo::componentComplete()
+void AppInfo::init()
 {
+    if (m_settings != 0) return;
+
     // Check settings if monitoring is enabled.
     m_settings = new QSettings(m_domainName, m_appName);
     qDebug() << "AppInfo m_settings fileName()" << m_settings->fileName();
+}
 
-    // Start monitoring if it's enabled.
-    manageMonitoring();
+void AppInfo::componentComplete()
+{
+    init();
 }
 

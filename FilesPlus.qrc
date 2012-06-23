@@ -67,5 +67,6 @@
         <file>qml/FilesPlus/folder_add.svg</file>
         <file>qml/FilesPlus/cloud_wait.svg</file>
         <file>qml/FilesPlus/CloudDriveUsersDialog.qml</file>
+        <file>qml/FilesPlus/SettingPage.qml</file>
     </qresource>
 </RCC>

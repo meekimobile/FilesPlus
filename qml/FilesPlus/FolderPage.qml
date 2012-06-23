@@ -4,6 +4,7 @@ import Charts 1.0
 import FolderSizeItemListModel 1.0
 import GCPClient 1.0
 import CloudDriveModel 1.0
+import AppInfo 1.0
 import "Utility.js" as Utility
 
 Page {
@@ -30,6 +31,13 @@ Page {
         }
     }
 
+//    onStatusChanged: {
+//        if (status == PageStatus.Active) {
+//            // Show/Hide flipButton according to setting.
+//            flipButton.visible = fsListView.state == "" && appInfo.getSettingValue("FolderPie.enabled", true);
+//        }
+//    }
+
     Component.onCompleted: {
         console.debug(Utility.nowText() + " folderPage onCompleted");
     }
@@ -38,7 +46,6 @@ Page {
 
     ToolBarLayout {
         id: toolBarLayout
-        x: 0
 
         ToolButton {
             id: backButton
@@ -90,6 +97,12 @@ Page {
         }
     }
 
+    AppInfo {
+        id: appInfo
+        domain: "MeekiMobile"
+        app: "FilesPlus"
+    }
+
     MainMenu {
         id: mainMenu
 
@@ -123,24 +136,16 @@ Page {
     SettingMenu {
         id: settingMenu
         onResetCache: {
-            resetCacheConfirmation.open();
+            resetCacheSlot();
         }
         onResetCloudPrint: {
-            popupToolPanel.selectedFilePath = "";
-            popupToolPanel.selectedFileIndex = -1;
-            gcpClient.authorize();
-        }
-        onResetCloudDrive: {
-            popupToolPanel.selectedFilePath = "";
-            popupToolPanel.selectedFileIndex = -1;
-//            gcpClient.refreshAccessToken();
-            cloudDriveModel.authorize(CloudDriveModel.GoogleDrive);
+            resetCloudPrintSlot();
         }
         onRegisterDropboxUser: {
-            cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
+            registerDropboxUserSlot();
         }
         onShowCloudPrintJobs: {
-            pageStack.push(Qt.resolvedUrl("PrintJobsPage.qml"));
+            showCloudPrintJobsSlot();
         }
     }
 
@@ -153,7 +158,7 @@ Page {
         titleText: "Reset Cache"
         contentText: "Resetting Cache will take time depends on numbers of sub folders/files under current folder.\n\nPlease click OK to continue."
         onConfirm: {
-            resetCacheSlot();
+            fsModel.refreshDir(true);
         }
     }
 
@@ -163,7 +168,7 @@ Page {
     }
 
     function resetCacheSlot() {
-        fsModel.refreshDir(true);
+        resetCacheConfirmation.open();
     }
 
     function goUpSlot() {
@@ -272,6 +277,20 @@ Page {
         cloudDriveModel.accessToken(CloudDriveModel.Dropbox);
     }
 
+    function resetCloudPrintSlot() {
+        popupToolPanel.selectedFilePath = "";
+        popupToolPanel.selectedFileIndex = -1;
+        gcpClient.authorize();
+    }
+
+    function registerDropboxUserSlot() {
+        cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
+    }
+
+    function showCloudPrintJobsSlot() {
+        pageStack.push(Qt.resolvedUrl("PrintJobsPage.qml"));
+    }
+
     FolderSizeItemListModel {
         id: fsModel
         currentDir: "C:/"
@@ -301,13 +320,13 @@ Page {
         onRequestResetCache: {
             console.debug("QML FolderSizeItemListModel::onRequestResetCache");
             messageDialog.titleText = "First time loading";
-            messageDialog.message = "Thank you for download FolderPie.\
+            messageDialog.message = "Thank you for download FilesPlus.\
 \nThis is first time running, FolderPie needs to load information from your drive.\
 \n\nIt will take time depends on numbers of sub folders/files under current folder.\
 \n\nPlease click OK to continue.";
             messageDialog.open();
 
-            resetCacheSlot();
+            fsModel.refreshDir(true);
         }
 
         onCopyStarted: {
