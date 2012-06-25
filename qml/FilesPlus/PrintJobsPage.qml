@@ -121,6 +121,7 @@ Page {
         z: 2
         onClicked: {
             // TODO delete selected job.
+            jobModel.setProperty(jobListView.currentIndex, "status", "Deleting");
             gcpClient.deletejob(jobId);
             visible = false;
         }
