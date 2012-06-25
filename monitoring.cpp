@@ -24,9 +24,7 @@ Monitoring::~Monitoring()
 {
     qDebug() << "Monitoring is destroyed.";
 
-    qDebug() << "monitorFile" << monitorFile;
-    monitorFile->flush();
-    monitorFile->close();
+    stop();
 }
 
 void Monitoring::log()
