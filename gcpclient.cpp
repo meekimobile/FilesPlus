@@ -474,6 +474,10 @@ void GCPClient::accessTokenReplyFinished(QNetworkReply *reply)
     }
 
     emit accessTokenReplySignal(reply->error(), reply->errorString(), replyBody );
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCPClient::refreshAccessTokenReplyFinished(QNetworkReply *reply)
@@ -491,6 +495,10 @@ void GCPClient::refreshAccessTokenReplyFinished(QNetworkReply *reply)
     }
 
     emit refreshAccessTokenReplySignal(reply->error(), reply->errorString(), replyBody );
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCPClient::accountInfoReplyFinished(QNetworkReply *reply)
@@ -504,6 +512,10 @@ void GCPClient::accountInfoReplyFinished(QNetworkReply *reply)
     }
 
     emit accountInfoReplySignal(reply->error(), reply->errorString(), replyBody );
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCPClient::searchReplyFinished(QNetworkReply *reply)
@@ -521,6 +533,10 @@ void GCPClient::searchReplyFinished(QNetworkReply *reply)
     } else {
         emit searchReplySignal(reply->error(), reply->errorString(), replyBody );
     }
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCPClient::submitReplyFinished(QNetworkReply *reply)
@@ -530,6 +546,10 @@ void GCPClient::submitReplyFinished(QNetworkReply *reply)
     QString replyBody = QString(reply->readAll());
 
     emit submitReplySignal(reply->error(), reply->errorString(), replyBody );
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCPClient::jobsReplyFinished(QNetworkReply *reply)
@@ -539,6 +559,10 @@ void GCPClient::jobsReplyFinished(QNetworkReply *reply)
     QString replyBody = QString(reply->readAll());
 
     emit jobsReplySignal(reply->error(), reply->errorString(), replyBody );
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCPClient::deletejobReplyFinished(QNetworkReply *reply)
@@ -548,6 +572,10 @@ void GCPClient::deletejobReplyFinished(QNetworkReply *reply)
     QString replyBody = QString(reply->readAll());
 
     emit deletejobReplySignal(reply->error(), reply->errorString(), replyBody );
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 

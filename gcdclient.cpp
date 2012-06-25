@@ -434,6 +434,10 @@ void GCDClient::accessTokenReplyFinished(QNetworkReply *reply)
     }
 
     emit accessTokenReplySignal(reply->error(), reply->errorString(), replyBody );
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCDClient::refreshAccessTokenReplyFinished(QNetworkReply *reply)
@@ -448,6 +452,10 @@ void GCDClient::refreshAccessTokenReplyFinished(QNetworkReply *reply)
     }
 
     emit refreshAccessTokenReplySignal(reply->error(), reply->errorString(), replyBody );
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCDClient::accountInfoReplyFinished(QNetworkReply *reply)
@@ -461,6 +469,10 @@ void GCDClient::accountInfoReplyFinished(QNetworkReply *reply)
     }
 
     emit accountInfoReplySignal(reply->error(), reply->errorString(), replyBody );
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCDClient::metadataReplyFinished(QNetworkReply *reply)
@@ -475,6 +487,10 @@ void GCDClient::metadataReplyFinished(QNetworkReply *reply)
     } else {
         emit metadataReplySignal(reply->error(), reply->errorString(), replyBody );
     }
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCDClient::fileGetReplyFinished(QNetworkReply *reply)
@@ -489,6 +505,10 @@ void GCDClient::fileGetReplyFinished(QNetworkReply *reply)
     } else {
         emit fileGetReplySignal(reply->error(), reply->errorString(), replyBody );
     }
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCDClient::filePutReplyFinished(QNetworkReply *reply)
@@ -503,4 +523,8 @@ void GCDClient::filePutReplyFinished(QNetworkReply *reply)
     } else {
         emit filePutReplySignal(reply->error(), reply->errorString(), replyBody );
     }
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
