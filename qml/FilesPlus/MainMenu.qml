@@ -55,13 +55,13 @@ Menu {
             }
         }
 
-        MenuItem {
-            id: syncAllMenuItem
-            text: "Sync all connected items"
-            onClicked: {
-                cloudDriveModel.syncItems();
-            }
-        }
+//        MenuItem {
+//            id: syncAllMenuItem
+//            text: "Sync all connected items"
+//            onClicked: {
+//                syncAllConnectedItemsSlot();
+//            }
+//        }
 
         MenuItem {
             id: sortByMenuItem
@@ -120,7 +120,7 @@ Menu {
             clearClipboardMenuItem.visible = isEnabled(clearClipboardMenuItem.text) && (clipboard.count > 0);
             markMenuItem.visible = isEnabled(markMenuItem.text) && (fsListView.state != "mark");
             syncFolderMenuItem.visible = isEnabled(syncFolderMenuItem.text) && (!fsModel.isRoot());
-            syncAllMenuItem.visible = isEnabled(syncAllMenuItem.text);
+//            syncAllMenuItem.visible = isEnabled(syncAllMenuItem.text);
         }
     }
 }

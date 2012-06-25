@@ -155,8 +155,8 @@ Page {
 
     ConfirmDialog {
         id: resetCacheConfirmation
-        titleText: "Reset Cache"
-        contentText: "Resetting Cache will take time depends on numbers of sub folders/files under current folder.\n\nPlease click OK to continue."
+        titleText: "Reset folder cache"
+        contentText: "Resetting folder cache will take time depends on numbers of sub folders/files under current folder.\n\nPlease click OK to continue."
         onConfirm: {
             fsModel.refreshDir(true);
         }
@@ -289,6 +289,10 @@ Page {
 
     function showCloudPrintJobsSlot() {
         pageStack.push(Qt.resolvedUrl("PrintJobsPage.qml"));
+    }
+
+    function syncAllConnectedItemsSlot() {
+        cloudDriveModel.syncItems();
     }
 
     FolderSizeItemListModel {
@@ -754,7 +758,7 @@ Page {
                             mode: listItem.mode
                             role: "Subtitle"
                             text: Utility.formatFileSize(size, 1)
-                            width: 120
+                            width: 70
                             horizontalAlignment: Text.AlignRight
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -842,7 +846,6 @@ Page {
                     }
                 }
             }
-
 
             onPressAndHold: {
                 if (fsListView.state != "mark") {
