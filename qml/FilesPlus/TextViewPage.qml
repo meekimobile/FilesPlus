@@ -20,6 +20,14 @@ Page {
         }
 
         ToolButton {
+            id: openButton
+            iconSource: "notes.svg"
+            onClicked: {
+                Qt.openUrlExternally(helper.getUrl(filePath));
+            }
+        }
+
+        ToolButton {
             id: printButton
             iconSource: "print.svg"
 

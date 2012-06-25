@@ -874,7 +874,7 @@ Page {
 
                         // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
                         var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-                        var viewableTextFileTypes = ["TXT", "HTML"];
+                        var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV"];
                         if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             fsModel.nameFilters = ["*.jpg", "*.png", "*.svg"];
                             fsModel.refreshDir(false);
