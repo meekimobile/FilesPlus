@@ -28,6 +28,19 @@ Page {
         text: "Settings"
     }
 
+    ConfirmDialog {
+        id: quitConfirmation
+        titleText: "Enable logging"
+        contentText: "Turn on logging requires restart.\nFilesPlus is exiting now.\n\nPlease confirm."
+        onConfirm: {
+            Qt.quit();
+        }
+    }
+
+    MessageDialog {
+        id: messageDialog
+    }
+
     ListModel {
         id: settingModel
         ListElement {
@@ -93,21 +106,31 @@ Page {
     }
 
     function buttonClickedHandler(name) {
-        // Pop current page.
-        pageStack.pop();
-
         var p = pageStack.find(function (page) { return page.name == "folderPage"; });
         if (p) {
             if (name == "showCloudPrintJobs") {
+                pageStack.pop();
                 p.showCloudPrintJobsSlot();
             } else if (name == "resetCloudPrint") {
+                pageStack.pop();
                 p.resetCloudPrintSlot();
             } else if (name == "syncAllConnectedItems") {
+                pageStack.pop();
                 p.syncAllConnectedItemsSlot();
             } else if (name == "registerDropboxUser") {
+                pageStack.pop();
                 p.registerDropboxUserSlot();
             } else if (name == "resetCache") {
+                pageStack.pop();
                 p.resetCacheSlot();
+            } else if (name == "Logging.enabled") {
+                quitConfirmation.open();
+            } else if (name == "Monitoring.enabled") {
+                if (appInfo.isMonitoring()) {
+                    messageDialog.titleText = "Monitoring";
+                    messageDialog.message = "Monitoring is enabled. Log file is " + appInfo.getMonitoringFilePath();
+                    messageDialog.open();
+                }
             }
         }
     }
@@ -139,6 +162,7 @@ Page {
                     checked: appInfo.getSettingValue(name, false);
                     onClicked: {
                         appInfo.setSettingValue(name, checked);
+                        buttonClickedHandler(name);
                     }
                 }
             }

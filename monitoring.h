@@ -16,6 +16,7 @@ public:
     ~Monitoring();
     void start();
     void stop();
+    QString getMonitoringFilePath() const;
 signals:
     
 public slots:
@@ -23,6 +24,7 @@ public slots:
 private:
     QTimer monitorTimer;
     QFile *monitorFile;
+    QString filePath;
     QTextStream out;
 #ifdef Q_OS_SYMBIAN
     TTimeIntervalMicroSeconds lastCpuTime;

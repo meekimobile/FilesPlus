@@ -17,8 +17,9 @@ public:
     void setDomainName(const QString domainName);
     QString getAppName() const;
     void setAppName(const QString appName);
-    bool isMonitoring() const;
+    Q_INVOKABLE bool isMonitoring() const;
     void setMonitoring(const bool flag);
+    Q_INVOKABLE QString getMonitoringFilePath() const;
     Q_INVOKABLE QVariant getSettingValue(const QString key, const QVariant defaultValue);
     Q_INVOKABLE void setSettingValue(const QString key, const QVariant v);
     Q_INVOKABLE void startMonitoring();

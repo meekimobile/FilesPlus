@@ -36,6 +36,14 @@ void AppInfo::setMonitoring(const bool flag)
     m_settings->sync();
 }
 
+QString AppInfo::getMonitoringFilePath() const
+{
+    if (mon != 0) {
+        return mon->getMonitoringFilePath();
+    }
+    return "";
+}
+
 QVariant AppInfo::getSettingValue(const QString key, const QVariant defaultValue)
 {
     // Initialize if it's not done.

@@ -60,7 +60,7 @@ void Monitoring::log()
 
 void Monitoring::start()
 {
-    QString filePath = QString("E:/FilesPlus_Heap_%1.csv").arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
+    filePath = QString("E:/FilesPlus_Heap_%1.csv").arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
     monitorFile = new QFile(filePath);
     if (monitorFile->open(QFile::WriteOnly | QIODevice::Text)) {
         qDebug() << "Monitoring::Monitoring open file" << monitorFile->fileName();
@@ -81,4 +81,9 @@ void Monitoring::stop()
         monitorFile->flush();
         monitorFile->close();
     }
+}
+
+QString Monitoring::getMonitoringFilePath() const
+{
+    return filePath;
 }
