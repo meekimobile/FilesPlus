@@ -68,5 +68,7 @@
         <file>qml/FilesPlus/cloud_wait.svg</file>
         <file>qml/FilesPlus/CloudDriveUsersDialog.qml</file>
         <file>qml/FilesPlus/SettingPage.qml</file>
+        <file>qml/FilesPlus/cloudprint-ready.png</file>
+        <file>qml/FilesPlus/dropbox_white.png</file>
     </qresource>
 </RCC>

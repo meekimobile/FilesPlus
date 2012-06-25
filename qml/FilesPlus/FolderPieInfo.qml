@@ -44,25 +44,17 @@ Column {
         id: author
         width: parent.width
         color: "grey"
-        text: qsTr("\n\nDeveloped by MeekiMobile\nhttp://sites.google.com/site/meekimobile")
+        text: qsTr("\n\nDeveloped by MeekiMobile")
         horizontalAlignment: Text.AlignHCenter
         anchors.horizontalCenter: parent.horizontalCenter
         font.pointSize: 6
         wrapMode: Text.WordWrap
         font.family: "Century Gothic"
-
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton
-            onClicked: {
-                Qt.openUrlExternally("http://sites.google.com/site/meekimobile");
-            }
-        }
     }
 
     Image {
         source: "MeekiMobile256.svg"
-        width: 64
+        width: 48
         height: width
         anchors.horizontalCenter: parent.horizontalCenter
 

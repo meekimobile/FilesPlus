@@ -19,7 +19,7 @@ Column {
     Text {
         id: title
         color: "white"
-        text: qsTr("Files+" + ((version=="")?"":(" "+version)))
+        text: qsTr("FilesPlus" + ((version=="")?"":(" "+version)))
         anchors.horizontalCenter: parent.horizontalCenter
         horizontalAlignment: Text.AlignLeft
         font.bold: true
@@ -30,41 +30,60 @@ Column {
     Text {
         id: description
         color: "grey"
-        width: parent.width
-        text: "File+ will provide extended functionalities beyond bundled file manager.\
-\nPrint via Google® CloudPrint.\
-\nSync via Dropbox®.\
-\nView images in folder."
-        horizontalAlignment: Text.AlignHCenter
+        width: 270
+        text: "FilesPlus provide extended functionalities beyond file manager.\
+\n • Print with Google™ Cloud Print.\
+\n • Sync with Cloud Drive.\
+\n • Preview images in your folder.\
+\n • Present folders in Pie view."
         anchors.horizontalCenter: parent.horizontalCenter
         wrapMode: Text.WordWrap
         font.family: "Century Gothic"
         font.pointSize: 6
+    }
+
+    Row {
+        height: 80
+        anchors.horizontalCenter: parent.horizontalCenter
+        Image {
+            source: "dropbox_white.png"
+            anchors.verticalCenter: parent.verticalCenter
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton
+                onClicked: {
+                    Qt.openUrlExternally("https://www.dropbox.com");
+                }
+            }
+        }
+        Image {
+            source: "cloudprint-ready.png"
+            anchors.verticalCenter: parent.verticalCenter
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton
+                onClicked: {
+                    Qt.openUrlExternally("http://www.google.com/cloudprint/learn");
+                }
+            }
+        }
     }
 
     Text {
         id: author
         width: parent.width
         color: "grey"
-        text: qsTr("\n\nDeveloped by MeekiMobile\nhttp://sites.google.com/site/meekimobile")
+        text: qsTr("Developed by MeekiMobile")
         horizontalAlignment: Text.AlignHCenter
         anchors.horizontalCenter: parent.horizontalCenter
         font.pointSize: 6
         wrapMode: Text.WordWrap
         font.family: "Century Gothic"
-
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton
-            onClicked: {
-                Qt.openUrlExternally("http://sites.google.com/site/meekimobile");
-            }
-        }
     }
 
     Image {
         source: "MeekiMobile256.svg"
-        width: 64
+        width: 48
         height: width
         anchors.horizontalCenter: parent.horizontalCenter
 

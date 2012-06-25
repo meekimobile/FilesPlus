@@ -557,7 +557,7 @@ Page {
                 }
             }
         }
-        snapMode: ListView.SnapToItem
+//        snapMode: ListView.SnapToItem
         clip: true
         focus: true
         model: fsModel
