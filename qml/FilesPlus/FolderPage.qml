@@ -1865,6 +1865,14 @@ Page {
                 cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], cloudDriveModel.dirtyHash);
             }
         }
+
+        onJobQueueStatusSignal: {
+            // Send info to cloudDriveAccountsPage.
+            var p = pageStack.find(function (page) { return (page.name == "settingPage"); });
+            if (p) {
+                p.updateJobQueueCount(runningJobCount, jobQueueCount);
+            }
+        }
     }
 
     CloudDriveUsersDialog {

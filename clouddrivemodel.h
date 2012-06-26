@@ -102,6 +102,7 @@ public:
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void proceedNextJobSignal();
+    void jobQueueStatusSignal(int runningJobCount, int jobQueueCount);
     void localChangedSignal(QString localPath);
 
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);

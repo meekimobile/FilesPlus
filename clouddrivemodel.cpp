@@ -735,6 +735,7 @@ void CloudDriveModel::jobDone() {
 
     qDebug() << "CloudDriveModel::jobDone runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue.count() << "m_cloudDriveJobs" << m_cloudDriveJobs.count();
 
+    emit jobQueueStatusSignal(runningJobCount, m_jobQueue.count());
     emit proceedNextJobSignal();
 }
 

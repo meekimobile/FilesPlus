@@ -7,6 +7,23 @@ Page {
 
     property string name: "settingPage"
 
+    function getIndexByName(name) {
+        for (var i=0; i<settingModel.count; i++) {
+            if (settingModel.get(i).name == name) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    function updateJobQueueCount(runningJobCount, jobQueueCount) {
+        var i = getIndexByName("cancelAllCloudDriveJobs");
+        if (i > -1) {
+            settingModel.set(i, { title: "Cancel queued jobs (" + jobQueueCount + ")" });
+        }
+    }
+
     tools: ToolBarLayout {
         ToolButton {
             id: back
