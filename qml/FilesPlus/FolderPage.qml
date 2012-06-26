@@ -293,6 +293,14 @@ Page {
         pageStack.push(Qt.resolvedUrl("PrintJobsPage.qml"));
     }
 
+    function showCloudDriveJobsSlot() {
+        pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"), { }, false);
+    }
+
+    function cancelAllCloudDriveJobsSlot() {
+        cancelQueuedJobsConfirmation.open();
+    }
+
     function syncAllConnectedItemsSlot() {
         cloudDriveModel.syncItems();
     }
@@ -1296,6 +1304,17 @@ Page {
                     res = fsModel.move(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
                 }
             }
+        }
+    }
+
+    ConfirmDialog {
+        id: cancelQueuedJobsConfirmation
+        titleText: "Cancel queued jobs"
+        onOpening: {
+            contentText = "Cancel " + cloudDriveModel.getQueuedJobCount() + " jobs ?";
+        }
+        onConfirm: {
+            cloudDriveModel.cancelQueuedJobs();
         }
     }
 

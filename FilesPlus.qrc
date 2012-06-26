@@ -70,5 +70,6 @@
         <file>qml/FilesPlus/SettingPage.qml</file>
         <file>qml/FilesPlus/cloudprint-ready.png</file>
         <file>qml/FilesPlus/dropbox_white.png</file>
+        <file>qml/FilesPlus/CloudDriveJobsPage.qml</file>
     </qresource>
 </RCC>

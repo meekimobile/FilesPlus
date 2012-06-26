@@ -213,6 +213,18 @@ void CloudDriveModel::removeJob(QString nonce)
     qDebug() << "CloudDriveModel::removeJob nonce" << nonce << "removeCount" << removeCount << "m_cloudDriveJobs.count()" << m_cloudDriveJobs.count();
 }
 
+int CloudDriveModel::getQueuedJobCount() const
+{
+    return m_jobQueue.count();
+}
+
+void CloudDriveModel::cancelQueuedJobs()
+{
+    m_jobQueue.clear();
+
+    qDebug() << "CloudDriveModel::cancelQueuedJobs done";
+}
+
 void CloudDriveModel::addItem(QString localPath, CloudDriveItem item)
 {
     m_cloudDriveItems.insert(localPath, item);
@@ -724,7 +736,7 @@ void CloudDriveModel::jobDone() {
 void CloudDriveModel::proceedNextJob() {
     if (m_thread.isRunning()) return;
 
-    // Proceed next job in queue.
+    // Proceed next job in queue. Any jobs which haven't queued will be ignored.
     qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue.count() << "m_cloudDriveJobs" << m_cloudDriveJobs.count();
     if (runningJobCount >= MaxRunningJobCount || m_jobQueue.count() <= 0) {
         return;

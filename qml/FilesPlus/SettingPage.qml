@@ -45,15 +45,27 @@ Page {
         id: settingModel
         ListElement {
             name: "showCloudPrintJobs"
-            title: "Show CloudPrint jobs"
+            title: "Show cloud print jobs"
             type: "button"
             group: "CloudPrint"
         }
         ListElement {
             name: "resetCloudPrint"
-            title: "Reset CloudPrint"
+            title: "Reset cloud print"
             type: "button"
             group: "CloudPrint"
+        }
+//        ListElement {
+//            name: "showCloudDriveJobs"
+//            title: "Show cloud drive jobs"
+//            type: "button"
+//            group: "CloudDrive"
+//        }
+        ListElement {
+            name: "cancelAllCloudDriveJobs"
+            title: "Cancel queued jobs"
+            type: "button"
+            group: "CloudDrive"
         }
         ListElement {
             name: "syncAllConnectedItems"
@@ -114,6 +126,12 @@ Page {
             } else if (name == "resetCloudPrint") {
                 pageStack.pop();
                 p.resetCloudPrintSlot();
+            } else if (name == "showCloudDriveJobs") {
+                pageStack.pop();
+                p.showCloudDriveJobsSlot();
+            } else if (name == "cancelAllCloudDriveJobs") {
+                pageStack.pop();
+                p.cancelAllCloudDriveJobsSlot();
             } else if (name == "syncAllConnectedItems") {
                 pageStack.pop();
                 p.syncAllConnectedItemsSlot();

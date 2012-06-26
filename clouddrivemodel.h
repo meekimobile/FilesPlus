@@ -64,6 +64,8 @@ public:
     Q_INVOKABLE QString getFirstJobJson(QString localPath);
     Q_INVOKABLE QString getJobJson(QString jobId);
     Q_INVOKABLE void removeJob(QString nonce);
+    Q_INVOKABLE int getQueuedJobCount() const;
+    Q_INVOKABLE void cancelQueuedJobs();
     Q_INVOKABLE void addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash, bool addOnly = false);
     Q_INVOKABLE void removeItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE void updateItems(CloudDriveModel::ClientTypes type, QString localPath, QString hash);
