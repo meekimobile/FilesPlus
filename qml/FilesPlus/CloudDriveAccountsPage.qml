@@ -10,9 +10,9 @@ Page {
     property variant cloudDriveModel
 
     function updateAccountInfoSlot(type, uid, name, shared, normal, quota) {
-        console.debug("cloudDriveAccountsPage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
+//        console.debug("cloudDriveAccountsPage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
         for (var i=0; i<accountListView.model.count; i++) {
-            console.debug("cloudDriveAccountsPage updateAccountInfoSlot accountModel i " + i + " uid " + accountListView.model.get(i).uid + " type " + accountListView.model.get(i).type);
+//            console.debug("cloudDriveAccountsPage updateAccountInfoSlot accountModel i " + i + " uid " + accountListView.model.get(i).uid + " type " + accountListView.model.get(i).type);
             if (accountListView.model.get(i).uid == uid && accountListView.model.get(i).type == type) {
                 console.debug("cloudDriveAccountsPage updateAccountInfoSlot i " + i + " uid " + uid + " type " + type);
                 accountListView.model.set(i, { name: name, shared: shared, normal: normal, quota: quota });
@@ -21,6 +21,10 @@ Page {
     }
 
     function refreshAccountsInfoSlot() {
+        // Refresh UID list.
+        accountListView.model = cloudDriveAccountsPage.cloudDriveModel.getUidListModel();
+
+        // Refresh quota.
         for (var i=0; i<accountListView.model.count; i++) {
             accountListView.model.set(i, { quota: 0 });
             cloudDriveAccountsPage.cloudDriveModel.accountInfo(accountListView.model.get(i).type, accountListView.model.get(i).uid);
@@ -61,7 +65,6 @@ Page {
             onClicked: {
                 var p = pageStack.find(function (page) { return page.name == "folderPage"; });
                 if (p) p.registerDropboxUserSlot();
-                pageStack.pop();
             }
         }
     }
@@ -121,7 +124,6 @@ Page {
         width: parent.width
         height: parent.height - titlePanel.height
         anchors.top: titlePanel.bottom
-        model: accountModel
         delegate: accountDelegate
     }
 

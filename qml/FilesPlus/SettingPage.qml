@@ -74,12 +74,6 @@ Page {
             group: "CloudDrive"
         }
         ListElement {
-            name: "registerDropboxUser"
-            title: "Register new Dropbox account"
-            type: "button"
-            group: "CloudDrive"
-        }
-        ListElement {
             name: "showCloudDriveAccounts"
             title: "Show accounts"
             type: "button"
@@ -133,7 +127,6 @@ Page {
                 pageStack.pop();
                 p.resetCloudPrintSlot();
             } else if (name == "showCloudDriveJobs") {
-                pageStack.pop();
                 p.showCloudDriveJobsSlot();
             } else if (name == "cancelAllCloudDriveJobs") {
                 pageStack.pop();
@@ -141,11 +134,7 @@ Page {
             } else if (name == "syncAllConnectedItems") {
                 pageStack.pop();
                 p.syncAllConnectedItemsSlot();
-            } else if (name == "registerDropboxUser") {
-                pageStack.pop();
-                p.registerDropboxUserSlot();
             } else if (name == "showCloudDriveAccounts") {
-                pageStack.pop();
                 p.showCloudDriveAccountsSlot();
             } else if (name == "resetCache") {
                 pageStack.pop();
