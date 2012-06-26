@@ -8,23 +8,28 @@ Page {
 
     property string name: "cloudDriveAccountsPage"
     property variant cloudDriveModel
-    property alias accountModel: accountListView.model
 
-    function getCloudIcon(type) {
-        switch (type) {
-        case CloudDriveModel.Dropbox:
-            return "dropbox_icon.png";
-        case CloudDriveModel.GoogleDrive:
-            return "drive_icon.png";
+    function updateAccountInfoSlot(type, uid, name, shared, normal, quota) {
+        console.debug("cloudDriveAccountsPage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
+        for (var i=0; i<accountListView.model.count; i++) {
+            console.debug("cloudDriveAccountsPage updateAccountInfoSlot accountModel i " + i + " uid " + accountListView.model.get(i).uid + " type " + accountListView.model.get(i).type);
+            if (accountListView.model.get(i).uid == uid && accountListView.model.get(i).type == type) {
+                console.debug("cloudDriveAccountsPage updateAccountInfoSlot i " + i + " uid " + uid + " type " + type);
+                accountListView.model.set(i, { name: name, shared: shared, normal: normal, quota: quota });
+            }
         }
     }
 
-    function getCloudName(type) {
-        switch (type) {
-        case CloudDriveModel.Dropbox:
-            return "Dropbox";
-        case CloudDriveModel.GoogleDrive:
-            return "GoogleDrive";
+    function refreshAccountsInfoSlot() {
+        for (var i=0; i<accountListView.model.count; i++) {
+            accountListView.model.set(i, { quota: 0 });
+            cloudDriveAccountsPage.cloudDriveModel.accountInfo(accountListView.model.get(i).type, accountListView.model.get(i).uid);
+        }
+    }
+
+    onStatusChanged: {
+        if (status == PageStatus.Active) {
+            accountListView.model = cloudDriveAccountsPage.cloudDriveModel.getUidListModel();
         }
     }
 
@@ -41,75 +46,35 @@ Page {
                 pageStack.pop();
             }
         }
-
         ToolButton {
             id: refreshButton
             iconSource: "toolbar-refresh"
             flat: true
             onClicked: {
+                refreshAccountsInfoSlot();
             }
         }
-
         ToolButton {
-            id: menuButton
-            iconSource: "toolbar-menu"
+            id: addButton
+            iconSource: "toolbar-add"
             flat: true
             onClicked: {
+                var p = pageStack.find(function (page) { return page.name == "folderPage"; });
+                if (p) p.registerDropboxUserSlot();
+                pageStack.pop();
             }
         }
     }
-
-//    function addJobsFromJson(msg) {
-//        jobModel.clear();
-
-//        var jsonObj = Utility.createJsonObj(msg);
-//        console.debug("jsonObj.jobs " + jsonObj.jobs + " " + jsonObj.jobs.length);
-//        for (var i=0; i<jsonObj.jobs.length; i++)
-//        {
-//            var job = jsonObj.jobs[i];
-//            jobModel.append({
-//                                id: job.id,
-//                                printerid: job.printerid,
-//                                printerName: job.printerName,
-//                                title: job.title,
-//                                contentType: job.contentType,
-//                                fileUrl: job.fileUrl,
-//                                ticketUrl: job.ticketUrl,
-//                                createTime: job.createTime,
-//                                updateTime: job.updateTime,
-//                                status: job.status,
-//                                errorCode: job.errorCode,
-//                                message: job.message,
-//                                tags: job.tags
-//                            });
-//        }
-
-//        jobListView.model = jobModel;
-//    }
-
-//    function deleteAllDoneJobs() {
-//        for (var i=0; i<jobModel.count; i++) {
-//            var jobId = jobModel.get(i).id;
-//            var status = jobModel.get(i).status;
-//            if (status == "DONE") {
-//                gcpClient.deletejob(jobId);
-//            }
-//        }
-//    }
 
     TitlePanel {
         id: titlePanel
         text: "Cloud Drive Accounts"
     }
 
-    ListModel {
-        id: accountModel
-    }
-
     Button {
         id: popupDeleteButton
 
-        property string uid
+        property int index
 
         iconSource: "delete.svg"
         visible: false
@@ -117,9 +82,10 @@ Page {
         height: 50
         z: 2
         onClicked: {
-            // TODO delete selected account.
-            accountModel.setProperty(jobListView.currentIndex, "status", "Deleting");
+            // Delete selected account.
             visible = false;
+            removeAccountConfirmation.index = index;
+            removeAccountConfirmation.open();
         }
         onVisibleChanged: {
             if (visible) popupDeleteButtonTimer.restart();
@@ -132,6 +98,21 @@ Page {
             onTriggered: {
                 parent.visible = false;
             }
+        }
+    }
+
+    ConfirmDialog {
+        id: removeAccountConfirmation
+
+        property int index
+
+        titleText: "Remove cloud drive account"
+        onConfirm: {
+            cloudDriveModel.removeUid(accountListView.model.get(index).type, accountListView.model.get(index).uid);
+            accountListView.model.remove(index);
+        }
+        onOpening: {
+            contentText = "Please confirm to remove " + cloudDriveModel.getCloudName(accountListView.model.get(index).type) + " UID " + accountListView.model.get(index).uid + " ?";
         }
     }
 
@@ -159,11 +140,15 @@ Page {
 
                 Image {
                     id: cloudIcon
-                    source: getCloudIcon(type)
+                    source: cloudDriveModel.getCloudIcon(type)
+                    width: 48
+                    height: 48
+                    fillMode: Image.PreserveAspectFit
                 }
                 Column {
                     width: parent.width - cloudIcon.width
                     ListItemText {
+                        id: titleText
                         mode: listItem.mode
                         role: "Title"
                         text: email
@@ -171,6 +156,7 @@ Page {
                         verticalAlignment: Text.AlignVCenter
                     }
                     Row {
+                        width: parent.width
                         ListItemText {
                             mode: listItem.mode
                             role: "SubTitle"
@@ -182,10 +168,19 @@ Page {
                             id: quotaText
                             mode: listItem.mode
                             role: "Subtitle"
-                            text: normal + "," + shared + " /" + quota
+                            text: Utility.formatFileSize(normal + shared) + " / " + Utility.formatFileSize(quota)
                             width: 120
+                            visible: (quota > 0)
                             horizontalAlignment: Text.AlignRight
                             verticalAlignment: Text.AlignVCenter
+                        }
+                        Image {
+                            id: runningIcon
+                            width: 24
+                            height: 24
+                            anchors.right: parent.right
+                            source: "refresh.svg"
+                            visible: (quota <= 0)
                         }
                     }
                 }
@@ -193,10 +188,10 @@ Page {
 
             onPressAndHold: {
                 var panelX = x + mouseX - accountListView.contentX;
-                var panelY = y + mouseY - accountListView.contentY + jobListView.y;
+                var panelY = y + mouseY - accountListView.contentY + accountListView.y;
                 popupDeleteButton.x = panelX - (popupDeleteButton.width / 2);
                 popupDeleteButton.y = panelY - (popupDeleteButton.height);
-                popupDeleteButton.uid = uid;
+                popupDeleteButton.index = index;
                 popupDeleteButton.visible = true;
             }
 
@@ -210,6 +205,7 @@ Page {
             }
 
             Component.onCompleted: {
+//                console.debug("uid " + uid + " type " + type);
                 cloudDriveAccountsPage.cloudDriveModel.accountInfo(type, uid);
             }
         }

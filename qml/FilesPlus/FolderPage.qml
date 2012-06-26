@@ -291,7 +291,7 @@ Page {
 
     function showCloudDriveAccountsSlot() {
         pageStack.push(Qt.resolvedUrl("CloudDriveAccountsPage.qml"),
-                       { cloudDriveModel: cloudDriveModel, accountModel: getUidListModel() },
+                       { cloudDriveModel: cloudDriveModel },
                        false);
     }
 
@@ -1495,6 +1495,54 @@ Page {
             }
         }
 
+        function getUidListModel(localPath) {
+            console.debug("getUidListModel localPath " + localPath);
+
+            // TODO Get uid list from GDClient.
+
+            // Get uid list from DropboxClient.
+            var dbUidList = cloudDriveModel.getStoredUidList(CloudDriveModel.Dropbox);
+
+            // Construct model.
+            var model = Qt.createQmlObject(
+                        'import QtQuick 1.1; ListModel {}', folderPage);
+
+            for (var i=0; i<dbUidList.length; i++)
+            {
+                var json = JSON.parse(dbUidList[i]);
+                model.append({
+                                 type: CloudDriveModel.Dropbox,
+                                 uid: json.uid,
+                                 email: json.email,
+                                 hash: cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, json.uid),
+                                 name: "",
+                                 shared: 0,
+                                 normal: 0,
+                                 quota: 0
+                             });
+            }
+
+            return model;
+        }
+
+        function getCloudIcon(type) {
+            switch (type) {
+            case CloudDriveModel.Dropbox:
+                return "dropbox_icon.png";
+            case CloudDriveModel.GoogleDrive:
+                return "drive_icon.png";
+            }
+        }
+
+        function getCloudName(type) {
+            switch (type) {
+            case CloudDriveModel.Dropbox:
+                return "Dropbox";
+            case CloudDriveModel.GoogleDrive:
+                return "GoogleDrive";
+            }
+        }
+
         onRequestTokenReplySignal: {
             console.debug("folderPage cloudDriveModel onRequestTokenReplySignal " + err + " " + errMsg + " " + msg);
 
@@ -1537,6 +1585,12 @@ Page {
         onAccountInfoReplySignal: {
             console.debug("folderPage cloudDriveModel onAccountInfoReplySignal " + err + " " + errMsg + " " + msg);
 
+            var jsonText = cloudDriveModel.getJobJson(nonce);
+            var cloudDriveJobJson = JSON.parse(jsonText);
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+
             if (err == 0) {
                 /*
 {
@@ -1553,6 +1607,12 @@ Page {
                   */
                 var jsonObj = Utility.createJsonObj(msg);
                 console.debug("jsonObj.email " + jsonObj.email);
+
+                // Send info to cloudDriveAccountsPage.
+                var p = pageStack.find(function (page) { return (page.name == "cloudDriveAccountsPage"); });
+                if (p) {
+                    p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.quota_info.shared, jsonObj.quota_info.normal, jsonObj.quota_info.quota);
+                }
             } else {
                 messageDialog.titleText = "CloudDrive Account Info"
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
@@ -1801,53 +1861,6 @@ Page {
         }
     }
 
-    function getUidListModel(localPath) {
-        console.debug("getUidListModel localPath " + localPath);
-
-        // TODO Get uid list from GDClient.
-
-        // Get uid list from DropboxClient.
-        var dbUidList = cloudDriveModel.getStoredUidList(CloudDriveModel.Dropbox);
-
-        // Construct model.
-        var model = Qt.createQmlObject(
-                    'import QtQuick 1.1; ListModel {}', folderPage);
-
-        for (var i=0; i<dbUidList.length; i++)
-        {
-            var json = JSON.parse(dbUidList[i]);
-            model.append({
-                             type: CloudDriveModel.Dropbox,
-                             uid: json.uid,
-                             email: json.email,
-                             hash: cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, json.uid),
-                             shared: 0,
-                             normal: 0,
-                             quota: 0
-                         });
-        }
-
-        return model;
-    }
-
-    function getCloudIcon(type) {
-        switch (type) {
-        case CloudDriveModel.Dropbox:
-            return "dropbox_icon.png";
-        case CloudDriveModel.GoogleDrive:
-            return "drive_icon.png";
-        }
-    }
-
-    function getCloudName(type) {
-        switch (type) {
-        case CloudDriveModel.Dropbox:
-            return "Dropbox";
-        case CloudDriveModel.GoogleDrive:
-            return "GoogleDrive";
-        }
-    }
-
     CloudDriveUsersDialog {
         id: uidDialog
 
@@ -1876,7 +1889,7 @@ Page {
         }
 
         onOpened: {
-            uidDialog.model = getUidListModel(localPath);
+            uidDialog.model = cloudDriveModel.getUidListModel(localPath);
         }
 
         onAccepted: {

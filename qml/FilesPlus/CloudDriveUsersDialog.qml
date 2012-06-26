@@ -29,7 +29,7 @@ SelectionDialog {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 30
                 height: 30
-                source: getCloudIcon(type)
+                source: cloudDriveModel.getCloudIcon(type)
             }
             ListItemText {
                 anchors.verticalCenter: parent.verticalCenter

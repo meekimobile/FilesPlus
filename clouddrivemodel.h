@@ -7,6 +7,11 @@
 #include <QMultiHash>
 #include <QThread>
 #include <QAbstractListModel>
+#include <QFile>
+#include <QScriptEngine>
+#include <QScriptValue>
+#include <QThread>
+#include <QDebug>
 #include "clouddriveitem.h"
 #include "clouddrivejob.h"
 #include "clouddrivemodelthread.h"
@@ -77,6 +82,7 @@ public:
     Q_INVOKABLE bool isAuthorized();
     Q_INVOKABLE bool isAuthorized(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE QStringList getStoredUidList(CloudDriveModel::ClientTypes type);
+    Q_INVOKABLE int removeUid(CloudDriveModel::ClientTypes type, QString uid);
 
     // Sync items.
     Q_INVOKABLE void syncItems();
@@ -98,10 +104,10 @@ signals:
     void proceedNextJobSignal();
     void localChangedSignal(QString localPath);
 
-    void requestTokenReplySignal(int err, QString errMsg, QString msg);
-    void authorizeRedirectSignal(QString url, QString redirectFrom);
-    void accessTokenReplySignal(int err, QString errMsg, QString msg);
-    void accountInfoReplySignal(int err, QString errMsg, QString msg);
+    void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
+    void accessTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void accountInfoReplySignal(QString nonce, int err, QString errMsg, QString msg);
 
     void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
@@ -114,6 +120,10 @@ public slots:
 
     void threadFinishedFilter();
     void loadCloudDriveItemsFilter(QString nonce);
+    void requestTokenReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void authorizeRedirectFilter(QString nonce, QString url, QString redirectFrom);
+    void accessTokenReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void accountInfoReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplyFilter(QString nonce, int err, QString errMsg, QString msg);
