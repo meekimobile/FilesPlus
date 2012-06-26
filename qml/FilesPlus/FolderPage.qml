@@ -322,7 +322,7 @@ Page {
 
         onRefreshBegin: {
             console.debug("QML FolderSizeItemListModel::refreshBegin");
-            window.state = "busy";
+//            window.state = "busy";
         }
 
         onDataChanged: {
@@ -331,7 +331,7 @@ Page {
 
         onRefreshCompleted: {
             console.debug("QML FolderSizeItemListModel::refreshCompleted");
-            window.state = "ready";
+//            window.state = "ready";
 
             // Reset ListView currentIndex.
             fsListView.currentIndex = -1;
