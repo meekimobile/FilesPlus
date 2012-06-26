@@ -15,9 +15,11 @@ Monitoring::Monitoring(QObject *parent) :
 #endif
 
     // Start timer.
-    monitorTimer.setInterval(2000);
-    monitorTimer.setSingleShot(false);
-    connect(&monitorTimer, SIGNAL(timeout()), this, SLOT(log()) );
+    monitorTimer = new QTimer(this);
+    monitorTimer->setInterval(2000);
+    monitorTimer->setSingleShot(false);
+    connect(monitorTimer, SIGNAL(timeout()), this, SLOT(log()) );
+    connect(this, SIGNAL(destroyed()), monitorTimer, SIGNAL(destroyed()) );
 }
 
 Monitoring::~Monitoring()
@@ -64,7 +66,7 @@ void Monitoring::start()
         qDebug() << "Monitoring::Monitoring open file" << monitorFile->fileName();
         out.setDevice(monitorFile);
         out << "Time,UserCountAllocCells,FreeCells,UserHeapCount,UserHeapSize,UserHeapMaxLength,UserAvailable,CpuDelta\n";
-        monitorTimer.start();
+        monitorTimer->start();
     } else {
         qDebug() << "Monitoring::Monitoring I can't open" << monitorFile->fileName();
     }
@@ -72,7 +74,7 @@ void Monitoring::start()
 
 void Monitoring::stop()
 {
-    monitorTimer.stop();
+    monitorTimer->stop();
 
     qDebug() << "monitorFile" << monitorFile;
     if (monitorFile == 0 || monitorFile->isOpen()) {

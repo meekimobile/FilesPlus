@@ -22,7 +22,7 @@ signals:
 public slots:
     void log();
 private:
-    QTimer monitorTimer;
+    QTimer *monitorTimer;
     QFile *monitorFile;
     QString filePath;
     QTextStream out;
