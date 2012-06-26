@@ -289,6 +289,12 @@ Page {
         cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
     }
 
+    function showCloudDriveAccountsSlot() {
+        pageStack.push(Qt.resolvedUrl("CloudDriveAccountsPage.qml"),
+                       { cloudDriveModel: cloudDriveModel, accountModel: getUidListModel() },
+                       false);
+    }
+
     function showCloudPrintJobsSlot() {
         pageStack.push(Qt.resolvedUrl("PrintJobsPage.qml"));
     }
@@ -1532,6 +1538,19 @@ Page {
             console.debug("folderPage cloudDriveModel onAccountInfoReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
+                /*
+{
+    "referral_link": "https://www.dropbox.com/referrals/r1a2n3d4m5s6t7",
+    "display_name": "John P. User",
+    "uid": 12345678,
+    "country": "US",
+    "quota_info": {
+        "shared": 253738410565,
+        "quota": 107374182400000,
+        "normal": 680031877871
+    }
+}
+                  */
                 var jsonObj = Utility.createJsonObj(msg);
                 console.debug("jsonObj.email " + jsonObj.email);
             } else {
@@ -1801,7 +1820,10 @@ Page {
                              type: CloudDriveModel.Dropbox,
                              uid: json.uid,
                              email: json.email,
-                             hash: cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, json.uid)
+                             hash: cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, json.uid),
+                             shared: 0,
+                             normal: 0,
+                             quota: 0
                          });
         }
 

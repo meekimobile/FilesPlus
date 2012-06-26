@@ -79,6 +79,12 @@ Page {
             type: "button"
             group: "CloudDrive"
         }
+        ListElement {
+            name: "showCloudDriveAccounts"
+            title: "Show accounts"
+            type: "button"
+            group: "CloudDrive"
+        }
 //        ListElement {
 //            name: "FolderPie.enabled"
 //            title: "FolderPie feature"
@@ -138,6 +144,9 @@ Page {
             } else if (name == "registerDropboxUser") {
                 pageStack.pop();
                 p.registerDropboxUserSlot();
+            } else if (name == "showCloudDriveAccounts") {
+                pageStack.pop();
+                p.showCloudDriveAccountsSlot();
             } else if (name == "resetCache") {
                 pageStack.pop();
                 p.resetCacheSlot();
