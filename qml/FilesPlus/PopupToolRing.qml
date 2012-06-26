@@ -200,9 +200,6 @@ Rectangle {
 
             // Restart timer
             popupTimer.restart();
-
-//            showTools(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
-//            popupToolPanel.visible = false;
         }
     }
 }

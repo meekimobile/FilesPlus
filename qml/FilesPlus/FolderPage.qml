@@ -767,6 +767,7 @@ Page {
                             role: "Title"
                             text: name
                             width: parent.width - sizeText.width
+                            height: parent.height
                             verticalAlignment: Text.AlignVCenter
                         }
                         ListItemText {
@@ -775,6 +776,7 @@ Page {
                             role: "Subtitle"
                             text: Utility.formatFileSize(size, 1)
                             width: 70
+                            height: parent.height
                             horizontalAlignment: Text.AlignRight
                             verticalAlignment: Text.AlignVCenter
                         }

@@ -74,7 +74,10 @@ void AppInfo::startMonitoring()
         mon = new Monitoring();
         mon->start();
     } else {
-        mon->deleteLater();
+        if (mon != 0) {
+            mon->stop();
+            mon->deleteLater();
+        }
     }
 #endif
 }
