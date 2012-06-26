@@ -272,12 +272,13 @@ void FolderSizeItemListModel::refreshDir(const bool clearCache)
 
             emit proceedNextJobSignal();
         }
+
+        // Once thread is done, it will invoke refreshItemList() in fetchDirSizeFinishedFilter().
     } else {
         qDebug() << "FolderSizeItemListModel::refreshDir is not ready. Refresh itemList as-is.";
+        // Populate and sort directory content to itemList. Then respond to UI.
+        refreshItemList();
     }
-
-    // Populate and sort directory content to itemList. Then respond to UI.
-    refreshItemList();
 }
 
 QString FolderSizeItemListModel::getUrl(const QString absPath)
@@ -606,13 +607,15 @@ bool FolderSizeItemListModel::isRunning()
 
 void FolderSizeItemListModel::refreshItemList()
 {
-    qDebug() << "FolderSizeModelThread::refreshDirSize";
+    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::refreshItemList started.";
 
     // Clear existing itemList.
     itemList.clear();
 
     // Populate dir content to itemList. m.getDirContent() also sort itemList as current sortFlag.
     m.getDirContent(currentDir(), itemList);
+
+    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::refreshItemList is done.";
 }
 
 void FolderSizeItemListModel::removeItem(const int index)
