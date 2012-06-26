@@ -607,6 +607,7 @@ bool FolderSizeItemListModel::isRunning()
 
 void FolderSizeItemListModel::refreshItemList()
 {
+    emit refreshBegin();
     qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::refreshItemList started.";
 
     // Clear existing itemList.
@@ -616,6 +617,7 @@ void FolderSizeItemListModel::refreshItemList()
     m.getDirContent(currentDir(), itemList);
 
     qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::refreshItemList is done.";
+    emit refreshCompleted();
 }
 
 void FolderSizeItemListModel::removeItem(const int index)

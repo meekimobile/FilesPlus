@@ -396,6 +396,12 @@ void FolderSizeModelThread::getDirContent(const QString dirPath, QList<FolderSiz
 
     QFileInfoList list = dir.entryInfoList();
     for (int i = 0; i < list.size(); ++i) {
+        if (i % 10 == 1) {
+            // Process events i = 1,11,21,...
+            // Tell event loop to process event before it will process time consuming task.
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+        }
+
         QFileInfo fileInfo = list.at(i);
         QString fileName = fileInfo.fileName();
 
