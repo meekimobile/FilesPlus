@@ -1219,8 +1219,10 @@ Page {
             spacing: 3
 
             Text {
-                text: fsModel.getFileName(renameDialog.sourcePath);
+                width: parent.width
+                text: fsModel.getFileName(renameDialog.sourcePath) + "\nto";
                 color: "white"
+                horizontalAlignment: Text.AlignHCenter
             }
 
             TextField {
@@ -1232,6 +1234,7 @@ Page {
 
         onStatusChanged: {
             if (status == DialogStatus.Open) {
+                newName.text = fsModel.getFileName(renameDialog.sourcePath);
                 newName.forceActiveFocus();
             }
 
@@ -1453,6 +1456,7 @@ Page {
 
             // Shows in progress bar.
             if (downloadProgressDialog.status != DialogStatus.Open) {
+                downloadProgressDialog.titleText = "Searching for printers"
                 downloadProgressDialog.indeterminate = false;
                 downloadProgressDialog.open();
             }
