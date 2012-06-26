@@ -32,8 +32,13 @@ PageStackWindow {
 
     onOrientationChangeFinished: {
         console.debug("window onOrientationChangeFinished");
-        var p = pageStack.find(function(page) { return (page.name == "folderPage")});
-        if (p) p.orientationChangeSlot();
+        var p = pageStack.find(function(page) {
+            if (page.name == "folderPage") {
+                page.orientationChangeSlot();
+            } else if (page.name == "imageViewPage") {
+                page.orientationChangeSlot();
+            }
+        });
     }
 
     AppInfo {

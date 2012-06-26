@@ -108,6 +108,11 @@ Page {
         console.debug("imageViewPage onFileNameChanged fileName " + fileName);
     }
 
+    function orientationChangeSlot() {
+        // Signal from main.qml
+        imageGrid.positionViewAtIndex(imageGrid.currentIndex, GridView.Contain);
+    }
+
     SystemInfoHelper {
         id: helper
     }
@@ -230,8 +235,8 @@ Page {
 
             source: getImageSource()
             asynchronous: true
-            sourceSize.width: (fileType.toUpperCase() == "SVG") ? paintedWidth : imageGrid.cellWidth
-            sourceSize.height: (fileType.toUpperCase() == "SVG") ? paintedHeight : imageGrid.cellHeight
+            sourceSize.width: (fileType.toUpperCase() == "SVG") ? undefined : imageGrid.cellWidth
+            sourceSize.height: (fileType.toUpperCase() == "SVG") ? undefined : imageGrid.cellHeight
             width: imageGrid.cellWidth
             height: imageGrid.cellHeight
             fillMode: Image.PreserveAspectFit
@@ -264,9 +269,9 @@ Page {
 
             onStatusChanged: {
                 if (status == Image.Null) {
-                    console.debug("imageView onStatusChanged index " + index + " status " + status + " absolutePath " + absolutePath);
-                    console.debug("imageView onStatusChanged imageGrid.currentIndex " + imageGrid.currentIndex);
-                    console.debug("imageView onStatusChanged imageGrid.selectedIndex " + imageGrid.selectedIndex);
+//                    console.debug("imageView onStatusChanged index " + index + " status " + status + " absolutePath " + absolutePath);
+//                    console.debug("imageView onStatusChanged imageGrid.currentIndex " + imageGrid.currentIndex);
+//                    console.debug("imageView onStatusChanged imageGrid.selectedIndex " + imageGrid.selectedIndex);
                     // Issue: Position at index still not work if selected index is not covered by cache.
 
                     // Set currentIndex to skip image loading to selected image.
@@ -277,7 +282,7 @@ Page {
                 }
 
                 if (status == Image.Ready) {
-                    console.debug("imageView onStatusChanged index " + index + " status " + status + " absolutePath " + absolutePath);
+//                    console.debug("imageView onStatusChanged index " + index + " status " + status + " absolutePath " + absolutePath);
 //                    console.debug("imageView onStatusChanged imageGrid.currentIndex " + imageGrid.currentIndex);
 //                    console.debug("imageView onStatusChanged imageGrid.selectedIndex " + imageGrid.selectedIndex);
 //                    console.debug("imageView onStatusChanged width " + width + " height " + height);

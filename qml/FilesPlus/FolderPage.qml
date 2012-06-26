@@ -184,7 +184,9 @@ Page {
     }
 
     function orientationChangeSlot() {
-        pieChart1.refreshItems();
+        if (pieChartView && folderPage.state == "chart") {
+            pieChartView.refreshItems();
+        }
     }
 
     function printFileSlot(srcFilePath, selectedIndex) {
@@ -512,23 +514,23 @@ Page {
         visible: (folderPage.state == "chart")
 
         onChartClicked: {
-            console.debug("QML pieChart1.onChartClicked");
+            console.debug("QML pieChartView.onChartClicked");
         }
         onSliceClicked: {
-            console.debug("QML pieChart1.onSliceClicked " + text + ", index=" + index + ", isDir=" + isDir);
+            console.debug("QML pieChartView.onSliceClicked " + text + ", index=" + index + ", isDir=" + isDir);
             if (isDir)
                 fsModel.changeDir(text);
             else
                 fsModel.refreshDir(false);
         }
         onActiveFocusChanged: {
-            console.debug("QML pieChart1.onActiveFocusChanged");
+            console.debug("QML pieChartView.onActiveFocusChanged");
         }
         onSceneActivated: {
-            console.debug("QML pieChart1.onSceneActivated");
+            console.debug("QML pieChartView.onSceneActivated");
         }
         onSwipe: {
-            console.debug("QML pieChart1.onSwipe " + swipeAngle);
+            console.debug("QML pieChartView.onSwipe " + swipeAngle);
             flipSlot();
         }
     }
