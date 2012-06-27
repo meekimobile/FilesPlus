@@ -326,7 +326,8 @@ Page {
         }
 
         onDataChanged: {
-            console.debug("QML FolderSizeItemListModel::dataChanged");
+            // Suppress as it's too noisy from CloudDriveModel activities.
+//            console.debug("QML FolderSizeItemListModel::dataChanged");
         }
 
         onRefreshCompleted: {
@@ -1653,6 +1654,16 @@ Page {
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
+
+            // Show indicator on parent up to root.
+            // Skip i=0 as it's notified above already.
+            var pathList = fsModel.getPathToRoot(json.local_file_path);
+            for(var i=1; i<pathList.length; i++) {
+                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                if (modelIndex > -1) {
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                }
+            }
         }
 
         onFilePutReplySignal: {
@@ -1676,6 +1687,16 @@ Page {
                 messageDialog.titleText = getCloudName(json.type) + " File Put";
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
+            }
+
+            // Show indicator on parent up to root.
+            // Skip i=0 as it's notified above already.
+            var pathList = fsModel.getPathToRoot(json.local_file_path);
+            for(var i=1; i<pathList.length; i++) {
+                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                if (modelIndex > -1) {
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                }
             }
         }
 
@@ -1835,6 +1856,17 @@ Page {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesReceived);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
             }
+
+            // Show indicator on parent up to root.
+            // Skip i=0 as it's notified above already.
+            var pathList = fsModel.getPathToRoot(json.local_file_path);
+            for(var i=1; i<pathList.length; i++) {
+                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                if (modelIndex > -1) {
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
+                }
+            }
         }
 
         onUploadProgress: {
@@ -1853,6 +1885,17 @@ Page {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, mapToFolderSizeListModelOperation(json.operation) );
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesSent);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
+            }
+
+            // Show indicator on parent up to root.
+            // Skip i=0 as it's notified above already.
+            var pathList = fsModel.getPathToRoot(json.local_file_path);
+            for(var i=1; i<pathList.length; i++) {
+                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                if (modelIndex > -1) {
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
+                }
             }
         }
 

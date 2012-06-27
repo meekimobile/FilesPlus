@@ -128,6 +128,9 @@ private:
     bool isDirSizeCacheExisting();
     bool isReady();
     QStringList splitFileName(const QString fileName);
+
+    QCache<QString, QString> m_pathToRootCache;
+    QHash<QString, int> m_indexOnCurrentDirHash;
 public slots:
     void loadDirSizeCacheFinishedFilter();
     void fetchDirSizeFinishedFilter();

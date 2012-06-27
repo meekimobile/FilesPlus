@@ -4,7 +4,7 @@ const int FolderSizeItemListModel::TimerInterval = 100;
 const int FolderSizeItemListModel::MaxRunningJobCount = 1;
 
 FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
-    : QAbstractListModel(parent)
+    : QAbstractListModel(parent), m_pathToRootCache()
 {
     // This map will be used when populating property to delegate.
     QHash<int, QByteArray> roles;
@@ -245,6 +245,9 @@ void FolderSizeItemListModel::changeDir(const QString &name)
         // Emit to update currentDir on UI.
         emit currentDirChanged();
 
+        // Reset m_indexOnCurrentDirHash.
+        m_indexOnCurrentDirHash.clear();
+
         // Invoke background refresh
         refreshDir();
     }
@@ -465,16 +468,34 @@ QString FolderSizeItemListModel::getDirPath(const QString absFilePath)
 
 QStringList FolderSizeItemListModel::getPathToRoot(const QString absFilePath)
 {
-    QStringList paths;
-    QDir dir(absFilePath);
+//    qDebug() << "FolderSizeItemListModel::getPathToRoot" << absFilePath;
 
-    while (!dir.isRoot()) {
+    // Try get from cache. It will not 0 if exists.
+//    qDebug() << "FolderSizeItemListModel::getPathToRoot absFilePath" << absFilePath << "cache" << m_pathToRootCache.contains(absFilePath);
+    if (!m_pathToRootCache.contains(absFilePath)) {
+        QStringList paths;
+        QDir dir(absFilePath);
+
+        while (!dir.isRoot()) {
+            paths << dir.absolutePath();
+//            qDebug() << "FolderSizeItemListModel::getPathToRoot append" << dir.absolutePath();
+            dir.cdUp();
+        }
         paths << dir.absolutePath();
-        dir.cdUp();
-    }
-    paths << dir.absolutePath();
+//        qDebug() << "FolderSizeItemListModel::getPathToRoot append" << dir.absolutePath();
 
-    return paths;
+        // Insert to cache.
+        QString *cachePaths = new QString(paths.join(","));
+        m_pathToRootCache.insert(absFilePath, cachePaths);
+        qDebug() << "FolderSizeItemListModel::getPathToRoot insert cache" << absFilePath << "=" << cachePaths;
+
+        return paths;
+    } else {
+        QStringList returnedPaths = m_pathToRootCache.object(absFilePath)->split(",");
+//        qDebug() << "FolderSizeItemListModel::getPathToRoot returnedPaths" << returnedPaths;
+
+        return returnedPaths;
+    }
 }
 
 bool FolderSizeItemListModel::isDir(const QString absFilePath)
@@ -579,19 +600,35 @@ QString FolderSizeItemListModel::getDirContentJson(const QString dirPath)
 
 int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
 {
+    // TODO implement cache.
+    int index = -1;
+    if (m_indexOnCurrentDirHash.contains(absFilePath)) {
+        index = m_indexOnCurrentDirHash[absFilePath];
+//        qDebug() << "FolderSizeItemListModel::getIndexOnCurrentDir cached index for " << absFilePath << "=" << index;
+        return index;
+    }
+
+    // Not found.
+//    qDebug() << "FolderSizeItemListModel::getIndexOnCurrentDir" << absFilePath << " index cache is not found.";
     bool isOnCurrentDir = false;
     if (getDirPath(absFilePath) == currentDir()) {
         isOnCurrentDir = true;
         int i=0;
         foreach (FolderSizeItem item, getItemList()) {
             if (item.absolutePath == absFilePath) {
-                return i;
+                index = i;
+                break;
             }
             i++;
         }
+
     }
 
-    return (isOnCurrentDir)?-2:-1;
+    index = (isOnCurrentDir && index == -1)?-2:index;
+    m_indexOnCurrentDirHash[absFilePath] = index;
+    qDebug() << "FolderSizeItemListModel::getIndexOnCurrentDir insert cache for" << absFilePath << "index" << index;
+
+    return index;
 }
 
 void FolderSizeItemListModel::removeCache(const QString absPath)
