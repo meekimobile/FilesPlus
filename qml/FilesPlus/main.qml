@@ -58,7 +58,7 @@ PageStackWindow {
         width: parent.width / 2
         height: 26
         color: "white"
-        text: qsTr("Files+")
+        text: qsTr("FilesPlus")
         smooth: false
         verticalAlignment: Text.AlignVCenter
         font.family: "MS Shell Dlg 2"
