@@ -116,10 +116,7 @@ void FolderSizeItemListModel::setCurrentDir(const QString &path)
     emit currentDirChanged();
 
     // Invoke background refresh
-    refreshDir(false);
-
-    // Invoke refreshItems to emit dataChanged.
-    refreshItems();
+    refreshDir();
 
     qDebug() << QTime::currentTime() << "FolderSizeItemListModel::setCurrentDir";
 }
@@ -249,10 +246,7 @@ void FolderSizeItemListModel::changeDir(const QString &name)
         emit currentDirChanged();
 
         // Invoke background refresh
-        refreshDir(false);
-
-        // Invoke refreshItems to emit dataChanged.
-        refreshItems();
+        refreshDir();
     }
 }
 
@@ -274,10 +268,15 @@ void FolderSizeItemListModel::refreshDir(const bool clearCache)
         }
 
         // Once thread is done, it will invoke refreshItemList() in fetchDirSizeFinishedFilter().
+        if (clearCache) {
+            refreshItemList();
+            refreshItems();
+        }
     } else {
         qDebug() << "FolderSizeItemListModel::refreshDir is not ready. Refresh itemList as-is.";
         // Populate and sort directory content to itemList. Then respond to UI.
         refreshItemList();
+        refreshItems();
     }
 }
 
@@ -608,7 +607,7 @@ bool FolderSizeItemListModel::isRunning()
 void FolderSizeItemListModel::refreshItemList()
 {
     emit refreshBegin();
-    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::refreshItemList started.";
+    qDebug() << QTime::currentTime() << "FolderSizeItemListModel::refreshItemList started.";
 
     // Clear existing itemList.
     itemList.clear();
@@ -616,7 +615,7 @@ void FolderSizeItemListModel::refreshItemList()
     // Populate dir content to itemList. m.getDirContent() also sort itemList as current sortFlag.
     m.getDirContent(currentDir(), itemList);
 
-    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::refreshItemList is done.";
+    qDebug() << QTime::currentTime() << "FolderSizeItemListModel::refreshItemList is done.";
     emit refreshCompleted();
 }
 
@@ -686,6 +685,7 @@ void FolderSizeItemListModel::proceedNextJob()
 
     // Load cache
     m.setRunMethod(job.operation);
+    m.setClearCache(job.clearCache);
     m.setCopyPath(job.sourcePath, job.targetPath);
     m.start();
 
@@ -704,8 +704,8 @@ void FolderSizeItemListModel::proceedNextJob()
 
     runningJobCount++;
 
-    qDebug() << "QThreadPool::globalInstance() active / max" << QThreadPool::globalInstance()->activeThreadCount()
-             << "/" << QThreadPool::globalInstance()->maxThreadCount() << "runningJobCount" << runningJobCount;
+//    qDebug() << "QThreadPool::globalInstance() active / max" << QThreadPool::globalInstance()->activeThreadCount()
+//             << "/" << QThreadPool::globalInstance()->maxThreadCount() << "runningJobCount" << runningJobCount;
 
     emit proceedNextJobSignal();
 }

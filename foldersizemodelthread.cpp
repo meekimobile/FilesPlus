@@ -538,6 +538,7 @@ bool FolderSizeModelThread::clearCache()
 
 void FolderSizeModelThread::setClearCache(bool clearCache)
 {
+    qDebug() << "FolderSizeModelThread::setClearCache" << clearCache << "isRunning()" << isRunning();
     if (!isRunning()) m_clearCache = clearCache;
 }
 
@@ -557,7 +558,7 @@ void FolderSizeModelThread::setCopyPath(const QString sourcePath, const QString 
 
 void FolderSizeModelThread::run()
 {
-    qDebug() << "FolderSizeModelThread::run m_runMethod" << m_runMethod;
+    qDebug() << "FolderSizeModelThread::run m_runMethod" << m_runMethod << "m_clearCache" << m_clearCache << "m_sourcePath" << m_sourcePath << "m_targetPath" << m_targetPath;
 
     switch (m_runMethod) {
     case FetchDirSize:

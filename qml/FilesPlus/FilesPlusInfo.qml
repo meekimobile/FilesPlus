@@ -14,6 +14,14 @@ Column {
         height: 180
         anchors.horizontalCenter: parent.horizontalCenter
         source: "FilesPlus256.png"
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton
+            onClicked: {
+                Qt.openUrlExternally("http://sites.google.com/site/meekimobile");
+            }
+        }
     }
 
     Text {
@@ -32,10 +40,10 @@ Column {
         color: "grey"
         width: 270
         text: "FilesPlus provide extended functionalities beyond file manager.\
-\n • Print with Google™ Cloud Print.\
-\n • Sync with Cloud Drive.\
-\n • Preview images in your folder.\
-\n • Present folders in Pie view."
+\n   • Print with Google™ Cloud Print.\
+\n   • Sync with Cloud Drive.\
+\n   • Preview images in your folder.\
+\n   • Present folders in Pie view."
         anchors.horizontalCenter: parent.horizontalCenter
         wrapMode: Text.WordWrap
         font.family: "Century Gothic"

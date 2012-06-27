@@ -121,16 +121,16 @@ bool PieChart::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
         } else {
             // TODO below code causes crash on device.
 
-            qDebug() << QTime::currentTime() << "PieChart::sceneEventFilter swipe " << pressEvent->pos() << " -> " << ge->pos();
+//            qDebug() << QTime::currentTime() << "PieChart::sceneEventFilter swipe " << pressEvent->pos() << " -> " << ge->pos();
 
-            qreal dx = pressEvent->pos().x() - ge->pos().x();
-            qreal dy = pressEvent->pos().y() - ge->pos().y();
+//            qreal dx = pressEvent->pos().x() - ge->pos().x();
+//            qreal dy = pressEvent->pos().y() - ge->pos().y();
 
-            qreal angle = qAtan(dy / dx) / 3.1416 * 180;
+//            qreal angle = qAtan(dy / dx) / 3.1416 * 180;
 
             slice->mouseReleaseEvent(ge);
 
-            emit swipe(angle);
+//            emit swipe(angle);
         }
 
         // Stop propagating.

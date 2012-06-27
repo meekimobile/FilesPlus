@@ -326,7 +326,7 @@ Page {
         }
 
         onDataChanged: {
-//            console.debug("QML FolderSizeItemListModel::dataChanged");
+            console.debug("QML FolderSizeItemListModel::dataChanged");
         }
 
         onRefreshCompleted: {
@@ -573,7 +573,6 @@ Page {
                 }
             }
         }
-//        snapMode: ListView.SnapToItem
         clip: true
         focus: true
         model: fsModel
@@ -775,7 +774,7 @@ Page {
                             mode: listItem.mode
                             role: "Subtitle"
                             text: Utility.formatFileSize(size, 1)
-                            width: 70
+                            width: 80
                             height: parent.height
                             horizontalAlignment: Text.AlignRight
                             verticalAlignment: Text.AlignVCenter
