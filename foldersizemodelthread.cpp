@@ -104,6 +104,7 @@ bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QSt
 
     // Copy dir.
     if (sourceFileInfo.isDir()) {
+        // TODO include total size in signal.
         emit copyStarted(method, sourcePath, targetPath, "", 0);
 
         // Create dir on targetPath.

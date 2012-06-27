@@ -131,6 +131,8 @@ private:
 
     QCache<QString, QString> m_pathToRootCache;
     QHash<QString, int> m_indexOnCurrentDirHash;
+
+    QMutex mutex;
 public slots:
     void loadDirSizeCacheFinishedFilter();
     void fetchDirSizeFinishedFilter();

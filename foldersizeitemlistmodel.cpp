@@ -154,23 +154,31 @@ QVariant FolderSizeItemListModel::getProperty(const int index, FolderSizeItemLis
 
 void FolderSizeItemListModel::setProperty(const int index, FolderSizeItemListModel::FolderSizeItemRoles role, QVariant value)
 {
+    bool isChanged = false;
     if (index >= 0 && index < rowCount()) {
         // Update to limited properties.
         FolderSizeItem item = getItem(index);
-        if (role == IsRunningRole)
+        if (role == IsRunningRole && item.isRunning != value.toBool()) {
             item.isRunning = value.toBool();
-        else if (role == RunningOperationRole)
+            isChanged = true;
+        } else if (role == RunningOperationRole && item.runningOperation != value.toInt()) {
             item.runningOperation = value.toInt();
-        else if (role == RunningValueRole)
+            isChanged = true;
+        } else if (role == RunningValueRole && item.runningValue != value.toLongLong()) {
             item.runningValue = value.toLongLong();
-        else if (role == RunningMaxValueRole)
+            isChanged = true;
+        } else if (role == RunningMaxValueRole && item.runningMaxValue != value.toLongLong()) {
             item.runningMaxValue = value.toLongLong();
-        else if (role == IsCheckedRole)
+            isChanged = true;
+        } else if (role == IsCheckedRole && item.isChecked != value.toBool()) {
             item.isChecked = value.toBool();
+            isChanged = true;
+        }
 
-        setItem(index, item);
-
-        refreshItem(index);
+        if (isChanged) {
+            setItem(index, item);
+            refreshItem(index);
+        }
     } else {
         // TODO do nothing.
     }
@@ -187,7 +195,8 @@ void FolderSizeItemListModel::setProperty(const QString localPath, FolderSizeIte
     } else if (modelIndex == -1) {
         // Do nothing as it's not on currentDir.
     } else if (modelIndex == -2) {
-        refreshItems();
+        // Disable because it causes too much load on UI.
+//        refreshItems();
     }
 }
 
@@ -487,7 +496,7 @@ QStringList FolderSizeItemListModel::getPathToRoot(const QString absFilePath)
         // Insert to cache.
         QString *cachePaths = new QString(paths.join(","));
         m_pathToRootCache.insert(absFilePath, cachePaths);
-        qDebug() << "FolderSizeItemListModel::getPathToRoot insert cache" << absFilePath << "=" << cachePaths;
+        qDebug() << "FolderSizeItemListModel::getPathToRoot insert cache" << absFilePath << "=" << *cachePaths;
 
         return paths;
     } else {
@@ -646,8 +655,12 @@ void FolderSizeItemListModel::refreshItemList()
     emit refreshBegin();
     qDebug() << QTime::currentTime() << "FolderSizeItemListModel::refreshItemList started.";
 
+    mutex.lock();
+
     // Clear existing itemList.
     itemList.clear();
+
+    mutex.unlock();
 
     // Populate dir content to itemList. m.getDirContent() also sort itemList as current sortFlag.
     m.getDirContent(currentDir(), itemList);

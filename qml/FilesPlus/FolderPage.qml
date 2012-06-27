@@ -383,6 +383,28 @@ Page {
                 fsModel.setProperty(targetIndex, FolderSizeItemListModel.RunningValueRole, bytes);
                 fsModel.setProperty(targetIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
             }
+
+            // Show indicator on parent up to root.
+            // Skip i=0 as it's notified above already.
+            var i;
+            var modelIndex;
+            var pathList;
+            pathList = fsModel.getPathToRoot(sourcePath);
+            for(i=1; i<pathList.length; i++) {
+                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                if (modelIndex > -1) {
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, true);
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.ReadOperation);
+                }
+            }
+            pathList = fsModel.getPathToRoot(targetPath);
+            for(i=1; i<pathList.length; i++) {
+                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                if (modelIndex > -1) {
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, true);
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.WriteOperation);
+                }
+            }
         }
 
         onCopyFinished: {
@@ -395,8 +417,27 @@ Page {
                 messageDialog.open();
             }
 
-            fsModel.setProperty(sourcePath, FolderSizeItemListModel.IsRunningRole, false);
-            fsModel.setProperty(targetPath, FolderSizeItemListModel.IsRunningRole, false);
+//            fsModel.setProperty(sourcePath, FolderSizeItemListModel.IsRunningRole, false);
+//            fsModel.setProperty(targetPath, FolderSizeItemListModel.IsRunningRole, false);
+
+            // Show indicator on item up to root.
+            var i;
+            var modelIndex;
+            var pathList;
+            pathList = fsModel.getPathToRoot(sourcePath);
+            for(i=0; i<pathList.length; i++) {
+                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                if (modelIndex > -1) {
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, false);
+                }
+            }
+            pathList = fsModel.getPathToRoot(targetPath);
+            for(i=0; i<pathList.length; i++) {
+                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                if (modelIndex > -1) {
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, false);
+                }
+            }
 
             // Reset popupToolPanel
             popupToolPanel.srcFilePath = "";
