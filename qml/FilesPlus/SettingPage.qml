@@ -6,6 +6,7 @@ Page {
     id: settingPage
 
     property string name: "settingPage"
+    property int cloudDriveItemCount: 0
 
     function getIndexByName(name) {
         for (var i=0; i<settingModel.count; i++) {
@@ -21,6 +22,13 @@ Page {
         var i = getIndexByName("cancelAllCloudDriveJobs");
         if (i > -1) {
             settingModel.set(i, { title: "Cancel queued jobs (" + jobQueueCount + ")" });
+        }
+    }
+
+    Component.onCompleted: {
+        var i = getIndexByName("syncAllConnectedItem");
+        if (i > -1 && settingPage.cloudDriveItemCount > 0) {
+            settingModel.set(i, { title: "Sync all connected items (" + settingPage.cloudDriveItemCount + ")" });
         }
     }
 
@@ -43,6 +51,7 @@ Page {
     TitlePanel {
         id: titlePanel
         text: "Settings"
+        z: 1
     }
 
     ConfirmDialog {
@@ -110,13 +119,13 @@ Page {
         }
         ListElement {
             name: "Monitoring.enabled"
-            title: "Monitoring"
+            title: "Monitoring (RAM,CPU)"
             type: "switch"
             group: "Developer"
         }
         ListElement {
             name: "Logging.enabled"
-            title: "Logging"
+            title: "Logging (Debug)"
             type: "switch"
             group: "Developer"
         }
@@ -138,7 +147,6 @@ Page {
         var p = pageStack.find(function (page) { return page.name == "folderPage"; });
         if (p) {
             if (name == "showCloudPrintJobs") {
-                pageStack.pop();
                 p.showCloudPrintJobsSlot();
             } else if (name == "resetCloudPrint") {
                 pageStack.pop();
@@ -146,10 +154,8 @@ Page {
             } else if (name == "showCloudDriveJobs") {
                 p.showCloudDriveJobsSlot();
             } else if (name == "cancelAllCloudDriveJobs") {
-                pageStack.pop();
                 p.cancelAllCloudDriveJobsSlot();
             } else if (name == "syncAllConnectedItems") {
-                pageStack.pop();
                 p.syncAllConnectedItemsSlot();
             } else if (name == "showCloudDriveAccounts") {
                 p.showCloudDriveAccountsSlot();
@@ -177,8 +183,8 @@ Page {
             color: "transparent"
             Row {
                 visible: (type == "switch")
-                anchors.fill: parent
-                anchors.margins: 5
+                width: parent.width - 40
+                anchors.centerIn: parent
                 Text {
                     id: settingKey
                     color: "white"
@@ -186,7 +192,6 @@ Page {
                     width: parent.width - settingValue.width
                     height: parent.height
                     verticalAlignment: Text.AlignVCenter
-                    anchors.leftMargin: 5
                     text: title
                 }
                 Switch {

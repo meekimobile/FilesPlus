@@ -74,6 +74,7 @@ public:
     Q_INVOKABLE void addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash, bool addOnly = false);
     Q_INVOKABLE void removeItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE void updateItems(CloudDriveModel::ClientTypes type, QString localPath, QString hash);
+    Q_INVOKABLE int getItemCount() const;
     Q_INVOKABLE QString getItemHash(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE QString getItemRemotePath(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE QString getItemListJson(QString localPath);

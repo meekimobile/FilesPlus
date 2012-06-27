@@ -265,6 +265,11 @@ void CloudDriveModel::updateItems(CloudDriveModel::ClientTypes type, QString loc
     qDebug() << "CloudDriveModel::updateItems items" << getItemList(localPath);
 }
 
+int CloudDriveModel::getItemCount() const
+{
+    return m_cloudDriveItems.count();
+}
+
 QString CloudDriveModel::getItemListJson(QString localPath)
 {
     QList<CloudDriveItem> list = getItemList(localPath);
