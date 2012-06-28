@@ -92,16 +92,16 @@ CommonDialog {
             width: parent.width
             Text {
                 id: countText
-                width: parent.width / 2
+                width: (progressDialog.maxCount == 0) ? 0 : 120
                 color: "grey"
                 font.pointSize: 6
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignLeft
-                text: progressDialog.count + " / " + progressDialog.maxCount;
+                text: (progressDialog.maxCount == 0) ? "" : (progressDialog.count + " / " + progressDialog.maxCount)
             }
             Text {
                 id: progressText
-                width: parent.width / 2
+                width: parent.width - countText.width
                 color: "grey"
                 font.pointSize: 6
                 wrapMode: Text.WordWrap

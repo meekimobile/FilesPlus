@@ -322,6 +322,7 @@ Page {
     FolderSizeItemListModel {
         id: fsModel
         currentDir: "C:/"
+        sortFlag: FolderSizeItemListModel.SortByType
 
         function getActionName(fileAction) {
             switch (fileAction) {
@@ -420,7 +421,7 @@ Page {
             // Reset cloudDriveModel hash on parent.
             var paths = fsModel.getPathToRoot(sourcePath);
             for (var i=0; i<paths.length; i++) {
-                console.debug("folderPage fsModel onDeleteFinished updateItems paths[" + i + "] " + paths[i]);
+//                console.debug("folderPage fsModel onDeleteFinished updateItems paths[" + i + "] " + paths[i]);
                 cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], cloudDriveModel.dirtyHash);
             }
         }
@@ -986,8 +987,8 @@ Page {
         }
 
         onDeleteFile: {
-            fileDeleteDialog.sourcePath = sourcePath;
-            fileDeleteDialog.open();
+            clipboard.addItem({ "action": "delete", "sourcePath": sourcePath });
+            fileActionDialog.open();
         }
 
         onPrintFile: {
@@ -1021,34 +1022,6 @@ Page {
 
         onUploadFile: {
             uploadFileSlot(srcFilePath, srcItemIndex);
-        }
-    }
-
-    ConfirmDialog {
-        id: fileDeleteDialog
-
-        property string sourcePath
-
-        titleText: "Delete"
-        contentText: "Delete " + fsModel.getFileName(fileDeleteDialog.sourcePath) + " ?"
-
-        onConfirm: {
-            console.debug("fileDeleteDialog onConfirm json " + fsModel.getItemJson(fileDeleteDialog.sourcePath));
-            var json = Utility.createJsonObj(fsModel.getItemJson(fileDeleteDialog.sourcePath));
-            console.debug("FolderSizeItemListModel onDeleteStarted json.sub_file_count " + json.sub_file_count);
-            deleteProgressDialog.titleText = "Deleting";
-            deleteProgressDialog.min = 0;
-            deleteProgressDialog.max = 1 + json.sub_file_count;
-            deleteProgressDialog.open();
-
-            var sourceIndex = fsModel.getIndexOnCurrentDir(sourcePath);
-            console.debug("fileDeleteDialog OK delete index " + sourceIndex);
-            var res = fsModel.removeRow(sourceIndex);
-            if (!res) {
-                messageDialog.titleText = "Delete"
-                messageDialog.message = sourcePath + " can't be deleted because it's not empty.";
-                messageDialog.open();
-            }
         }
     }
 
@@ -1160,7 +1133,7 @@ Page {
                     console.debug("fileActionDialog openDeleteProgressDialog estimate total jsonText " + jsonText);
                     var itemJson = Utility.createJsonObj(jsonText);
                     console.debug("fileActionDialog openDeleteProgressDialog estimate total itemJson " + itemJson + " itemJson.sub_file_count " + itemJson.sub_file_count);
-                    totalFiles += itemJson.sub_file_count + 1;  // +1 for itself.
+                    totalFiles += itemJson.sub_file_count + ((itemJson.is_dir) ? 0 : 1);  // +1 for file.
                     totalFolders += itemJson.sub_dir_count;
                 }
             }
@@ -1168,7 +1141,7 @@ Page {
             if (totalFiles > 0) {
                 deleteProgressDialog.titleText = "Deleting";
                 deleteProgressDialog.min = 0;
-                deleteProgressDialog.max = totalFiles + totalFolders;
+                deleteProgressDialog.max = totalFiles;
                 deleteProgressDialog.value = 0;
                 deleteProgressDialog.open();
             }

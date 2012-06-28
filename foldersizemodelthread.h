@@ -14,6 +14,7 @@ class FolderSizeModelThread : public QThread
 public:
     static const QString CACHE_FILE_PATH;
     static const QString DEFAULT_CURRENT_DIR;
+    static const int FILE_READ_BUFFER;
 
     enum SortFlags {
         SortByName,
@@ -49,7 +50,7 @@ public:
     void saveDirSizeCache();
     bool copy(int method, const QString sourcePath, const QString targetPath);
     bool copyFile(int method, const QString sourcePath, const QString targetPath);
-    bool deleteDir(const QString targetPath);
+    bool deleteDir(const QString sourcePath);
 
     void getDirContent(const QString dirPath, QList<FolderSizeItem> &itemList);
     void sortItemList(QList<FolderSizeItem> &itemList);

@@ -492,7 +492,7 @@ QStringList FolderSizeItemListModel::getPathToRoot(const QString absFilePath)
         // Insert to cache.
         QString *cachePaths = new QString(paths.join(","));
         m_pathToRootCache->insert(absFilePath, cachePaths);
-        qDebug() << "FolderSizeItemListModel::getPathToRoot insert cache" << absFilePath << "=" << *cachePaths;
+//        qDebug() << "FolderSizeItemListModel::getPathToRoot insert cache" << absFilePath << "=" << *cachePaths;
 
         return paths;
     } else {
@@ -631,14 +631,17 @@ int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
 
     index = (isOnCurrentDir && index == -1)?-2:index;
     m_indexOnCurrentDirHash->insert(absFilePath, index);
-    qDebug() << "FolderSizeItemListModel::getIndexOnCurrentDir insert cache for" << absFilePath << "index" << index;
+//    qDebug() << "FolderSizeItemListModel::getIndexOnCurrentDir insert cache for" << absFilePath << "index" << index;
 
     return index;
 }
 
 void FolderSizeItemListModel::removeCache(const QString absPath)
 {
-    m.removeDirSizeCache(absPath);
+    // Remove cache up to root by ustilizing cache in getPathToRoot().
+    foreach (QString path, getPathToRoot(absPath)) {
+        m.removeDirSizeCache(path);
+    }
 }
 
 bool FolderSizeItemListModel::isRunning()
@@ -694,13 +697,18 @@ void FolderSizeItemListModel::fetchDirSizeFinishedFilter()
 
 void FolderSizeItemListModel::copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err)
 {
-    refreshItemList();
+    // Remove cache of path up to root.
+    removeCache(targetPath);
+
+    // TODO it's not required as progressDialog will shows during copying/moving
+//    refreshItemList();
+
     emit copyFinished(fileAction, sourcePath, targetPath, msg, err);
 }
 
 void FolderSizeItemListModel::deleteFinishedFilter(QString sourcePath, QString msg, int err)
 {    
-    qDebug() << "FolderSizeItemListModel::deleteFinishedFilter" << sourcePath;
+//    qDebug() << "FolderSizeItemListModel::deleteFinishedFilter" << sourcePath;
     // Remove item from ListView.
     // TODO streamline flow to remove item correctly.
     if (err >= 0) {
@@ -715,10 +723,14 @@ void FolderSizeItemListModel::deleteFinishedFilter(QString sourcePath, QString m
             endRemoveRows();
         }
     }
+
+    // Remove cache of path up to root.
+    removeCache(sourcePath);
+
     // Emit deleteFinished
     emit deleteFinished(sourcePath, msg, err);
 
-    qDebug() << "FolderSizeItemListModel::deleteFinishedFilter" << sourcePath << "is done.";
+//    qDebug() << "FolderSizeItemListModel::deleteFinishedFilter" << sourcePath << "is done.";
 }
 
 void FolderSizeItemListModel::proceedNextJob()
