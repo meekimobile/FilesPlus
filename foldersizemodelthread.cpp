@@ -205,7 +205,8 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
             // Emit copy progress.
             emit copyProgress(method, sourceAbsFilePath, targetAbsFilePath, totalBytes, sourceFile.size());
 
-            msleep(50);
+            // TODO Commented below line can speedup copying.
+//            msleep(50);
 
             // Read next buffer.
 //            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::copyFile before read";
@@ -213,6 +214,7 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
 //            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::copyFile after read" << c;
         }
 
+        qDebug() << "FolderSizeModelThread::copyFile done method" << method << "sourceFile" << sourceAbsFilePath << "targetFile" << targetAbsFilePath << "totalBytes" << totalBytes;
         res = !m_abortFlag;
     } else {
         qDebug() << "FolderSizeModelThread::copyFile Error method" << method << "sourceFile" << sourceAbsFilePath << "targetFile" << targetAbsFilePath;
