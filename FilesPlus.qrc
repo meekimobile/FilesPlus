@@ -72,5 +72,6 @@
         <file>qml/FilesPlus/dropbox_white.png</file>
         <file>qml/FilesPlus/CloudDriveJobsPage.qml</file>
         <file>qml/FilesPlus/CloudDriveAccountsPage.qml</file>
+        <file>qml/FilesPlus/ProgressDialog.qml</file>
     </qresource>
 </RCC>

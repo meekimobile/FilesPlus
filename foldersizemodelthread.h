@@ -26,7 +26,8 @@ public:
         FetchDirSize,
         LoadDirSizeCache,
         CopyFile,
-        MoveFile
+        MoveFile,
+        DeleteFile
     };
 
     FolderSizeModelThread(QObject *parent = 0);
@@ -37,8 +38,10 @@ public:
     bool setSortFlag(int sortFlag);
     QStringList nameFilters() const;
     void setNameFilters(const QStringList nameFilters);
-    bool clearCache();
+    bool clearCache() const;
     void setClearCache(bool clearCache);
+    bool abortFlag() const;
+    void setAbortFlag(bool flag);
 
     // Thread methods.
     void fetchDirSize(const bool clearCache = false);
@@ -53,9 +56,11 @@ public:
     bool isDirSizeCacheExisting();
     void removeDirSizeCache(const QString key);
     bool changeDir(const QString dirName);
+    FolderSizeItem getItem(const QFileInfo fileInfo) const;
 
     void setRunMethod(int method);
-    void setCopyPath(const QString sourcePath, const QString targetPath);
+    void setSourcePath(const QString sourcePath);
+    void setTargetPath(const QString targetPath);
     void run();
 signals:
     void loadDirSizeCacheFinished();
@@ -65,14 +70,14 @@ signals:
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void fetchDirSizeUpdated(QString dirPath);
-    void deleteFinished(QString localPath);
+    void deleteStarted(QString localPath);
+    void deleteFinished(QString localPath, QString msg, int err);
 private:
     FolderSizeItem getCachedDir(const QFileInfo dir, const bool clearCache = false);
-    FolderSizeItem getItem(const QFileInfo fileInfo) const;
     FolderSizeItem getFileItem(const QFileInfo fileInfo) const;
     FolderSizeItem getDirItem(const QFileInfo dirInfo) const;
 
-    QHash<QString, FolderSizeItem> dirSizeCache;
+    QHash<QString, FolderSizeItem> *dirSizeCache;
     QString m_currentDir;
     bool m_clearCache;
     int m_sortFlag;
@@ -81,6 +86,8 @@ private:
     int m_runMethod;
     QString m_sourcePath;
     QString m_targetPath;
+
+    bool m_abortFlag;
 };
 
 #endif // FOLDERSIZEMODELTHREAD_H

@@ -17,6 +17,7 @@ class FolderSizeItemListModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_ENUMS(SortFlags)
+    Q_ENUMS(RunnableMethods)
     Q_ENUMS(FolderSizeItemRoles)
     Q_ENUMS(RunningOperations)
     Q_PROPERTY(QString currentDir READ currentDir WRITE setCurrentDir NOTIFY currentDirChanged)
@@ -32,6 +33,14 @@ public:
         SortByTime,
         SortBySize,
         SortByType
+    };
+
+    enum RunnableMethods {
+        FetchDirSize,
+        LoadDirSizeCache,
+        CopyFile,
+        MoveFile,
+        DeleteFile
     };
 
     enum FolderSizeItemRoles {
@@ -80,6 +89,7 @@ public:
     Q_INVOKABLE void changeDir(const QString &name);
     Q_INVOKABLE QString getUrl(const QString absPath);
     Q_INVOKABLE bool isRoot();
+    Q_INVOKABLE QString getItemJson(const QString absFilePath);
     Q_INVOKABLE QString getDirContentJson(const QString dirPath);
     Q_INVOKABLE int getIndexOnCurrentDir(const QString absFilePath);
     Q_INVOKABLE void removeCache(const QString absPath);
@@ -94,7 +104,7 @@ public:
     Q_INVOKABLE bool createDir(const QString name);
     Q_INVOKABLE bool renameFile(const QString fileName, const QString newFileName);
 
-    // Informative methods which don't use FolderSizeModel.
+    // Informative methods which don't use FolderSizeModelThread.
     Q_INVOKABLE void refreshItems();
     Q_INVOKABLE void refreshItem(const int index);
     Q_INVOKABLE void refreshItem(const QString localPath);
@@ -108,6 +118,9 @@ public:
     Q_INVOKABLE QString getAbsolutePath(const QString dirPath, const QString fileName);
     Q_INVOKABLE QStringList getDriveList();
     Q_INVOKABLE QString formatFileSize(double size);
+    Q_INVOKABLE void cancelQueuedJobs();
+    Q_INVOKABLE int getQueuedJobCount() const;
+    Q_INVOKABLE void abortThread();
 
     QList<FolderSizeItem> getItemList() const;
     void removeItem(const int index);
@@ -129,15 +142,15 @@ private:
     bool isReady();
     QStringList splitFileName(const QString fileName);
 
-    QCache<QString, QString> m_pathToRootCache;
-    QHash<QString, int> m_indexOnCurrentDirHash;
+    QCache<QString, QString> *m_pathToRootCache;
+    QHash<QString, int> *m_indexOnCurrentDirHash;
 
     QMutex mutex;
 public slots:
     void loadDirSizeCacheFinishedFilter();
     void fetchDirSizeFinishedFilter();
     void copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
-    void deleteFinishedFilter(QString targetPath);
+    void deleteFinishedFilter(QString sourcePath, QString msg, int err);
     void proceedNextJob();
     void jobDone();
 Q_SIGNALS:
@@ -148,7 +161,8 @@ Q_SIGNALS:
     void copyStarted(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
-    void deleteFinished(QString targetPath);
+    void deleteStarted(QString sourcePath);
+    void deleteFinished(QString sourcePath, QString msg, int err);
     void createFinished(QString targetPath);
     void fetchDirSizeStarted();
     void fetchDirSizeFinished();

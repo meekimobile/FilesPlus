@@ -115,6 +115,10 @@ Page {
                 Qt.quit();
             }
         }
+        onPaste: {
+            fileActionDialog.targetPath = fsModel.currentDir;
+            fileActionDialog.open();
+        }
     }
 
     SortByMenu {
@@ -304,7 +308,11 @@ Page {
     }
 
     function cancelAllCloudDriveJobsSlot() {
-        cancelQueuedJobsConfirmation.open();
+        cancelQueuedCloudDriveJobsConfirmation.open();
+    }
+
+    function cancelAllFolderSizeJobsSlot() {
+        cancelQueuedFolderSizeJobsConfirmation.open();
     }
 
     function syncAllConnectedItemsSlot() {
@@ -314,6 +322,17 @@ Page {
     FolderSizeItemListModel {
         id: fsModel
         currentDir: "C:/"
+
+        function getActionName(fileAction) {
+            switch (fileAction) {
+            case FolderSizeItemListModel.CopyFile:
+                return "Copy";
+                break;
+            case FolderSizeItemListModel.MoveFile:
+                return "Move";
+                break;
+            }
+        }
 
         onCurrentDirChanged: {
             console.debug("QML FolderSizeItemListModel::currentDirChanged");
@@ -352,116 +371,54 @@ Page {
 
         onCopyStarted: {
             console.debug("folderPage fsModel onCopyStarted " + fileAction + " from " + sourcePath + " to " + targetPath + " " + err + " " + msg);
-
-            var sourceIndex = fsModel.getIndexOnCurrentDir(sourcePath);
-            var targetIndex = fsModel.getIndexOnCurrentDir(targetPath);
-            if (sourceIndex > -1) {
-                fsModel.setProperty(sourceIndex, FolderSizeItemListModel.IsRunningRole, true);
-                fsModel.setProperty(sourceIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.ReadOperation);
-            }
-            if (targetIndex > -1) {
-                fsModel.setProperty(targetIndex, FolderSizeItemListModel.IsRunningRole, true);
-                fsModel.setProperty(targetIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.WriteOperation);
-            }
+            // TODO Reopen copyProgressDialog if it's not opened.
+            var sourceFileName = fsModel.getFileName(sourcePath);
+            var targetFileName = fsModel.getFileName(targetPath);
+            var targetDirPath = fsModel.getDirPath(targetPath);
+            copyProgressDialog.source = getActionName(fileAction) + " " + sourceFileName;
+            copyProgressDialog.target = "to " + ((sourceFileName == targetFileName) ? targetDirPath : targetFileName);
+            copyProgressDialog.lastValue = 0;
+            copyProgressDialog.indeterminate = false;
         }
 
         onCopyProgress: {
 //            console.debug("folderPage fsModel onCopyProgress " + fileAction + " from " + sourcePath + " to " + targetPath + " " + bytes + " / " + bytesTotal);
-
-            // Update ProgressBar on listItem.
-            var sourceIndex = fsModel.getIndexOnCurrentDir(sourcePath);
-            var targetIndex = fsModel.getIndexOnCurrentDir(targetPath);
-            if (sourceIndex > -1) {
-                fsModel.setProperty(sourceIndex, FolderSizeItemListModel.IsRunningRole, true);
-                fsModel.setProperty(sourceIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.ReadOperation);
-                fsModel.setProperty(sourceIndex, FolderSizeItemListModel.RunningValueRole, bytes);
-                fsModel.setProperty(sourceIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
-            }
-            if (targetIndex > -1) {
-                fsModel.setProperty(targetIndex, FolderSizeItemListModel.IsRunningRole, true);
-                fsModel.setProperty(targetIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.WriteOperation);
-                fsModel.setProperty(targetIndex, FolderSizeItemListModel.RunningValueRole, bytes);
-                fsModel.setProperty(targetIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
-            }
-
-            // Show indicator on parent up to root.
-            // Skip i=0 as it's notified above already.
-            var i;
-            var modelIndex;
-            var pathList;
-            pathList = fsModel.getPathToRoot(sourcePath);
-            for(i=1; i<pathList.length; i++) {
-                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex > -1) {
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, true);
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.ReadOperation);
-                }
-            }
-            pathList = fsModel.getPathToRoot(targetPath);
-            for(i=1; i<pathList.length; i++) {
-                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex > -1) {
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, true);
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.WriteOperation);
-                }
-            }
+            copyProgressDialog.newValue = bytes;
         }
 
         onCopyFinished: {
             console.debug("folderPage fsModel onCopyFinished " + fileAction + " from " + sourcePath + " to " + targetPath + " " + err + " " + msg);
+            copyProgressDialog.count += 1;
 
             // Show message if error.
             if (err < 0) {
                 messageDialog.titleText = "Copy/Move Error";
                 messageDialog.message = msg;
                 messageDialog.open();
+
+                // TODO stop queued jobs
+                // TODO Reset popupToolPanel and clipboard ?
+            } else {
+                // Reset popupToolPanel
+                popupToolPanel.srcFilePath = "";
+                popupToolPanel.pastePath = "";
+
+                // Remove finished sourcePath from clipboard.
+                clipboard.clear();
             }
+        }
 
-//            fsModel.setProperty(sourcePath, FolderSizeItemListModel.IsRunningRole, false);
-//            fsModel.setProperty(targetPath, FolderSizeItemListModel.IsRunningRole, false);
-
-            // Show indicator on item up to root.
-            var i;
-            var modelIndex;
-            var pathList;
-            pathList = fsModel.getPathToRoot(sourcePath);
-            for(i=0; i<pathList.length; i++) {
-                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex > -1) {
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, false);
-                }
-            }
-            pathList = fsModel.getPathToRoot(targetPath);
-            for(i=0; i<pathList.length; i++) {
-                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex > -1) {
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, false);
-                }
-            }
-
-            // Reset popupToolPanel
-            popupToolPanel.srcFilePath = "";
-            popupToolPanel.pastePath = "";
-
-            // Remove finished sourcePath from clipboard.
-            clipboard.clear();
-
-            // Reset cloudDriveModel hash.
-            var paths = fsModel.getPathToRoot(targetPath);
-            for (var i=0; i<paths.length; i++) {
-                console.debug("folderPage fsModel onCopyFinished updateItems paths[" + i + "] " + paths[i]);
-                cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], cloudDriveModel.dirtyHash);
-            }
-
-            // Cache for changed files has been removed by FolderSizeItemModel internally.
-            // Refresh list view.
-            refreshSlot();
+        onDeleteStarted: {
+            console.debug("folderPage fsModel onDeleteStarted " + sourcePath);
+            deleteProgressDialog.source = sourcePath;
         }
 
         onDeleteFinished: {
-            console.debug("folderPage fsModel onDeleteFinished " + targetPath);
+            console.debug("folderPage fsModel onDeleteFinished " + sourcePath);
+            deleteProgressDialog.value += 1;
+
             // Reset cloudDriveModel hash on parent.
-            var paths = fsModel.getPathToRoot(targetPath);
+            var paths = fsModel.getPathToRoot(sourcePath);
             for (var i=0; i<paths.length; i++) {
                 console.debug("folderPage fsModel onDeleteFinished updateItems paths[" + i + "] " + paths[i]);
                 cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], cloudDriveModel.dirtyHash);
@@ -1070,6 +1027,14 @@ Page {
         contentText: "Delete " + fsModel.getFileName(fileDeleteDialog.sourcePath) + " ?"
 
         onConfirm: {
+            console.debug("fileDeleteDialog onConfirm json " + fsModel.getItemJson(fileDeleteDialog.sourcePath));
+            var json = Utility.createJsonObj(fsModel.getItemJson(fileDeleteDialog.sourcePath));
+            console.debug("FolderSizeItemListModel onDeleteStarted json.sub_file_count " + json.sub_file_count);
+            deleteProgressDialog.titleText = "Deleting";
+            deleteProgressDialog.min = 0;
+            deleteProgressDialog.max = 1 + json.sub_file_count;
+            deleteProgressDialog.open();
+
             var sourceIndex = fsModel.getIndexOnCurrentDir(sourcePath);
             console.debug("fileDeleteDialog OK delete index " + sourceIndex);
             var res = fsModel.removeRow(sourceIndex);
@@ -1141,8 +1106,75 @@ Page {
             return text;
         }
 
+        function openCopyProgressDialog() {
+            // Estimate total.
+            var totalBytes = 0;
+            var totalFiles = 0;
+            var totalFolders = 0;
+            for (var i=0; i<clipboard.count; i++) {
+                var action = clipboard.get(i).action;
+                var sourcePath = clipboard.get(i).sourcePath;
+                console.debug("fileActionDialog openCopyProgressDialog estimate total action " + action + " sourcePath " + sourcePath);
+                if (action == "copy" || action == "cut") {
+                    var jsonText = fsModel.getItemJson(sourcePath);
+                    console.debug("fileActionDialog openCopyProgressDialog estimate total jsonText " + jsonText);
+                    var itemJson = Utility.createJsonObj(jsonText);
+                    console.debug("fileActionDialog openCopyProgressDialog estimate total itemJson " + itemJson + " itemJson.size " + itemJson.size + " itemJson.sub_file_count " + itemJson.sub_file_count);
+                    totalBytes += itemJson.size;
+                    totalFiles += itemJson.sub_file_count + 1;  // +1 for itself.
+                    totalFolders += itemJson.sub_dir_count;
+                }
+            }
+            console.debug("fileActionDialog openCopyProgressDialog estimate totalBytes " + totalBytes + " totalFiles " + totalFiles + " totalFolders " + totalFolders);
+            if (totalBytes > 0) {
+                // Open ProgressDialog.
+                copyProgressDialog.min = 0;
+                copyProgressDialog.max = totalBytes;
+                copyProgressDialog.value = 0;
+                copyProgressDialog.minCount = 0;
+                copyProgressDialog.maxCount = totalFiles + totalFolders;
+                copyProgressDialog.count = 0;
+                copyProgressDialog.indeterminate = true;
+                copyProgressDialog.autoClose = false;
+                copyProgressDialog.titleText = fileActionDialog.titleText;
+                copyProgressDialog.open();
+            }
+        }
+
+        function openDeleteProgressDialog() {
+            // Estimate total.
+            var totalFiles = 0;
+            var totalFolders = 0;
+            for (var i=0; i<clipboard.count; i++) {
+                var action = clipboard.get(i).action;
+                var sourcePath = clipboard.get(i).sourcePath;
+                console.debug("fileActionDialog openDeleteProgressDialog estimate total action " + action + " sourcePath " + sourcePath);
+                if (action == "delete") {
+                    var jsonText = fsModel.getItemJson(sourcePath);
+                    console.debug("fileActionDialog openDeleteProgressDialog estimate total jsonText " + jsonText);
+                    var itemJson = Utility.createJsonObj(jsonText);
+                    console.debug("fileActionDialog openDeleteProgressDialog estimate total itemJson " + itemJson + " itemJson.sub_file_count " + itemJson.sub_file_count);
+                    totalFiles += itemJson.sub_file_count + 1;  // +1 for itself.
+                    totalFolders += itemJson.sub_dir_count;
+                }
+            }
+            console.debug("fileActionDialog openDeleteProgressDialog estimate totalFiles " + totalFiles + " totalFolders " + totalFolders);
+            if (totalFiles > 0) {
+                deleteProgressDialog.titleText = "Deleting";
+                deleteProgressDialog.min = 0;
+                deleteProgressDialog.max = totalFiles + totalFolders;
+                deleteProgressDialog.value = 0;
+                deleteProgressDialog.open();
+            }
+        }
+
         onConfirm: {
+
             if (clipboard.count == 1) {
+                // Open progress dialogs if it's related.
+                openCopyProgressDialog();
+                openDeleteProgressDialog();
+
                 // Copy/Move/Delete first file from clipboard.
                 // Check if there is existing file on target folder. Then show overwrite dialog.
                 if (clipboard.get(0).action != "delete" && !fsModel.canCopy(clipboard.get(0).sourcePath, targetPath)) {
@@ -1169,6 +1201,12 @@ Page {
                     popupToolPanel.srcFilePath = "";
                     popupToolPanel.pastePath = "";
                 } else {
+                    // Close copyProgressDialog as it failed.
+                    copyProgressDialog.close();
+
+                    // Close copyProgressDialog as it failed.
+                    deleteProgressDialog.close();
+
                     messageDialog.titleText = getActionName(clipboard.get(0).action);
                     messageDialog.message = "I can't " + getActionName(clipboard.get(0).action).toLowerCase()
                             + "\nfile " + clipboard.get(0).sourcePath
@@ -1180,6 +1218,10 @@ Page {
                     popupToolPanel.pastePath = "";
                 }
             } else {
+                // Open progress dialogs if it's related.
+                openCopyProgressDialog();
+                openDeleteProgressDialog();
+
                 // TODO Copy/Move/Delete all files from clipboard.
                 // Action is {copy, cut, delete}
                 for (var i=0; i<clipboard.count; i++) {
@@ -1360,13 +1402,25 @@ Page {
     }
 
     ConfirmDialog {
-        id: cancelQueuedJobsConfirmation
-        titleText: "Cancel queued jobs"
+        id: cancelQueuedCloudDriveJobsConfirmation
+        titleText: "Cancel sync jobs"
         onOpening: {
             contentText = "Cancel " + cloudDriveModel.getQueuedJobCount() + " jobs ?";
         }
         onConfirm: {
             cloudDriveModel.cancelQueuedJobs();
+        }
+    }
+
+    ConfirmDialog {
+        id: cancelQueuedFolderSizeJobsConfirmation
+        titleText: "Cancel file action jobs"
+        onOpening: {
+            contentText = "Cancel " + fsModel.getQueuedJobCount() + " jobs ?";
+        }
+        onConfirm: {
+            fsModel.cancelQueuedJobs();
+            fsModel.abortThread();
         }
     }
 
@@ -1406,6 +1460,28 @@ Page {
 
     DownloadProgressDialog {
         id: downloadProgressDialog
+    }
+
+    ProgressDialog {
+        id: copyProgressDialog
+        onClosed: {
+            // Refresh view after copied/moved.
+            refreshSlot();
+        }
+        onCancelled: {
+            cancelAllFolderSizeJobsSlot();
+        }
+    }
+
+    ProgressDialog {
+        id: deleteProgressDialog
+        onClosed: {
+            // Refresh view after copied/moved.
+            refreshSlot();
+        }
+        onCancelled: {
+            cancelAllFolderSizeJobsSlot();
+        }
     }
 
     GCPClient {
@@ -1782,7 +1858,7 @@ Page {
 
                     messageDialog.titleText = getCloudName(type) + " Metadata";
                     messageDialog.message = "File " + localPath + " was removed remotely.\nLink will be removed.";
-                    messageDialog.autoClosed = true;
+                    messageDialog.autoClose = true;
                     messageDialog.open();
                     return;
                 }
@@ -1871,7 +1947,7 @@ Page {
             } else {
                 messageDialog.titleText = getCloudName(json.type) + " Create Folder";
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
-                messageDialog.autoClosed = true;
+                messageDialog.autoClose = true;
                 messageDialog.open();
             }
 

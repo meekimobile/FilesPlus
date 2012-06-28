@@ -6,8 +6,8 @@ CommonDialog {
     id: messageDialog
     
     property alias message: contentText.text
-    property bool autoClosed: false
-    property int autoClosedInterval: 3000
+    property bool autoClose: false
+    property int autoCloseInterval: 3000
 
     titleIcon: "FilesPlusIcon.svg"
     buttonTexts: ["Ok"]
@@ -23,7 +23,7 @@ CommonDialog {
     SequentialAnimation {
         id: hideAction
 
-        PauseAnimation { duration: autoClosedInterval }
+        PauseAnimation { duration: autoCloseInterval }
         ScriptAction {
             script: close();
         }
@@ -31,7 +31,7 @@ CommonDialog {
 
     onStatusChanged: {
         if (status == DialogStatus.Open) {
-            if (autoClosed) hideAction.restart();
+            if (autoClose) hideAction.restart();
         }
 
         if (status == DialogStatus.Closed) {

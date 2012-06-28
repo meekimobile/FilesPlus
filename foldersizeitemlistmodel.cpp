@@ -4,7 +4,7 @@ const int FolderSizeItemListModel::TimerInterval = 100;
 const int FolderSizeItemListModel::MaxRunningJobCount = 1;
 
 FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
-    : QAbstractListModel(parent), m_pathToRootCache()
+    : QAbstractListModel(parent)
 {
     // This map will be used when populating property to delegate.
     QHash<int, QByteArray> roles;
@@ -23,6 +23,10 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     roles[IsCheckedRole] = "isChecked";
     setRoleNames(roles);
 
+    // TODO Initialize cache.
+    m_pathToRootCache = new QCache<QString, QString>();
+    m_indexOnCurrentDirHash = new QHash<QString, int>();
+
     // Connect job queue chain.
     connect(this, SIGNAL(proceedNextJobSignal()), SLOT(proceedNextJob()) );
 
@@ -34,7 +38,8 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)), this, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)) );
     connect(&m, SIGNAL(copyFinished(int,QString,QString,QString,int)), this, SLOT(copyFinishedFilter(int,QString,QString,QString,int)) );
     connect(&m, SIGNAL(fetchDirSizeUpdated(QString)), this, SIGNAL(fetchDirSizeUpdated(QString)) );
-    connect(&m, SIGNAL(deleteFinished(QString)), this, SLOT(deleteFinishedFilter(QString)) );
+    connect(&m, SIGNAL(deleteStarted(QString)), this, SIGNAL(deleteStarted(QString)) );
+    connect(&m, SIGNAL(deleteFinished(QString,QString,int)), this, SLOT(deleteFinishedFilter(QString,QString,int)) );
     connect(&m, SIGNAL(finished()), this, SLOT(jobDone()) );
 
 //    // Load cache
@@ -221,6 +226,13 @@ QString FolderSizeItemListModel::formatFileSize(double size)
     return fileSize;
 }
 
+void FolderSizeItemListModel::cancelQueuedJobs()
+{
+    m_jobQueue.clear();
+
+    qDebug() << "FolderSizeItemListModel::cancelQueuedJobs done";
+}
+
 QList<FolderSizeItem> FolderSizeItemListModel::getItemList() const
 {
     return itemList;
@@ -255,7 +267,7 @@ void FolderSizeItemListModel::changeDir(const QString &name)
         emit currentDirChanged();
 
         // Reset m_indexOnCurrentDirHash.
-        m_indexOnCurrentDirHash.clear();
+        m_indexOnCurrentDirHash->clear();
 
         // Invoke background refresh
         refreshDir();
@@ -303,6 +315,11 @@ bool FolderSizeItemListModel::isRoot()
     return (dir.isRoot());
 }
 
+QString FolderSizeItemListModel::getItemJson(const QString absFilePath)
+{
+    return m.getItem(QFileInfo(absFilePath)).toJsonText();
+}
+
 int FolderSizeItemListModel::getSortFlag() const
 {
     return m.sortFlag();
@@ -310,7 +327,7 @@ int FolderSizeItemListModel::getSortFlag() const
 
 void FolderSizeItemListModel::setSortFlag(const int sortFlag)
 {
-    if (m.setSortFlag(sortFlag)) {
+    if (m.setSortFlag(sortFlag)) {        
         m.sortItemList(itemList);
 
         // If itemList is actually sorted, refreshItems to emit dataChanged.
@@ -355,56 +372,35 @@ bool FolderSizeItemListModel::removeRow(int row, const QModelIndex &parent)
 
 bool FolderSizeItemListModel::removeRows(int row, int count, const QModelIndex &parent)
 {
-    bool res = true;
     for (int i = row; i < row+count; i++) {
         QString filePath = data(this->index(i,0), AbsolutePathRole).toString();
-        bool iRes = false;
-        QFileInfo fileInfo(filePath);
 
-        iRes = m.deleteDir(filePath);
-
-        // Remove item from model's itemList.
-        if (iRes) {
-            beginRemoveRows(parent, i, i);
-
-            // Remote item from itemList.
-            removeItem(i);
-
-            // Remove cache is done in m.deleteDir()
-
-            // Emit deleteFinished
-            emit deleteFinished(fileInfo.absoluteFilePath());
-
-            endRemoveRows();
-
-            qDebug() << "FolderSizeItemListModel::removeRows" << fileInfo.absoluteFilePath() << " has been removed.";
-        } else {
-            qDebug() << "FolderSizeItemListModel::removeRows" << fileInfo.absoluteFilePath() << " can't' be removed because it's not empty.";
-        }
-
-        res = res && iRes;
+        // Queue delete job.
+        deleteFile(filePath);
     }
 
-    return res;
+    return true;
 }
 
 bool FolderSizeItemListModel::deleteFile(const QString absPath)
 {
-    int index = getIndexOnCurrentDir(absPath);
+    // Enqueue job.
+    FolderSizeJob job(createNonce(), FolderSizeModelThread::DeleteFile, absPath, "");
+    m_jobQueue.enqueue(job);
 
-    if (index >= 0) {
-        return removeRow(index);
-    } else {
-        return m.deleteDir(absPath);
-    }
+    emit proceedNextJobSignal();
+
+    return true;
 }
 
 bool FolderSizeItemListModel::copy(const QString sourcePath, const QString targetPath)
 {
     if (sourcePath == targetPath) {
         emit copyFinished(FolderSizeModelThread::CopyFile, sourcePath, targetPath, "Source and Target path can't be the same.", -3);
-    } else if (targetPath.indexOf(sourcePath) != -1) {
+        return false;
+    } else if (targetPath.indexOf(sourcePath + "/") != -1) {
         emit copyFinished(FolderSizeModelThread::CopyFile, sourcePath, targetPath, "Target path can't be inside source path.", -4);
+        return false;
     }
 
     // TODO Show running on targetPath's parent.
@@ -461,7 +457,7 @@ bool FolderSizeItemListModel::renameFile(const QString fileName, const QString n
     qDebug() << "FolderSizeItemListModel::renameFile res" << res << "fileName" << fileName << "newFileName" << newFileName;
     if (res) {
         // Emit signal to change CloudDriveItem.
-        emit deleteFinished(QDir::current().absoluteFilePath(fileName));
+        emit deleteFinished(QDir::current().absoluteFilePath(fileName), "Deleting is triggered by rename.", 0);
         emit createFinished(QDir::current().absoluteFilePath(newFileName));
     }
 
@@ -480,8 +476,8 @@ QStringList FolderSizeItemListModel::getPathToRoot(const QString absFilePath)
 //    qDebug() << "FolderSizeItemListModel::getPathToRoot" << absFilePath;
 
     // Try get from cache. It will not 0 if exists.
-//    qDebug() << "FolderSizeItemListModel::getPathToRoot absFilePath" << absFilePath << "cache" << m_pathToRootCache.contains(absFilePath);
-    if (!m_pathToRootCache.contains(absFilePath)) {
+//    qDebug() << "FolderSizeItemListModel::getPathToRoot absFilePath" << absFilePath << "cache" << m_pathToRootCache->contains(absFilePath);
+    if (!m_pathToRootCache->contains(absFilePath)) {
         QStringList paths;
         QDir dir(absFilePath);
 
@@ -495,12 +491,12 @@ QStringList FolderSizeItemListModel::getPathToRoot(const QString absFilePath)
 
         // Insert to cache.
         QString *cachePaths = new QString(paths.join(","));
-        m_pathToRootCache.insert(absFilePath, cachePaths);
+        m_pathToRootCache->insert(absFilePath, cachePaths);
         qDebug() << "FolderSizeItemListModel::getPathToRoot insert cache" << absFilePath << "=" << *cachePaths;
 
         return paths;
     } else {
-        QStringList returnedPaths = m_pathToRootCache.object(absFilePath)->split(",");
+        QStringList returnedPaths = m_pathToRootCache->object(absFilePath)->split(",");
 //        qDebug() << "FolderSizeItemListModel::getPathToRoot returnedPaths" << returnedPaths;
 
         return returnedPaths;
@@ -611,8 +607,8 @@ int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
 {
     // TODO implement cache.
     int index = -1;
-    if (m_indexOnCurrentDirHash.contains(absFilePath)) {
-        index = m_indexOnCurrentDirHash[absFilePath];
+    if (m_indexOnCurrentDirHash->contains(absFilePath)) {
+        index = m_indexOnCurrentDirHash->value(absFilePath);
 //        qDebug() << "FolderSizeItemListModel::getIndexOnCurrentDir cached index for " << absFilePath << "=" << index;
         return index;
     }
@@ -634,7 +630,7 @@ int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
     }
 
     index = (isOnCurrentDir && index == -1)?-2:index;
-    m_indexOnCurrentDirHash[absFilePath] = index;
+    m_indexOnCurrentDirHash->insert(absFilePath, index);
     qDebug() << "FolderSizeItemListModel::getIndexOnCurrentDir insert cache for" << absFilePath << "index" << index;
 
     return index;
@@ -702,22 +698,27 @@ void FolderSizeItemListModel::copyFinishedFilter(int fileAction, QString sourceP
     emit copyFinished(fileAction, sourcePath, targetPath, msg, err);
 }
 
-void FolderSizeItemListModel::deleteFinishedFilter(QString targetPath)
-{
+void FolderSizeItemListModel::deleteFinishedFilter(QString sourcePath, QString msg, int err)
+{    
+    qDebug() << "FolderSizeItemListModel::deleteFinishedFilter" << sourcePath;
     // Remove item from ListView.
-    int i = getIndexOnCurrentDir(targetPath);
+    // TODO streamline flow to remove item correctly.
+    if (err >= 0) {
+        int i = getIndexOnCurrentDir(sourcePath);
 
-    if (i >= 0) {
-        beginRemoveRows(createIndex(0,0), i, i);
+        if (i >= 0) {
+            beginRemoveRows(createIndex(0,0), i, i);
 
-        // Remote item from itemList.
-        removeItem(i);
+            // Remote item from itemList.
+            removeItem(i);
 
-        // Emit deleteFinished
-        emit deleteFinished(targetPath);
-
-        endRemoveRows();
+            endRemoveRows();
+        }
     }
+    // Emit deleteFinished
+    emit deleteFinished(sourcePath, msg, err);
+
+    qDebug() << "FolderSizeItemListModel::deleteFinishedFilter" << sourcePath << "is done.";
 }
 
 void FolderSizeItemListModel::proceedNextJob()
@@ -730,13 +731,17 @@ void FolderSizeItemListModel::proceedNextJob()
         return;
     }
 
+    // Tell event loop to process event before it will process time consuming task.
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+
     // Dequeue job and create job thread with signal/slot connections.
     FolderSizeJob job = m_jobQueue.dequeue();
 
     // Load cache
     m.setRunMethod(job.operation);
     m.setClearCache(job.clearCache);
-    m.setCopyPath(job.sourcePath, job.targetPath);
+    m.setSourcePath(job.sourcePath);
+    m.setTargetPath(job.targetPath);
     m.start();
 
 //    FolderSizeModelThread *t;
@@ -758,4 +763,15 @@ void FolderSizeItemListModel::proceedNextJob()
 //             << "/" << QThreadPool::globalInstance()->maxThreadCount() << "runningJobCount" << runningJobCount;
 
     emit proceedNextJobSignal();
+}
+
+
+int FolderSizeItemListModel::getQueuedJobCount() const
+{
+    return m_jobQueue.count();
+}
+
+void FolderSizeItemListModel::abortThread()
+{
+    m.setAbortFlag(true);
 }

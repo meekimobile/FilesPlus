@@ -9,6 +9,7 @@ Menu {
     property variant enabledMenus: []
 
     signal quit()
+    signal paste()
 
     content: MenuLayout {
         id: mainMenuLayout
@@ -17,8 +18,7 @@ Menu {
             id: pasteMenuItem
             text: "Paste"
             onClicked: {
-                fileActionDialog.targetPath = fsModel.currentDir;
-                fileActionDialog.open();
+                paste();
             }
         }
 
