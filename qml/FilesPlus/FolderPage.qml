@@ -630,7 +630,7 @@ Page {
                                   + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
                                   + " isChecked " + model.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
 
-                    clipboard.append({ "action": "cut", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
+                    clipboard.addItem({ "action": "cut", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
                 }
 
                 // Reset isChecked.
@@ -645,7 +645,7 @@ Page {
                                   + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
                                   + " isChecked " + model.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
 
-                    clipboard.append({ "action": "copy", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
+                    clipboard.addItem({ "action": "copy", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
                 }
 
                 // Reset isChecked.
@@ -663,7 +663,7 @@ Page {
                                   + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
                                   + " isChecked " + model.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
 
-                    clipboard.append({ "action": "delete", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
+                    clipboard.addItem({ "action": "delete", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
                 }
 
                 // Reset isChecked.
@@ -684,7 +684,7 @@ Page {
                                   + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
                                   + " isChecked " + model.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
 
-                    clipboard.append({ "action": "sync", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
+                    clipboard.addItem({ "action": "sync", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
                 }
 
                 // Reset isChecked.
@@ -973,11 +973,11 @@ Page {
         }
 
         onCutClicked: {
-            clipboard.append({ "action": "cut", "sourcePath": sourcePath });
+            clipboard.addItem({ "action": "cut", "sourcePath": sourcePath });
         }
 
         onCopyClicked: {
-            clipboard.append({ "action": "copy", "sourcePath": sourcePath });
+            clipboard.addItem({ "action": "copy", "sourcePath": sourcePath });
         }
 
         onPasteClicked: {

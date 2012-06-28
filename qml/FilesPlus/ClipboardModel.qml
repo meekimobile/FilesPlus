@@ -34,4 +34,14 @@ ListModel {
             }
         }
     }
+
+    function addItem(jsobj) {
+        var i = getModelIndex(jsobj.sourcePath);
+        if (i > -1) {
+            clipboard.set(i, jsobj);
+            console.debug("clipboard.addItem found and replace index " + i + " action " + jsobj.action + " sourcePath " + jsobj.sourcePath);
+        } else {
+            clipboard.append(jsobj);
+        }
+    }
 }
