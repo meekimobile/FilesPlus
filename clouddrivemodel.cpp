@@ -262,7 +262,9 @@ void CloudDriveModel::updateItems(CloudDriveModel::ClientTypes type, QString loc
         m_cloudDriveItems.replace(item.localPath, item);
     }
 
-    qDebug() << "CloudDriveModel::updateItems items" << getItemList(localPath);
+    if (!items.isEmpty()) {
+        qDebug() << "CloudDriveModel::updateItems items" << getItemList(localPath);
+    }
 }
 
 int CloudDriveModel::getItemCount() const
