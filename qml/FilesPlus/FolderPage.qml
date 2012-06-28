@@ -654,6 +654,9 @@ Page {
         }
 
         function deleteMarkedItems() {
+            // Always clear clipboard before delete marked items.
+            clipboard.clear();
+
             for (var i=0; i<model.count; i++) {
                 if (model.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
                     console.debug("fsListView deleteMarkedItems item"
@@ -672,6 +675,9 @@ Page {
         }
 
         function syncMarkedItems() {
+            // Always clear clipboard before delete marked items.
+            clipboard.clear();
+
             for (var i=0; i<model.count; i++) {
                 if (model.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
                     console.debug("fsListView deleteMarkedItems item"
