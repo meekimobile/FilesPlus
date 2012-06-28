@@ -669,6 +669,4 @@ void FolderSizeModelThread::run()
         }
         break;
     }
-
-    wait();
 }
