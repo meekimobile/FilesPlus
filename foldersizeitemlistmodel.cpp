@@ -36,7 +36,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(fetchDirSizeFinished()), this, SLOT(fetchDirSizeFinishedFilter()) );
     connect(&m, SIGNAL(copyStarted(int,QString,QString,QString,int)), this, SIGNAL(copyStarted(int,QString,QString,QString,int)) );
     connect(&m, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)), this, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)) );
-    connect(&m, SIGNAL(copyFinished(int,QString,QString,QString,int)), this, SLOT(copyFinishedFilter(int,QString,QString,QString,int)) );
+    connect(&m, SIGNAL(copyFinished(int,QString,QString,QString,int,qint64,qint64)), this, SLOT(copyFinishedFilter(int,QString,QString,QString,int,qint64,qint64)) );
     connect(&m, SIGNAL(fetchDirSizeUpdated(QString)), this, SIGNAL(fetchDirSizeUpdated(QString)) );
     connect(&m, SIGNAL(deleteStarted(QString)), this, SIGNAL(deleteStarted(QString)) );
     connect(&m, SIGNAL(deleteFinished(QString,QString,int)), this, SLOT(deleteFinishedFilter(QString,QString,int)) );
@@ -396,10 +396,10 @@ bool FolderSizeItemListModel::deleteFile(const QString absPath)
 bool FolderSizeItemListModel::copy(const QString sourcePath, const QString targetPath)
 {
     if (sourcePath == targetPath) {
-        emit copyFinished(FolderSizeModelThread::CopyFile, sourcePath, targetPath, "Source and Target path can't be the same.", -3);
+        emit copyFinished(FolderSizeModelThread::CopyFile, sourcePath, targetPath, "Source and Target path can't be the same.", -5, 0, -1);
         return false;
     } else if (targetPath.indexOf(sourcePath + "/") != -1) {
-        emit copyFinished(FolderSizeModelThread::CopyFile, sourcePath, targetPath, "Target path can't be inside source path.", -4);
+        emit copyFinished(FolderSizeModelThread::CopyFile, sourcePath, targetPath, "Target path can't be inside source path.", -6, 0, -1);
         return false;
     }
 
@@ -418,9 +418,11 @@ bool FolderSizeItemListModel::copy(const QString sourcePath, const QString targe
 bool FolderSizeItemListModel::move(const QString sourcePath, const QString targetPath)
 {
     if (sourcePath == targetPath) {
-        emit copyFinished(FolderSizeModelThread::MoveFile, sourcePath, targetPath, "Source and Target path can't be the same.", -3);
+        emit copyFinished(FolderSizeModelThread::MoveFile, sourcePath, targetPath, "Source and Target path can't be the same.", -5, 0, -1);
+        return false;
     } else if (targetPath.indexOf(sourcePath) != -1) {
-        emit copyFinished(FolderSizeModelThread::MoveFile, sourcePath, targetPath, "Target path can't be inside source path.", -4);
+        emit copyFinished(FolderSizeModelThread::MoveFile, sourcePath, targetPath, "Target path can't be inside source path.", -6, 0, -1);
+        return false;
     }
 
     // TODO Show running on targetPath's parent.
@@ -695,7 +697,7 @@ void FolderSizeItemListModel::fetchDirSizeFinishedFilter()
     emit fetchDirSizeFinished();
 }
 
-void FolderSizeItemListModel::copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err)
+void FolderSizeItemListModel::copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes)
 {
     // Remove cache of path up to root.
     removeCache(targetPath);
@@ -703,7 +705,7 @@ void FolderSizeItemListModel::copyFinishedFilter(int fileAction, QString sourceP
     // TODO it's not required as progressDialog will shows during copying/moving
 //    refreshItemList();
 
-    emit copyFinished(fileAction, sourcePath, targetPath, msg, err);
+    emit copyFinished(fileAction, sourcePath, targetPath, msg, err, bytes, totalBytes);
 }
 
 void FolderSizeItemListModel::deleteFinishedFilter(QString sourcePath, QString msg, int err)
@@ -783,7 +785,8 @@ int FolderSizeItemListModel::getQueuedJobCount() const
     return m_jobQueue.count();
 }
 
-void FolderSizeItemListModel::abortThread()
+void FolderSizeItemListModel::abortThread(bool rollbackFlag)
 {
     m.setAbortFlag(true);
+    m.setRollbackFlag(rollbackFlag);
 }

@@ -120,7 +120,7 @@ public:
     Q_INVOKABLE QString formatFileSize(double size);
     Q_INVOKABLE void cancelQueuedJobs();
     Q_INVOKABLE int getQueuedJobCount() const;
-    Q_INVOKABLE void abortThread();
+    Q_INVOKABLE void abortThread(bool rollbackFlag = true);
 
     QList<FolderSizeItem> getItemList() const;
     void removeItem(const int index);
@@ -149,7 +149,7 @@ private:
 public slots:
     void loadDirSizeCacheFinishedFilter();
     void fetchDirSizeFinishedFilter();
-    void copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
+    void copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes);
     void deleteFinishedFilter(QString sourcePath, QString msg, int err);
     void proceedNextJob();
     void jobDone();
@@ -160,7 +160,7 @@ Q_SIGNALS:
     void requestResetCache();
     void copyStarted(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
-    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
+    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes);
     void deleteStarted(QString sourcePath);
     void deleteFinished(QString sourcePath, QString msg, int err);
     void createFinished(QString targetPath);

@@ -43,6 +43,8 @@ public:
     void setClearCache(bool clearCache);
     bool abortFlag() const;
     void setAbortFlag(bool flag);
+    bool rollbackFlag() const;
+    void setRollbackFlag(bool flag);
 
     // Thread methods.
     void fetchDirSize(const bool clearCache = false);
@@ -69,7 +71,7 @@ signals:
     void fetchDirSizeFinished();
     void copyStarted(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
-    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
+    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 bytesTotal);
     void fetchDirSizeUpdated(QString dirPath);
     void deleteStarted(QString localPath);
     void deleteFinished(QString localPath, QString msg, int err);
@@ -89,6 +91,7 @@ private:
     QString m_targetPath;
 
     bool m_abortFlag;
+    bool m_rollbackFlag;
 };
 
 #endif // FOLDERSIZEMODELTHREAD_H

@@ -380,6 +380,9 @@ Page {
             copyProgressDialog.target = "to " + ((sourceFileName == targetFileName) ? targetDirPath : targetFileName);
             copyProgressDialog.lastValue = 0;
             copyProgressDialog.indeterminate = false;
+            if (copyProgressDialog.status != DialogStatus.Open) {
+                copyProgressDialog.open();
+            }
         }
 
         onCopyProgress: {
@@ -388,13 +391,14 @@ Page {
         }
 
         onCopyFinished: {
-            console.debug("folderPage fsModel onCopyFinished " + fileAction + " from " + sourcePath + " to " + targetPath + " " + err + " " + msg);
+            console.debug("folderPage fsModel onCopyFinished " + fileAction + " from " + sourcePath + " to " + targetPath + " " + err + " " + msg + " " + bytes + " " + totalBytes);
             copyProgressDialog.count += 1;
 
             // Show message if error.
             if (err < 0) {
                 messageDialog.titleText = "Copy/Move Error";
                 messageDialog.message = msg;
+                messageDialog.autoClose = true;
                 messageDialog.open();
 
                 // TODO stop queued jobs
@@ -412,6 +416,10 @@ Page {
         onDeleteStarted: {
             console.debug("folderPage fsModel onDeleteStarted " + sourcePath);
             deleteProgressDialog.source = sourcePath;
+            if (deleteProgressDialog.status != DialogStatus.Open) {
+                deleteProgressDialog.titleText = "Deleting";
+                deleteProgressDialog.open();
+            }
         }
 
         onDeleteFinished: {
@@ -1394,12 +1402,38 @@ Page {
     ConfirmDialog {
         id: cancelQueuedFolderSizeJobsConfirmation
         titleText: "Cancel file action jobs"
+        content: Column {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width - 20
+            spacing: 3
+                Text {
+                id: content
+                color: "white"
+                font.pixelSize: 18
+                wrapMode: Text.Wrap
+                width: parent.width - 20
+                height: implicitHeight
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+            CheckBox {
+                id: rollbackFlag
+                text: "Rollback changes"
+                checked: false
+            }
+        }
         onOpening: {
-            contentText = "Cancel " + fsModel.getQueuedJobCount() + " jobs ?";
+            var jobCount = fsModel.getQueuedJobCount();
+            if (jobCount > 0) {
+                content.text = "Cancel " + jobCount + " jobs and abort file action ?";
+            } else {
+                content.text = "Abort file action ?";
+            }
+            rollbackFlag.checked = false;
         }
         onConfirm: {
             fsModel.cancelQueuedJobs();
-            fsModel.abortThread();
+            // Abort thread with rollbackFlag.
+            fsModel.abortThread(rollbackFlag.checked);
         }
     }
 
@@ -1454,6 +1488,7 @@ Page {
 
     ProgressDialog {
         id: deleteProgressDialog
+        titleText: "Deleting"
         onClosed: {
             // Refresh view after copied/moved.
             refreshSlot();

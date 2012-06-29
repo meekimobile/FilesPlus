@@ -54,7 +54,7 @@ CommonDialog {
 
     titleText: "Progressing"
     titleIcon: "FilesPlusIcon.svg"
-    buttonTexts: ["Cancel"]
+    buttonTexts: ["OK", "Cancel"]
     content: Column {
         width: parent.width - 10
         spacing: 4
@@ -82,7 +82,7 @@ CommonDialog {
 
                 if (value >= maximumValue) {
                     console.debug("ProgressDialog progressBar onValueChanged " + value + " >= " +maximumValue);
-                    progressDialog.buttonTexts = ["OK"];
+//                    progressDialog.buttonTexts = ["OK"];
 //                    progressDialog.autoClose = true;
                     toggleHideAction();
                 }
@@ -126,7 +126,7 @@ CommonDialog {
     
     onStatusChanged: {
         if (status == DialogStatus.Open) {
-            buttonTexts = ["Cancel"];
+//            buttonTexts = ["Cancel"];
             open();
         }
 
