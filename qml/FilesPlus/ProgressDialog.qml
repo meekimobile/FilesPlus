@@ -60,10 +60,12 @@ CommonDialog {
         width: parent.width - 10
         spacing: 4
         anchors.horizontalCenter: parent.horizontalCenter
-        
+
         Text {
             id: source
             width: parent.width
+            height: 30
+            verticalAlignment: Text.AlignBottom
             color: "white"
             font.pointSize: 6
             wrapMode: Text.WordWrap
@@ -118,9 +120,10 @@ CommonDialog {
         Text {
             id: message
             width: parent.width
-            color: "yellow"
+            color: "white"
             font.pointSize: 6
             wrapMode: Text.WordWrap
+            elide: Text.ElideMiddle
         }
     }
     

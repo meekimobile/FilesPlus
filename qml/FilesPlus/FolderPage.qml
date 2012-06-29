@@ -31,13 +31,6 @@ Page {
         }
     }
 
-//    onStatusChanged: {
-//        if (status == PageStatus.Active) {
-//            // Show/Hide flipButton according to setting.
-//            flipButton.visible = fsListView.state == "" && appInfo.getSettingValue("FolderPie.enabled", true);
-//        }
-//    }
-
     Component.onCompleted: {
         console.debug(Utility.nowText() + " folderPage onCompleted");
     }
@@ -397,16 +390,18 @@ Page {
 
             // Show message if error.
             if (err < 0) {
-                messageDialog.titleText = "Copy error";
+                messageDialog.titleText = getActionName(fileAction) + " error";
                 messageDialog.message = msg;
                 messageDialog.autoClose = true;
                 messageDialog.open();
 
-                copyProgressDialog.message += "Copy " + sourcePath + " is failed.\n";
+                copyProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " failed.\n";
 
                 // TODO stop queued jobs
                 // TODO Reset popupToolPanel and clipboard ?
             } else {
+//                copyProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " done.\n";
+
                 // Reset popupToolPanel
                 popupToolPanel.srcFilePath = "";
                 popupToolPanel.pastePath = "";
@@ -417,18 +412,23 @@ Page {
         }
 
         onDeleteStarted: {
-            console.debug("folderPage fsModel onDeleteStarted " + sourcePath);
-            deleteProgressDialog.source = sourcePath;
-            deleteProgressDialog.indeterminate = false;
-            if (deleteProgressDialog.status != DialogStatus.Open) {
-                deleteProgressDialog.titleText = "Deleting";
-                deleteProgressDialog.open();
+            console.debug("folderPage fsModel onDeleteStarted " + fileAction + " sourcePath " + sourcePath);
+            if (fileAction == FolderSizeItemListModel.DeleteFile) {
+                deleteProgressDialog.source = sourcePath;
+                deleteProgressDialog.indeterminate = false;
+                if (deleteProgressDialog.status != DialogStatus.Open) {
+                    deleteProgressDialog.titleText = "Deleting";
+                    deleteProgressDialog.open();
+                }
             }
         }
 
         onDeleteFinished: {
-            console.debug("folderPage fsModel onDeleteFinished " + sourcePath);
-            deleteProgressDialog.value += 1;
+            console.debug("folderPage fsModel onDeleteFinished " + fileAction + " sourcePath " + sourcePath);
+            if (fileAction == FolderSizeItemListModel.DeleteFile) {
+                deleteProgressDialog.value += 1;
+                deleteProgressDialog.message = sourcePath + " is deleted.";
+            }
 
             // Reset cloudDriveModel hash on parent.
             var paths = fsModel.getPathToRoot(sourcePath);
@@ -1105,19 +1105,19 @@ Page {
             for (var i=0; i<clipboard.count; i++) {
                 var action = clipboard.get(i).action;
                 var sourcePath = clipboard.get(i).sourcePath;
-                console.debug("fileActionDialog openCopyProgressDialog estimate total action " + action + " sourcePath " + sourcePath);
+//                console.debug("fileActionDialog openCopyProgressDialog estimate total action " + action + " sourcePath " + sourcePath);
                 if (action == "copy" || action == "cut") {
                     var jsonText = fsModel.getItemJson(sourcePath);
-                    console.debug("fileActionDialog openCopyProgressDialog estimate total jsonText " + jsonText);
+//                    console.debug("fileActionDialog openCopyProgressDialog estimate total jsonText " + jsonText);
                     var itemJson = Utility.createJsonObj(jsonText);
-                    console.debug("fileActionDialog openCopyProgressDialog estimate total itemJson " + itemJson + " itemJson.size " + itemJson.size + " itemJson.sub_file_count " + itemJson.sub_file_count);
+//                    console.debug("fileActionDialog openCopyProgressDialog estimate total itemJson " + itemJson + " itemJson.size " + itemJson.size + " itemJson.sub_file_count " + itemJson.sub_file_count);
                     totalBytes += itemJson.size;
-                    totalFiles += itemJson.sub_file_count + 1;  // +1 for itself.
-                    totalFolders += itemJson.sub_dir_count;
+                    totalFiles += itemJson.sub_file_count + ((itemJson.is_dir) ? 0 : 1);  // +1 for file.
+                    totalFolders += itemJson.sub_dir_count + ((itemJson.is_dir) ? 1 : 0);  // +1 for folder.
                 }
             }
             console.debug("fileActionDialog openCopyProgressDialog estimate totalBytes " + totalBytes + " totalFiles " + totalFiles + " totalFolders " + totalFolders);
-            if (totalBytes > 0) {
+            if (totalBytes > 0 || totalFiles + totalFolders > 0) {
                 // Open ProgressDialog.
                 copyProgressDialog.min = 0;
                 copyProgressDialog.max = totalBytes;
@@ -1129,6 +1129,7 @@ Page {
                 copyProgressDialog.autoClose = false;
                 copyProgressDialog.formatValue = true;
                 copyProgressDialog.titleText = fileActionDialog.titleText;
+                copyProgressDialog.message = "";
                 copyProgressDialog.open();
             }
         }
@@ -1140,22 +1141,26 @@ Page {
             for (var i=0; i<clipboard.count; i++) {
                 var action = clipboard.get(i).action;
                 var sourcePath = clipboard.get(i).sourcePath;
-                console.debug("fileActionDialog openDeleteProgressDialog estimate total action " + action + " sourcePath " + sourcePath);
+//                console.debug("fileActionDialog openDeleteProgressDialog estimate total action " + action + " sourcePath " + sourcePath);
                 if (action == "delete") {
                     var jsonText = fsModel.getItemJson(sourcePath);
-                    console.debug("fileActionDialog openDeleteProgressDialog estimate total jsonText " + jsonText);
+//                    console.debug("fileActionDialog openDeleteProgressDialog estimate total jsonText " + jsonText);
                     var itemJson = Utility.createJsonObj(jsonText);
-                    console.debug("fileActionDialog openDeleteProgressDialog estimate total itemJson " + itemJson + " itemJson.sub_file_count " + itemJson.sub_file_count);
+//                    console.debug("fileActionDialog openDeleteProgressDialog estimate total itemJson " + itemJson + " itemJson.sub_file_count " + itemJson.sub_file_count);
                     totalFiles += itemJson.sub_file_count + ((itemJson.is_dir) ? 0 : 1);  // +1 for file.
-                    totalFolders += itemJson.sub_dir_count;
+                    totalFolders += itemJson.sub_dir_count + ((itemJson.is_dir) ? 1 : 0);  // +1 for folder.
                 }
             }
             console.debug("fileActionDialog openDeleteProgressDialog estimate totalFiles " + totalFiles + " totalFolders " + totalFolders);
-            if (totalFiles > 0) {
-                deleteProgressDialog.titleText = "Deleting";
+            if (totalFiles + totalFolders > 0) {
+                deleteProgressDialog.minCount = 0;
+                deleteProgressDialog.maxCount = 0;
+                deleteProgressDialog.count = 0;
                 deleteProgressDialog.min = 0;
-                deleteProgressDialog.max = totalFiles;
+                deleteProgressDialog.max = totalFiles + totalFolders;
                 deleteProgressDialog.value = 0;
+                deleteProgressDialog.titleText = "Deleting";
+                deleteProgressDialog.message = "";
                 deleteProgressDialog.open();
             }
         }
