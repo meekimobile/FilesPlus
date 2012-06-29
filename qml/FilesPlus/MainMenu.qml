@@ -105,13 +105,13 @@ Menu {
 
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
-            sortByMenuItem.visible = isEnabled(sortByMenuItem.text);
+            sortByMenuItem.visible = isEnabled(sortByMenuItem.text) && (folderPage.state == "list");
             settingMenuItem.visible = isEnabled(settingMenuItem.text);
-            newFolderMenuItem.visible = isEnabled(newFolderMenuItem.text);
-            pasteMenuItem.visible = isEnabled(pasteMenuItem.text) && (clipboard.count > 0);
-            clearClipboardMenuItem.visible = isEnabled(clearClipboardMenuItem.text) && (clipboard.count > 0);
-            markMenuItem.visible = isEnabled(markMenuItem.text) && (fsListView.state != "mark");
-            syncFolderMenuItem.visible = isEnabled(syncFolderMenuItem.text) && (!fsModel.isRoot());
+            newFolderMenuItem.visible = isEnabled(newFolderMenuItem.text) && (folderPage.state == "list");
+            pasteMenuItem.visible = isEnabled(pasteMenuItem.text) && (clipboard.count > 0) && (folderPage.state == "list");
+            clearClipboardMenuItem.visible = isEnabled(clearClipboardMenuItem.text) && (clipboard.count > 0) && (folderPage.state == "list");
+            markMenuItem.visible = isEnabled(markMenuItem.text) && (fsListView.state != "mark") && (folderPage.state == "list");
+            syncFolderMenuItem.visible = isEnabled(syncFolderMenuItem.text) && (!fsModel.isRoot()) && (folderPage.state == "list");
         }
     }
 }
