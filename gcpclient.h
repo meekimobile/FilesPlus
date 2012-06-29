@@ -76,6 +76,9 @@ private:
     QHash<QString, QString> m_printerHash;
     QHash<QString, QString> m_contentTypeHash;
 
+    QDateTime m_paramMapLastModified;
+    bool isParamMapChanged();
+
     void loadParamMap();
     void saveParamMap();
 };

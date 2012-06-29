@@ -31,11 +31,19 @@ GCPClient::GCPClient(QDeclarativeItem *parent) :
     m_contentTypeHash["png"] = "image/png";
     m_contentTypeHash["pdf"] = "application/pdf";
     m_contentTypeHash["txt"] = "text/plain";
+    m_contentTypeHash["log"] = "text/plain";
+    m_contentTypeHash["csv"] = "text/plain";
 }
 
 GCPClient::~GCPClient()
 {
     saveParamMap();
+}
+
+bool GCPClient::isParamMapChanged() {
+    QFileInfo fileInfo(KeyStoreFilePath);
+    qDebug() << "GCPClient::isParamMapChanged fileInfo.lastModified()" << fileInfo.lastModified().toString(Qt::ISODate) << "m_paramMapLastModified" << m_paramMapLastModified.toString(Qt::ISODate);
+    return (fileInfo.lastModified() != m_paramMapLastModified);
 }
 
 void GCPClient::loadParamMap() {
@@ -44,7 +52,11 @@ void GCPClient::loadParamMap() {
         QDataStream in(&file);    // read the data serialized from the file
         in >> m_paramMap;
 
-        qDebug() << QTime::currentTime() << "GCPClient::loadParamMap " << m_paramMap;
+        // Store file timestamp.
+        QFileInfo fileInfo(file);
+        m_paramMapLastModified = fileInfo.lastModified();
+
+        qDebug() << QTime::currentTime() << "GCPClient::loadParamMap " << m_paramMap << "timestamp" << m_paramMapLastModified.toString(Qt::ISODate);
     }
 }
 
@@ -321,6 +333,9 @@ void GCPClient::accountInfo()
 
 void GCPClient::search(QString q)
 {
+    // Check if token is changed, then reload.
+    if (isParamMapChanged()) loadParamMap();
+
     qDebug() << "----- GCPClient::search -----";
 
     QString uri = searchURI + "?q=" + q;
@@ -347,6 +362,9 @@ void GCPClient::search(QString q)
 
 void GCPClient::submit(QString printerId, QString title, QString capabilities, QString contentPath, QString contentType, QString tag)
 {
+    // Check if token is changed, then reload.
+    if (isParamMapChanged()) loadParamMap();
+
     qDebug() << "----- GCPClient::submit -----";
 
     QString uri = submitURI;
@@ -404,6 +422,9 @@ void GCPClient::submit(QString printerId, QString contentPath)
 
 void GCPClient::jobs(QString printerId)
 {
+    // Check if token is changed, then reload.
+    if (isParamMapChanged()) loadParamMap();
+
     qDebug() << "----- GCPClient::jobs -----";
 
     QString uri = jobsURI;
@@ -427,6 +448,9 @@ void GCPClient::jobs(QString printerId)
 
 void GCPClient::deletejob(QString jobId)
 {
+    // Check if token is changed, then reload.
+    if (isParamMapChanged()) loadParamMap();
+
     qDebug() << "----- GCPClient::deletejob -----";
 
     QString uri = deletejobURI + "?jobid=" + jobId;
@@ -471,6 +495,9 @@ void GCPClient::accessTokenReplyFinished(QNetworkReply *reply)
         QMap<QString, QString> map = createMapFromJson(replyBody);
         m_paramMap["access_token"] = map["access_token"];
         m_paramMap["refresh_token"] = map["refresh_token"];
+
+        // Save tokens.
+        saveParamMap();
     }
 
     emit accessTokenReplySignal(reply->error(), reply->errorString(), replyBody );
