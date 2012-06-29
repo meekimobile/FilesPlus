@@ -82,7 +82,7 @@ CommonDialog {
             width: parent.width            
             onValueChanged: {
                 if (formatValue) {
-                    progressText.text = Utility.formatFileSize(value,1) + " / " + Utility.formatFileSize(maximumValue,1);
+                    progressText.text = Utility.formatFileSize(value,3) + " / " + Utility.formatFileSize(maximumValue,3);
                 } else {
                     progressText.text = value + " / " + maximumValue;
                 }

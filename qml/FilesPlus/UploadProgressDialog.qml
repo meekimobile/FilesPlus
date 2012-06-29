@@ -26,13 +26,14 @@ CommonDialog {
             width: parent.width
             color: "white"
             wrapMode: Text.WordWrap
+            elide: Text.ElideMiddle
         }
         ProgressBar {
             id: uploadProgressBar
             width: parent.width
             
             onValueChanged: {
-                uploadProgressText.text = value + " / " + maximumValue;
+                uploadProgressText.text = Utility.formatFileSize(value,3) + " / " + Utility.formatFileSize(maximumValue,3);
                 if (uploadProgressDialog.autoClose && value == maximumValue) {
                     uploadProgressDialog.close();
                 } else if (value == maximumValue) {

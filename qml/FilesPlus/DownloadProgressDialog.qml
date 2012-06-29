@@ -26,13 +26,14 @@ CommonDialog {
             width: parent.width
             color: "white"
             wrapMode: Text.WordWrap
+            elide: Text.ElideMiddle
         }
         ProgressBar {
             id: downloadProgressBar
             width: parent.width
             
             onValueChanged: {
-                downloadProgressText.text = value + " / " + maximumValue;
+                downloadProgressText.text = Utility.formatFileSize(value,3) + " / " + Utility.formatFileSize(maximumValue,3);
                 if (downloadProgressDialog.autoClose && value == maximumValue) {
                     downloadProgressDialog.close();
                 } else if (value == maximumValue) {
