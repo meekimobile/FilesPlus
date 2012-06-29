@@ -381,6 +381,7 @@ Page {
             copyProgressDialog.lastValue = 0;
             copyProgressDialog.indeterminate = false;
             if (copyProgressDialog.status != DialogStatus.Open) {
+                copyProgressDialog.formatValue = true;
                 copyProgressDialog.open();
             }
         }
@@ -396,10 +397,12 @@ Page {
 
             // Show message if error.
             if (err < 0) {
-                messageDialog.titleText = "Copy/Move Error";
+                messageDialog.titleText = "Copy error";
                 messageDialog.message = msg;
                 messageDialog.autoClose = true;
                 messageDialog.open();
+
+                copyProgressDialog.message += "Copy " + sourcePath + " is failed.\n";
 
                 // TODO stop queued jobs
                 // TODO Reset popupToolPanel and clipboard ?
@@ -416,6 +419,7 @@ Page {
         onDeleteStarted: {
             console.debug("folderPage fsModel onDeleteStarted " + sourcePath);
             deleteProgressDialog.source = sourcePath;
+            deleteProgressDialog.indeterminate = false;
             if (deleteProgressDialog.status != DialogStatus.Open) {
                 deleteProgressDialog.titleText = "Deleting";
                 deleteProgressDialog.open();
@@ -1123,6 +1127,7 @@ Page {
                 copyProgressDialog.count = 0;
                 copyProgressDialog.indeterminate = true;
                 copyProgressDialog.autoClose = false;
+                copyProgressDialog.formatValue = true;
                 copyProgressDialog.titleText = fileActionDialog.titleText;
                 copyProgressDialog.open();
             }
@@ -1208,6 +1213,9 @@ Page {
                 // Open progress dialogs if it's related.
                 openCopyProgressDialog();
                 openDeleteProgressDialog();
+
+                // TODO openOverwriteDialog.
+                // It always replace existing names.
 
                 // TODO Copy/Move/Delete all files from clipboard.
                 // Action is {copy, cut, delete}

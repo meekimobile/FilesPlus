@@ -19,6 +19,7 @@ CommonDialog {
     property alias indeterminate: progressBar.indeterminate
     property bool autoClose: false
     property int autoCloseInterval: 3000
+    property bool formatValue: false
 
     signal opened()
     signal closed()
@@ -80,7 +81,11 @@ CommonDialog {
             id: progressBar
             width: parent.width            
             onValueChanged: {
-                progressText.text = value + " / " + maximumValue;
+                if (formatValue) {
+                    progressText.text = Utility.formatFileSize(value,1) + " / " + Utility.formatFileSize(maximumValue,1);
+                } else {
+                    progressText.text = value + " / " + maximumValue;
+                }
 
                 if (value >= maximumValue) {
                     console.debug("ProgressDialog progressBar onValueChanged " + value + " >= " +maximumValue);
@@ -113,7 +118,7 @@ CommonDialog {
         Text {
             id: message
             width: parent.width
-            color: "white"
+            color: "yellow"
             font.pointSize: 6
             wrapMode: Text.WordWrap
         }
@@ -141,6 +146,7 @@ CommonDialog {
             autoClose = false;
             message = "";
             indeterminate = false;
+            formatValue = false;
 
             closed();
         }
