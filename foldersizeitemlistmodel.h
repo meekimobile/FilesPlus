@@ -150,7 +150,7 @@ public slots:
     void loadDirSizeCacheFinishedFilter();
     void fetchDirSizeFinishedFilter();
     void copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes);
-    void deleteFinishedFilter(QString sourcePath, QString msg, int err);
+    void deleteFinishedFilter(int fileAction, QString sourcePath, QString msg, int err);
     void proceedNextJob();
     void jobDone();
 Q_SIGNALS:
@@ -161,8 +161,8 @@ Q_SIGNALS:
     void copyStarted(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes);
-    void deleteStarted(QString sourcePath);
-    void deleteFinished(QString sourcePath, QString msg, int err);
+    void deleteStarted(int fileAction, QString sourcePath);
+    void deleteFinished(int fileAction, QString sourcePath, QString msg, int err);
     void createFinished(QString targetPath);
     void fetchDirSizeStarted();
     void fetchDirSizeFinished();

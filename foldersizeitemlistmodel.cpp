@@ -38,8 +38,8 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)), this, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)) );
     connect(&m, SIGNAL(copyFinished(int,QString,QString,QString,int,qint64,qint64)), this, SLOT(copyFinishedFilter(int,QString,QString,QString,int,qint64,qint64)) );
     connect(&m, SIGNAL(fetchDirSizeUpdated(QString)), this, SIGNAL(fetchDirSizeUpdated(QString)) );
-    connect(&m, SIGNAL(deleteStarted(QString)), this, SIGNAL(deleteStarted(QString)) );
-    connect(&m, SIGNAL(deleteFinished(QString,QString,int)), this, SLOT(deleteFinishedFilter(QString,QString,int)) );
+    connect(&m, SIGNAL(deleteStarted(int,QString)), this, SIGNAL(deleteStarted(int,QString)) );
+    connect(&m, SIGNAL(deleteFinished(int,QString,QString,int)), this, SLOT(deleteFinishedFilter(int,QString,QString,int)) );
     connect(&m, SIGNAL(finished()), this, SLOT(jobDone()) );
 
 //    // Load cache
@@ -459,7 +459,7 @@ bool FolderSizeItemListModel::renameFile(const QString fileName, const QString n
     qDebug() << "FolderSizeItemListModel::renameFile res" << res << "fileName" << fileName << "newFileName" << newFileName;
     if (res) {
         // Emit signal to change CloudDriveItem.
-        emit deleteFinished(QDir::current().absoluteFilePath(fileName), "Deleting is triggered by rename.", 0);
+        emit deleteFinished(FolderSizeItemListModel::MoveFile, QDir::current().absoluteFilePath(fileName), "Deleting is triggered by rename.", 0);
         emit createFinished(QDir::current().absoluteFilePath(newFileName));
     }
 
@@ -708,7 +708,7 @@ void FolderSizeItemListModel::copyFinishedFilter(int fileAction, QString sourceP
     emit copyFinished(fileAction, sourcePath, targetPath, msg, err, bytes, totalBytes);
 }
 
-void FolderSizeItemListModel::deleteFinishedFilter(QString sourcePath, QString msg, int err)
+void FolderSizeItemListModel::deleteFinishedFilter(int fileAction, QString sourcePath, QString msg, int err)
 {    
 //    qDebug() << "FolderSizeItemListModel::deleteFinishedFilter" << sourcePath;
     // Remove item from ListView.
@@ -730,7 +730,7 @@ void FolderSizeItemListModel::deleteFinishedFilter(QString sourcePath, QString m
     removeCache(sourcePath);
 
     // Emit deleteFinished
-    emit deleteFinished(sourcePath, msg, err);
+    emit deleteFinished(fileAction, sourcePath, msg, err);
 
 //    qDebug() << "FolderSizeItemListModel::deleteFinishedFilter" << sourcePath << "is done.";
 }

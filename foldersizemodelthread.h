@@ -46,13 +46,7 @@ public:
     bool rollbackFlag() const;
     void setRollbackFlag(bool flag);
 
-    // Thread methods.
-    void fetchDirSize(const bool clearCache = false);
-    void loadDirSizeCache();
     void saveDirSizeCache();
-    bool copy(int method, const QString sourcePath, const QString targetPath);
-    bool copyFile(int method, const QString sourcePath, const QString targetPath);
-    bool deleteDir(const QString sourcePath);
 
     void getDirContent(const QString dirPath, QList<FolderSizeItem> &itemList);
     void sortItemList(QList<FolderSizeItem> &itemList);
@@ -73,12 +67,19 @@ signals:
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 bytesTotal);
     void fetchDirSizeUpdated(QString dirPath);
-    void deleteStarted(QString localPath);
-    void deleteFinished(QString localPath, QString msg, int err);
+    void deleteStarted(int fileAction, QString localPath);
+    void deleteFinished(int fileAction, QString localPath, QString msg, int err);
 private:
     FolderSizeItem getCachedDir(const QFileInfo dir, const bool clearCache = false);
     FolderSizeItem getFileItem(const QFileInfo fileInfo) const;
     FolderSizeItem getDirItem(const QFileInfo dirInfo) const;
+
+    // Thread methods.
+    void loadDirSizeCache();
+    void fetchDirSize(const bool clearCache = false);
+    bool copy(int method, const QString sourcePath, const QString targetPath);
+    bool copyFile(int method, const QString sourcePath, const QString targetPath);
+    bool deleteDir(const QString sourcePath);
 
     QHash<QString, FolderSizeItem> *dirSizeCache;
     QString m_currentDir;

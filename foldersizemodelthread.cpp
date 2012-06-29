@@ -117,6 +117,9 @@ bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QSt
         if (!targetFileInfo.exists()) {
             if (!targetFileInfo.dir().mkdir(targetFileInfo.fileName())) {
                 qDebug() << "FolderSizeModelThread::copy can't create folder" << targetFileInfo.absoluteFilePath() << "It already exists.";
+            } else {
+                // Create folder successfully, result = true;
+                res = true;
             }
         }
 
@@ -251,7 +254,7 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath)
 {
     qDebug() << "FolderSizeModelThread::deleteDir sourcePath" << sourcePath;
 
-    emit deleteStarted(sourcePath);
+    emit deleteStarted(m_runMethod, sourcePath);
 
     msleep(50);
 
@@ -279,17 +282,20 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath)
 
     if (!res) {
         qDebug() << "FolderSizeModelThread::deleteDir sourcePath" << sourcePath << "failed.";
-        emit deleteFinished(sourcePath, "Deleting " + sourcePath + " is failed.", -1);
+        emit deleteFinished(m_runMethod, sourcePath, "Deleting " + sourcePath + " is failed.", -1);
     } else {
         qDebug() << "FolderSizeModelThread::deleteDir sourcePath" << sourcePath << "done.";
-        emit deleteFinished(sourcePath, "Deleting " + sourcePath + " is done.", 0);
-
-        msleep(50);
+        emit deleteFinished(m_runMethod, sourcePath, "Deleting " + sourcePath + " is done.", 0);
 
         // Move to deleteFinishedFilter
 //        // Remove cache up to parent.
 //        removeDirSizeCache(sourcePath);
     }
+
+    // This sleep is a must.
+    // Sleep for process deleteFinished signal.
+    msleep(50);
+
     return res;
 }
 
