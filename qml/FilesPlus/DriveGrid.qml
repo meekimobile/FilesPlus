@@ -71,7 +71,9 @@ Rectangle {
             ]
 
             Row {
-                anchors.fill: parent
+//                anchors.fill: parent
+                width: parent.width
+                anchors.verticalCenter: parent.verticalCenter
                 spacing: 2
                 Image {
                     id: driveIcon

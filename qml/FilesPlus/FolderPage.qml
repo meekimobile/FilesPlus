@@ -101,8 +101,8 @@ Page {
 
         onQuit: {
             if (fsModel.isRunning()) {
-                messageDialog.titleText = "Notify";
-                messageDialog.message = "Reset Cache is running. Please wait until it's done.";
+                messageDialog.titleText = "Reset folder cache";
+                messageDialog.message = "Reset folder case is running. Please wait until it's done.";
                 messageDialog.open();
             } else {
                 Qt.quit();
@@ -1422,7 +1422,7 @@ Page {
                 Text {
                 id: content
                 color: "white"
-                font.pixelSize: 18
+//                font.pointSize: 6
                 wrapMode: Text.Wrap
                 width: parent.width - 20
                 height: implicitHeight

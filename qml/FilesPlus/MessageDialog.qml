@@ -14,9 +14,10 @@ CommonDialog {
     content: Text {
         id: contentText
         width: parent.width - 20
-        color: "white"
-        wrapMode: Text.WordWrap
         height: implicitHeight
+        color: "white"
+//        font.pointSize: 6
+        wrapMode: Text.WordWrap
         anchors.horizontalCenter: parent.horizontalCenter
     }
     
