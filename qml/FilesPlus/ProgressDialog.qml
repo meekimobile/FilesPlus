@@ -66,6 +66,7 @@ CommonDialog {
             color: "white"
             font.pointSize: 6
             wrapMode: Text.WordWrap
+            elide: Text.ElideMiddle
         }
         Text {
             id: target
@@ -73,6 +74,7 @@ CommonDialog {
             color: "white"
             font.pointSize: 6
             wrapMode: Text.WordWrap
+            elide: Text.ElideMiddle
         }
         ProgressBar {
             id: progressBar
