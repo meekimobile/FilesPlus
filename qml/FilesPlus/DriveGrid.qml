@@ -17,7 +17,7 @@ Rectangle {
         id: driveGrid
         anchors.fill: parent
         cellWidth: parent.width
-        cellHeight: 64
+        cellHeight: 70  // Hieght equals to list item.
         delegate: driveCell
         highlight: Rectangle {
             gradient: highlightGradient
