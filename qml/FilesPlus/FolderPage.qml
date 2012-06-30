@@ -312,6 +312,10 @@ Page {
         cloudDriveModel.syncItems();
     }
 
+    function requestJobQueueStatusSlot() {
+        cloudDriveModel.requestJobQueueStatus();
+    }
+
     FolderSizeItemListModel {
         id: fsModel
         currentDir: "C:/"

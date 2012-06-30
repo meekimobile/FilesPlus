@@ -403,6 +403,11 @@ int CloudDriveModel::removeUid(CloudDriveModel::ClientTypes type, QString uid)
     return -1;
 }
 
+void CloudDriveModel::requestJobQueueStatus()
+{
+    emit jobQueueStatusSignal(runningJobCount, m_jobQueue.count(), m_cloudDriveItems.count());
+}
+
 void CloudDriveModel::cleanItems()
 {
     foreach (CloudDriveItem item, m_cloudDriveItems.values()) {
