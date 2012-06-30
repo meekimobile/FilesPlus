@@ -170,6 +170,14 @@ Page {
         function getViewFilePath() {
             var i = imageGrid.getViewIndex();
             if (i > -1) {
+                return imageGrid.model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole);
+            }
+            return "";
+        }
+
+        function getViewFileName() {
+            var i = imageGrid.getViewIndex();
+            if (i > -1) {
                 return imageGrid.model.getProperty(i, FolderSizeItemListModel.NameRole);
             }
             return "";
@@ -216,7 +224,7 @@ Page {
 //            console.debug("imageGrid onMovementEnded currentIndex " + currentIndex);
 //            console.debug("imageGrid onMovementEnded currentItem.width " + currentItem.width + " currentItem.height " + currentItem.height);
 //            console.debug("imageGrid onMovementEnded currentItem.sourceSize.width " + currentItem.sourceSize.width + " currentItem.sourceSize.height " + currentItem.sourceSize.height);
-            imageLabelText.text = getViewFilePath();
+            imageLabelText.text = getViewFileName();
         }
 
         onFlickEnded: {
@@ -225,7 +233,7 @@ Page {
 //            console.debug("imageGrid onFlickEnded currentIndex " + currentIndex);
 //            console.debug("imageGrid onFlickEnded currentItem.width " + currentItem.width + " currentItem.height " + currentItem.height);
 //            console.debug("imageGrid onFlickEnded currentItem.sourceSize.width " + currentItem.sourceSize.width + " currentItem.sourceSize.height " + currentItem.sourceSize.height);
-            imageLabelText.text = getViewFilePath();
+            imageLabelText.text = getViewFileName();
         }
     }
 
