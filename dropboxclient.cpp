@@ -20,8 +20,11 @@ const QString DropboxClient::accessTokenURI = "https://api.dropbox.com/1/oauth/a
 const QString DropboxClient::accountInfoURI = "https://api.dropbox.com/1/account/info";
 const QString DropboxClient::fileGetURI = "https://api-content.dropbox.com/1/files/%1%2";
 const QString DropboxClient::filePutURI = "https://api-content.dropbox.com/1/files_put/%1%2"; // Parameter if any needs to be appended here. ?param=val
-const QString DropboxClient::createFolderURI = "https://api.dropbox.com/1/fileops/create_folder";
 const QString DropboxClient::metadataURI = "https://api.dropbox.com/1/metadata/%1%2";
+const QString DropboxClient::createFolderURI = "https://api.dropbox.com/1/fileops/create_folder";
+const QString DropboxClient::moveFileURI = "https://api.dropbox.com/1/fileops/move";
+const QString DropboxClient::copyFileURI = "https://api.dropbox.com/1/fileops/copy";
+const QString DropboxClient::deleteFileURI = "https://api.dropbox.com/1/fileops/delete";
 
 DropboxClient::DropboxClient(QDeclarativeItem *parent) :
     QObject(parent)
@@ -452,6 +455,101 @@ void DropboxClient::createFolder(QString nonce, QString uid, QString localFilePa
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
+void DropboxClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
+{
+    qDebug() << "----- DropboxClient::moveFile -----";
+
+    QString uri = moveFileURI;
+    qDebug() << "DropboxClient::moveFile uri " << uri;
+
+    // Construct normalized query string.
+    QMap<QString, QString> sortMap;
+    sortMap["root"] = dropboxRoot;
+    sortMap["from_path"] = remoteFilePath;
+    sortMap["to_path"] = newRemoteFilePath;
+    QString queryString = createNormalizedQueryString(sortMap);
+    qDebug() << "queryString " << queryString;
+
+    QByteArray postData;
+    postData.append(queryString);
+    qDebug() << "postData" << postData;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)) );
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "POST", uri, sortMap));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    QNetworkReply *reply = manager->post(req, postData);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+}
+
+void DropboxClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
+{
+    qDebug() << "----- DropboxClient::copyFile -----";
+
+    QString uri = copyFileURI;
+    qDebug() << "DropboxClient::copyFile uri " << uri;
+
+    // Construct normalized query string.
+    QMap<QString, QString> sortMap;
+    sortMap["root"] = dropboxRoot;
+    sortMap["from_path"] = remoteFilePath;
+    sortMap["to_path"] = newRemoteFilePath;
+    QString queryString = createNormalizedQueryString(sortMap);
+    qDebug() << "queryString " << queryString;
+
+    QByteArray postData;
+    postData.append(queryString);
+    qDebug() << "postData" << postData;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(copyFileReplyFinished(QNetworkReply*)) );
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "POST", uri, sortMap));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    QNetworkReply *reply = manager->post(req, postData);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+}
+
+void DropboxClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
+{
+    qDebug() << "----- DropboxClient::deleteFile -----";
+
+    QString uri = deleteFileURI;
+    qDebug() << "DropboxClient::deleteFile uri " << uri;
+
+    // Construct normalized query string.
+    QMap<QString, QString> sortMap;
+    sortMap["root"] = dropboxRoot;
+    sortMap["path"] = remoteFilePath;
+    QString queryString = createNormalizedQueryString(sortMap);
+    qDebug() << "queryString " << queryString;
+
+    QByteArray postData;
+    postData.append(queryString);
+    qDebug() << "postData" << postData;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deleteFileReplyFinished(QNetworkReply*)) );
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "POST", uri, sortMap));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    QNetworkReply *reply = manager->post(req, postData);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+}
+
 void DropboxClient::requestTokenReplyFinished(QNetworkReply *reply)
 {
     qDebug() << "DropboxClient::requestTokenReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
@@ -626,6 +724,45 @@ void DropboxClient::createFolderReplyFinished(QNetworkReply *reply)
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
     emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void DropboxClient::moveFileReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "DropboxClient::moveFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void DropboxClient::copyFileReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "DropboxClient::copyFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void DropboxClient::deleteFileReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "DropboxClient::deleteFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 
     // TODO scheduled to delete later.
     reply->deleteLater();

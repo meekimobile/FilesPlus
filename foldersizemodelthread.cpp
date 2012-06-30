@@ -142,6 +142,13 @@ bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QSt
         // Emit signal as dir copying is finished.
         if (res) {
             qDebug() << "FolderSizeModelThread::copy method" << method << "sourceFile" << sourcePath << "targetFile" << targetPath << "is done.";
+
+            // TODO Copy cache for targetPath.
+            FolderSizeItem cachedItem = getCachedDir(sourceFileInfo);
+            cachedItem.name = targetFileInfo.fileName();
+            cachedItem.absolutePath = targetFileInfo.absoluteFilePath();
+            dirSizeCache->insert(targetPath, cachedItem);
+
             emit copyFinished(method, sourcePath, targetPath, "Copy " + sourcePath + " to " + targetPath + " is done successfully.", 0, 0, itemSize);
         } else {
             qDebug() << "FolderSizeModelThread::copy method" << method << "sourceFile" << sourcePath << "targetFile" << targetPath << "is failed. err = -1";

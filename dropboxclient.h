@@ -21,8 +21,11 @@ public:
     static const QString accountInfoURI;
     static const QString fileGetURI;
     static const QString filePutURI;
-    static const QString createFolderURI;
     static const QString metadataURI;
+    static const QString createFolderURI;
+    static const QString moveFileURI;
+    static const QString copyFileURI;
+    static const QString deleteFileURI;
 
     explicit DropboxClient(QDeclarativeItem *parent = 0);
     ~DropboxClient();
@@ -51,6 +54,9 @@ public:
     Q_INVOKABLE QString getDefaultRemoteFilePath(const QString &localFilePath);
     Q_INVOKABLE void metadata(QString nonce, QString uid, QString remoteFilePath);
     Q_INVOKABLE void createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
+    Q_INVOKABLE void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
+    Q_INVOKABLE void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
+    Q_INVOKABLE void deleteFile(QString nonce, QString uid, QString remoteFilePath);
 signals:
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectForm);
@@ -60,11 +66,15 @@ signals:
     void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void createFolderReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
+
+    void createFolderReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void moveFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void copyFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void deleteFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
 public slots:
     void requestTokenReplyFinished(QNetworkReply *reply);
     void accessTokenReplyFinished(QNetworkReply *reply);
@@ -73,7 +83,11 @@ public slots:
     void fileGetReplyFinished(QNetworkReply *reply);
     void filePutReplyFinished(QNetworkReply *reply);
     void metadataReplyFinished(QNetworkReply *reply);
+
     void createFolderReplyFinished(QNetworkReply *reply);
+    void moveFileReplyFinished(QNetworkReply *reply);
+    void copyFileReplyFinished(QNetworkReply *reply);
+    void deleteFileReplyFinished(QNetworkReply *reply);
 private:
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;

@@ -397,6 +397,8 @@ Page {
 
                 copyProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " failed.\n";
 
+                // TODO Connect to cloud if copied/moved file/folder is in connected folder.
+
                 // TODO stop queued jobs
                 // TODO Reset popupToolPanel and clipboard ?
             } else {
@@ -430,11 +432,23 @@ Page {
                 deleteProgressDialog.message = sourcePath + " is deleted.";
             }
 
-            // Reset cloudDriveModel hash on parent.
+            // Delete file from clouds.
+            if (err == 0 && cloudDriveModel.isConnected(sourcePath)) {
+                var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
+                for (var i=0; i<json.length; i++) {
+                    switch (json[i].type) {
+                    case CloudDriveModel.Dropbox:
+                        cloudDriveModel.deleteFile(CloudDriveModel.Dropbox, json[i].uid, json[i].local_path, json[i].remote_path);
+                        break;
+                    }
+                }
+            }
+
+            // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
             var paths = fsModel.getPathToRoot(sourcePath);
-            for (var i=0; i<paths.length; i++) {
+            for (var i=1; i<paths.length; i++) {
 //                console.debug("folderPage fsModel onDeleteFinished updateItems paths[" + i + "] " + paths[i]);
-                cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], cloudDriveModel.dirtyHash);
+                cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
             }
         }
 
@@ -445,10 +459,28 @@ Page {
             var paths = fsModel.getPathToRoot(targetPath);
             for (var i=0; i<paths.length; i++) {
                 console.debug("folderPage fsModel onCreateFinished updateItems paths[" + i + "] " + paths[i]);
-                cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], cloudDriveModel.dirtyHash);
+                cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
             }
 
             // TODO request cloudDriveModel.createFolder
+        }
+
+        onRenameFinished: {
+            console.debug("folderPage fsModel onRenameFinished sourcePath " + sourcePath + " targetPath " + targetPath + " err " + err + " msg " + msg);
+
+            // Rename file on clouds.
+            if (err == 0 && cloudDriveModel.isConnected(sourcePath)) {
+//                console.debug("folderPage fsModel onRenameFinished itemList " + cloudDriveModel.getItemListJson(sourcePath));
+                var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
+                for (var i=0; i<json.length; i++) {
+                    switch (json[i].type) {
+                    case CloudDriveModel.Dropbox:
+                        console.debug("folderPage fsModel onRenameFinished item " + json[i].type + " " + json[i].uid + " " + json[i].local_path + " " + json[i].remote_path);
+                        cloudDriveModel.moveFile(CloudDriveModel.Dropbox, json[i].uid, sourcePath, json[i].remote_path, targetPath, cloudDriveModel.getDefaultRemoteFilePath(targetPath));
+                        break;
+                    }
+                }
+            }
         }
 
         onFetchDirSizeUpdated: {
@@ -2052,7 +2084,7 @@ Page {
             var paths = fsModel.getPathToRoot(localPath);
             for (var i=0; i<paths.length; i++) {
                 console.debug("folderPage cloudDriveModel onLocalChangedSignal updateItems paths[" + i + "] " + paths[i]);
-                cloudDriveModel.updateItems(CloudDriveModel.Dropbox, paths[i], cloudDriveModel.dirtyHash);
+                cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
             }
         }
 
@@ -2061,6 +2093,75 @@ Page {
             var p = pageStack.find(function (page) { return (page.name == "settingPage"); });
             if (p) {
                 p.updateJobQueueCount(runningJobCount, jobQueueCount);
+            }
+        }
+
+        onMoveFileReplySignal: {
+            console.debug("folderPage cloudDriveModel onMoveFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
+
+            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+
+            console.debug("folderPage cloudDriveModel onMoveFileReplySignal jobJson " + cloudDriveModel.getJobJson(nonce));
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+
+            if (err == 0) {
+                var msgJson = Utility.createJsonObj(msg);
+                if (msgJson.is_dir) {
+                    // Connect folder to cloud.
+                    switch (jobJson.type) {
+                    case CloudDriveModel.Dropbox:
+                        cloudDriveModel.removeItem(CloudDriveModel.Dropbox, jobJson.uid, jobJson.local_file_path);
+                        cloudDriveModel.addItem(CloudDriveModel.Dropbox, jobJson.uid, jobJson.new_local_file_path, jobJson.new_remote_file_path, msgJson.hash);
+                        for (var i=0; i<msgJson.contents.length; i++) {
+                            var contentJson = msgJson.contents[i];
+                            if (contentJson.is_dir) {
+                                // TODO connect its sub files/folders.
+                                cloudDriveModel.addItem(CloudDriveModel.Dropbox, jobJson.uid, cloudDriveModel.getDefaultLocalFilePath(contentJson.path), contentJson.path, contentJson.rev);
+                            } else {
+                                cloudDriveModel.addItem(CloudDriveModel.Dropbox, jobJson.uid, cloudDriveModel.getDefaultLocalFilePath(contentJson.path), contentJson.path, contentJson.rev);
+                            }
+                        }
+                        break;
+                    }
+                } else {
+                    // Connect file to cloud.
+                    switch (json.type) {
+                    case CloudDriveModel.Dropbox:
+                        cloudDriveModel.removeItem(CloudDriveModel.Dropbox, jobJson.uid, jobJson.local_file_path);
+                        cloudDriveModel.addItem(CloudDriveModel.Dropbox, jobJson.uid, jobJson.new_local_file_path, jobJson.new_remote_file_path, msgJson.rev);
+                        break;
+                    }
+                }
+            } else {
+                messageDialog.titleText = getCloudName(json.type) + " Move";
+                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.autoClose = true;
+                messageDialog.open();
+            }
+
+            // Update ProgressBar on listItem.
+            // TODO also show running on its parents.
+            fsModel.setProperty(jobJson.new_local_file_path, FolderSizeItemListModel.IsRunningRole, false);
+            fsModel.refreshItem(jobJson.new_local_file_path);
+        }
+
+        onDeleteFileReplySignal: {
+            console.debug("folderPage cloudDriveModel onDeleteFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
+
+            var json = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+
+            if (err == 0) {
+                // do nothing.
+            } else {
+                messageDialog.titleText = getCloudName(json.type) + " Delete";
+                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.autoClose = true;
+                messageDialog.open();
             }
         }
     }

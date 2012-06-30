@@ -456,21 +456,19 @@ bool FolderSizeItemListModel::renameFile(const QString fileName, const QString n
     int res = false;
     if (sourceFileInfo.isFile()) {
         res = QFile::rename(fileName, newFileName);
-        qDebug() << "FolderSizeItemListModel::renameFile res" << res << "fileName" << fileName << "newFileName" << newFileName;
-        if (res) {
-            // Emit signal to change CloudDriveItem.
-            emit deleteFinished(FolderSizeItemListModel::MoveFile, QDir::current().absoluteFilePath(fileName), "Deleting is triggered by rename.", 0);
-            emit createFinished(QDir::current().absoluteFilePath(newFileName));
-        }
     } else {
-//        QDir(sourceFileInfo.absoluteFilePath()).rename();
         res = QDir::current().rename(fileName, newFileName);
-        qDebug() << "FolderSizeItemListModel::renameFile res" << res << "fileName" << fileName << "newFileName" << newFileName;
-        if (res) {
-            // Emit signal to change CloudDriveItem.
-            emit deleteFinished(FolderSizeItemListModel::MoveFile, QDir::current().absoluteFilePath(fileName), "Deleting is triggered by rename.", 0);
-            emit createFinished(QDir::current().absoluteFilePath(newFileName));
-        }
+    }
+
+    qDebug() << "FolderSizeItemListModel::renameFile res" << res << "fileName" << fileName << "newFileName" << newFileName;
+    if (res) {
+        // TODO Move cache and its sub items cache to new names.
+
+        // Emit signal to change CloudDriveItem.
+        emit renameFinished( QDir::current().absoluteFilePath(fileName), QDir::current().absoluteFilePath(newFileName), "Rename " + fileName + " to " + newFileName + " done.", 0);
+    } else {
+        // Emit signal to change CloudDriveItem.
+        emit renameFinished( QDir::current().absoluteFilePath(fileName), QDir::current().absoluteFilePath(newFileName), "Rename " + fileName + " to " + newFileName + " failed.", -1);
     }
 
     return res;
@@ -650,7 +648,7 @@ int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
 
 void FolderSizeItemListModel::removeCache(const QString absPath)
 {
-    // Remove cache up to root by ustilizing cache in getPathToRoot().
+    // Remove cache up to root by utilizing cache in getPathToRoot().
     foreach (QString path, getPathToRoot(absPath)) {
         m.removeDirSizeCache(path);
     }

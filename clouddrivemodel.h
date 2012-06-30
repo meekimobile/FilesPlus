@@ -47,7 +47,10 @@ public:
         RequestToken,
         Authorize,
         AccessToken,
-        AccountInfo
+        AccountInfo,
+        DeleteFile,
+        MoveFile,
+        CopyFile
     };
 
     explicit CloudDriveModel(QDeclarativeItem *parent = 0);
@@ -73,7 +76,9 @@ public:
     Q_INVOKABLE void cancelQueuedJobs();
     Q_INVOKABLE void addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash, bool addOnly = false);
     Q_INVOKABLE void removeItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
-    Q_INVOKABLE void updateItems(CloudDriveModel::ClientTypes type, QString localPath, QString hash);
+    Q_INVOKABLE void removeItems(QString localPath);
+    Q_INVOKABLE void updateItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString hash);
+    Q_INVOKABLE void updateItems(QString localPath, QString hash);
     Q_INVOKABLE int getItemCount() const;
     Q_INVOKABLE QString getItemHash(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE QString getItemRemotePath(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
@@ -100,6 +105,9 @@ public:
     Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
     Q_INVOKABLE void syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex, bool forcePut = false);
     Q_INVOKABLE void createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex);
+    Q_INVOKABLE void moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath);
+    Q_INVOKABLE void copyFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath);
+    Q_INVOKABLE void deleteFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void proceedNextJobSignal();
@@ -114,9 +122,12 @@ signals:
     void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void createFolderReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
+    void createFolderReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void moveFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void copyFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void deleteFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
 public slots:
     void proceedNextJob();
 
@@ -129,9 +140,12 @@ public slots:
     void fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplyFilter(QString nonce, int err, QString errMsg, QString msg);
-    void createFolderReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void uploadProgressFilter(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgressFilter(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
+    void createFolderReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void moveFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void copyFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void deleteFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
 private:
     QMultiMap<QString, CloudDriveItem> m_cloudDriveItems;
     QHash<QString, CloudDriveJob> m_cloudDriveJobs;

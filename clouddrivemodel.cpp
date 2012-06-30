@@ -78,6 +78,9 @@ void CloudDriveModel::initializeDropboxClient() {
     connect(dbClient, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SLOT(filePutReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(createFolderReplySignal(QString,int,QString,QString)), SLOT(createFolderReplyFilter(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(moveFileReplySignal(QString,int,QString,QString)), SLOT(moveFileReplyFilter(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
 }
 
 //void CloudDriveModel::initializeGCDClient() {
@@ -251,10 +254,29 @@ void CloudDriveModel::removeItem(CloudDriveModel::ClientTypes type, QString uid,
 {
     CloudDriveItem item =  getItem(localPath, type, uid);
     int removeCount = m_cloudDriveItems.remove(localPath, item);
-    qDebug() << "CloudDriveModel::remoteItem item" << item << "removeCount" << removeCount;
+    qDebug() << "CloudDriveModel::removeItem item" << item << "removeCount" << removeCount;
 }
 
-void CloudDriveModel::updateItems(CloudDriveModel::ClientTypes type, QString localPath, QString hash)
+void CloudDriveModel::removeItems(QString localPath)
+{
+    QList<CloudDriveItem> items = getItemList(localPath);
+    foreach (CloudDriveItem item, items) {
+        m_cloudDriveItems.remove(item.localPath, item);
+    }
+
+    if (getItemList(localPath).isEmpty()) {
+        qDebug() << "CloudDriveModel::removeItems items" << getItemList(localPath);
+    }
+}
+
+void CloudDriveModel::updateItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString hash)
+{
+    CloudDriveItem item = getItem(localPath, type, uid);
+    item.hash = hash;
+    m_cloudDriveItems.replace(item.localPath, item);
+}
+
+void CloudDriveModel::updateItems(QString localPath, QString hash)
 {
     QList<CloudDriveItem> items = getItemList(localPath);
     foreach (CloudDriveItem item, items) {
@@ -600,6 +622,57 @@ void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString ui
     emit proceedNextJobSignal();
 }
 
+void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), MoveFile, type, uid, localFilePath, remoteFilePath, newLocalFilePath, newRemoteFilePath, -1);
+    job.isRunning = true;
+    m_cloudDriveJobs[job.jobId] = job;
+    m_jobQueue.enqueue(job.jobId);
+
+    // Add item with dirtyHash to avoid duplicate sync job.
+    // TODO handle other clouds.
+    if (job.type == Dropbox) {
+        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+    }
+
+    emit proceedNextJobSignal();
+}
+
+void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), CopyFile, type, uid, localFilePath, remoteFilePath, newLocalFilePath, newRemoteFilePath, -1);
+    job.isRunning = true;
+    m_cloudDriveJobs[job.jobId] = job;
+    m_jobQueue.enqueue(job.jobId);
+
+    // Add item with dirtyHash to avoid duplicate sync job.
+    // TODO handle other clouds.
+    if (job.type == Dropbox) {
+        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+    }
+
+    emit proceedNextJobSignal();
+}
+
+void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), DeleteFile, type, uid, localFilePath, remoteFilePath, -1);
+    job.isRunning = true;
+    m_cloudDriveJobs[job.jobId] = job;
+    m_jobQueue.enqueue(job.jobId);
+
+    // Add item with dirtyHash to avoid duplicate sync job.
+    // TODO handle other clouds.
+    if (job.type == Dropbox) {
+        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+    }
+
+    emit proceedNextJobSignal();
+}
+
 void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs[nonce];
@@ -698,7 +771,10 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
         if (job.type == Dropbox) {
             addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
         }
-    } else if (err == -1) {
+    } else if (err == 202) {
+        // Forbidden {"error": " at path 'The folder '???' already exists.'"}
+        // Do nothing.
+    } else {
         // Remove failed item.
         if (job.type == Dropbox) {
             removeItem(Dropbox, job.uid, job.localFilePath);
@@ -713,6 +789,101 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
     jobDone();
 
     emit createFolderReplySignal(nonce, err, errMsg, msg);
+}
+
+void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    CloudDriveJob job = m_cloudDriveJobs[nonce];
+
+    if (err == 0) {
+        // TODO generalize to support other clouds.
+        QScriptEngine engine;
+        QScriptValue sc;
+        sc = engine.evaluate("(" + msg + ")");
+        QString hash = sc.property("rev").toString();
+
+
+        // TODO Disconnect original item from clouds.
+        // TODO Connect moved item to clouds.
+
+//        // TODO handle other clouds.
+//        // Connect moved local path with new remote path.
+//        if (job.type == Dropbox) {
+//            addItem(Dropbox, job.uid, job.localFilePath, job.newRemoteFilePath, hash);
+//        }
+
+        // Disconnect original local path.
+        if (job.type == Dropbox) {
+            removeItem(Dropbox, job.uid, job.localFilePath);
+        }
+    }
+
+    // Stop running.
+    job.isRunning = false;
+    m_cloudDriveJobs[nonce] = job;
+
+    // Notify job done.
+    jobDone();
+
+    emit moveFileReplySignal(nonce, err, errMsg, msg);
+}
+
+void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    CloudDriveJob job = m_cloudDriveJobs[nonce];
+
+    if (err == 0) {
+        // TODO generalize to support other clouds.
+        QScriptEngine engine;
+        QScriptValue sc;
+        sc = engine.evaluate("(" + msg + ")");
+        QString hash = sc.property("rev").toString();
+
+//        // TODO handle other clouds.
+//        // Connect copied local path with new remote path.
+//        if (job.type == Dropbox) {
+//            addItem(Dropbox, job.uid, job.localFilePath, job.newRemoteFilePath, hash);
+//        }
+    }
+
+    // Stop running.
+    job.isRunning = false;
+    m_cloudDriveJobs[nonce] = job;
+
+    // Notify job done.
+    jobDone();
+
+    emit copyFileReplySignal(nonce, err, errMsg, msg);
+}
+
+void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    CloudDriveJob job = m_cloudDriveJobs[nonce];
+
+    if (err == 0) {
+        // TODO handle other clouds.
+        // Disconnect deleted local path.
+        if (job.type == Dropbox) {
+            removeItem(Dropbox, job.uid, job.localFilePath);
+        }
+    } else if (err == 203) {
+        // Not Found {"error": "Path '???' not found"}
+
+        // TODO handle other clouds.
+        // Disconnect deleted local path.
+        if (job.type == Dropbox) {
+            removeItem(Dropbox, job.uid, job.localFilePath);
+        }
+    }
+
+    // Stop running.
+    job.isRunning = false;
+    m_cloudDriveJobs[nonce] = job;
+
+    // Notify job done.
+    jobDone();
+
+    emit deleteFileReplySignal(nonce, err, errMsg, msg);
 }
 
 void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint64 bytesTotal)
@@ -793,13 +964,6 @@ void CloudDriveModel::proceedNextJob() {
             break;
         }
         break;
-    case CreateFolder:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
-            break;
-        }
-        break;
     case RequestToken:
         switch (job.type) {
         case Dropbox:
@@ -825,6 +989,34 @@ void CloudDriveModel::proceedNextJob() {
         switch (job.type) {
         case Dropbox:
             dbClient->accountInfo(job.jobId, job.uid);
+            break;
+        }
+        break;
+    case CreateFolder:
+        switch (job.type) {
+        case Dropbox:
+            dbClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
+            break;
+        }
+        break;
+    case MoveFile:
+        switch (job.type) {
+        case Dropbox:
+            dbClient->moveFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
+            break;
+        }
+        break;
+    case CopyFile:
+        switch (job.type) {
+        case Dropbox:
+            dbClient->copyFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
+            break;
+        }
+        break;
+    case DeleteFile:
+        switch (job.type) {
+        case Dropbox:
+            dbClient->deleteFile(job.jobId, job.uid, job.remoteFilePath);
             break;
         }
         break;
