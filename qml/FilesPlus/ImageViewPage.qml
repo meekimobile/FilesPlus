@@ -316,52 +316,52 @@ Page {
                 }
             }
 
-            PinchArea {
-                anchors.fill: parent
-                pinch.dragAxis: Pinch.XandYAxis
+//            PinchArea {
+//                anchors.fill: parent
+//                pinch.dragAxis: Pinch.XandYAxis
 
-                onPinchStarted: {
-                    console.debug("imageView onPinchStarted imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
+//                onPinchStarted: {
+//                    console.debug("imageView onPinchStarted imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
 
-                    // TODO pinch cell image until finish, then show flick.
+//                    // TODO pinch cell image until finish, then show flick.
 
-                    // Send center, painted size to flick.
-                    var left = (imageView.width / 2) - (imageView.paintedWidth / 2);
-                    var right = (imageView.width / 2) + (imageView.paintedWidth / 2);
-                    var top = (imageView.height / 2) - (imageView.paintedHeight / 2);
-                    var bottom = (imageView.height / 2) + (imageView.paintedHeight / 2);
-                    imageFlick.gridMouseX = (imageView.width / 2) - left;
-                    imageFlick.gridMouseY = (imageView.height / 2) - top;
-                    imageFlick.gridPaintedWidth = imageView.paintedWidth;
-                    imageFlick.gridPaintedHeight = imageView.paintedHeight;
-                    imageViewPage.state = "flick";
-                }
+//                    // Send center, painted size to flick.
+//                    var left = (imageView.width / 2) - (imageView.paintedWidth / 2);
+//                    var right = (imageView.width / 2) + (imageView.paintedWidth / 2);
+//                    var top = (imageView.height / 2) - (imageView.paintedHeight / 2);
+//                    var bottom = (imageView.height / 2) + (imageView.paintedHeight / 2);
+//                    imageFlick.gridMouseX = (imageView.width / 2) - left;
+//                    imageFlick.gridMouseY = (imageView.height / 2) - top;
+//                    imageFlick.gridPaintedWidth = imageView.paintedWidth;
+//                    imageFlick.gridPaintedHeight = imageView.paintedHeight;
+//                    imageViewPage.state = "flick";
+//                }
 
-                MouseArea {
-                    anchors.fill: parent
+//                MouseArea {
+//                    anchors.fill: parent
 
-//                    onClicked: {
-//                        console.debug("imageView onClicked mouseX " + mouseX + " mouseY " + mouseY)
-//                        clickDelayTimer.restart();
+////                    onClicked: {
+////                        console.debug("imageView onClicked mouseX " + mouseX + " mouseY " + mouseY)
+////                        clickDelayTimer.restart();
+////                    }
+
+//                    onDoubleClicked: {
+//                        console.debug("imageView onDoubleClicked mouseX " + mouseX + " mouseY " + mouseY)
+//                        clickDelayTimer.stop();
+
+//                        // TODO Send relative mouseX, mouseY, painted size to flick.
+//                        var left = (imageView.width / 2) - (imageView.paintedWidth / 2);
+//                        var right = (imageView.width / 2) + (imageView.paintedWidth / 2);
+//                        var top = (imageView.height / 2) - (imageView.paintedHeight / 2);
+//                        var bottom = (imageView.height / 2) + (imageView.paintedHeight / 2);
+//                        imageFlick.gridMouseX = mouseX - left;
+//                        imageFlick.gridMouseY = mouseY - top;
+//                        imageFlick.gridPaintedWidth = imageView.paintedWidth;
+//                        imageFlick.gridPaintedHeight = imageView.paintedHeight;
+//                        imageViewPage.state = "actual";
 //                    }
-
-                    onDoubleClicked: {
-                        console.debug("imageView onDoubleClicked mouseX " + mouseX + " mouseY " + mouseY)
-                        clickDelayTimer.stop();
-
-                        // TODO Send relative mouseX, mouseY, painted size to flick.
-                        var left = (imageView.width / 2) - (imageView.paintedWidth / 2);
-                        var right = (imageView.width / 2) + (imageView.paintedWidth / 2);
-                        var top = (imageView.height / 2) - (imageView.paintedHeight / 2);
-                        var bottom = (imageView.height / 2) + (imageView.paintedHeight / 2);
-                        imageFlick.gridMouseX = mouseX - left;
-                        imageFlick.gridMouseY = mouseY - top;
-                        imageFlick.gridPaintedWidth = imageView.paintedWidth;
-                        imageFlick.gridPaintedHeight = imageView.paintedHeight;
-                        imageViewPage.state = "actual";
-                    }
-                }
-            }
+//                }
+//            }
         }
     }
 
