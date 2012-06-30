@@ -25,10 +25,10 @@ Page {
         }
     }
 
-    Component.onCompleted: {
-        var i = getIndexByName("syncAllConnectedItem");
-        if (i > -1 && settingPage.cloudDriveItemCount > 0) {
-            settingModel.set(i, { title: "Sync all connected items (" + settingPage.cloudDriveItemCount + ")" });
+    function updateCloudDriveItemCount(cloudDriveItemCount) {
+        var i = getIndexByName("syncAllConnectedItems");
+        if (i > -1) {
+            settingModel.set(i, { title: "Sync all connected items (" + cloudDriveItemCount + ")" });
         }
     }
 

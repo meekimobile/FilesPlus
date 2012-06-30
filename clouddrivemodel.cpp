@@ -914,9 +914,9 @@ void CloudDriveModel::jobDone() {
     runningJobCount--;
     mutex.unlock();
 
-    qDebug() << "CloudDriveModel::jobDone runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue.count() << "m_cloudDriveJobs" << m_cloudDriveJobs.count();
+    qDebug() << "CloudDriveModel::jobDone runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue.count() << "m_cloudDriveJobs" << m_cloudDriveJobs.count() << "m_cloudDriveItems" << m_cloudDriveItems.count();
 
-    emit jobQueueStatusSignal(runningJobCount, m_jobQueue.count());
+    emit jobQueueStatusSignal(runningJobCount, m_jobQueue.count(), m_cloudDriveItems.count());
     emit proceedNextJobSignal();
 }
 
