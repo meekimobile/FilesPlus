@@ -129,9 +129,12 @@ Page {
 
         Text {
             id: imageLabelText
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.fill: parent
+            anchors.margins: 5
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
             color: "white"
+            elide: Text.ElideMiddle
         }
     }
 
@@ -167,7 +170,7 @@ Page {
         function getViewFilePath() {
             var i = imageGrid.getViewIndex();
             if (i > -1) {
-                return imageGrid.model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole);
+                return imageGrid.model.getProperty(i, FolderSizeItemListModel.NameRole);
             }
             return "";
         }
@@ -194,6 +197,7 @@ Page {
             console.debug("imageGrid onModelChanged count " + model.count + " imageViewPage.fileName " + imageViewPage.fileName);
             // GridView item is not set, positionViewAtIndex() won't work.
             selectedIndex = getImageModelIndex(imageViewPage.fileName);
+            console.debug("imageGrid onModelChanged selectedIndex " + selectedIndex);
         }
 
         onWidthChanged: {
@@ -292,7 +296,7 @@ Page {
                     // Position selected image.
                     if (index == imageGrid.currentIndex) {
                         imageGrid.positionViewAtIndex(index, GridView.Contain);
-                        imageLabelText.text = absolutePath;
+                        imageLabelText.text = name;
                         console.debug("imageView onStatusChanged positionViewAtIndex index " + index);
                     }
 
