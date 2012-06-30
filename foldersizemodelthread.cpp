@@ -93,6 +93,31 @@ void FolderSizeModelThread::saveDirSizeCache() {
     }
 }
 
+void FolderSizeModelThread::cleanItems()
+{
+    foreach (FolderSizeItem item, dirSizeCache->values()) {
+        cleanItem(item);
+    }
+}
+
+bool FolderSizeModelThread::cleanItem(const FolderSizeItem &item)
+{
+//    qDebug() << "FolderSizeModelThread::cleanItem item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
+
+    QFileInfo info(item.absolutePath);
+    if (!info.exists()) {
+        qDebug() << "FolderSizeModelThread::cleanItem remove item absolutePath" << item.absolutePath << "isDir" << item.isDir << "size" << item.size << "subFileCount" << item.subFileCount << "subDirCount" << item.subDirCount << "lastModified" << item.lastModified.toString(Qt::ISODate);
+        dirSizeCache->remove(item.absolutePath);
+        return true;
+    } else if (item.absolutePath.startsWith(":") || item.absolutePath == "") {
+        // TODO override remove for unwanted item.
+        qDebug() << "FolderSizeModelThread::cleanItem remove item absolutePath" << item.absolutePath << "isDir" << item.isDir << "size" << item.size << "subFileCount" << item.subFileCount << "subDirCount" << item.subDirCount << "lastModified" << item.lastModified.toString(Qt::ISODate);
+        dirSizeCache->remove(item.absolutePath);
+        return true;
+    }
+    return false;
+}
+
 bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QString targetPath)
 {
     // targetPath is always actual file/folder name, not parent folder.

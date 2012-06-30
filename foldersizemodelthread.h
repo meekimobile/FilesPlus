@@ -81,6 +81,9 @@ private:
     bool copyFile(int method, const QString sourcePath, const QString targetPath);
     bool deleteDir(const QString sourcePath);
 
+    void cleanItems();
+    bool cleanItem(const FolderSizeItem &item);
+
     QHash<QString, FolderSizeItem> *dirSizeCache;
     QString m_currentDir;
     bool m_clearCache;
