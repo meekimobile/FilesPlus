@@ -57,6 +57,9 @@ void CloudDriveModel::loadCloudDriveItems() {
 void CloudDriveModel::saveCloudDriveItems() {
     if (m_cloudDriveItems.isEmpty()) return;
 
+    // Cleanup before save.
+    cleanItems();
+
     QFile file(HashFilePath);
     if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);   // we will serialize the data into the file
@@ -416,11 +419,11 @@ bool CloudDriveModel::cleanItem(const CloudDriveItem &item)
         qDebug() << "CloudDriveModel::cleanItem remove item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
         m_cloudDriveItems.remove(item.localPath, item);
         return true;
-//    } else if (info.absoluteFilePath().startsWith(":")) {
-//        // TODO override remove for unwanted item.
-//        qDebug() << "CloudDriveModel::cleanItem remove item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
-//        m_cloudDriveItems.remove(item.localPath, item);
-//        return true;
+    } else if (item.localPath.startsWith(":") || item.localPath == "" || item.remotePath == "") {
+        // TODO override remove for unwanted item.
+        qDebug() << "CloudDriveModel::cleanItem remove item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
+        m_cloudDriveItems.remove(item.localPath, item);
+        return true;
     }
     return false;
 }
