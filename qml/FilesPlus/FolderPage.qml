@@ -1303,9 +1303,10 @@ Page {
 
             Text {
                 width: parent.width
-                text: fsModel.getFileName(renameDialog.sourcePath) + "\nto";
+                text: "Rename " + fsModel.getFileName(renameDialog.sourcePath) + " to";
                 color: "white"
                 horizontalAlignment: Text.AlignHCenter
+                elide: Text.ElideMiddle
             }
 
             TextField {
@@ -1328,9 +1329,12 @@ Page {
 
         onButtonClicked: {
             if (index === 0) {
-                var res = fsModel.renameFile(fsModel.getFileName(renameDialog.sourcePath), newName.text);
-                refreshSlot();
+                if (newName.text != "" && newName.text != fsModel.getFileName(renameDialog.sourcePath)) {
+                    var res = fsModel.renameFile(fsModel.getFileName(renameDialog.sourcePath), newName.text);
+                    refreshSlot();
+                }
             }
+
         }
     }
 
