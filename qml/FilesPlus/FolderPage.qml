@@ -1677,7 +1677,7 @@ Page {
             case CloudDriveModel.FilePut:
                 return FolderSizeItemListModel.UploadOperation;
             default:
-                return FolderSizeItemListModel.NoOperation;
+                return FolderSizeItemListModel.SyncOperation;
             }
         }
 
