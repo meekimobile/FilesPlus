@@ -440,17 +440,26 @@ bool CloudDriveModel::cleanItem(const CloudDriveItem &item)
 void CloudDriveModel::syncItems()
 {
     // Queue all items for metadata requesting.
+    QString lastItemLocalPath = "";
     foreach (CloudDriveItem item, m_cloudDriveItems.values()) {
         qDebug() << "CloudDriveModel::syncItems item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
 
         // TODO temp cleanup.
         if (cleanItem(item)) continue;
 
+        // TODO suppress sync if any items' parent is in queued jobs.
+//        if (item.localPath.startsWith(lastItemLocalPath) && lastItemLocalPath != "") {
+//            qDebug() << "CloudDriveModel::syncItems suppress item localPath" << item.localPath << " as its parent already in queue.";
+//            continue;
+//        }
+
         switch (item.type) {
         case Dropbox:
             metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
             break;
         }
+
+//        lastItemLocalPath = item.localPath;
     }
 }
 
