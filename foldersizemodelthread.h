@@ -7,6 +7,7 @@
 #include <QFileInfo>
 #include <QHash>
 #include <QThread>
+#include <QApplication>
 
 class FolderSizeModelThread : public QThread
 {

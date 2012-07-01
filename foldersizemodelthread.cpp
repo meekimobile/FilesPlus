@@ -243,7 +243,7 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
             emit copyProgress(method, sourceAbsFilePath, targetAbsFilePath, totalBytes, sourceFile.size());
 
             // TODO Commented below line can speedup copying.
-//            msleep(50);
+//            QApplication::processEvents();
 
             // Read next buffer.
 //            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::copyFile before read";
@@ -277,7 +277,7 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
     }
 
     // Sleep after emit signal.
-    msleep(50);
+    QApplication::processEvents();
 
     return res;
 }
@@ -288,6 +288,8 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath)
 
     emit deleteStarted(m_runMethod, sourcePath);
 
+    // This sleep is a must.
+    // Sleep for process deleteStarted signal.
     msleep(50);
 
     bool res = true;
@@ -397,7 +399,8 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
     if (!isFound) {
 //        qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir NOT found " + dir.absoluteFilePath();
 
-        msleep(50);
+        // Avoid UI freezing by processEvents().
+        QApplication::processEvents();
 
         QDir d = QDir(dir.absoluteFilePath());
         d.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
@@ -406,6 +409,9 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
         for (int i = 0; i < subList.size(); ++i) {
             QFileInfo fileInfo = subList.at(i);
             QString fileName = fileInfo.fileName();
+
+            // Avoid UI freezing by processEvents().
+            QApplication::processEvents();
 
             if (fileName == "." || fileName == "..") {
                 // do nothing.
@@ -487,7 +493,7 @@ void FolderSizeModelThread::getDirContent(const QString dirPath, QList<FolderSiz
     for (int i = 0; i < list.size(); ++i) {
         if (i % 10 == 1) {
             // Process events i = 1,11,21,...
-            msleep(50);
+            QApplication::processEvents();
         }
 
         QFileInfo fileInfo = list.at(i);
@@ -722,4 +728,7 @@ void FolderSizeModelThread::run()
         }
         break;
     }
+
+    // TODO Process events before thread is finished.
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents, 50);
 }
