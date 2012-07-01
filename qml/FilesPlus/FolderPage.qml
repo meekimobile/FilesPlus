@@ -1739,6 +1739,9 @@ Page {
         onRequestTokenReplySignal: {
             console.debug("folderPage cloudDriveModel onRequestTokenReplySignal " + err + " " + errMsg + " " + msg);
 
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+
             if (err == 0) {
                 // TODO how to check if app has been authorized by user.
                 cloudDriveModel.authorize(CloudDriveModel.Dropbox);
@@ -1751,11 +1754,18 @@ Page {
 
         onAuthorizeRedirectSignal: {
             console.debug("folderPage cloudDriveModel onAuthorizeRedirectSignal " + url + " redirectFrom " + redirectFrom);
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+
             pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: redirectFrom });
         }
 
         onAccessTokenReplySignal: {
             console.debug("folderPage cloudDriveModel onAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
 
             if (err == 0) {
                 // TODO find better way to proceed after got accessToken.
