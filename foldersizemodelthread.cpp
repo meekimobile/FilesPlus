@@ -329,6 +329,7 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath)
     // This sleep is a must.
     // Sleep for process deleteFinished signal.
     msleep(50);
+    QApplication::processEvents(QEventLoop::AllEvents, 50);
 
     return res;
 }
