@@ -1945,6 +1945,10 @@ Page {
 
                 // Sync starts from itself.
                 if (jsonObj.is_dir) { // Sync folder.
+                    // TODO if there is no local folder, create it and connect.
+                    if (!fsModel.isDir(localPath)) {
+                        fsModel.createDirPath(localPath);
+                    }
 
                     // Sync based on remote contents.
 //                    console.debug("cloudDriveModel onMetadataReplySignal folder jsonObj.rev " + jsonObj.rev + " jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
@@ -1973,6 +1977,8 @@ Page {
                     cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex);
                 } else { // Sync file.
 //                    console.debug("cloudDriveModel onMetadataReplySignal file jsonObj.rev " + jsonObj.rev + " localPathHash " + localPathHash);
+
+                    // TODO if (rev is newer or there is no local file), get from remote.
                     if (jsonObj.rev > localPathHash || !fsModel.isFile(localPath)) {
                         // TODO it should be specified with localPath instead of always use defaultLocalPath.
                         cloudDriveModel.fileGet(type, uid, remotePath, localPath, modelIndex);

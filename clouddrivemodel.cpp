@@ -579,7 +579,9 @@ void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString u
         // Sync based on local contents.
 
         // TODO create remote directory if no content.
-        createFolder(type, uid, localPath, remotePath, modelIndex);
+        if (getItem(localPath, type, uid).localPath == "") {
+            createFolder(type, uid, localPath, remotePath, modelIndex);
+        }
 
         QDir dir(info.absoluteFilePath());
         dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
@@ -930,6 +932,9 @@ void CloudDriveModel::jobDone() {
 }
 
 void CloudDriveModel::proceedNextJob() {
+    // TODO delay start by process events.
+    QApplication::processEvents();
+
     if (m_thread.isRunning()) return;
 
     // Proceed next job in queue. Any jobs which haven't queued will be ignored.

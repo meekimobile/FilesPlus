@@ -447,6 +447,16 @@ bool FolderSizeItemListModel::createDir(const QString name)
     return res;
 }
 
+bool FolderSizeItemListModel::createDirPath(const QString absPath)
+{
+    QDir dir(getDirPath(absPath));
+    bool res = dir.mkdir(getFileName(absPath));
+    if (res) {
+        emit createFinished(absPath);
+    }
+    return res;
+}
+
 bool FolderSizeItemListModel::renameFile(const QString fileName, const QString newFileName)
 {
     if (fileName == newFileName) return false;
