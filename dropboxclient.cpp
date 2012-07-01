@@ -290,7 +290,7 @@ QByteArray DropboxClient::createOAuthHeaderForUid(QString nonce, QString uid, QS
     sortMap["oauth_token"] = accessTokenPairMap[uid].token;
     sortMap["oauth_signature_method"] = signatureMethod;
     sortMap["oauth_timestamp"] = createTimestamp();
-    sortMap["oauth_nonce"] = createNonce();
+    sortMap["oauth_nonce"] = nonce;
     sortMap.unite(addParamMap);
     QString queryString = createNormalizedQueryString(sortMap);
 //    qDebug() << "queryString " << queryString;
