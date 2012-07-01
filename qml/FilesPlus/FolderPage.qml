@@ -1437,6 +1437,8 @@ Page {
                 } else {
                     res = fsModel.move(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
                 }
+            } else {
+                copyProgressDialog.close();
             }
         }
     }
