@@ -12,6 +12,7 @@
 #include <QScriptValue>
 #include <QThread>
 #include <QDebug>
+#include <QApplication>
 #include "clouddriveitem.h"
 #include "clouddrivejob.h"
 #include "clouddrivemodelthread.h"

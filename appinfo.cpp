@@ -74,9 +74,11 @@ void AppInfo::startMonitoring()
         mon = new Monitoring();
         mon->start();
     } else {
+        qDebug() << "AppInfo m_settings mon" << mon;
         if (mon != 0) {
             mon->stop();
             mon->deleteLater();
+            qDebug() << "AppInfo m_settings mon" << mon << "is stopped.";
         }
     }
 #endif

@@ -209,7 +209,9 @@ QString CloudDriveModel::getJobJson(QString jobId)
 
 void CloudDriveModel::removeJob(QString nonce)
 {
+    mutex.lock();
     int removeCount = m_cloudDriveJobs.remove(nonce);
+    mutex.unlock();
 
     qDebug() << "CloudDriveModel::removeJob nonce" << nonce << "removeCount" << removeCount << "m_cloudDriveJobs.count()" << m_cloudDriveJobs.count();
 }
@@ -222,8 +224,10 @@ int CloudDriveModel::getQueuedJobCount() const
 void CloudDriveModel::cancelQueuedJobs()
 {
     m_jobQueue.clear();
+    // TODO Should it also clear jobs? Some QNAM requests may need it after this method call.
+    m_cloudDriveJobs.clear();
 
-    qDebug() << "CloudDriveModel::cancelQueuedJobs done";
+    qDebug() << "CloudDriveModel::cancelQueuedJobs done m_jobQueue.count()" << m_jobQueue.count() << "m_cloudDriveJobs.count()" << m_cloudDriveJobs.count();
 }
 
 void CloudDriveModel::addItem(QString localPath, CloudDriveItem item)
