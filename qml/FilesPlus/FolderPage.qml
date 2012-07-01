@@ -1451,6 +1451,7 @@ Page {
         }
         onConfirm: {
             cloudDriveModel.cancelQueuedJobs();
+            requestJobQueueStatusSlot();
         }
     }
 
