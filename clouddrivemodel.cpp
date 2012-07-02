@@ -440,7 +440,7 @@ bool CloudDriveModel::cleanItem(const CloudDriveItem &item)
 void CloudDriveModel::syncItems()
 {
     // Queue all items for metadata requesting.
-    QString lastItemLocalPath = "";
+//    QString lastItemLocalPath = "";
     foreach (CloudDriveItem item, m_cloudDriveItems.values()) {
         qDebug() << "CloudDriveModel::syncItems item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
 

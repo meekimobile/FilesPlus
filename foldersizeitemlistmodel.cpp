@@ -35,7 +35,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(fetchDirSizeStarted()), this, SIGNAL(fetchDirSizeStarted()) );
     connect(&m, SIGNAL(fetchDirSizeFinished()), this, SLOT(fetchDirSizeFinishedFilter()) );
     connect(&m, SIGNAL(copyStarted(int,QString,QString,QString,int)), this, SIGNAL(copyStarted(int,QString,QString,QString,int)) );
-    connect(&m, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)), this, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)) );
+    connect(&m, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)), this, SLOT(copyProgressFilter(int,QString,QString,qint64,qint64)) , Qt::QueuedConnection);
     connect(&m, SIGNAL(copyFinished(int,QString,QString,QString,int,qint64,qint64)), this, SLOT(copyFinishedFilter(int,QString,QString,QString,int,qint64,qint64)) );
     connect(&m, SIGNAL(fetchDirSizeUpdated(QString)), this, SIGNAL(fetchDirSizeUpdated(QString)) );
     connect(&m, SIGNAL(deleteStarted(int,QString)), this, SIGNAL(deleteStarted(int,QString)) );
@@ -713,6 +713,13 @@ void FolderSizeItemListModel::fetchDirSizeFinishedFilter()
     refreshItemList();
     emit refreshCompleted();
     emit fetchDirSizeFinished();
+}
+
+void FolderSizeItemListModel::copyProgressFilter(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal)
+{
+    // TODO Suppress some overflow events.
+
+    emit copyProgress(fileAction, sourcePath, targetPath, bytes, bytesTotal);
 }
 
 void FolderSizeItemListModel::copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes)

@@ -150,6 +150,7 @@ private:
 public slots:
     void loadDirSizeCacheFinishedFilter();
     void fetchDirSizeFinishedFilter();
+    void copyProgressFilter(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes);
     void deleteFinishedFilter(int fileAction, QString sourcePath, QString msg, int err);
     void proceedNextJob();
