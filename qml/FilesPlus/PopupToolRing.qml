@@ -28,7 +28,7 @@ Rectangle {
 
     ]
 
-    property bool forFile
+    property bool isDir
     property string srcFilePath
     property string selectedFilePath
     property int selectedFileIndex
@@ -136,7 +136,7 @@ Rectangle {
         } else if (buttonName === "paste") {
             return (clipboardCount > 0);
         } else if (buttonName == "send") {
-            return forFile;
+            return !isDir;
         }
 
         return true;

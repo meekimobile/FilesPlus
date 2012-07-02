@@ -275,9 +275,11 @@ Page {
 
     function sendFileSlot(srcFilePath, selectedIndex) {
         console.debug("folderPage sendFileSlot srcFilePath=" + srcFilePath);
-        uidDialog.localPath = srcFilePath;
-        uidDialog.operation = CloudDriveModel.ShareFile;
-        uidDialog.open();
+        if (cloudDriveModel.isConnected() && fsModel.isFile(srcFilePath)) {
+            uidDialog.localPath = srcFilePath;
+            uidDialog.operation = CloudDriveModel.ShareFile;
+            uidDialog.open();
+        }
     }
 
     function dropboxAccessTokenSlot() {
@@ -931,7 +933,7 @@ Page {
                     fsListView.currentIndex = index;
                     popupToolPanel.selectedFilePath = absolutePath;
                     popupToolPanel.selectedFileIndex = index;
-                    popupToolPanel.forFile = !isDir;
+                    popupToolPanel.isDir = isDir;
                     popupToolPanel.pastePath = (isDir) ? absolutePath : currentPath.text;
                     var panelX = x + mouseX - fsListView.contentX;
                     var panelY = y + mouseY - fsListView.contentY + flipable1.y;
