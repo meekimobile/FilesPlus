@@ -2011,6 +2011,16 @@ Page {
 
             // Update ProgressBar on listItem.
             fsModel.setProperty(localPath, FolderSizeItemListModel.IsRunningRole, isRunning);
+
+            // Show indicator on parent up to root.
+            // Skip i=0 as it's notified above already.
+            var pathList = fsModel.getPathToRoot(json.local_file_path);
+            for(var i=1; i<pathList.length; i++) {
+                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                if (modelIndex > -1) {
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                }
+            }
         }
 
         onCreateFolderReplySignal: {

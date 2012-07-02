@@ -1,95 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
-<svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="60"
-   height="60"
-   id="svg3765"
-   version="1.1"
-   inkscape:version="0.48.2 r9819"
-   sodipodi:docname="chart.svg">
-  <defs
-     id="defs3767">
-    <inkscape:path-effect
-       effect="skeletal"
-       id="path-effect3777"
-       is_visible="true"
-       pattern="M 0,5 10,10 10,0 z"
-       copytype="single_stretched"
-       prop_scale="1"
-       scale_y_rel="false"
-       spacing="0"
-       normal_offset="0"
-       tang_offset="0"
-       prop_units="false"
-       vertical_pattern="false"
-       fuse_tolerance="0" />
-  </defs>
-  <sodipodi:namedview
-     id="base"
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1.0"
-     inkscape:pageopacity="0"
-     inkscape:pageshadow="2"
-     inkscape:zoom="8.25"
-     inkscape:cx="25.467872"
-     inkscape:cy="29.528319"
-     inkscape:document-units="px"
-     inkscape:current-layer="layer1"
-     showgrid="false"
-     inkscape:window-width="1024"
-     inkscape:window-height="712"
-     inkscape:window-x="-4"
-     inkscape:window-y="-4"
-     inkscape:window-maximized="1" />
-  <metadata
-     id="metadata3770">
-    <rdf:RDF>
-      <cc:Work
-         rdf:about="">
-        <dc:format>image/svg+xml</dc:format>
-        <dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1"
-     transform="translate(0,-992.36218)">
-    <path
-       sodipodi:type="arc"
-       style="fill:none;stroke:#ffffff;stroke-width:1.67758808000000000;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-       id="path3794"
-       sodipodi:cx="22.727272"
-       sodipodi:cy="25.212122"
-       sodipodi:rx="13.757576"
-       sodipodi:ry="11.030303"
-       d="M 36.484848,25.212122 A 13.757576,11.030303 0 1 1 25.11625,14.349394 l -2.388978,10.862728 z"
-       transform="matrix(1.6012483,0,0,1.9971614,-7.4223107,972.25193)"
-       sodipodi:start="0"
-       sodipodi:end="4.8869219" />
-    <path
-       sodipodi:type="arc"
-       style="fill:none;stroke:#ffffff;stroke-width:1.67758808000000000;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-       id="path3794-1"
-       sodipodi:cx="22.727272"
-       sodipodi:cy="25.212122"
-       sodipodi:rx="13.757576"
-       sodipodi:ry="11.030303"
-       d="m 25.11625,14.349394 a 13.757576,11.030303 0 0 1 11.368598,10.862728 l -13.757576,0 z"
-       transform="matrix(1.6012483,0,0,1.9971614,-0.56049664,966.48118)"
-       sodipodi:start="4.8869219"
-       sodipodi:end="6.2831853" />
-  </g>
+<?xml version="1.0"?>
+<!-- Converted with SVG Converter - Version 0.9.5 (Compiled Mon May 30 09:08:51 2011) - Copyright (C) 2011 Nokia -->
+<svg xmlns="http://www.w3.org/2000/svg" width="60" version="1.1" height="60" baseProfile="tiny" xmlns:xlink="http://www.w3.org/1999/xlink" id="svg3765">
+ <defs id="defs3767"/>
+ <metadata id="metadata3770"/>
+ <g id="layer1" transform="translate(0,-992.36218)">
+  <path style="fill:none;stroke:#ffffff;stroke-width:1.67758808000000000;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" id="path3794" d="M 36.484848,25.212122  C 36.4848 29.8492 32.8675 33.9912 27.4326 35.5772 C 21.9978 37.1632 15.9060 35.8545 12.1884 32.3023 C 8.4707 28.7500 7.9210 23.7128 10.8129 19.6970 C 13.7047 15.6811 19.4205 13.5442 25.1162 14.3494 l -2.388978,10.862728 z" transform="matrix(1.6012483,0,0,1.9971614,-7.4223107,972.25193)"/>
+  <path style="fill:none;stroke:#ffffff;stroke-width:1.67758808000000000;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" id="path3794-1" d="m 25.11625,14.349394  c 6.5750 0.9295 11.3686 5.5098 11.3686 10.8627 l -13.757576,0 z" transform="matrix(1.6012483,0,0,1.9971614,-0.56049664,966.48118)"/>
+ </g>
 </svg>
