@@ -25,6 +25,8 @@ const QString DropboxClient::createFolderURI = "https://api.dropbox.com/1/fileop
 const QString DropboxClient::moveFileURI = "https://api.dropbox.com/1/fileops/move";
 const QString DropboxClient::copyFileURI = "https://api.dropbox.com/1/fileops/copy";
 const QString DropboxClient::deleteFileURI = "https://api.dropbox.com/1/fileops/delete";
+const QString DropboxClient::sharesURI = "https://api.dropbox.com/1/shares/%1%2";
+const QString DropboxClient::mediaURI = "https://api.dropbox.com/1/media/%1%2";
 
 DropboxClient::DropboxClient(QDeclarativeItem *parent) :
     QObject(parent)
@@ -550,6 +552,30 @@ void DropboxClient::deleteFile(QString nonce, QString uid, QString remoteFilePat
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
+void DropboxClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
+{
+    qDebug() << "----- DropboxClient::shareFile -----";
+
+    // TODO root dropbox(Full access) or sandbox(App folder access)
+    QString uri = sharesURI.arg(dropboxRoot).arg(remoteFilePath);
+    qDebug() << "DropboxClient::shareFile uri " << uri;
+
+    QByteArray postData;
+    qDebug() << "postData" << postData;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)));
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "POST", uri));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    QNetworkReply *reply = manager->post(req, postData);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+}
+
 void DropboxClient::requestTokenReplyFinished(QNetworkReply *reply)
 {
     qDebug() << "DropboxClient::requestTokenReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
@@ -763,6 +789,19 @@ void DropboxClient::deleteFileReplyFinished(QNetworkReply *reply)
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
     emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void DropboxClient::shareFileReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "DropboxClient::shareFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 
     // TODO scheduled to delete later.
     reply->deleteLater();

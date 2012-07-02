@@ -71,5 +71,7 @@
         <file>qml/FilesPlus/CloudDriveJobsPage.qml</file>
         <file>qml/FilesPlus/CloudDriveAccountsPage.qml</file>
         <file>qml/FilesPlus/ProgressDialog.qml</file>
+        <file>qml/FilesPlus/RecipientSelectionDialog.qml</file>
+        <file>qml/FilesPlus/mail.svg</file>
     </qresource>
 </RCC>

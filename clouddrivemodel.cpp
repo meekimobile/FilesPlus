@@ -28,6 +28,9 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
 //    connect(&m_thread, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
 //    connect(&m_thread, SIGNAL(createFolderReplySignal(QString,int,QString,QString)), SLOT(createFolderReplyFilter(QString,int,QString,QString)) );
 
+    // Fetch first nonce and trash it.
+    createNonce();
+
     // Load cloud drive items.
     loadCloudDriveItems();
 
@@ -84,6 +87,7 @@ void CloudDriveModel::initializeDropboxClient() {
     connect(dbClient, SIGNAL(moveFileReplySignal(QString,int,QString,QString)), SLOT(moveFileReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
 }
 
 //void CloudDriveModel::initializeGCDClient() {
@@ -696,6 +700,17 @@ void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid,
     emit proceedNextJobSignal();
 }
 
+void CloudDriveModel::shareFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), ShareFile, type, uid, localFilePath, remoteFilePath, -1);
+    job.isRunning = true;
+    m_cloudDriveJobs[job.jobId] = job;
+    m_jobQueue.enqueue(job.jobId);
+
+    emit proceedNextJobSignal();
+}
+
 void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs[nonce];
@@ -909,6 +924,33 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
     emit deleteFileReplySignal(nonce, err, errMsg, msg);
 }
 
+void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    CloudDriveJob job = m_cloudDriveJobs[nonce];
+
+    QString url = "";
+    QString expires = "";
+    if (err == 0) {
+        // TODO generalize to support other clouds.
+        QScriptEngine engine;
+        QScriptValue sc;
+        sc = engine.evaluate("(" + msg + ")");
+        url = sc.property("url").toString();
+        expires = sc.property("expires").toString();
+
+        job.isRunning = false;
+        m_cloudDriveJobs[nonce] = job;
+    } else if (err == 202) {
+        // Issue: handle 202 Nonce already in used.
+        // Solution: let QML handle retry.
+    }
+
+    // Notify job done.
+    jobDone();
+
+    emit shareFileReplySignal(nonce, err, errMsg, msg, url, expires);
+}
+
 void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint64 bytesTotal)
 {
     CloudDriveJob job = m_cloudDriveJobs[nonce];
@@ -1043,6 +1085,13 @@ void CloudDriveModel::proceedNextJob() {
         switch (job.type) {
         case Dropbox:
             dbClient->deleteFile(job.jobId, job.uid, job.remoteFilePath);
+            break;
+        }
+        break;
+    case ShareFile:
+        switch (job.type) {
+        case Dropbox:
+            dbClient->shareFile(job.jobId, job.uid, job.remoteFilePath);
             break;
         }
         break;

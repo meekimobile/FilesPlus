@@ -51,7 +51,8 @@ public:
         AccountInfo,
         DeleteFile,
         MoveFile,
-        CopyFile
+        CopyFile,
+        ShareFile
     };
 
     explicit CloudDriveModel(QDeclarativeItem *parent = 0);
@@ -109,6 +110,7 @@ public:
     Q_INVOKABLE void moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath);
     Q_INVOKABLE void copyFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath);
     Q_INVOKABLE void deleteFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath);
+    Q_INVOKABLE void shareFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void proceedNextJobSignal();
@@ -129,6 +131,7 @@ signals:
     void moveFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void copyFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void deleteFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg, QString url, QString expires);
 public slots:
     void proceedNextJob();
 
@@ -147,6 +150,7 @@ public slots:
     void moveFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void copyFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void deleteFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
 private:
     QMultiMap<QString, CloudDriveItem> m_cloudDriveItems;
     QHash<QString, CloudDriveJob> m_cloudDriveJobs;

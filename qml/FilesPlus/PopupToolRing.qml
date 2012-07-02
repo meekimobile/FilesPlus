@@ -54,6 +54,7 @@ Rectangle {
     signal markClicked(string srcFilePath, int srcItemIndex)
     signal renameFile(string srcFilePath, int srcItemIndex)
     signal uploadFile(string srcFilePath, int srcItemIndex)
+    signal sendFile(string srcFilePath, int srcItemIndex)
 
     function open(panelX, panelY) {
 //        console.debug("popupToolRing open panelX " + panelX + " panelY " + panelY);
@@ -114,6 +115,7 @@ Rectangle {
         ListElement { buttonName: "mark"; icon: "check_mark.svg" }
         ListElement { buttonName: "newFolder"; icon: "folder_add.svg" }
         ListElement { buttonName: "upload"; icon: "upload.svg" }
+        ListElement { buttonName: "send"; icon: "mail.svg" }
         ListElement { buttonName: "rename"; icon: "rename.svg" }
     }
 
@@ -133,6 +135,8 @@ Rectangle {
             return (roots.indexOf(selectedFilePath) == -1);
         } else if (buttonName === "paste") {
             return (clipboardCount > 0);
+        } else if (buttonName == "send") {
+            return forFile;
         }
 
         return true;
@@ -164,6 +168,8 @@ Rectangle {
             renameFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "upload") {
             uploadFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "send") {
+            sendFile(selectedFilePath, selectedFileIndex);
         }
         popupToolPanel.visible = false;
     }

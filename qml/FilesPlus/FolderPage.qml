@@ -5,6 +5,7 @@ import FolderSizeItemListModel 1.0
 import GCPClient 1.0
 import CloudDriveModel 1.0
 import AppInfo 1.0
+import QtMobility.contacts 1.1
 import "Utility.js" as Utility
 
 Page {
@@ -270,6 +271,13 @@ Page {
     function uploadFileSlot(srcFilePath, selectedIndex) {
         console.debug("folderPage uploadFileSlot srcFilePath=" + srcFilePath);
         syncFileSlot(srcFilePath, selectedIndex, CloudDriveModel.FilePut);
+    }
+
+    function sendFileSlot(srcFilePath, selectedIndex) {
+        console.debug("folderPage sendFileSlot srcFilePath=" + srcFilePath);
+        uidDialog.localPath = srcFilePath;
+        uidDialog.operation = CloudDriveModel.ShareFile;
+        uidDialog.open();
     }
 
     function dropboxAccessTokenSlot() {
@@ -1071,6 +1079,10 @@ Page {
         onUploadFile: {
             uploadFileSlot(srcFilePath, srcItemIndex);
         }
+
+        onSendFile: {
+            sendFileSlot(srcFilePath, srcItemIndex);
+        }
     }
 
     ConfirmDialog {
@@ -1718,6 +1730,19 @@ Page {
             return model;
         }
 
+        function getUidEmail(type, uid) {
+            // Get uid list from DropboxClient.
+            var dbUidList = cloudDriveModel.getStoredUidList(type);
+
+            for (var i=0; i<dbUidList.length; i++)
+            {
+                var json = JSON.parse(dbUidList[i]);
+                if (uid == json.uid) return json.email;
+            }
+
+            return "";
+        }
+
         function getCloudIcon(type) {
             switch (type) {
             case CloudDriveModel.Dropbox:
@@ -2200,6 +2225,41 @@ Page {
                 messageDialog.open();
             }
         }
+
+        onShareFileReplySignal: {
+            console.debug("folderPage cloudDriveModel onShareFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg + " " + url + " " + expires);
+
+            var json = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+
+            var isRunning = json.is_running;
+
+            if (err == 0) {
+                // Open recipientSelectionDialog for sending share link.
+                var senderEmail = getUidEmail(json.type, json.uid);
+                if (senderEmail != "") {
+                    recipientSelectionDialog.srcFilePath = json.local_file_path;
+                    recipientSelectionDialog.messageSubject = "Share file on Dropbox";
+                    recipientSelectionDialog.messageBody = "Please download file with below link.\n" + url;
+                    recipientSelectionDialog.senderEmail = senderEmail;
+                    recipientSelectionDialog.open();
+                }
+            } else if (err == 202) { // Forbidden nonce is already used.
+                // Retry.
+                cloudDriveModel.shareFile(json.type, json.uid, json.local_file_path, json.remote_file_path);
+            } else {
+                messageDialog.titleText = getCloudName(json.type) + " Delete";
+                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.autoClose = true;
+                messageDialog.open();
+            }
+
+            // Update ProgressBar on listItem.
+            // TODO also show running on its parents.
+            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
+        }
     }
 
     CloudDriveUsersDialog {
@@ -2225,6 +2285,9 @@ Page {
                 break;
             case CloudDriveModel.FileGet:
                 cloudDriveModel.fileGet(type, uid, localPath, remotePath, modelIndex);
+                break;
+            case CloudDriveModel.ShareFile:
+                cloudDriveModel.shareFile(type, uid, localPath, remotePath);
                 break;
             }
         }
@@ -2260,6 +2323,20 @@ Page {
                 // Clear clipboard.
                 clipboard.clear();
             }
+        }
+    }
+
+    RecipientSelectionDialog {
+        id: recipientSelectionDialog
+        onAccepted: {
+            console.debug("recipientSelectionDialog onAccepted email " + selectedEmail + " senderEmail " + senderEmail);
+            Qt.openUrlExternally("mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody);
+        }
+        onRejected: {
+            // Reset popupToolPanel.
+            popupToolPanel.selectedFilePath = "";
+            popupToolPanel.selectedFileIndex = -1;
+            srcFilePath = "";
         }
     }
 }

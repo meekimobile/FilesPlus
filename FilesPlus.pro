@@ -23,7 +23,7 @@ VERSION = 1.0.0
 symbian:DEPLOYMENT.installer_header = 0x2002CCCF
 
 # Allow network access on Symbian
-symbian:TARGET.CAPABILITY += NetworkServices Location SwEvent
+symbian:TARGET.CAPABILITY += NetworkServices Location SwEvent ReadUserData
 
 # Set heap size. min 8M max 32M.
 #symbian:TARGET.EPOCHEAPSIZE = 0x800000 0x2000000
@@ -34,7 +34,7 @@ symbian:TARGET.EPOCHEAPSIZE = 0x800000 0x4000000
 # If your application uses the Qt Mobility libraries, uncomment the following
 # lines and add the respective components to the MOBILITY variable.
 CONFIG += mobility
-MOBILITY = systeminfo
+MOBILITY = systeminfo contacts
 
 # Speed up launching on MeeGo/Harmattan when using applauncherd daemon
 CONFIG += qdeclarative-boostable

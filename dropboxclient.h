@@ -26,6 +26,8 @@ public:
     static const QString moveFileURI;
     static const QString copyFileURI;
     static const QString deleteFileURI;
+    static const QString sharesURI;
+    static const QString mediaURI;
 
     explicit DropboxClient(QDeclarativeItem *parent = 0);
     ~DropboxClient();
@@ -57,6 +59,7 @@ public:
     Q_INVOKABLE void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
     Q_INVOKABLE void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
     Q_INVOKABLE void deleteFile(QString nonce, QString uid, QString remoteFilePath);
+    Q_INVOKABLE void shareFile(QString nonce, QString uid, QString remoteFilePath);
 signals:
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectForm);
@@ -75,6 +78,7 @@ signals:
     void moveFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void copyFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void deleteFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
 public slots:
     void requestTokenReplyFinished(QNetworkReply *reply);
     void accessTokenReplyFinished(QNetworkReply *reply);
@@ -88,6 +92,7 @@ public slots:
     void moveFileReplyFinished(QNetworkReply *reply);
     void copyFileReplyFinished(QNetworkReply *reply);
     void deleteFileReplyFinished(QNetworkReply *reply);
+    void shareFileReplyFinished(QNetworkReply *reply);
 private:
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;
