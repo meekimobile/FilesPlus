@@ -138,14 +138,14 @@ Page {
         }
     }
 
-    Timer {
-        id: clickDelayTimer
-        interval: 300
-        running: false
-        onTriggered: {
-            imageLabel.visible = !imageLabel.visible;
-        }
-    }
+//    Timer {
+//        id: clickDelayTimer
+//        interval: 300
+//        running: false
+//        onTriggered: {
+//            imageLabel.visible = !imageLabel.visible;
+//        }
+//    }
 
     GridView {
         id: imageGrid
@@ -184,12 +184,25 @@ Page {
         }
 
         function getImageModelIndex(fileName) {
+            // Model is set before it can finish filter only images. Find selected image position needs to be done with full list.
+            var imageIndex = 0;
             for (var i=0; i<imageGrid.model.count; i++) {
+                var isDir = imageGrid.model.getProperty(i, FolderSizeItemListModel.IsDirRole);
+                var fileType = imageGrid.model.getProperty(i, FolderSizeItemListModel.FileTypeRole);
                 var name = imageGrid.model.getProperty(i, FolderSizeItemListModel.NameRole);
-                if (name == fileName) {
-                    console.debug("getImageModelIndex " + i + " name " + name)
-                    return i;
+//                console.debug("ImageViewPage imageGrid getImageModelIndex " + i + " name " + name + " isDir " + isDir + " fileType " + fileType)
+
+                // If item is dir or is not image, skip.
+                if (isDir || supportedFileType.indexOf(fileType.toUpperCase()) == -1) {
+                    continue;
                 }
+
+                if (name == fileName) {
+                    console.debug("ImageViewPage imageGrid getImageModelIndex found " + i + " name " + name)
+                    return imageIndex;
+                }
+
+                imageIndex++;
             }
 //            console.debug("getImageModelIndex model.count " + model.count);
 //            console.debug("getImageModelIndex found index " + i);
