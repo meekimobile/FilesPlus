@@ -32,9 +32,14 @@ Menu {
                 console.debug("MenuWithIcon toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.text + " is removed.");
                 menuItem.visible = false;
             } else {
-                menuItem.visible = true;
+                menuItem.visible = isMenuItemVisible(menuItem);
             }
         }
+    }
+
+    // Override this function with menuItem logic.
+    function isMenuItemVisible(menuItem) {
+        return true;
     }
 
     function updateBgImageSources() {

@@ -19,7 +19,7 @@ SelectionDialog {
     signal opened()
     
     titleText: "Please select Cloud Account"
-    delegate: ListItem {
+    delegate: Rectangle {
         id: uidDialogListViewItem
         height: 60
         Row {
@@ -31,11 +31,13 @@ SelectionDialog {
                 height: 30
                 source: cloudDriveModel.getCloudIcon(type)
             }
-            ListItemText {
+            Text {
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width - 64
-                mode: uidDialogListViewItem.mode
-                role: "Title"
+                height: parent.height
+                font.pointSize: 18
+                elide: Text.ElideMiddle
+                verticalAlignment: Text.AlignVCenter
                 text: email
             }
             Image {
@@ -47,11 +49,15 @@ SelectionDialog {
             }
         }
         
-        onClicked: {
-            uidDialog.selectedIndex = index;
-            uidDialog.selectedCloudType = uidDialog.model.get(uidDialog.selectedIndex).type;
-            uidDialog.selectedUid = uidDialog.model.get(uidDialog.selectedIndex).uid;
-            uidDialog.accept();
+        MouseArea {
+            anchors.fill: parent
+            //TODO implement onPressed, onReleased to highlight item.
+            onClicked: {
+                uidDialog.selectedIndex = index;
+                uidDialog.selectedCloudType = uidDialog.model.get(uidDialog.selectedIndex).type;
+                uidDialog.selectedUid = uidDialog.model.get(uidDialog.selectedIndex).uid;
+                uidDialog.accept();
+            }
         }
     }
         

@@ -6,10 +6,6 @@ MenuWithIcon {
     id: mainMenu
     z: 2
 
-    property variant enabledMenus: []
-    property variant disabledMenus: []
-
-    signal quit()
     signal paste()
 
     content: MenuLayout {
@@ -18,7 +14,7 @@ MenuWithIcon {
         // TODO Alias for fixing incorrect children.
         default property alias children: menuLayout.menuChildren
 
-        MenuItem {
+        MenuItemWithIcon {
             id: pasteMenuItem
             text: "Paste"
             onClicked: {
@@ -26,7 +22,7 @@ MenuWithIcon {
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: markMenuItem
             text: "Mark multiple items"
             onClicked: {
@@ -34,7 +30,7 @@ MenuWithIcon {
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: clearClipboardMenuItem
             text: "Clear clipboard"
             onClicked: {
@@ -42,7 +38,7 @@ MenuWithIcon {
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: newFolderMenuItem
             text: "New folder"
             onClicked: {
@@ -50,7 +46,7 @@ MenuWithIcon {
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: syncFolderMenuItem
             text: "Sync current folder"
             onClicked: {
@@ -59,7 +55,7 @@ MenuWithIcon {
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: sortByMenuItem
             text: "Sort by"
             platformSubItemIndicator: true
@@ -68,7 +64,7 @@ MenuWithIcon {
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             text: "Settings"
             platformSubItemIndicator: true
             onClicked: {
@@ -82,21 +78,21 @@ MenuWithIcon {
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             text: "About"
             onClicked: {
                 pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
             }
         }
                 
-//        MenuItem {
+//        MenuItemWithIcon {
 //            text: "More Apps"
 //            onClicked: {
 //                pageStack.push(Qt.resolvedUrl("MoreApps.qml"));
 //            }
 //        }
         
-        MenuItem {
+        MenuItemWithIcon {
             text: "Exit"
             onClicked: {
                 quit();
@@ -104,50 +100,19 @@ MenuWithIcon {
         }
     }
 
-    function isEnabled(menuName) {
-        if (enabledMenus && enabledMenus.length > 0) {
-            return (enabledMenus.indexOf(menuName) != -1);
-        }
-        return true;
-    }
-
-    function isDisabled(menuName) {
-        if (disabledMenus && disabledMenus.length > 0) {
-            return (disabledMenus.indexOf(menuName) != -1);
-        }
-        return false;
-    }
-
-    function toggleMenuItems() {
-        console.debug(mainMenu.disabledMenus);
-//        console.debug("mainMenu toggleMenuItems menuLayout.children.length " + menuLayout.children.length);
-        for (var i=0; i<menuLayout.children.length; i++) {
-            var menuItem = menuLayout.children[i];
-            if (!isEnabled(menuItem.text) || isDisabled(menuItem.text)) {
-                menuItem.visible = false;
-//                console.debug("mainMenu toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.text + " is hidden.");
-            } else {
-                // Validate each menu logic if it's specified, otherwise it's visible.
-                if (menuItem == pasteMenuItem) {
-                    menuItem.visible = clipboard.count > 0;
-                } else if (menuItem == clearClipboardMenuItem) {
-                    menuItem.visible = clipboard.count > 0;
-                } else if (menuItem == markMenuItem) {
-                    menuItem.visible = fsListView.state != "mark";
-                } else if (menuItem == syncFolderMenuItem) {
-                    menuItem.visible = !fsModel.isRoot();
-                } else {
-                    menuItem.visible = true;
-//                    console.debug("mainMenu toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.text + " is shown.");
-                }
-            }
-        }
-    }
-
-    onStatusChanged: {
-        if (status == DialogStatus.Opening) {
-            toggleMenuItems();
-            // After toggle, visible is not presented correctly. It will be updated on status=Open.
+    // Override this function with menuItem logic.
+    function isMenuItemVisible(menuItem) {
+        // Validate each menu logic if it's specified, otherwise it's visible.
+        if (menuItem == pasteMenuItem) {
+            return clipboard.count > 0;
+        } else if (menuItem == clearClipboardMenuItem) {
+            return clipboard.count > 0;
+        } else if (menuItem == markMenuItem) {
+            return fsListView.state != "mark";
+        } else if (menuItem == syncFolderMenuItem) {
+            return !fsModel.isRoot();
+        } else {
+            return true;
         }
     }
 }
