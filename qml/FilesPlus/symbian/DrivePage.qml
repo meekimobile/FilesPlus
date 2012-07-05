@@ -11,6 +11,11 @@ Page {
 
     tools: toolBarLayout
 
+    function quitSlot() {
+        var p = pageStack.find(function (page) { return page.name == "folderPage"; });
+        if (p) p.quitSlot();
+    }
+
     ToolBarLayout {
         id: toolBarLayout
 
@@ -19,7 +24,7 @@ Page {
             iconSource: "toolbar-back"
             flat: true
             onClicked: {
-                Qt.quit();
+                quitSlot();
             }
         }
 
@@ -39,7 +44,7 @@ Page {
         enabledMenus: ["About", "More Apps", "Settings", "Exit"]
 
         onQuit: {
-            Qt.quit();
+            quitSlot();
         }
     }
 
@@ -61,7 +66,7 @@ Page {
         {
             // Workaround for QtSimulator
             var driveName = drives[i];
-            if (driveName.indexOf(":") == -1) {
+            if (i < simulatedDriveNames.length) {
                 driveName = simulatedDriveNames[i];
             }
 
@@ -107,7 +112,6 @@ Page {
     }
 
     Component.onCompleted: {
-        var now = Qt.formatDateTime(new Date(), "d MMM yyyy h:mm:ss ap");
-        console.debug(now + " drivePage onCompleted");
+        console.debug(Utility.nowText() + " drivePage onCompleted");
     }
 }

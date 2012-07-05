@@ -101,36 +101,46 @@ bool PieChart::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
     int nameRole = getRole(model(), "name");
 
     if (event->type() == QEvent::GraphicsSceneMousePress) {
+        qDebug() << QTime::currentTime() << "PieChart::sceneEventFilter GraphicsSceneMousePress begin " << pressTime;
+
         pressTime.start();
         pressEvent = dynamic_cast<QGraphicsSceneMouseEvent *>(event);
     } else if (event->type() == QEvent::GraphicsSceneMouseRelease) {
-        qDebug() << QTime::currentTime() << "PieChart::sceneEventFilter begin " << pressTime << ", elapsed " << pressTime.elapsed();
+        qDebug() << QTime::currentTime() << "PieChart::sceneEventFilter GraphicsSceneMouseRelease begin " << pressTime << ", elapsed " << pressTime.elapsed();
 
         QGraphicsSceneMouseEvent *ge = dynamic_cast<QGraphicsSceneMouseEvent *>(event);
         PieSlice *slice = dynamic_cast<PieSlice *>(watched);
 
-        if (slice->contains(ge->pos())) {
-            // Can't use index from childItems() for refering as model index.
-            QVariant vIsDir = model()->data(model()->index(slice->modelIndex(), 0), isDirRole);
-            QVariant vName = model()->data(model()->index(slice->modelIndex(), 0), nameRole);
-            qDebug() << "PieChart::sceneEventFilter slice modelIndex " << slice->modelIndex() << ", name " << vName.toString() << ", isDir " << vIsDir.toBool();
+        // Files always have modelIndex = -1. Respond only if modelIndex >= 0.
+        if (slice->modelIndex() >= 0) {
+            // If release in slice, invoke slice's release.
+            if (slice->contains(ge->pos())) {
+                // Can't use index from childItems() for refering as model index.
+                QVariant vIsDir = model()->data(model()->index(slice->modelIndex(), 0), isDirRole);
+                QVariant vName = model()->data(model()->index(slice->modelIndex(), 0), nameRole);
+                qDebug() << "PieChart::sceneEventFilter watched slice modelIndex" << slice->modelIndex() << "label" << slice->getTextLabel() << "name" << vName.toString() << "isDir" << vIsDir.toBool();
 
-            slice->mouseReleaseEvent(ge);
+                slice->mouseReleaseEvent(ge);
 
-            emit sliceClicked(slice->text(), slice->modelIndex(), vIsDir.toBool());
+                emit sliceClicked(slice->text(), slice->modelIndex(), vIsDir.toBool());
+            } else {
+                // TODO below code causes crash on device.
+
+    //            qDebug() << QTime::currentTime() << "PieChart::sceneEventFilter swipe " << pressEvent->pos() << " -> " << ge->pos();
+
+    //            qreal dx = pressEvent->pos().x() - ge->pos().x();
+    //            qreal dy = pressEvent->pos().y() - ge->pos().y();
+
+    //            qreal angle = qAtan(dy / dx) / 3.1416 * 180;
+
+                slice->mouseReleaseEvent(ge);
+
+    //            emit swipe(angle);
+            }
         } else {
-            // TODO below code causes crash on device.
-
-//            qDebug() << QTime::currentTime() << "PieChart::sceneEventFilter swipe " << pressEvent->pos() << " -> " << ge->pos();
-
-//            qreal dx = pressEvent->pos().x() - ge->pos().x();
-//            qreal dy = pressEvent->pos().y() - ge->pos().y();
-
-//            qreal angle = qAtan(dy / dx) / 3.1416 * 180;
+            qDebug() << "PieChart::sceneEventFilter watched slice modelIndex" << slice->modelIndex() << "label" << slice->getTextLabel() << " is for files. Suppress event.";
 
             slice->mouseReleaseEvent(ge);
-
-//            emit swipe(angle);
         }
 
         // Stop propagating.
@@ -188,6 +198,20 @@ bool PieChart::visible() const
 void PieChart::setVisible(const bool visible)
 {
     m_visible = visible;
+}
+
+QString PieChart::labelFontDesc() const
+{
+    return m_labelFont.toString();
+}
+
+bool PieChart::setLabelFontDesc(const QString fontDesc)
+{
+    qDebug() << "PieChart::setLabelFontDesc m_labelFont" << m_labelFont.toString();
+    bool res = m_labelFont.fromString(fontDesc);
+    qDebug() << "PieChart::setLabelFontDesc m_labelFont" << m_labelFont.toString();
+
+    return res;
 }
 
 void PieChart::paint(QPainter *painter, const QStyleOptionGraphicsItem * o, QWidget * w)
@@ -295,7 +319,7 @@ void PieChart::createItemFromModel()
     }
     PieSlice *slice;
     slice = new PieSlice(this);
-    slice->setModelIndex(-1);
+    slice->setModelIndex(-1); // always use -1 for files.
     slice->setColor(Qt::gray);
     slice->setText(QString("%1 file%2").arg(totalFiles).arg((totalFiles > 1)?"s":""));
     slice->setSubText(formatFileSize(totalfileSize, 1));
@@ -341,7 +365,8 @@ void PieChart::createLabelFromSlice(PieSlice *slice)
     // Draw text rect.
     Label *label = new Label();
     label->setHtml(textLabel);
-    label->setFont(QFont("MS Shell Dlg 2", 6, 2));
+    label->setFont(m_labelFont);
+    label->setDefaultTextColor(Qt::white);
     label->setRadius(5);
     label->setZValue(1);
     label->setParentItem(this);

@@ -3,7 +3,7 @@ import QtQuick 1.1
 Column {
     id: folderPieInfo
     spacing: 10
-    width: 270
+    width: parent.width
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.verticalCenter: parent.verticalCenter
 
@@ -15,6 +15,14 @@ Column {
         height: 180
         anchors.horizontalCenter: parent.horizontalCenter
         source: "FolderPie256.png"
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton
+            onClicked: {
+                Qt.openUrlExternally("https://sites.google.com/site/meekimobile/products/folderpie");
+            }
+        }
     }
 
     Text {
@@ -24,19 +32,17 @@ Column {
         anchors.horizontalCenter: parent.horizontalCenter
         horizontalAlignment: Text.AlignLeft
         font.bold: true
-        font.family: "Century Gothic"
         font.pointSize: 10
     }
 
     Text {
         id: description
         color: "grey"
-        width: parent.width
-        text: qsTr("FolderPie will help you collect each folder actual size on your disk space. And present in Pie view for easy understanding at glance.")
+        width: 300
+        text: qsTr("FolderPie helps you collect each folder actual size on your disk space.\nAnd present in Pie view for easy understanding at glance.")
         horizontalAlignment: Text.AlignHCenter
         anchors.horizontalCenter: parent.horizontalCenter
         wrapMode: Text.WordWrap
-        font.family: "Century Gothic"
         font.pointSize: 6
     }
 
@@ -47,9 +53,8 @@ Column {
         text: qsTr("\n\nDeveloped by MeekiMobile")
         horizontalAlignment: Text.AlignHCenter
         anchors.horizontalCenter: parent.horizontalCenter
-        font.pointSize: 6
         wrapMode: Text.WordWrap
-        font.family: "Century Gothic"
+        font.pointSize: 6
     }
 
     Image {

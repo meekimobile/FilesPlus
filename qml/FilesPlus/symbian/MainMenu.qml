@@ -7,12 +7,13 @@ Menu {
     z: 2
 
     property variant enabledMenus: []
+    property variant disabledMenus: []
 
     signal quit()
     signal paste()
 
     content: MenuLayout {
-        id: mainMenuLayout
+        id: menuLayout
 
         MenuItem {
             id: pasteMenuItem
@@ -65,7 +66,6 @@ Menu {
         }
 
         MenuItem {
-            id: settingMenuItem
             text: "Settings"
             platformSubItemIndicator: true
             onClicked: {
@@ -102,21 +102,49 @@ Menu {
     }
 
     function isEnabled(menuName) {
-        if (enabledMenus.length > 0) {
+        if (enabledMenus && enabledMenus.length > 0) {
             return (enabledMenus.indexOf(menuName) != -1);
         }
         return true;
     }
 
+    function isDisabled(menuName) {
+        if (disabledMenus && disabledMenus.length > 0) {
+            return (disabledMenus.indexOf(menuName) != -1);
+        }
+        return false;
+    }
+
+    function toggleMenuItems() {
+        console.debug(mainMenu.disabledMenus);
+//        console.debug("mainMenu toggleMenuItems menuLayout.children.length " + menuLayout.children.length);
+        for (var i=0; i<menuLayout.children.length; i++) {
+            var menuItem = menuLayout.children[i];
+            if (!isEnabled(menuItem.text) || isDisabled(menuItem.text)) {
+                menuItem.visible = false;
+//                console.debug("mainMenu toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.text + " is hidden.");
+            } else {
+                // Validate each menu logic if it's specified, otherwise it's visible.
+                if (menuItem == pasteMenuItem) {
+                    menuItem.visible = clipboard.count > 0;
+                } else if (menuItem == clearClipboardMenuItem) {
+                    menuItem.visible = clipboard.count > 0;
+                } else if (menuItem == markMenuItem) {
+                    menuItem.visible = fsListView.state != "mark";
+                } else if (menuItem == syncFolderMenuItem) {
+                    menuItem.visible = !fsModel.isRoot();
+                } else {
+                    menuItem.visible = true;
+//                    console.debug("mainMenu toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.text + " is shown.");
+                }
+            }
+        }
+    }
+
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
-            sortByMenuItem.visible = isEnabled(sortByMenuItem.text) && (folderPage.state == "list");
-            settingMenuItem.visible = isEnabled(settingMenuItem.text);
-            newFolderMenuItem.visible = isEnabled(newFolderMenuItem.text) && (folderPage.state == "list");
-            pasteMenuItem.visible = isEnabled(pasteMenuItem.text) && (clipboard.count > 0) && (folderPage.state == "list");
-            clearClipboardMenuItem.visible = isEnabled(clearClipboardMenuItem.text) && (clipboard.count > 0) && (folderPage.state == "list");
-            markMenuItem.visible = isEnabled(markMenuItem.text) && (fsListView.state != "mark") && (folderPage.state == "list");
-            syncFolderMenuItem.visible = isEnabled(syncFolderMenuItem.text) && (!fsModel.isRoot()) && (folderPage.state == "list");
+            toggleMenuItems();
+            // After toggle, visible is not presented correctly. It will be updated on status=Open.
         }
     }
 }

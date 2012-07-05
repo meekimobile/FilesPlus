@@ -12,7 +12,7 @@ CommonDialog {
     content: Text {
         id: content
         color: "white"
-//        font.pointSize: 6
+        font.pointSize: 6
         wrapMode: Text.Wrap
         width: parent.width - 20
         height: implicitHeight

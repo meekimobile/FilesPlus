@@ -59,12 +59,23 @@ int SystemInfoHelper::getDriveTypeInt(const QString &drive)
 }
 
 QStringList SystemInfoHelper::getDriveList() {
-    QFileInfoList drives = QDir::drives();
     QStringList driveList;
 
+#if defined(Q_WS_SIMULATOR)
+    qDebug() << "SystemInfoHelper::getDriveList platform=Q_WS_SIMULATOR";
+    QFileInfoList drives = QDir::drives();
     for (int i=0; i<drives.length(); i++) {
-        driveList.append(drives.at(i).absolutePath());
+        qDebug() << "SystemInfoHelper::getDriveList drives" << drives.at(i).absoluteFilePath();
+        driveList.append(drives.at(i).absoluteFilePath());
     }
+#elif defined(Q_OS_SYMBIAN)
+    qDebug() << "SystemInfoHelper::getDriveList platform=Q_OS_SYMBIAN";
+    QFileInfoList drives = QDir::drives();
+    for (int i=0; i<drives.length(); i++) {
+        qDebug() << "SystemInfoHelper::getDriveList drives" << drives.at(i).absoluteFilePath();
+        driveList.append(drives.at(i).absoluteFilePath());
+    }
+#endif
 
     return driveList;
 }

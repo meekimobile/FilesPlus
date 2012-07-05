@@ -18,10 +18,18 @@ Page {
         State {
             name: "chart"
             when: flipable1.flipped
+            PropertyChanges {
+                target: mainMenu
+                disabledMenus: ["Paste", "Mark multiple items", "Clear clipboard", "New folder", "Sync current folder", "Sort by"]
+            }
         },
         State {
             name: "list"
             when: !flipable1.flipped
+            PropertyChanges {
+                target: mainMenu
+                disabledMenus: []
+            }
         }
     ]
 
@@ -85,7 +93,7 @@ Page {
                 if (fsListView.state == "mark") {
                     markMenu.open();
                 } else {
-                    mainMenu.open();
+					mainMenu.open();
                 }
             }
         }
@@ -101,13 +109,7 @@ Page {
         id: mainMenu
 
         onQuit: {
-            if (fsModel.isRunning()) {
-                messageDialog.titleText = "Reset folder cache";
-                messageDialog.message = "Reset folder case is running. Please wait until it's done.";
-                messageDialog.open();
-            } else {
-                Qt.quit();
-            }
+			quitSlot();
         }
         onPaste: {
             fileActionDialog.targetPath = fsModel.currentDir;
@@ -184,6 +186,16 @@ Page {
     function orientationChangeSlot() {
         if (pieChartView && folderPage.state == "chart") {
             pieChartView.refreshItems();
+        }
+    }
+
+    function quitSlot() {
+        if (fsModel.isRunning()) {
+            messageDialog.titleText = "Notify";
+            messageDialog.message = "Reset Cache is running. Please wait until it's done.";
+            messageDialog.open();
+        } else {
+            Qt.quit();
         }
     }
 
@@ -328,7 +340,7 @@ Page {
 
     FolderSizeItemListModel {
         id: fsModel
-        currentDir: "C:/"
+//        currentDir: "C:/"
         sortFlag: FolderSizeItemListModel.SortByType
 
         function getActionName(fileAction) {
@@ -498,7 +510,6 @@ Page {
         }
 
         onFetchDirSizeUpdated: {
-            if (!refreshButton.checked) refreshButton.checked = true;
             refreshButton.rotation = 360 + (refreshButton.rotation - 6);
         }
 
@@ -584,6 +595,7 @@ Page {
         anchors.horizontalCenter: parent.horizontalCenter
         model: fsModel
         visible: (folderPage.state == "chart")
+        labelFont: "Sans Serif,6"
 
         onChartClicked: {
             console.debug("QML pieChartView.onChartClicked");
@@ -618,18 +630,7 @@ Page {
         highlightMoveSpeed: 4000
         highlight: Rectangle {
             width: fsListView.width
-            gradient: Gradient {
-                id: highlightGradient
-                GradientStop {
-                    position: 0
-                    color: "#0080D0"
-                }
-
-                GradientStop {
-                    position: 1
-                    color: "#53A3E6"
-                }
-            }
+            gradient: highlightGradient
         }
         clip: true
         focus: true
@@ -754,6 +755,22 @@ Page {
             cloudDriveModel.syncClipboardItems();
         }
 
+        onMovementStarted: {
+            if (currentItem) currentItem.state = "normal";
+        }
+    }
+
+    Gradient {
+        id: highlightGradient
+        GradientStop {
+            position: 0
+            color: "#0080D0"
+        }
+
+        GradientStop {
+            position: 1
+            color: "#53A3E6"
+        }
     }
 
     Component {

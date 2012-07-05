@@ -15,6 +15,7 @@ class PieChart : public QDeclarativeItem
     Q_PROPERTY(QString name READ name WRITE setName)
     Q_PROPERTY(QAbstractListModel * model READ model WRITE setModel)
     Q_PROPERTY(bool visible READ visible WRITE setVisible)
+    Q_PROPERTY(QString labelFont READ labelFontDesc WRITE setLabelFontDesc)
 public:
     static const QColor sliceColors[];
     static const QColor highlightSliceColor;
@@ -30,6 +31,9 @@ public:
 
     bool visible() const;
     void setVisible(const bool visible);
+
+    QString labelFontDesc() const;
+    bool setLabelFontDesc(const QString fontDesc);
 
     int getRole(const QAbstractListModel *model, QString sizeRoleName);
 
@@ -63,6 +67,7 @@ private:
     QString m_name;
     QAbstractListModel *m_model;
     bool m_visible;
+    QFont m_labelFont;
 };
 
 #endif

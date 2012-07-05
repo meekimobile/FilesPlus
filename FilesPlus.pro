@@ -2,18 +2,18 @@
 QT += network script
 
 # Add more folders to ship with the application, here
-folder_01.source = qml/FilesPlus
-folder_01.target = qml
-DEPLOYMENTFOLDERS = folder_01
+#folder_01.source = qml/FilesPlus
+#folder_01.target = qml
+#DEPLOYMENTFOLDERS = folder_01
 
 # Additional import path used to resolve QML modules in Creator's code model
 QML_IMPORT_PATH =
 
 # Change UID3 to protected UID for publishing to Nokia Store.
-#symbian:TARGET.UID3 = 0xE11DCC9D
-symbian:TARGET.UID3 = 0x20064E45
+symbian:TARGET.UID3 = 0xE11DCC9D
+#symbian:TARGET.UID3 = 0x20064E45
 
-VERSION = 1.0.0
+VERSION = 1.0.1
 
 # Smart Installer package's UID
 # This UID is from the protected range and therefore the package will
@@ -23,7 +23,7 @@ VERSION = 1.0.0
 symbian:DEPLOYMENT.installer_header = 0x2002CCCF
 
 # Allow network access on Symbian
-symbian:TARGET.CAPABILITY += NetworkServices Location SwEvent ReadUserData
+symbian:TARGET.CAPABILITY += NetworkServices ReadUserData
 
 # Set heap size. min 8M max 32M.
 #symbian:TARGET.EPOCHEAPSIZE = 0x800000 0x2000000
@@ -106,8 +106,20 @@ HEADERS += \
     foldersizejob.h \
     appinfo.h
 
-OTHER_FILES +=
+OTHER_FILES += \
+    qml/FilesPlus/*.svg \
+    qml/FilesPlus/*.png \
+    qml/FilesPlus/*.js \
+    qml/FilesPlus/meego/*.qml \
+    qml/FilesPlus/symbian/*.qml
 
-RESOURCES += \
-    FilesPlus.qrc
+simulator {
+RESOURCES += FilesPlus_symbian.qrc
+}
+symbian {
+RESOURCES += FilesPlus_symbian.qrc
+}
+contains(MEEGO_EDITION, harmattan) {
+RESOURCES += FilesPlus_meego.qrc
+}
 

@@ -29,8 +29,9 @@ Rectangle {
         id: headerText
         anchors.fill: parent
         anchors.margins: 3
-        verticalAlignment: Text.AlignVCenter
+        anchors.verticalCenter: parent.verticalCenter
         color: "white"
+        font.pointSize: 6
         elide: Text.ElideMiddle
     }
 }

@@ -17,7 +17,7 @@ Rectangle {
         id: driveGrid
         anchors.fill: parent
         cellWidth: parent.width
-        cellHeight: 70  // Hieght equals to list item.
+        cellHeight: 70
         delegate: driveCell
         highlight: Rectangle {
             gradient: highlightGradient
@@ -30,7 +30,7 @@ Rectangle {
         property string currentDriveName: ""
 
         onMovementStarted: {
-            currentItem.state = "normal";
+            if (currentItem) currentItem.state = "normal";
         }
     }
 
@@ -71,33 +71,32 @@ Rectangle {
             ]
 
             Row {
-//                anchors.fill: parent
-                width: parent.width
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.fill: parent
                 spacing: 2
                 Image {
                     id: driveIcon
                     width: 67
                     height: 57
                     source: driveIcons[model.driveType]
+                    anchors.verticalCenter: parent.verticalCenter
                 }
 
                 Column {
                     width: parent.width - driveIcon.width - 4
                     height: parent.height
-                    spacing: 0
+                    anchors.verticalCenter: parent.verticalCenter
                     Text {
                         width: parent.width
-                        height: 29
+                        height: 35
                         color: "white"
-                        font.family: "Century Gothic"
-                        font.pixelSize: 18
-                        text: model.logicalDrive + ": " + driveTypeTexts[model.driveType]
+                        font.pointSize: 6
+                        verticalAlignment: Text.AlignVCenter
+                        text: model.logicalDrive + "  (" + driveTypeTexts[model.driveType] + ")"
                     }
 
                     Rectangle {
                         width: parent.width
-                        height: 29
+                        height: 30
                         gradient: Gradient {
                             GradientStop {
                                 position: 0
@@ -139,11 +138,10 @@ Rectangle {
                             width: parent.width
                             height: parent.height
                             color: "white"
-                            font.family: "Century Gothic"
                             verticalAlignment: Text.AlignVCenter
                             horizontalAlignment: Text.AlignHCenter
                             style: Text.Outline
-                            font.pixelSize:16
+                            font.pointSize: 6
                             text: "Free: " + Utility.formatFileSize(model.availableSpace, 1)
                                   + " / Total: " + Utility.formatFileSize(model.totalSpace, 1)
                         }

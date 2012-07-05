@@ -51,3 +51,7 @@ function now() {
 function nowText() {
     return Qt.formatDateTime(now(), "d MMM yyyy h:mm:ss ap");
 }
+
+function replace(text, oldText, newText) {
+    return text.replace(oldText, newText);
+}

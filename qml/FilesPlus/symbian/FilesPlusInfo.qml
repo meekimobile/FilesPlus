@@ -2,7 +2,7 @@ import QtQuick 1.1
 
 Column {
     id: filePlusInfo
-    width: 270
+    width: parent.width
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.verticalCenter: parent.verticalCenter
 
@@ -19,7 +19,7 @@ Column {
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton
             onClicked: {
-                Qt.openUrlExternally("http://sites.google.com/site/meekimobile");
+                Qt.openUrlExternally("https://sites.google.com/site/meekimobile/products/filesplus");
             }
         }
     }
@@ -31,14 +31,13 @@ Column {
         anchors.horizontalCenter: parent.horizontalCenter
         horizontalAlignment: Text.AlignLeft
         font.bold: true
-        font.family: "Century Gothic"
         font.pointSize: 10
     }
 
     Text {
         id: description
         color: "grey"
-        width: 280
+        width: 300
         text: "FilesPlus provide extended functions beyond file manager.\
 \n   • Print with Google™ Cloud Print.\
 \n   • Sync with Cloud Drive.\
@@ -46,7 +45,6 @@ Column {
 \n   • Present folders in Pie view."
         anchors.horizontalCenter: parent.horizontalCenter
         wrapMode: Text.WordWrap
-        font.family: "Century Gothic"
         font.pointSize: 6
     }
 
@@ -84,9 +82,8 @@ Column {
         text: qsTr("Developed by MeekiMobile")
         horizontalAlignment: Text.AlignHCenter
         anchors.horizontalCenter: parent.horizontalCenter
-        font.pointSize: 6
         wrapMode: Text.WordWrap
-        font.family: "Century Gothic"
+        font.pointSize: 6
     }
 
     Image {

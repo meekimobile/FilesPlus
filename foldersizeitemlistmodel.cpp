@@ -327,7 +327,7 @@ int FolderSizeItemListModel::getSortFlag() const
 
 void FolderSizeItemListModel::setSortFlag(const int sortFlag)
 {
-    if (m.setSortFlag(sortFlag)) {        
+    if (m.setSortFlag(sortFlag)) {
         m.sortItemList(itemList);
 
         // If itemList is actually sorted, refreshItems to emit dataChanged.
@@ -646,7 +646,6 @@ int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
             }
             i++;
         }
-
     }
 
     index = (isOnCurrentDir && index == -1)?-2:index;

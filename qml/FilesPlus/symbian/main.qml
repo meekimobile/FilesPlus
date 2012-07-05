@@ -61,8 +61,7 @@ PageStackWindow {
         text: qsTr("FilesPlus")
         smooth: false
         verticalAlignment: Text.AlignVCenter
-        font.family: "MS Shell Dlg 2"
-        font.pixelSize: 18
+        font.pointSize: 6
     }
 
     Rectangle {

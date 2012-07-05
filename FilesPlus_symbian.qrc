@@ -1,0 +1,78 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/FilesPlus/arrow-up.svg</file>
+        <file>qml/FilesPlus/chart.svg</file>
+        <file>qml/FilesPlus/list.svg</file>
+        <file>qml/FilesPlus/MeekiMobile256.svg</file>
+        <file>qml/FilesPlus/close_stop.svg</file>
+        <file>qml/FilesPlus/device.svg</file>
+        <file>qml/FilesPlus/save.svg</file>
+        <file>qml/FilesPlus/memory_card.svg</file>
+        <file>qml/FilesPlus/folder.svg</file>
+        <file>qml/FilesPlus/notes.svg</file>
+        <file>qml/FilesPlus/FolderPieIcon.svg</file>
+        <file>qml/FilesPlus/music_player_update.svg</file>
+        <file>qml/FilesPlus/usb.svg</file>
+        <file>qml/FilesPlus/delete.svg</file>
+        <file>qml/FilesPlus/trim.svg</file>
+        <file>qml/FilesPlus/next.svg</file>
+        <file>qml/FilesPlus/copy.svg</file>
+        <file>qml/FilesPlus/paste.svg</file>
+        <file>qml/FilesPlus/FilesPlusIcon.svg</file>
+        <file>qml/FilesPlus/FilesPlus256.png</file>
+        <file>qml/FilesPlus/FolderPie256.png</file>
+        <file>qml/FilesPlus/print.svg</file>
+        <file>qml/FilesPlus/play.svg</file>
+        <file>qml/FilesPlus/refresh.svg</file>
+        <file>qml/FilesPlus/drive_icon.png</file>
+        <file>qml/FilesPlus/dropbox_icon.png</file>
+        <file>qml/FilesPlus/dropbox_white.png</file>
+        <file>qml/FilesPlus/cloudprint-ready.png</file>
+        <file>qml/FilesPlus/photos.svg</file>
+        <file>qml/FilesPlus/options.svg</file>
+        <file>qml/FilesPlus/cloud_dirty.svg</file>
+        <file>qml/FilesPlus/cloud.svg</file>
+        <file>qml/FilesPlus/toolbar_extension.svg</file>
+        <file>qml/FilesPlus/check_mark.svg</file>
+        <file>qml/FilesPlus/upload.svg</file>
+        <file>qml/FilesPlus/back.svg</file>
+        <file>qml/FilesPlus/download.svg</file>
+        <file>qml/FilesPlus/clock.svg</file>
+        <file>qml/FilesPlus/rename.svg</file>
+        <file>qml/FilesPlus/folder_add.svg</file>
+        <file>qml/FilesPlus/cloud_wait.svg</file>
+        <file>qml/FilesPlus/mail.svg</file>
+        <file>qml/FilesPlus/ok.svg</file>
+        <file>qml/FilesPlus/Utility.js</file>
+        <file alias="qml/FilesPlus/TitlePanel.qml">qml/FilesPlus/symbian/TitlePanel.qml</file>
+        <file alias="qml/FilesPlus/AboutPage.qml">qml/FilesPlus/symbian/AboutPage.qml</file>
+        <file alias="qml/FilesPlus/ConfirmDialog.qml">qml/FilesPlus/symbian/ConfirmDialog.qml</file>
+        <file alias="qml/FilesPlus/DriveGrid.qml">qml/FilesPlus/symbian/DriveGrid.qml</file>
+        <file alias="qml/FilesPlus/DrivePage.qml">qml/FilesPlus/symbian/DrivePage.qml</file>
+        <file alias="qml/FilesPlus/FilesPlusInfo.qml">qml/FilesPlus/symbian/FilesPlusInfo.qml</file>
+        <file alias="qml/FilesPlus/FolderPage.qml">qml/FilesPlus/symbian/FolderPage.qml</file>
+        <file alias="qml/FilesPlus/FolderPieInfo.qml">qml/FilesPlus/symbian/FolderPieInfo.qml</file>
+        <file alias="qml/FilesPlus/main.qml">qml/FilesPlus/symbian/main.qml</file>
+        <file alias="qml/FilesPlus/MainMenu.qml">qml/FilesPlus/symbian/MainMenu.qml</file>
+        <file alias="qml/FilesPlus/MenuItemWithCheck.qml">qml/FilesPlus/symbian/MenuItemWithCheck.qml</file>
+        <file alias="qml/FilesPlus/MessageDialog.qml">qml/FilesPlus/symbian/MessageDialog.qml</file>
+        <file alias="qml/FilesPlus/MoreApps.qml">qml/FilesPlus/symbian/MoreApps.qml</file>
+        <file alias="qml/FilesPlus/SettingMenu.qml">qml/FilesPlus/symbian/SettingMenu.qml</file>
+        <file alias="qml/FilesPlus/SortByMenu.qml">qml/FilesPlus/symbian/SortByMenu.qml</file>
+        <file alias="qml/FilesPlus/Splash.qml">qml/FilesPlus/symbian/Splash.qml</file>
+        <file alias="qml/FilesPlus/ImageViewPage.qml">qml/FilesPlus/symbian/ImageViewPage.qml</file>
+        <file alias="qml/FilesPlus/TextViewPage.qml">qml/FilesPlus/symbian/TextViewPage.qml</file>
+        <file alias="qml/FilesPlus/PopupToolRing.qml">qml/FilesPlus/symbian/PopupToolRing.qml</file>
+        <file alias="qml/FilesPlus/ClipboardModel.qml">qml/FilesPlus/symbian/ClipboardModel.qml</file>
+        <file alias="qml/FilesPlus/MarkMenu.qml">qml/FilesPlus/symbian/MarkMenu.qml</file>
+        <file alias="qml/FilesPlus/PrintJobsPage.qml">qml/FilesPlus/symbian/PrintJobsPage.qml</file>
+        <file alias="qml/FilesPlus/UploadProgressDialog.qml">qml/FilesPlus/symbian/UploadProgressDialog.qml</file>
+        <file alias="qml/FilesPlus/DownloadProgressDialog.qml">qml/FilesPlus/symbian/DownloadProgressDialog.qml</file>
+        <file alias="qml/FilesPlus/CloudDriveUsersDialog.qml">qml/FilesPlus/symbian/CloudDriveUsersDialog.qml</file>
+        <file alias="qml/FilesPlus/SettingPage.qml">qml/FilesPlus/symbian/SettingPage.qml</file>
+        <file alias="qml/FilesPlus/CloudDriveJobsPage.qml">qml/FilesPlus/symbian/CloudDriveJobsPage.qml</file>
+        <file alias="qml/FilesPlus/CloudDriveAccountsPage.qml">qml/FilesPlus/symbian/CloudDriveAccountsPage.qml</file>
+        <file alias="qml/FilesPlus/ProgressDialog.qml">qml/FilesPlus/symbian/ProgressDialog.qml</file>
+        <file alias="qml/FilesPlus/RecipientSelectionDialog.qml">qml/FilesPlus/symbian/RecipientSelectionDialog.qml</file>
+    </qresource>
+</RCC>

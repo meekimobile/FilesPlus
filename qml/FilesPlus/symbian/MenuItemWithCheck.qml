@@ -18,7 +18,7 @@ MenuItem {
         }
 
         visible: root.checked
-        source: "play.svg"
+        source: "ok.svg"
         sourceSize.width: platformStyle.graphicSizeSmall
         sourceSize.height: platformStyle.graphicSizeSmall
     }
