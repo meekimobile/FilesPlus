@@ -19,19 +19,17 @@ Page {
     ToolBarLayout {
         id: toolBarLayout
 
-        ToolButton {
+        ToolIcon {
             id: backButton
-            iconSource: "toolbar-back"
-            flat: true
+            iconId: "toolbar-back"
             onClicked: {
                 quitSlot();
             }
         }
 
-        ToolButton {
+        ToolIcon {
             id: menuButton
-            iconSource: "toolbar-menu"
-            flat: true
+            iconId: "toolbar-view-menu"
             onClicked: {
                 mainMenu.open();
             }

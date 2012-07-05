@@ -42,26 +42,23 @@ Page {
     ToolBarLayout {
         id: toolBarLayout
 
-        ToolButton {
+        ToolIcon {
             id: backButton
-            iconSource: "toolbar-back"
-            flat: true
+            iconId: "toolbar-back"
             onClicked: {
                 pageStack.pop();
             }
         }
-        ToolButton {
+        ToolIcon {
             id: refreshButton
-            iconSource: "toolbar-refresh"
-            flat: true
+            iconId: "toolbar-refresh"
             onClicked: {
                 refreshAccountsInfoSlot();
             }
         }
-        ToolButton {
+        ToolIcon {
             id: addButton
-            iconSource: "toolbar-add"
-            flat: true
+            iconId: "toolbar-add"
             onClicked: {
                 var p = pageStack.find(function (page) { return page.name == "folderPage"; });
                 if (p) p.registerDropboxUserSlot();

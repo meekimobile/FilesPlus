@@ -107,6 +107,18 @@ HEADERS += \
     appinfo.h
 
 OTHER_FILES += \
+    qtc_packaging/debian_harmattan/rules \
+    qtc_packaging/debian_harmattan/README \
+    qtc_packaging/debian_harmattan/manifest.aegis \
+    qtc_packaging/debian_harmattan/copyright \
+    qtc_packaging/debian_harmattan/control \
+    qtc_packaging/debian_harmattan/compat \
+    qtc_packaging/debian_harmattan/changelog \
+    qml/FilesPlus/meego/MenuItemWithIcon.qml \
+    qml/FilesPlus/meego/CommonDialog.qml \
+    qml/FilesPlus/meego/MenuWithIcon.qml
+
+OTHER_FILES += \
     qml/FilesPlus/*.svg \
     qml/FilesPlus/*.png \
     qml/FilesPlus/*.js \

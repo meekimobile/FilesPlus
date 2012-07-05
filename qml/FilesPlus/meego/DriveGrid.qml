@@ -89,7 +89,7 @@ Rectangle {
                         width: parent.width
                         height: 35
                         color: "white"
-                        font.pointSize: 6
+                        font.pointSize: 18
                         verticalAlignment: Text.AlignVCenter
                         text: model.logicalDrive + "  (" + driveTypeTexts[model.driveType] + ")"
                     }
@@ -141,7 +141,7 @@ Rectangle {
                             verticalAlignment: Text.AlignVCenter
                             horizontalAlignment: Text.AlignHCenter
                             style: Text.Outline
-                            font.pointSize: 6
+                            font.pointSize: 16
                             text: "Free: " + Utility.formatFileSize(model.availableSpace, 1)
                                   + " / Total: " + Utility.formatFileSize(model.totalSpace, 1)
                         }

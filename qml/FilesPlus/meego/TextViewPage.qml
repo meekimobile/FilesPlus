@@ -10,16 +10,15 @@ Page {
     property string filePath
 
     tools: ToolBarLayout {
-        ToolButton {
+        ToolIcon {
             id: backButton
-            iconSource: "toolbar-back"
-
+            iconId: "toolbar-back"
             onClicked: {
                 pageStack.pop();
             }
         }
 
-        ToolButton {
+        ToolIcon {
             id: openButton
             iconSource: "notes.svg"
             onClicked: {
@@ -27,10 +26,9 @@ Page {
             }
         }
 
-        ToolButton {
+        ToolIcon {
             id: printButton
             iconSource: "print.svg"
-
             onClicked: {
                 var p = pageStack.find(function (page) { return page.name == "folderPage"; });
                 if (p) p.printFileSlot(textViewPage.filePath, -1);

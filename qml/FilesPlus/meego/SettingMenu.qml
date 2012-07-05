@@ -12,7 +12,12 @@ Menu {
     signal showCloudPrintJobs()
 
     content: MenuLayout {
-        MenuItem {
+        id: menuLayout
+
+        // TODO Alias for fixing incorrect children.
+        default property alias children: menuLayout.menuChildren
+        
+		MenuItem {
             id: menuPrintJobs
             text: "Show CloudPrint jobs"
             onClicked: {

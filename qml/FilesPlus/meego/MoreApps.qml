@@ -5,9 +5,9 @@ Page {
     id: moreApps
     z: 3
     tools: ToolBarLayout {
-        ToolButton {
+        ToolIcon {
             id: back
-            iconSource: "toolbar-back"
+            iconId: "toolbar-back"
             onClicked: {
                 pageStack.pop();
             }

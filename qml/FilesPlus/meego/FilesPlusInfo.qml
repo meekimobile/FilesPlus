@@ -31,13 +31,13 @@ Column {
         anchors.horizontalCenter: parent.horizontalCenter
         horizontalAlignment: Text.AlignLeft
         font.bold: true
-        font.pointSize: 10
+        font.pointSize: 24
     }
 
     Text {
         id: description
         color: "grey"
-        width: 300
+        width: 400
         text: "FilesPlus provide extended functions beyond file manager.\
 \n   • Print with Google™ Cloud Print.\
 \n   • Sync with Cloud Drive.\
@@ -45,7 +45,7 @@ Column {
 \n   • Present folders in Pie view."
         anchors.horizontalCenter: parent.horizontalCenter
         wrapMode: Text.WordWrap
-        font.pointSize: 6
+        font.pointSize: 16
     }
 
     Row {
@@ -83,7 +83,7 @@ Column {
         horizontalAlignment: Text.AlignHCenter
         anchors.horizontalCenter: parent.horizontalCenter
         wrapMode: Text.WordWrap
-        font.pointSize: 6
+        font.pointSize: 14
     }
 
     Image {

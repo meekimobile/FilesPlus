@@ -13,27 +13,24 @@ Page {
     ToolBarLayout {
         id: toolBarLayout
 
-        ToolButton {
+        ToolIcon {
             id: backButton
-            iconSource: "toolbar-back"
-            flat: true
+            iconId: "toolbar-back"
             onClicked: {
                 pageStack.pop();
             }
         }
 
-        ToolButton {
+        ToolIcon {
             id: refreshButton
-            iconSource: "toolbar-refresh"
-            flat: true
+            iconId: "toolbar-refresh"
             onClicked: {
             }
         }
 
-        ToolButton {
+        ToolIcon {
             id: menuButton
-            iconSource: "toolbar-menu"
-            flat: true
+            iconId: "toolbar-menu"
             onClicked: {
             }
         }

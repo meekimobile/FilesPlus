@@ -33,9 +33,9 @@ Page {
     }
 
     tools: ToolBarLayout {
-        ToolButton {
+        ToolIcon {
             id: back
-            iconSource: "toolbar-back"
+            iconId: "toolbar-back"
             onClicked: {
                 pageStack.pop();
             }

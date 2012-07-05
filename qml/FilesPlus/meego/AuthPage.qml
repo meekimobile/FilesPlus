@@ -13,9 +13,9 @@ Page {
         id: toolBarLayout
         x: 0
 
-        ToolButton {
+        ToolIcon {
             id:backButton
-            iconSource: "toolbar-back"
+            iconId: "toolbar-back"
 
             onClicked: {
                 pageStack.pop(authPage);

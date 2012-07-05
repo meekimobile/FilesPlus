@@ -31,7 +31,7 @@ Rectangle {
         anchors.margins: 3
         anchors.verticalCenter: parent.verticalCenter
         color: "white"
-        font.pointSize: 6
+        font.pointSize: 18
         elide: Text.ElideMiddle
     }
 }

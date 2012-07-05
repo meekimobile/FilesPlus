@@ -61,7 +61,7 @@ PageStackWindow {
         text: qsTr("FilesPlus")
         smooth: false
         verticalAlignment: Text.AlignVCenter
-        font.pointSize: 6
+        font.pointSize: 18
     }
 
     Rectangle {
@@ -85,7 +85,6 @@ PageStackWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             running: false
             visible: true
-            platformInverted: false
         }
 
         Text {
@@ -131,6 +130,9 @@ PageStackWindow {
         interval: 3000
 
         onLoaded: {
+            // Set theme.inverted = true -> black theme.
+            theme.inverted = true;
+
             // Load folderPage then push drivePage to increase performance.
             pageStack.push(Qt.resolvedUrl("FolderPage.qml"));
             pageStack.push(Qt.resolvedUrl("DrivePage.qml"));

@@ -69,10 +69,9 @@ Page {
         z: 2
         visible: false
         tools: ToolBarLayout {
-            ToolButton {
+            ToolIcon {
                 id: backButton
-                iconSource: "toolbar-back"
-
+                iconId: "toolbar-back"
                 onClicked: {
                     var p = pageStack.find(function (page) { return page.name == "folderPage"; });
                     if (p) p.refreshSlot();
@@ -80,7 +79,7 @@ Page {
                 }
             }
 
-            ToolButton {
+            ToolIcon {
                 id: openButton
                 iconSource: "photos.svg"
                 onClicked: {
@@ -88,10 +87,9 @@ Page {
                 }
             }
 
-            ToolButton {
+            ToolIcon {
                 id: printButton
                 iconSource: "print.svg"
-
                 onClicked: {
                     var p = pageStack.find(function (page) { return page.name == "folderPage"; });
                     if (p) p.printFileSlot(imageGrid.getViewFilePath(), -1);

@@ -2,47 +2,55 @@ import QtQuick 1.1
 import com.nokia.meego 1.1
 import FolderSizeItemListModel 1.0
 
-Menu {
+MenuWithIcon {
     id: sortByMenu
     z: 2
 
     property int sortFlag
-    property variant disabledSorts: []
 
     signal selectSort (int flag)
 
     content: MenuLayout {
-        MenuItemWithCheck {
+        id: menuLayout
+
+        // TODO Alias for fixing incorrect children.
+        default property alias children: menuLayout.menuChildren
+
+        MenuItemWithIcon {
             property int flag: FolderSizeItemListModel.SortByName
             text: "Sort by Name"
             checked: (sortFlag == flag)
+            platformLeftMargin: 60
             onClicked: {
                 selectSort(flag);
             }
         }
 
-        MenuItemWithCheck {
+        MenuItemWithIcon {
             property int flag: FolderSizeItemListModel.SortByType
             text: "Sort by Type"
             checked: (sortFlag == flag)
+            platformLeftMargin: 60
             onClicked: {
                 selectSort(flag);
             }
         }
 
-        MenuItemWithCheck {
+        MenuItemWithIcon {
             property int flag: FolderSizeItemListModel.SortByTime
             text: "Sort by Time"
             checked: (sortFlag == flag)
+            platformLeftMargin: 60
             onClicked: {
                 selectSort(flag);
             }
         }
 
-        MenuItemWithCheck {
+        MenuItemWithIcon {
             property int flag: FolderSizeItemListModel.SortBySize
             text: "Sort by Size"
             checked: (sortFlag == flag)
+            platformLeftMargin: 60
             onClicked: {
                 selectSort(flag);
             }

@@ -2,7 +2,7 @@ import QtQuick 1.1
 import com.nokia.meego 1.1
 import CloudDriveModel 1.0
 
-Menu {
+MenuWithIcon {
     id: mainMenu
     z: 2
 
@@ -14,6 +14,9 @@ Menu {
 
     content: MenuLayout {
         id: menuLayout
+
+        // TODO Alias for fixing incorrect children.
+        default property alias children: menuLayout.menuChildren
 
         MenuItem {
             id: pasteMenuItem

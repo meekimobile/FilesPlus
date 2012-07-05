@@ -49,10 +49,9 @@ Page {
     ToolBarLayout {
         id: toolBarLayout
 
-        ToolButton {
+        ToolIcon {
             id: backButton
-            iconSource: "toolbar-back"
-            flat: true
+            iconId: "toolbar-back"
             onClicked: {
                 if (fsListView.state == "mark") {
                     fsListView.state = "";
@@ -63,10 +62,9 @@ Page {
             }
         }
 
-        ToolButton {
+        ToolIcon {
             id: refreshButton
-            iconSource: "toolbar-refresh"
-            flat: true
+            iconId: "toolbar-refresh"
             visible: (fsListView.state == "")
 
             Component.onCompleted: {
@@ -74,10 +72,9 @@ Page {
             }
         }
 
-        ToolButton {
+        ToolIcon {
             id: flipButton
             iconSource: (folderPage.state != "list") ? "list.svg" : "chart.svg"
-            flat: true
             visible: (fsListView.state == "")
 
             Component.onCompleted: {
@@ -85,10 +82,9 @@ Page {
             }
         }
 
-        ToolButton {
+        ToolIcon {
             id: menuButton
-            iconSource: "toolbar-menu"
-            flat: true
+            iconId: "toolbar-view-menu"
             onClicked: {
                 if (fsListView.state == "mark") {
                     markMenu.open();
@@ -595,7 +591,7 @@ Page {
         anchors.horizontalCenter: parent.horizontalCenter
         model: fsModel
         visible: (folderPage.state == "chart")
-        labelFont: "Sans Serif,6"
+        labelFont: "Sans Serif,16"
 
         onChartClicked: {
             console.debug("QML pieChartView.onChartClicked");
@@ -776,13 +772,31 @@ Page {
     Component {
         id: listDelegate
 
-        ListItem {
+        Rectangle {
             id: listItem
+            width: fsListView.width
+            height: 70
+            color: "transparent"
+
             property real mouseX: 0
             property real mouseY: 0
             property string fileName: name
             property string filePath: absolutePath
             property int clipboardIndex: clipboard.getModelIndex(absolutePath)
+
+            state: "normal"
+            states: [
+                State {
+                    name: "highlight"
+                    PropertyChanges {
+                        target: listItem
+                        gradient: highlightGradient
+                    }
+                },
+                State {
+                    name: "normal"
+                }
+            ]
 
             function getIconSource() {
                 var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
@@ -842,21 +856,22 @@ Page {
                     Row {
                         width: parent.width
                         height: parent.height / 2
-                        ListItemText {
-                            mode: listItem.mode
-                            role: "Title"
+                        Text {
                             text: name
+                            color: "white"
                             width: parent.width - sizeText.width
                             height: parent.height
+                            font.pointSize: 18
+                            elide: Text.ElideMiddle
                             verticalAlignment: Text.AlignVCenter
                         }
-                        ListItemText {
+                        Text {
                             id: sizeText
-                            mode: listItem.mode
-                            role: "Subtitle"
                             text: Utility.formatFileSize(size, 1)
+                            color: "white"
                             width: 80
                             height: parent.height
+                            font.pointSize: 16
                             horizontalAlignment: Text.AlignRight
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -869,10 +884,8 @@ Page {
                             width: parent.width - syncIcon.width - parent.spacing
                             height: parent.height
                             color: "transparent"
-                            ListItemText {
+                            Text {
                                 id: listItemSubTitle
-                                mode: listItem.mode
-                                role: "SubTitle"
                                 text: {
                                     var sub = ""
                                     if (subDirCount > 0) sub += subDirCount + " dir" + ((subDirCount > 1) ? "s" : "");
@@ -881,8 +894,11 @@ Page {
 
                                     return sub;
                                 }
+                                color: "grey"
                                 width: parent.width
                                 height: parent.height
+                                font.pointSize: 16
+                                elide: Text.ElideMiddle
                                 verticalAlignment: Text.AlignVCenter
                                 visible: !isRunning
                             }
@@ -945,6 +961,25 @@ Page {
                 }
             }
 
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: "grey"
+                anchors.bottom: parent.bottom
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton
+
+                onPressed: {
+                    listItem.state = "highlight";
+                    fsListView.currentIndex = index;
+                    parent.mouseX = mouseX;
+                    parent.mouseY = mouseY;
+                    mouse.accepted = false;
+                }
+
             onPressAndHold: {
                 if (fsListView.state != "mark") {
                     fsListView.currentIndex = index;
@@ -959,6 +994,9 @@ Page {
             }
 
             onClicked: {
+                // console.debug("listItem clicked " + (parent.x + mouseX) + ", " + (parent.y + mouseY) );
+                fsListView.currentItem.state = "normal";
+
                 if (fsListView.state == "mark") {
                     if (listItem.clipboardIndex == -1) {
                         fsModel.setProperty(index, FolderSizeItemListModel.IsCheckedRole, !isChecked);
@@ -989,14 +1027,6 @@ Page {
                     }
                 }
             }
-
-            MouseArea {
-                anchors.fill: parent
-                onPressed: {
-                    parent.mouseX = mouseX;
-                    parent.mouseY = mouseY;
-                    mouse.accepted = false;
-                }
             }
         }
     }

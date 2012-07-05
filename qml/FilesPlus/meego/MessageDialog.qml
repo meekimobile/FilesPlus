@@ -5,21 +5,12 @@ import "Utility.js" as Utility
 CommonDialog {
     id: messageDialog
     
-    property alias message: contentText.text
+    property alias message: messageDialog.contentText
     property bool autoClose: false
     property int autoCloseInterval: 3000
 
     titleIcon: "FilesPlusIcon.svg"
     buttonTexts: ["Ok"]
-    content: Text {
-        id: contentText
-        width: parent.width - 20
-        height: implicitHeight
-        color: "white"
-        font.pointSize: 6
-        wrapMode: Text.WordWrap
-        anchors.horizontalCenter: parent.horizontalCenter
-    }
     
     SequentialAnimation {
         id: hideAction
@@ -27,6 +18,12 @@ CommonDialog {
         PauseAnimation { duration: autoCloseInterval }
         ScriptAction {
             script: close();
+        }
+    }
+
+    onButtonClicked: {
+        if (index == 0) {
+            accept();
         }
     }
 

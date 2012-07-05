@@ -32,18 +32,18 @@ Column {
         anchors.horizontalCenter: parent.horizontalCenter
         horizontalAlignment: Text.AlignLeft
         font.bold: true
-        font.pointSize: 10
+        font.pointSize: 24
     }
 
     Text {
         id: description
         color: "grey"
-        width: 300
+        width: 400
         text: qsTr("FolderPie helps you collect each folder actual size on your disk space.\nAnd present in Pie view for easy understanding at glance.")
         horizontalAlignment: Text.AlignHCenter
         anchors.horizontalCenter: parent.horizontalCenter
         wrapMode: Text.WordWrap
-        font.pointSize: 6
+        font.pointSize: 16
     }
 
     Text {
@@ -54,7 +54,7 @@ Column {
         horizontalAlignment: Text.AlignHCenter
         anchors.horizontalCenter: parent.horizontalCenter
         wrapMode: Text.WordWrap
-        font.pointSize: 6
+        font.pointSize: 14
     }
 
     Image {
