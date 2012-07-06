@@ -88,17 +88,17 @@ QString DropboxClient::createTimestamp() {
     return QString("%1").arg(seconds);
 }
 
-QString DropboxClient::createNonce() {
-    QString ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    QString nonce;
+//QString DropboxClient::createNonce() {
+//    QString ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+//    QString nonce;
 
-    for(int i = 0; i <= 16; ++i)
-    {
-        nonce += ALPHANUMERIC.at( qrand() % ALPHANUMERIC.length() );
-    }
+//    for(int i = 0; i <= 16; ++i)
+//    {
+//        nonce += ALPHANUMERIC.at( qrand() % ALPHANUMERIC.length() );
+//    }
 
-    return nonce;
-}
+//    return nonce;
+//}
 
 QByteArray DropboxClient::createBaseString(QString method, QString uri, QString queryString) {
     QByteArray baseString;
@@ -187,7 +187,7 @@ void DropboxClient::requestToken(QString nonce)
     sortMap["oauth_consumer_key"] = m_paramMap["oauth_consumer_key"];
     sortMap["oauth_signature_method"] = m_paramMap["oauth_signature_method"];
     sortMap["oauth_timestamp"] = createTimestamp();
-    sortMap["oauth_nonce"] = createNonce();
+    sortMap["oauth_nonce"] = nonce;
     QString queryString = createNormalizedQueryString(sortMap);
     qDebug() << "queryString " << queryString;
 
@@ -236,7 +236,7 @@ void DropboxClient::accessToken(QString nonce)
     sortMap["oauth_token"] = requestTokenPair.token;
     sortMap["oauth_signature_method"] = signatureMethod;
     sortMap["oauth_timestamp"] = createTimestamp();
-    sortMap["oauth_nonce"] = createNonce();
+    sortMap["oauth_nonce"] = nonce;
     QString queryString = createNormalizedQueryString(sortMap);
     qDebug() << "queryString " << queryString;
 
@@ -339,7 +339,7 @@ void DropboxClient::accountInfo(QString nonce, QString uid)
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", createOAuthHeaderForUid(createNonce(), uid, "GET", uri));
+    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
     QNetworkReply *reply = manager->get(req);
     connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
@@ -640,6 +640,9 @@ void DropboxClient::accessTokenReplyFinished(QNetworkReply *reply)
         if (uid != "" && accessTokenPair.token != "" && accessTokenPair.secret != "") {
             accessTokenPairMap[uid] = accessTokenPair;
         }
+
+        // Save tokens.
+        saveAccessPairMap();
 
         qDebug() << "m_paramMap " << m_paramMap;
         qDebug() << "accessTokenPairMap " << accessTokenPairMap;

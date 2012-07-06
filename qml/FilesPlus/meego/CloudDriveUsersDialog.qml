@@ -1,9 +1,5 @@
 import QtQuick 1.1
 import com.nokia.meego 1.1
-import Charts 1.0
-import FolderSizeItemListModel 1.0
-import GCPClient 1.0
-import CloudDriveModel 1.0
 import "Utility.js" as Utility
 
 SelectionDialog {
@@ -38,10 +34,6 @@ SelectionDialog {
                 elide: Text.ElideMiddle
                 color: "white"
                 text: email
-
-                Component.onCompleted: {
-                    console.debug(email);
-                }
             }
             Image {
                 anchors.verticalCenter: parent.verticalCenter
@@ -59,7 +51,7 @@ SelectionDialog {
             uidDialog.accept();
         }
     }
-        
+
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
             selectedIndex = -1;

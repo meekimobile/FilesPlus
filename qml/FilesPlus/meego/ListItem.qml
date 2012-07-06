@@ -43,7 +43,7 @@ Item {
     Rectangle {
         width: parent.width
         height: 1
-        color: "grey"
+        color: "#202020"
         anchors.bottom: parent.bottom
     }
 
@@ -52,17 +52,17 @@ Item {
         //TODO implement onPressed, onReleased to highlight item.
         onPressed: {
 //            console.debug("ListItem onPressed mouse " + mouse);
+            listItem.postPressed(mouse);
+
             parent.mouseX = mouseX;
             parent.mouseY = mouseY;
             parent.pressed = true;
-
-            listItem.postPressed(mouse);
         }
         onReleased: {
 //            console.debug("ListItem onReleased mouse " + mouse);
-            parent.pressed = false;
-
             listItem.postReleased(mouse);
+
+            parent.pressed = false;
         }
         onClicked: {
 //            console.debug("ListItem onClicked mouse " + mouse);

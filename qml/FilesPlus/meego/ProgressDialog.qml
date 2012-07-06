@@ -67,7 +67,7 @@ CommonDialog {
             height: 30
             verticalAlignment: Text.AlignBottom
             color: "white"
-            font.pointSize: 6
+            font.pointSize: 16
             wrapMode: Text.WordWrap
             elide: Text.ElideMiddle
         }
@@ -75,7 +75,7 @@ CommonDialog {
             id: target
             width: parent.width
             color: "white"
-            font.pointSize: 6
+            font.pointSize: 16
             wrapMode: Text.WordWrap
             elide: Text.ElideMiddle
         }
@@ -103,7 +103,7 @@ CommonDialog {
                 id: countText
                 width: (progressDialog.maxCount == 0) ? 0 : 120
                 color: "grey"
-                font.pointSize: 6
+                font.pointSize: 16
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignLeft
                 text: (progressDialog.maxCount == 0) ? "" : (progressDialog.count + " / " + progressDialog.maxCount)
@@ -112,7 +112,7 @@ CommonDialog {
                 id: progressText
                 width: parent.width - countText.width
                 color: "grey"
-                font.pointSize: 6
+                font.pointSize: 16
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignRight
             }
@@ -121,7 +121,7 @@ CommonDialog {
             id: message
             width: parent.width
             color: "white"
-            font.pointSize: 6
+            font.pointSize: 16
             wrapMode: Text.WordWrap
             elide: Text.ElideMiddle
         }

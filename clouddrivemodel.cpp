@@ -1,6 +1,11 @@
 #include "clouddrivemodel.h"
 
+// Harmattan is a linux
+#if defined(Q_OS_LINUX)
+const QString CloudDriveModel::HashFilePath = "/home/user/.folderpie/CloudDriveModel.dat";
+#else
 const QString CloudDriveModel::HashFilePath = "C:/CloudDriveModel.dat";
+#endif
 const int CloudDriveModel::MaxRunningJobCount = 3;
 const QString CloudDriveModel::DirtyHash = "FFFFFFFF";
 
@@ -64,6 +69,16 @@ void CloudDriveModel::saveCloudDriveItems() {
     cleanItems();
 
     QFile file(HashFilePath);
+    QFileInfo info(file);
+    if (!info.absoluteDir().exists()) {
+        qDebug() << "CloudDriveModel::saveCloudDriveItems dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
+        bool res = QDir::home().mkpath(info.absolutePath());
+        if (!res) {
+            qDebug() << "CloudDriveModel::saveCloudDriveItems can't make dir" << info.absolutePath();
+        } else {
+            qDebug() << "CloudDriveModel::saveCloudDriveItems make dir" << info.absolutePath();
+        }
+    }
     if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);   // we will serialize the data into the file
         out << m_cloudDriveItems;
@@ -106,10 +121,13 @@ QString CloudDriveModel::createNonce() {
     QString ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     QString nonce;
 
-    for(int i = 0; i <= 16; ++i)
+    for(int i = 0; i <= 8; ++i)
     {
         nonce += ALPHANUMERIC.at( qrand() % ALPHANUMERIC.length() );
     }
+
+    nonce = nonce.append(QString("%1").arg(QDateTime::currentMSecsSinceEpoch()));
+    qDebug() << "CloudDriveModel::createNonce" << nonce;
 
     return nonce;
 }
@@ -332,6 +350,7 @@ QString CloudDriveModel::getItemHash(QString localPath, CloudDriveModel::ClientT
 
 QString CloudDriveModel::getDefaultLocalFilePath(const QString &remoteFilePath)
 {
+#if defined(Q_WS_SIMULATOR)
     QRegExp rx("^(/*)([C-F])(.+)$");
     rx.indexIn(remoteFilePath);
     if (rx.captureCount() == 3) {
@@ -339,16 +358,49 @@ QString CloudDriveModel::getDefaultLocalFilePath(const QString &remoteFilePath)
     } else if (rx.captureCount() == 2) {
         return rx.cap(1).append(":").append(rx.cap(2));
     }
+#elif defined(Q_OS_SYMBIAN)
+    QRegExp rx("^(/*)([C-F])(.+)$");
+    rx.indexIn(remoteFilePath);
+    if (rx.captureCount() == 3) {
+        return rx.cap(2).append(":").append(rx.cap(3));
+    } else if (rx.captureCount() == 2) {
+        return rx.cap(1).append(":").append(rx.cap(2));
+    }
+#elif defined(Q_WS_HARMATTAN)
+    // Map /home/user/MyDocs/ to /E/ on remote to share the same remote root as E:/ on Symbian.
+    // TODO Make it more configuration.
+    QRegExp rx("^(/E/)(.+)$");
+    rx.indexIn(remoteFilePath);
+    if (rx.captureCount() == 2) {
+        return "/home/user/MyDocs/" + rx.cap(2);
+    }
+#endif
     return "";
 }
 
 QString CloudDriveModel::getDefaultRemoteFilePath(const QString &localFilePath)
 {
+#if defined(Q_WS_SIMULATOR)
     QRegExp rx("^([C-F])(:)(.+)$");
     rx.indexIn(localFilePath);
     if (rx.captureCount() == 3) {
         return "/" + rx.cap(1).append(rx.cap(3));
     }
+#elif defined(Q_OS_SYMBIAN)
+    QRegExp rx("^([C-F])(:)(.+)$");
+    rx.indexIn(localFilePath);
+    if (rx.captureCount() == 3) {
+        return "/" + rx.cap(1).append(rx.cap(3));
+    }
+#elif defined(Q_WS_HARMATTAN)
+    // Map /home/user/MyDocs/ to /E/ on remote to share the same remote root as E:/ on Symbian.
+    // TODO Make it more configuration.
+    QRegExp rx("^(/home/user/MyDocs/)(.+)$");
+    rx.indexIn(localFilePath);
+    if (rx.captureCount() == 2) {
+        return "/E/" + rx.cap(2);
+    }
+#endif
     return "";
 }
 

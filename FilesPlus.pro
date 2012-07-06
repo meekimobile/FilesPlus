@@ -128,12 +128,13 @@ OTHER_FILES += \
     qml/FilesPlus/symbian/*.qml
 
 simulator {
-RESOURCES += FilesPlus_symbian.qrc
+    RESOURCES += FilesPlus_symbian.qrc
 }
 symbian {
-RESOURCES += FilesPlus_symbian.qrc
+    RESOURCES += FilesPlus_symbian.qrc
 }
 contains(MEEGO_EDITION, harmattan) {
-RESOURCES += FilesPlus_meego.qrc
+    RESOURCES += FilesPlus_meego.qrc
+    DEFINES += Q_WS_HARMATTAN
 }
 

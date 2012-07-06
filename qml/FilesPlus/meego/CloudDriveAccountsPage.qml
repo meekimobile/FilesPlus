@@ -140,6 +140,7 @@ Page {
                     width: 48
                     height: 48
                     fillMode: Image.PreserveAspectFit
+                    anchors.verticalCenter: parent.verticalCenter
                 }
                 Column {
                     width: parent.width - cloudIcon.width
@@ -165,7 +166,7 @@ Page {
                         Text {
                             id: quotaText
                             text: Utility.formatFileSize(normal + shared) + " / " + Utility.formatFileSize(quota)
-                            width: 120
+                            width: 160
                             visible: (quota > 0)
                             horizontalAlignment: Text.AlignRight
                             verticalAlignment: Text.AlignVCenter

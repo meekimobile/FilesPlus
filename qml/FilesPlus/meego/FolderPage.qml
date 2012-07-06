@@ -780,7 +780,7 @@ Page {
         ListItem {
             id: listItem
             width: fsListView.width
-            height: 70
+            height: 80
 
             property string fileName: name
             property string filePath: absolutePath
@@ -1034,7 +1034,7 @@ Page {
 
     PopupToolRing {
         id: popupToolPanel
-        ringRadius: 70
+        ringRadius: 80
         buttonRadius: 30
         clipboardCount: clipboard.count
 
@@ -2358,8 +2358,55 @@ Page {
         }
     }
 
+    ContactModel {
+        id: favContactModel
+        filter: DetailFilter {
+            detail: ContactDetail.Email
+            field: EmailAddress.emailAddress
+            matchFlags: Filter.MatchContains
+            value: "@"
+        }
+        sortOrders: [
+            SortOrder {
+                detail: ContactDetail.Favorite
+                field: Favorite.favorite
+                direction: Qt.AscendingOrder
+            },
+            SortOrder {
+                detail: ContactDetail.Name
+                field: Name.FirstName
+                direction: Qt.AscendingOrder
+            },
+            SortOrder {
+                detail: ContactDetail.Name
+                field: Name.LastName
+                direction: Qt.AscendingOrder
+            }
+        ]
+
+        function getFavListModel() {
+            // Construct model.
+            var model = Qt.createQmlObject(
+                        'import QtQuick 1.1; ListModel {}', folderPage);
+
+            for (var i=0; i<favContactModel.contacts.length; i++)
+            {
+                var contact = favContactModel.contacts[i];
+                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + contact.favorite.favorite);
+                model.append({
+                                 displayLabel: contact.displayLabel,
+                                 email: contact.email.emailAddress,
+                                 favorite: contact.favorite.favorite
+                             });
+            }
+
+            return model;
+        }
+    }
+
     RecipientSelectionDialog {
         id: recipientSelectionDialog
+        model: favContactModel.getFavListModel()
         onAccepted: {
             console.debug("recipientSelectionDialog onAccepted email " + selectedEmail + " senderEmail " + senderEmail);
             Qt.openUrlExternally("mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody);

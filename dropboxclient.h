@@ -33,7 +33,7 @@ public:
     ~DropboxClient();
 
     QString createTimestamp();
-    QString createNonce();
+//    QString createNonce();
     QString createNormalizedQueryString(QMap<QString, QString> sortMap);
     QByteArray createBaseString(QString method, QString uri, QString queryString);
     QString createSignatureWithHMACSHA1(QString consumerSecret, QString tokenSecret, QByteArray baseString);

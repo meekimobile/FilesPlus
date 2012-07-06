@@ -17,7 +17,7 @@ Rectangle {
         id: driveGrid
         anchors.fill: parent
         cellWidth: parent.width
-        cellHeight: 70
+        cellHeight: 80
         delegate: driveCell
         highlight: Rectangle {
             gradient: highlightGradient
@@ -87,7 +87,7 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     Text {
                         width: parent.width
-                        height: 35
+                        height: 40
                         color: "white"
                         font.pointSize: 18
                         verticalAlignment: Text.AlignVCenter
