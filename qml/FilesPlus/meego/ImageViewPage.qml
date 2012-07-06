@@ -133,6 +133,7 @@ Page {
             verticalAlignment: Text.AlignVCenter
             color: "white"
             elide: Text.ElideMiddle
+            font.pointSize: 18
         }
     }
 

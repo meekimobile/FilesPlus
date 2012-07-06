@@ -82,8 +82,7 @@ Page {
             enabled: true
             readOnly: true
             anchors.fill: parent
-            font.family: "Helvetica"
-            font.pointSize: 6
+            font.pointSize: 16
             wrapMode: TextEdit.WordWrap
             textFormat: TextEdit.AutoText
             text: helper.getFileContent(textViewPage.filePath)
