@@ -74,5 +74,8 @@
         <file alias="qml/FilesPlus/CloudDriveAccountsPage.qml">qml/FilesPlus/meego/CloudDriveAccountsPage.qml</file>
         <file alias="qml/FilesPlus/ProgressDialog.qml">qml/FilesPlus/meego/ProgressDialog.qml</file>
         <file alias="qml/FilesPlus/RecipientSelectionDialog.qml">qml/FilesPlus/meego/RecipientSelectionDialog.qml</file>
+        <file alias="qml/FilesPlus/ListItem.qml">qml/FilesPlus/meego/ListItem.qml</file>
+        <file alias="qml/FilesPlus/AuthPage.qml">qml/FilesPlus/meego/AuthPage.qml</file>
+        <file alias="qml/FilesPlus/PrinterSelectionDialog.qml">qml/FilesPlus/meego/PrinterSelectionDialog.qml</file>
     </qresource>
 </RCC>

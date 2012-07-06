@@ -6,7 +6,12 @@
 #include <QScriptValue>
 #include <QScriptValueIterator>
 
+// Harmattan is a linux
+#if defined(Q_OS_LINUX)
+const QString GCPClient::KeyStoreFilePath = "/home/user/.filesplus/GCPClient.dat";
+#else
 const QString GCPClient::KeyStoreFilePath = "C:/GCPClient.dat";
+#endif
 const QString GCPClient::consumerKey = "196573379494.apps.googleusercontent.com";
 const QString GCPClient::consumerSecret = "il59cyz3dwBW6tsHBkZYGSWj";
 const QString GCPClient::authorizationScope = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/cloudprint";
@@ -64,6 +69,16 @@ void GCPClient::saveParamMap() {
     if (m_paramMap.isEmpty()) return;
 
     QFile file(KeyStoreFilePath);
+    QFileInfo info(file);
+    if (!info.absoluteDir().exists()) {
+        qDebug() << "GCPClient::saveParamMap dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
+        bool res = QDir::home().mkpath(info.absolutePath());
+        if (!res) {
+            qDebug() << "GCPClient::saveParamMap can't make dir" << info.absolutePath();
+        } else {
+            qDebug() << "GCPClient::saveParamMap make dir" << info.absolutePath();
+        }
+    }
     if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);   // we will serialize the data into the file
         out << m_paramMap;
@@ -173,7 +188,7 @@ QHash<QString, QString> GCPClient::createHashFromJson(QString jsonText)
     QScriptValue sc;
     sc = engine.evaluate("(" + jsonText + ")");
 
-    qDebug() << "sc " << sc.toString();
+//    qDebug() << "GCPClient::createHashFromJson json" << sc.toString();
 
     hash = createHashFromScriptValue("", sc);
 
@@ -476,9 +491,9 @@ QString GCPClient::getContentType(QString fileName) {
     // Parse fileName with RegExp
     QRegExp rx("(.+)(\\.)(\\w{3,4})$");
     rx.indexIn(fileName);
-    qDebug() << "GCPClient::getContentType fileName=" << fileName << " rx.captureCount()=" << rx.captureCount();
+//    qDebug() << "GCPClient::getContentType fileName=" << fileName << " rx.captureCount()=" << rx.captureCount();
     for(int i=0; i<=rx.captureCount(); i++) {
-        qDebug() << "i=" << i << " rx.cap=" << rx.cap(i);
+//        qDebug() << "i=" << i << " rx.cap=" << rx.cap(i);
     }
     QString fileExt = rx.cap(3).toLower();
 

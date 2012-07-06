@@ -27,6 +27,7 @@ CommonDialog {
             color: "white"
             wrapMode: Text.WordWrap
             elide: Text.ElideMiddle
+            font.pointSize: 16
         }
         ProgressBar {
             id: uploadProgressBar
@@ -47,18 +48,20 @@ CommonDialog {
             color: "grey"
             wrapMode: Text.WordWrap
             horizontalAlignment: Text.AlignRight
+            font.pointSize: 16
         }
-        //            Rectangle {
-        //                color: "grey"
-        //                width: parent.width
-        //                height: 1
-        //                visible: (uploadMessage.text != "")
-        //            }
+        Rectangle {
+            color: "grey"
+            width: parent.width
+            height: 1
+            visible: (uploadMessage.text != "")
+        }
         Text {
             id: uploadMessage
             width: parent.width
             color: "white"
             wrapMode: Text.WordWrap
+            font.pointSize: 16
         }
     }
     

@@ -13,7 +13,7 @@ SelectionDialog {
     property string messageBody
     
     titleText: "Send " + fsModel.getFileName(srcFilePath) + " to favorite"
-    titleIcon: "FilesPlusIcon.svg"
+//    titleIcon: "FilesPlusIcon.svg"
     model: ContactModel {
         id: favContactModel
         filter: DetailFilter {
@@ -34,28 +34,40 @@ SelectionDialog {
             }
         ]
     }
-    delegate: ListItem {
+    delegate: Rectangle {
         id: recipientItem
+        height: 60
         Column {
-            anchors.fill: recipientItem.paddingItem
-            ListItemText {
-                width: parent.width - 20
+            anchors.fill: parent
+            anchors.margins: 10
+            spacing: 2
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                width: parent.width
+                font.pointSize: 18
+                elide: Text.ElideMiddle
+                color: "white"
                 text: display
-                mode: recipientItem.mode
-                role: "Title"
             }
-            ListItemText {
-                width: parent.width - 20
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                width: parent.width
+                font.pointSize: 16
+                elide: Text.ElideMiddle
+                color: "grey"
                 text: contact.email.emailAddress
-                mode: recipientItem.mode
-                role: "Subtitle"
             }
         }
-        onClicked: {
-            console.debug("recipientSelectionDialog recipientItem onClicked " + index + " email " + contact.email.emailAddress);
-            recipientSelectionDialog.selectedIndex = index;
-            recipientSelectionDialog.selectedEmail = contact.email.emailAddress;
-            recipientSelectionDialog.accept();
+
+        MouseArea {
+            anchors.fill: parent
+            //TODO implement onPressed, onReleased to highlight item.
+            onClicked: {
+                console.debug("recipientSelectionDialog recipientItem onClicked " + index + " email " + contact.email.emailAddress);
+                recipientSelectionDialog.selectedIndex = index;
+                recipientSelectionDialog.selectedEmail = contact.email.emailAddress;
+                recipientSelectionDialog.accept();
+            }
         }
     }
 }

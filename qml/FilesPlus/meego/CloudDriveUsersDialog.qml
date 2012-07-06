@@ -8,7 +8,7 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: uidDialog
-    height: 200
+//    height: 200
     
     property int operation
     property string localPath
@@ -18,12 +18,12 @@ SelectionDialog {
 
     signal opened()
     
-    titleText: "Please select Cloud Account"
-    delegate: Rectangle {
+    titleText: "Please select cloud account"
+    delegate: ListItem {
         id: uidDialogListViewItem
-        height: 60
         Row {
-            anchors.fill: uidDialogListViewItem.paddingItem
+            anchors.fill: parent
+            anchors.margins: 10
             spacing: 2
             Image {
                 anchors.verticalCenter: parent.verticalCenter
@@ -34,11 +34,14 @@ SelectionDialog {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width - 64
-                height: parent.height
                 font.pointSize: 18
                 elide: Text.ElideMiddle
-                verticalAlignment: Text.AlignVCenter
+                color: "white"
                 text: email
+
+                Component.onCompleted: {
+                    console.debug(email);
+                }
             }
             Image {
                 anchors.verticalCenter: parent.verticalCenter
@@ -49,20 +52,18 @@ SelectionDialog {
             }
         }
         
-        MouseArea {
-            anchors.fill: parent
-            //TODO implement onPressed, onReleased to highlight item.
-            onClicked: {
-                uidDialog.selectedIndex = index;
-                uidDialog.selectedCloudType = uidDialog.model.get(uidDialog.selectedIndex).type;
-                uidDialog.selectedUid = uidDialog.model.get(uidDialog.selectedIndex).uid;
-                uidDialog.accept();
-            }
+        onClicked: {
+            uidDialog.selectedIndex = index;
+            uidDialog.selectedCloudType = uidDialog.model.get(uidDialog.selectedIndex).type;
+            uidDialog.selectedUid = uidDialog.model.get(uidDialog.selectedIndex).uid;
+            uidDialog.accept();
         }
     }
         
     onStatusChanged: {
-        if (status == DialogStatus.Open) {
+        if (status == DialogStatus.Opening) {
+            selectedIndex = -1;
+        } else if (status == DialogStatus.Open) {
             opened();
         }
     }

@@ -149,40 +149,40 @@ Page {
         id: jobDelegate
 
         ListItem {
-            id: listItem
-
-            property int mouseX
-            property int mouseY
-
+            id: jobListItem
             Row {
-                anchors.fill: parent.paddingItem
+                anchors.fill: parent
+                anchors.margins: 10
                 spacing: 5
 
                 Column {
                     width: parent.width - statusText.width - parent.spacing
-                    ListItemText {
-                        mode: listItem.mode
-                        role: "Title"
+                    Text {
                         text: title
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
+                        font.pointSize: 18
+                        elide: Text.ElideMiddle
+                        color: "white"
                     }
-                    ListItemText {
-                        mode: listItem.mode
-                        role: "SubTitle"
+                    Text {
                         text: printerName
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
+                        font.pointSize: 16
+                        elide: Text.ElideMiddle
+                        color: "grey"
                     }
                 }
-                ListItemText {
+                Text {
                     id: statusText
-                    mode: listItem.mode
-                    role: "Subtitle"
                     text: status
                     width: 120
                     horizontalAlignment: Text.AlignRight
                     verticalAlignment: Text.AlignVCenter
+                    font.pointSize: 16
+                    elide: Text.ElideMiddle
+                    color: "grey"
                 }
             }
 
@@ -193,15 +193,6 @@ Page {
                 popupDeleteButton.y = panelY - (popupDeleteButton.height);
                 popupDeleteButton.jobId = id;
                 popupDeleteButton.visible = true;
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onPressed: {
-                    parent.mouseX = mouseX;
-                    parent.mouseY = mouseY;
-                    mouse.accepted = false;
-                }
             }
         }
     }

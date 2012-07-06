@@ -3,7 +3,8 @@ import com.nokia.meego 1.1
 
 Dialog {
     id: commonDialog
-    width: parent.width - 100
+    width: 400
+    height: 400
     opacity: 0.6
 //    z: 2
 
@@ -14,6 +15,7 @@ Dialog {
 
     signal opening()
     signal opened()
+    signal closing()
     signal closed()
     signal buttonClicked(int index)
 
@@ -74,6 +76,8 @@ Dialog {
             opening();
         } else if (status == DialogStatus.Open) {
             opened();
+        } else if (status == DialogStatus.Closing) {
+            closing();
         } else if (status == DialogStatus.Closed) {
             closed();
         }

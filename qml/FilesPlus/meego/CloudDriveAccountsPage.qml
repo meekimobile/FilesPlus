@@ -129,12 +129,9 @@ Page {
 
         ListItem {
             id: listItem
-
-            property int mouseX
-            property int mouseY
-
             Row {
-                anchors.fill: parent.paddingItem
+                anchors.fill: parent
+                anchors.margins: 10
                 spacing: 5
 
                 Image {
@@ -146,32 +143,35 @@ Page {
                 }
                 Column {
                     width: parent.width - cloudIcon.width
-                    ListItemText {
+                    Text {
                         id: titleText
-                        mode: listItem.mode
-                        role: "Title"
                         text: email
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
+                        font.pointSize: 18
+                        elide: Text.ElideMiddle
+                        color: "white"
                     }
                     Row {
                         width: parent.width
-                        ListItemText {
-                            mode: listItem.mode
-                            role: "SubTitle"
+                        Text {
                             text: "UID " + uid
                             width: parent.width - quotaText.width
                             verticalAlignment: Text.AlignVCenter
+                            font.pointSize: 16
+                            elide: Text.ElideMiddle
+                            color: "grey"
                         }
-                        ListItemText {
+                        Text {
                             id: quotaText
-                            mode: listItem.mode
-                            role: "Subtitle"
                             text: Utility.formatFileSize(normal + shared) + " / " + Utility.formatFileSize(quota)
                             width: 120
                             visible: (quota > 0)
                             horizontalAlignment: Text.AlignRight
                             verticalAlignment: Text.AlignVCenter
+                            font.pointSize: 16
+                            elide: Text.ElideMiddle
+                            color: "grey"
                         }
                         Image {
                             id: runningIcon
@@ -192,15 +192,6 @@ Page {
                 popupDeleteButton.y = panelY - (popupDeleteButton.height);
                 popupDeleteButton.index = index;
                 popupDeleteButton.visible = true;
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onPressed: {
-                    parent.mouseX = mouseX;
-                    parent.mouseY = mouseY;
-                    mouse.accepted = false;
-                }
             }
 
             Component.onCompleted: {

@@ -25,7 +25,7 @@ Page {
 
     BusyIndicator {
         id: webViewBusy
-        width: 100
+        width: 150
         height: width
         z: 2
         anchors.horizontalCenter: parent.horizontalCenter

@@ -4,8 +4,12 @@
 #include <QCoreApplication>
 #include <QScriptEngine>
 
+// Harmattan is a linux
+#if defined(Q_OS_LINUX)
+const QString DropboxClient::KeyStoreFilePath = "/home/user/.filesplus/DropboxClient.dat";
+#else
 const QString DropboxClient::KeyStoreFilePath = "C:/DropboxClient.dat";
-
+#endif
 //const QString DropboxClient::consumerKey = "4i5z1mwqh60x832"; // Key from DropBox
 //const QString DropboxClient::consumerSecret = "tcf4h7zo5c5nuzr"; // Secret from Dropbox
 //const QString DropboxClient::dropboxRoot = "dropbox"; // For full access
@@ -61,7 +65,16 @@ void DropboxClient::saveAccessPairMap() {
     if (accessTokenPairMap.isEmpty()) return;
 
     QFile file(KeyStoreFilePath);
-    if (file.open(QIODevice::WriteOnly)) {
+    QFileInfo info(file);
+    if (!info.absoluteDir().exists()) {
+        qDebug() << "DropboxClient::saveAccessPairMap dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
+        bool res = QDir::home().mkpath(info.absolutePath());
+        if (!res) {
+            qDebug() << "DropboxClient::saveAccessPairMap can't make dir" << info.absolutePath();
+        } else {
+            qDebug() << "DropboxClient::saveAccessPairMap make dir" << info.absolutePath();
+        }
+    }    if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);   // we will serialize the data into the file
         out << accessTokenPairMap;
 

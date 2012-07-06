@@ -27,6 +27,7 @@ CommonDialog {
             color: "white"
             wrapMode: Text.WordWrap
             elide: Text.ElideMiddle
+            font.pointSize: 16
         }
         ProgressBar {
             id: downloadProgressBar
@@ -34,8 +35,11 @@ CommonDialog {
             
             onValueChanged: {
                 downloadProgressText.text = Utility.formatFileSize(value,3) + " / " + Utility.formatFileSize(maximumValue,3);
+
                 if (downloadProgressDialog.autoClose && value == maximumValue) {
-                    downloadProgressDialog.close();
+//                    console.debug("downloadProgressDialog.autoClose " + downloadProgressDialog.autoClose + value + " / " + maximumValue);
+                    downloadProgressDialog.accept();
+//                    console.debug("downloadProgressDialog.close() is requested.");
                 } else if (value == maximumValue) {
                     indeterminate = true;
                 }
@@ -47,6 +51,7 @@ CommonDialog {
             color: "grey"
             wrapMode: Text.WordWrap
             horizontalAlignment: Text.AlignRight
+            font.pointSize: 16
         }
         Rectangle {
             color: "grey"
@@ -59,6 +64,7 @@ CommonDialog {
             width: parent.width
             color: "white"
             wrapMode: Text.WordWrap
+            font.pointSize: 16
         }
     }
     
@@ -67,6 +73,7 @@ CommonDialog {
     }
     
     onStatusChanged: {
+        console.debug("downloadProgressDialog onStatusChanged status " + status);
         if (status == DialogStatus.Closed) {
             targetFilePath = "";
             autoClose = true;

@@ -188,7 +188,7 @@ Page {
                 Text {
                     id: settingKey
                     color: "white"
-                    font.pointSize: 7
+                    font.pointSize: 18
                     width: parent.width - settingValue.width
                     height: parent.height
                     verticalAlignment: Text.AlignVCenter
@@ -198,9 +198,11 @@ Page {
                     id: settingValue
                     anchors.verticalCenter: parent.verticalCenter
                     checked: appInfo.getSettingValue(name, false);
-                    onClicked: {
-                        appInfo.setSettingValue(name, checked);
-                        buttonClickedHandler(name);
+                    onCheckedChanged: {
+                        if (checked != appInfo.getSettingValue(name, false)) {
+                            appInfo.setSettingValue(name, checked);
+                            buttonClickedHandler(name);
+                        }
                     }
                 }
             }
@@ -231,6 +233,7 @@ Page {
                     id: sectionText
                     text: section
                     color: "grey"
+                    font.pointSize: 14
                 }
                 Rectangle {
                     width: parent.width - sectionText.width - parent.spacing

@@ -116,7 +116,9 @@ OTHER_FILES += \
     qtc_packaging/debian_harmattan/changelog \
     qml/FilesPlus/meego/MenuItemWithIcon.qml \
     qml/FilesPlus/meego/CommonDialog.qml \
-    qml/FilesPlus/meego/MenuWithIcon.qml
+    qml/FilesPlus/meego/MenuWithIcon.qml \
+    qml/FilesPlus/meego/ListItem.qml \
+    qml/FilesPlus/meego/PrinterSelectionDialog.qml
 
 OTHER_FILES += \
     qml/FilesPlus/*.svg \

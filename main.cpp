@@ -30,12 +30,21 @@ void customMessageHandler(QtMsgType type, const char *msg)
         abort();
     }
 
+#ifdef Q_OS_SYMBIAN
     // Append to file.
     QString filePath = QString("E:/FilesPlus_Debug_%1.log").arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
     QFile outFile(filePath);
     outFile.open(QIODevice::WriteOnly | QIODevice::Append);
     QTextStream ts(&outFile);
     ts << txt << endl;
+#elif defined(Q_OS_LINUX)
+    // Append to file.
+    QString filePath = QString("/home/user/FilesPlus_Debug_%1.log").arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
+    QFile outFile(filePath);
+    outFile.open(QIODevice::WriteOnly | QIODevice::Append);
+    QTextStream ts(&outFile);
+    ts << txt << endl;
+#endif
 }
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
@@ -58,9 +67,16 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 #ifdef Q_OS_SYMBIAN
     // Check settings if logging is enabled.
     QSettings *m_settings = new QSettings();
-//    m_settings->setValue("Logging.enabled", false);
-//    m_settings->setValue("Monitoring.enabled", true);
-//    m_settings->sync();
+    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
+    if (m_settings->value("Logging.enabled", false).toBool()) {
+        qDebug() << "main m_settings Logging.enabled=true";
+        qInstallMsgHandler(customMessageHandler);
+    } else {
+        qDebug() << "main m_settings Logging.enabled=false";
+    }
+#elif defined(Q_OS_LINUX)
+    // Check settings if logging is enabled.
+    QSettings *m_settings = new QSettings();
     qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
     if (m_settings->value("Logging.enabled", false).toBool()) {
         qDebug() << "main m_settings Logging.enabled=true";

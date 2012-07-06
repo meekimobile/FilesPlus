@@ -221,11 +221,11 @@ Page {
 
             gcpClient.authorize();
         } else {
-            var printerList = gcpClient.getStoredPrinterList();
-            console.debug("folderPage printFileSlot gcpClient.getStoredPrinterList()=" + printerList);
-            if (printerList.length > 0) {
+            var printerListModel = gcpClient.getPrinterListModel();
+            console.debug("folderPage printFileSlot printerListModel.count=" + printerListModel.count);
+            if (printerListModel.count > 0) {
                 printerSelectionDialog.srcFilePath = srcFilePath;
-                printerSelectionDialog.model = printerList;
+                printerSelectionDialog.model = printerListModel;
                 printerSelectionDialog.open();
             } else {
                 // TODO Open progress dialog.
@@ -560,6 +560,7 @@ Page {
         front: fsListView
         back: pieChartView
         onStateChanged: {
+            console.debug("flipable1 onStateChanged x " + x)
             fsModel.refreshItems();
         }
 
@@ -752,7 +753,11 @@ Page {
         }
 
         onMovementStarted: {
-            if (currentItem) currentItem.state = "normal";
+            if (currentItem) {
+//                console.debug("fsListView onMovementStarted currentItem.pressed " + currentItem.pressed);
+                currentItem.pressed = false;
+//                console.debug("fsListView onMovementStarted currentItem.pressed " + currentItem.pressed);
+            }
         }
     }
 
@@ -772,31 +777,14 @@ Page {
     Component {
         id: listDelegate
 
-        Rectangle {
+        ListItem {
             id: listItem
             width: fsListView.width
             height: 70
-            color: "transparent"
 
-            property real mouseX: 0
-            property real mouseY: 0
             property string fileName: name
             property string filePath: absolutePath
             property int clipboardIndex: clipboard.getModelIndex(absolutePath)
-
-            state: "normal"
-            states: [
-                State {
-                    name: "highlight"
-                    PropertyChanges {
-                        target: listItem
-                        gradient: highlightGradient
-                    }
-                },
-                State {
-                    name: "normal"
-                }
-            ]
 
             function getIconSource() {
                 var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
@@ -961,24 +949,9 @@ Page {
                 }
             }
 
-            Rectangle {
-                width: parent.width
-                height: 1
-                color: "grey"
-                anchors.bottom: parent.bottom
+            onPostPressed: {
+                fsListView.currentIndex = index;
             }
-
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-
-                onPressed: {
-                    listItem.state = "highlight";
-                    fsListView.currentIndex = index;
-                    parent.mouseX = mouseX;
-                    parent.mouseY = mouseY;
-                    mouse.accepted = false;
-                }
 
             onPressAndHold: {
                 if (fsListView.state != "mark") {
@@ -995,7 +968,7 @@ Page {
 
             onClicked: {
                 // console.debug("listItem clicked " + (parent.x + mouseX) + ", " + (parent.y + mouseY) );
-                fsListView.currentItem.state = "normal";
+//                fsListView.currentItem.state = "normal";
 
                 if (fsListView.state == "mark") {
                     if (listItem.clipboardIndex == -1) {
@@ -1026,7 +999,6 @@ Page {
                         }
                     }
                 }
-            }
             }
         }
     }
@@ -1062,8 +1034,8 @@ Page {
 
     PopupToolRing {
         id: popupToolPanel
-        ringRadius: 65
-        buttonRadius: 25
+        ringRadius: 70
+        buttonRadius: 30
         clipboardCount: clipboard.count
 
         onOpened: {
@@ -1554,14 +1526,8 @@ Page {
         }
     }
 
-    SelectionDialog {
+    PrinterSelectionDialog {
         id: printerSelectionDialog
-
-        property string srcFilePath
-
-        titleText: "Print " + fsModel.getFileName(srcFilePath) + " to"
-        titleIcon: "FilesPlusIcon.svg"
-
         onAccepted: {
             // Print on selected printer index.
             var pid = gcpClient.getPrinterId(printerSelectionDialog.selectedIndex);
@@ -1576,7 +1542,6 @@ Page {
                 gcpClient.submit(pid, srcFilePath);
             }
         }
-
         onRejected: {
             // Reset popupToolPanel.
             popupToolPanel.selectedFilePath = "";
@@ -1619,6 +1584,24 @@ Page {
         id: gcpClient
 
         property string selectedFilePath
+
+        function getPrinterListModel() {
+            var printerList = gcpClient.getStoredPrinterList();
+            console.debug("gcpClient.getPrinterListModel() " + printerList);
+            // Construct model.
+            var model = Qt.createQmlObject(
+                        'import QtQuick 1.1; ListModel {}', folderPage);
+
+            for (var i=0; i<printerList.length; i++)
+            {
+                model.append({
+                                 name: printerList[i]
+                             });
+            }
+
+            console.debug("gcpClient.getPrinterListModel() model.count " + model.count);
+            return model;
+        }
 
         onAuthorizeRedirectSignal: {
             console.debug("folderPage gcpClient onAuthorizeRedirectSignal " + url);
@@ -1665,7 +1648,6 @@ Page {
 
             if (err == 0) {
                 // Once search done, open printerSelectionDialog
-                // TODO any case that error=0 but no printers returned.
                 printFileSlot(gcpClient.selectedFilePath);
             } else {
                 gcpClient.refreshAccessToken();
@@ -1703,11 +1685,11 @@ Page {
 //            console.debug("sandBox gcpClient onDownloadProgress " + bytesReceived + " / " + bytesTotal);
 
             // Shows in progress bar.
-            if (downloadProgressDialog.status != DialogStatus.Open) {
-                downloadProgressDialog.titleText = "Searching for printers"
-                downloadProgressDialog.indeterminate = false;
-                downloadProgressDialog.open();
-            }
+//            if (downloadProgressDialog.status != DialogStatus.Open) {
+//                downloadProgressDialog.titleText = "Searching for printers"
+//                downloadProgressDialog.indeterminate = false;
+//                downloadProgressDialog.open();
+//            }
             downloadProgressDialog.min = 0;
             downloadProgressDialog.max = bytesTotal;
             downloadProgressDialog.value = bytesReceived;
@@ -1717,10 +1699,10 @@ Page {
 //            console.debug("sandBox gcpClient onUploadProgress " + bytesSent + " / " + bytesTotal);
 
             // Shows in progress bar.
-            if (uploadProgressDialog.status != DialogStatus.Open) {
-                uploadProgressDialog.indeterminate = false;
-                uploadProgressDialog.open();
-            }
+//            if (uploadProgressDialog.status != DialogStatus.Open) {
+//                uploadProgressDialog.indeterminate = false;
+//                uploadProgressDialog.open();
+//            }
             uploadProgressDialog.min = 0;
             uploadProgressDialog.max = bytesTotal;
             uploadProgressDialog.value = bytesSent;
@@ -2313,6 +2295,7 @@ Page {
 
     CloudDriveUsersDialog {
         id: uidDialog
+        model: cloudDriveModel.getUidListModel(localPath)
 
         function proceedPendingOperation() {
             // TODO
@@ -2341,9 +2324,9 @@ Page {
             }
         }
 
-        onOpened: {
-            uidDialog.model = cloudDriveModel.getUidListModel(localPath);
-        }
+//        onOpened: {
+//            uidDialog.model = cloudDriveModel.getUidListModel(localPath);
+//        }
 
         onAccepted: {
             // TODO Proceed for GoogleDrive

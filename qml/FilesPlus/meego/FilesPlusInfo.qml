@@ -38,7 +38,7 @@ Column {
         id: description
         color: "grey"
         width: 400
-        text: "FilesPlus provide extended functions beyond file manager.\
+        text: "FilesPlus provides extended functions beyond file manager.\
 \n   • Print with Google™ Cloud Print.\
 \n   • Sync with Cloud Drive.\
 \n   • Preview images in your folder.\

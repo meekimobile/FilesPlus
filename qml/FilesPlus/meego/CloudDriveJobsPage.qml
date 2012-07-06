@@ -124,24 +124,13 @@ Page {
     Component {
         id: jobDelegate
 
-        ListItem {
+        Rectangle {
             id: listItem
+            height: 60
 
             property int mouseX
             property int mouseY
 
-            /*
-    QString jobId;
-    int operation;
-    int type;
-    QString uid;
-    QString localFilePath;
-    QString remoteFilePath;
-    bool isRunning;
-    int modelIndex;
-    qint64 bytes;
-    qint64 bytesTotal;
-              */
             Row {
                 anchors.fill: parent.paddingItem
                 spacing: 5
