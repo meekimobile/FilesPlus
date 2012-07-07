@@ -29,9 +29,10 @@ Menu {
         for (var i=0; i<menuLayout.children.length; i++) {
             var menuItem = menuLayout.children[i];
             if (!isEnabled(menuItem.text) || isDisabled(menuItem.text)) {
-                console.debug("MenuWithIcon toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.text + " is removed.");
+//                console.debug("MenuWithIcon toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.text + " is hidden.");
                 menuItem.visible = false;
             } else {
+//                console.debug("MenuWithIcon toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.text + " is shown.");
                 menuItem.visible = isMenuItemVisible(menuItem);
             }
         }
@@ -72,15 +73,24 @@ Menu {
         }
     }
 
+    function prepareMenuItems() {
+        toggleMenuItems();
+        updateBgImageSources();
+    }
+
     onContentChanged: {
+        console.debug("MenuWithIcon onContentChanged");
         toggleMenuItems();
         updateBgImageSources();
     }
 
     onStatusChanged: {
+//        console.debug("MenuWithIcon onStatusChanged status " + status);
         if (status == DialogStatus.Opening) {
             toggleMenuItems();
             updateBgImageSources();
+//        } else if (status == DialogStatus.Open) {
+//            console.debug("MenuWithIcon onStatusChanged height " + height + " implicitHeight " + implicitHeight);
         }
     }
 }

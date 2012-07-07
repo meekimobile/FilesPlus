@@ -7,7 +7,7 @@ Dialog {
     height: 400
     opacity: 0.6
     style: DialogStyle {
-        dim: 0.8
+        dim: 0.85
     }
 
     property alias titleText: title.text

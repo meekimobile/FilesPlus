@@ -31,15 +31,13 @@ Page {
             id: menuButton
             iconId: "toolbar-view-menu"
             onClicked: {
-                mainMenu.open();
+                driveMenu.open();
             }
         }
     }
 
-    MainMenu {
-        id: mainMenu
-        // TODO refactor to use id.
-        enabledMenus: ["About", "More Apps", "Settings", "Exit"]
+    DriveMenu {
+        id: driveMenu
 
         onQuit: {
             quitSlot();

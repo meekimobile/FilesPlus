@@ -82,5 +82,7 @@
         <file>qml/FilesPlus/folder_list.svg</file>
         <file>qml/FilesPlus/notes_list.svg</file>
         <file>qml/FilesPlus/photos_list.svg</file>
+        <file alias="qml/FilesPlus/ChartMenu.qml">qml/FilesPlus/meego/ChartMenu.qml</file>
+        <file alias="qml/FilesPlus/DriveMenu.qml">qml/FilesPlus/meego/DriveMenu.qml</file>
     </qresource>
 </RCC>

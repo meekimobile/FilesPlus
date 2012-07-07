@@ -88,8 +88,10 @@ Page {
             onClicked: {
                 if (fsListView.state == "mark") {
                     markMenu.open();
-                } else {
-					mainMenu.open();
+                } else if (folderPage.state == "list") {
+                    mainMenu.open();
+                } else if (folderPage.state == "chart") {
+                    chartMenu.open();
                 }
             }
         }
@@ -110,6 +112,14 @@ Page {
         onPaste: {
             fileActionDialog.targetPath = fsModel.currentDir;
             fileActionDialog.open();
+        }
+    }
+
+    ChartMenu {
+        id: chartMenu
+
+        onQuit: {
+            quitSlot();
         }
     }
 
