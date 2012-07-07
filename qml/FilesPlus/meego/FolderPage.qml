@@ -791,11 +791,11 @@ Page {
                 var viewableTextFileTypes = ["TXT", "HTML"];
 
                 if (isDir) {
-                    return "folder.svg";
+                    return "folder_list.svg";
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                    return "photos.svg";
+                    return "photos_list.svg";
                 } else {
-                    return "notes.svg";
+                    return "notes_list.svg";
                 }
             }
 
@@ -989,7 +989,7 @@ Page {
                                            });
                         } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
-                                           { filePath: absolutePath });
+                                           { filePath: absolutePath, fileName: fsModel.getFileName(absolutePath) });
                         } else {
                             Qt.openUrlExternally(fsModel.getUrl(absolutePath));
                         }

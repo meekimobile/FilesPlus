@@ -113,12 +113,7 @@ OTHER_FILES += \
     qtc_packaging/debian_harmattan/copyright \
     qtc_packaging/debian_harmattan/control \
     qtc_packaging/debian_harmattan/compat \
-    qtc_packaging/debian_harmattan/changelog \
-    qml/FilesPlus/meego/MenuItemWithIcon.qml \
-    qml/FilesPlus/meego/CommonDialog.qml \
-    qml/FilesPlus/meego/MenuWithIcon.qml \
-    qml/FilesPlus/meego/ListItem.qml \
-    qml/FilesPlus/meego/PrinterSelectionDialog.qml
+    qtc_packaging/debian_harmattan/changelog
 
 OTHER_FILES += \
     qml/FilesPlus/*.svg \

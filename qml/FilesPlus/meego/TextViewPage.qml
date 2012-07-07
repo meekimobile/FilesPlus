@@ -8,6 +8,7 @@ Page {
 
     property string name: "textViewPage"
     property string filePath
+    property string fileName
 
     tools: ToolBarLayout {
         ToolIcon {
@@ -46,7 +47,6 @@ Page {
         width: parent.width
         height: 40
         color: "black"
-//        opacity: 0.7
         z: 1
 
         Text {
@@ -57,83 +57,82 @@ Page {
             color: "white"
             elide: Text.ElideMiddle
             font.pointSize: 18
-            text: textViewPage.filePath
+            text: textViewPage.fileName
         }
     }
 
-//    Flickable {
-//         id: flick
-
-//         width: parent.width
-//         height: parent.height - textLabel.height
-//         anchors.top: textLabel.bottom
-//         contentWidth: textView.paintedWidth
-//         contentHeight: textView.paintedHeight
-//         clip: true
-
-//         function ensureVisible(r)
-//         {
-//             if (contentX >= r.x)
-//                 contentX = r.x;
-//             else if (contentX+width <= r.x+r.width)
-//                 contentX = r.x+r.width-width;
-//             if (contentY >= r.y)
-//                 contentY = r.y;
-//             else if (contentY+height <= r.y+r.height)
-//                 contentY = r.y+r.height-height;
-//         }
+    BorderImage {
+        id: background
+        source: "image://theme/meegotouch-textedit-background"
+        width: parent.width
+        height: parent.height - textLabel.height
+        anchors.top: textLabel.bottom
+        border.left: 22; border.top: 22
+        border.right: 22; border.bottom: 22
+    }
 
     // TextArea is a superset of TextEdit to implement the Symbian-style look-and-feel.
     // TODO Change to Flickable + TextEdit.
-    TextArea {
-        id: textView
-        enabled: true
-        readOnly: true
-        width: parent.width
-        height: 400
-//        height: parent.height
-//        height: parent.height - textLabel.height
+    Flickable {
+        id: flick
         anchors.top: textLabel.bottom
-        font.pointSize: 16
-        wrapMode: TextEdit.WordWrap
-        textFormat: TextEdit.AutoText
+        anchors.topMargin: 22
+        anchors.left: parent.left
+        anchors.leftMargin: 22
+        width: parent.width - 44
+        height: parent.height - textLabel.height - 44
+        contentWidth: textView.width
+        contentHeight: textView.height
+        flickableDirection: Flickable.VerticalFlick
         clip: true
-        text: helper.getFileContent(textViewPage.filePath)
 
-        property int startFontSize
+        TextEdit {
+            id: textView
+            enabled: true
+            readOnly: true
+            width: textViewPage.width - 44
+            font.pointSize: 16
+            color: "black"
+            wrapMode: TextEdit.WordWrap
+            textFormat: TextEdit.AutoText
+            text: helper.getFileContent(textViewPage.filePath)
 
-        PinchArea {
-            anchors.fill: parent
-            pinch.dragAxis: Pinch.XandYAxis
+            property int startFontSize
 
-            onPinchStarted: {
-                console.debug("textView onPinchStarted textView.cursorPosition " + textView.cursorPosition);
-                textView.startFontSize = textView.font.pointSize;
+            PinchArea {
+                anchors.fill: parent
+                pinch.dragAxis: Pinch.XandYAxis
+
+                onPinchStarted: {
+//                    console.debug("textView onPinchStarted textView.cursorPosition " + textView.cursorPosition);
+                    textView.startFontSize = textView.font.pointSize;
+                }
+                onPinchFinished: {
+//                    console.debug("textView onPinchFinished textView.cursorPosition " + textView.cursorPosition);
+                }
+                onPinchUpdated: {
+//                    console.debug("textView onPinchUpdated pinch.scale " + pinch.scale);
+                    var newFontSize = Math.round(textView.startFontSize * pinch.scale);
+                    newFontSize = Utility.limit(newFontSize, 6, 24);
+
+                    textView.font.pointSize = newFontSize;
+                }
             }
-            onPinchFinished: {
-                console.debug("textView onPinchFinished textView.cursorPosition" + textView.cursorPosition);
-            }
-            onPinchUpdated: {
-                console.debug("textView onPinchUpdated pinch.scale " + pinch.scale);
-                var newFontSize = Math.round(textView.startFontSize * pinch.scale);
-                newFontSize = Utility.limit(newFontSize, 6, 24);
 
-                textView.font.pointSize = newFontSize;
-            }
-        }
+//            MouseArea {
+//                anchors.fill: parent
 
-        MouseArea {
-            anchors.fill: parent
-
-            onPressAndHold: {
-                console.debug("textView onPressAndHold");
-                console.debug("textView width " + textView.width + " height " + textView.height);
-                textView.closeSoftwareInputPanel();
-            }
+//                onPressAndHold: {
+//                    console.debug("textView onPressAndHold");
+//                    console.debug("textView width " + textView.width + " height " + textView.height);
+//                    console.debug("textViewPage " + textViewPage.width + "," + textViewPage.height);
+//                    console.debug("textViewPage flick " + flick.width + "," + flick.height);
+//                    console.debug("textViewPage textView " + textView.width + "," + textView.height);
+//                    textView.closeSoftwareInputPanel();
+//                }
+//            }
         }
     }
-
-//    }
 
     Component.onCompleted: {
         console.debug("textViewPage filePath " + textViewPage.filePath);
