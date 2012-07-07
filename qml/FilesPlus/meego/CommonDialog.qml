@@ -6,7 +6,9 @@ Dialog {
     width: 400
     height: 400
     opacity: 0.6
-//    z: 2
+    style: DialogStyle {
+        dim: 0.8
+    }
 
     property alias titleText: title.text
     property alias titleIcon: titleIcon.source
@@ -18,7 +20,6 @@ Dialog {
     signal closing()
     signal closed()
     signal buttonClicked(int index)
-
 
     buttons: Row {
         id: buttonRow
