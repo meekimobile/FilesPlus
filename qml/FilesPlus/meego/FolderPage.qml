@@ -949,10 +949,6 @@ Page {
                 }
             }
 
-            onPostPressed: {
-                fsListView.currentIndex = index;
-            }
-
             onPressAndHold: {
                 if (fsListView.state != "mark") {
                     fsListView.currentIndex = index;

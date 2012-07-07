@@ -49,20 +49,23 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        //TODO implement onPressed, onReleased to highlight item.
         onPressed: {
 //            console.debug("ListItem onPressed mouse " + mouse);
-            listItem.postPressed(mouse);
-
             parent.mouseX = mouseX;
             parent.mouseY = mouseY;
             parent.pressed = true;
+
+            var listView = parent.parent.parent;
+            listView.currentIndex = index;
+//            console.debug(listView + " currentIndex " + listView.currentIndex);
+
+            listItem.postPressed(mouse);
         }
         onReleased: {
 //            console.debug("ListItem onReleased mouse " + mouse);
-            listItem.postReleased(mouse);
-
             parent.pressed = false;
+
+            listItem.postReleased(mouse);
         }
         onClicked: {
 //            console.debug("ListItem onClicked mouse " + mouse);

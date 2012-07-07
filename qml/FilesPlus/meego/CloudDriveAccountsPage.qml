@@ -78,8 +78,8 @@ Page {
 
         iconSource: "delete.svg"
         visible: false
-        width: 50
-        height: 50
+        width: 60
+        height: 60
         z: 2
         onClicked: {
             // Delete selected account.
@@ -122,6 +122,12 @@ Page {
         height: parent.height - titlePanel.height
         anchors.top: titlePanel.bottom
         delegate: accountDelegate
+
+        onMovementStarted: {
+            if (currentItem) {
+                currentItem.pressed = false;
+            }
+        }
     }
 
     Component {
@@ -129,6 +135,7 @@ Page {
 
         ListItem {
             id: listItem
+            height: 80
             Row {
                 anchors.fill: parent
                 anchors.margins: 10

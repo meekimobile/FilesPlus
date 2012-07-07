@@ -152,7 +152,7 @@ Rectangle {
             Rectangle {
                 width: parent.width
                 height: 1
-                color: "grey"
+                color: "#202020"
                 anchors.bottom: parent.bottom
             }
 

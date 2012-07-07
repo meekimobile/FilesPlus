@@ -33,9 +33,17 @@ Page {
             id: deleteButton
             iconSource: "delete.svg"
             onClicked: {
-                // TODO delete all done jobs.
-                deleteAllDoneJobs();
+                deleteConfirmation.open();
             }
+        }
+    }
+
+    ConfirmDialog {
+        id: deleteConfirmation
+        titleText: "Delete print jobs"
+        contentText: "Delete all print jobs ?"
+        onConfirm: {
+            deleteAllJobs();
         }
     }
 
@@ -92,8 +100,17 @@ Page {
             var jobId = jobModel.get(i).id;
             var status = jobModel.get(i).status;
             if (status == "DONE") {
+                jobModel.setProperty(i, "status", "Deleting");
                 gcpClient.deletejob(jobId);
             }
+        }
+    }
+
+    function deleteAllJobs() {
+        for (var i=0; i<jobModel.count; i++) {
+            var jobId = jobModel.get(i).id;
+            jobModel.setProperty(i, "status", "Deleting");
+            gcpClient.deletejob(jobId);
         }
     }
 
@@ -113,11 +130,11 @@ Page {
 
         iconSource: "delete.svg"
         visible: false
-        width: 50
-        height: 50
+        width: 60
+        height: 60
         z: 2
         onClicked: {
-            // TODO delete selected job.
+            // Delete selected job.
             jobModel.setProperty(jobListView.currentIndex, "status", "Deleting");
             gcpClient.deletejob(jobId);
             visible = false;
@@ -143,6 +160,12 @@ Page {
         anchors.top: titlePanel.bottom
         model: jobModel
         delegate: jobDelegate
+
+        onMovementStarted: {
+            if (currentItem) {
+                currentItem.pressed = false;
+            }
+        }
     }
 
     Component {
