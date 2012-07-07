@@ -1370,6 +1370,7 @@ Page {
                 width: parent.width
                 text: "Rename " + fsModel.getFileName(renameDialog.sourcePath) + " to";
                 color: "white"
+                font.pointSize: 16
                 horizontalAlignment: Text.AlignHCenter
                 elide: Text.ElideMiddle
             }
@@ -1417,6 +1418,7 @@ Page {
                 text: "Please input new file name"
                 color: "white"
                 height: 48
+                font.pointSize: 16
                 verticalAlignment: Text.AlignVCenter
             }
 

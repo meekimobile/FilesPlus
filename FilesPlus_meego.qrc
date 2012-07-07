@@ -77,7 +77,7 @@
         <file alias="qml/FilesPlus/ListItem.qml">qml/FilesPlus/meego/ListItem.qml</file>
         <file alias="qml/FilesPlus/AuthPage.qml">qml/FilesPlus/meego/AuthPage.qml</file>
         <file alias="qml/FilesPlus/PrinterSelectionDialog.qml">qml/FilesPlus/meego/PrinterSelectionDialog.qml</file>
-        <file alias="qml/FilesPlus/TextViewPage.qml">qml/FilesPlus/meego/TextViewPage.qml</file>
         <file alias="qml/FilesPlus/ImageViewPage.qml">qml/FilesPlus/meego/ImageViewPage.qml</file>
+        <file alias="qml/FilesPlus/TextViewPage.qml">qml/FilesPlus/meego/TextViewPage.qml</file>
     </qresource>
 </RCC>

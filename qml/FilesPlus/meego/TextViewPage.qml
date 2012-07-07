@@ -46,50 +46,94 @@ Page {
         width: parent.width
         height: 40
         color: "black"
-        opacity: 0.7
+//        opacity: 0.7
         z: 1
-        visible: false
 
         Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.fill: parent
+            anchors.margins: 5
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
             color: "white"
+            elide: Text.ElideMiddle
+            font.pointSize: 18
             text: textViewPage.filePath
         }
     }
 
-    PinchArea {
-        anchors.fill: parent
-        pinch.dragAxis: Pinch.XandYAxis
+//    Flickable {
+//         id: flick
 
-        onPinchStarted: {
-            console.debug("textView onPinchStarted textView.cursorPosition " + textView.cursorPosition);
-            textView.startFontSize = textView.font.pointSize;
-        }
-        onPinchFinished: {
-            console.debug("textView onPinchFinished textView.cursorPosition" + textView.cursorPosition);
-        }
-        onPinchUpdated: {
-            console.debug("textView onPinchUpdated pinch.scale " + pinch.scale);
-            var newFontSize = Math.round(textView.startFontSize * pinch.scale);
-            newFontSize = Utility.limit(newFontSize, 4, 14);
+//         width: parent.width
+//         height: parent.height - textLabel.height
+//         anchors.top: textLabel.bottom
+//         contentWidth: textView.paintedWidth
+//         contentHeight: textView.paintedHeight
+//         clip: true
 
-            textView.font.pointSize = newFontSize;
-        }
+//         function ensureVisible(r)
+//         {
+//             if (contentX >= r.x)
+//                 contentX = r.x;
+//             else if (contentX+width <= r.x+r.width)
+//                 contentX = r.x+r.width-width;
+//             if (contentY >= r.y)
+//                 contentY = r.y;
+//             else if (contentY+height <= r.y+r.height)
+//                 contentY = r.y+r.height-height;
+//         }
 
-        TextArea {
-            id: textView
-            enabled: true
-            readOnly: true
+    // TextArea is a superset of TextEdit to implement the Symbian-style look-and-feel.
+    // TODO Change to Flickable + TextEdit.
+    TextArea {
+        id: textView
+        enabled: true
+        readOnly: true
+        width: parent.width
+        height: 400
+//        height: parent.height
+//        height: parent.height - textLabel.height
+        anchors.top: textLabel.bottom
+        font.pointSize: 16
+        wrapMode: TextEdit.WordWrap
+        textFormat: TextEdit.AutoText
+        clip: true
+        text: helper.getFileContent(textViewPage.filePath)
+
+        property int startFontSize
+
+        PinchArea {
             anchors.fill: parent
-            font.pointSize: 16
-            wrapMode: TextEdit.WordWrap
-            textFormat: TextEdit.AutoText
-            text: helper.getFileContent(textViewPage.filePath)
+            pinch.dragAxis: Pinch.XandYAxis
 
-            property int startFontSize
+            onPinchStarted: {
+                console.debug("textView onPinchStarted textView.cursorPosition " + textView.cursorPosition);
+                textView.startFontSize = textView.font.pointSize;
+            }
+            onPinchFinished: {
+                console.debug("textView onPinchFinished textView.cursorPosition" + textView.cursorPosition);
+            }
+            onPinchUpdated: {
+                console.debug("textView onPinchUpdated pinch.scale " + pinch.scale);
+                var newFontSize = Math.round(textView.startFontSize * pinch.scale);
+                newFontSize = Utility.limit(newFontSize, 6, 24);
+
+                textView.font.pointSize = newFontSize;
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+
+            onPressAndHold: {
+                console.debug("textView onPressAndHold");
+                console.debug("textView width " + textView.width + " height " + textView.height);
+                textView.closeSoftwareInputPanel();
+            }
         }
     }
+
+//    }
 
     Component.onCompleted: {
         console.debug("textViewPage filePath " + textViewPage.filePath);
