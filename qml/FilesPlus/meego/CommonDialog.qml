@@ -7,7 +7,7 @@ Dialog {
     height: 400
     opacity: 0.6
     style: DialogStyle {
-        dim: 0.85
+        dim: 0.9
     }
 
     property alias titleText: title.text
@@ -66,7 +66,7 @@ Dialog {
         id: content
         color: "grey"
         font.pointSize:  18
-        wrapMode: Text.Wrap
+        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
         width: parent.width - 20
         height: implicitHeight
         anchors.horizontalCenter: parent.horizontalCenter

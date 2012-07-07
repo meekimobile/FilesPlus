@@ -1118,7 +1118,7 @@ Page {
         property string targetPath
 
         titleText: fileActionDialog.getTitleText()
-        contentText: fileActionDialog.getText()
+        contentText: fileActionDialog.getText() + "\n"
 
         function getTitleText() {
             var text = "";
@@ -1144,7 +1144,7 @@ Page {
             var text = "";
             if (clipboard.count == 1) {
                 text = getActionName(clipboard.get(0).action)
-                        + "\nfile " + clipboard.get(0).sourcePath
+                        + " " + clipboard.get(0).sourcePath
                         + ((clipboard.get(0).action == "delete")?"":("\nto " + targetPath))
                         + " ?";
             } else {
@@ -1336,10 +1336,10 @@ Page {
             anchors.margins: 5
             anchors.fill: parent
             color: "transparent"
+            height: 80
 
             TextField {
                 id: folderName
-                anchors.verticalCenter: parent.verticalCenter
                 width: parent.width
                 placeholderText: "Please input folder name."
             }
@@ -1374,6 +1374,7 @@ Page {
         content: Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width - 10
+            height: 120
             spacing: 3
 
             Text {
@@ -1381,7 +1382,6 @@ Page {
                 text: "Rename " + fsModel.getFileName(renameDialog.sourcePath) + " to";
                 color: "white"
                 font.pointSize: 16
-                horizontalAlignment: Text.AlignHCenter
                 elide: Text.ElideMiddle
             }
 
@@ -1422,6 +1422,7 @@ Page {
         content: Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width - 10
+            height: 160
             spacing: 3
 
             Text {
