@@ -5,7 +5,7 @@
 #include <QScriptEngine>
 
 // Harmattan is a linux
-#if defined(Q_OS_LINUX)
+#if defined(Q_WS_HARMATTAN)
 const QString DropboxClient::KeyStoreFilePath = "/home/user/.filesplus/DropboxClient.dat";
 #else
 const QString DropboxClient::KeyStoreFilePath = "C:/DropboxClient.dat";

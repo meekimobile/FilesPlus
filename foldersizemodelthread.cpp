@@ -53,7 +53,7 @@ bool sizeGreaterThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
     }
 }
 // Harmattan is a linux
-#if defined(Q_OS_LINUX)
+#if defined(Q_WS_HARMATTAN)
 const QString FolderSizeModelThread::CACHE_FILE_PATH = "/home/user/.folderpie/FolderPieCache.dat";
 const QString FolderSizeModelThread::DEFAULT_CURRENT_DIR = "/home/user/";
 #else

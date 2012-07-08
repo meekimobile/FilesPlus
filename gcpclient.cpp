@@ -7,7 +7,7 @@
 #include <QScriptValueIterator>
 
 // Harmattan is a linux
-#if defined(Q_OS_LINUX)
+#if defined(Q_WS_HARMATTAN)
 const QString GCPClient::KeyStoreFilePath = "/home/user/.filesplus/GCPClient.dat";
 #else
 const QString GCPClient::KeyStoreFilePath = "C:/GCPClient.dat";

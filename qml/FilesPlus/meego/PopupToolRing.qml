@@ -54,6 +54,7 @@ Rectangle {
     signal markClicked(string srcFilePath, int srcItemIndex)
     signal renameFile(string srcFilePath, int srcItemIndex)
     signal uploadFile(string srcFilePath, int srcItemIndex)
+    signal unsyncFile(string srcFilePath, int srcItemIndex)
     signal sendFile(string srcFilePath, int srcItemIndex)
 
     function open(panelX, panelY) {
@@ -115,6 +116,7 @@ Rectangle {
         ListElement { buttonName: "mark"; icon: "check_mark.svg" }
         ListElement { buttonName: "newFolder"; icon: "folder_add.svg" }
         ListElement { buttonName: "upload"; icon: "upload.svg" }
+        ListElement { buttonName: "unsync"; icon: "cloud_remove.svg" }
         ListElement { buttonName: "send"; icon: "mail.svg" }
         ListElement { buttonName: "rename"; icon: "rename.svg" }
     }
@@ -132,9 +134,9 @@ Rectangle {
 
     function isButtonVisible(buttonName) {
         if (buttonName === "sync") {
-            // TODO Use CloudDriveModel logics.
-//            return (roots.indexOf(selectedFilePath) == -1);
             return !fsModel.isRoot(selectedFilePath) && cloudDriveModel.canSync(selectedFilePath)
+        } else if (buttonName === "unsync") {
+            return cloudDriveModel.isConnected(selectedFilePath)
         } else if (buttonName === "paste") {
             return (clipboardCount > 0);
         } else if (buttonName == "send") {
@@ -172,6 +174,8 @@ Rectangle {
             uploadFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "send") {
             sendFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "unsync") {
+            unsyncFile(selectedFilePath, selectedFileIndex);
         }
         popupToolPanel.visible = false;
     }

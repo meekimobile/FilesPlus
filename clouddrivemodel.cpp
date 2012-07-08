@@ -1,7 +1,7 @@
 #include "clouddrivemodel.h"
 
 // Harmattan is a linux
-#if defined(Q_OS_LINUX)
+#if defined(Q_WS_HARMATTAN)
 const QString CloudDriveModel::HashFilePath = "/home/user/.folderpie/CloudDriveModel.dat";
 #else
 const QString CloudDriveModel::HashFilePath = "C:/CloudDriveModel.dat";
@@ -146,22 +146,27 @@ CloudDriveItem CloudDriveModel::getItem(QString localPath, ClientTypes type, QSt
     return CloudDriveItem();
 }
 
-QList<CloudDriveItem> CloudDriveModel::findItemList(QString localPath)
+QList<CloudDriveItem> CloudDriveModel::findItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
 {
-//    QList<CloudDriveItem> list;
+    QList<CloudDriveItem> list;
 
-//    m_cloudDriveItems.keys();
-//    while (i != m_cloudDriveItems.end()) {
-//        qDebug() << "CloudDriveModel::findItemList" << i.key() << i.value();
+    QMultiMap<QString, CloudDriveItem>::iterator i;
+    i = m_cloudDriveItems.find(localPath);
+    while (i != m_cloudDriveItems.end()) {
+//        qDebug() << "CloudDriveModel::findItemWithChildren" << i.key() << i.value();
 
-//        QString key = i.key();
-//        if (!key.startsWith(localPath)) {
-//            list.append(i.value());
-//        } else {
-//            break;
-//        }
-//        ++i;
-//    }
+        QString key = i.key();
+        CloudDriveItem item = i.value();
+        if (key.startsWith(localPath) && item.type == type && item.uid == uid) {
+//            qDebug() << "CloudDriveModel::findItemWithChildren add" << i.key() << i.value();
+            list.append(i.value());
+        } else {
+            break;
+        }
+        ++i;
+    }
+
+    return list;
 }
 
 QList<CloudDriveItem> CloudDriveModel::getItemList(QString localPath) {
@@ -290,8 +295,22 @@ void CloudDriveModel::addItem(CloudDriveModel::ClientTypes type, QString uid, QS
 void CloudDriveModel::removeItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
 {
     CloudDriveItem item =  getItem(localPath, type, uid);
-    int removeCount = m_cloudDriveItems.remove(localPath, item);
+    int removeCount = m_cloudDriveItems.remove(item.localPath, item);
     qDebug() << "CloudDriveModel::removeItem item" << item << "removeCount" << removeCount;
+}
+
+void CloudDriveModel::removeItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
+{
+    int removeCount = 0;
+
+    foreach (CloudDriveItem item, findItemWithChildren(type, uid, localPath)) {
+//        qDebug() << "CloudDriveModel::removeItemWithChildren item" << item;
+
+        // TODO Remove only localPath's children which have specified type and uid.
+        removeCount += m_cloudDriveItems.remove(item.localPath, item);
+    }
+
+    qDebug() << "CloudDriveModel::removeItemWithChildren removeCount" << removeCount;
 }
 
 void CloudDriveModel::removeItems(QString localPath)
@@ -967,7 +986,8 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
         // TODO handle other clouds.
         // Disconnect deleted local path.
         if (job.type == Dropbox) {
-            removeItem(Dropbox, job.uid, job.localFilePath);
+            // TODO Remove local cloudDriveItems with it children.
+            removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
         }
     } else if (err == 203) {
         // Not Found {"error": "Path '???' not found"}
@@ -975,7 +995,8 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
         // TODO handle other clouds.
         // Disconnect deleted local path.
         if (job.type == Dropbox) {
-            removeItem(Dropbox, job.uid, job.localFilePath);
+            // TODO Remove local cloudDriveItems with it children.
+            removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
         }
     }
 

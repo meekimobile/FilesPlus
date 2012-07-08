@@ -37,7 +37,7 @@ void customMessageHandler(QtMsgType type, const char *msg)
     outFile.open(QIODevice::WriteOnly | QIODevice::Append);
     QTextStream ts(&outFile);
     ts << txt << endl;
-#elif defined(Q_OS_LINUX)
+#elif defined(Q_WS_HARMATTAN)
     // Append to file.
     QString filePath = QString("/home/user/FilesPlus_Debug_%1.log").arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
     QFile outFile(filePath);
@@ -74,7 +74,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     } else {
         qDebug() << "main m_settings Logging.enabled=false";
     }
-#elif defined(Q_OS_LINUX)
+#elif defined(Q_WS_HARMATTAN)
     // Check settings if logging is enabled.
     QSettings *m_settings = new QSettings();
     qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();

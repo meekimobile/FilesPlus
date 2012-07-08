@@ -32,6 +32,9 @@ SelectionDialog {
         case CloudDriveModel.ShareFile:
             text += "Share link of " + fsModel.getFileName(localPath) + " from";
             break;
+        case CloudDriveModel.DeleteFile:
+            text += "Unsync " + fsModel.getFileName(localPath) + " from";
+            break;
         }
 
         return text;

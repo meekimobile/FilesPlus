@@ -288,6 +288,18 @@ Page {
         }
     }
 
+    function unsyncFileSlot(srcFilePath, selectedIndex) {
+        console.debug("folderPage unsyncFileSlot srcFilePath=" + srcFilePath);
+
+        if (!cloudDriveModel.isConnected(srcFilePath)) return;
+
+        // Delete remote file/folder.
+        uidDialog.localPath = srcFilePath;
+        uidDialog.selectedModelIndex = selectedIndex;
+        uidDialog.operation = CloudDriveModel.DeleteFile;
+        uidDialog.open();
+    }
+
     function uploadFileSlot(srcFilePath, selectedIndex) {
         console.debug("folderPage uploadFileSlot srcFilePath=" + srcFilePath);
         syncFileSlot(srcFilePath, selectedIndex, CloudDriveModel.FilePut);
@@ -1051,6 +1063,10 @@ Page {
 
         onSyncFile: {
             syncFileSlot(srcFilePath, srcItemIndex);
+        }
+
+        onUnsyncFile: {
+            unsyncFileSlot(srcFilePath, srcItemIndex);
         }
 
         onShowTools: {
@@ -2224,6 +2240,10 @@ Page {
                 messageDialog.autoClose = true;
                 messageDialog.open();
             }
+
+            // Update ProgressBar on listItem.
+            // TODO also show running on its parents.
+            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, json.is_running);
         }
 
         onShareFileReplySignal: {
@@ -2288,6 +2308,9 @@ Page {
                 break;
             case CloudDriveModel.ShareFile:
                 cloudDriveModel.shareFile(type, uid, localPath, remotePath);
+                break;
+            case CloudDriveModel.DeleteFile:
+                cloudDriveModel.deleteFile(type, uid, localPath, remotePath);
                 break;
             }
         }

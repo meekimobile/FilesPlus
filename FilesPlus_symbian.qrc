@@ -78,5 +78,6 @@
         <file>qml/FilesPlus/photos_list.svg</file>
         <file>qml/FilesPlus/folder_list.svg</file>
         <file>qml/FilesPlus/notes_list.svg</file>
+        <file alias="qml/FilesPlus/cloud_remove.svg">qml/FilesPlus/cloud_remove.svg</file>
     </qresource>
 </RCC>

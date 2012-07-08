@@ -353,7 +353,7 @@ bool FolderSizeItemListModel::isRoot(const QString absPath)
 
     QStringList driveList = getLogicalDriveList();
     bool isRootLogicalDrive = driveList.contains(absPath);
-    qDebug() << "FolderSizeItemListModel::isRoot dir.isRoot()" << dir.isRoot() << "driveList" << driveList << "isRootLogicalDrive" << isRootLogicalDrive;
+    qDebug() << "FolderSizeItemListModel::isRoot path" << absPath << "dir.isRoot()" << dir.isRoot() << "driveList" << driveList << "isRootLogicalDrive" << isRootLogicalDrive;
 
     return (dir.isRoot() || isRootLogicalDrive);
 }

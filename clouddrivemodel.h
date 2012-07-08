@@ -63,7 +63,7 @@ public:
     void addItem(QString localPath, CloudDriveItem item);
     QList<CloudDriveItem> getItemList(QString localPath);
     CloudDriveItem getItem(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
-    QList<CloudDriveItem> findItemList(QString pattern);
+    QList<CloudDriveItem> findItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     void cleanItems();
     bool cleanItem(const CloudDriveItem &item);
 
@@ -79,6 +79,7 @@ public:
     Q_INVOKABLE void cancelQueuedJobs();
     Q_INVOKABLE void addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash, bool addOnly = false);
     Q_INVOKABLE void removeItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
+    Q_INVOKABLE void removeItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE void removeItems(QString localPath);
     Q_INVOKABLE void updateItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString hash);
     Q_INVOKABLE void updateItems(QString localPath, QString hash);
