@@ -1,20 +1,42 @@
 import QtQuick 1.1
 import com.nokia.meego 1.1
+import CloudDriveModel 1.0
 import "Utility.js" as Utility
 
 SelectionDialog {
     id: uidDialog
-//    height: 200
-    
+    style: SelectionDialogStyle { dim: 0.9 }
+
     property int operation
     property string localPath
     property int selectedCloudType
     property string selectedUid
     property int selectedModelIndex
 
+    signal opening()
     signal opened()
     
-    titleText: "Please select cloud account"
+    function getTitleText(localPath) {
+        var text = "";
+
+        switch (operation) {
+        case CloudDriveModel.Metadata:
+            text += "Sync " + fsModel.getFileName(localPath) + " to";
+            break;
+        case CloudDriveModel.FilePut:
+            text += "Upload " + fsModel.getFileName(localPath) + " to";
+            break;
+        case CloudDriveModel.FileGet:
+            text += "Download " + fsModel.getFileName(localPath) + " from";
+            break;
+        case CloudDriveModel.ShareFile:
+            text += "Share link of " + fsModel.getFileName(localPath) + " from";
+            break;
+        }
+
+        return text;
+    }
+
     delegate: ListItem {
         id: uidDialogListViewItem
         Row {
@@ -55,6 +77,8 @@ SelectionDialog {
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
             selectedIndex = -1;
+            titleText = getTitleText(localPath);
+            opening();
         } else if (status == DialogStatus.Open) {
             opened();
         }

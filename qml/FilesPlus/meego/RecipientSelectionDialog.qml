@@ -4,15 +4,18 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: recipientSelectionDialog
-    
+    style: SelectionDialogStyle { dim: 0.9 }
+
     property string srcFilePath
     property string selectedEmail
     property string senderEmail
     property string messageSubject
     property string messageBody
     
+    signal opening()
+    signal opened()
+
     titleText: "Send " + fsModel.getFileName(srcFilePath) + " to favorite"
-//    titleIcon: "FilesPlusIcon.svg"
     delegate: ListItem {
         id: recipientItem
         Row {
@@ -55,6 +58,7 @@ SelectionDialog {
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
             selectedIndex = -1;
+            opening();
         }
     }
 }

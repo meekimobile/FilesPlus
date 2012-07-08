@@ -527,37 +527,6 @@ Page {
         }
     }
 
-    function getImageSourcesModel(jsonText, fileName) {
-//        console.debug("getImageSourcesModel jsonText " + jsonText + " fileName " + fileName);
-
-        var supportedFileTypes = ["JPG", "PNG", "SVG"];
-
-        // Construct model.
-        var model = Qt.createQmlObject(
-                    'import QtQuick 1.1; ListModel {}', folderPage);
-
-        if (jsonText != "") {
-            var json = JSON.parse(jsonText);
-
-            for (var i=0; i<json.length; i++)
-            {
-//                console.debug("getImageSourcesModel i = " + i + " json[i].absolute_path " + json[i].absolute_path);
-                if (json[i].is_dir) {
-                    // skip dir
-                } else if (supportedFileTypes.indexOf(json[i].file_type.toUpperCase()) != -1) {
-                    console.debug("getImageSourcesModel model.append " + json[i].absolute_path);
-                    model.append({
-                                     name: json[i].name,
-                                     absolutePath: json[i].absolute_path,
-                                     isSelected: (fileName == json[i].name)
-                                 });
-                }
-            }
-        }
-
-        return model;
-    }
-
     Flipable {
         id: flipable1
         width: parent.width
@@ -1755,11 +1724,13 @@ Page {
             for (var i=0; i<dbUidList.length; i++)
             {
                 var json = JSON.parse(dbUidList[i]);
+                var localHash = cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, json.uid);
+                console.debug("getUidListModel i " + i + " uid " + json.uid + " email " + json.email + " localHash " + localHash);
                 model.append({
                                  type: CloudDriveModel.Dropbox,
                                  uid: json.uid,
                                  email: json.email,
-                                 hash: cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, json.uid),
+                                 hash: localHash,
                                  name: "",
                                  shared: 0,
                                  normal: 0,
@@ -1860,19 +1831,6 @@ Page {
             cloudDriveModel.removeJob(nonce);
 
             if (err == 0) {
-                /*
-{
-    "referral_link": "https://www.dropbox.com/referrals/r1a2n3d4m5s6t7",
-    "display_name": "John P. User",
-    "uid": 12345678,
-    "country": "US",
-    "quota_info": {
-        "shared": 253738410565,
-        "quota": 107374182400000,
-        "normal": 680031877871
-    }
-}
-                  */
                 var jsonObj = Utility.createJsonObj(msg);
                 console.debug("jsonObj.email " + jsonObj.email);
 
@@ -2304,7 +2262,6 @@ Page {
 
     CloudDriveUsersDialog {
         id: uidDialog
-        model: cloudDriveModel.getUidListModel(localPath)
 
         function proceedPendingOperation() {
             // TODO
@@ -2333,9 +2290,9 @@ Page {
             }
         }
 
-//        onOpened: {
-//            uidDialog.model = cloudDriveModel.getUidListModel(localPath);
-//        }
+        onOpening: {
+            uidDialog.model = cloudDriveModel.getUidListModel(localPath);
+        }
 
         onAccepted: {
             // TODO Proceed for GoogleDrive
@@ -2401,7 +2358,7 @@ Page {
             for (var i=0; i<favContactModel.contacts.length; i++)
             {
                 var contact = favContactModel.contacts[i];
-                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + contact.favorite.favorite);
+//                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + contact.favorite.favorite);
                 model.append({
                                  displayLabel: contact.displayLabel,
                                  email: contact.email.emailAddress,
@@ -2416,6 +2373,9 @@ Page {
     RecipientSelectionDialog {
         id: recipientSelectionDialog
         model: favContactModel.getFavListModel()
+        onOpening: {
+            recipientSelectionDialog.model = favContactModel.getFavListModel();
+        }
         onAccepted: {
             console.debug("recipientSelectionDialog onAccepted email " + selectedEmail + " senderEmail " + senderEmail);
             Qt.openUrlExternally("mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody);

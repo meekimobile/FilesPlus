@@ -4,9 +4,8 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: printerSelectionDialog
-//    width: 400
-//    height: 400
-    
+    style: SelectionDialogStyle { dim: 0.9 }
+
     property string srcFilePath
     
     titleText: "Print " + fsModel.getFileName(srcFilePath) + " to"
