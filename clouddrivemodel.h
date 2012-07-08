@@ -64,6 +64,7 @@ public:
     QList<CloudDriveItem> getItemList(QString localPath);
     CloudDriveItem getItem(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     QList<CloudDriveItem> findItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
+    QList<CloudDriveItem> findItems(CloudDriveModel::ClientTypes type, QString uid);
     void cleanItems();
     bool cleanItem(const CloudDriveItem &item);
 

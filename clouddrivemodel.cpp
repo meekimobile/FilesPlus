@@ -2,7 +2,7 @@
 
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
-const QString CloudDriveModel::HashFilePath = "/home/user/.folderpie/CloudDriveModel.dat";
+const QString CloudDriveModel::HashFilePath = "/home/user/.filesplus/CloudDriveModel.dat";
 #else
 const QString CloudDriveModel::HashFilePath = "C:/CloudDriveModel.dat";
 #endif
@@ -153,17 +153,33 @@ QList<CloudDriveItem> CloudDriveModel::findItemWithChildren(CloudDriveModel::Cli
     QMultiMap<QString, CloudDriveItem>::iterator i;
     i = m_cloudDriveItems.find(localPath);
     while (i != m_cloudDriveItems.end()) {
-//        qDebug() << "CloudDriveModel::findItemWithChildren" << i.key() << i.value();
-
         QString key = i.key();
         CloudDriveItem item = i.value();
+//        qDebug() << "CloudDriveModel::findItemWithChildren" << key << item.type << item.uid;
         if (key.startsWith(localPath) && item.type == type && item.uid == uid) {
-//            qDebug() << "CloudDriveModel::findItemWithChildren add" << i.key() << i.value();
-            list.append(i.value());
+//            qDebug() << "CloudDriveModel::findItemWithChildren add" << key << item;
+            list.append(item);
         } else {
             break;
         }
         ++i;
+    }
+
+    return list;
+}
+
+QList<CloudDriveItem> CloudDriveModel::findItems(CloudDriveModel::ClientTypes type, QString uid)
+{
+//    qDebug() << "CloudDriveModel::findItems type" << type << "uid" << uid;
+    QList<CloudDriveItem> list;
+
+    foreach (CloudDriveItem item, m_cloudDriveItems.values()) {
+        QString key = item.localPath;
+//        qDebug() << "CloudDriveModel::findItems" << key << item.type << item.uid;
+        if (item.type == type && item.uid == uid) {
+//            qDebug() << "CloudDriveModel::findItems add" << key << item;
+            list.append(item);
+        }
     }
 
     return list;
@@ -527,27 +543,41 @@ bool CloudDriveModel::cleanItem(const CloudDriveItem &item)
 
 void CloudDriveModel::syncItems()
 {
+//    qDebug() << "CloudDriveModel::syncItems started.";
+
     // Queue all items for metadata requesting.
-//    QString lastItemLocalPath = "";
-    foreach (CloudDriveItem item, m_cloudDriveItems.values()) {
-        qDebug() << "CloudDriveModel::syncItems item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
+    // TODO Queue only topmost items. Suppress if its parent is already queued.
+    QScriptEngine engine;
+    QScriptValue sc;
+    foreach (QString uidJson, getStoredUidList(Dropbox)) {
+//        qDebug() << "CloudDriveModel::syncItems Dropbox uidJson" << uidJson;
 
-        // TODO temp cleanup.
-        if (cleanItem(item)) continue;
+        // Create json object.
+        sc = engine.evaluate("(" + uidJson + ")");
+        QString uid = sc.property("uid").toString();
 
-        // TODO suppress sync if any items' parent is in queued jobs.
-//        if (item.localPath.startsWith(lastItemLocalPath) && lastItemLocalPath != "") {
-//            qDebug() << "CloudDriveModel::syncItems suppress item localPath" << item.localPath << " as its parent already in queue.";
-//            continue;
-//        }
+        QString lastItemLocalPath = "";
+        foreach (CloudDriveItem item, findItems(Dropbox, uid)) {
+            qDebug() << "CloudDriveModel::syncItems item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
 
-        switch (item.type) {
-        case Dropbox:
-            metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
-            break;
+            // TODO temp cleanup.
+            if (cleanItem(item)) continue;
+
+            // TODO suppress sync if any items' parent is in queued jobs.
+            if (item.localPath.startsWith(lastItemLocalPath) && lastItemLocalPath != "") {
+                qDebug() << "CloudDriveModel::syncItems suppress item localPath" << item.localPath << " as its parent already in queue.";
+                continue;
+            }
+
+            switch (item.type) {
+            case Dropbox:
+                qDebug() << "CloudDriveModel::syncItems sync item localPath" << item.localPath;
+                metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
+                break;
+            }
+
+            lastItemLocalPath = item.localPath;
         }
-
-//        lastItemLocalPath = item.localPath;
     }
 }
 
