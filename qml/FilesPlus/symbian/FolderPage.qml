@@ -261,6 +261,8 @@ Page {
         // Default operation = CloudDriveModel.Metadata
         if (!operation) operation = CloudDriveModel.Metadata;
 
+        if (!cloudDriveModel.canSync(srcFilePath)) return;
+
         if (!cloudDriveModel.isAuthorized()) {
             // TODO implement for other cloud drive.
             messageDialog.message = "Files+ sync your files via Dropbox service.\

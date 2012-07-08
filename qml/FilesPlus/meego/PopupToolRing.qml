@@ -132,6 +132,7 @@ Rectangle {
 
     function isButtonVisible(buttonName) {
         if (buttonName === "sync") {
+            // TODO Use CloudDriveModel logics.
             return (roots.indexOf(selectedFilePath) == -1);
         } else if (buttonName === "paste") {
             return (clipboardCount > 0);

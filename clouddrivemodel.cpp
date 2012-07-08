@@ -209,6 +209,14 @@ bool CloudDriveModel::isSyncing(QString localPath)
     return false;
 }
 
+bool CloudDriveModel::canSync(QString localPath)
+{
+    QString remotePath = getDefaultRemoteFilePath(localPath);
+    qDebug() << "CloudDriveModel::canSync localPath " << localPath << " remotePath " << remotePath;
+
+    return remotePath != "";
+}
+
 QString CloudDriveModel::getFirstJobJson(QString localPath)
 {
     foreach (CloudDriveJob job, m_cloudDriveJobs.values()) {
@@ -351,6 +359,7 @@ QString CloudDriveModel::getItemHash(QString localPath, CloudDriveModel::ClientT
 QString CloudDriveModel::getDefaultLocalFilePath(const QString &remoteFilePath)
 {
 #if defined(Q_WS_SIMULATOR)
+    // TODO Support Simulator on Mac, Linux.
     QRegExp rx("^(/*)([C-F])(.+)$");
     rx.indexIn(remoteFilePath);
     if (rx.captureCount() == 3) {
@@ -371,7 +380,7 @@ QString CloudDriveModel::getDefaultLocalFilePath(const QString &remoteFilePath)
     // TODO Make it more configuration.
     QRegExp rx("^(/E/)(.+)$");
     rx.indexIn(remoteFilePath);
-    if (rx.captureCount() == 2) {
+    if (rx.captureCount() == 2 && rx.cap(1) != "" & rx.cap(2) != "") {
         return "/home/user/MyDocs/" + rx.cap(2);
     }
 #endif
@@ -381,6 +390,7 @@ QString CloudDriveModel::getDefaultLocalFilePath(const QString &remoteFilePath)
 QString CloudDriveModel::getDefaultRemoteFilePath(const QString &localFilePath)
 {
 #if defined(Q_WS_SIMULATOR)
+    // TODO Support Simulator on Mac, Linux.
     QRegExp rx("^([C-F])(:)(.+)$");
     rx.indexIn(localFilePath);
     if (rx.captureCount() == 3) {
@@ -397,7 +407,10 @@ QString CloudDriveModel::getDefaultRemoteFilePath(const QString &localFilePath)
     // TODO Make it more configuration.
     QRegExp rx("^(/home/user/MyDocs/)(.+)$");
     rx.indexIn(localFilePath);
-    if (rx.captureCount() == 2) {
+//    for (int i=1; i<=rx.captureCount(); i++) {
+//        qDebug() << "CloudDriveModel::getDefaultRemoteFilePath rx.cap i" << i << rx.cap(i);
+//    }
+    if (rx.captureCount() == 2 && rx.cap(1) != "" & rx.cap(2) != "") {
         return "/E/" + rx.cap(2);
     }
 #endif

@@ -71,6 +71,7 @@ public:
     Q_INVOKABLE bool isConnected(QString localPath);
     Q_INVOKABLE bool isDirty(QString localPath, QDateTime lastModified);
     Q_INVOKABLE bool isSyncing(QString localPath);
+    Q_INVOKABLE bool canSync(QString localPath);
     Q_INVOKABLE QString getFirstJobJson(QString localPath);
     Q_INVOKABLE QString getJobJson(QString jobId);
     Q_INVOKABLE void removeJob(QString nonce);
