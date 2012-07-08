@@ -9,9 +9,12 @@
 #include <QUrl>
 #include <QDir>
 #include <QFileInfo>
+#include <qsystemstorageinfo.h>
 #include "foldersizeitem.h"
 #include "foldersizemodelthread.h"
 #include "foldersizejob.h"
+
+using namespace QtMobility;
 
 class FolderSizeItemListModel : public QAbstractListModel
 {
@@ -118,6 +121,7 @@ public:
     Q_INVOKABLE QString getNewFileName(const QString absFilePath, const QString targetPath);
     Q_INVOKABLE QString getAbsolutePath(const QString dirPath, const QString fileName);
     Q_INVOKABLE QStringList getDriveList();
+    Q_INVOKABLE QStringList getLogicalDriveList();
     Q_INVOKABLE QString formatFileSize(double size);
     Q_INVOKABLE void cancelQueuedJobs();
     Q_INVOKABLE int getQueuedJobCount() const;

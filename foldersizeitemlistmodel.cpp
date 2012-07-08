@@ -128,11 +128,43 @@ void FolderSizeItemListModel::setCurrentDir(const QString &path)
 
 QStringList FolderSizeItemListModel::getDriveList()
 {
-    QFileInfoList drives = QDir::drives();
     QStringList driveList;
 
+#if defined(Q_WS_SIMULATOR)
+    qDebug() << "FolderSizeItemListModel::getDriveList platform=Q_WS_SIMULATOR";
+    QFileInfoList drives = QDir::drives();
     for (int i=0; i<drives.length(); i++) {
-        driveList.append(drives.at(i).absolutePath());
+        qDebug() << "FolderSizeItemListModel::getDriveList drives" << drives.at(i).absoluteFilePath();
+        driveList.append(drives.at(i).absoluteFilePath());
+    }
+#elif defined(Q_OS_SYMBIAN)
+    qDebug() << "FolderSizeItemListModel::getDriveList platform=Q_OS_SYMBIAN";
+    QFileInfoList drives = QDir::drives();
+    for (int i=0; i<drives.length(); i++) {
+        qDebug() << "FolderSizeItemListModel::getDriveList drives" << drives.at(i).absoluteFilePath();
+        driveList.append(drives.at(i).absoluteFilePath());
+    }
+#endif
+
+    return driveList;
+}
+
+QStringList FolderSizeItemListModel::getLogicalDriveList() {
+    QStringList driveList;
+
+    QSystemStorageInfo storageInfo;
+    QStringList simulatedDriveNames = getDriveList();
+    QStringList drives = storageInfo.logicalDrives();
+
+    for (int i=0; i<drives.count(); i++)
+    {
+        // Workaround for QtSimulator
+        QString driveName = drives.at(i);
+        if (i < simulatedDriveNames.count()) {
+            driveName = simulatedDriveNames.at(i);
+        }
+
+        driveList << driveName;
     }
 
     return driveList;
@@ -311,8 +343,14 @@ QString FolderSizeItemListModel::getUrl(const QString absPath)
 
 bool FolderSizeItemListModel::isRoot()
 {
+    // TODO Impl. Caching.
     QDir dir(m.currentDir());
-    return (dir.isRoot());
+
+    QStringList driveList = getLogicalDriveList();
+    bool isRootLogicalDrive = driveList.contains(m.currentDir());
+    qDebug() << "FolderSizeItemListModel::isRoot dir.isRoot()" << dir.isRoot() << "driveList" << driveList << "isRootLogicalDrive" << isRootLogicalDrive;
+
+    return (dir.isRoot() || isRootLogicalDrive);
 }
 
 QString FolderSizeItemListModel::getItemJson(const QString absFilePath)
