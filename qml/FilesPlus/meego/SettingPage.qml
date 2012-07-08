@@ -149,7 +149,7 @@ Page {
             if (name == "showCloudPrintJobs") {
                 p.showCloudPrintJobsSlot();
             } else if (name == "resetCloudPrint") {
-                pageStack.pop();
+//                pageStack.pop();
                 p.resetCloudPrintSlot();
             } else if (name == "showCloudDriveJobs") {
                 p.showCloudDriveJobsSlot();

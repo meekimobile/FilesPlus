@@ -1333,14 +1333,14 @@ Page {
         titleIcon: "FilesPlusIcon.svg"
         buttonTexts: ["Ok", "Cancel"]
         content: Rectangle {
-            anchors.margins: 5
-            anchors.fill: parent
-            color: "transparent"
+            width: parent.width - 10
             height: 80
+            color: "transparent"
 
             TextField {
                 id: folderName
                 width: parent.width
+                anchors.verticalCenter: parent.verticalCenter
                 placeholderText: "Please input folder name."
             }
         }
@@ -1614,7 +1614,7 @@ Page {
 
         onAuthorizeRedirectSignal: {
             console.debug("folderPage gcpClient onAuthorizeRedirectSignal " + url);
-            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: "GCPClient" });
+            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: "GCPClient" }, true);
         }
 
         onAccessTokenReplySignal: {
@@ -1823,7 +1823,7 @@ Page {
             // Remove finished job.
             cloudDriveModel.removeJob(nonce);
 
-            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: redirectFrom });
+            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: redirectFrom }, true);
         }
 
         onAccessTokenReplySignal: {
