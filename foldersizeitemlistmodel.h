@@ -91,7 +91,8 @@ public:
     Q_INVOKABLE void refreshDir(const bool clearCache = false);
     Q_INVOKABLE void changeDir(const QString &name);
     Q_INVOKABLE QString getUrl(const QString absPath);
-    Q_INVOKABLE bool isRoot();
+    Q_INVOKABLE bool isRoot(); // Overload method for verifying on currentDir.
+    Q_INVOKABLE bool isRoot(const QString absPath);
     Q_INVOKABLE QString getItemJson(const QString absFilePath);
     Q_INVOKABLE QString getDirContentJson(const QString dirPath);
     Q_INVOKABLE int getIndexOnCurrentDir(const QString absFilePath);

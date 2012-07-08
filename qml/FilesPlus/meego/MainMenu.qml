@@ -110,7 +110,7 @@ MenuWithIcon {
         } else if (menuItem == markMenuItem) {
             return fsListView.state != "mark";
         } else if (menuItem == syncFolderMenuItem) {
-            return !fsModel.isRoot();
+            return !fsModel.isRoot() && cloudDriveModel.canSync(fsModel.currentDir)
         } else {
             return true;
         }

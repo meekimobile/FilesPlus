@@ -343,11 +343,16 @@ QString FolderSizeItemListModel::getUrl(const QString absPath)
 
 bool FolderSizeItemListModel::isRoot()
 {
+    return isRoot(m.currentDir());
+}
+
+bool FolderSizeItemListModel::isRoot(const QString absPath)
+{
     // TODO Impl. Caching.
-    QDir dir(m.currentDir());
+    QDir dir(absPath);
 
     QStringList driveList = getLogicalDriveList();
-    bool isRootLogicalDrive = driveList.contains(m.currentDir());
+    bool isRootLogicalDrive = driveList.contains(absPath);
     qDebug() << "FolderSizeItemListModel::isRoot dir.isRoot()" << dir.isRoot() << "driveList" << driveList << "isRootLogicalDrive" << isRootLogicalDrive;
 
     return (dir.isRoot() || isRootLogicalDrive);
