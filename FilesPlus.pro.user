@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by Qt Creator 2.5.0, 2012-07-08T20:21:53. -->
+<!-- Written by Qt Creator 2.5.0, 2012-07-08T22:17:56. -->
 <qtcreator>
  <data>
   <variable>ProjectExplorer.Project.ActiveTarget</variable>
@@ -723,7 +723,7 @@
        <value type="QString">c:/qtsdk/madde/sysroots/harmattan_sysroot_10.2011.34-1_slim</value>
       </valuelist>
       <valuelist type="QVariantList" key="Qt4ProjectManager.MaemoRunConfiguration.LastDeployedTimes">
-       <value type="QDateTime">2012-07-08T20:12:17</value>
+       <value type="QDateTime">2012-07-08T22:07:25</value>
       </valuelist>
      </valuemap>
      <value type="int" key="ProjectExplorer.BuildStepList.StepsCount">3</value>

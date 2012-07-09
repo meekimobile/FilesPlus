@@ -1539,9 +1539,9 @@ Page {
             }
         }
         onRejected: {
-            // Reset popupToolPanel.
-            popupToolPanel.selectedFilePath = "";
-            popupToolPanel.selectedFileIndex = -1;
+//            // Reset popupToolPanel.
+//            popupToolPanel.selectedFilePath = "";
+//            popupToolPanel.selectedFileIndex = -1;
         }
     }
 
@@ -2383,7 +2383,7 @@ Page {
             for (var i=0; i<favContactModel.contacts.length; i++)
             {
                 var contact = favContactModel.contacts[i];
-//                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + contact.favorite.favorite);
+                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + contact.favorite.favorite);
                 model.append({
                                  displayLabel: contact.displayLabel,
                                  email: contact.email.emailAddress,
@@ -2406,10 +2406,10 @@ Page {
             Qt.openUrlExternally("mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody);
         }
         onRejected: {
-            // Reset popupToolPanel.
-            popupToolPanel.selectedFilePath = "";
-            popupToolPanel.selectedFileIndex = -1;
-            srcFilePath = "";
+//            // Reset popupToolPanel.
+//            popupToolPanel.selectedFilePath = "";
+//            popupToolPanel.selectedFileIndex = -1;
+//            srcFilePath = "";
         }
     }
 }

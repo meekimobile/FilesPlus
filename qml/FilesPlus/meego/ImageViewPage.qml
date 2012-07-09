@@ -12,7 +12,6 @@ Page {
     property alias model: imageGrid.model
     property string fileName
     property bool showGrid: true
-//    property variant supportedFileType: ["JPG", "PNG", "SVG"]
 
     state: "grid"
     states: [
@@ -284,8 +283,7 @@ Page {
 
             BusyIndicator {
                 id: imageViewBusy
-                width: 80
-                height: 80
+                style: BusyIndicatorStyle { size: "large" }
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
                 visible: (parent.progress < 1 && parent.status == Image.Loading)
