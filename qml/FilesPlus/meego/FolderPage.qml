@@ -307,7 +307,7 @@ Page {
 
     function sendFileSlot(srcFilePath, selectedIndex) {
         console.debug("folderPage sendFileSlot srcFilePath=" + srcFilePath);
-        if (cloudDriveModel.isConnected(srcFilePath) && fsModel.isFile(srcFilePath)) {
+        if (cloudDriveModel.isConnected(srcFilePath)) {
             uidDialog.localPath = srcFilePath;
             uidDialog.operation = CloudDriveModel.ShareFile;
             uidDialog.open();
