@@ -8,8 +8,6 @@ PageStackWindow {
     showStatusBar: true
     showToolBar: true
 
-    property string version: "v1.0.0"
-
     state: "ready"
     states: [
         State {
