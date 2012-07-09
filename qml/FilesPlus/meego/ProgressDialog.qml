@@ -21,8 +21,6 @@ CommonDialog {
     property int autoCloseInterval: 3000
     property bool formatValue: false
 
-    signal opened()
-    signal closed()
     signal cancelled()
 
     function toggleHideAction() {
@@ -91,8 +89,6 @@ CommonDialog {
 
                 if (value >= maximumValue) {
                     console.debug("ProgressDialog progressBar onValueChanged " + value + " >= " +maximumValue);
-//                    progressDialog.buttonTexts = ["OK"];
-//                    progressDialog.autoClose = true;
                     toggleHideAction();
                 }
             }
@@ -136,11 +132,8 @@ CommonDialog {
     
     onStatusChanged: {
         if (status == DialogStatus.Open) {
-//            buttonTexts = ["Cancel"];
             open();
-        }
-
-        if (status == DialogStatus.Closed) {
+        } else if (status == DialogStatus.Closing) {
             hideAction.stop();
 
             titleText = "";
@@ -151,7 +144,7 @@ CommonDialog {
             indeterminate = false;
             formatValue = false;
 
-            closed();
+            closing();
         }
     }
 }

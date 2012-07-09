@@ -121,7 +121,7 @@ void FolderSizeItemListModel::setCurrentDir(const QString &path)
     emit currentDirChanged();
 
     // Invoke background refresh
-    refreshDir();
+    refreshDir("FolderSizeItemListModel::setCurrentDir");
 
     qDebug() << QTime::currentTime() << "FolderSizeItemListModel::setCurrentDir";
 }
@@ -302,13 +302,13 @@ void FolderSizeItemListModel::changeDir(const QString &name)
         m_indexOnCurrentDirHash->clear();
 
         // Invoke background refresh
-        refreshDir();
+        refreshDir("FolderSizeItemListModel::changeDir");
     }
 }
 
-void FolderSizeItemListModel::refreshDir(const bool clearCache)
+void FolderSizeItemListModel::refreshDir(const QString caller, const bool clearCache)
 {
-    qDebug() << "FolderSizeItemListModel::refreshDir clearCache" << clearCache;
+    qDebug() << "FolderSizeItemListModel::refreshDir clearCache" << clearCache << "sender" << sender() << "caller" << caller;
 
     if (isReady()) {
         if (!clearCache && !isDirSizeCacheExisting()) {
@@ -747,7 +747,7 @@ void FolderSizeItemListModel::setItem(const int index, FolderSizeItem &item)
 
 void FolderSizeItemListModel::loadDirSizeCacheFinishedFilter()
 {
-    refreshDir();
+    refreshDir("FolderSizeItemListModel::loadDirSizeCacheFinishedFilter");
 }
 
 void FolderSizeItemListModel::fetchDirSizeFinishedFilter()

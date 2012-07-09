@@ -70,7 +70,8 @@ CommonDialog {
     }
     
     onStatusChanged: {
-        if (status == DialogStatus.Closed) {
+        console.debug("uploadProgressDialog onStatusChanged status " + status);
+        if (status == DialogStatus.Closing) {
             srcFilePath = "";
             autoClose = true;
             message = "";

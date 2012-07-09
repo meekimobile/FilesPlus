@@ -207,9 +207,9 @@ QString PieChart::labelFontDesc() const
 
 bool PieChart::setLabelFontDesc(const QString fontDesc)
 {
-    qDebug() << "PieChart::setLabelFontDesc m_labelFont" << m_labelFont.toString();
+//    qDebug() << "PieChart::setLabelFontDesc m_labelFont" << m_labelFont.toString();
     bool res = m_labelFont.fromString(fontDesc);
-    qDebug() << "PieChart::setLabelFontDesc m_labelFont" << m_labelFont.toString();
+//    qDebug() << "PieChart::setLabelFontDesc m_labelFont" << m_labelFont.toString();
 
     return res;
 }

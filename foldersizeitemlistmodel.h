@@ -88,7 +88,7 @@ public:
     Q_INVOKABLE void setProperty(const int index, FolderSizeItemRoles role, QVariant value);
     Q_INVOKABLE void setProperty(const QString localPath, FolderSizeItemRoles role, QVariant value);
 
-    Q_INVOKABLE void refreshDir(const bool clearCache = false);
+    Q_INVOKABLE void refreshDir(const QString caller, const bool clearCache = false);
     Q_INVOKABLE void changeDir(const QString &name);
     Q_INVOKABLE QString getUrl(const QString absPath);
     Q_INVOKABLE bool isRoot(); // Overload method for verifying on currentDir.

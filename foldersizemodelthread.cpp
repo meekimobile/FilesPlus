@@ -65,6 +65,7 @@ const int FolderSizeModelThread::FILE_READ_BUFFER = 32768;
 FolderSizeModelThread::FolderSizeModelThread(QObject *parent) : QThread(parent)
 {
     m_currentDir = DEFAULT_CURRENT_DIR;
+    m_sortFlag = SortByType;
     dirSizeCache = new QHash<QString, FolderSizeItem>();
 }
 

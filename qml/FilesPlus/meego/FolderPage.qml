@@ -164,13 +164,13 @@ Page {
         titleText: "Reset folder cache"
         contentText: "Resetting folder cache will take time depends on numbers of sub folders/files under current folder.\n\nPlease click OK to continue."
         onConfirm: {
-            fsModel.refreshDir(true);
+            fsModel.refreshDir("folderPage resetCacheConfirmation", true);
         }
     }
 
     function refreshSlot() {
         fsModel.nameFilters = [];
-        fsModel.refreshDir(false);
+        fsModel.refreshDir("folderPage refreshSlot", false);
     }
 
     function resetCacheSlot() {
@@ -360,8 +360,6 @@ Page {
 
     FolderSizeItemListModel {
         id: fsModel
-//        currentDir: "C:/"
-        sortFlag: FolderSizeItemListModel.SortByType
 
         function getActionName(fileAction) {
             switch (fileAction) {
@@ -406,7 +404,7 @@ Page {
 \n\nPlease click OK to continue.";
             messageDialog.open();
 
-            fsModel.refreshDir(true);
+            fsModel.refreshDir("folderPage onRequestResetCache", true);
         }
 
         onCopyStarted: {
@@ -592,10 +590,7 @@ Page {
         }
         onSliceClicked: {
             console.debug("QML pieChartView.onSliceClicked " + text + ", index=" + index + ", isDir=" + isDir);
-            if (isDir)
-                fsModel.changeDir(text);
-            else
-                fsModel.refreshDir(false);
+            if (isDir) fsModel.changeDir(text);
         }
         onActiveFocusChanged: {
             console.debug("QML pieChartView.onActiveFocusChanged");
@@ -975,7 +970,7 @@ Page {
                         var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV"];
                         if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             fsModel.nameFilters = ["*.jpg", "*.png", "*.svg"];
-                            fsModel.refreshDir(false);
+                            fsModel.refreshDir("folderPage listItem onClicked", false);
                             pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), {
                                                fileName: name,
                                                model: fsModel
@@ -1555,7 +1550,7 @@ Page {
 
     ProgressDialog {
         id: copyProgressDialog
-        onClosed: {
+        onClosing: {
             // Refresh view after copied/moved.
             refreshSlot();
         }
@@ -1567,7 +1562,7 @@ Page {
     ProgressDialog {
         id: deleteProgressDialog
         titleText: "Deleting"
-        onClosed: {
+        onClosing: {
             // Refresh view after copied/moved.
             refreshSlot();
         }
@@ -2380,10 +2375,11 @@ Page {
             var model = Qt.createQmlObject(
                         'import QtQuick 1.1; ListModel {}', folderPage);
 
+            console.debug("getFavListModel favContactModel.contacts.length " + favContactModel.contacts.length);
             for (var i=0; i<favContactModel.contacts.length; i++)
             {
                 var contact = favContactModel.contacts[i];
-                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + contact.favorite.favorite);
+//                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + contact.favorite.favorite);
                 model.append({
                                  displayLabel: contact.displayLabel,
                                  email: contact.email.emailAddress,
