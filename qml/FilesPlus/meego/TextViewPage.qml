@@ -71,8 +71,20 @@ Page {
         border.right: 22; border.bottom: 22
     }
 
+    Rectangle {
+        id: flickScrollbar
+        anchors.right: flick.right
+        anchors.rightMargin: -17
+        radius: 2
+        y: flick.visibleArea.yPosition * flick.height + textLabel.height + flick.anchors.topMargin
+        z: 1
+        width: 4
+        height: flick.visibleArea.heightRatio * flick.height
+        color: "grey"
+    }
+
     // TextArea is a superset of TextEdit to implement the Symbian-style look-and-feel.
-    // TODO Change to Flickable + TextEdit.
+    // Meego needs to use Flickable + TextEdit.
     Flickable {
         id: flick
         anchors.top: textLabel.bottom
