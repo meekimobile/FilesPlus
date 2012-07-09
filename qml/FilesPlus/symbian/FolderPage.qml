@@ -1873,21 +1873,9 @@ Page {
             var modelIndex = json.model_index;
             var isRunning = json.is_running;
 
-            if (err == 0) {
-                // Update ProgressBar on listItem.
-                // TODO also show running on its parents.
-                fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
-
-                // Remove cache on target folders and its parents.
-                fsModel.removeCache(json.local_file_path);
-
-                // TODO Does it need to refresh to add gotten file to listview ?
-                refreshSlot();
-            } else {
-                messageDialog.titleText = getCloudName(job.type) + " File Get";
-                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
-                messageDialog.open();
-            }
+            // Update ProgressBar on listItem.
+            // TODO also show running on its parents.
+            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
 
             // Show indicator on parent up to root.
             // Skip i=0 as it's notified above already.
@@ -1897,6 +1885,18 @@ Page {
                 if (modelIndex > -1) {
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                 }
+            }
+
+            if (err == 0) {
+                // Remove cache on target folders and its parents.
+                fsModel.removeCache(json.local_file_path);
+
+                // TODO Does it need to refresh to add gotten file to listview ?
+                refreshSlot();
+            } else {
+                messageDialog.titleText = getCloudName(job.type) + " File Get";
+                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.open();
             }
         }
 
@@ -1913,15 +1913,9 @@ Page {
             var modelIndex = json.model_index;
             var isRunning = json.is_running;
 
-            if (err == 0) {
-                // Update ProgressBar on listItem.
-                // TODO also show running on its parents.
-                fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
-            } else {
-                messageDialog.titleText = getCloudName(json.type) + " File Put";
-                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
-                messageDialog.open();
-            }
+            // Update ProgressBar on listItem.
+            // TODO also show running on its parents.
+            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
 
             // Show indicator on parent up to root.
             // Skip i=0 as it's notified above already.
@@ -1931,6 +1925,14 @@ Page {
                 if (modelIndex > -1) {
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                 }
+            }
+
+            if (err == 0) {
+                // Do nothing.
+            } else {
+                messageDialog.titleText = getCloudName(json.type) + " File Put";
+                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.open();
             }
         }
 
