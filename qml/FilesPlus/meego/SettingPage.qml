@@ -117,18 +117,18 @@ Page {
             type: "button"
             group: "FolderPie"
         }
-        ListElement {
-            name: "Monitoring.enabled"
-            title: "Monitoring (RAM,CPU)"
-            type: "switch"
-            group: "Developer"
-        }
-        ListElement {
-            name: "Logging.enabled"
-            title: "Logging (Debug)"
-            type: "switch"
-            group: "Developer"
-        }
+//        ListElement {
+//            name: "Monitoring.enabled"
+//            title: "Monitoring (RAM,CPU)"
+//            type: "switch"
+//            group: "Developer"
+//        }
+//        ListElement {
+//            name: "Logging.enabled"
+//            title: "Logging (Debug)"
+//            type: "switch"
+//            group: "Developer"
+//        }
     }
 
     ListView {
@@ -149,7 +149,6 @@ Page {
             if (name == "showCloudPrintJobs") {
                 p.showCloudPrintJobsSlot();
             } else if (name == "resetCloudPrint") {
-//                pageStack.pop();
                 p.resetCloudPrintSlot();
             } else if (name == "showCloudDriveJobs") {
                 p.showCloudDriveJobsSlot();
