@@ -149,7 +149,6 @@ Page {
             if (name == "showCloudPrintJobs") {
                 p.showCloudPrintJobsSlot();
             } else if (name == "resetCloudPrint") {
-                pageStack.pop();
                 p.resetCloudPrintSlot();
             } else if (name == "showCloudDriveJobs") {
                 p.showCloudDriveJobsSlot();
@@ -198,9 +197,11 @@ Page {
                     id: settingValue
                     anchors.verticalCenter: parent.verticalCenter
                     checked: appInfo.getSettingValue(name, false);
-                    onClicked: {
-                        appInfo.setSettingValue(name, checked);
-                        buttonClickedHandler(name);
+                    onCheckedChanged: {
+                        if (checked != appInfo.getSettingValue(name, false)) {
+                            appInfo.setSettingValue(name, checked);
+                            buttonClickedHandler(name);
+                        }
                     }
                 }
             }

@@ -1,6 +1,5 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
-import QtMobility.contacts 1.1
 import "Utility.js" as Utility
 
 SelectionDialog {
@@ -12,50 +11,51 @@ SelectionDialog {
     property string messageSubject
     property string messageBody
     
+    signal opening()
+    signal opened()
+
     titleText: "Send " + fsModel.getFileName(srcFilePath) + " to favorite"
     titleIcon: "FilesPlusIcon.svg"
-    model: ContactModel {
-        id: favContactModel
-        filter: DetailFilter {
-            detail: ContactDetail.Favorite
-            field: Favorite.favorite
-            value: true
-        }
-        sortOrders: [
-            SortOrder {
-                detail: ContactDetail.Name
-                field: Name.FirstName
-                direction: Qt.AscendingOrder
-            },
-            SortOrder {
-                detail: ContactDetail.Name
-                field: Name.LastName
-                direction: Qt.AscendingOrder
-            }
-        ]
-    }
+    height: 280
     delegate: ListItem {
         id: recipientItem
-        Column {
+        Row {
             anchors.fill: recipientItem.paddingItem
-            ListItemText {
-                width: parent.width - 20
-                text: display
-                mode: recipientItem.mode
-                role: "Title"
+            Column {
+                width: parent.width - favIcon.width - parent.spacing
+                spacing: 2
+                ListItemText {
+                    width: parent.width - 20
+                    text: displayLabel
+                    mode: recipientItem.mode
+                    role: "Title"
+                }
+                ListItemText {
+                    width: parent.width - 20
+                    text: email
+                    mode: recipientItem.mode
+                    role: "Subtitle"
+                }
             }
-            ListItemText {
-                width: parent.width - 20
-                text: contact.email.emailAddress
-                mode: recipientItem.mode
-                role: "Subtitle"
+            Image {
+                id: favIcon
+                source: "favourite.svg"
+                visible: favorite
+                anchors.verticalCenter: parent.verticalCenter
             }
         }
         onClicked: {
-            console.debug("recipientSelectionDialog recipientItem onClicked " + index + " email " + contact.email.emailAddress);
+            console.debug("recipientSelectionDialog recipientItem onClicked " + index + " email " + email);
             recipientSelectionDialog.selectedIndex = index;
-            recipientSelectionDialog.selectedEmail = contact.email.emailAddress;
+            recipientSelectionDialog.selectedEmail = email;
             recipientSelectionDialog.accept();
+        }
+    }
+
+    onStatusChanged: {
+        if (status == DialogStatus.Opening) {
+            selectedIndex = -1;
+            opening();
         }
     }
 }

@@ -8,6 +8,7 @@ Page {
 
     property string name: "textViewPage"
     property string filePath
+    property string fileName
 
     tools: ToolBarLayout {
         ToolButton {
@@ -48,15 +49,13 @@ Page {
         width: parent.width
         height: 40
         color: "black"
-        opacity: 0.7
         z: 1
-        visible: false
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             color: "white"
-            text: textViewPage.filePath
+            text: textViewPage.fileName
         }
     }
 

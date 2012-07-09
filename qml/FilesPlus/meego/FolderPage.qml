@@ -577,7 +577,6 @@ Page {
         front: fsListView
         back: pieChartView
         onStateChanged: {
-            console.debug("flipable1 onStateChanged x " + x)
             fsModel.refreshItems();
         }
 
@@ -977,9 +976,6 @@ Page {
             }
 
             onClicked: {
-                // console.debug("listItem clicked " + (parent.x + mouseX) + ", " + (parent.y + mouseY) );
-//                fsListView.currentItem.state = "normal";
-
                 if (fsListView.state == "mark") {
                     if (listItem.clipboardIndex == -1) {
                         fsModel.setProperty(index, FolderSizeItemListModel.IsCheckedRole, !isChecked);
@@ -1665,6 +1661,7 @@ Page {
 
             if (err == 0) {
                 // Once search done, open printerSelectionDialog
+                // TODO any case that error=0 but no printers returned.
                 printFileSlot(gcpClient.selectedFilePath);
             } else {
                 gcpClient.refreshAccessToken();
@@ -2382,7 +2379,7 @@ Page {
             SortOrder {
                 detail: ContactDetail.Favorite
                 field: Favorite.favorite
-                direction: Qt.AscendingOrder
+                direction: Qt.AscendingOrder // Meego ascending true > false
             },
             SortOrder {
                 detail: ContactDetail.Name

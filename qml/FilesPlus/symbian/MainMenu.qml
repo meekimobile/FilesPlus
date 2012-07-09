@@ -48,6 +48,14 @@ Menu {
         }
 
         MenuItem {
+            id: syncItemsMenuItem
+            text: "Sync connected items"
+            onClicked: {
+                syncConnectedItemsSlot();
+            }
+        }
+
+        MenuItem {
             id: syncFolderMenuItem
             text: "Sync current folder"
             onClicked: {
@@ -132,7 +140,7 @@ Menu {
                 } else if (menuItem == markMenuItem) {
                     menuItem.visible = fsListView.state != "mark";
                 } else if (menuItem == syncFolderMenuItem) {
-                    menuItem.visible = !fsModel.isRoot();
+                    menuItem.visible = !fsModel.isRoot() && cloudDriveModel.canSync(fsModel.currentDir);
                 } else {
                     menuItem.visible = true;
 //                    console.debug("mainMenu toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.text + " is shown.");

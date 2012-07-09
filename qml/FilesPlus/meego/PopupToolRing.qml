@@ -36,7 +36,6 @@ Rectangle {
     property string pastePath
     property int clipboardCount
     property alias timeout: popupTimer.interval
-//    property variant roots: ["C:/","D:/","E:/","F:/","G:/"]
 
     property int ringRadius: 60
     property int buttonRadius: 25

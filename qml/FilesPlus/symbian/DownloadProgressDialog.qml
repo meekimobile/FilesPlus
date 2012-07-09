@@ -67,7 +67,8 @@ CommonDialog {
     }
     
     onStatusChanged: {
-        if (status == DialogStatus.Closed) {
+        console.debug("downloadProgressDialog onStatusChanged status " + status);
+        if (status == DialogStatus.Closing) {
             targetFilePath = "";
             autoClose = true;
             message = "";

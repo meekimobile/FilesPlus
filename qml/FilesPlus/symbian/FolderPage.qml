@@ -158,13 +158,13 @@ Page {
         titleText: "Reset folder cache"
         contentText: "Resetting folder cache will take time depends on numbers of sub folders/files under current folder.\n\nPlease click OK to continue."
         onConfirm: {
-            fsModel.refreshDir(true);
+            fsModel.refreshDir("folderPage resetCacheConfirmation", true);
         }
     }
 
     function refreshSlot() {
         fsModel.nameFilters = [];
-        fsModel.refreshDir(false);
+        fsModel.refreshDir("folderPage refreshSlot", false);
     }
 
     function resetCacheSlot() {
@@ -282,6 +282,30 @@ Page {
         }
     }
 
+    function syncConnectedItemsSlot() {
+        for (var i=0; i<fsModel.count; i++) {
+            var localPath = fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole);
+            var isConnected = cloudDriveModel.isConnected(localPath);
+//            console.debug("folderPage synconnectedItemsSlot localPath " + localPath + " isConnected " + isConnected);
+            if (isConnected) {
+                console.debug("folderPage synconnectedItemsSlot localPath " + localPath + " isConnected " + isConnected + " is queued for syncing.");
+                cloudDriveModel.syncItem(localPath);
+            }
+        }
+    }
+
+    function unsyncFileSlot(srcFilePath, selectedIndex) {
+        console.debug("folderPage unsyncFileSlot srcFilePath=" + srcFilePath);
+
+        if (!cloudDriveModel.isConnected(srcFilePath)) return;
+
+        // Delete remote file/folder.
+        uidDialog.localPath = srcFilePath;
+        uidDialog.selectedModelIndex = selectedIndex;
+        uidDialog.operation = CloudDriveModel.DeleteFile;
+        uidDialog.open();
+    }
+
     function uploadFileSlot(srcFilePath, selectedIndex) {
         console.debug("folderPage uploadFileSlot srcFilePath=" + srcFilePath);
         syncFileSlot(srcFilePath, selectedIndex, CloudDriveModel.FilePut);
@@ -289,7 +313,7 @@ Page {
 
     function sendFileSlot(srcFilePath, selectedIndex) {
         console.debug("folderPage sendFileSlot srcFilePath=" + srcFilePath);
-        if (cloudDriveModel.isConnected(srcFilePath) && fsModel.isFile(srcFilePath)) {
+        if (cloudDriveModel.isConnected(srcFilePath)) {
             uidDialog.localPath = srcFilePath;
             uidDialog.operation = CloudDriveModel.ShareFile;
             uidDialog.open();
@@ -342,8 +366,6 @@ Page {
 
     FolderSizeItemListModel {
         id: fsModel
-//        currentDir: "C:/"
-        sortFlag: FolderSizeItemListModel.SortByType
 
         function getActionName(fileAction) {
             switch (fileAction) {
@@ -388,7 +410,7 @@ Page {
 \n\nPlease click OK to continue.";
             messageDialog.open();
 
-            fsModel.refreshDir(true);
+            fsModel.refreshDir("folderPage onRequestResetCache", true);
         }
 
         onCopyStarted: {
@@ -523,37 +545,6 @@ Page {
         }
     }
 
-    function getImageSourcesModel(jsonText, fileName) {
-//        console.debug("getImageSourcesModel jsonText " + jsonText + " fileName " + fileName);
-
-        var supportedFileTypes = ["JPG", "PNG", "SVG"];
-
-        // Construct model.
-        var model = Qt.createQmlObject(
-                    'import QtQuick 1.1; ListModel {}', folderPage);
-
-        if (jsonText != "") {
-            var json = JSON.parse(jsonText);
-
-            for (var i=0; i<json.length; i++)
-            {
-//                console.debug("getImageSourcesModel i = " + i + " json[i].absolute_path " + json[i].absolute_path);
-                if (json[i].is_dir) {
-                    // skip dir
-                } else if (supportedFileTypes.indexOf(json[i].file_type.toUpperCase()) != -1) {
-                    console.debug("getImageSourcesModel model.append " + json[i].absolute_path);
-                    model.append({
-                                     name: json[i].name,
-                                     absolutePath: json[i].absolute_path,
-                                     isSelected: (fileName == json[i].name)
-                                 });
-                }
-            }
-        }
-
-        return model;
-    }
-
     Flipable {
         id: flipable1
         width: parent.width
@@ -604,10 +595,7 @@ Page {
         }
         onSliceClicked: {
             console.debug("QML pieChartView.onSliceClicked " + text + ", index=" + index + ", isDir=" + isDir);
-            if (isDir)
-                fsModel.changeDir(text);
-            else
-                fsModel.refreshDir(false);
+            if (isDir) fsModel.changeDir(text);
         }
         onActiveFocusChanged: {
             console.debug("QML pieChartView.onActiveFocusChanged");
@@ -977,14 +965,14 @@ Page {
                         var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV"];
                         if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             fsModel.nameFilters = ["*.jpg", "*.png", "*.svg"];
-                            fsModel.refreshDir(false);
+                            fsModel.refreshDir("folderPage listItem onClicked", false);
                             pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), {
                                                fileName: name,
                                                model: fsModel
                                            });
                         } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
-                                           { filePath: absolutePath });
+                                           { filePath: absolutePath, fileName: fsModel.getFileName(absolutePath) });
                         } else {
                             Qt.openUrlExternally(fsModel.getUrl(absolutePath));
                         }
@@ -1076,6 +1064,10 @@ Page {
             syncFileSlot(srcFilePath, srcItemIndex);
         }
 
+        onUnsyncFile: {
+            unsyncFileSlot(srcFilePath, srcItemIndex);
+        }
+
         onShowTools: {
             fsListView.currentIndex = srcItemIndex;
             toolMenu.selectedIndex = srcItemIndex;
@@ -1112,7 +1104,7 @@ Page {
         property string targetPath
 
         titleText: fileActionDialog.getTitleText()
-        contentText: fileActionDialog.getText()
+        contentText: fileActionDialog.getText() + "\n"
 
         function getTitleText() {
             var text = "";
@@ -1138,7 +1130,7 @@ Page {
             var text = "";
             if (clipboard.count == 1) {
                 text = getActionName(clipboard.get(0).action)
-                        + "\nfile " + clipboard.get(0).sourcePath
+                        + " " + clipboard.get(0).sourcePath
                         + ((clipboard.get(0).action == "delete")?"":("\nto " + targetPath))
                         + " ?";
             } else {
@@ -1333,8 +1325,8 @@ Page {
 
             TextField {
                 id: folderName
-                anchors.verticalCenter: parent.verticalCenter
                 width: parent.width
+                anchors.verticalCenter: parent.verticalCenter
                 placeholderText: "Please input folder name."
             }
         }
@@ -1374,7 +1366,6 @@ Page {
                 width: parent.width
                 text: "Rename " + fsModel.getFileName(renameDialog.sourcePath) + " to";
                 color: "white"
-                horizontalAlignment: Text.AlignHCenter
                 elide: Text.ElideMiddle
             }
 
@@ -1526,14 +1517,8 @@ Page {
         }
     }
 
-    SelectionDialog {
+    PrinterSelectionDialog {
         id: printerSelectionDialog
-
-        property string srcFilePath
-
-        titleText: "Print " + fsModel.getFileName(srcFilePath) + " to"
-        titleIcon: "FilesPlusIcon.svg"
-
         onAccepted: {
             // Print on selected printer index.
             var pid = gcpClient.getPrinterId(printerSelectionDialog.selectedIndex);
@@ -1548,11 +1533,10 @@ Page {
                 gcpClient.submit(pid, srcFilePath);
             }
         }
-
         onRejected: {
-            // Reset popupToolPanel.
-            popupToolPanel.selectedFilePath = "";
-            popupToolPanel.selectedFileIndex = -1;
+//            // Reset popupToolPanel.
+//            popupToolPanel.selectedFilePath = "";
+//            popupToolPanel.selectedFileIndex = -1;
         }
     }
 
@@ -1566,7 +1550,7 @@ Page {
 
     ProgressDialog {
         id: copyProgressDialog
-        onClosed: {
+        onClosing: {
             // Refresh view after copied/moved.
             refreshSlot();
         }
@@ -1578,7 +1562,7 @@ Page {
     ProgressDialog {
         id: deleteProgressDialog
         titleText: "Deleting"
-        onClosed: {
+        onClosing: {
             // Refresh view after copied/moved.
             refreshSlot();
         }
@@ -1592,9 +1576,27 @@ Page {
 
         property string selectedFilePath
 
+        function getPrinterListModel() {
+            var printerList = gcpClient.getStoredPrinterList();
+            console.debug("gcpClient.getPrinterListModel() " + printerList);
+            // Construct model.
+            var model = Qt.createQmlObject(
+                        'import QtQuick 1.1; ListModel {}', folderPage);
+
+            for (var i=0; i<printerList.length; i++)
+            {
+                model.append({
+                                 name: printerList[i]
+                             });
+            }
+
+            console.debug("gcpClient.getPrinterListModel() model.count " + model.count);
+            return model;
+        }
+
         onAuthorizeRedirectSignal: {
             console.debug("folderPage gcpClient onAuthorizeRedirectSignal " + url);
-            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: "GCPClient" });
+            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: "GCPClient" }, true);
         }
 
         onAccessTokenReplySignal: {
@@ -1675,11 +1677,11 @@ Page {
 //            console.debug("sandBox gcpClient onDownloadProgress " + bytesReceived + " / " + bytesTotal);
 
             // Shows in progress bar.
-            if (downloadProgressDialog.status != DialogStatus.Open) {
-                downloadProgressDialog.titleText = "Searching for printers"
-                downloadProgressDialog.indeterminate = false;
-                downloadProgressDialog.open();
-            }
+//            if (downloadProgressDialog.status != DialogStatus.Open) {
+//                downloadProgressDialog.titleText = "Searching for printers"
+//                downloadProgressDialog.indeterminate = false;
+//                downloadProgressDialog.open();
+//            }
             downloadProgressDialog.min = 0;
             downloadProgressDialog.max = bytesTotal;
             downloadProgressDialog.value = bytesReceived;
@@ -1689,10 +1691,10 @@ Page {
 //            console.debug("sandBox gcpClient onUploadProgress " + bytesSent + " / " + bytesTotal);
 
             // Shows in progress bar.
-            if (uploadProgressDialog.status != DialogStatus.Open) {
-                uploadProgressDialog.indeterminate = false;
-                uploadProgressDialog.open();
-            }
+//            if (uploadProgressDialog.status != DialogStatus.Open) {
+//                uploadProgressDialog.indeterminate = false;
+//                uploadProgressDialog.open();
+//            }
             uploadProgressDialog.min = 0;
             uploadProgressDialog.max = bytesTotal;
             uploadProgressDialog.value = bytesSent;
@@ -1736,11 +1738,13 @@ Page {
             for (var i=0; i<dbUidList.length; i++)
             {
                 var json = JSON.parse(dbUidList[i]);
+                var localHash = cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, json.uid);
+                console.debug("getUidListModel i " + i + " uid " + json.uid + " email " + json.email + " localHash " + localHash);
                 model.append({
                                  type: CloudDriveModel.Dropbox,
                                  uid: json.uid,
                                  email: json.email,
-                                 hash: cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, json.uid),
+                                 hash: localHash,
                                  name: "",
                                  shared: 0,
                                  normal: 0,
@@ -1804,7 +1808,7 @@ Page {
             // Remove finished job.
             cloudDriveModel.removeJob(nonce);
 
-            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: redirectFrom });
+            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: redirectFrom }, true);
         }
 
         onAccessTokenReplySignal: {
@@ -1841,19 +1845,6 @@ Page {
             cloudDriveModel.removeJob(nonce);
 
             if (err == 0) {
-                /*
-{
-    "referral_link": "https://www.dropbox.com/referrals/r1a2n3d4m5s6t7",
-    "display_name": "John P. User",
-    "uid": 12345678,
-    "country": "US",
-    "quota_info": {
-        "shared": 253738410565,
-        "quota": 107374182400000,
-        "normal": 680031877871
-    }
-}
-                  */
                 var jsonObj = Utility.createJsonObj(msg);
                 console.debug("jsonObj.email " + jsonObj.email);
 
@@ -1986,50 +1977,50 @@ Page {
                     messageDialog.message = "File " + localPath + " was removed remotely.\nLink will be removed.";
                     messageDialog.autoClose = true;
                     messageDialog.open();
-                    return;
-                }
-
-                // Sync starts from itself.
-                if (jsonObj.is_dir) { // Sync folder.
-                    // TODO if there is no local folder, create it and connect.
-                    if (!fsModel.isDir(localPath)) {
-                        fsModel.createDirPath(localPath);
-                    }
-
-                    // Sync based on remote contents.
-//                    console.debug("cloudDriveModel onMetadataReplySignal folder jsonObj.rev " + jsonObj.rev + " jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
-                    if (jsonObj.hash != localPathHash) { // Sync all json(remote)'s contents.
-                        for(var i=0; i<jsonObj.contents.length; i++) {
-                            var item = jsonObj.contents[i];
-                            var itemLocalPath = cloudDriveModel.getDefaultLocalFilePath(item.path);
-                            var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, type, uid);
-                            if (item.is_dir) {
-                                // This flow will trigger recursive metadata calling.
-//                                console.debug("dir item.path = " + item.path + " itemLocalHash " + itemLocalHash + " item.rev " + item.rev);
-                                cloudDriveModel.metadata(type, uid, itemLocalPath, item.path, -1);
-                            } else {
-//                                console.debug("file item.path = " + item.path + " itemLocalHash " + itemLocalHash + " item.rev " + item.rev);
-                                if (itemLocalHash != item.rev) {
-                                    cloudDriveModel.metadata(type, uid, itemLocalPath, item.path, -1);
-                                }
-                            }
+//                    return;
+                } else {
+                    // Sync starts from itself.
+                    if (jsonObj.is_dir) { // Sync folder.
+                        // TODO if there is no local folder, create it and connect.
+                        if (!fsModel.isDir(localPath)) {
+                            fsModel.createDirPath(localPath);
                         }
 
-                        // Add cloudDriveItem for currentDir.
-                        cloudDriveModel.addItem(type, uid, localPath, remotePath, jsonObj.hash);
-                    }
+                        // Sync based on remote contents.
+//                        console.debug("cloudDriveModel onMetadataReplySignal folder jsonObj.rev " + jsonObj.rev + " jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
+                        if (jsonObj.hash != localPathHash) { // Sync all json(remote)'s contents.
+                            for(var i=0; i<jsonObj.contents.length; i++) {
+                                var item = jsonObj.contents[i];
+                                var itemLocalPath = cloudDriveModel.getDefaultLocalFilePath(item.path);
+                                var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, type, uid);
+                                if (item.is_dir) {
+                                    // This flow will trigger recursive metadata calling.
+    //                                console.debug("dir item.path = " + item.path + " itemLocalHash " + itemLocalHash + " item.rev " + item.rev);
+                                    cloudDriveModel.metadata(type, uid, itemLocalPath, item.path, -1);
+                                } else {
+    //                                console.debug("file item.path = " + item.path + " itemLocalHash " + itemLocalHash + " item.rev " + item.rev);
+                                    if (itemLocalHash != item.rev) {
+                                        cloudDriveModel.metadata(type, uid, itemLocalPath, item.path, -1);
+                                    }
+                                }
+                            }
 
-                    // Sync based on local contents.
-                    cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex);
-                } else { // Sync file.
-//                    console.debug("cloudDriveModel onMetadataReplySignal file jsonObj.rev " + jsonObj.rev + " localPathHash " + localPathHash);
+                            // Add cloudDriveItem for currentDir.
+                            cloudDriveModel.addItem(type, uid, localPath, remotePath, jsonObj.hash);
+                        }
 
-                    // TODO if (rev is newer or there is no local file), get from remote.
-                    if (jsonObj.rev > localPathHash || !fsModel.isFile(localPath)) {
-                        // TODO it should be specified with localPath instead of always use defaultLocalPath.
-                        cloudDriveModel.fileGet(type, uid, remotePath, localPath, modelIndex);
-                    } else if (jsonObj.rev < localPathHash) {
-                        cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                        // Sync based on local contents.
+                        cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex);
+                    } else { // Sync file.
+//                        console.debug("cloudDriveModel onMetadataReplySignal file jsonObj.rev " + jsonObj.rev + " localPathHash " + localPathHash);
+
+                        // TODO if (rev is newer or there is no local file), get from remote.
+                        if (jsonObj.rev > localPathHash || !fsModel.isFile(localPath)) {
+                            // TODO it should be specified with localPath instead of always use defaultLocalPath.
+                            cloudDriveModel.fileGet(type, uid, remotePath, localPath, modelIndex);
+                        } else if (jsonObj.rev < localPathHash) {
+                            cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                        }
                     }
                 }
             } else if (err == 203) { // If metadata is not found, put it to cloud right away recursively.
@@ -2245,6 +2236,10 @@ Page {
                 messageDialog.autoClose = true;
                 messageDialog.open();
             }
+
+            // Update ProgressBar on listItem.
+            // TODO also show running on its parents.
+            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, json.is_running);
         }
 
         onShareFileReplySignal: {
@@ -2310,10 +2305,13 @@ Page {
             case CloudDriveModel.ShareFile:
                 cloudDriveModel.shareFile(type, uid, localPath, remotePath);
                 break;
+            case CloudDriveModel.DeleteFile:
+                cloudDriveModel.deleteFile(type, uid, localPath, remotePath);
+                break;
             }
         }
 
-        onOpened: {
+        onOpening: {
             uidDialog.model = cloudDriveModel.getUidListModel(localPath);
         }
 
@@ -2347,17 +2345,69 @@ Page {
         }
     }
 
+    ContactModel {
+        id: favContactModel
+        filter: DetailFilter {
+            detail: ContactDetail.Email
+            field: EmailAddress.emailAddress
+            matchFlags: Filter.MatchContains
+            value: "@"
+        }
+        sortOrders: [
+            SortOrder {
+                detail: ContactDetail.Favorite
+                field: Favorite.favorite
+                direction: Qt.DescendingOrder // Symbian descending true > false.
+            },
+            SortOrder {
+                detail: ContactDetail.Name
+                field: Name.FirstName
+                direction: Qt.AscendingOrder
+            },
+            SortOrder {
+                detail: ContactDetail.Name
+                field: Name.LastName
+                direction: Qt.AscendingOrder
+            }
+        ]
+
+        function getFavListModel() {
+            // Construct model.
+            var model = Qt.createQmlObject(
+                        'import QtQuick 1.1; ListModel {}', folderPage);
+
+            console.debug("getFavListModel favContactModel.contacts.length " + favContactModel.contacts.length);
+            for (var i=0; i<favContactModel.contacts.length; i++)
+            {
+                var contact = favContactModel.contacts[i];
+                var favorite = (contact.favorite) ? contact.favorite.favorite : false;
+                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + favorite);
+                model.append({
+                                 displayLabel: contact.displayLabel,
+                                 email: contact.email.emailAddress,
+                                 favorite: favorite
+                             });
+            }
+
+            return model;
+        }
+    }
+
     RecipientSelectionDialog {
         id: recipientSelectionDialog
+        model: favContactModel.getFavListModel()
+        onOpening: {
+            recipientSelectionDialog.model = favContactModel.getFavListModel();
+        }
         onAccepted: {
             console.debug("recipientSelectionDialog onAccepted email " + selectedEmail + " senderEmail " + senderEmail);
             Qt.openUrlExternally("mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody);
         }
         onRejected: {
-            // Reset popupToolPanel.
-            popupToolPanel.selectedFilePath = "";
-            popupToolPanel.selectedFileIndex = -1;
-            srcFilePath = "";
+//            // Reset popupToolPanel.
+//            popupToolPanel.selectedFilePath = "";
+//            popupToolPanel.selectedFileIndex = -1;
+//            srcFilePath = "";
         }
     }
 }

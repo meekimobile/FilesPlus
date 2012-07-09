@@ -84,7 +84,7 @@
         <file>qml/FilesPlus/photos_list.svg</file>
         <file alias="qml/FilesPlus/ChartMenu.qml">qml/FilesPlus/meego/ChartMenu.qml</file>
         <file alias="qml/FilesPlus/DriveMenu.qml">qml/FilesPlus/meego/DriveMenu.qml</file>
-        <file alias="qml/FilesPlus/cloud_remove.svg">qml/FilesPlus/cloud_remove.svg</file>
+        <file>qml/FilesPlus/cloud_remove.svg</file>
         <file alias="qml/FilesPlus/MarkAllMenu.qml">qml/FilesPlus/meego/MarkAllMenu.qml</file>
     </qresource>
 </RCC>

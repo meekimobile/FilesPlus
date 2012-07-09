@@ -42,6 +42,15 @@ Page {
         }
     }
 
+    ConfirmDialog {
+        id: deleteConfirmation
+        titleText: "Delete print jobs"
+        contentText: "Delete all print jobs ?"
+        onConfirm: {
+            deleteAllJobs();
+        }
+    }
+
     GCPClient {
         id: gcpClient
 
@@ -95,8 +104,17 @@ Page {
             var jobId = jobModel.get(i).id;
             var status = jobModel.get(i).status;
             if (status == "DONE") {
+                jobModel.setProperty(i, "status", "Deleting");
                 gcpClient.deletejob(jobId);
             }
+        }
+    }
+
+    function deleteAllJobs() {
+        for (var i=0; i<jobModel.count; i++) {
+            var jobId = jobModel.get(i).id;
+            jobModel.setProperty(i, "status", "Deleting");
+            gcpClient.deletejob(jobId);
         }
     }
 
@@ -120,7 +138,7 @@ Page {
         height: 50
         z: 2
         onClicked: {
-            // TODO delete selected job.
+            // Delete selected job.
             jobModel.setProperty(jobListView.currentIndex, "status", "Deleting");
             gcpClient.deletejob(jobId);
             visible = false;

@@ -12,7 +12,6 @@ Page {
     property alias model: imageGrid.model
     property string fileName
     property bool showGrid: true
-    property variant supportedFileType: ["JPG", "PNG", "SVG"]
 
     state: "grid"
     states: [
@@ -183,6 +182,11 @@ Page {
             return "";
         }
 
+        function isSupportedImageFormat(fileType) {
+            var supportedFileType = ["JPG", "PNG", "SVG"];
+            return (supportedFileType.indexOf(fileType.toUpperCase()) != -1);
+        }
+
         function getImageModelIndex(fileName) {
             // Model is set before it can finish filter only images. Find selected image position needs to be done with full list.
             var imageIndex = 0;
@@ -193,7 +197,7 @@ Page {
 //                console.debug("ImageViewPage imageGrid getImageModelIndex " + i + " name " + name + " isDir " + isDir + " fileType " + fileType)
 
                 // If item is dir or is not image, skip.
-                if (isDir || supportedFileType.indexOf(fileType.toUpperCase()) == -1) {
+                if (isDir || !isSupportedImageFormat(fileType.toUpperCase())) {
                     continue;
                 }
 
@@ -256,7 +260,7 @@ Page {
         Image {
             id: imageView
 
-            property bool isImage: isSupportedImageFormat(fileType)
+            property bool isImage: imageGrid.isSupportedImageFormat(fileType)
 
             source: getImageSource()
             asynchronous: true
@@ -265,10 +269,6 @@ Page {
             width: imageGrid.cellWidth
             height: imageGrid.cellHeight
             fillMode: Image.PreserveAspectFit
-
-            function isSupportedImageFormat(fileType) {
-                return (supportedFileType.indexOf(fileType.toUpperCase()) != -1);
-            }
 
             function getImageSource() {
                 if (imageViewPage.status == PageStatus.Active && isImage) {
@@ -284,8 +284,8 @@ Page {
 
             BusyIndicator {
                 id: imageViewBusy
-                width: 80
-                height: 80
+                width: 150
+                height: width
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
                 visible: (parent.progress < 1 && parent.status == Image.Loading)

@@ -118,7 +118,7 @@ MenuWithIcon {
         } else if (menuItem == markMenuItem) {
             return fsListView.state != "mark";
         } else if (menuItem == syncFolderMenuItem) {
-            return !fsModel.isRoot() && cloudDriveModel.canSync(fsModel.currentDir)
+            return !fsModel.isRoot() && cloudDriveModel.canSync(fsModel.currentDir);
         } else {
             return true;
         }

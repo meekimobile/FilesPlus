@@ -23,15 +23,24 @@ Page {
         }
     }
 
-    BusyIndicator {
+    Rectangle {
         id: webViewBusy
-        width: 100
-        height: width
+        anchors.fill: parent
+        color: "black"
+        visible: false
+        smooth: false
+        opacity: 0.9
         z: 2
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        visible: running
-        running: false
+
+        BusyIndicator {
+            id: busyIdicator
+            width: 150
+            height: width
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+            visible: parent.visible
+            running: parent.visible
+        }
     }
 
     WebView {
@@ -40,18 +49,18 @@ Page {
         height: parent.height
         preferredWidth: width
         preferredHeight: height
-        z: 1
+//        z: 1
         visible: true
 
         onLoadStarted: {
-            webViewBusy.running = true;
+            webViewBusy.visible = true;
         }
 
         onLoadFinished: {
             // Workaround for transparent background ( https://bugreports.qt-project.org/browse/QTWEBKIT-352 )
             webView.evaluateJavaScript("if (!document.body.style.backgroundColor) document.body.style.backgroundColor='white';");
 
-            webViewBusy.running = false;
+            webViewBusy.visible = false;
 
             if (authPage.redirectFrom == "GCPClient") {
                 // GCPClient handler.

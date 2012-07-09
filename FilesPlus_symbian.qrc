@@ -75,9 +75,11 @@
         <file alias="qml/FilesPlus/ProgressDialog.qml">qml/FilesPlus/symbian/ProgressDialog.qml</file>
         <file alias="qml/FilesPlus/RecipientSelectionDialog.qml">qml/FilesPlus/symbian/RecipientSelectionDialog.qml</file>
         <file alias="qml/FilesPlus/AuthPage.qml">qml/FilesPlus/symbian/AuthPage.qml</file>
-        <file>qml/FilesPlus/photos_list.svg</file>
+        <file alias="qml/FilesPlus/PrinterSelectionDialog.qml">qml/FilesPlus/symbian/PrinterSelectionDialog.qml</file>
         <file>qml/FilesPlus/folder_list.svg</file>
         <file>qml/FilesPlus/notes_list.svg</file>
-        <file alias="qml/FilesPlus/cloud_remove.svg">qml/FilesPlus/cloud_remove.svg</file>
+        <file>qml/FilesPlus/photos_list.svg</file>
+        <file>qml/FilesPlus/cloud_remove.svg</file>
+        <file>qml/FilesPlus/favourite.svg</file>
     </qresource>
 </RCC>

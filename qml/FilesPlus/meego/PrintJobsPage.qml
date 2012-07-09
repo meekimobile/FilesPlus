@@ -33,7 +33,8 @@ Page {
             id: deleteButton
             iconSource: "delete.svg"
             onClicked: {
-                deleteConfirmation.open();
+                // TODO delete all done jobs.
+                deleteAllDoneJobs();
             }
         }
     }

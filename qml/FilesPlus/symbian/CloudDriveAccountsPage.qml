@@ -146,6 +146,7 @@ Page {
                     width: 48
                     height: 48
                     fillMode: Image.PreserveAspectFit
+                    anchors.verticalCenter: parent.verticalCenter
                 }
                 Column {
                     width: parent.width - cloudIcon.width

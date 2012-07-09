@@ -1,8 +1,5 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
-import Charts 1.0
-import FolderSizeItemListModel 1.0
-import GCPClient 1.0
 import CloudDriveModel 1.0
 import "Utility.js" as Utility
 
@@ -16,9 +13,44 @@ SelectionDialog {
     property string selectedUid
     property int selectedModelIndex
 
+    signal opening()
     signal opened()
     
-    titleText: "Please select Cloud Account"
+    function getTitleText(localPath) {
+        var text = "";
+
+        switch (operation) {
+        case CloudDriveModel.Metadata:
+            // TODO To support both single/multiple items.
+            if (localPath != "") {
+                text += "Sync " + fsModel.getFileName(localPath) + " to";
+            } else if (clipboard.count > 0){
+                var syncCount = 0;
+                for (var i=0; i<clipboard.count; i++) {
+                    if (clipboard.get(i).action == "sync") {
+                        syncCount++;
+                    }
+                }
+                text += "Sync " + syncCount + (syncCount>1 ? " items" : " item") + " to";
+            }
+            break;
+        case CloudDriveModel.FilePut:
+            text += "Upload " + fsModel.getFileName(localPath) + " to";
+            break;
+        case CloudDriveModel.FileGet:
+            text += "Download " + fsModel.getFileName(localPath) + " from";
+            break;
+        case CloudDriveModel.ShareFile:
+            text += "Share link of " + fsModel.getFileName(localPath) + " from";
+            break;
+        case CloudDriveModel.DeleteFile:
+            text += "Unsync " + fsModel.getFileName(localPath) + " from";
+            break;
+        }
+
+        return text;
+    }
+
     delegate: ListItem {
         id: uidDialogListViewItem
         height: 60
@@ -56,7 +88,11 @@ SelectionDialog {
     }
         
     onStatusChanged: {
-        if (status == DialogStatus.Open) {
+        if (status == DialogStatus.Opening) {
+            selectedIndex = -1;
+            titleText = getTitleText(localPath);
+            opening();
+        } else if (status == DialogStatus.Open) {
             opened();
         }
     }
