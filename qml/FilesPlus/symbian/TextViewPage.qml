@@ -31,7 +31,6 @@ Page {
         ToolButton {
             id: printButton
             iconSource: "print.svg"
-
             onClicked: {
                 var p = pageStack.find(function (page) { return page.name == "folderPage"; });
                 if (p) p.printFileSlot(textViewPage.filePath, -1);
@@ -60,7 +59,9 @@ Page {
     }
 
     PinchArea {
-        anchors.fill: parent
+        anchors.top: textLabel.bottom
+        width: parent.width
+        height: parent.height - textLabel.height
         pinch.dragAxis: Pinch.XandYAxis
 
         onPinchStarted: {
@@ -83,7 +84,9 @@ Page {
             enabled: true
             readOnly: true
             anchors.fill: parent
-            font.family: "Helvetica"
+//            anchors.top: textLabel.bottom
+//            width: parent.width
+//            height: parent.height - textLabel.height
             font.pointSize: 6
             wrapMode: TextEdit.WordWrap
             textFormat: TextEdit.AutoText
