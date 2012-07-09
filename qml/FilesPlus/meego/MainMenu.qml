@@ -47,6 +47,14 @@ MenuWithIcon {
         }
 
         MenuItemWithIcon {
+            id: syncItemsMenuItem
+            text: "Sync connected items"
+            onClicked: {
+                syncConnectedItemsSlot();
+            }
+        }
+
+        MenuItemWithIcon {
             id: syncFolderMenuItem
             text: "Sync current folder"
             onClicked: {

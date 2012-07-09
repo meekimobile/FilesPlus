@@ -581,11 +581,11 @@ void CloudDriveModel::syncItems()
     }
 }
 
-void CloudDriveModel::syncFolder(const QString localFilePath)
+void CloudDriveModel::syncItem(const QString localFilePath)
 {
     // Queue localFilePath's items for metadata requesting.
     foreach (CloudDriveItem item, m_cloudDriveItems.values(localFilePath)) {
-        qDebug() << "CloudDriveModel::syncFolder item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
+        qDebug() << "CloudDriveModel::syncItem item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
 
         switch (item.type) {
         case Dropbox:

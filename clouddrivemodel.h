@@ -97,7 +97,7 @@ public:
     Q_INVOKABLE void requestJobQueueStatus();
     // Sync items.
     Q_INVOKABLE void syncItems();
-    Q_INVOKABLE void syncFolder(const QString localFilePath);
+    Q_INVOKABLE void syncItem(const QString localFilePath);
 
     // Service Proxy with Job Queuing.
     Q_INVOKABLE void requestToken(CloudDriveModel::ClientTypes type);

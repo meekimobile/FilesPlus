@@ -302,6 +302,18 @@ Page {
         }
     }
 
+    function syncConnectedItemsSlot() {
+        for (var i=0; i<fsModel.count; i++) {
+            var localPath = fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole);
+            var isConnected = cloudDriveModel.isConnected(localPath);
+//            console.debug("folderPage synconnectedItemsSlot localPath " + localPath + " isConnected " + isConnected);
+            if (isConnected) {
+                console.debug("folderPage synconnectedItemsSlot localPath " + localPath + " isConnected " + isConnected + " is queued for syncing.");
+                cloudDriveModel.syncItem(localPath);
+            }
+        }
+    }
+
     function unsyncFileSlot(srcFilePath, selectedIndex) {
         console.debug("folderPage unsyncFileSlot srcFilePath=" + srcFilePath);
 
@@ -1990,50 +2002,50 @@ Page {
                     messageDialog.message = "File " + localPath + " was removed remotely.\nLink will be removed.";
                     messageDialog.autoClose = true;
                     messageDialog.open();
-                    return;
-                }
-
-                // Sync starts from itself.
-                if (jsonObj.is_dir) { // Sync folder.
-                    // TODO if there is no local folder, create it and connect.
-                    if (!fsModel.isDir(localPath)) {
-                        fsModel.createDirPath(localPath);
-                    }
-
-                    // Sync based on remote contents.
-//                    console.debug("cloudDriveModel onMetadataReplySignal folder jsonObj.rev " + jsonObj.rev + " jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
-                    if (jsonObj.hash != localPathHash) { // Sync all json(remote)'s contents.
-                        for(var i=0; i<jsonObj.contents.length; i++) {
-                            var item = jsonObj.contents[i];
-                            var itemLocalPath = cloudDriveModel.getDefaultLocalFilePath(item.path);
-                            var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, type, uid);
-                            if (item.is_dir) {
-                                // This flow will trigger recursive metadata calling.
-//                                console.debug("dir item.path = " + item.path + " itemLocalHash " + itemLocalHash + " item.rev " + item.rev);
-                                cloudDriveModel.metadata(type, uid, itemLocalPath, item.path, -1);
-                            } else {
-//                                console.debug("file item.path = " + item.path + " itemLocalHash " + itemLocalHash + " item.rev " + item.rev);
-                                if (itemLocalHash != item.rev) {
-                                    cloudDriveModel.metadata(type, uid, itemLocalPath, item.path, -1);
-                                }
-                            }
+//                    return;
+                } else {
+                    // Sync starts from itself.
+                    if (jsonObj.is_dir) { // Sync folder.
+                        // TODO if there is no local folder, create it and connect.
+                        if (!fsModel.isDir(localPath)) {
+                            fsModel.createDirPath(localPath);
                         }
 
-                        // Add cloudDriveItem for currentDir.
-                        cloudDriveModel.addItem(type, uid, localPath, remotePath, jsonObj.hash);
-                    }
+                        // Sync based on remote contents.
+//                        console.debug("cloudDriveModel onMetadataReplySignal folder jsonObj.rev " + jsonObj.rev + " jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
+                        if (jsonObj.hash != localPathHash) { // Sync all json(remote)'s contents.
+                            for(var i=0; i<jsonObj.contents.length; i++) {
+                                var item = jsonObj.contents[i];
+                                var itemLocalPath = cloudDriveModel.getDefaultLocalFilePath(item.path);
+                                var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, type, uid);
+                                if (item.is_dir) {
+                                    // This flow will trigger recursive metadata calling.
+    //                                console.debug("dir item.path = " + item.path + " itemLocalHash " + itemLocalHash + " item.rev " + item.rev);
+                                    cloudDriveModel.metadata(type, uid, itemLocalPath, item.path, -1);
+                                } else {
+    //                                console.debug("file item.path = " + item.path + " itemLocalHash " + itemLocalHash + " item.rev " + item.rev);
+                                    if (itemLocalHash != item.rev) {
+                                        cloudDriveModel.metadata(type, uid, itemLocalPath, item.path, -1);
+                                    }
+                                }
+                            }
 
-                    // Sync based on local contents.
-                    cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex);
-                } else { // Sync file.
-//                    console.debug("cloudDriveModel onMetadataReplySignal file jsonObj.rev " + jsonObj.rev + " localPathHash " + localPathHash);
+                            // Add cloudDriveItem for currentDir.
+                            cloudDriveModel.addItem(type, uid, localPath, remotePath, jsonObj.hash);
+                        }
 
-                    // TODO if (rev is newer or there is no local file), get from remote.
-                    if (jsonObj.rev > localPathHash || !fsModel.isFile(localPath)) {
-                        // TODO it should be specified with localPath instead of always use defaultLocalPath.
-                        cloudDriveModel.fileGet(type, uid, remotePath, localPath, modelIndex);
-                    } else if (jsonObj.rev < localPathHash) {
-                        cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                        // Sync based on local contents.
+                        cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex);
+                    } else { // Sync file.
+//                        console.debug("cloudDriveModel onMetadataReplySignal file jsonObj.rev " + jsonObj.rev + " localPathHash " + localPathHash);
+
+                        // TODO if (rev is newer or there is no local file), get from remote.
+                        if (jsonObj.rev > localPathHash || !fsModel.isFile(localPath)) {
+                            // TODO it should be specified with localPath instead of always use defaultLocalPath.
+                            cloudDriveModel.fileGet(type, uid, remotePath, localPath, modelIndex);
+                        } else if (jsonObj.rev < localPathHash) {
+                            cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                        }
                     }
                 }
             } else if (err == 203) { // If metadata is not found, put it to cloud right away recursively.
