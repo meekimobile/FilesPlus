@@ -72,6 +72,12 @@ Page {
             }
         }
 
+        ToolButton {
+            text: "Mark mode"
+            enabled: false
+            visible: (fsListView.state == "mark")
+        }
+
         ToolIcon {
             id: flipButton
             iconSource: (folderPage.state != "list") ? "list.svg" : "chart.svg"
