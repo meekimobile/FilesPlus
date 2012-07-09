@@ -65,12 +65,6 @@ Menu {
 
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
-            var isAnyChecked = fsListView.isAnyItemChecked();
-            console.debug("markMenu onStatusChanged isAnyChecked " + isAnyChecked);
-            copyMarked.visible = isAnyChecked;
-            cutMarked.visible = isAnyChecked;
-            syncMarked.visible = isAnyChecked;
-            deleteMarked.visible = isAnyChecked;
             markAll.isMarkAll = !fsListView.areAllItemChecked();
         }
     }

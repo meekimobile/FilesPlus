@@ -87,7 +87,11 @@ Page {
             iconId: "toolbar-view-menu"
             onClicked: {
                 if (fsListView.state == "mark") {
-                    markMenu.open();
+                    if (!fsListView.isAnyItemChecked()) {
+                        markAllMenu.open();
+                    } else {
+                        markMenu.open();
+                    }
                 } else if (folderPage.state == "list") {
                     mainMenu.open();
                 } else if (folderPage.state == "chart") {
@@ -157,6 +161,10 @@ Page {
 
     MarkMenu {
         id: markMenu
+    }
+
+    MarkAllMenu {
+        id: markAllMenu
     }
 
     ConfirmDialog {
