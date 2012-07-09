@@ -21,7 +21,18 @@ SelectionDialog {
 
         switch (operation) {
         case CloudDriveModel.Metadata:
-            text += "Sync " + fsModel.getFileName(localPath) + " to";
+            // TODO To support both single/multiple items.
+            if (localPath != "") {
+                text += "Sync " + fsModel.getFileName(localPath) + " to";
+            } else if (clipboard.count > 0){
+                var syncCount = 0;
+                for (var i=0; i<clipboard.count; i++) {
+                    if (clipboard.get(i).action == "sync") {
+                        syncCount++;
+                    }
+                }
+                text += "Sync " + syncCount + (syncCount>1 ? " items" : " item") + " to";
+            }
             break;
         case CloudDriveModel.FilePut:
             text += "Upload " + fsModel.getFileName(localPath) + " to";
