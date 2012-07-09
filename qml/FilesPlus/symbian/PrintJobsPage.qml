@@ -36,8 +36,7 @@ Page {
             iconSource: "delete.svg"
             flat: true
             onClicked: {
-                // TODO delete all done jobs.
-                deleteAllDoneJobs();
+                deleteConfirmation.open();
             }
         }
     }
