@@ -134,6 +134,8 @@ Rectangle {
     function isButtonVisible(buttonName) {
         if (buttonName === "sync") {
             return !fsModel.isRoot(selectedFilePath) && cloudDriveModel.canSync(selectedFilePath);
+        } else if (buttonName === "upload") {
+            return !fsModel.isRoot(selectedFilePath) && cloudDriveModel.canSync(selectedFilePath);
         } else if (buttonName === "unsync") {
             return cloudDriveModel.isConnected(selectedFilePath);
         } else if (buttonName === "paste") {
