@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by Qt Creator 2.5.0, 2012-07-09T19:52:33. -->
+<!-- Written by Qt Creator 2.5.0, 2012-07-10T10:54:37. -->
 <qtcreator>
  <data>
   <variable>ProjectExplorer.Project.ActiveTarget</variable>
@@ -483,10 +483,10 @@
       <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">Create SIS Package</value>
       <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
       <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.S60SignBuildStep</value>
-      <value type="QString" key="Qt4ProjectManager.S60CreatePackageStep.Certificate">C:/TaweesakKittipureeCert26Apr2012/NOKIA_2012-04-04.crt</value>
-      <value type="QString" key="Qt4ProjectManager.S60CreatePackageStep.Keyfile">C:/TaweesakKittipureeCert26Apr2012/NOKIA_2012-04-04.key</value>
-      <value type="int" key="Qt4ProjectManager.S60CreatePackageStep.SignMode">0</value>
-      <value type="bool" key="Qt4ProjectManager.S60CreatorPackageStep.SmartInstaller">false</value>
+      <value type="QString" key="Qt4ProjectManager.S60CreatePackageStep.Certificate">C:/TaweesakKittipureecert09jul2012/NOKIA_2012-06-27.crt</value>
+      <value type="QString" key="Qt4ProjectManager.S60CreatePackageStep.Keyfile">C:/TaweesakKittipureecert09jul2012/NOKIA_2012-06-27.key</value>
+      <value type="int" key="Qt4ProjectManager.S60CreatePackageStep.SignMode">1</value>
+      <value type="bool" key="Qt4ProjectManager.S60CreatorPackageStep.SmartInstaller">true</value>
       <value type="bool" key="Qt4ProjectManager.S60CreatorPackageStep.SuppressPatchWarningDialog">false</value>
      </valuemap>
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.1">
@@ -567,7 +567,7 @@
    <value type="int" key="ProjectExplorer.Target.ActiveDeployConfiguration">0</value>
    <value type="int" key="ProjectExplorer.Target.ActiveRunConfiguration">0</value>
    <valuemap type="QVariantMap" key="ProjectExplorer.Target.BuildConfiguration.0">
-    <value type="QString" key="ProjectExplorer.BuildCOnfiguration.ToolChain">Qt4ProjectManager.ToolChain.Maemo:{91d5d2be-2242-4a3e-b10e-0d9a63da979f}</value>
+    <value type="QString" key="ProjectExplorer.BuildCOnfiguration.ToolChain">Qt4ProjectManager.ToolChain.Maemo:{8b61cb0c-4d29-4d78-aad8-566e358c40c7}</value>
     <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.0">
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <value type="bool" key="ProjectExplorer.BuildStep.Enabled">false</value>
@@ -638,7 +638,7 @@
     <value type="bool" key="Qt4ProjectManager.Qt4BuildConfiguration.UseShadowBuild">false</value>
    </valuemap>
    <valuemap type="QVariantMap" key="ProjectExplorer.Target.BuildConfiguration.1">
-    <value type="QString" key="ProjectExplorer.BuildCOnfiguration.ToolChain">Qt4ProjectManager.ToolChain.Maemo:{91d5d2be-2242-4a3e-b10e-0d9a63da979f}</value>
+    <value type="QString" key="ProjectExplorer.BuildCOnfiguration.ToolChain">Qt4ProjectManager.ToolChain.Maemo:{8b61cb0c-4d29-4d78-aad8-566e358c40c7}</value>
     <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.0">
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <value type="bool" key="ProjectExplorer.BuildStep.Enabled">true</value>
@@ -723,7 +723,7 @@
        <value type="QString">c:/qtsdk/madde/sysroots/harmattan_sysroot_10.2011.34-1_slim</value>
       </valuelist>
       <valuelist type="QVariantList" key="Qt4ProjectManager.MaemoRunConfiguration.LastDeployedTimes">
-       <value type="QDateTime">2012-07-09T17:12:13</value>
+       <value type="QDateTime">2012-07-10T09:43:09</value>
       </valuelist>
      </valuemap>
      <value type="int" key="ProjectExplorer.BuildStepList.StepsCount">3</value>
