@@ -10,8 +10,8 @@ QT += network script
 QML_IMPORT_PATH =
 
 # Change UID3 to protected UID for publishing to Nokia Store.
-symbian:TARGET.UID3 = 0xE11DCC9D
-#symbian:TARGET.UID3 = 0x20064E45
+#symbian:TARGET.UID3 = 0xE11DCC9D
+symbian:TARGET.UID3 = 0x20064E45
 
 VERSION = 1.0.1
 
@@ -51,7 +51,7 @@ symbian {
 
     my_deployment.pkg_prerules += \
         "; Vendor names" \
-        "%{\"Vendor\"}" \
+        "%{\"MeekiMobile\"}" \
         ":\"MeekiMobile\""
 
     DEPLOYMENT += my_deployment
