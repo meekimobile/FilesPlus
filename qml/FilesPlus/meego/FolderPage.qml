@@ -1914,7 +1914,14 @@ Page {
                 fsModel.removeCache(json.local_file_path);
 
                 // TODO Does it need to refresh to add gotten file to listview ?
-                refreshSlot();
+                var index = fsModel.getIndexOnCurrentDir(json.local_file_path);
+                if (index == FolderSizeItemListModel.IndexNotOnCurrentDir) {
+                    // do nothing.
+                } else if (index == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
+                    refreshSlot();
+                } else {
+                    fsModel.refreshItem(index);
+                }
             } else {
                 messageDialog.titleText = getCloudName(job.type) + " File Get";
                 messageDialog.message = "Error " + err + " " + errMsg + " " + msg;

@@ -41,6 +41,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(deleteStarted(int,QString)), this, SIGNAL(deleteStarted(int,QString)) );
     connect(&m, SIGNAL(deleteFinished(int,QString,QString,int)), this, SLOT(deleteFinishedFilter(int,QString,QString,int)) );
     connect(&m, SIGNAL(finished()), this, SLOT(jobDone()) );
+    connect(&m, SIGNAL(terminated()), this, SLOT(jobDone()) );
 
 //    // Load cache
 //    m.setRunMethod(m.LoadDirSizeCache);
@@ -284,7 +285,15 @@ QString FolderSizeItemListModel::createNonce() {
 
 void FolderSizeItemListModel::jobDone()
 {
-    runningJobCount--;
+    qDebug() << "FolderSizeItemListModel::jobDone runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue.count();
+
+    if (runningJobCount > 0) {
+        mutex.lock();
+        runningJobCount--;
+        mutex.unlock();
+    }
+
+    qDebug() << "FolderSizeItemListModel::jobDone runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue.count();
 
     emit proceedNextJobSignal();
 }
@@ -669,7 +678,7 @@ QString FolderSizeItemListModel::getDirContentJson(const QString dirPath)
 int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
 {
     // TODO implement cache.
-    int index = -1;
+    int index = IndexNotOnCurrentDir;
     if (m_indexOnCurrentDirHash->contains(absFilePath)) {
         index = m_indexOnCurrentDirHash->value(absFilePath);
 //        qDebug() << "FolderSizeItemListModel::getIndexOnCurrentDir cached index for " << absFilePath << "=" << index;
@@ -691,7 +700,7 @@ int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
         }
     }
 
-    index = (isOnCurrentDir && index == -1)?-2:index;
+    index = (isOnCurrentDir && index == IndexNotOnCurrentDir)?IndexOnCurrentDirButNotFound:index;
     m_indexOnCurrentDirHash->insert(absFilePath, index);
 //    qDebug() << "FolderSizeItemListModel::getIndexOnCurrentDir insert cache for" << absFilePath << "index" << index;
 
@@ -838,7 +847,9 @@ void FolderSizeItemListModel::proceedNextJob()
 //    qDebug() << "FolderSizeItemListModel::proceedNextJob t " << t->currentThreadId();
 //    t->start();
 
+    mutex.lock();
     runningJobCount++;
+    mutex.unlock();
 
 //    qDebug() << "QThreadPool::globalInstance() active / max" << QThreadPool::globalInstance()->activeThreadCount()
 //             << "/" << QThreadPool::globalInstance()->maxThreadCount() << "runningJobCount" << runningJobCount;

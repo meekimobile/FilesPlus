@@ -127,7 +127,7 @@ QString CloudDriveModel::createNonce() {
     }
 
     nonce = nonce.append(QString("%1").arg(QDateTime::currentMSecsSinceEpoch()));
-    qDebug() << "CloudDriveModel::createNonce" << nonce;
+//    qDebug() << "CloudDriveModel::createNonce" << nonce;
 
     return nonce;
 }
@@ -294,12 +294,12 @@ void CloudDriveModel::addItem(CloudDriveModel::ClientTypes type, QString uid, QS
     if (item.localPath != "") {
         // Found existing item. Remove then add.
         if (!addOnly) {
-            qDebug() << "CloudDriveModel::addItem remove for update" << item;
+//            qDebug() << "CloudDriveModel::addItem remove for update" << item;
             removeItem(type, uid, localPath);
             item = CloudDriveItem(type, uid, localPath, remotePath, hash, QDateTime::currentDateTime());
             addItem(localPath, item);
         } else {
-            qDebug() << "CloudDriveModel::addItem suppress remove" << item << "addOnly=" << addOnly;
+//            qDebug() << "CloudDriveModel::addItem suppress remove" << item << "addOnly=" << addOnly;
         }
     } else {
         // Not found, add it right away.
@@ -558,7 +558,7 @@ void CloudDriveModel::syncItems()
 
         QString lastItemLocalPath = "";
         foreach (CloudDriveItem item, findItems(Dropbox, uid)) {
-            qDebug() << "CloudDriveModel::syncItems item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
+//            qDebug() << "CloudDriveModel::syncItems item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
 
             // TODO temp cleanup.
             if (cleanItem(item)) continue;
@@ -577,6 +577,9 @@ void CloudDriveModel::syncItems()
             }
 
             lastItemLocalPath = item.localPath;
+
+            // Process events to avoid freezing UI.
+            QApplication::processEvents();
         }
     }
 }
@@ -1092,7 +1095,7 @@ void CloudDriveModel::jobDone() {
     runningJobCount--;
     mutex.unlock();
 
-    qDebug() << "CloudDriveModel::jobDone runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue.count() << "m_cloudDriveJobs" << m_cloudDriveJobs.count() << "m_cloudDriveItems" << m_cloudDriveItems.count();
+    qDebug() << "CloudDriveModel::jobDone runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue.count() << "m_cloudDriveJobs" << m_cloudDriveJobs.count();
 
     emit jobQueueStatusSignal(runningJobCount, m_jobQueue.count(), m_cloudDriveItems.count());
     emit proceedNextJobSignal();
