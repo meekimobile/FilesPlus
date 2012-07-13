@@ -798,6 +798,9 @@ void FolderSizeItemListModel::deleteFinishedFilter(int fileAction, QString sourc
             // Remote item from itemList.
             removeItem(i);
 
+            // Reset m_indexOnCurrentDirHash.
+            m_indexOnCurrentDirHash->clear();
+
             endRemoveRows();
         }
     }

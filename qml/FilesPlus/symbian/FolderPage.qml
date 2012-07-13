@@ -2060,7 +2060,7 @@ Page {
 
             // Show indicator on parent up to root.
             // Skip i=0 as it's notified above already.
-            var pathList = fsModel.getPathToRoot(json.local_file_path);
+            var pathList = fsModel.getPathToRoot(localPath);
             for(var i=1; i<pathList.length; i++) {
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
                 if (modelIndex > -1) {
@@ -2096,6 +2096,16 @@ Page {
             // Update ProgressBar on listItem.
             // TODO also show running on its parents.
             fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
+
+            // Show indicator on parent up to root.
+            // Skip i=0 as it's notified above already.
+            var pathList = fsModel.getPathToRoot(json.local_file_path);
+            for(var i=1; i<pathList.length; i++) {
+                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                if (modelIndex > -1) {
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                }
+            }
         }
 
         onDownloadProgress: {
@@ -2233,6 +2243,8 @@ Page {
             console.debug("folderPage cloudDriveModel onDeleteFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
             var json = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var modelIndex = json.model_index;
+            var isRunning = json.is_running;
 
             // Remove finished job.
             cloudDriveModel.removeJob(nonce);
@@ -2248,7 +2260,17 @@ Page {
 
             // Update ProgressBar on listItem.
             // TODO also show running on its parents.
-            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, json.is_running);
+            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
+
+            // Show indicator on parent up to root.
+            // Skip i=0 as it's notified above already.
+            var pathList = fsModel.getPathToRoot(json.local_file_path);
+            for(var i=1; i<pathList.length; i++) {
+                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                if (modelIndex > -1) {
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                }
+            }
         }
 
         onShareFileReplySignal: {

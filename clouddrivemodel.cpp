@@ -742,8 +742,10 @@ void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString u
     if (info.isDir()) {
         // Sync based on local contents.
 
-        // TODO create remote directory if no content.
-        if (getItem(localPath, type, uid).localPath == "") {
+        // TODO create remote directory if no content or pending refresh metadata.
+        CloudDriveItem cloudItem = getItem(localPath, type, uid);
+        qDebug() << "CloudDriveModel::syncFromLocal cloudItem" << cloudItem;
+        if (cloudItem.localPath == "" || cloudItem.hash == CloudDriveModel::DirtyHash) {
             createFolder(type, uid, localPath, remotePath, modelIndex);
         }
 
