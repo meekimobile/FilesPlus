@@ -129,6 +129,16 @@ PageStackWindow {
         interval: 3000
 
         onLoaded: {
+            // Set timer to push pages later after shows splash screen.
+            pushPagesTimer.start();
+        }
+    }
+
+    Timer {
+        id: pushPagesTimer
+        interval: 500
+        running: false
+        onTriggered: {
             // Load folderPage then push drivePage to increase performance.
             pageStack.push(Qt.resolvedUrl("FolderPage.qml"));
             pageStack.push(Qt.resolvedUrl("DrivePage.qml"));
@@ -137,5 +147,8 @@ PageStackWindow {
 
     Component.onCompleted: {
         console.debug(Utility.nowText() + " window onCompleted");
+
+        // Set to portrait to show splash screen. Then it will set back to default once it's destroyed.
+        screen.allowedOrientations = Screen.Portrait;
     }
 }

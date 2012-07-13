@@ -8,6 +8,7 @@ const QString CloudDriveModel::HashFilePath = "C:/CloudDriveModel.dat";
 #endif
 const int CloudDriveModel::MaxRunningJobCount = 3;
 const QString CloudDriveModel::DirtyHash = "FFFFFFFF";
+const QStringList CloudDriveModel::restrictFileTypes = QString("SIS,SISX,DEB").split(",");
 
 CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
@@ -230,8 +231,29 @@ bool CloudDriveModel::isSyncing(QString localPath)
     return false;
 }
 
+QString CloudDriveModel::getFileType(QString localPath)
+{
+    int i = localPath.lastIndexOf(".");
+    QString fileType;
+    if (i > -1 && i < localPath.length()) {
+        fileType = localPath.mid(i + 1);
+    } else {
+        fileType = "";
+    }
+
+    qDebug() << "CloudDriveModel::getFileType" << localPath << "fileType" << fileType;
+    return fileType;
+}
+
 bool CloudDriveModel::canSync(QString localPath)
 {
+    QString fileType = getFileType(localPath);
+    if (fileType != "") {
+        if (restrictFileTypes.contains(fileType, Qt::CaseInsensitive)) {
+            return false;
+        }
+    }
+
     QString remotePath = getDefaultRemoteFilePath(localPath);
     qDebug() << "CloudDriveModel::canSync localPath " << localPath << " remotePath " << remotePath;
 
@@ -667,6 +689,12 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
 
 void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex)
 {
+    // TODO Restrict file types.
+    if (!canSync(localFilePath)) {
+        qDebug() << "CloudDriveModel::filePut localFilePath" << localFilePath << " is restricted, can't upload.";
+        return;
+    }
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), FilePut, type, uid, localFilePath, remoteFilePath, modelIndex);
     job.isRunning = true;
@@ -684,6 +712,12 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
 
 void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex)
 {
+    // TODO Restrict file types.
+    if (!canSync(localFilePath)) {
+        qDebug() << "CloudDriveModel::metadata localFilePath" << localFilePath << " is restricted, can't sync.";
+        return;
+    }
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), Metadata, type, uid, localFilePath, remoteFilePath, modelIndex);
     job.isRunning = true;

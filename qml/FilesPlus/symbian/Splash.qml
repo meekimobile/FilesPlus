@@ -1,4 +1,5 @@
 import QtQuick 1.1
+import com.nokia.symbian 1.1
 import "Utility.js" as Utility
 
 Rectangle {
@@ -39,6 +40,14 @@ Rectangle {
 
         PauseAnimation { duration: interval-500 }
         NumberAnimation { target: splashScreen; property: "opacity"; to: 0; duration: 500; easing.type: Easing.Linear }
-        ScriptAction { script: { splashScreen.destroy(); } }
+        ScriptAction {
+            script: {
+                splashScreen.destroy();
+            }
+        }
+    }
+
+    Component.onDestruction: {
+        screen.allowedOrientations = Screen.All;
     }
 }

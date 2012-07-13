@@ -1,5 +1,5 @@
 import QtQuick 1.1
-import com.nokia.meego 1.1
+import com.nokia.meego 1.0
 import Charts 1.0
 import FolderSizeItemListModel 1.0
 import GCPClient 1.0

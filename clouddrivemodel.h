@@ -29,6 +29,7 @@ public:
     static const QString HashFilePath;
     static const int MaxRunningJobCount;
     static const QString DirtyHash;
+    static const QStringList restrictFileTypes;
 
     // ClientTypes is stored on m_cloudDriveItems. Its sequence shouldn't be changed.
     // AnyClient is technically never stored. It should be the last type.
@@ -171,6 +172,7 @@ private:
     void initializeDropboxClient();
     QString createNonce();
     void jobDone();
+    QString getFileType(QString localPath);
 //    CloudDriveModelThread::ClientTypes mapToThreadClientTypes(CloudDriveModel::ClientTypes type);
 //    CloudDriveModelThread::ClientTypes mapToThreadClientTypes(int type);
 };

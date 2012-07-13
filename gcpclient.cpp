@@ -38,6 +38,7 @@ GCPClient::GCPClient(QDeclarativeItem *parent) :
     m_contentTypeHash["txt"] = "text/plain";
     m_contentTypeHash["log"] = "text/plain";
     m_contentTypeHash["csv"] = "text/plain";
+    // TODO SVG ?
 }
 
 GCPClient::~GCPClient()

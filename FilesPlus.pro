@@ -129,7 +129,10 @@ symbian {
     RESOURCES += FilesPlus_symbian.qrc
 }
 contains(MEEGO_EDITION, harmattan) {
+    message( MEEGO_EDITION $${MEEGO_EDITION} $${MEEGO_VERSION_MAJOR} $${MEEGO_VERSION_MINOR} $${MEEGO_VERSION_PATCH} )
+
     RESOURCES += FilesPlus_meego.qrc
     DEFINES += Q_WS_HARMATTAN
 }
+
 

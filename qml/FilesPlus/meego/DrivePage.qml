@@ -1,5 +1,5 @@
 import QtQuick 1.1
-import com.nokia.meego 1.1
+import com.nokia.meego 1.0
 import QtMobility.systeminfo 1.2
 import SystemInfoHelper 1.0
 import "Utility.js" as Utility

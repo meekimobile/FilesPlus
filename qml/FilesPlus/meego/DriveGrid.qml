@@ -91,6 +91,7 @@ Rectangle {
                         color: "white"
                         font.pointSize: 18
                         verticalAlignment: Text.AlignVCenter
+                        elide: Text.ElideRight
                         text: model.logicalDrive + "  (" + driveTypeTexts[model.driveType] + ")"
                     }
 
