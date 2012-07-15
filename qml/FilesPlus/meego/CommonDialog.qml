@@ -49,7 +49,7 @@ Dialog {
         Text {
             id: title
             color: "white"
-            font.pointSize: 18
+            font.pointSize: 20
             wrapMode: Text.Wrap
             elide: Text.ElideRight
             width: parent.width - titleIcon.width

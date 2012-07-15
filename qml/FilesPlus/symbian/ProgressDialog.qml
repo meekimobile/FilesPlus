@@ -139,7 +139,6 @@ CommonDialog {
         } else if (status == DialogStatus.Closing) {
             hideAction.stop();
 
-            titleText = "";
             source = "";
             target = "";
             autoClose = false;
