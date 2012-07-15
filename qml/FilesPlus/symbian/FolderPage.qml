@@ -2173,12 +2173,13 @@ Page {
         }
 
         onLocalChangedSignal: {
+            // TODO Disable becuase it can damage stored hash.
             // Reset CloudDriveItem hash upto root.
-            var paths = fsModel.getPathToRoot(localPath);
-            for (var i=0; i<paths.length; i++) {
-                console.debug("folderPage cloudDriveModel onLocalChangedSignal updateItems paths[" + i + "] " + paths[i]);
-                cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
-            }
+//            var paths = fsModel.getPathToRoot(localPath);
+//            for (var i=0; i<paths.length; i++) {
+//                console.debug("folderPage cloudDriveModel onLocalChangedSignal updateItems paths[" + i + "] " + paths[i]);
+//                cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
+//            }
         }
 
         onJobQueueStatusSignal: {

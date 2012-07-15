@@ -38,7 +38,8 @@ QString FolderSizeItem::toJsonText()
     jsonText.append(QString("\"running_operation\": %1, ").arg(runningOperation));
     jsonText.append(QString("\"running_value\": %1, ").arg(runningValue));
     jsonText.append(QString("\"running_max_value\": %1, ").arg(runningMaxValue));
-    jsonText.append(QString("\"is_checked\": %1 ").arg(isChecked));
+    jsonText.append(QString("\"is_checked\": %1, ").arg(isChecked));
+    jsonText.append(QString("\"is_dirty\": %1 ").arg(isDirty));
     jsonText.append("}");
 
     return jsonText;

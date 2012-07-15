@@ -27,6 +27,7 @@ public:
     int runningOperation;
 
     bool isChecked;
+    bool isDirty;
 
     QString toJsonText();
 private:

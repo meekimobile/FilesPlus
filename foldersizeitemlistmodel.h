@@ -60,7 +60,8 @@ public:
         RunningOperationRole,
         RunningValueRole,
         RunningMaxValueRole,
-        IsCheckedRole
+        IsCheckedRole,
+        IsDirtyRole
     };
 
     enum RunningOperations {

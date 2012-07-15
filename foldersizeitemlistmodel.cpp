@@ -21,6 +21,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     roles[RunningValueRole] = "runningValue";
     roles[RunningMaxValueRole] = "runningMaxValue";
     roles[IsCheckedRole] = "isChecked";
+    roles[IsDirtyRole] = "isDirty";
     setRoleNames(roles);
 
     // TODO Initialize cache.
@@ -106,6 +107,8 @@ QVariant FolderSizeItemListModel::data(const QModelIndex & index, int role) cons
         return item.runningMaxValue;
     else if (role == IsCheckedRole)
         return item.isChecked;
+    else if (role == IsDirtyRole)
+        return item.isDirty;
     return QVariant();
 }
 
@@ -210,6 +213,9 @@ void FolderSizeItemListModel::setProperty(const int index, FolderSizeItemListMod
             isChanged = true;
         } else if (role == IsCheckedRole && item.isChecked != value.toBool()) {
             item.isChecked = value.toBool();
+            isChanged = true;
+        } else if (role == IsDirtyRole && item.isDirty != value.toBool()) {
+            item.isDirty = value.toBool();
             isChanged = true;
         }
 
