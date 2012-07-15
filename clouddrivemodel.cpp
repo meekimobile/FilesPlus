@@ -3,10 +3,11 @@
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
 const QString CloudDriveModel::HashFilePath = "/home/user/.filesplus/CloudDriveModel.dat";
+const int CloudDriveModel::MaxRunningJobCount = 3;
 #else
 const QString CloudDriveModel::HashFilePath = "C:/CloudDriveModel.dat";
+const int CloudDriveModel::MaxRunningJobCount = 2;
 #endif
-const int CloudDriveModel::MaxRunningJobCount = 3;
 const QString CloudDriveModel::DirtyHash = "FFFFFFFF";
 const QStringList CloudDriveModel::restrictFileTypes = QString("SIS,SISX,DEB").split(",");
 
@@ -64,6 +65,7 @@ void CloudDriveModel::loadCloudDriveItems() {
 }
 
 void CloudDriveModel::saveCloudDriveItems() {
+    // Prevent save for testing only.
     if (m_cloudDriveItems.isEmpty()) return;
 
     // Cleanup before save.
@@ -678,6 +680,9 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
     m_cloudDriveJobs[job.jobId] = job;
     m_jobQueue.enqueue(job.jobId);
 
+    // Emit signal to show cloud_wait.
+    emit jobEnqueuedSignal(job.jobId, localFilePath);
+
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
     if (job.type == Dropbox) {
@@ -701,6 +706,9 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
     m_cloudDriveJobs[job.jobId] = job;
     m_jobQueue.enqueue(job.jobId);
 
+    // Emit signal to show cloud_wait.
+    emit jobEnqueuedSignal(job.jobId, localFilePath);
+
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
     if (job.type == Dropbox) {
@@ -723,6 +731,9 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
     job.isRunning = true;
     m_cloudDriveJobs[job.jobId] = job;
     m_jobQueue.enqueue(job.jobId);
+
+    // Emit signal to show cloud_wait.
+    emit jobEnqueuedSignal(job.jobId, localFilePath);
 
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
@@ -793,6 +804,9 @@ void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString ui
     m_cloudDriveJobs[job.jobId] = job;
     m_jobQueue.enqueue(job.jobId);
 
+    // Emit signal to show cloud_wait.
+    emit jobEnqueuedSignal(job.jobId, localPath);
+
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
     if (job.type == Dropbox) {
@@ -809,6 +823,9 @@ void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, Q
     job.isRunning = true;
     m_cloudDriveJobs[job.jobId] = job;
     m_jobQueue.enqueue(job.jobId);
+
+    // Emit signal to show cloud_wait.
+    emit jobEnqueuedSignal(job.jobId, localFilePath);
 
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
@@ -827,6 +844,9 @@ void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, Q
     m_cloudDriveJobs[job.jobId] = job;
     m_jobQueue.enqueue(job.jobId);
 
+    // Emit signal to show cloud_wait.
+    emit jobEnqueuedSignal(job.jobId, localFilePath);
+
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
     if (job.type == Dropbox) {
@@ -844,6 +864,9 @@ void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid,
     m_cloudDriveJobs[job.jobId] = job;
     m_jobQueue.enqueue(job.jobId);
 
+    // Emit signal to show cloud_wait.
+    emit jobEnqueuedSignal(job.jobId, localFilePath);
+
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
     if (job.type == Dropbox) {
@@ -860,6 +883,9 @@ void CloudDriveModel::shareFile(CloudDriveModel::ClientTypes type, QString uid, 
     job.isRunning = true;
     m_cloudDriveJobs[job.jobId] = job;
     m_jobQueue.enqueue(job.jobId);
+
+    // Emit signal to show cloud_wait.
+    emit jobEnqueuedSignal(job.jobId, localFilePath);
 
     emit proceedNextJobSignal();
 }

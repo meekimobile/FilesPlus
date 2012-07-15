@@ -47,6 +47,16 @@ PageStackWindow {
         Component.onCompleted: {
             appInfo.startMonitoring();
         }
+
+        onNotifyLoggingSignal: {
+            messageDialog.titleText = "Notify";
+            messageDialog.message = "Logging is enabled. Log file is at " + logFilePath + "\nYou may turn off in Settings.";
+            messageDialog.open();
+        }
+    }
+
+    MessageDialog {
+        id: messageDialog
     }
 
     Text {

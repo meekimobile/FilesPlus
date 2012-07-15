@@ -56,8 +56,8 @@ Page {
 
     ConfirmDialog {
         id: quitConfirmation
-        titleText: "Enable logging"
-        contentText: "Turn on logging requires restart.\nFilesPlus is exiting now.\n\nPlease confirm."
+        titleText: "Logging (Debug)"
+        contentText: "Changing logging switch requires restart.\nFilesPlus is exiting now.\n\nPlease confirm."
         onConfirm: {
             Qt.quit();
         }
@@ -178,7 +178,7 @@ Page {
 
         Rectangle {
             width: settingList.width
-            height: 60
+            height: 70
             color: "transparent"
             Row {
                 visible: (type == "switch")
@@ -196,10 +196,12 @@ Page {
                 Switch {
                     id: settingValue
                     anchors.verticalCenter: parent.verticalCenter
-                    checked: appInfo.getSettingValue(name, false);
+                    checked: appInfo.getSettingValue(name, false)
                     onCheckedChanged: {
-                        if (checked != appInfo.getSettingValue(name, false)) {
-                            appInfo.setSettingValue(name, checked);
+//                        console.debug("settingListItemDelegate settingValue checked " + checked + " appInfo.getSettingValue " + name + " " + appInfo.getSettingValue(name, false));
+                        if (appInfo.setSettingValue(name, checked)) {
+                            console.debug("settingListItemDelegate settingValue " + name + " checked " + checked + " is changed.");
+                            // Handle only if it's enabled.
                             buttonClickedHandler(name);
                         }
                     }

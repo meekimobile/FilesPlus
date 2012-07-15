@@ -25,6 +25,11 @@ void AppInfo::setAppName(const QString appName)
     m_appName = appName;
 }
 
+bool AppInfo::isLogging() const
+{
+    return m_settings->value("Logging.enabled", false).toBool();
+}
+
 bool AppInfo::isMonitoring() const
 {
     return m_settings->value("Monitoring.enabled", false).toBool();
@@ -55,15 +60,21 @@ QVariant AppInfo::getSettingValue(const QString key, const QVariant defaultValue
     return m_settings->value(key, defaultValue);
 }
 
-void AppInfo::setSettingValue(const QString key, const QVariant v)
+bool AppInfo::setSettingValue(const QString key, const QVariant v)
 {
-    m_settings->setValue(key, v);
+    if (m_settings->value(key) != v) {
+        m_settings->setValue(key, v);
 
-    // Sync to backend.
-    m_settings->sync();
+        // Sync to backend.
+        m_settings->sync();
 
-    // Call startMonitoring.
-    startMonitoring();
+        // Call startMonitoring.
+        startMonitoring();
+
+        return true;
+    } else {
+        return false;
+    }
 }
 
 void AppInfo::startMonitoring()
@@ -91,6 +102,22 @@ void AppInfo::init()
     // Check settings if monitoring is enabled.
     m_settings = new QSettings(m_domainName, m_appName);
     qDebug() << "AppInfo m_settings fileName()" << m_settings->fileName();
+
+    if (isLogging()) {
+#ifdef Q_OS_SYMBIAN
+        emit notifyLoggingSignal("E:/");
+#elif defined(Q_WS_HARMATTAN)
+        emit notifyLoggingSignal("/home/user/");
+#endif
+    }
+
+    if (isMonitoring()) {
+#ifdef Q_OS_SYMBIAN
+        emit notifyMonitoringSignal("E:/");
+#elif defined(Q_WS_HARMATTAN)
+        emit notifyMonitoringSignal("/home/user/");
+#endif
+    }
 }
 
 void AppInfo::componentComplete()

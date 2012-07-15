@@ -120,6 +120,7 @@ signals:
     void proceedNextJobSignal();
     void jobQueueStatusSignal(int runningJobCount, int jobQueueCount, int itemCount);
     void localChangedSignal(QString localPath);
+    void jobEnqueuedSignal(QString nonce, QString localPath);
 
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);

@@ -15,18 +15,19 @@
 void customMessageHandler(QtMsgType type, const char *msg)
 {
     QString txt;
+    QString timestampString = QDateTime::currentDateTime().toString(Qt::ISODate);
     switch (type) {
     case QtDebugMsg:
-        txt = QString("Debug: %1").arg(msg);
+        txt = QString("%1 Debug: %2").arg(timestampString).arg(msg);
         break;
     case QtWarningMsg:
-        txt = QString("Warning: %1").arg(msg);
+        txt = QString("%1 Warning: %2").arg(timestampString).arg(msg);
         break;
     case QtCriticalMsg:
-        txt = QString("Critical: %1").arg(msg);
+        txt = QString("%1 Critical: %2").arg(timestampString).arg(msg);
         break;
     case QtFatalMsg:
-        txt = QString("Fatal: %1").arg(msg);
+        txt = QString("%1 Fatal: %2").arg(timestampString).arg(msg);
         abort();
     }
 

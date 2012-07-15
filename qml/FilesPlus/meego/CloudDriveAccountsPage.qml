@@ -9,13 +9,13 @@ Page {
     property string name: "cloudDriveAccountsPage"
     property variant cloudDriveModel
 
-    function updateAccountInfoSlot(type, uid, name, shared, normal, quota) {
+    function updateAccountInfoSlot(type, uid, name, email, shared, normal, quota) {
 //        console.debug("cloudDriveAccountsPage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
         for (var i=0; i<accountListView.model.count; i++) {
 //            console.debug("cloudDriveAccountsPage updateAccountInfoSlot accountModel i " + i + " uid " + accountListView.model.get(i).uid + " type " + accountListView.model.get(i).type);
             if (accountListView.model.get(i).uid == uid && accountListView.model.get(i).type == type) {
                 console.debug("cloudDriveAccountsPage updateAccountInfoSlot i " + i + " uid " + uid + " type " + type);
-                accountListView.model.set(i, { name: name, shared: shared, normal: normal, quota: quota });
+                accountListView.model.set(i, { name: name, email: email, shared: shared, normal: normal, quota: quota });
             }
         }
     }
@@ -29,6 +29,10 @@ Page {
             accountListView.model.set(i, { quota: 0 });
             cloudDriveAccountsPage.cloudDriveModel.accountInfo(accountListView.model.get(i).type, accountListView.model.get(i).uid);
         }
+    }
+
+    function refreshCloudDriveAccountsSlot() {
+        accountListView.model = cloudDriveAccountsPage.cloudDriveModel.getUidListModel();
     }
 
     onStatusChanged: {

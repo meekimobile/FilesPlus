@@ -265,8 +265,8 @@ Page {
 
         if (!cloudDriveModel.isAuthorized()) {
             // TODO implement for other cloud drive.
-            messageDialog.message = "Files+ sync your files via Dropbox service.\
-\nYou will redirect to authorization page.";
+            messageDialog.message = "FilesPlus syncs your files via Dropbox service.\
+\nYou will be redirected to authorization page.";
             messageDialog.titleText = "Sync with Dropbox";
             messageDialog.open();
 
@@ -1825,8 +1825,12 @@ Page {
                 } else {
                     // TODO Get account info and show in dialog.
                     messageDialog.titleText = "CloudDrive Access Token"
-                    messageDialog.message = "New user is authorized";
+                    messageDialog.message = "Cloud drive user is authorized.\nPlease proceed your sync action.";
                     messageDialog.open();
+
+                    // Refresh account page.
+                    var p = pageStack.find(function (page) { return page.name == "cloudDriveAccountsPage"; });
+                    if (p) p.refreshCloudDriveAccountsSlot();
                 }
             } else {
                 messageDialog.titleText = "CloudDrive Access Token"
@@ -1851,7 +1855,7 @@ Page {
                 // Send info to cloudDriveAccountsPage.
                 var p = pageStack.find(function (page) { return (page.name == "cloudDriveAccountsPage"); });
                 if (p) {
-                    p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.quota_info.shared, jsonObj.quota_info.normal, jsonObj.quota_info.quota);
+                    p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email, jsonObj.quota_info.shared, jsonObj.quota_info.normal, jsonObj.quota_info.quota);
                 }
             } else {
                 messageDialog.titleText = "CloudDrive Account Info"
@@ -2306,6 +2310,11 @@ Page {
             // Update ProgressBar on listItem.
             // TODO also show running on its parents.
             fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
+        }
+
+        onJobEnqueuedSignal: {
+            console.debug("folderPage cloudDriveModel onJobEnqueuedSignal " + nonce + " " + localPath);
+            fsModel.refreshItem(localPath);
         }
     }
 

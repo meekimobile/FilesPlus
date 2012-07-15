@@ -21,6 +21,20 @@ Page {
                 pageStack.pop(authPage);
             }
         }
+
+        ToolButton {
+            id:okButton
+            iconSource: "ok.svg"
+
+            onClicked: {
+                var p = pageStack.find(function(page) {
+                    return (page.name == "folderPage");
+                });
+                // TODO Remove dependency to make authPage reusable for other REST API.
+                if (p) p.dropboxAccessTokenSlot();
+                pageStack.pop();
+            }
+        }
     }
 
     Rectangle {
@@ -54,6 +68,7 @@ Page {
 
         onLoadStarted: {
             webViewBusy.visible = true;
+            okButton.visible = false;
         }
 
         onLoadFinished: {
@@ -93,12 +108,16 @@ Page {
                     pageStack.pop();
                 }
             } else if (authPage.redirectFrom == "DropboxClient") {
+                okButton.visible = true;
+
                 // DropboxClient handler
                 console.debug("DropboxClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom);
+                console.debug("DropboxClient title " + title);
+                console.debug("DropboxClient html " + html);
                 var uidIndex = html.indexOf("uid:");
                 if (uidIndex != -1) {
                     console.debug("found uid! at " + uidIndex);
-                    console.debug(html);
+//                    console.debug("DropboxClient html " + html);
 
                     var p = pageStack.find(function(page) {
                         return (page.name == "folderPage");
@@ -107,7 +126,7 @@ Page {
                     if (p) p.dropboxAccessTokenSlot();
                     pageStack.pop();
                 } else if (title.match("^API Request Authorized")) {
-                    console.debug("title = " + title);
+//                    console.debug("DropboxClient title " + title);
 
                     var p = pageStack.find(function(page) {
                         return (page.name == "folderPage");
@@ -116,8 +135,8 @@ Page {
                     if (p) p.dropboxAccessTokenSlot();
                     pageStack.pop();
                 } else {
-                    console.debug("title = " + title);
-                    console.debug(html);
+//                    console.debug("DropboxClient title " + title);
+//                    console.debug("DropboxClient html " + html);
                 }
             }
         }

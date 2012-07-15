@@ -49,7 +49,7 @@ Dialog {
         Text {
             id: title
             color: "white"
-            font.pointSize: 24
+            font.pointSize: 18
             wrapMode: Text.Wrap
             elide: Text.ElideRight
             width: parent.width - titleIcon.width
@@ -65,7 +65,7 @@ Dialog {
     content: Text {
         id: content
         color: "grey"
-        font.pointSize:  18
+        font.pointSize:  16
         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
         width: parent.width - 20
         height: implicitHeight

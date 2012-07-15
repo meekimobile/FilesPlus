@@ -62,7 +62,8 @@ void DropboxClient::saveAccessPairMap() {
     // TODO workaround fix to remove tokenPair with key="".
     accessTokenPairMap.remove("");
 
-    if (accessTokenPairMap.isEmpty()) return;
+    // TODO To prevent invalid code to save damage data for testing only.
+//    if (accessTokenPairMap.isEmpty()) return;
 
     QFile file(KeyStoreFilePath);
     QFileInfo info(file);
@@ -221,6 +222,8 @@ void DropboxClient::authorize(QString nonce)
     queryString.append("oauth_token=" + m_paramMap["oauth_token"]);
     queryString.append("&oauth_callback=" + m_paramMap["oauth_callback"]);
     queryString.append("&display=mobile");
+    // TODO Force with locale=en.
+//    queryString.append("&locale=en");
 
     // Send signal to redirect to URL.
     emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, "DropboxClient");
