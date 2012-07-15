@@ -143,8 +143,8 @@ Rectangle {
                             horizontalAlignment: Text.AlignHCenter
                             style: Text.Outline
                             font.pointSize: 16
-                            text: "Free: " + Utility.formatFileSize(model.availableSpace, 1)
-                                  + " / Total: " + Utility.formatFileSize(model.totalSpace, 1)
+                            text: qsTr("Free") + ": " + Utility.formatFileSize(model.availableSpace, 1)
+                                  + " / " + qsTr("Total") + ": " + Utility.formatFileSize(model.totalSpace, 1)
                         }
                     }
                 }

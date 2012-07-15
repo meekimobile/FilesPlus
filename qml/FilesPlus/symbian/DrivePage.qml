@@ -41,7 +41,7 @@ Page {
     MainMenu {
         id: mainMenu
         // TODO refactor to use id.
-        enabledMenus: ["About", "More Apps", "Settings", "Exit"]
+        enabledMenus: [qsTr("About"), qsTr("More Apps"), qsTr("Settings"), qsTr("Exit")]
 
         onQuit: {
             quitSlot();
@@ -102,7 +102,7 @@ Page {
 
     TitlePanel {
         id: titlePanel
-        text: "Drives"
+        text: qsTr("Drives")
     }
 
     onStatusChanged: {

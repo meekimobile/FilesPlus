@@ -5,7 +5,7 @@ CommonDialog {
     id: confirmDialog
     z: 2
     titleIcon: "FilesPlusIcon.svg"
-    buttonTexts: ["OK", "Cancel"]
+    buttonTexts: [qsTr("OK"), qsTr("Cancel")]
     
     signal confirm()
 

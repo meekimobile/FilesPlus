@@ -49,8 +49,8 @@ PageStackWindow {
         }
 
         onNotifyLoggingSignal: {
-            messageDialog.titleText = "Notify";
-            messageDialog.message = "Logging is enabled. Log file is at " + logFilePath + "\nYou may turn off in Settings.";
+            messageDialog.titleText = qsTr("Notify");
+            messageDialog.message = qsTr("Logging is enabled. Log file is at ") + logFilePath + "\n" + qsTr("You may turn off in Settings.");
             messageDialog.open();
         }
     }
@@ -66,7 +66,7 @@ PageStackWindow {
         width: parent.width / 2
         height: 26
         color: "white"
-        text: qsTr("FilesPlus")
+        text: "FilesPlus"
         smooth: false
         verticalAlignment: Text.AlignVCenter
         font.pointSize: 6
@@ -99,7 +99,7 @@ PageStackWindow {
         Text {
             id: busyText1
             width: 180
-            text: "Please wait while loading."
+            text: qsTr("Please wait while loading.")
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
             font.pointSize: 8

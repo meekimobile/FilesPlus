@@ -124,7 +124,7 @@ Page {
                     // TODO Remove dependency to make authPage reusable for other REST API.
                     if (p) p.dropboxAccessTokenSlot();
                     pageStack.pop();
-                } else if (title.match("^API Request Authorized")) {
+                } else if (title.match(qsTr("^API Request Authorized"))) {
 //                    console.debug("DropboxClient title " + title);
 
                     var p = pageStack.find(function(page) {

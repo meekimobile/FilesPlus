@@ -17,7 +17,7 @@ Menu {
 
         MenuItem {
             id: pasteMenuItem
-            text: "Paste"
+            text: qsTr("Paste")
             onClicked: {
                 paste();
             }
@@ -25,7 +25,7 @@ Menu {
 
         MenuItem {
             id: markMenuItem
-            text: "Mark multiple items"
+            text: qsTr("Mark multiple items")
             onClicked: {
                 fsListView.state = "mark";
             }
@@ -33,7 +33,7 @@ Menu {
 
         MenuItem {
             id: clearClipboardMenuItem
-            text: "Clear clipboard"
+            text: qsTr("Clear clipboard")
             onClicked: {
                 clipboard.clear();
             }
@@ -41,7 +41,7 @@ Menu {
 
         MenuItem {
             id: newFolderMenuItem
-            text: "New folder"
+            text: qsTr("New folder")
             onClicked: {
                 newFolderDialog.open();
             }
@@ -49,7 +49,7 @@ Menu {
 
         MenuItem {
             id: syncItemsMenuItem
-            text: "Sync connected items"
+            text: qsTr("Sync connected items")
             onClicked: {
                 syncConnectedItemsSlot();
             }
@@ -57,7 +57,7 @@ Menu {
 
         MenuItem {
             id: syncFolderMenuItem
-            text: "Sync current folder"
+            text: qsTr("Sync current folder")
             onClicked: {
                 console.debug("mainMenu syncFolderMenuItem fsModel.currentDir " + fsModel.currentDir);
                 syncFileSlot(fsModel.currentDir, -1);
@@ -66,7 +66,7 @@ Menu {
 
         MenuItem {
             id: sortByMenuItem
-            text: "Sort by"
+            text: qsTr("Sort by")
             platformSubItemIndicator: true
             onClicked: {
                 sortByMenu.open();
@@ -74,7 +74,7 @@ Menu {
         }
 
         MenuItem {
-            text: "Settings"
+            text: qsTr("Settings")
             platformSubItemIndicator: true
             onClicked: {
 //                settingMenu.open();
@@ -88,21 +88,21 @@ Menu {
         }
 
         MenuItem {
-            text: "About"
+            text: qsTr("About")
             onClicked: {
                 pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
             }
         }
                 
 //        MenuItem {
-//            text: "More Apps"
+//            text: qsTr("More Apps")
 //            onClicked: {
 //                pageStack.push(Qt.resolvedUrl("MoreApps.qml"));
 //            }
 //        }
         
         MenuItem {
-            text: "Exit"
+            text: qsTr("Exit")
             onClicked: {
                 quit();
             }

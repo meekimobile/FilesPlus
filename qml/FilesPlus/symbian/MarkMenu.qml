@@ -15,7 +15,7 @@ Menu {
 
             property bool isMarkAll: true
 
-            text: (isMarkAll) ? "Mark all" : "Unmark all"
+            text: (isMarkAll) ? qsTr("Mark all") : qsTr("Unmark all")
             onClicked: {
                 if (isMarkAll) {
                     fsListView.markAll();
@@ -28,7 +28,7 @@ Menu {
 
         MenuItem {
             id: copyMarked
-            text: "Copy marked items"
+            text: qsTr("Copy marked items")
             onClicked: {
                 fsListView.copyMarkedItems();
                 fsListView.state = "";
@@ -37,7 +37,7 @@ Menu {
 
         MenuItem {
             id: cutMarked
-            text: "Cut marked items"
+            text: qsTr("Cut marked items")
             onClicked: {
                 fsListView.cutMarkedItems();
                 fsListView.state = "";
@@ -46,7 +46,7 @@ Menu {
 
         MenuItem {
             id: deleteMarked
-            text: "Delete marked items"
+            text: qsTr("Delete marked items")
             onClicked: {
                 fsListView.deleteMarkedItems();
                 fsListView.state = "";
@@ -55,7 +55,7 @@ Menu {
 
         MenuItem {
             id: syncMarked
-            text: "Sync marked items"
+            text: qsTr("Sync marked items")
             onClicked: {
                 fsListView.syncMarkedItems();
                 fsListView.state = "";

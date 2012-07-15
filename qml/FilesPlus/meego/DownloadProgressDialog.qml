@@ -13,9 +13,9 @@ CommonDialog {
     property alias indeterminate: downloadProgressBar.indeterminate
     property bool autoClose: true
     
-    titleText: "Downloading"
+    titleText: qsTr("Downloading")
     titleIcon: "FilesPlusIcon.svg"
-    buttonTexts: ["OK"]
+    buttonTexts: [qsTr("OK")]
     content: Column {
         width: parent.width - 10
         spacing: 4

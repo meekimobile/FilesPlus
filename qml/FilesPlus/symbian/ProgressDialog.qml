@@ -54,9 +54,9 @@ CommonDialog {
         }
     }
 
-    titleText: "Progressing"
+    titleText: qsTr("Progressing")
     titleIcon: "FilesPlusIcon.svg"
-    buttonTexts: ["OK", "Cancel"]
+    buttonTexts: [qsTr("OK"), qsTr("Cancel")]
     content: Column {
         width: parent.width - 10
         spacing: 4
@@ -128,7 +128,7 @@ CommonDialog {
     
     onButtonClicked: {
         var buttonName = buttonTexts[index];
-        if (buttonName == "Cancel") {
+        if (buttonName == qsTr("Cancel")) {
             cancelled();
         }
     }

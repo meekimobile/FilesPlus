@@ -14,7 +14,7 @@ Menu {
     content: MenuLayout {
         MenuItemWithCheck {
             property int flag: FolderSizeItemListModel.SortByName
-            text: "Sort by Name"
+            text: qsTr("Sort by Name")
             checked: (sortFlag == flag)
             onClicked: {
                 selectSort(flag);
@@ -23,7 +23,7 @@ Menu {
 
         MenuItemWithCheck {
             property int flag: FolderSizeItemListModel.SortByType
-            text: "Sort by Type"
+            text: qsTr("Sort by Type")
             checked: (sortFlag == flag)
             onClicked: {
                 selectSort(flag);
@@ -32,7 +32,7 @@ Menu {
 
         MenuItemWithCheck {
             property int flag: FolderSizeItemListModel.SortByTime
-            text: "Sort by Time"
+            text: qsTr("Sort by Time")
             checked: (sortFlag == flag)
             onClicked: {
                 selectSort(flag);
@@ -41,7 +41,7 @@ Menu {
 
         MenuItemWithCheck {
             property int flag: FolderSizeItemListModel.SortBySize
-            text: "Sort by Size"
+            text: qsTr("Sort by Size")
             checked: (sortFlag == flag)
             onClicked: {
                 selectSort(flag);

@@ -38,11 +38,11 @@ Column {
         id: description
         color: "grey"
         width: 360
-        text: "FilesPlus provides extended functions beyond file manager.\
+        text: qsTr("FilesPlus provides extended functions beyond file manager.\
 \n   • Print with Google™ Cloud Print.\
 \n   • Sync with Cloud Drive.\
 \n   • Preview images in your folder.\
-\n   • Present folders in Pie view."
+\n   • Present folders in Pie view.")
         anchors.horizontalCenter: parent.horizontalCenter
         wrapMode: Text.WordWrap
         font.pointSize: 16
@@ -79,7 +79,7 @@ Column {
         id: author
         width: parent.width
         color: "grey"
-        text: qsTr("Developed by MeekiMobile")
+        text: qsTr("Developed by ") + "MeekiMobile"
         horizontalAlignment: Text.AlignHCenter
         anchors.horizontalCenter: parent.horizontalCenter
         wrapMode: Text.WordWrap

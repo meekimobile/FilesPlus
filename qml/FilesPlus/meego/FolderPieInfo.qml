@@ -50,7 +50,7 @@ Column {
         id: author
         width: parent.width
         color: "grey"
-        text: qsTr("\n\nDeveloped by MeekiMobile")
+        text: "\n\n" + qsTr("Developed by") + " MeekiMobile"
         horizontalAlignment: Text.AlignHCenter
         anchors.horizontalCenter: parent.horizontalCenter
         wrapMode: Text.WordWrap

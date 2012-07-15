@@ -16,7 +16,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: pasteMenuItem
-            text: "Paste"
+            text: qsTr("Paste")
             onClicked: {
                 paste();
             }
@@ -24,7 +24,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: markMenuItem
-            text: "Mark multiple items"
+            text: qsTr("Mark multiple items")
             onClicked: {
                 fsListView.state = "mark";
             }
@@ -32,7 +32,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: clearClipboardMenuItem
-            text: "Clear clipboard"
+            text: qsTr("Clear clipboard")
             onClicked: {
                 clipboard.clear();
             }
@@ -40,7 +40,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: newFolderMenuItem
-            text: "New folder"
+            text: qsTr("New folder")
             onClicked: {
                 newFolderDialog.open();
             }
@@ -48,7 +48,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: syncItemsMenuItem
-            text: "Sync connected items"
+            text: qsTr("Sync connected items")
             onClicked: {
                 syncConnectedItemsSlot();
             }
@@ -56,7 +56,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: syncFolderMenuItem
-            text: "Sync current folder"
+            text: qsTr("Sync current folder")
             onClicked: {
                 console.debug("mainMenu syncFolderMenuItem fsModel.currentDir " + fsModel.currentDir);
                 syncFileSlot(fsModel.currentDir, -1);
@@ -65,7 +65,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: sortByMenuItem
-            text: "Sort by"
+            text: qsTr("Sort by")
             platformSubItemIndicator: true
             onClicked: {
                 sortByMenu.open();
@@ -73,7 +73,7 @@ MenuWithIcon {
         }
 
         MenuItemWithIcon {
-            text: "Settings"
+            text: qsTr("Settings")
             platformSubItemIndicator: true
             onClicked: {
 //                settingMenu.open();
@@ -87,21 +87,21 @@ MenuWithIcon {
         }
 
         MenuItemWithIcon {
-            text: "About"
+            text: qsTr("About")
             onClicked: {
                 pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
             }
         }
                 
 //        MenuItemWithIcon {
-//            text: "More Apps"
+//            text: qsTr("More Apps")
 //            onClicked: {
 //                pageStack.push(Qt.resolvedUrl("MoreApps.qml"));
 //            }
 //        }
         
         MenuItemWithIcon {
-            text: "Exit"
+            text: qsTr("Exit")
             onClicked: {
                 quit();
             }

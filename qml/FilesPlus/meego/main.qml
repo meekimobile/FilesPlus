@@ -56,7 +56,7 @@ PageStackWindow {
         width: parent.width / 2
         height: 26
         color: "white"
-        text: qsTr("FilesPlus")
+        text: "FilesPlus"
         smooth: false
         verticalAlignment: Text.AlignVCenter
         font.pointSize: 18
@@ -88,7 +88,7 @@ PageStackWindow {
         Text {
             id: busyText1
             width: 180
-            text: "Please wait while loading."
+            text: qsTr("Please wait while loading.")
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
             font.pointSize: 8

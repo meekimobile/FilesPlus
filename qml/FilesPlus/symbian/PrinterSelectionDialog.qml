@@ -7,7 +7,7 @@ SelectionDialog {
     
     property string srcFilePath
     
-    titleText: "Print " + fsModel.getFileName(srcFilePath) + " to"
+    titleText: qsTr("Print") + " " + fsModel.getFileName(srcFilePath) + " " + qsTr("to")
     titleIcon: "FilesPlusIcon.svg"
     
     onStatusChanged: {
@@ -24,7 +24,7 @@ SelectionDialog {
         if (pid != "") {
             // Open uploadProgressBar for printing.
             uploadProgressDialog.srcFilePath = srcFilePath;
-            uploadProgressDialog.titleText = "Printing";
+            uploadProgressDialog.titleText = qsTr("Printing");
             uploadProgressDialog.autoClose = false;
             uploadProgressDialog.open();
             

@@ -23,7 +23,7 @@ SelectionDialog {
         case CloudDriveModel.Metadata:
             // TODO To support both single/multiple items.
             if (localPath != "") {
-                text += "Sync " + fsModel.getFileName(localPath) + " to";
+                text += qsTr("Sync") + " " + fsModel.getFileName(localPath) + " " + qsTr("to");
             } else if (clipboard.count > 0){
                 var syncCount = 0;
                 for (var i=0; i<clipboard.count; i++) {
@@ -31,20 +31,20 @@ SelectionDialog {
                         syncCount++;
                     }
                 }
-                text += "Sync " + syncCount + (syncCount>1 ? " items" : " item") + " to";
+                text += qsTr("Sync") + " " + syncCount + (syncCount>1 ? (" " + qsTr("items")) : (" " + qsTr("item"))) + " " + qsTr("to");
             }
             break;
         case CloudDriveModel.FilePut:
-            text += "Upload " + fsModel.getFileName(localPath) + " to";
+            text += qsTr("Upload") + " " + fsModel.getFileName(localPath) + " " + qsTr("to");
             break;
         case CloudDriveModel.FileGet:
-            text += "Download " + fsModel.getFileName(localPath) + " from";
+            text += qsTr("Download") + " " + fsModel.getFileName(localPath) + " " + qsTr("from");
             break;
         case CloudDriveModel.ShareFile:
-            text += "Share link of " + fsModel.getFileName(localPath) + " from";
+            text += qsTr("Share link of") + " " + fsModel.getFileName(localPath) + " " + qsTr("from");
             break;
         case CloudDriveModel.DeleteFile:
-            text += "Unsync " + fsModel.getFileName(localPath) + " from";
+            text += qsTr("Unsync") + " " + fsModel.getFileName(localPath) + " " + qsTr("from");
             break;
         }
 

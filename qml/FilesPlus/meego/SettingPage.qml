@@ -21,14 +21,14 @@ Page {
     function updateJobQueueCount(runningJobCount, jobQueueCount) {
         var i = getIndexByName("cancelAllCloudDriveJobs");
         if (i > -1) {
-            settingModel.set(i, { title: "Cancel queued jobs (" + jobQueueCount + ")" });
+            settingModel.set(i, { title: qsTr("Cancel queued jobs") + " (" + jobQueueCount + ")" });
         }
     }
 
     function updateCloudDriveItemCount(cloudDriveItemCount) {
         var i = getIndexByName("syncAllConnectedItems");
         if (i > -1) {
-            settingModel.set(i, { title: "Sync all connected items (" + cloudDriveItemCount + ")" });
+            settingModel.set(i, { title: qsTr("Sync all connected items") + " (" + cloudDriveItemCount + ")" });
         }
     }
 
@@ -50,14 +50,14 @@ Page {
 
     TitlePanel {
         id: titlePanel
-        text: "Settings"
+        text: qsTr("Settings")
         z: 1
     }
 
     ConfirmDialog {
         id: quitConfirmation
-        titleText: "Logging (Debug)"
-        contentText: "Changing logging switch requires restart.\nFilesPlus is exiting now.\n\nPlease confirm."
+        titleText: qsTr("Logging (Debug)")
+        contentText: qsTr("Changing logging switch requires restart.\nFilesPlus is exiting now.\n\nPlease confirm.")
         onConfirm: {
             Qt.quit();
         }
@@ -71,61 +71,61 @@ Page {
         id: settingModel
         ListElement {
             name: "showCloudPrintJobs"
-            title: "Show cloud print jobs"
+            title: ""
             type: "button"
             group: "CloudPrint"
         }
         ListElement {
             name: "resetCloudPrint"
-            title: "Reset cloud print"
+            title: ""
             type: "button"
             group: "CloudPrint"
         }
 //        ListElement {
 //            name: "showCloudDriveJobs"
-//            title: "Show cloud drive jobs"
+//            title: ""
 //            type: "button"
 //            group: "CloudDrive"
 //        }
         ListElement {
             name: "cancelAllCloudDriveJobs"
-            title: "Cancel queued jobs"
+            title: ""
             type: "button"
             group: "CloudDrive"
         }
         ListElement {
             name: "syncAllConnectedItems"
-            title: "Sync all connected items"
+            title: ""
             type: "button"
             group: "CloudDrive"
         }
         ListElement {
             name: "showCloudDriveAccounts"
-            title: "Show accounts"
+            title: ""
             type: "button"
             group: "CloudDrive"
         }
 //        ListElement {
 //            name: "FolderPie.enabled"
-//            title: "FolderPie feature"
+//            title: ""
 //            type: "switch"
 //            group: "FolderPie"
 //        }
         ListElement {
             name: "resetCache"
-            title: "Reset current folder cache"
+            title: ""
             type: "button"
             group: "FolderPie"
         }
 //        ListElement {
 //            name: "Monitoring.enabled"
-//            title: "Monitoring (RAM,CPU)"
+//            title: ""
 //            type: "switch"
 //            group: "Developer"
 //        }
         ListElement {
             name: "Logging.enabled"
-            title: "Logging (Debug)"
+            title: ""
             type: "switch"
             group: "Developer"
         }
@@ -141,6 +141,20 @@ Page {
         section.property: "group"
         section.criteria: ViewSection.FullString
         section.delegate: settingListSectionDelegate
+    }
+
+    function getTitle(name) {
+        if (name == "showCloudPrintJobs") return qsTr("Show cloud print jobs");
+        else if (name == "resetCloudPrint") return qsTr("Reset cloud print");
+        else if (name == "showCloudDriveJobs") return qsTr("Show cloud drive jobs");
+        else if (name == "cancelAllCloudDriveJobs") return qsTr("Cancel queued jobs");
+        else if (name == "syncAllConnectedItems") return qsTr("Sync all connected items");
+        else if (name == "showCloudDriveAccounts") return qsTr("Show accounts");
+        else if (name == "FolderPie.enabled") return qsTr("FolderPie feature");
+        else if (name == "resetCache") return qsTr("Reset current folder cache");
+        else if (name == "Logging.enabled") return qsTr("Logging (Debug)");
+        else if (name == "Monitoring.enabled") return qsTr("Monitoring (RAM,CPU)");
+        else return qsTr(name);
     }
 
     function buttonClickedHandler(name) {
@@ -165,8 +179,8 @@ Page {
                 quitConfirmation.open();
             } else if (name == "Monitoring.enabled") {
                 if (appInfo.isMonitoring()) {
-                    messageDialog.titleText = "Monitoring";
-                    messageDialog.message = "Monitoring is enabled. Log file is " + appInfo.getMonitoringFilePath();
+                    messageDialog.titleText = qsTr("Monitoring");
+                    messageDialog.message = qsTr("Monitoring is enabled. Log file is ") + appInfo.getMonitoringFilePath();
                     messageDialog.open();
                 }
             }
@@ -191,7 +205,7 @@ Page {
                     width: parent.width - settingValue.width
                     height: parent.height
                     verticalAlignment: Text.AlignVCenter
-                    text: title
+                    text: (title=="") ? getTitle(name) : title
                 }
                 Switch {
                     id: settingValue
@@ -212,7 +226,7 @@ Page {
                 visible: (type == "button")
                 width: parent.width - 20
                 anchors.centerIn: parent
-                text: title
+                text: (title=="") ? getTitle(name) : title
                 onClicked: {
                     buttonClickedHandler(name);
                 }

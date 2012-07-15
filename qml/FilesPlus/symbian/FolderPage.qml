@@ -20,7 +20,7 @@ Page {
             when: flipable1.flipped
             PropertyChanges {
                 target: mainMenu
-                disabledMenus: ["Paste", "Mark multiple items", "Clear clipboard", "New folder", "Sync current folder", "Sort by"]
+                disabledMenus: [qsTr("Paste"), qsTr("Mark multiple items"), qsTr("Clear clipboard"), qsTr("New folder"), qsTr("Sync current folder"), qsTr("Sort by")]
             }
         },
         State {
@@ -155,8 +155,8 @@ Page {
 
     ConfirmDialog {
         id: resetCacheConfirmation
-        titleText: "Reset folder cache"
-        contentText: "Resetting folder cache will take time depends on numbers of sub folders/files under current folder.\n\nPlease click OK to continue."
+        titleText: qsTr("Reset folder cache")
+        contentText: qsTr("Resetting folder cache will take time depends on numbers of sub folders/files under current folder.\n\nPlease click OK to continue.")
         onConfirm: {
             fsModel.refreshDir("folderPage resetCacheConfirmation", true);
         }
@@ -191,8 +191,8 @@ Page {
 
     function quitSlot() {
         if (fsModel.isRunning()) {
-            messageDialog.titleText = "Notify";
-            messageDialog.message = "Reset Cache is running. Please wait until it's done.";
+            messageDialog.titleText = qsTr("Notify");
+            messageDialog.message = qsTr("Reset Cache is running. Please wait until it's done.");
             messageDialog.open();
         } else {
             Qt.quit();
@@ -209,18 +209,18 @@ Page {
         if (gcpClient.getContentType(srcFilePath) == "") {
             console.debug("folderPage printFileSlot File type is not supported. (" + srcFilePath + ")");
 
-            messageDialog.titleText = "Print Error";
-            messageDialog.message = "Can't print " + srcFilePath + ".\
-\nFile type is not supported. Only JPEG, PNG, Text and PDF are supported.";
+            messageDialog.titleText = qsTr("Print Error");
+            messageDialog.message = qsTr("Can't print") + " " + srcFilePath + ".\
+\n" + qsTr("File type is not supported. Only JPEG, PNG, Text and PDF are supported.");
             messageDialog.open();
             return;
         }
 
         if (!gcpClient.isAuthorized()) {
-            messageDialog.message = "FilesPlus print via Google CloudPrint service.\
+            messageDialog.message = qsTr("FilesPlus print via Google CloudPrint service.\
 \nPlease enable printer on your desktop with Chrome or with CloudPrint-ready printer.\
-\nYou will redirect to authorization page.";
-            messageDialog.titleText = "Print with CloudPrint";
+\nYou will redirect to authorization page.");
+            messageDialog.titleText = qsTr("Print with CloudPrint");
             messageDialog.open();
 
             gcpClient.authorize();
@@ -233,7 +233,7 @@ Page {
                 printerSelectionDialog.open();
             } else {
                 // TODO Open progress dialog.
-                downloadProgressDialog.titleText = "Search for printers";
+                downloadProgressDialog.titleText = qsTr("Search for printers");
                 downloadProgressDialog.indeterminate = true;
                 downloadProgressDialog.open();
                 gcpClient.search("");
@@ -265,9 +265,9 @@ Page {
 
         if (!cloudDriveModel.isAuthorized()) {
             // TODO implement for other cloud drive.
-            messageDialog.message = "FilesPlus syncs your files via Dropbox service.\
-\nYou will be redirected to authorization page.";
-            messageDialog.titleText = "Sync with Dropbox";
+            messageDialog.message = qsTr("FilesPlus syncs your files via Dropbox service.\
+\nYou will be redirected to authorization page.");
+            messageDialog.titleText = qsTr("Sync with Dropbox");
             messageDialog.open();
 
             cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
@@ -370,10 +370,10 @@ Page {
         function getActionName(fileAction) {
             switch (fileAction) {
             case FolderSizeItemListModel.CopyFile:
-                return "Copy";
+                return qsTr("Copy");
                 break;
             case FolderSizeItemListModel.MoveFile:
-                return "Move";
+                return qsTr("Move");
                 break;
             }
         }
@@ -403,11 +403,11 @@ Page {
 
         onRequestResetCache: {
             console.debug("QML FolderSizeItemListModel::onRequestResetCache");
-            messageDialog.titleText = "First time loading";
-            messageDialog.message = "Thank you for download FilesPlus.\
+            messageDialog.titleText = qsTr("First time loading");
+            messageDialog.message = qsTr("Thank you for download FilesPlus.\
 \nThis is first time running, FolderPie needs to load information from your drive.\
 \n\nIt will take time depends on numbers of sub folders/files under current folder.\
-\n\nPlease click OK to continue.";
+\n\nPlease click OK to continue.");
             messageDialog.open();
 
             fsModel.refreshDir("folderPage onRequestResetCache", true);
@@ -420,7 +420,7 @@ Page {
             var targetFileName = fsModel.getFileName(targetPath);
             var targetDirPath = fsModel.getDirPath(targetPath);
             copyProgressDialog.source = getActionName(fileAction) + " " + sourceFileName;
-            copyProgressDialog.target = "to " + ((sourceFileName == targetFileName) ? targetDirPath : targetFileName);
+            copyProgressDialog.target = qsTr("to") + " " + ((sourceFileName == targetFileName) ? targetDirPath : targetFileName);
             copyProgressDialog.lastValue = 0;
             copyProgressDialog.indeterminate = false;
             if (copyProgressDialog.status != DialogStatus.Open) {
@@ -440,12 +440,12 @@ Page {
 
             // Show message if error.
             if (err < 0) {
-                messageDialog.titleText = getActionName(fileAction) + " error";
+                messageDialog.titleText = getActionName(fileAction) + " " + qsTr("error");
                 messageDialog.message = msg;
                 messageDialog.autoClose = true;
                 messageDialog.open();
 
-                copyProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " failed.\n";
+                copyProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " " + qsTr("failed") + ".\n";
 
                 // TODO Connect to cloud if copied/moved file/folder is in connected folder.
 
@@ -469,7 +469,7 @@ Page {
                 deleteProgressDialog.source = sourcePath;
                 deleteProgressDialog.indeterminate = false;
                 if (deleteProgressDialog.status != DialogStatus.Open) {
-                    deleteProgressDialog.titleText = "Deleting";
+                    deleteProgressDialog.titleText = qsTr("Deleting");
                     deleteProgressDialog.open();
                 }
             }
@@ -479,7 +479,7 @@ Page {
             console.debug("folderPage fsModel onDeleteFinished " + fileAction + " sourcePath " + sourcePath);
             if (fileAction == FolderSizeItemListModel.DeleteFile) {
                 deleteProgressDialog.value += 1;
-                deleteProgressDialog.message = sourcePath + " is deleted.";
+                deleteProgressDialog.message = sourcePath + " " + qsTr("is deleted.");
             }
 
             // Delete file from clouds.
@@ -867,7 +867,7 @@ Page {
                                     var sub = ""
                                     if (subDirCount > 0) sub += subDirCount + " dir" + ((subDirCount > 1) ? "s" : "");
                                     if (subFileCount > 0) sub += ((sub == "") ? "" : " ") + subFileCount + " file" + ((subFileCount > 1) ? "s" : "");
-                                    sub += ((sub == "") ? "" : ", ") + "last modified " + Qt.formatDateTime(lastModified, "d MMM yyyy h:mm:ss ap");
+                                    sub += ((sub == "") ? "" : ", ") + qsTr("last modified") + " " + Qt.formatDateTime(lastModified, "d MMM yyyy h:mm:ss ap");
 
                                     return sub;
                                 }
@@ -1112,17 +1112,17 @@ Page {
                 text = getActionName(clipboard.get(0).action);
             } else {
                 // TODO if all copy, show "Multiple copy".
-                text = "Multiple actions";
+                text = qsTr("Multiple actions");
             }
 
             return text;
         }
 
         function getActionName(action) {
-            if (action == "copy") return "Copy";
-            else if (action == "cut") return "Move";
-            else if (action == "delete") return "Delete";
-            else return "Invalid action";
+            if (action == "copy") return qsTr("Copy");
+            else if (action == "cut") return qsTr("Move");
+            else if (action == "delete") return qsTr("Delete");
+            else return qsTr("Invalid action");
         }
 
         function getText() {
@@ -1131,7 +1131,7 @@ Page {
             if (clipboard.count == 1) {
                 text = getActionName(clipboard.get(0).action)
                         + " " + clipboard.get(0).sourcePath
-                        + ((clipboard.get(0).action == "delete")?"":("\nto " + targetPath))
+                        + ((clipboard.get(0).action == "delete")?"":("\n" + qsTr("to") + " " + targetPath))
                         + " ?";
             } else {
                 var cutCount = 0;
@@ -1148,10 +1148,10 @@ Page {
                     }
                 }
 
-                if (deleteCount>0) text = text + ("Delete " + deleteCount + " file" + ((deleteCount>1)?"s":"") + "\n");
-                if (copyCount>0) text = text + ("Copy " + copyCount + " file" + ((copyCount>1)?"s":"") + "\n");
-                if (cutCount>0) text = text + ("Move " + cutCount + " file" + ((cutCount>1)?"s":"") + "\n");
-                if (copyCount>0 || cutCount>0) text = text + "to " + targetPath;
+                if (deleteCount>0) text = text + (qsTr("Delete") + " " + deleteCount + " file" + ((deleteCount>1)?"s":"") + "\n");
+                if (copyCount>0) text = text + (qsTr("Copy") + " " + copyCount + " file" + ((copyCount>1)?"s":"") + "\n");
+                if (cutCount>0) text = text + (qsTr("Move") + " " + cutCount + " file" + ((cutCount>1)?"s":"") + "\n");
+                if (copyCount>0 || cutCount>0) text = text + qsTr("to") + " " + targetPath;
                 text = text + " ?";
             }
 
@@ -1220,7 +1220,7 @@ Page {
                 deleteProgressDialog.min = 0;
                 deleteProgressDialog.max = totalFiles + totalFolders;
                 deleteProgressDialog.value = 0;
-                deleteProgressDialog.titleText = "Deleting";
+                deleteProgressDialog.titleText = qsTr("Deleting");
                 deleteProgressDialog.message = "";
                 deleteProgressDialog.open();
             }
@@ -1266,9 +1266,9 @@ Page {
                     deleteProgressDialog.close();
 
                     messageDialog.titleText = getActionName(clipboard.get(0).action);
-                    messageDialog.message = "I can't " + getActionName(clipboard.get(0).action).toLowerCase()
-                            + "\nfile " + clipboard.get(0).sourcePath
-                            + "\nto " + targetPath;
+                    messageDialog.message = qsTr("I can't ") + getActionName(clipboard.get(0).action).toLowerCase()
+                            + "\n" + qsTr("file") + " " + clipboard.get(0).sourcePath
+                            + "\n" + qsTr("to") + " " + targetPath;
                     messageDialog.open();
 
                     // Reset target only.
@@ -1315,9 +1315,9 @@ Page {
 
     CommonDialog {
         id: newFolderDialog
-        titleText: "New Folder"
+        titleText: qsTr("New Folder")
         titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: ["Ok", "Cancel"]
+        buttonTexts: [qsTr("OK"), qsTr("Cancel")]
         content: Rectangle {
             anchors.margins: 5
             anchors.fill: parent
@@ -1327,7 +1327,7 @@ Page {
                 id: folderName
                 width: parent.width
                 anchors.verticalCenter: parent.verticalCenter
-                placeholderText: "Please input folder name."
+                placeholderText: qsTr("Please input folder name.")
             }
         }
 
@@ -1354,9 +1354,9 @@ Page {
 
         property string sourcePath
 
-        titleText: "Rename"
+        titleText: qsTr("Rename")
         titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: ["Ok", "Cancel"]
+        buttonTexts: [qsTr("OK"), qsTr("Cancel")]
         content: Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width - 10
@@ -1364,7 +1364,7 @@ Page {
 
             Text {
                 width: parent.width
-                text: "Rename " + fsModel.getFileName(renameDialog.sourcePath) + " to";
+                text: qsTr("Rename") + " " + fsModel.getFileName(renameDialog.sourcePath) + " " + qsTr("to");
                 color: "white"
                 elide: Text.ElideMiddle
             }
@@ -1372,7 +1372,7 @@ Page {
             TextField {
                 id: newName
                 width: parent.width
-                placeholderText: "Please input new name."
+                placeholderText: qsTr("Please input new name.")
             }
         }
 
@@ -1400,16 +1400,16 @@ Page {
 
     CommonDialog {
         id: fileOverwriteDialog
-        titleText: "File overwrite"
+        titleText: qsTr("File overwrite")
         titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: ["Ok", "Cancel"]
+        buttonTexts: [qsTr("OK"), qsTr("Cancel")]
         content: Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width - 10
             spacing: 3
 
             Text {
-                text: "Please input new file name"
+                text: qsTr("Please input new file name.")
                 color: "white"
                 height: 48
                 verticalAlignment: Text.AlignVCenter
@@ -1422,7 +1422,7 @@ Page {
 
             CheckBox {
                 id: overwriteFile
-                text: "Overwrite existing file"
+                text: qsTr("Overwrite existing file")
                 checked: false
 
                 onClicked: {
@@ -1469,9 +1469,9 @@ Page {
 
     ConfirmDialog {
         id: cancelQueuedCloudDriveJobsConfirmation
-        titleText: "Cancel sync jobs"
+        titleText: qsTr("Cancel sync jobs")
         onOpening: {
-            contentText = "Cancel " + cloudDriveModel.getQueuedJobCount() + " jobs ?";
+            contentText = qsTr("Cancel") + " " + cloudDriveModel.getQueuedJobCount() + " " + qsTr("jobs") + " ?";
         }
         onConfirm: {
             cloudDriveModel.cancelQueuedJobs();
@@ -1481,7 +1481,7 @@ Page {
 
     ConfirmDialog {
         id: cancelQueuedFolderSizeJobsConfirmation
-        titleText: "Cancel file action jobs"
+        titleText: qsTr("Cancel file action jobs")
         content: Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width - 20
@@ -1497,16 +1497,16 @@ Page {
             }
             CheckBox {
                 id: rollbackFlag
-                text: "Rollback changes"
+                text: qsTr("Rollback changes")
                 checked: false
             }
         }
         onOpening: {
             var jobCount = fsModel.getQueuedJobCount();
             if (jobCount > 0) {
-                content.text = "Cancel " + jobCount + " jobs and abort file action ?";
+                content.text = qsTr("Cancel") + " " + jobCount + " " + qsTr("jobs and abort file action ?");
             } else {
-                content.text = "Abort file action ?";
+                content.text = qsTr("Abort file action ?");
             }
             rollbackFlag.checked = false;
         }
@@ -1526,7 +1526,7 @@ Page {
             if (pid != "") {
                 // Open uploadProgressBar for printing.
                 uploadProgressDialog.srcFilePath = srcFilePath;
-                uploadProgressDialog.titleText = "Printing";
+                uploadProgressDialog.titleText = qsTr("Printing");
                 uploadProgressDialog.autoClose = false;
                 uploadProgressDialog.open();
 
@@ -1561,7 +1561,7 @@ Page {
 
     ProgressDialog {
         id: deleteProgressDialog
-        titleText: "Deleting"
+        titleText: qsTr("Deleting")
         onClosing: {
             // Refresh view after copied/moved.
             refreshSlot();
@@ -1618,8 +1618,8 @@ Page {
                 if (gcpClient.selectedFilePath != "") {
                     printFileSlot(gcpClient.selectedFilePath);
                 } else {
-                    messageDialog.titleText = "Reset CloudPrint"
-                    messageDialog.message = "Resetting is done.";
+                    messageDialog.titleText = qsTr("Reset CloudPrint");
+                    messageDialog.message = qsTr("Resetting is done.");
                     messageDialog.open();
                 }
             } else {
@@ -1653,13 +1653,13 @@ Page {
             var jsonObj = Utility.createJsonObj(msg);
             var message = "";
             if (err != 0) {
-                message = "Error " + err + " " + errMsg + "\n";
+                message = qsTr("Error") + " " + err + " " + errMsg + "\n";
             }
             message += jsonObj.message;
 
             // Show reply message on progressDialog and also turn indeterminate off.
             if (uploadProgressDialog.status != DialogStatus.Open) {
-                uploadProgressDialog.titleText = "Printing";
+                uploadProgressDialog.titleText = qsTr("Printing");
                 uploadProgressDialog.srcFilePath = popupToolPanel.selectedFilePath;
                 uploadProgressDialog.autoClose = false;
                 uploadProgressDialog.open();
@@ -1678,7 +1678,7 @@ Page {
 
             // Shows in progress bar.
 //            if (downloadProgressDialog.status != DialogStatus.Open) {
-//                downloadProgressDialog.titleText = "Searching for printers"
+//                downloadProgressDialog.titleText = qsTr("Searching for printers"
 //                downloadProgressDialog.indeterminate = false;
 //                downloadProgressDialog.open();
 //            }
@@ -1796,8 +1796,8 @@ Page {
                 // TODO how to check if app has been authorized by user.
                 cloudDriveModel.authorize(CloudDriveModel.Dropbox);
             } else {
-                messageDialog.titleText = "CloudDrive Request Token"
-                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.titleText = qsTr("CloudDrive Request Token");
+                messageDialog.message = qsTr("Error") + " " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
         }
@@ -1824,8 +1824,8 @@ Page {
 //                    syncFileSlot(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
                 } else {
                     // TODO Get account info and show in dialog.
-                    messageDialog.titleText = "CloudDrive Access Token"
-                    messageDialog.message = "Cloud drive user is authorized.\nPlease proceed your sync action.";
+                    messageDialog.titleText = qsTr("CloudDrive Access Token");
+                    messageDialog.message = qsTr("Cloud drive user is authorized.\nPlease proceed your sync action.");
                     messageDialog.open();
 
                     // Refresh account page.
@@ -1833,8 +1833,8 @@ Page {
                     if (p) p.refreshCloudDriveAccountsSlot();
                 }
             } else {
-                messageDialog.titleText = "CloudDrive Access Token"
-                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.titleText = qsTr("CloudDrive Access Token");
+                messageDialog.message = qsTr("Error") + " " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
         }
@@ -1858,8 +1858,8 @@ Page {
                     p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email, jsonObj.quota_info.shared, jsonObj.quota_info.normal, jsonObj.quota_info.quota);
                 }
             } else {
-                messageDialog.titleText = "CloudDrive Account Info"
-                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.titleText = qsTr("CloudDrive Account Info");
+                messageDialog.message = qsTr("Error") + " " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
         }
@@ -1905,8 +1905,8 @@ Page {
                     fsModel.refreshItem(index);
                 }
             } else {
-                messageDialog.titleText = getCloudName(job.type) + " File Get";
-                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.titleText = getCloudName(job.type) + " " + qsTr("File Get");
+                messageDialog.message = qsTr("Error") + " " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
         }
@@ -1941,8 +1941,8 @@ Page {
             if (err == 0) {
                 // Do nothing.
             } else {
-                messageDialog.titleText = getCloudName(json.type) + " File Put";
-                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.titleText = getCloudName(json.type) + " " + qsTr("File Put");
+                messageDialog.message = qsTr("Error") + " " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
         }
@@ -1987,7 +1987,7 @@ Page {
                     // Notify removed link.
 
                     messageDialog.titleText = getCloudName(type) + " Metadata";
-                    messageDialog.message = "File " + localPath + " was removed remotely.\nLink will be removed.";
+                    messageDialog.message = qsTr("File") + " " + localPath + " " + qsTr("was removed remotely.\nLink will be removed.");
                     messageDialog.autoClose = true;
                     messageDialog.open();
 //                    return;
@@ -2055,7 +2055,7 @@ Page {
                 metadata(type, uid, localPath, remotePath, modelIndex);
             } else {
                 messageDialog.titleText = getCloudName(type) + " Metadata";
-                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.message = qsTr("Error") + " " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
 
@@ -2091,8 +2091,8 @@ Page {
             } else if (err == 202) { // Folder already exists.
                 // Do nothing.
             } else {
-                messageDialog.titleText = getCloudName(json.type) + " Create Folder";
-                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.titleText = getCloudName(json.type) + " " + qsTr("Create Folder");
+                messageDialog.message = qsTr("Error") + " " + err + " " + errMsg + " " + msg;
                 messageDialog.autoClose = true;
                 messageDialog.open();
             }
@@ -2231,8 +2231,8 @@ Page {
                     }
                 }
             } else {
-                messageDialog.titleText = getCloudName(json.type) + " Move";
-                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.titleText = getCloudName(json.type) + " " + qsTr("Move");
+                messageDialog.message = qsTr("Error") + " " + err + " " + errMsg + " " + msg;
                 messageDialog.autoClose = true;
                 messageDialog.open();
             }
@@ -2256,8 +2256,8 @@ Page {
             if (err == 0) {
                 // do nothing.
             } else {
-                messageDialog.titleText = getCloudName(json.type) + " Delete";
-                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.titleText = getCloudName(json.type) + " " + qsTr("Delete");
+                messageDialog.message = qsTr("Error") + " " + err + " " + errMsg + " " + msg;
                 messageDialog.autoClose = true;
                 messageDialog.open();
             }
@@ -2292,8 +2292,8 @@ Page {
                 var senderEmail = getUidEmail(json.type, json.uid);
                 if (senderEmail != "") {
                     recipientSelectionDialog.srcFilePath = json.local_file_path;
-                    recipientSelectionDialog.messageSubject = "Share file on Dropbox";
-                    recipientSelectionDialog.messageBody = "Please download file with below link.\n" + url;
+                    recipientSelectionDialog.messageSubject = qsTr("Share file on Dropbox");
+                    recipientSelectionDialog.messageBody = qsTr("Please download file with below link.") + "\n" + url;
                     recipientSelectionDialog.senderEmail = senderEmail;
                     recipientSelectionDialog.open();
                 }
@@ -2301,8 +2301,8 @@ Page {
                 // Retry.
                 cloudDriveModel.shareFile(json.type, json.uid, json.local_file_path, json.remote_file_path);
             } else {
-                messageDialog.titleText = getCloudName(json.type) + " Delete";
-                messageDialog.message = "Error " + err + " " + errMsg + " " + msg;
+                messageDialog.titleText = getCloudName(json.type) + " " + qsTr("Share");
+                messageDialog.message = qsTr("Error") + " " + err + " " + errMsg + " " + msg;
                 messageDialog.autoClose = true;
                 messageDialog.open();
             }

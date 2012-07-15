@@ -10,7 +10,7 @@ CommonDialog {
     property int autoCloseInterval: 3000
 
     titleIcon: "FilesPlusIcon.svg"
-    buttonTexts: ["Ok"]
+    buttonTexts: [qsTr("OK")]
     
     SequentialAnimation {
         id: hideAction

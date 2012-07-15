@@ -11,7 +11,7 @@ Menu {
         id: markAllMenuLayout
 
         MenuItem {
-            text: "Mark all"
+            text: qsTr("Mark all")
             onClicked: {
                 fsListView.markAll();
             }

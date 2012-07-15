@@ -40,8 +40,8 @@ Page {
 
     ConfirmDialog {
         id: deleteConfirmation
-        titleText: "Delete print jobs"
-        contentText: "Delete all print jobs ?"
+        titleText: qsTr("Delete print jobs")
+        contentText: qsTr("Delete all print jobs ?")
         onConfirm: {
             deleteAllJobs();
         }
@@ -100,7 +100,7 @@ Page {
             var jobId = jobModel.get(i).id;
             var status = jobModel.get(i).status;
             if (status == "DONE") {
-                jobModel.setProperty(i, "status", "Deleting");
+                jobModel.setProperty(i, "status", qsTr("Deleting"));
                 gcpClient.deletejob(jobId);
             }
         }
@@ -109,14 +109,14 @@ Page {
     function deleteAllJobs() {
         for (var i=0; i<jobModel.count; i++) {
             var jobId = jobModel.get(i).id;
-            jobModel.setProperty(i, "status", "Deleting");
+            jobModel.setProperty(i, "status", qsTr("Deleting"));
             gcpClient.deletejob(jobId);
         }
     }
 
     TitlePanel {
         id: titlePanel
-        text: "Print Jobs"
+        text: qsTr("Print Jobs")
     }
 
     ListModel {
@@ -135,7 +135,7 @@ Page {
         z: 2
         onClicked: {
             // Delete selected job.
-            jobModel.setProperty(jobListView.currentIndex, "status", "Deleting");
+            jobModel.setProperty(jobListView.currentIndex, "status", qsTr("Deleting"));
             gcpClient.deletejob(jobId);
             visible = false;
         }
