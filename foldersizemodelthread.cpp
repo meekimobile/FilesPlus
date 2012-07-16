@@ -56,11 +56,12 @@ bool sizeGreaterThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
 #if defined(Q_WS_HARMATTAN)
 const QString FolderSizeModelThread::CACHE_FILE_PATH = "/home/user/.folderpie/FolderPieCache.dat";
 const QString FolderSizeModelThread::DEFAULT_CURRENT_DIR = "/home/user/";
+const int FolderSizeModelThread::FILE_READ_BUFFER = 32768;
 #else
 const QString FolderSizeModelThread::CACHE_FILE_PATH = "C:/FolderPieCache.dat";
 const QString FolderSizeModelThread::DEFAULT_CURRENT_DIR = "C:/";
-#endif
 const int FolderSizeModelThread::FILE_READ_BUFFER = 32768;
+#endif
 
 FolderSizeModelThread::FolderSizeModelThread(QObject *parent) : QThread(parent)
 {
@@ -261,7 +262,7 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
             emit copyProgress(method, sourceAbsFilePath, targetAbsFilePath, totalBytes, sourceFile.size());
 
             // TODO Commented below line can speedup copying.
-            //            QApplication::processEvents();
+            QApplication::processEvents(QEventLoop::AllEvents, 50);
 
             // Read next buffer.
             //            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::copyFile before read";
@@ -306,9 +307,16 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath)
 
     emit deleteStarted(m_runMethod, sourcePath);
 
+#ifdef Q_OS_SYMBIAN
     // This sleep is a must.
     // Sleep for process deleteStarted signal.
-    msleep(50);
+//    msleep(50);
+#endif
+
+    // Return false if aborted.
+    if (m_abortFlag) {
+        return false;
+    }
 
     bool res = true;
     QFileInfo sourceFileInfo(sourcePath);
@@ -324,6 +332,11 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath)
             if (!res) break;
         }
 
+        // Return false if aborted.
+        if (m_abortFlag) {
+            return false;
+        }
+
         // Delete dir.
         res = res && sourceFileInfo.dir().rmdir(sourceFileInfo.fileName());
     } else {
@@ -334,20 +347,30 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath)
 
     if (!res) {
         qDebug() << "FolderSizeModelThread::deleteDir sourcePath" << sourcePath << "failed.";
-        emit deleteFinished(m_runMethod, sourcePath, "Deleting " + sourcePath + " is failed.", -1);
+        emit deleteProgress(m_runMethod, sourcePath, "Deleting sub item " + sourcePath + " is failed.", -1);
     } else {
+        // TODO Move to emit only once per thread call.
         qDebug() << "FolderSizeModelThread::deleteDir sourcePath" << sourcePath << "done.";
-        emit deleteFinished(m_runMethod, sourcePath, "Deleting " + sourcePath + " is done.", 0);
+        emit deleteProgress(m_runMethod, sourcePath, "Deleting sub item " + sourcePath + " is done.", 0);
 
         // Move to deleteFinishedFilter
         //        // Remove cache up to parent.
         //        removeDirSizeCache(sourcePath);
     }
 
+#ifdef Q_OS_SYMBIAN
     // This sleep is a must.
     // Sleep for process deleteFinished signal.
-    msleep(50);
-    QApplication::processEvents(QEventLoop::AllEvents, 50);
+    QApplication::sendPostedEvents();
+    msleep(200);
+    QApplication::processEvents();
+#elif defined(Q_WS_HARMATTAN)
+    // This sleep is a must.
+    // Sleep for process deleteFinished signal.
+    QApplication::sendPostedEvents();
+    msleep(200);
+    QApplication::processEvents();
+#endif
 
     return res;
 }
@@ -741,13 +764,19 @@ void FolderSizeModelThread::run()
     case DeleteFile:
         if (deleteDir(m_sourcePath)) {
             qDebug() << "FolderSizeModelThread::run delete sourcePath" << m_sourcePath << "is done.";
+            emit deleteFinished(m_runMethod, m_sourcePath, "Deleting " + m_sourcePath + " is done.", 0);
+
             // Reset method parameters
             m_sourcePath = "";
             m_targetPath = "";
+        } else {
+            if (abortFlag()) {
+                emit deleteFinished(m_runMethod, m_sourcePath, "Deleting " + m_sourcePath + " is aborted.", -2);
+            }
         }
         break;
     }
 
     // TODO Process events before thread is finished.
-    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents, 50);
+    QApplication::processEvents(QEventLoop::AllEvents, 50);
 }

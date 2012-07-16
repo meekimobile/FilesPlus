@@ -353,7 +353,11 @@ Page {
     }
 
     function cancelAllFolderSizeJobsSlot() {
-        cancelQueuedFolderSizeJobsConfirmation.open();
+//        cancelQueuedFolderSizeJobsConfirmation.open();
+
+        fsModel.cancelQueuedJobs();
+        // Abort thread with rollbackFlag=false.
+        fsModel.abortThread(false);
     }
 
     function syncAllConnectedItemsSlot() {
@@ -371,10 +375,10 @@ Page {
             switch (fileAction) {
             case FolderSizeItemListModel.CopyFile:
                 return qsTr("Copy");
-                break;
             case FolderSizeItemListModel.MoveFile:
                 return qsTr("Move");
-                break;
+            case FolderSizeItemListModel.DeleteFile:
+                return qsTr("Delete");
             }
         }
 
@@ -447,13 +451,14 @@ Page {
 
                 copyProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " " + qsTr("failed") + ".\n";
 
+                // Clear sourcePath from clipboard.
+                clipboard.clear();
+
                 // TODO Connect to cloud if copied/moved file/folder is in connected folder.
 
                 // TODO stop queued jobs
                 // TODO Reset popupToolPanel and clipboard ?
             } else {
-//                copyProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " done.\n";
-
                 // Reset popupToolPanel
                 popupToolPanel.srcFilePath = "";
                 popupToolPanel.pastePath = "";
@@ -475,30 +480,53 @@ Page {
             }
         }
 
-        onDeleteFinished: {
-            console.debug("folderPage fsModel onDeleteFinished " + fileAction + " sourcePath " + sourcePath);
+        onDeleteProgress: {
+            console.debug("folderPage fsModel onDeleteProgress " + fileAction + " sourceSubPath " + sourceSubPath);
+            // Update progress only.
             if (fileAction == FolderSizeItemListModel.DeleteFile) {
                 deleteProgressDialog.value += 1;
-                deleteProgressDialog.message = sourcePath + " " + qsTr("is deleted.");
+                deleteProgressDialog.message = sourceSubPath + " " + qsTr("is deleted.");
+            }
+        }
+
+        onDeleteFinished: {
+            console.debug("folderPage fsModel onDeleteFinished " + fileAction + " sourcePath " + sourcePath);
+
+            // Show message if error.
+            if (err < 0) {
+                messageDialog.titleText = getActionName(fileAction) + " " + qsTr("error");
+                messageDialog.message = msg;
+                messageDialog.autoClose = true;
+                messageDialog.open();
+
+                deleteProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " " + qsTr("failed") + ".\n";
+            } else {
+                // Reset popupToolPanel
+                popupToolPanel.selectedFilePath = "";
+
+                // Remove finished sourcePath from clipboard.
+                clipboard.clear();
             }
 
             // Delete file from clouds.
-            if (err == 0 && cloudDriveModel.isConnected(sourcePath)) {
-                var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
-                for (var i=0; i<json.length; i++) {
-                    switch (json[i].type) {
-                    case CloudDriveModel.Dropbox:
-                        cloudDriveModel.deleteFile(CloudDriveModel.Dropbox, json[i].uid, json[i].local_path, json[i].remote_path);
-                        break;
+            if (err == 0) {
+                if (cloudDriveModel.isConnected(sourcePath)) {
+                    var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
+                    for (var i=0; i<json.length; i++) {
+                        switch (json[i].type) {
+                        case CloudDriveModel.Dropbox:
+                            cloudDriveModel.deleteFile(CloudDriveModel.Dropbox, json[i].uid, json[i].local_path, json[i].remote_path);
+                            break;
+                        }
                     }
                 }
-            }
 
-            // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
-            var paths = fsModel.getPathToRoot(sourcePath);
-            for (var i=1; i<paths.length; i++) {
-//                console.debug("folderPage fsModel onDeleteFinished updateItems paths[" + i + "] " + paths[i]);
-                cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
+                // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
+                var paths = fsModel.getPathToRoot(sourcePath);
+                for (var i=1; i<paths.length; i++) {
+//                    console.debug("folderPage fsModel onDeleteFinished updateItems paths[" + i + "] " + paths[i]);
+                    cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
+                }
             }
         }
 
@@ -1052,6 +1080,8 @@ Page {
         }
 
         onDeleteFile: {
+            // Delete always clear clipboard.
+            clipboard.clear();
             clipboard.addItem({ "action": "delete", "sourcePath": sourcePath });
             fileActionDialog.open();
         }
@@ -1550,24 +1580,30 @@ Page {
 
     ProgressDialog {
         id: copyProgressDialog
-        onClosing: {
+        autoClose: false
+        onOk: {
             // Refresh view after copied/moved.
             refreshSlot();
         }
-        onCancelled: {
+        onCancel: {
             cancelAllFolderSizeJobsSlot();
+            // Refresh view after copied/moved.
+            refreshSlot();
         }
     }
 
     ProgressDialog {
         id: deleteProgressDialog
+        autoClose: false
         titleText: qsTr("Deleting")
-        onClosing: {
+        onOk: {
             // Refresh view after copied/moved.
             refreshSlot();
         }
-        onCancelled: {
+        onCancel: {
             cancelAllFolderSizeJobsSlot();
+            // Refresh view after copied/moved.
+            refreshSlot();
         }
     }
 
@@ -2422,7 +2458,7 @@ Page {
             {
                 var contact = favContactModel.contacts[i];
                 var favorite = (contact.favorite) ? contact.favorite.favorite : false;
-                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + favorite);
+//                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + favorite);
                 model.append({
                                  displayLabel: contact.displayLabel,
                                  email: contact.email.emailAddress,

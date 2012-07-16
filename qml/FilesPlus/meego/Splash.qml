@@ -48,6 +48,6 @@ Rectangle {
     }
 
     Component.onDestruction: {
-        screen.allowedOrientations = Screen.Automatic;
+        screen.allowedOrientations = Screen.All;
     }
 }

@@ -249,6 +249,8 @@ QString CloudDriveModel::getFileType(QString localPath)
 
 bool CloudDriveModel::canSync(QString localPath)
 {
+    if (localPath == "") return false;
+
     QString fileType = getFileType(localPath);
     if (fileType != "") {
         if (restrictFileTypes.contains(fileType, Qt::CaseInsensitive)) {

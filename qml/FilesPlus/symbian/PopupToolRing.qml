@@ -132,6 +132,8 @@ Rectangle {
     }
 
     function isButtonVisible(buttonName) {
+        if (selectedFilePath == "") return false;
+
         if (buttonName === "sync") {
             return !fsModel.isRoot(selectedFilePath) && cloudDriveModel.canSync(selectedFilePath);
         } else if (buttonName === "upload") {
@@ -188,6 +190,7 @@ Rectangle {
         focus: true
         delegate: buttonDelegate
         visible: true
+        interactive: false
         path: Path {
             startX: buttonRing.width / 2
             startY: buttonRing.y

@@ -138,7 +138,7 @@ PageStackWindow {
 
     Timer {
         id: pushPagesTimer
-        interval: 500
+        interval: 200
         running: false
         onTriggered: {
             // Load folderPage then push drivePage to increase performance.

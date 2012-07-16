@@ -69,6 +69,7 @@ signals:
     void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 bytesTotal);
     void fetchDirSizeUpdated(QString dirPath);
     void deleteStarted(int fileAction, QString localPath);
+    void deleteProgress(int fileAction, QString subLocalPath, QString msg, int err);
     void deleteFinished(int fileAction, QString localPath, QString msg, int err);
 private:
     FolderSizeItem getCachedDir(const QFileInfo dir, const bool clearCache = false);

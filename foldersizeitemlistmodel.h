@@ -158,12 +158,15 @@ private:
     QCache<QString, QString> *m_pathToRootCache;
     QHash<QString, int> *m_indexOnCurrentDirHash;
 
+    QStringList m_driveList;
+
     QMutex mutex;
 public slots:
     void loadDirSizeCacheFinishedFilter();
     void fetchDirSizeFinishedFilter();
     void copyProgressFilter(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes);
+    void deleteProgressFilter(int fileAction, QString sourceSubPath, QString msg, int err);
     void deleteFinishedFilter(int fileAction, QString sourcePath, QString msg, int err);
     void proceedNextJob();
     void jobDone();
@@ -176,6 +179,7 @@ Q_SIGNALS:
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes);
     void deleteStarted(int fileAction, QString sourcePath);
+    void deleteProgress(int fileAction, QString sourceSubPath, QString msg, int err);
     void deleteFinished(int fileAction, QString sourcePath, QString msg, int err);
     void createFinished(QString targetPath);
     void renameFinished(QString sourcePath, QString targetPath, QString msg, int err);

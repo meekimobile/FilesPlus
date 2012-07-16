@@ -1,3 +1,8 @@
+filesplus (1.0.2) unstable; urgency=low
+  * <Add change description here>
+
+ -- Taweesak Kittipuree <>  Mon, 16 Jul 2012 08:29:12 +0700
+
 filesplus (1.0.1) unstable; urgency=low
   * Port from symbian version. Change version number to match symbian version.
 

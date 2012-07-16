@@ -40,6 +40,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(copyFinished(int,QString,QString,QString,int,qint64,qint64)), this, SLOT(copyFinishedFilter(int,QString,QString,QString,int,qint64,qint64)) );
     connect(&m, SIGNAL(fetchDirSizeUpdated(QString)), this, SIGNAL(fetchDirSizeUpdated(QString)) );
     connect(&m, SIGNAL(deleteStarted(int,QString)), this, SIGNAL(deleteStarted(int,QString)) );
+    connect(&m, SIGNAL(deleteProgress(int,QString,QString,int)), this, SLOT(deleteProgressFilter(int,QString,QString,int)) );
     connect(&m, SIGNAL(deleteFinished(int,QString,QString,int)), this, SLOT(deleteFinishedFilter(int,QString,QString,int)) );
     connect(&m, SIGNAL(finished()), this, SLOT(jobDone()) );
     connect(&m, SIGNAL(terminated()), this, SLOT(jobDone()) );
@@ -154,7 +155,7 @@ QStringList FolderSizeItemListModel::getDriveList()
 }
 
 QStringList FolderSizeItemListModel::getLogicalDriveList() {
-    QStringList driveList;
+    if (!m_driveList.isEmpty()) return m_driveList;
 
     QSystemStorageInfo storageInfo;
     QStringList simulatedDriveNames = getDriveList();
@@ -168,10 +169,10 @@ QStringList FolderSizeItemListModel::getLogicalDriveList() {
             driveName = simulatedDriveNames.at(i);
         }
 
-        driveList << driveName;
+        m_driveList << driveName;
     }
 
-    return driveList;
+    return m_driveList;
 }
 
 bool FolderSizeItemListModel::isDirSizeCacheExisting()
@@ -363,6 +364,8 @@ bool FolderSizeItemListModel::isRoot()
 
 bool FolderSizeItemListModel::isRoot(const QString absPath)
 {
+    if (absPath == "") return true;
+
     // TODO Impl. Caching.
     QDir dir(absPath);
 
@@ -788,6 +791,34 @@ void FolderSizeItemListModel::copyFinishedFilter(int fileAction, QString sourceP
 //    refreshItemList();
 
     emit copyFinished(fileAction, sourcePath, targetPath, msg, err, bytes, totalBytes);
+}
+
+void FolderSizeItemListModel::deleteProgressFilter(int fileAction, QString sourceSubPath, QString msg, int err)
+{
+//    qDebug() << "FolderSizeItemListModel::deleteProgressFilter" << sourceSubPath;
+    if (err >= 0) {
+        int i = getIndexOnCurrentDir(sourceSubPath);
+
+        if (i >= 0) {
+            beginRemoveRows(createIndex(0,0), i, i);
+
+            // Remote item from itemList.
+            removeItem(i);
+
+            // Reset m_indexOnCurrentDirHash.
+            m_indexOnCurrentDirHash->clear();
+
+            endRemoveRows();
+        }
+    }
+
+    // Remove cache of path up to root.
+    removeCache(sourceSubPath);
+
+    // Emit deleteFinished
+    emit deleteProgress(fileAction, sourceSubPath, msg, err);
+
+//    qDebug() << "FolderSizeItemListModel::deleteProgressFilter" << sourceSubPath << "is done.";
 }
 
 void FolderSizeItemListModel::deleteFinishedFilter(int fileAction, QString sourcePath, QString msg, int err)

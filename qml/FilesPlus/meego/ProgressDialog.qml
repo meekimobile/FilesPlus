@@ -21,7 +21,8 @@ CommonDialog {
     property int autoCloseInterval: 3000
     property bool formatValue: false
 
-    signal cancelled()
+    signal ok()
+    signal cancel()
 
     function toggleHideAction() {
         if (autoClose) {
@@ -124,9 +125,10 @@ CommonDialog {
     }
     
     onButtonClicked: {
-        var buttonName = buttonTexts[index];
-        if (buttonName == qsTr("Cancel")) {
-            cancelled();
+        if (index == 0) {
+            ok();
+        } else {
+            cancel();
         }
     }
     
