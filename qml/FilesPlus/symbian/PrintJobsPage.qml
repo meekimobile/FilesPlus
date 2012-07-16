@@ -55,11 +55,21 @@ Page {
 
         property string selectedFilePath
 
+        onRefreshAccessTokenReplySignal: {
+            console.debug("printJobsPage gcpClient onRefreshAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
+
+            if (err == 0) {
+                gcpClient.jobs("");
+            }
+        }
+
         onJobsReplySignal: {
             console.debug("printJobsPage gcpClient onJobsReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
                 addJobsFromJson(msg);
+            } else if (err == 202) { // You have to be signed in to your Google Account.
+                gcpClient.refreshAccessToken();
             }
         }
 
