@@ -39,10 +39,10 @@ Column {
         color: "grey"
         width: 300
         text: qsTr("FilesPlus provides extended functions beyond file manager.\
-\n   • Print with Google™ Cloud Print.\
-\n   • Sync with Cloud Drive.\
-\n   • Preview images in your folder.\
-\n   • Present folders in Pie view.")
+\n   + Print with Google Cloud Print.\
+\n   + Sync with Cloud Drive.\
+\n   + Preview images in your folder.\
+\n   + Present folders in Pie view.")
         anchors.horizontalCenter: parent.horizontalCenter
         wrapMode: Text.WordWrap
         font.pointSize: 6

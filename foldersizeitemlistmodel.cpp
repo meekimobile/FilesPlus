@@ -457,15 +457,15 @@ bool FolderSizeItemListModel::deleteFile(const QString absPath)
 bool FolderSizeItemListModel::copy(const QString sourcePath, const QString targetPath)
 {
     if (sourcePath == targetPath) {
-        emit copyFinished(FolderSizeModelThread::CopyFile, sourcePath, targetPath, "Source and Target path can't be the same.", -5, 0, -1);
+        emit copyFinished(FolderSizeModelThread::CopyFile, sourcePath, targetPath, tr("Source and Target path can't be the same."), -5, 0, -1);
         return false;
     } else if (targetPath.indexOf(sourcePath + "/") != -1) {
-        emit copyFinished(FolderSizeModelThread::CopyFile, sourcePath, targetPath, "Target path can't be inside source path.", -6, 0, -1);
+        emit copyFinished(FolderSizeModelThread::CopyFile, sourcePath, targetPath, tr("Target path can't be inside source path."), -6, 0, -1);
         return false;
     }
 
     // TODO Show running on targetPath's parent.
-    emit copyStarted(FolderSizeModelThread::CopyFile, sourcePath, getDirPath(targetPath), "Show running on targetPath's parent", 0);
+    emit copyStarted(FolderSizeModelThread::CopyFile, sourcePath, getDirPath(targetPath), tr("Show running on targetPath's parent"), 0);
 
     // Enqueue job.
     FolderSizeJob job(createNonce(), FolderSizeModelThread::CopyFile, sourcePath, targetPath);
@@ -479,15 +479,15 @@ bool FolderSizeItemListModel::copy(const QString sourcePath, const QString targe
 bool FolderSizeItemListModel::move(const QString sourcePath, const QString targetPath)
 {
     if (sourcePath == targetPath) {
-        emit copyFinished(FolderSizeModelThread::MoveFile, sourcePath, targetPath, "Source and Target path can't be the same.", -5, 0, -1);
+        emit copyFinished(FolderSizeModelThread::MoveFile, sourcePath, targetPath, tr("Source and Target path can't be the same."), -5, 0, -1);
         return false;
-    } else if (targetPath.indexOf(sourcePath) != -1) {
-        emit copyFinished(FolderSizeModelThread::MoveFile, sourcePath, targetPath, "Target path can't be inside source path.", -6, 0, -1);
+    } else if (targetPath.indexOf(sourcePath + "/") != -1) {
+        emit copyFinished(FolderSizeModelThread::MoveFile, sourcePath, targetPath, tr("Target path can't be inside source path."), -6, 0, -1);
         return false;
     }
 
     // TODO Show running on targetPath's parent.
-    emit copyStarted(FolderSizeModelThread::MoveFile, sourcePath, getDirPath(targetPath), "Show running on targetPath's parent", 0);
+    emit copyStarted(FolderSizeModelThread::MoveFile, sourcePath, getDirPath(targetPath), tr("Show running on targetPath's parent"), 0);
 
     // Enqueue job.
     FolderSizeJob job(createNonce(), FolderSizeModelThread::MoveFile, sourcePath, targetPath);
@@ -536,10 +536,10 @@ bool FolderSizeItemListModel::renameFile(const QString fileName, const QString n
         // TODO Move cache and its sub items cache to new names.
 
         // Emit signal to change CloudDriveItem.
-        emit renameFinished( QDir::current().absoluteFilePath(fileName), QDir::current().absoluteFilePath(newFileName), "Rename " + fileName + " to " + newFileName + " done.", 0);
+        emit renameFinished( QDir::current().absoluteFilePath(fileName), QDir::current().absoluteFilePath(newFileName), tr("Rename %1 to %2 done.").arg(fileName).arg(newFileName), 0);
     } else {
         // Emit signal to change CloudDriveItem.
-        emit renameFinished( QDir::current().absoluteFilePath(fileName), QDir::current().absoluteFilePath(newFileName), "Rename " + fileName + " to " + newFileName + " failed.", -1);
+        emit renameFinished( QDir::current().absoluteFilePath(fileName), QDir::current().absoluteFilePath(newFileName), tr("Rename %1 to %2 failed.").arg(fileName).arg(newFileName), -1);
     }
 
     return res;
@@ -618,7 +618,7 @@ QString FolderSizeItemListModel::getNewFileName(const QString absFilePath, const
     // Get new name as *Copy.* , *Copy 2.*, ...
     QFileInfo file( QDir(targetPath).absoluteFilePath(getFileName(absFilePath)) );
     QStringList caps = splitFileName(file.absoluteFilePath());
-    int copyIndex = caps.at(0).lastIndexOf("Copy");
+    int copyIndex = caps.at(0).lastIndexOf(tr("Copy"));
     QString originalFileName = (copyIndex != -1) ? caps.at(0).left(copyIndex) : caps.at(0);
     QString originalFileExtension = caps.at(1);
 
@@ -626,9 +626,9 @@ QString FolderSizeItemListModel::getNewFileName(const QString absFilePath, const
     while (file.exists()) {
         QString newFilePath;
         if (i == 1) {
-            newFilePath = originalFileName + QString("_%1").arg("Copy") + (originalFileExtension.isEmpty()?"":("."+originalFileExtension));
+            newFilePath = originalFileName + tr("_Copy") + (originalFileExtension.isEmpty()?"":("."+originalFileExtension));
         } else {
-            newFilePath = originalFileName + QString("_Copy%1").arg(i) + (originalFileExtension.isEmpty()?"":("."+originalFileExtension));
+            newFilePath = originalFileName + tr("_Copy%1").arg(i) + (originalFileExtension.isEmpty()?"":("."+originalFileExtension));
         }
         file = QFileInfo(newFilePath);
         i++;
