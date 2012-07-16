@@ -237,9 +237,9 @@ Page {
         }
 
         if (!gcpClient.isAuthorized()) {
-            messageDialog.message = qsTr("FilesPlus print via Google CloudPrint service.\
-\nPlease enable printer on your desktop with Chrome or with CloudPrint-ready printer.\
-\nYou will redirect to authorization page.");
+            messageDialog.message = qsTr("FilesPlus print via Google CloudPrint service. \
+Please enable printer on your desktop with Chrome or with CloudPrint-ready printer. \
+You will be redirected to authorization page.");
             messageDialog.titleText = qsTr("Print with CloudPrint");
             messageDialog.open();
 
@@ -285,8 +285,8 @@ Page {
 
         if (!cloudDriveModel.isAuthorized()) {
             // TODO implement for other cloud drive.
-            messageDialog.message = qsTr("FilesPlus syncs your files via Dropbox service.\
-\nYou will be redirected to authorization page.");
+            messageDialog.message = qsTr("FilesPlus syncs your files via Dropbox service. \
+You will be redirected to authorization page.");
             messageDialog.titleText = qsTr("Sync with Dropbox");
             messageDialog.open();
 
