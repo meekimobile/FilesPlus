@@ -2054,9 +2054,12 @@ Page {
                                 }
                             }
 
-                            // Add cloudDriveItem for currentDir.
-                            cloudDriveModel.addItem(type, uid, localPath, remotePath, jsonObj.hash);
+//                            // Add cloudDriveItem for currentDir.
+//                            cloudDriveModel.addItem(type, uid, localPath, remotePath, jsonObj.hash);
                         }
+
+                        // Add or Update timestamp from local to cloudDriveItem.
+                        cloudDriveModel.addItem(type, uid, localPath, remotePath, jsonObj.hash);
 
                         // Sync based on local contents.
                         cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex);
