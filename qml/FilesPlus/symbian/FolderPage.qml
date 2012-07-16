@@ -1860,7 +1860,7 @@ You will be redirected to authorization page.");
 //                    syncFileSlot(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
                 } else {
                     // TODO Get account info and show in dialog.
-                    messageDialog.titleText = qsTr("CloudDrive Access Token");
+                    messageDialog.titleText = qsTr("CloudDrive Authorized");
                     messageDialog.message = qsTr("Cloud drive user is authorized.\nPlease proceed your sync action.");
                     messageDialog.open();
 
