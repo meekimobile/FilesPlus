@@ -173,6 +173,7 @@ Page {
 
         ListItem {
             id: jobListItem
+            height: 80
             Row {
                 anchors.fill: parent
                 anchors.margins: 10
@@ -200,7 +201,7 @@ Page {
                 Text {
                     id: statusText
                     text: status
-                    width: 120
+                    width: 160
                     horizontalAlignment: Text.AlignRight
                     verticalAlignment: Text.AlignVCenter
                     font.pointSize: 16

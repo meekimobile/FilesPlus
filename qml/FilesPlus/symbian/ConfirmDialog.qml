@@ -14,8 +14,9 @@ CommonDialog {
         color: "white"
         font.pointSize: 6
         wrapMode: Text.Wrap
+        verticalAlignment: Text.AlignVCenter
         width: parent.width - 20
-        height: implicitHeight
+        height: implicitHeight + 20
         anchors.horizontalCenter: parent.horizontalCenter
     }
     

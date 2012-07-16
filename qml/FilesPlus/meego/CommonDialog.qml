@@ -67,8 +67,9 @@ Dialog {
         color: "grey"
         font.pointSize:  16
         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+        verticalAlignment: Text.AlignVCenter
         width: parent.width - 20
-        height: implicitHeight
+        height: implicitHeight + 20
         anchors.horizontalCenter: parent.horizontalCenter
     }
     

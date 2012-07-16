@@ -18,6 +18,7 @@ CommonDialog {
     buttonTexts: [qsTr("OK")]
     content: Column {
         width: parent.width - 10
+        height: implicitHeight + 20
         spacing: 4
         anchors.horizontalCenter: parent.horizontalCenter
         
