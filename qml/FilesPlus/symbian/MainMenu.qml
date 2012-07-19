@@ -6,6 +6,8 @@ Menu {
     id: mainMenu
     z: 2
 
+    platformInverted: window.platformInverted
+
     property variant enabledMenus: []
     property variant disabledMenus: []
 
@@ -18,6 +20,7 @@ Menu {
         MenuItem {
             id: pasteMenuItem
             text: qsTr("Paste")
+            platformInverted: window.platformInverted
             onClicked: {
                 paste();
             }

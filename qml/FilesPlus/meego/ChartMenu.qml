@@ -12,7 +12,7 @@ MenuWithIcon {
         default property alias children: menuLayout.menuChildren
 
         MenuItemWithIcon {
-            text: "Settings"
+            text: qsTr("Settings")
             platformSubItemIndicator: true
             onClicked: {
 //                settingMenu.open();

@@ -199,6 +199,9 @@ bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QSt
             emit copyFinished(method, sourcePath, targetPath, tr("Copy %1 to %2 is failed.").arg(sourcePath).arg(targetPath), -1, 0, itemSize);
         }
     } else {
+        // TODO Copy with bundled method QFile::copy() may consume less CPU power.
+//        res = QFile::copy(sourcePath, targetPath);
+
         // Method copyFile. Method copyFile will emit copyFinished once it's done.
         res = copyFile(method, sourcePath, targetPath);
     }

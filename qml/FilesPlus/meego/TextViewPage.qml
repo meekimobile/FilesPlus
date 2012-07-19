@@ -21,7 +21,7 @@ Page {
 
         ToolIcon {
             id: openButton
-            iconSource: "notes.svg"
+            iconSource: (theme.inverted) ? "notes.svg" : "notes_inverted.svg"
             onClicked: {
                 Qt.openUrlExternally(helper.getUrl(filePath));
             }
@@ -29,7 +29,7 @@ Page {
 
         ToolIcon {
             id: printButton
-            iconSource: "print.svg"
+            iconSource: (theme.inverted) ? "print.svg" : "print_inverted.svg"
             onClicked: {
                 var p = pageStack.find(function (page) { return page.name == "folderPage"; });
                 if (p) p.printFileSlot(textViewPage.filePath, -1);
@@ -41,25 +41,31 @@ Page {
         id: helper
     }
 
-    Rectangle {
+    TitlePanel {
         id: textLabel
-        anchors.top: parent.top
-        width: parent.width
-        height: 40
-        color: "black"
-        z: 1
-
-        Text {
-            anchors.fill: parent
-            anchors.margins: 5
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            color: "white"
-            elide: Text.ElideMiddle
-            font.pointSize: 18
-            text: textViewPage.fileName
-        }
+        horizontalAlignment: Text.AlignHCenter
+        text: textViewPage.fileName
     }
+
+//    Rectangle {
+//        id: textLabel
+//        anchors.top: parent.top
+//        width: parent.width
+//        height: 40
+//        color: "black"
+//        z: 1
+
+//        Text {
+//            anchors.fill: parent
+//            anchors.margins: 5
+//            horizontalAlignment: Text.AlignHCenter
+//            verticalAlignment: Text.AlignVCenter
+//            color: "white"
+//            elide: Text.ElideMiddle
+//            font.pointSize: 18
+//            text: textViewPage.fileName
+//        }
+//    }
 
     BorderImage {
         id: background

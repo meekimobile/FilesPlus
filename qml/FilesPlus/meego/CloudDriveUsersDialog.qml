@@ -53,6 +53,7 @@ SelectionDialog {
 
     delegate: ListItem {
         id: uidDialogListViewItem
+        showUnderline: false
         Row {
             anchors.fill: parent
             anchors.margins: 10

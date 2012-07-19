@@ -3,25 +3,26 @@ import "Utility.js" as Utility
 
 Rectangle {
     property alias text: headerText.text
+    property alias horizontalAlignment: headerText.horizontalAlignment
 
     id: titlePanel
     anchors.top: parent.top
     width: parent.width
-    height: 32
+    height: 40
     gradient: Gradient {
         GradientStop {
             position: 0
-            color: "#242424"
+            color: (theme.inverted) ? "#242424" : "#DBDBDB"
         }
 
         GradientStop {
             position: 0.790
-            color: "#0F0F0F"
+            color: (theme.inverted) ? "#0F0F0F" : "#F0F0F0"
         }
 
         GradientStop {
             position: 1
-            color: "#000000"
+            color: (theme.inverted) ? "#000000" : "#FFFFFF"
         }
     }
     
@@ -30,8 +31,15 @@ Rectangle {
         anchors.fill: parent
         anchors.margins: 3
         anchors.verticalCenter: parent.verticalCenter
-        color: "white"
+        color: (theme.inverted) ? "white" : "black"
         font.pointSize: 18
         elide: Text.ElideMiddle
+    }
+
+    Rectangle {
+        width: parent.width
+        height: 1
+        anchors.bottom: parent.bottom
+        color: (theme.inverted) ? "black" : "grey"
     }
 }

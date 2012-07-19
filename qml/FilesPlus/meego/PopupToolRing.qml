@@ -126,9 +126,13 @@ Rectangle {
             enabled: isButtonVisible(buttonName)
             width: popupToolPanel.buttonRadius * 2
             height: popupToolPanel.buttonRadius * 2
-            iconSource: icon
+            iconSource: getIcon(icon)
             onClicked: buttonHandler(buttonName, index)
         }
+    }
+
+    function getIcon(iconSource) {
+        return theme.inverted ? iconSource : Utility.replace(iconSource, ".svg", "_inverted.svg");
     }
 
     function isButtonVisible(buttonName) {
@@ -206,7 +210,7 @@ Rectangle {
         anchors.centerIn: parent
         width: popupToolPanel.buttonRadius * 2
         height: popupToolPanel.buttonRadius * 2
-        iconSource: "toolbar_extension.svg"
+        iconSource: (theme.inverted) ? "toolbar_extension.svg" : "toolbar_extension_inverted.svg"
         onClicked: {
             if (popupToolPanel.state == "main") {
                 popupToolPanel.state = "tools";

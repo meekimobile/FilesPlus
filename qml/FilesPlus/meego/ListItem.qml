@@ -9,6 +9,7 @@ Item {
     property int mouseX
     property int mouseY
     property bool pressed: false
+    property alias showUnderline: underline.visible
 
     signal postPressed(variant mouse)
     signal postReleased(variant mouse)
@@ -41,9 +42,10 @@ Item {
     }
 
     Rectangle {
+        id: underline
         width: parent.width
         height: 1
-        color: "#202020"
+        color: (theme.inverted) ? "#202020" : "grey"
         anchors.bottom: parent.bottom
     }
 

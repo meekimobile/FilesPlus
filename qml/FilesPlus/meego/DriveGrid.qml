@@ -88,7 +88,7 @@ Rectangle {
                     Text {
                         width: parent.width
                         height: 40
-                        color: "white"
+                        color: (theme.inverted) ? "white" : "black"
                         font.pointSize: 18
                         verticalAlignment: Text.AlignVCenter
                         elide: Text.ElideRight

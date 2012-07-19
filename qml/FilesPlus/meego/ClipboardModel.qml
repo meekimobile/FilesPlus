@@ -15,9 +15,9 @@ ListModel {
     function getActionIcon(index) {
         if (index > -1) {
             if (clipboard.get(index).action == "copy") {
-                return "copy.svg";
+                return (theme.inverted) ? "copy.svg" : "copy_inverted.svg";
             } else if (clipboard.get(index).action == "cut") {
-                return "trim.svg";
+                return (theme.inverted) ? "trim.svg" : "trim_inverted.svg";
             }
         }
         return "";

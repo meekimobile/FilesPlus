@@ -24,7 +24,7 @@ Page {
 
         ToolIcon {
             id:okButton
-            iconSource: "ok.svg"
+            iconSource: (theme.inverted) ? "ok.svg" : "ok_inverted.svg"
 
             onClicked: {
                 var p = pageStack.find(function(page) {

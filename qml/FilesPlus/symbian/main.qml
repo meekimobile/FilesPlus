@@ -8,6 +8,8 @@ PageStackWindow {
     showStatusBar: true
     showToolBar: true
 
+    platformInverted: true
+
     state: "ready"
     states: [
         State {

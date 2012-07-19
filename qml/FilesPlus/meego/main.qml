@@ -129,7 +129,7 @@ PageStackWindow {
 
         onLoaded: {
             // Set theme.inverted = true -> black theme.
-            theme.inverted = true;
+            theme.inverted = appInfo.getSettingValue("Theme.inverted", true);
 
             // Set timer to push pages later after shows splash screen.
             pushPagesTimer.start();

@@ -80,7 +80,7 @@ Page {
 
             ToolIcon {
                 id: openButton
-                iconSource: "photos.svg"
+                iconSource: (theme.inverted) ? "photos.svg" : "photos_inverted.svg"
                 onClicked: {
                     Qt.openUrlExternally(helper.getUrl(imageGrid.getViewFilePath()));
                 }
@@ -88,7 +88,7 @@ Page {
 
             ToolIcon {
                 id: printButton
-                iconSource: "print.svg"
+                iconSource: (theme.inverted) ? "print.svg" : "print_inverted.svg"
                 onClicked: {
                     var p = pageStack.find(function (page) { return page.name == "folderPage"; });
                     if (p) p.printFileSlot(imageGrid.getViewFilePath(), -1);

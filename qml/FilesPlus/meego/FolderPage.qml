@@ -80,7 +80,7 @@ Page {
 
         ToolIcon {
             id: flipButton
-            iconSource: (folderPage.state != "list") ? "list.svg" : "chart.svg"
+            iconSource: (folderPage.state != "list") ? (theme.inverted ? "list.svg" : "list_inverted.svg") : (theme.inverted ? "chart.svg" : "chart_inverted.svg")
             visible: (fsListView.state == "")
 
             Component.onCompleted: {
@@ -867,7 +867,7 @@ You will be redirected to authorization page.");
                         anchors.left: parent.left
                         anchors.bottom: parent.bottom
                         visible: (fsListView.state == "mark" && isChecked)
-                        source: "check_mark.svg"
+                        source: (theme.inverted) ? "check_mark.svg" : "check_mark_inverted.svg"
                     }
                     Image {
                         id: icon1
@@ -887,7 +887,7 @@ You will be redirected to authorization page.");
                         height: parent.height / 2
                         Text {
                             text: name
-                            color: "white"
+                            color: (theme.inverted) ? "white" : "black"
                             width: parent.width - sizeText.width
                             height: parent.height
                             font.pointSize: 18
@@ -897,7 +897,7 @@ You will be redirected to authorization page.");
                         Text {
                             id: sizeText
                             text: Utility.formatFileSize(size, 1)
-                            color: "white"
+                            color: (theme.inverted) ? "white" : "black"
                             width: 80
                             height: parent.height
                             font.pointSize: 16
@@ -948,11 +948,11 @@ You will be redirected to authorization page.");
                                         case FolderSizeItemListModel.WriteOperation:
                                             return "back.svg"
                                         case FolderSizeItemListModel.SyncOperation:
-                                            return "refresh.svg"
+                                            return (theme.inverted) ? "refresh.svg" : "refresh_inverted.svg"
                                         case FolderSizeItemListModel.UploadOperation:
-                                            return "upload.svg"
+                                            return (theme.inverted) ? "upload.svg" : "upload_inverted.svg"
                                         case FolderSizeItemListModel.DownloadOperation:
-                                            return "download.svg"
+                                            return (theme.inverted) ? "download.svg" : "download_inverted.svg"
                                         default:
                                             return ""
                                         }
@@ -1474,7 +1474,7 @@ You will be redirected to authorization page.");
 
             CheckBox {
                 id: overwriteFile
-                text: qsTr("Overwrite existing file")
+                text: "<font color='white'>" + qsTr("Overwrite existing file") + "</font>"
                 checked: false
 
                 onClicked: {

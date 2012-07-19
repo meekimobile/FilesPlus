@@ -89,7 +89,7 @@ MenuItem {
             verticalCenter: parent.verticalCenter
         }
 
-        source: (checked ? "ok.svg" : iconSource)
+        source: (checked ? (theme.inverted ? "image://theme/icon-m-toolbar-done-white" : "image://theme/icon-m-toolbar-done") : iconSource)
         visible: source != undefined
         sourceSize.width: platformStyle.graphicSizeSmall
         sourceSize.height: platformStyle.graphicSizeSmall

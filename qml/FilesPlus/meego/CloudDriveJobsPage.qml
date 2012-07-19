@@ -88,7 +88,7 @@ Page {
 
         property string jobId
 
-        iconSource: "delete.svg"
+        iconSource: (theme.inverted) ? "delete.svg" : "delete_inverted.svg"
         visible: false
         width: 50
         height: 50

@@ -31,7 +31,7 @@ Page {
 
         ToolIcon {
             id: deleteButton
-            iconSource: "delete.svg"
+            iconSource: (theme.inverted) ? "delete.svg" : "delete_inverted.svg"
             onClicked: {
                 deleteConfirmation.open();
             }
@@ -138,7 +138,7 @@ Page {
 
         property string jobId
 
-        iconSource: "delete.svg"
+        iconSource: (theme.inverted) ? "delete.svg" : "delete_inverted.svg"
         visible: false
         width: 60
         height: 60
@@ -197,7 +197,7 @@ Page {
                         verticalAlignment: Text.AlignVCenter
                         font.pointSize: 18
                         elide: Text.ElideMiddle
-                        color: "white"
+                        color: (theme.inverted) ? "white" : "black"
                     }
                     Text {
                         text: printerName
