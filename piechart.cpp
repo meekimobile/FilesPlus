@@ -4,8 +4,9 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QDeclarativeItem>
 
-const QColor PieChart::sliceColors[8] = {Qt::cyan, Qt::magenta, Qt::yellow, Qt::red, Qt::green, Qt::blue, QColor("orchid"), QColor("orange")};
+//const QColor PieChart::sliceColors[8] = {Qt::cyan, Qt::magenta, Qt::yellow, Qt::red, Qt::green, Qt::blue, QColor("orchid"), QColor("orange")};
 const QColor PieChart::highlightSliceColor = QColor("#0084ff");
+const QString PieChart::sliceColorsCSV = "cyan,magenta,yellow,red,green,blue,orchid,orange";
 
 qreal PieChart::radians(qreal degrees) {
     return float(degrees) * 3.1415927 / 180;
@@ -24,6 +25,9 @@ PieChart::PieChart(QDeclarativeItem *parent)
     timer = new QTimer();
     connect(timer, SIGNAL(timeout()), this, SLOT(checkSceneIsActive()));
     timer->start(1000);
+
+    // Initialize default colors.
+    setSliceColorsCSV(sliceColorsCSV);
 }
 
 void PieChart::checkSceneIsActive() {
@@ -214,6 +218,29 @@ bool PieChart::setLabelFontDesc(const QString fontDesc)
     return res;
 }
 
+QString PieChart::getSliceColorsCSV()
+{
+    return m_sliceColorsCSV;
+}
+
+void PieChart::setSliceColorsCSV(QString colorNamesCSV)
+{
+    qDebug() << "PieChart::setSliceColorsCSV colorNamesCSV" << colorNamesCSV << "m_sliceColorsCSV" << m_sliceColorsCSV;
+
+    if (colorNamesCSV == "") return;
+    if (m_sliceColorsCSV == colorNamesCSV) return;
+
+    // Set and parse colors.
+    m_sliceColorsCSV = colorNamesCSV;
+    m_sliceColorList.clear();
+    foreach (QString colorCode, m_sliceColorsCSV.split(",")) {
+        m_sliceColorList.append(QColor(colorCode.trimmed()));
+    }
+
+    qDebug() << "PieChart::setSliceColorsCSV m_sliceColorList" << m_sliceColorList;
+    emit sliceColorsChanged();
+}
+
 void PieChart::paint(QPainter *painter, const QStyleOptionGraphicsItem * o, QWidget * w)
 {
     // Paint every frames while flipping. The longer animation invoke more paint.
@@ -275,7 +302,7 @@ void PieChart::createItemFromModel()
         // Then assign parent after it's constructed.
         slice = new PieSlice(this);
         slice->setModelIndex(i);
-        slice->setColor(PieChart::sliceColors[i % 8]);
+        slice->setColor(m_sliceColorList.at(i % m_sliceColorList.length()));
         slice->setText(name);
         slice->setSubText(formatFileSize(size, 1));
         QString oText = "";

@@ -242,6 +242,40 @@ Page {
                     buttonClickedHandler(name);
                 }
             }
+//            Column {
+//                id: sliceColorsSelector
+//                visible: (type == "sliceColors")
+//                width: parent.width - 20
+//                anchors.centerIn: parent
+//                Text {
+//                    width: parent.width
+//                    text: "Slice colors"
+//                    color: (!window.platformInverted) ? "white" : "black"
+//                    font.pointSize: 7
+//                }
+//                Row {
+//                    id: colorRow
+//                    width: parent.width
+//                    spacing: 2
+//                    Repeater {
+//                        id: repeater
+//                        model: appInfo.getSettingValue("sliceColors", "cyan,magenta,yellow,red,green,blue,orchid,orange").split(",")
+//                        Rectangle {
+//                            width: (sliceColorsSelector.width - repeater.count * colorRow.spacing) / repeater.count
+//                            height: 40
+//                            radius: 3
+//                            color: modelData
+
+//                            MouseArea {
+//                                anchors.fill: parent
+//                                onClicked: {
+//                                    console.debug("color " + parent.color + " " + repeater.count);
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
         }
     }
 

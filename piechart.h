@@ -16,9 +16,11 @@ class PieChart : public QDeclarativeItem
     Q_PROPERTY(QAbstractListModel * model READ model WRITE setModel)
     Q_PROPERTY(bool visible READ visible WRITE setVisible)
     Q_PROPERTY(QString labelFont READ labelFontDesc WRITE setLabelFontDesc)
+    Q_PROPERTY(QString sliceColors READ getSliceColorsCSV WRITE setSliceColorsCSV)
 public:
     static const QColor sliceColors[];
     static const QColor highlightSliceColor;
+    static const QString sliceColorsCSV;
     static qreal radians(qreal degrees);
 
     PieChart(QDeclarativeItem *parent = 0);
@@ -34,6 +36,9 @@ public:
 
     QString labelFontDesc() const;
     bool setLabelFontDesc(const QString fontDesc);
+
+    QString getSliceColorsCSV();
+    void setSliceColorsCSV(QString colorNamesCSV);
 
     int getRole(const QAbstractListModel *model, QString sizeRoleName);
 
@@ -53,6 +58,7 @@ signals:
     void sliceClicked(QString text, int index, bool isDir);
     void sceneActivated();
     void swipe(qreal swipeAngle);
+    void sliceColorsChanged();
 private:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *o, QWidget *w);
     void removeAllExistingItems();
@@ -68,6 +74,8 @@ private:
     QAbstractListModel *m_model;
     bool m_visible;
     QFont m_labelFont;
+    QString m_sliceColorsCSV;
+    QList<QColor> m_sliceColorList;
 };
 
 #endif
