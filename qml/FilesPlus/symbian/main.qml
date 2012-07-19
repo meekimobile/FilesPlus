@@ -158,7 +158,6 @@ PageStackWindow {
 
     Component.onCompleted: {
         console.debug(Utility.nowText() + " window onCompleted");
-        console.debug(theme);
 
         // Set to portrait to show splash screen. Then it will set back to default once it's destroyed.
         screen.allowedOrientations = Screen.Portrait;
