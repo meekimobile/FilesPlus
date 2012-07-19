@@ -5,7 +5,6 @@ import CloudDriveModel 1.0
 Menu {
     id: mainMenu
     z: 2
-
     platformInverted: window.platformInverted
 
     property variant enabledMenus: []

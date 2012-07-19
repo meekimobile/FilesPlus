@@ -112,7 +112,7 @@ Rectangle {
 
     ListModel {
         id: toolsButtonModel
-        ListElement { buttonName: "mark"; icon: "check_mark.svg" }
+        ListElement { buttonName: "mark"; icon: "ok.svg" }
         ListElement { buttonName: "newFolder"; icon: "folder_add.svg" }
         ListElement { buttonName: "upload"; icon: "upload.svg" }
         ListElement { buttonName: "unsync"; icon: "cloud_remove.svg" }

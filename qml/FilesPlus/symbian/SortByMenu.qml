@@ -5,6 +5,7 @@ import FolderSizeItemListModel 1.0
 Menu {
     id: sortByMenu
     z: 2
+    platformInverted: window.platformInverted
 
     property int sortFlag
     property variant disabledSorts: []

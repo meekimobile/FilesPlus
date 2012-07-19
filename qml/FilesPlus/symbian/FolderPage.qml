@@ -20,7 +20,7 @@ Page {
             when: flipable1.flipped
             PropertyChanges {
                 target: mainMenu
-                disabledMenus: [qsTr("Paste"), qsTr("Mark multiple items"), qsTr("Clear clipboard"), qsTr("New folder"), qsTr("Sync current folder"), qsTr("Sort by")]
+                disabledMenus: [qsTr("Paste"), qsTr("Mark multiple items"), qsTr("Clear clipboard"), qsTr("New folder"), qsTr("Sync current folder"), qsTr("Sync connected items"), qsTr("Sort by")]
             }
         },
         State {
@@ -846,7 +846,7 @@ You will be redirected to authorization page.");
                         anchors.left: parent.left
                         anchors.bottom: parent.bottom
                         visible: (fsListView.state == "mark" && isChecked)
-                        source: (!window.platformInverted) ? "check_mark.svg" : "check_mark_inverted.svg"
+                        source: (!window.platformInverted) ? "ok.svg" : "ok_inverted.svg"
                     }
                     Image {
                         id: icon1

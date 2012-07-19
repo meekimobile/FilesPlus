@@ -4,6 +4,7 @@ import com.nokia.symbian 1.1
 Menu {
     id: settingMenu
     z: 2
+    platformInverted: window.platformInverted
 
     signal resetCache()
     signal resetCloudPrint()
