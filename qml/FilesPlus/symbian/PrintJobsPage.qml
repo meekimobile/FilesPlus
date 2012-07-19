@@ -16,6 +16,7 @@ Page {
         ToolButton {
             id: backButton
             iconSource: "toolbar-back"
+            platformInverted: window.platformInverted
             flat: true
             onClicked: {
                 pageStack.pop();
@@ -25,6 +26,7 @@ Page {
         ToolButton {
             id: refreshButton
             iconSource: "toolbar-refresh"
+            platformInverted: window.platformInverted
             flat: true
             onClicked: {
                 gcpClient.jobs("");
@@ -33,7 +35,8 @@ Page {
 
         ToolButton {
             id: deleteButton
-            iconSource: "delete.svg"
+            iconSource: (!window.platformInverted) ? "delete.svg" : "delete_inverted.svg"
+            platformInverted: window.platformInverted
             flat: true
             onClicked: {
                 deleteConfirmation.open();
@@ -141,7 +144,8 @@ Page {
 
         property string jobId
 
-        iconSource: "delete.svg"
+        iconSource: (!window.platformInverted) ? "delete.svg" : "delete_inverted.svg"
+        platformInverted: window.platformInverted
         visible: false
         width: 50
         height: 50
@@ -196,6 +200,7 @@ Page {
                         text: title
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
+                        platformInverted: window.platformInverted
                     }
                     ListItemText {
                         mode: listItem.mode
@@ -203,6 +208,7 @@ Page {
                         text: printerName
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
+                        platformInverted: window.platformInverted
                     }
                 }
                 ListItemText {
@@ -213,6 +219,7 @@ Page {
                     width: 120
                     horizontalAlignment: Text.AlignRight
                     verticalAlignment: Text.AlignVCenter
+                    platformInverted: window.platformInverted
                 }
             }
 

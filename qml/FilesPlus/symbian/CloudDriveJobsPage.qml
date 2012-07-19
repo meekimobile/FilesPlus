@@ -16,6 +16,7 @@ Page {
         ToolButton {
             id: backButton
             iconSource: "toolbar-back"
+            platformInverted: window.platformInverted
             flat: true
             onClicked: {
                 pageStack.pop();
@@ -25,6 +26,7 @@ Page {
         ToolButton {
             id: refreshButton
             iconSource: "toolbar-refresh"
+            platformInverted: window.platformInverted
             flat: true
             onClicked: {
             }
@@ -33,6 +35,7 @@ Page {
         ToolButton {
             id: menuButton
             iconSource: "toolbar-menu"
+            platformInverted: window.platformInverted
             flat: true
             onClicked: {
             }
@@ -91,7 +94,7 @@ Page {
 
         property string jobId
 
-        iconSource: "delete.svg"
+        iconSource: (!window.platformInverted) ? "delete.svg" : "delete_inverted.svg"
         visible: false
         width: 50
         height: 50
@@ -145,6 +148,7 @@ Page {
                         text: jobId + " " + operation + " " + type + " " + uid
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
+                        platformInverted: window.platformInverted
                     }
                     ListItemText {
                         mode: listItem.mode
@@ -152,6 +156,7 @@ Page {
                         text: localFilePath
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
+                        platformInverted: window.platformInverted
                     }
                 }
                 ListItemText {
@@ -162,6 +167,7 @@ Page {
                     width: 120
                     horizontalAlignment: Text.AlignRight
                     verticalAlignment: Text.AlignVCenter
+                    platformInverted: window.platformInverted
                 }
             }
 

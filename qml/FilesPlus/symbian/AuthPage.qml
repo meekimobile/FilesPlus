@@ -16,6 +16,7 @@ Page {
         ToolButton {
             id:backButton
             iconSource: "toolbar-back"
+            platformInverted: window.platformInverted
 
             onClicked: {
                 pageStack.pop(authPage);
@@ -24,7 +25,8 @@ Page {
 
         ToolButton {
             id:okButton
-            iconSource: "ok.svg"
+            iconSource: (!window.platformInverted) ? "ok.svg" : "ok_inverted.svg"
+            platformInverted: window.platformInverted
 
             onClicked: {
                 var p = pageStack.find(function(page) {

@@ -18,7 +18,7 @@ MenuItem {
         }
 
         visible: root.checked
-        source: "ok.svg"
+        source: (!window.platformInverted) ? "ok.svg" : "ok_inverted.svg"
         sourceSize.width: platformStyle.graphicSizeSmall
         sourceSize.height: platformStyle.graphicSizeSmall
     }

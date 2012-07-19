@@ -47,26 +47,6 @@ Page {
         text: textViewPage.fileName
     }
 
-//    Rectangle {
-//        id: textLabel
-//        anchors.top: parent.top
-//        width: parent.width
-//        height: 40
-//        color: "black"
-//        z: 1
-
-//        Text {
-//            anchors.fill: parent
-//            anchors.margins: 5
-//            horizontalAlignment: Text.AlignHCenter
-//            verticalAlignment: Text.AlignVCenter
-//            color: "white"
-//            elide: Text.ElideMiddle
-//            font.pointSize: 18
-//            text: textViewPage.fileName
-//        }
-//    }
-
     BorderImage {
         id: background
         source: "image://theme/meegotouch-textedit-background"

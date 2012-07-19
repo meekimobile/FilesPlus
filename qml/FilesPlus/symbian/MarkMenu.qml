@@ -15,6 +15,7 @@ Menu {
 
             property bool isMarkAll: true
 
+            platformInverted: window.platformInverted
             text: (isMarkAll) ? qsTr("Mark all") : qsTr("Unmark all")
             onClicked: {
                 if (isMarkAll) {
@@ -28,6 +29,7 @@ Menu {
 
         MenuItem {
             id: copyMarked
+            platformInverted: window.platformInverted
             text: qsTr("Copy marked items")
             onClicked: {
                 fsListView.copyMarkedItems();
@@ -37,6 +39,7 @@ Menu {
 
         MenuItem {
             id: cutMarked
+            platformInverted: window.platformInverted
             text: qsTr("Cut marked items")
             onClicked: {
                 fsListView.cutMarkedItems();
@@ -46,6 +49,7 @@ Menu {
 
         MenuItem {
             id: deleteMarked
+            platformInverted: window.platformInverted
             text: qsTr("Delete marked items")
             onClicked: {
                 fsListView.deleteMarkedItems();
@@ -55,6 +59,7 @@ Menu {
 
         MenuItem {
             id: syncMarked
+            platformInverted: window.platformInverted
             text: qsTr("Sync marked items")
             onClicked: {
                 fsListView.syncMarkedItems();

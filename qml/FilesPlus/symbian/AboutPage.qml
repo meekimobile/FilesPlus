@@ -9,6 +9,7 @@ Page {
         ToolButton {
             id: back
             iconSource: "toolbar-back"
+            platformInverted: window.platformInverted
             onClicked: {
                 pageStack.pop();
             }

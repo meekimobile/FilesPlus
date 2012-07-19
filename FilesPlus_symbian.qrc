@@ -81,5 +81,25 @@
         <file>qml/FilesPlus/photos_list.svg</file>
         <file>qml/FilesPlus/cloud_remove.svg</file>
         <file>qml/FilesPlus/favourite.svg</file>
+        <file>qml/FilesPlus/upload_inverted.svg</file>
+        <file>qml/FilesPlus/chart_inverted.svg</file>
+        <file>qml/FilesPlus/check_mark_inverted.svg</file>
+        <file>qml/FilesPlus/cloud_inverted.svg</file>
+        <file>qml/FilesPlus/cloud_remove_inverted.svg</file>
+        <file>qml/FilesPlus/copy_inverted.svg</file>
+        <file>qml/FilesPlus/delete_inverted.svg</file>
+        <file>qml/FilesPlus/download_inverted.svg</file>
+        <file>qml/FilesPlus/folder_add_inverted.svg</file>
+        <file>qml/FilesPlus/list_inverted.svg</file>
+        <file>qml/FilesPlus/mail_inverted.svg</file>
+        <file>qml/FilesPlus/notes_inverted.svg</file>
+        <file>qml/FilesPlus/ok_inverted.svg</file>
+        <file>qml/FilesPlus/paste_inverted.svg</file>
+        <file>qml/FilesPlus/photos_inverted.svg</file>
+        <file>qml/FilesPlus/print_inverted.svg</file>
+        <file>qml/FilesPlus/refresh_inverted.svg</file>
+        <file>qml/FilesPlus/rename_inverted.svg</file>
+        <file>qml/FilesPlus/toolbar_extension_inverted.svg</file>
+        <file>qml/FilesPlus/trim_inverted.svg</file>
     </qresource>
 </RCC>

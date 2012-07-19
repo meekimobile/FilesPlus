@@ -49,6 +49,7 @@ Page {
         ToolButton {
             id: backButton
             iconSource: "toolbar-back"
+            platformInverted: window.platformInverted
             flat: true
             onClicked: {
                 pageStack.pop();
@@ -57,6 +58,7 @@ Page {
         ToolButton {
             id: refreshButton
             iconSource: "toolbar-refresh"
+            platformInverted: window.platformInverted
             flat: true
             onClicked: {
                 refreshAccountsInfoSlot();
@@ -65,6 +67,7 @@ Page {
         ToolButton {
             id: addButton
             iconSource: "toolbar-add"
+            platformInverted: window.platformInverted
             flat: true
             onClicked: {
                 var p = pageStack.find(function (page) { return page.name == "folderPage"; });
@@ -83,7 +86,8 @@ Page {
 
         property int index
 
-        iconSource: "delete.svg"
+        iconSource: (!window.platformInverted) ? "delete.svg" : "delete_inverted.svg"
+        platformInverted: window.platformInverted
         visible: false
         width: 50
         height: 50
@@ -161,6 +165,7 @@ Page {
                         text: email
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
+                        platformInverted: window.platformInverted
                     }
                     Row {
                         width: parent.width
@@ -170,6 +175,7 @@ Page {
                             text: "UID " + uid
                             width: parent.width - quotaText.width
                             verticalAlignment: Text.AlignVCenter
+                            platformInverted: window.platformInverted
                         }
                         ListItemText {
                             id: quotaText
@@ -180,6 +186,7 @@ Page {
                             visible: (quota > 0)
                             horizontalAlignment: Text.AlignRight
                             verticalAlignment: Text.AlignVCenter
+                            platformInverted: window.platformInverted
                         }
                         Image {
                             id: runningIcon

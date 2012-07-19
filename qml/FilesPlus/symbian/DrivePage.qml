@@ -22,6 +22,7 @@ Page {
         ToolButton {
             id: backButton
             iconSource: "toolbar-back"
+            platformInverted: window.platformInverted
             flat: true
             onClicked: {
                 quitSlot();
@@ -31,6 +32,7 @@ Page {
         ToolButton {
             id: menuButton
             iconSource: "toolbar-menu"
+            platformInverted: window.platformInverted
             flat: true
             onClicked: {
                 mainMenu.open();

@@ -36,6 +36,7 @@ Page {
         ToolButton {
             id: back
             iconSource: "toolbar-back"
+            platformInverted: window.platformInverted
             onClicked: {
                 pageStack.pop();
             }
@@ -118,6 +119,12 @@ Page {
             group: "FolderPie"
         }
         ListElement {
+            name: "Theme.inverted"
+            title: ""
+            type: "switch"
+            group: "Theme"
+        }
+        ListElement {
             name: "Monitoring.enabled"
             title: ""
             type: "switch"
@@ -152,6 +159,7 @@ Page {
         else if (name == "showCloudDriveAccounts") return qsTr("Show accounts");
         else if (name == "FolderPie.enabled") return qsTr("FolderPie feature");
         else if (name == "resetCache") return qsTr("Reset current folder cache");
+        else if (name == "Theme.inverted") return qsTr("Theme");
         else if (name == "Logging.enabled") return qsTr("Logging (Debug)");
         else if (name == "Monitoring.enabled") return qsTr("Monitoring (RAM,CPU)");
         else return qsTr(name);
@@ -175,6 +183,8 @@ Page {
             } else if (name == "resetCache") {
                 pageStack.pop();
                 p.resetCacheSlot();
+            } else if (name == "Theme.inverted") {
+                window.platformInverted = !window.platformInverted;
             } else if (name == "Logging.enabled") {
                 quitConfirmation.open();
             } else if (name == "Monitoring.enabled") {
@@ -200,7 +210,7 @@ Page {
                 anchors.centerIn: parent
                 Text {
                     id: settingKey
-                    color: "white"
+                    color: (!window.platformInverted) ? "white" : "black"
                     font.pointSize: 7
                     width: parent.width - settingValue.width
                     height: parent.height
@@ -226,6 +236,7 @@ Page {
                 visible: (type == "button")
                 width: parent.width - 20
                 anchors.centerIn: parent
+                platformInverted: window.platformInverted
                 text: (title=="") ? getTitle(name) : title
                 onClicked: {
                     buttonClickedHandler(name);
@@ -247,13 +258,13 @@ Page {
                 Text {
                     id: sectionText
                     text: section
-                    color: "grey"
+                    color: (!window.platformInverted) ? "grey" : "black"
                 }
                 Rectangle {
                     width: parent.width - sectionText.width - parent.spacing
                     height: 1
                     anchors.verticalCenter: sectionText.verticalCenter
-                    color: "grey"
+                    color: (!window.platformInverted) ? "grey" : "black"
                 }
             }
         }

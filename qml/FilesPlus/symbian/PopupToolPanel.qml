@@ -108,6 +108,7 @@ Rectangle {
             width: 57
             height: 57
             iconSource: "trim.svg"
+            platformInverted: window.platformInverted
             onClicked: {
                 popupToolPanel.visible = false;
                 // TODO to avoid directly refer to external element.
@@ -122,6 +123,7 @@ Rectangle {
             width: 57
             height: 57
             iconSource: "copy.svg"
+            platformInverted: window.platformInverted
             onClicked: {
                 popupToolPanel.visible = false;
                 // TODO to avoid directly refer to external element.
@@ -136,6 +138,7 @@ Rectangle {
             width: 57
             height: 57
             iconSource: "paste.svg"
+            platformInverted: window.platformInverted
             onClicked: {
                 popupToolPanel.visible = false;
                 // TODO to avoid directly refer to external element.
@@ -149,6 +152,7 @@ Rectangle {
             width: 57
             height: 57
             iconSource: "print.svg"
+            platformInverted: window.platformInverted
             onClicked: {
                 popupToolPanel.visible = false;
                 // TODO to avoid directly refer to external element.
@@ -164,6 +168,7 @@ Rectangle {
             width: 57
             height: 57
             iconSource: "delete.svg"
+            platformInverted: window.platformInverted
             onClicked: {
                 popupToolPanel.visible = false;
                 // TODO to avoid directly refer to external element.
@@ -177,6 +182,7 @@ Rectangle {
             width: 57
             height: 57
             iconSource: "refresh.svg"
+            platformInverted: window.platformInverted
             onClicked: {
                 popupToolPanel.visible = false;
                 // TODO to avoid directly refer to external element.

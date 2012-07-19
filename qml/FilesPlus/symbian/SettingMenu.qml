@@ -14,6 +14,7 @@ Menu {
     content: MenuLayout {
         MenuItem {
             id: menuPrintJobs
+            platformInverted: window.platformInverted
             text: qsTr("Show CloudPrint jobs")
             onClicked: {
                 showCloudPrintJobs();
@@ -22,6 +23,7 @@ Menu {
 
         MenuItem {
             id: menuResetCloudPrint
+            platformInverted: window.platformInverted
             text: qsTr("Reset CloudPrint")
             onClicked: {
                 resetCloudPrint();
@@ -29,6 +31,7 @@ Menu {
         }
 
         MenuItem {
+            platformInverted: window.platformInverted
             text: qsTr("Register new Dropbox account")
             onClicked: {
                 registerDropboxUser();
@@ -37,6 +40,7 @@ Menu {
 
         MenuItem {
             id: menuResetCache
+            platformInverted: window.platformInverted
             text: qsTr("Reset current folder cache")
 
             onClicked: {

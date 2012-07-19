@@ -16,6 +16,7 @@ Menu {
             property int flag: FolderSizeItemListModel.SortByName
             text: qsTr("Sort by Name")
             checked: (sortFlag == flag)
+            platformInverted: window.platformInverted
             onClicked: {
                 selectSort(flag);
             }
@@ -25,6 +26,7 @@ Menu {
             property int flag: FolderSizeItemListModel.SortByType
             text: qsTr("Sort by Type")
             checked: (sortFlag == flag)
+            platformInverted: window.platformInverted
             onClicked: {
                 selectSort(flag);
             }
@@ -34,6 +36,7 @@ Menu {
             property int flag: FolderSizeItemListModel.SortByTime
             text: qsTr("Sort by Time")
             checked: (sortFlag == flag)
+            platformInverted: window.platformInverted
             onClicked: {
                 selectSort(flag);
             }
@@ -43,6 +46,7 @@ Menu {
             property int flag: FolderSizeItemListModel.SortBySize
             text: qsTr("Sort by Size")
             checked: (sortFlag == flag)
+            platformInverted: window.platformInverted
             onClicked: {
                 selectSort(flag);
             }

@@ -14,7 +14,7 @@ Page {
         ToolButton {
             id: backButton
             iconSource: "toolbar-back"
-
+            platformInverted: window.platformInverted
             onClicked: {
                 pageStack.pop();
             }
@@ -22,7 +22,8 @@ Page {
 
         ToolButton {
             id: openButton
-            iconSource: "notes.svg"
+            iconSource: (!window.platformInverted) ? "notes.svg" : "notes_inverted.svg"
+            platformInverted: window.platformInverted
             onClicked: {
                 Qt.openUrlExternally(helper.getUrl(filePath));
             }
@@ -30,7 +31,8 @@ Page {
 
         ToolButton {
             id: printButton
-            iconSource: "print.svg"
+            iconSource: (!window.platformInverted) ? "print.svg" : "print_inverted.svg"
+            platformInverted: window.platformInverted
             onClicked: {
                 var p = pageStack.find(function (page) { return page.name == "folderPage"; });
                 if (p) p.printFileSlot(textViewPage.filePath, -1);
@@ -42,20 +44,10 @@ Page {
         id: helper
     }
 
-    Rectangle {
+    TitlePanel {
         id: textLabel
-        anchors.top: parent.top
-        width: parent.width
-        height: 40
-        color: "black"
-        z: 1
-
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
-            color: "white"
-            text: textViewPage.fileName
-        }
+        horizontalAlignment: Text.AlignHCenter
+        text: textViewPage.fileName
     }
 
     PinchArea {

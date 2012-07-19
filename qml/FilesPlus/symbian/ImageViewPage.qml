@@ -71,7 +71,7 @@ Page {
             ToolButton {
                 id: backButton
                 iconSource: "toolbar-back"
-
+                platformInverted: window.platformInverted
                 onClicked: {
                     var p = pageStack.find(function (page) { return page.name == "folderPage"; });
                     if (p) p.refreshSlot();
@@ -81,7 +81,8 @@ Page {
 
             ToolButton {
                 id: openButton
-                iconSource: "photos.svg"
+                iconSource: (!window.platformInverted) ? "photos.svg" : "photos_inverted.svg"
+                platformInverted: window.platformInverted
                 onClicked: {
                     Qt.openUrlExternally(helper.getUrl(imageGrid.getViewFilePath()));
                 }
@@ -89,8 +90,8 @@ Page {
 
             ToolButton {
                 id: printButton
-                iconSource: "print.svg"
-
+                iconSource: (!window.platformInverted) ? "print.svg" : "print_inverted.svg"
+                platformInverted: window.platformInverted
                 onClicked: {
                     var p = pageStack.find(function (page) { return page.name == "folderPage"; });
                     if (p) p.printFileSlot(imageGrid.getViewFilePath(), -1);

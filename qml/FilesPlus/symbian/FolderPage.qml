@@ -52,6 +52,7 @@ Page {
         ToolButton {
             id: backButton
             iconSource: "toolbar-back"
+            platformInverted: window.platformInverted
             flat: true
             onClicked: {
                 if (fsListView.state == "mark") {
@@ -66,6 +67,7 @@ Page {
         ToolButton {
             id: refreshButton
             iconSource: "toolbar-refresh"
+            platformInverted: window.platformInverted
             flat: true
             visible: (fsListView.state == "")
 
@@ -76,7 +78,8 @@ Page {
 
         ToolButton {
             id: flipButton
-            iconSource: (folderPage.state != "list") ? "list.svg" : "chart.svg"
+            iconSource: (folderPage.state != "list") ? (!window.platformInverted ? "list.svg" : "list_inverted.svg") : (!window.platformInverted ? "chart.svg" : "chart_inverted.svg")
+            platformInverted: window.platformInverted
             flat: true
             visible: (fsListView.state == "")
 
@@ -88,6 +91,7 @@ Page {
         ToolButton {
             id: menuButton
             iconSource: "toolbar-menu"
+            platformInverted: window.platformInverted
             flat: true
             onClicked: {
                 if (fsListView.state == "mark") {
@@ -133,21 +137,21 @@ Page {
         }
     }
 
-    SettingMenu {
-        id: settingMenu
-        onResetCache: {
-            resetCacheSlot();
-        }
-        onResetCloudPrint: {
-            resetCloudPrintSlot();
-        }
-        onRegisterDropboxUser: {
-            registerDropboxUserSlot();
-        }
-        onShowCloudPrintJobs: {
-            showCloudPrintJobsSlot();
-        }
-    }
+//    SettingMenu {
+//        id: settingMenu
+//        onResetCache: {
+//            resetCacheSlot();
+//        }
+//        onResetCloudPrint: {
+//            resetCloudPrintSlot();
+//        }
+//        onRegisterDropboxUser: {
+//            registerDropboxUserSlot();
+//        }
+//        onShowCloudPrintJobs: {
+//            showCloudPrintJobsSlot();
+//        }
+//    }
 
     MarkMenu {
         id: markMenu
@@ -842,7 +846,7 @@ You will be redirected to authorization page.");
                         anchors.left: parent.left
                         anchors.bottom: parent.bottom
                         visible: (fsListView.state == "mark" && isChecked)
-                        source: "check_mark.svg"
+                        source: (!window.platformInverted) ? "check_mark.svg" : "check_mark_inverted.svg"
                     }
                     Image {
                         id: icon1
@@ -867,6 +871,7 @@ You will be redirected to authorization page.");
                             width: parent.width - sizeText.width
                             height: parent.height
                             verticalAlignment: Text.AlignVCenter
+                            platformInverted: window.platformInverted
                         }
                         ListItemText {
                             id: sizeText
@@ -877,6 +882,7 @@ You will be redirected to authorization page.");
                             height: parent.height
                             horizontalAlignment: Text.AlignRight
                             verticalAlignment: Text.AlignVCenter
+                            platformInverted: window.platformInverted
                         }
                     }
                     Row {
@@ -903,6 +909,7 @@ You will be redirected to authorization page.");
                                 height: parent.height
                                 verticalAlignment: Text.AlignVCenter
                                 visible: !isRunning
+                                platformInverted: window.platformInverted
                             }
                             Row {
                                 width: parent.width
@@ -921,11 +928,11 @@ You will be redirected to authorization page.");
                                         case FolderSizeItemListModel.WriteOperation:
                                             return "back.svg"
                                         case FolderSizeItemListModel.SyncOperation:
-                                            return "refresh.svg"
+                                            return (!window.platformInverted) ? "refresh.svg" : "refresh_inverted.svg"
                                         case FolderSizeItemListModel.UploadOperation:
-                                            return "upload.svg"
+                                            return (!window.platformInverted) ? "upload.svg" : "upload_inverted.svg"
                                         case FolderSizeItemListModel.DownloadOperation:
-                                            return "download.svg"
+                                            return (!window.platformInverted) ? "download.svg" : "download_inverted.svg"
                                         default:
                                             return ""
                                         }
