@@ -62,7 +62,7 @@ public:
     Q_INVOKABLE void shareFile(QString nonce, QString uid, QString remoteFilePath);
 signals:
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void authorizeRedirectSignal(QString nonce, QString url, QString redirectForm);
+    void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
     void accessTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void accountInfoReplySignal(QString nonce, int err, QString errMsg, QString msg);
 
