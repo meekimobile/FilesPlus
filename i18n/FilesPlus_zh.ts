@@ -1126,18 +1126,14 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+24"/>
-        <location line="+132"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+24"/>
-        <location line="+133"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+156"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+157"/>
         <source>Cancel queued jobs</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-125"/>
-        <location line="+126"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-126"/>
-        <location line="+127"/>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Sync all connected items</source>
         <translation></translation>
     </message>
@@ -1214,11 +1210,13 @@ Please confirm.</source>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Personalization</source>
         <translation>个性化</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Developer</source>
         <translation>程序员</translation>
     </message>
@@ -1254,7 +1252,7 @@ Please confirm.</source>
     </message>
     <message>
         <location line="-114"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-150"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-152"/>
         <source>Locale</source>
         <translation></translation>
     </message>

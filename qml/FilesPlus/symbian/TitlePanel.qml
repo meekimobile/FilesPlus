@@ -12,7 +12,7 @@ Rectangle {
     gradient: Gradient {
         GradientStop {
             position: 0
-            color: (!window.platformInverted) ? "#242424" : "#DBDBDB"
+            color: (!window.platformInverted) ? "#242424" : "#FFFFFF"
         }
 
         GradientStop {
@@ -22,15 +22,17 @@ Rectangle {
 
         GradientStop {
             position: 1
-            color: (!window.platformInverted) ? "#000000" : "#FFFFFF"
+            color: (!window.platformInverted) ? "#000000" : "#DBDBDB"
         }
     }
     
     Text {
         id: headerText
-        anchors.fill: parent
-        anchors.margins: 3
-        anchors.verticalCenter: parent.verticalCenter
+        width: parent.width - 20
+        height: parent.height
+        anchors.left: parent.left
+        anchors.leftMargin: 10
+        verticalAlignment: Text.AlignVCenter
         color: (!window.platformInverted) ? "white" : "black"
         font.pointSize: 6
         elide: Text.ElideMiddle

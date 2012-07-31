@@ -21,14 +21,14 @@ Page {
     function updateJobQueueCount(runningJobCount, jobQueueCount) {
         var i = getIndexByName("cancelAllCloudDriveJobs");
         if (i > -1) {
-            settingModel.set(i, { title: qsTr("Cancel queued jobs") + " (" + jobQueueCount + ")" + appInfo.emptyStr });
+            settingModel.set(i, { title: getTitle("cancelAllCloudDriveJobs") + " (" + jobQueueCount + ")" + appInfo.emptyStr });
         }
     }
 
     function updateCloudDriveItemCount(cloudDriveItemCount) {
         var i = getIndexByName("syncAllConnectedItems");
         if (i > -1) {
-            settingModel.set(i, { title: qsTr("Sync all connected items") + " (" + cloudDriveItemCount + ")" + appInfo.emptyStr });
+            settingModel.set(i, { title: getTitle("syncAllConnectedItems") + " (" + cloudDriveItemCount + ")" + appInfo.emptyStr });
         }
     }
 
