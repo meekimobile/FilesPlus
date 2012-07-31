@@ -426,15 +426,13 @@ You will be redirected to authorization page.</translation>
         <translation>First time loading</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1"/>
         <source>Thank you for download FilesPlus.
 This is first time running, FolderPie needs to load information from your drive.
 
 It will take time depends on numbers of sub folders/files under current folder.
 
 Please click OK to continue.</source>
-        <translation>Thank you for download FilesPlus.
+        <translation type="obsolete">Thank you for download FilesPlus.
 This is first time running, FolderPie needs to load information from your drive.
 
 It will take time depends on numbers of sub folders/files under current folder.
@@ -442,10 +440,10 @@ It will take time depends on numbers of sub folders/files under current folder.
 Please click OK to continue.</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+17"/>
         <location line="+735"/>
         <location line="+20"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+16"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+17"/>
         <location line="+742"/>
         <location line="+20"/>
         <source>to</source>
@@ -723,8 +721,24 @@ File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
 File type is not supported. Only JPEG, PNG, Text and PDF are supported.</translation>
     </message>
     <message>
-        <location line="+275"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+275"/>
+        <location line="+198"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+198"/>
+        <source>Thank you for download FilesPlus.
+This is first time running, FilesPlus needs to load information from your drive.
+
+It will take time depends on numbers of sub folders/files under current folder.
+
+Please click OK to continue.</source>
+        <translation>Thank you for download FilesPlus.
+This is first time running, FilesPlus needs to load information from your drive.
+
+It will take time depends on numbers of sub folders/files under current folder.
+
+Please click OK to continue.</translation>
+    </message>
+    <message>
+        <location line="+77"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+77"/>
         <source>%1 is deleted.</source>
         <translation>%1 is deleted.</translation>
     </message>

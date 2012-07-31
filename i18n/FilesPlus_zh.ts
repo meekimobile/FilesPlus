@@ -435,15 +435,13 @@ You will be redirected to authorization page.</source>
         <translation>第一次加载</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1"/>
         <source>Thank you for download FilesPlus.
 This is first time running, FolderPie needs to load information from your drive.
 
 It will take time depends on numbers of sub folders/files under current folder.
 
 Please click OK to continue.</source>
-        <translation>感谢下载FilesPlus。
+        <translation type="obsolete">感谢下载FilesPlus。
 这是第一次运行，FilesPlus需要加载驱动器的信息。
 
 这将需要时间取决于当前文件夹下的子文件夹/文件号码。
@@ -451,10 +449,10 @@ Please click OK to continue.</source>
 请单击“确定”继续。</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+17"/>
         <location line="+735"/>
         <location line="+20"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+16"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+17"/>
         <location line="+742"/>
         <location line="+20"/>
         <source>to</source>
@@ -734,8 +732,24 @@ File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
 不支持的文件类型。只有JPEG，PNG等，文字和PDF支持。</translation>
     </message>
     <message>
-        <location line="+275"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+275"/>
+        <location line="+198"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+198"/>
+        <source>Thank you for download FilesPlus.
+This is first time running, FilesPlus needs to load information from your drive.
+
+It will take time depends on numbers of sub folders/files under current folder.
+
+Please click OK to continue.</source>
+        <translation>感谢下载FilesPlus。
+这是第一次运行，FilesPlus需要加载驱动器的信息。
+
+这将需要时间取决于当前文件夹下的子文件夹/文件号码。
+
+请单击“确定”继续。</translation>
+    </message>
+    <message>
+        <location line="+77"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+77"/>
         <source>%1 is deleted.</source>
         <translation>%1 被删除。</translation>
     </message>
@@ -1249,7 +1263,7 @@ Shows CloudDrive jobs</translatorcomment>
         <source>Show accounts</source>
         <translatorcomment>[Edited text copy]
 Shows CloudDrive accounts</translatorcomment>
-        <translation>显示CloudDrive帐户</translation>
+        <translation>显示 CloudDrive 帐户</translation>
     </message>
     <message>
         <location line="+1"/>

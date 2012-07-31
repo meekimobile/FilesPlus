@@ -435,15 +435,13 @@ You will be redirected to authorization page.</source>
         <translation>Первый запуск</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1"/>
         <source>Thank you for download FilesPlus.
 This is first time running, FolderPie needs to load information from your drive.
 
 It will take time depends on numbers of sub folders/files under current folder.
 
 Please click OK to continue.</source>
-        <translation>Спасибо за загрузку FilesPlus.
+        <translation type="obsolete">Спасибо за загрузку FilesPlus.
 Это первый запуск программы. FolderPie нужно время чтобы собрать информацию о ваших файлах.
 
 Это займёт некоторое время, в зависимости от кол-ва папок и файлов в них.
@@ -451,10 +449,10 @@ Please click OK to continue.</source>
 Пожалуйста, нажмите Да чтобы продолжить.</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+17"/>
         <location line="+735"/>
         <location line="+20"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+16"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+17"/>
         <location line="+742"/>
         <location line="+20"/>
         <source>to</source>
@@ -499,8 +497,24 @@ File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
 Этот тип файлов не поддерживается. Используйте только JPED, PNG, PDF или текстовые файлы.</translation>
     </message>
     <message>
-        <location line="+275"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+275"/>
+        <location line="+198"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+198"/>
+        <source>Thank you for download FilesPlus.
+This is first time running, FilesPlus needs to load information from your drive.
+
+It will take time depends on numbers of sub folders/files under current folder.
+
+Please click OK to continue.</source>
+        <translation>Спасибо за загрузку FilesPlus.
+Это первый запуск программы. FilesPlus нужно время чтобы собрать информацию о ваших файлах.
+
+Это займёт некоторое время, в зависимости от кол-ва папок и файлов в них.
+
+Пожалуйста, нажмите Да чтобы продолжить.</translation>
+    </message>
+    <message>
+        <location line="+77"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+77"/>
         <source>%1 is deleted.</source>
         <translation>%1 удалён.</translation>
     </message>
