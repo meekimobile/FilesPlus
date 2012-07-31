@@ -25,7 +25,7 @@
     <message>
         <location line="+14"/>
         <source>Exit</source>
-        <translation>关闭</translation>
+        <translation>退出</translation>
     </message>
 </context>
 <context>
@@ -227,7 +227,7 @@
     <message>
         <location line="+14"/>
         <source>Exit</source>
-        <translation>关闭</translation>
+        <translation>退出</translation>
     </message>
 </context>
 <context>
@@ -340,7 +340,7 @@ FilesPlus provides more features than file manager.
 Please click OK to continue.</source>
         <translation>重置文件夹缓存将采取时间取决于当前文件夹下的子文件夹/文件的数字。
 
-请单击“确定”继续。</translation>
+请单击“好”继续。</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -745,7 +745,7 @@ Please click OK to continue.</source>
 
 这将需要时间取决于当前文件夹下的子文件夹/文件号码。
 
-请单击“确定”继续。</translation>
+请单击“好”继续。</translation>
     </message>
     <message>
         <location line="+77"/>
@@ -1003,7 +1003,7 @@ Deleting %1 is aborted.</translatorcomment>
         <location line="+14"/>
         <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+16"/>
         <source>Exit</source>
-        <translation>关闭</translation>
+        <translation>退出</translation>
     </message>
 </context>
 <context>
