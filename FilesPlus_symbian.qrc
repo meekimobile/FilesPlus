@@ -104,5 +104,7 @@
         <file alias="FilesPlus_ru.qm">i18n/FilesPlus_ru.qm</file>
         <file alias="FilesPlus_zh.qm">i18n/FilesPlus_zh.qm</file>
         <file alias="FilesPlus_en.qm">i18n/FilesPlus_en.qm</file>
+        <file>qml/FilesPlus/question_inverted.svg</file>
+        <file>qml/FilesPlus/question.svg</file>
     </qresource>
 </RCC>

@@ -14,6 +14,14 @@ Page {
                 pageStack.pop();
             }
         }
+        ToolButton {
+            id: help
+            iconSource: (!window.platformInverted ? "question.svg" : "question_inverted.svg")
+            platformInverted: window.platformInverted
+            onClicked: {
+                Qt.openUrlExternally("http://www.meeki.mobi/faq");
+            }
+        }
     }
 
     FilesPlusInfo {
