@@ -13,7 +13,7 @@ QML_IMPORT_PATH =
 #symbian:TARGET.UID3 = 0xE11DCC9D
 symbian:TARGET.UID3 = 0x20064E45
 
-VERSION = 1.0.2
+VERSION = 1.0.3
 
 # Smart Installer package's UID
 # This UID is from the protected range and therefore the package will
@@ -120,7 +120,8 @@ OTHER_FILES += \
     qml/FilesPlus/*.png \
     qml/FilesPlus/*.js \
     qml/FilesPlus/meego/*.qml \
-    qml/FilesPlus/symbian/*.qml
+    qml/FilesPlus/symbian/*.qml \
+    i18n/*.*
 
 simulator {
     RESOURCES += FilesPlus_symbian.qrc
@@ -135,4 +136,8 @@ contains(MEEGO_EDITION, harmattan) {
     DEFINES += Q_WS_HARMATTAN
 }
 
+TRANSLATIONS += \
+    i18n/FilesPlus_en.ts \
+    i18n/FilesPlus_ru.ts \
+    i18n/FilesPlus_zh.ts
 

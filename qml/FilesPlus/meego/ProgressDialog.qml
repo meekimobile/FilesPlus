@@ -52,9 +52,9 @@ CommonDialog {
         }
     }
 
-    titleText: qsTr("Progressing")
+    titleText: appInfo.emptyStr+qsTr("Progressing")
     titleIcon: "FilesPlusIcon.svg"
-    buttonTexts: [qsTr("OK"), qsTr("Cancel")]
+    buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
     content: Column {
         width: parent.width - 10
         spacing: 4

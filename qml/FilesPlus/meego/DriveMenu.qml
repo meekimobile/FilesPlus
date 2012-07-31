@@ -12,7 +12,7 @@ MenuWithIcon {
         default property alias children: menuLayout.menuChildren
 
         MenuItemWithIcon {
-            text: "Settings"
+            text: appInfo.emptyStr+qsTr("Settings")
             platformSubItemIndicator: true
             onClicked: {
 //                settingMenu.open();
@@ -26,21 +26,21 @@ MenuWithIcon {
         }
 
         MenuItemWithIcon {
-            text: "About"
+            text: appInfo.emptyStr+qsTr("About")
             onClicked: {
                 pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
             }
         }
                 
 //        MenuItemWithIcon {
-//            text: "More Apps"
+//            text: appInfo.emptyStr+qsTr("More Apps")
 //            onClicked: {
 //                pageStack.push(Qt.resolvedUrl("MoreApps.qml"));
 //            }
 //        }
         
         MenuItemWithIcon {
-            text: "Exit"
+            text: appInfo.emptyStr+qsTr("Exit")
             onClicked: {
                 quit();
             }

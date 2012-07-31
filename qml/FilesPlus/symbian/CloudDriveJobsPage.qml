@@ -82,7 +82,7 @@ Page {
 
     TitlePanel {
         id: titlePanel
-        text: qsTr("Cloud Drive Jobs")
+        text: appInfo.emptyStr+qsTr("Cloud Drive Jobs")
     }
 
     ListModel {
@@ -163,7 +163,7 @@ Page {
                     id: statusText
                     mode: listItem.mode
                     role: "Subtitle"
-                    text: (isRunning)?qsTr("Running"):qsTr("Queued")
+                    text: appInfo.emptyStr+(isRunning)?qsTr("Running"):qsTr("Queued")
                     width: 120
                     horizontalAlignment: Text.AlignRight
                     verticalAlignment: Text.AlignVCenter

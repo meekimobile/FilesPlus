@@ -306,8 +306,8 @@ void PieChart::createItemFromModel()
         slice->setText(name);
         slice->setSubText(formatFileSize(size, 1));
         QString oText = "";
-        if (subDirCount > 0) oText += QString("%1 dir%2").arg(subDirCount).arg((subDirCount > 1)?"s":"");
-        if (subFileCount > 0) oText += ((oText == "") ? "" : "\n") + QString("%1 file%2").arg(subFileCount).arg((subFileCount > 1)?"s":"");
+        if (subDirCount > 0) oText += tr("%n dir(s)", "", subDirCount);
+        if (subFileCount > 0) oText += ((oText == "") ? "" : "\n") + tr("%n file(s)", "", subFileCount);
         slice->setOptionalText(oText);
         slice->setFromAngle(int(currentAngle));
         slice->setAngleSpan(int(currentAngleSpan));
@@ -348,7 +348,7 @@ void PieChart::createItemFromModel()
     slice = new PieSlice(this);
     slice->setModelIndex(-1); // always use -1 for files.
     slice->setColor(Qt::gray);
-    slice->setText(QString("%1 file%2").arg(totalFiles).arg((totalFiles > 1)?"s":""));
+    slice->setText(tr("%n file(s)", "disambiguation", totalFiles));
     slice->setSubText(formatFileSize(totalfileSize, 1));
     slice->setOptionalText("");
     slice->setFromAngle(int(currentAngle));

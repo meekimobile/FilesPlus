@@ -13,9 +13,9 @@ CommonDialog {
     property alias indeterminate: uploadProgressBar.indeterminate
     property bool autoClose: true
     
-    titleText: qsTr("Uploading")
+    titleText: appInfo.emptyStr+qsTr("Uploading")
     titleIcon: "FilesPlusIcon.svg"
-    buttonTexts: [qsTr("OK")]
+    buttonTexts: [appInfo.emptyStr+qsTr("OK")]
     content: Column {
         width: parent.width - 10
         height: implicitHeight + 20

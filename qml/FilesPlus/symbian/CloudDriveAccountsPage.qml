@@ -78,7 +78,7 @@ Page {
 
     TitlePanel {
         id: titlePanel
-        text: qsTr("Cloud Drive Accounts")
+        text: appInfo.emptyStr+qsTr("Cloud Drive Accounts")
     }
 
     Button {
@@ -117,13 +117,13 @@ Page {
 
         property int index
 
-        titleText: qsTr("Remove cloud drive account")
+        titleText: appInfo.emptyStr+qsTr("Remove cloud drive account")
         onConfirm: {
             cloudDriveModel.removeUid(accountListView.model.get(index).type, accountListView.model.get(index).uid);
             accountListView.model.remove(index);
         }
         onOpening: {
-            contentText = qsTr("Please confirm to remove ") + cloudDriveModel.getCloudName(accountListView.model.get(index).type) + " UID " + accountListView.model.get(index).uid + " ?";
+            contentText = appInfo.emptyStr+qsTr("Please confirm to remove ") + cloudDriveModel.getCloudName(accountListView.model.get(index).type) + " UID " + accountListView.model.get(index).uid + " ?";
         }
     }
 

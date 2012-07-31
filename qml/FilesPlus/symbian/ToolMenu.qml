@@ -14,7 +14,7 @@ Menu {
         MenuItem {
             id: markMenuItem
             platformInverted: window.platformInverted
-            text: qsTr("Mark")
+            text: appInfo.emptyStr+qsTr("Mark")
             onClicked: {
                 markClicked();
             }
@@ -23,7 +23,7 @@ Menu {
         MenuItem {
             id: newFolderMenuItem
             platformInverted: window.platformInverted
-            text: qsTr("New Folder")
+            text: appInfo.emptyStr+qsTr("New Folder")
             onClicked: {
                 newFolder();
             }
@@ -32,7 +32,7 @@ Menu {
         MenuItem {
             id: renameMenuItem
             platformInverted: window.platformInverted
-            text: qsTr("Rename")
+            text: appInfo.emptyStr+qsTr("Rename")
             onClicked: {
                 renameFile();
             }

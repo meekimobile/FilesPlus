@@ -18,7 +18,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             property int flag: FolderSizeItemListModel.SortByName
-            text: qsTr("Sort by Name")
+            text: appInfo.emptyStr+qsTr("Sort by Name")
             checked: (sortFlag == flag)
             platformLeftMargin: 60
             onClicked: {
@@ -28,7 +28,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             property int flag: FolderSizeItemListModel.SortByType
-            text: qsTr("Sort by Type")
+            text: appInfo.emptyStr+qsTr("Sort by Type")
             checked: (sortFlag == flag)
             platformLeftMargin: 60
             onClicked: {
@@ -38,7 +38,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             property int flag: FolderSizeItemListModel.SortByTime
-            text: qsTr("Sort by Time")
+            text: appInfo.emptyStr+qsTr("Sort by Time")
             checked: (sortFlag == flag)
             platformLeftMargin: 60
             onClicked: {
@@ -48,7 +48,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             property int flag: FolderSizeItemListModel.SortBySize
-            text: qsTr("Sort by Size")
+            text: appInfo.emptyStr+qsTr("Sort by Size")
             checked: (sortFlag == flag)
             platformLeftMargin: 60
             onClicked: {

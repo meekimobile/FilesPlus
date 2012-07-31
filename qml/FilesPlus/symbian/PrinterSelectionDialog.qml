@@ -7,7 +7,7 @@ SelectionDialog {
     
     property string srcFilePath
     
-    titleText: qsTr("Print") + " " + fsModel.getFileName(srcFilePath) + " " + qsTr("to")
+    titleText: appInfo.emptyStr+qsTr("Print %1 to").arg(fsModel.getFileName(srcFilePath))
     titleIcon: "FilesPlusIcon.svg"
     
     onStatusChanged: {

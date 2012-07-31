@@ -9,8 +9,8 @@ Rectangle {
     signal driveSelected (string driveName)
 
     property alias model: driveGrid.model
-    property variant driveTypeTexts: ["No Drive", "Internal Drive", "Removable Drive", "Remote Drive", "Cdrom Drive",             "Internal Flash Drive", "Ram Drive"]
-    property variant driveIcons:     ["",         "device.svg",     "memory_card.svg", "",             "music_player_update.svg", "memory_card.svg",      "device.svg"]
+    property variant driveTypeTexts: [appInfo.emptyStr+qsTr("No Drive"), appInfo.emptyStr+qsTr("Internal Drive"), appInfo.emptyStr+qsTr("Removable Drive"), appInfo.emptyStr+qsTr("Remote Drive"), appInfo.emptyStr+qsTr("Cdrom Drive"), appInfo.emptyStr+qsTr("Internal Flash Drive"), appInfo.emptyStr+qsTr("Ram Drive")]
+    property variant driveIcons:     ["", "device.svg", "memory_card.svg", "", "music_player_update.svg", "memory_card.svg", "device.svg"]
     property int currentIndex: driveGrid.currentIndex
 
     GridView {
@@ -143,8 +143,8 @@ Rectangle {
                             horizontalAlignment: Text.AlignHCenter
                             style: Text.Outline
                             font.pointSize: 6
-                            text: qsTr("Free") + ": " + Utility.formatFileSize(model.availableSpace, 1)
-                                  + " / " + qsTr("Total") + ": " + Utility.formatFileSize(model.totalSpace, 1)
+                            text: appInfo.emptyStr+qsTr("Free") + ": " + Utility.formatFileSize(model.availableSpace, 1)
+                                  + " / " + appInfo.emptyStr+qsTr("Total") + ": " + Utility.formatFileSize(model.totalSpace, 1)
                         }
                     }
                 }

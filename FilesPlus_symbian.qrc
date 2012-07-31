@@ -101,5 +101,8 @@
         <file>qml/FilesPlus/rename_inverted.svg</file>
         <file>qml/FilesPlus/toolbar_extension_inverted.svg</file>
         <file>qml/FilesPlus/trim_inverted.svg</file>
+        <file alias="FilesPlus_ru.qm">i18n/FilesPlus_ru.qm</file>
+        <file alias="FilesPlus_zh.qm">i18n/FilesPlus_zh.qm</file>
+        <file alias="FilesPlus_en.qm">i18n/FilesPlus_en.qm</file>
     </qresource>
 </RCC>

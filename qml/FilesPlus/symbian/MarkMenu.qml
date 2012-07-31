@@ -17,7 +17,7 @@ Menu {
             property bool isMarkAll: true
 
             platformInverted: window.platformInverted
-            text: (isMarkAll) ? qsTr("Mark all") : qsTr("Unmark all")
+            text: (isMarkAll) ? appInfo.emptyStr+qsTr("Mark all") : appInfo.emptyStr+qsTr("Unmark all")
             onClicked: {
                 if (isMarkAll) {
                     fsListView.markAll();
@@ -31,7 +31,7 @@ Menu {
         MenuItem {
             id: copyMarked
             platformInverted: window.platformInverted
-            text: qsTr("Copy marked items")
+            text: appInfo.emptyStr+qsTr("Copy marked items")
             onClicked: {
                 fsListView.copyMarkedItems();
                 fsListView.state = "";
@@ -41,7 +41,7 @@ Menu {
         MenuItem {
             id: cutMarked
             platformInverted: window.platformInverted
-            text: qsTr("Cut marked items")
+            text: appInfo.emptyStr+qsTr("Cut marked items")
             onClicked: {
                 fsListView.cutMarkedItems();
                 fsListView.state = "";
@@ -51,7 +51,7 @@ Menu {
         MenuItem {
             id: deleteMarked
             platformInverted: window.platformInverted
-            text: qsTr("Delete marked items")
+            text: appInfo.emptyStr+qsTr("Delete marked items")
             onClicked: {
                 fsListView.deleteMarkedItems();
                 fsListView.state = "";
@@ -61,7 +61,7 @@ Menu {
         MenuItem {
             id: syncMarked
             platformInverted: window.platformInverted
-            text: qsTr("Sync marked items")
+            text: appInfo.emptyStr+qsTr("Sync marked items")
             onClicked: {
                 fsListView.syncMarkedItems();
                 fsListView.state = "";

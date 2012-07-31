@@ -16,7 +16,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: pasteMenuItem
-            text: qsTr("Paste")
+            text: appInfo.emptyStr+qsTr("Paste")
             onClicked: {
                 paste();
             }
@@ -24,7 +24,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: markMenuItem
-            text: qsTr("Mark multiple items")
+            text: appInfo.emptyStr+qsTr("Mark multiple items")
             onClicked: {
                 fsListView.state = "mark";
             }
@@ -32,7 +32,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: clearClipboardMenuItem
-            text: qsTr("Clear clipboard")
+            text: appInfo.emptyStr+qsTr("Clear clipboard")
             onClicked: {
                 clipboard.clear();
             }
@@ -40,7 +40,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: newFolderMenuItem
-            text: qsTr("New folder")
+            text: appInfo.emptyStr+qsTr("New folder")
             onClicked: {
                 newFolderDialog.open();
             }
@@ -48,7 +48,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: syncItemsMenuItem
-            text: qsTr("Sync connected items")
+            text: appInfo.emptyStr+qsTr("Sync connected items")
             onClicked: {
                 syncConnectedItemsSlot();
             }
@@ -56,7 +56,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: syncFolderMenuItem
-            text: qsTr("Sync current folder")
+            text: appInfo.emptyStr+qsTr("Sync current folder")
             onClicked: {
                 console.debug("mainMenu syncFolderMenuItem fsModel.currentDir " + fsModel.currentDir);
                 syncFileSlot(fsModel.currentDir, -1);
@@ -65,7 +65,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: sortByMenuItem
-            text: qsTr("Sort by")
+            text: appInfo.emptyStr+qsTr("Sort by")
             platformSubItemIndicator: true
             onClicked: {
                 sortByMenu.open();
@@ -73,7 +73,7 @@ MenuWithIcon {
         }
 
         MenuItemWithIcon {
-            text: qsTr("Settings")
+            text: appInfo.emptyStr+qsTr("Settings")
             platformSubItemIndicator: true
             onClicked: {
 //                settingMenu.open();
@@ -87,21 +87,21 @@ MenuWithIcon {
         }
 
         MenuItemWithIcon {
-            text: qsTr("About")
+            text: appInfo.emptyStr+qsTr("About")
             onClicked: {
                 pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
             }
         }
                 
 //        MenuItemWithIcon {
-//            text: qsTr("More Apps")
+//            text: appInfo.emptyStr+qsTr("More Apps")
 //            onClicked: {
 //                pageStack.push(Qt.resolvedUrl("MoreApps.qml"));
 //            }
 //        }
         
         MenuItemWithIcon {
-            text: qsTr("Exit")
+            text: appInfo.emptyStr+qsTr("Exit")
             onClicked: {
                 quit();
             }

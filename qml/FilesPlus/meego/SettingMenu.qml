@@ -19,7 +19,7 @@ Menu {
         
 		MenuItem {
             id: menuPrintJobs
-            text: qsTr("Show CloudPrint jobs")
+            text: appInfo.emptyStr+qsTr("Show CloudPrint jobs")
             onClicked: {
                 showCloudPrintJobs();
             }
@@ -27,14 +27,14 @@ Menu {
 
         MenuItem {
             id: menuResetCloudPrint
-            text: qsTr("Reset CloudPrint")
+            text: appInfo.emptyStr+qsTr("Reset CloudPrint")
             onClicked: {
                 resetCloudPrint();
             }
         }
 
         MenuItem {
-            text: qsTr("Register new Dropbox account")
+            text: appInfo.emptyStr+qsTr("Register new Dropbox account")
             onClicked: {
                 registerDropboxUser();
             }
@@ -42,7 +42,7 @@ Menu {
 
         MenuItem {
             id: menuResetCache
-            text: qsTr("Reset current folder cache")
+            text: appInfo.emptyStr+qsTr("Reset current folder cache")
 
             onClicked: {
                 resetCache();

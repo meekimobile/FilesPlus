@@ -47,6 +47,11 @@ PageStackWindow {
         Component.onCompleted: {
             appInfo.startMonitoring();
         }
+        onLocaleChanged: {
+            console.debug("appInfo onLocaleChanged");
+            var p = pageStack.find(function (page) { return page.name == "folderPage"; });
+            if (p) p.requestJobQueueStatusSlot();
+        }
     }
 
     Text {
@@ -88,7 +93,7 @@ PageStackWindow {
         Text {
             id: busyText1
             width: 180
-            text: qsTr("Please wait while loading.")
+            text: appInfo.emptyStr+qsTr("Please wait while loading.")
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
             font.pointSize: 8

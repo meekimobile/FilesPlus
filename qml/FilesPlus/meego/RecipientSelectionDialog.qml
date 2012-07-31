@@ -15,7 +15,7 @@ SelectionDialog {
     signal opening()
     signal opened()
 
-    titleText: qsTr("Send") + " " + fsModel.getFileName(srcFilePath) + " " + qsTr("to favorite")
+    titleText: appInfo.emptyStr+qsTr("Send %1 to").arg(fsModel.getFileName(srcFilePath))
     delegate: ListItem {
         id: recipientItem
         Row {

@@ -1,3 +1,8 @@
+filesplus (1.0.3) unstable; urgency=low
+  * Add theme switcher and implement black/white theme.
+
+ -- Taweesak Kittipuree <>  Thu, 19 Jul 2012 18:16:49 +0700
+
 filesplus (1.0.2) unstable; urgency=low
   * <Add change description here>
 

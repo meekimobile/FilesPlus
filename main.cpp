@@ -89,6 +89,26 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 
     QScopedPointer<QApplication> app(createApplication(argc, argv));
 
+    // Get defined locale in settings or system locale if it's not defined.
+    QString localeName = m_settings->value("locale", QLocale::system().name()).toString();
+    qDebug() << "main localeName" << localeName << "translationPath" << QLibraryInfo::location(QLibraryInfo::TranslationsPath);
+
+    // Install bundled Qt translator.
+    QTranslator qtTranslator;
+    qtTranslator.load("qt_" + localeName, QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+    app.data()->installTranslator(&qtTranslator);
+
+    // ISSUE: If enable code below, causes unable to remove translator and switch back to english. Requires English translation to make it works.
+    // Install default app translator.
+    QTranslator myappTranslator;
+    bool res = myappTranslator.load(m_settings->applicationName() + "_" + localeName, ":/");
+    if (res) {
+        qDebug() << "main myappTranslation is loaded. isEmpty" << myappTranslator.isEmpty();
+        app.data()->installTranslator(&myappTranslator);
+    } else {
+        qDebug() << "main myappTranslation loading failed. isEmpty" << myappTranslator.isEmpty();
+    }
+
     QmlApplicationViewer viewer;
     viewer.setSource(QUrl("qrc:/qml/FilesPlus/main.qml"));
     viewer.showExpanded();

@@ -23,7 +23,7 @@ SelectionDialog {
         case CloudDriveModel.Metadata:
             // TODO To support both single/multiple items.
             if (localPath != "") {
-                text += qsTr("Sync") + " " + fsModel.getFileName(localPath) + " " + qsTr("to");
+                text += qsTr("Sync %1 to").arg(fsModel.getFileName(localPath));
             } else if (clipboard.count > 0){
                 var syncCount = 0;
                 for (var i=0; i<clipboard.count; i++) {
@@ -31,20 +31,20 @@ SelectionDialog {
                         syncCount++;
                     }
                 }
-                text += qsTr("Sync") + " " + syncCount + (syncCount>1 ? (" " + qsTr("items")) : (" " + qsTr("item"))) + " " + qsTr("to");
+                text += qsTr("Sync %n item(s) to", "disambiguation", syncCount);
             }
             break;
         case CloudDriveModel.FilePut:
-            text += qsTr("Upload") + " " + fsModel.getFileName(localPath) + " " + qsTr("to");
+            text += qsTr("Upload %1 to").arg(fsModel.getFileName(localPath));
             break;
         case CloudDriveModel.FileGet:
-            text += qsTr("Download") + " " + fsModel.getFileName(localPath) + " " + qsTr("from");
+            text += qsTr("Download %1 from").arg(fsModel.getFileName(localPath));
             break;
         case CloudDriveModel.ShareFile:
-            text += qsTr("Share link of") + " " + fsModel.getFileName(localPath) + " " + qsTr("from");
+            text += qsTr("Share link of %1 from").arg(fsModel.getFileName(localPath));
             break;
         case CloudDriveModel.DeleteFile:
-            text += qsTr("Unsync") + " " + fsModel.getFileName(localPath) + " " + qsTr("from");
+            text += qsTr("Unsync %1 from").arg(fsModel.getFileName(localPath));
             break;
         }
 
@@ -90,7 +90,7 @@ SelectionDialog {
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
             selectedIndex = -1;
-            titleText = getTitleText(localPath);
+            titleText = appInfo.emptyStr+getTitleText(localPath);
             opening();
         } else if (status == DialogStatus.Open) {
             opened();

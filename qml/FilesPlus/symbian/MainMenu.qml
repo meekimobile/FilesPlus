@@ -18,7 +18,7 @@ Menu {
 
         MenuItem {
             id: pasteMenuItem
-            text: qsTr("Paste")
+            text: appInfo.emptyStr+qsTr("Paste")
             platformInverted: window.platformInverted
             onClicked: {
                 paste();
@@ -27,7 +27,7 @@ Menu {
 
         MenuItem {
             id: markMenuItem
-            text: qsTr("Mark multiple items")
+            text: appInfo.emptyStr+qsTr("Mark multiple items")
             platformInverted: window.platformInverted
             onClicked: {
                 fsListView.state = "mark";
@@ -36,7 +36,7 @@ Menu {
 
         MenuItem {
             id: clearClipboardMenuItem
-            text: qsTr("Clear clipboard")
+            text: appInfo.emptyStr+qsTr("Clear clipboard")
             platformInverted: window.platformInverted
             onClicked: {
                 clipboard.clear();
@@ -45,7 +45,7 @@ Menu {
 
         MenuItem {
             id: newFolderMenuItem
-            text: qsTr("New folder")
+            text: appInfo.emptyStr+qsTr("New folder")
             platformInverted: window.platformInverted
             onClicked: {
                 newFolderDialog.open();
@@ -54,7 +54,7 @@ Menu {
 
         MenuItem {
             id: syncItemsMenuItem
-            text: qsTr("Sync connected items")
+            text: appInfo.emptyStr+qsTr("Sync connected items")
             platformInverted: window.platformInverted
             onClicked: {
                 syncConnectedItemsSlot();
@@ -63,7 +63,7 @@ Menu {
 
         MenuItem {
             id: syncFolderMenuItem
-            text: qsTr("Sync current folder")
+            text: appInfo.emptyStr+qsTr("Sync current folder")
             platformInverted: window.platformInverted
             onClicked: {
                 console.debug("mainMenu syncFolderMenuItem fsModel.currentDir " + fsModel.currentDir);
@@ -73,7 +73,7 @@ Menu {
 
         MenuItem {
             id: sortByMenuItem
-            text: qsTr("Sort by")
+            text: appInfo.emptyStr+qsTr("Sort by")
             platformInverted: window.platformInverted
             platformSubItemIndicator: true
             onClicked: {
@@ -82,7 +82,7 @@ Menu {
         }
 
         MenuItem {
-            text: qsTr("Settings")
+            text: appInfo.emptyStr+qsTr("Settings")
             platformInverted: window.platformInverted
             platformSubItemIndicator: true
             onClicked: {
@@ -97,7 +97,7 @@ Menu {
         }
 
         MenuItem {
-            text: qsTr("About")
+            text: appInfo.emptyStr+qsTr("About")
             platformInverted: window.platformInverted
             onClicked: {
                 pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
@@ -105,7 +105,7 @@ Menu {
         }
                 
 //        MenuItem {
-//            text: qsTr("More Apps")
+//            text: appInfo.emptyStr+qsTr("More Apps")
 //            platformInverted: window.platformInverted
 //            onClicked: {
 //                pageStack.push(Qt.resolvedUrl("MoreApps.qml"));
@@ -113,7 +113,7 @@ Menu {
 //        }
         
         MenuItem {
-            text: qsTr("Exit")
+            text: appInfo.emptyStr+qsTr("Exit")
             platformInverted: window.platformInverted
             onClicked: {
                 quit();

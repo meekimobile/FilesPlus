@@ -24,7 +24,7 @@ Rectangle {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton
                 onClicked: {
-                    Qt.openUrlExternally("https://sites.google.com/site/meekimobile/products/filesplus");
+                    Qt.openUrlExternally("http://www.meeki.mobi/products/filesplus");
                 }
             }
         }
@@ -32,7 +32,7 @@ Rectangle {
         Text {
             id: title
             color: "white"
-            text: qsTr("FilesPlus" + ((version=="")?"":(" "+version)))
+            text: appInfo.emptyStr+qsTr("FilesPlus" + ((version=="")?"":(" "+version)))
             anchors.horizontalCenter: parent.horizontalCenter
             horizontalAlignment: Text.AlignLeft
             font.bold: true
@@ -43,11 +43,11 @@ Rectangle {
             id: description
             color: "grey"
             width: 300
-            text: qsTr("FilesPlus provides extended functions beyond file manager.\
-    \n   + Print with Google Cloud Print.\
-    \n   + Sync with Cloud Drive.\
-    \n   + Preview images in your folder.\
-    \n   + Present folders in Pie view.")
+            text: appInfo.emptyStr+qsTr("FilesPlus provides extended functions beyond file manager.\
+\n   + Print with Google Cloud Print.\
+\n   + Sync with Cloud Drive.\
+\n   + Preview images in your folder.\
+\n   + Present folders in Pie view.")
             anchors.horizontalCenter: parent.horizontalCenter
             wrapMode: Text.WordWrap
             font.pointSize: 6
@@ -84,7 +84,7 @@ Rectangle {
             id: author
             width: parent.width
             color: "grey"
-            text: qsTr("Developed by ") + "MeekiMobile"
+            text: appInfo.emptyStr+qsTr("Developed by ") + "MeekiMobile"
             horizontalAlignment: Text.AlignHCenter
             anchors.horizontalCenter: parent.horizontalCenter
             wrapMode: Text.WordWrap
@@ -101,7 +101,7 @@ Rectangle {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton
                 onClicked: {
-                    Qt.openUrlExternally("http://sites.google.com/site/meekimobile");
+                    Qt.openUrlExternally("http://www.meeki.mobi/");
                 }
             }
         }

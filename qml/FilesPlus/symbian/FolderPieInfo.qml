@@ -25,7 +25,7 @@ Rectangle {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton
                 onClicked: {
-                    Qt.openUrlExternally("https://sites.google.com/site/meekimobile/products/folderpie");
+                    Qt.openUrlExternally("http://www.meeki.mobi/products/folderpie");
                 }
             }
         }
@@ -33,7 +33,7 @@ Rectangle {
         Text {
             id: title
             color: "white"
-            text: qsTr("FolderPie" + ((version=="")?"":(" "+version)))
+            text: appInfo.emptyStr+qsTr("FolderPie" + ((version=="")?"":(" "+version)))
             anchors.horizontalCenter: parent.horizontalCenter
             horizontalAlignment: Text.AlignLeft
             font.bold: true
@@ -44,7 +44,7 @@ Rectangle {
             id: description
             color: "grey"
             width: 300
-            text: qsTr("FolderPie helps you collect each folder actual size on your disk space.\nAnd present in Pie view for easy understanding at glance.")
+            text: appInfo.emptyStr+qsTr("FolderPie helps you collect each folder actual size on your disk space.\nAnd present in Pie view for easy understanding at glance.")
             horizontalAlignment: Text.AlignHCenter
             anchors.horizontalCenter: parent.horizontalCenter
             wrapMode: Text.WordWrap
@@ -55,7 +55,7 @@ Rectangle {
             id: author
             width: parent.width
             color: "grey"
-            text: "\n\n" + qsTr("Developed by") + " MeekiMobile"
+            text: "\n\n" + appInfo.emptyStr+qsTr("Developed by") + " MeekiMobile"
             horizontalAlignment: Text.AlignHCenter
             anchors.horizontalCenter: parent.horizontalCenter
             wrapMode: Text.WordWrap
@@ -72,7 +72,7 @@ Rectangle {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton
                 onClicked: {
-                    Qt.openUrlExternally("http://sites.google.com/site/meekimobile");
+                    Qt.openUrlExternally("http://www.meeki.mobi/");
                 }
             }
         }

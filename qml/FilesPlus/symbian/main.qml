@@ -50,9 +50,15 @@ PageStackWindow {
         }
 
         onNotifyLoggingSignal: {
-            messageDialog.titleText = qsTr("Notify");
-            messageDialog.message = qsTr("Logging is enabled. Log file is at ") + logFilePath + "\n" + qsTr("You may turn off in Settings.");
+            messageDialog.titleText = appInfo.emptyStr+qsTr("Notify");
+            messageDialog.message = appInfo.emptyStr+qsTr("Logging is enabled. Log file is at %1").arg(logFilePath) + "\n" + appInfo.emptyStr+qsTr("You may turn off in Settings.");
             messageDialog.open();
+        }
+
+        onLocaleChanged: {
+            console.debug("appInfo onLocaleChanged");
+            var p = pageStack.find(function (page) { return page.name == "folderPage"; });
+            if (p) p.requestJobQueueStatusSlot();
         }
     }
 
@@ -100,7 +106,7 @@ PageStackWindow {
         Text {
             id: busyText1
             width: 180
-            text: qsTr("Please wait while loading.")
+            text: appInfo.emptyStr+qsTr("Please wait while loading.")
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
             font.pointSize: 8

@@ -1,6 +1,7 @@
 #ifndef APPINFO_H
 #define APPINFO_H
 
+#include <QtGui>
 #include <QDeclarativeItem>
 #include <QSettings>
 #include "monitoring.h"
@@ -10,6 +11,8 @@ class AppInfo : public QDeclarativeItem
     Q_OBJECT
     Q_PROPERTY(QString domain READ getDomainName WRITE setDomainName)
     Q_PROPERTY(QString app READ getAppName WRITE setAppName)
+    Q_PROPERTY(QString emptyStr READ getEmptyStr NOTIFY localeChanged)
+    Q_PROPERTY(QString locale READ getLocale WRITE setLocale NOTIFY localeChanged)
 public:
     explicit AppInfo(QDeclarativeItem *parent = 0);
     
@@ -25,11 +28,17 @@ public:
     Q_INVOKABLE void startMonitoring();
     Q_INVOKABLE bool isLogging() const;
 
+    Q_INVOKABLE QString getSystemLocale() const;
+    Q_INVOKABLE QString getLocale();
+    Q_INVOKABLE void setLocale(const QString locale);
+    QString getEmptyStr();
+
     void componentComplete();
     void init();
 signals:
     void notifyLoggingSignal(QString logFilePath);
     void notifyMonitoringSignal(QString monitoringFilePath);
+    void localeChanged(QString locale);
 public slots:
 
 private:
@@ -37,6 +46,10 @@ private:
     QString m_appName;
     QSettings *m_settings;
     Monitoring *mon;
+    QTranslator *m_ts;
+
+    void initTS();
+    bool loadTS(const QString localeName);
 };
 
 #endif // APPINFO_H

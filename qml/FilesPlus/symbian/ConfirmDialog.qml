@@ -8,7 +8,7 @@ CommonDialog {
 
     z: 2
     titleIcon: "FilesPlusIcon.svg"
-    buttonTexts: [qsTr("OK"), qsTr("Cancel")]
+    buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
     content: Text {
         id: content
         color: "white"

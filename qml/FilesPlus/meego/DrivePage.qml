@@ -98,7 +98,7 @@ Page {
 
     TitlePanel {
         id: titlePanel
-        text: qsTr("Drives")
+        text: appInfo.emptyStr+qsTr("Drives")
     }
 
     onStatusChanged: {

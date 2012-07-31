@@ -21,14 +21,14 @@ Page {
     function updateJobQueueCount(runningJobCount, jobQueueCount) {
         var i = getIndexByName("cancelAllCloudDriveJobs");
         if (i > -1) {
-            settingModel.set(i, { title: qsTr("Cancel queued jobs") + " (" + jobQueueCount + ")" });
+            settingModel.set(i, { title: qsTr("Cancel queued jobs") + " (" + jobQueueCount + ")" + appInfo.emptyStr });
         }
     }
 
     function updateCloudDriveItemCount(cloudDriveItemCount) {
         var i = getIndexByName("syncAllConnectedItems");
         if (i > -1) {
-            settingModel.set(i, { title: qsTr("Sync all connected items") + " (" + cloudDriveItemCount + ")" });
+            settingModel.set(i, { title: qsTr("Sync all connected items") + " (" + cloudDriveItemCount + ")" + appInfo.emptyStr });
         }
     }
 
@@ -42,22 +42,16 @@ Page {
         }
     }
 
-    AppInfo {
-        id: appInfo
-        domain: "MeekiMobile"
-        app: "FilesPlus"
-    }
-
     TitlePanel {
         id: titlePanel
-        text: qsTr("Settings")
+        text: qsTr("Settings") + appInfo.emptyStr
         z: 1
     }
 
     ConfirmDialog {
         id: quitConfirmation
-        titleText: qsTr("Logging (Debug)")
-        contentText: qsTr("Changing logging switch requires restart.\nFilesPlus is exiting now.\n\nPlease confirm.")
+        titleText: appInfo.emptyStr+qsTr("Logging (Debug)")
+        contentText: appInfo.emptyStr+qsTr("Changing logging switch requires restart.\nFilesPlus is exiting now.\n\nPlease confirm.")
         onConfirm: {
             Qt.quit();
         }
@@ -123,6 +117,12 @@ Page {
             type: "switch"
             group: "Theme"
         }
+        ListElement {
+            name: "locale"
+            title: ""
+            type: "locale"
+            group: "Localization"
+        }
 //        ListElement {
 //            name: "Monitoring.enabled"
 //            title: ""
@@ -150,18 +150,19 @@ Page {
     }
 
     function getTitle(name) {
-        if (name == "showCloudPrintJobs") return qsTr("Show cloud print jobs");
-        else if (name == "resetCloudPrint") return qsTr("Reset cloud print");
-        else if (name == "showCloudDriveJobs") return qsTr("Show cloud drive jobs");
-        else if (name == "cancelAllCloudDriveJobs") return qsTr("Cancel queued jobs");
-        else if (name == "syncAllConnectedItems") return qsTr("Sync all connected items");
-        else if (name == "showCloudDriveAccounts") return qsTr("Show accounts");
-        else if (name == "FolderPie.enabled") return qsTr("FolderPie feature");
-        else if (name == "resetCache") return qsTr("Reset current folder cache");
-        else if (name == "Theme.inverted") return qsTr("Theme");
-        else if (name == "Logging.enabled") return qsTr("Logging (Debug)");
-        else if (name == "Monitoring.enabled") return qsTr("Monitoring (RAM,CPU)");
-        else return qsTr(name);
+        if (name == "showCloudPrintJobs") return qsTr("Show cloud print jobs") + appInfo.emptyStr;
+        else if (name == "resetCloudPrint") return qsTr("Reset cloud print") + appInfo.emptyStr;
+        else if (name == "showCloudDriveJobs") return qsTr("Show cloud drive jobs") + appInfo.emptyStr;
+        else if (name == "cancelAllCloudDriveJobs") return qsTr("Cancel queued jobs") + appInfo.emptyStr;
+        else if (name == "syncAllConnectedItems") return qsTr("Sync all connected items") + appInfo.emptyStr;
+        else if (name == "showCloudDriveAccounts") return qsTr("Show accounts") + appInfo.emptyStr;
+        else if (name == "FolderPie.enabled") return qsTr("FolderPie feature") + appInfo.emptyStr;
+        else if (name == "resetCache") return qsTr("Reset current folder cache") + appInfo.emptyStr;
+        else if (name == "Theme.inverted") return qsTr("Theme") + appInfo.emptyStr;
+        else if (name == "locale") return qsTr("Locale") + appInfo.emptyStr;
+        else if (name == "Logging.enabled") return qsTr("Logging (Debug)") + appInfo.emptyStr;
+        else if (name == "Monitoring.enabled") return qsTr("Monitoring (RAM,CPU)") + appInfo.emptyStr;
+        else return qsTr(name) + appInfo.emptyStr;
     }
 
     function buttonClickedHandler(name) {
@@ -188,8 +189,8 @@ Page {
                 quitConfirmation.open();
             } else if (name == "Monitoring.enabled") {
                 if (appInfo.isMonitoring()) {
-                    messageDialog.titleText = qsTr("Monitoring");
-                    messageDialog.message = qsTr("Monitoring is enabled. Log file is ") + appInfo.getMonitoringFilePath();
+                    messageDialog.titleText = appInfo.emptyStr+qsTr("Monitoring");
+                    messageDialog.message = appInfo.emptyStr+qsTr("Monitoring is enabled. Log file is ") + appInfo.getMonitoringFilePath();
                     messageDialog.open();
                 }
             }
@@ -214,16 +215,17 @@ Page {
                     width: parent.width - settingValue.width
                     height: parent.height
                     verticalAlignment: Text.AlignVCenter
+                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     text: (title=="") ? getTitle(name) : title
                 }
                 Switch {
                     id: settingValue
                     anchors.verticalCenter: parent.verticalCenter
-                    checked: appInfo.getSettingValue(name, false)
+                    checked: (type == "switch") && appInfo.getSettingValue(name, false)
                     onCheckedChanged: {
 //                        console.debug("settingListItemDelegate settingValue checked " + checked + " appInfo.getSettingValue " + name + " " + appInfo.getSettingValue(name, false));
                         if (appInfo.setSettingValue(name, checked)) {
-                            console.debug("settingListItemDelegate settingValue " + name + " checked " + checked + " is changed.");
+                            console.debug("settingListItemDelegate switch " + name + " checked " + checked + " is changed.");
                             // Handle only if it's enabled.
                             buttonClickedHandler(name);
                         }
@@ -238,6 +240,54 @@ Page {
                 text: (title=="") ? getTitle(name) : title
                 onClicked: {
                     buttonClickedHandler(name);
+                }
+            }
+            ButtonRow {
+                id: localeSelector
+                visible: (type == "locale")
+                width: parent.width - 20
+                anchors.centerIn: parent
+                checkedButton: localeCN
+                Button {
+                    id: localeEN
+                    property string locale: "en"
+                    text: "English"
+                    checkable: true
+                    onClicked: {
+                        appInfo.setLocale(locale);
+                        buttonClickedHandler("locale");
+                    }
+                }
+                Button {
+                    id: localeRU
+                    property string locale: "ru"
+                    text: "Russian"
+                    checkable: true
+                    onClicked: {
+                        appInfo.setLocale(locale);
+                        buttonClickedHandler("locale");
+                    }
+                }
+                Button {
+                    id: localeCN
+                    property string locale: "zh"
+                    text: "Chinese"
+                    checkable: true
+                    onClicked: {
+                        appInfo.setLocale(locale);
+                        buttonClickedHandler("locale");
+                    }
+                }
+
+                Component.onCompleted: {
+                    var currentLocale = appInfo.getLocale();
+                    for (var i=0; i<localeSelector.children.length; i++) {
+                        var child = localeSelector.children[i];
+                        if (currentLocale.indexOf(child.locale) == 0) {
+                            localeSelector.checkedButton = child;
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -255,7 +305,7 @@ Page {
                 spacing: 5
                 Text {
                     id: sectionText
-                    text: section
+                    text: section + appInfo.emptyStr
                     color: (theme.inverted) ? "grey" : "black"
                     font.pointSize: 14
                 }

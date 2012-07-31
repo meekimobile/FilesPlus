@@ -13,7 +13,7 @@ Dialog {
     property alias titleText: title.text
     property alias titleIcon: titleIcon.source
     property alias contentText: content.text
-    property variant buttonTexts: [qsTr("OK"), qsTr("Cancel")]
+    property variant buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
 
     signal opening()
     signal opened()

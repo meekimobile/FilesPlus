@@ -12,7 +12,7 @@ Menu {
     content: MenuLayout {
         MenuItem {
             id: markMenuItem
-            text: qsTr("Mark")
+            text: appInfo.emptyStr+qsTr("Mark")
             onClicked: {
                 markClicked();
             }
@@ -20,7 +20,7 @@ Menu {
 
         MenuItem {
             id: newFolderMenuItem
-            text: qsTr("New Folder")
+            text: appInfo.emptyStr+qsTr("New Folder")
             onClicked: {
                 newFolder();
             }
@@ -28,7 +28,7 @@ Menu {
 
         MenuItem {
             id: renameMenuItem
-            text: qsTr("Rename")
+            text: appInfo.emptyStr+qsTr("Rename")
             onClicked: {
                 renameFile();
             }

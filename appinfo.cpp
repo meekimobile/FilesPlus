@@ -30,6 +30,36 @@ bool AppInfo::isLogging() const
     return m_settings->value("Logging.enabled", false).toBool();
 }
 
+QString AppInfo::getSystemLocale() const
+{
+    return QLocale::system().name();
+}
+
+QString AppInfo::getLocale()
+{
+    return getSettingValue("locale", "").toString();
+}
+
+void AppInfo::setLocale(const QString locale)
+{
+    if (locale != getLocale()) {
+        // Load TS.
+        loadTS(locale);
+
+        // Save locale to settings.
+        m_settings->setValue("locale", locale);
+        m_settings->sync();
+
+        // Emit signal
+        emit localeChanged(locale);
+    }
+}
+
+QString AppInfo::getEmptyStr()
+{
+    return "";
+}
+
 bool AppInfo::isMonitoring() const
 {
     return m_settings->value("Monitoring.enabled", false).toBool();
@@ -118,6 +148,38 @@ void AppInfo::init()
         emit notifyMonitoringSignal("/home/user/");
 #endif
     }
+
+    // Initialize translator.
+    initTS();
+}
+
+void AppInfo::initTS()
+{
+    m_ts = new QTranslator();
+    connect(this, SIGNAL(destroyed()), m_ts, SIGNAL(destroyed()));
+
+    QString localeName = getLocale();
+    qDebug() << "appInfo.initTS settings localeName" << localeName << "translationPath" << QLibraryInfo::location(QLibraryInfo::TranslationsPath);
+
+    // Install app translator.
+    loadTS(localeName);
+}
+
+bool AppInfo::loadTS(const QString localeName)
+{
+    qDebug() << "appInfo.loadTS" << getLocale() << "is changing to" << localeName;
+
+    qApp->removeTranslator(m_ts);
+    bool res = false;
+    res = m_ts->load("FilesPlus_" + localeName, ":/");
+    if (res) {
+        qDebug() << "appInfo.loadTS m_ts is loaded. isEmpty" << m_ts->isEmpty();
+        qApp->installTranslator(m_ts);
+    } else {
+        qDebug() << "appInfo.loadTS m_ts loading failed. isEmpty" << m_ts->isEmpty();
+    }
+
+    return res;
 }
 
 void AppInfo::componentComplete()

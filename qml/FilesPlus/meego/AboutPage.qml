@@ -16,7 +16,7 @@ Page {
     }
 
     FilesPlusInfo {
-        id: appInfo
-        version: "v1.0.2"
+        id: productInfo
+        version: "v1.0.3"
     }
 }

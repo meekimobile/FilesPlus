@@ -14,7 +14,7 @@ SelectionDialog {
     signal opening()
     signal opened()
 
-    titleText: qsTr("Send") + " " + fsModel.getFileName(srcFilePath) + " " + qsTr("to favorite")
+    titleText: appInfo.emptyStr+qsTr("Send %1 to").arg(fsModel.getFileName(srcFilePath))
     titleIcon: "FilesPlusIcon.svg"
     height: 280
     delegate: ListItem {
