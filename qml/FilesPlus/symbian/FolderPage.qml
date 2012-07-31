@@ -407,7 +407,7 @@ Page {
             console.debug("QML FolderSizeItemListModel::onRequestResetCache");
             messageDialog.titleText = appInfo.emptyStr+qsTr("First time loading");
             messageDialog.message = appInfo.emptyStr+qsTr("Thank you for download FilesPlus.\
-\nThis is first time running, FolderPie needs to load information from your drive.\
+\nThis is first time running, FilesPlus needs to load information from your drive.\
 \n\nIt will take time depends on numbers of sub folders/files under current folder.\
 \n\nPlease click OK to continue.");
             messageDialog.open();
