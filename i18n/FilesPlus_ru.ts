@@ -23,7 +23,12 @@
         <translation>О приложении</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+7"/>
+        <source>More Apps</source>
+        <translation>Ещё приложения</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Exit</source>
         <translation>Выход</translation>
     </message>
@@ -227,7 +232,12 @@
         <translation>О программе</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+7"/>
+        <source>More Apps</source>
+        <translation>Ещё приложения</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Exit</source>
         <translation>Выход</translation>
     </message>
@@ -1030,8 +1040,14 @@ And present in Pie view for easy understanding at glance.</source>
         <translation>О программе</translation>
     </message>
     <message>
-        <location line="+14"/>
-        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+16"/>
+        <location line="+7"/>
+        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+8"/>
+        <source>More Apps</source>
+        <translation>Ещё приложения</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+8"/>
         <source>Exit</source>
         <translation>Выход</translation>
     </message>

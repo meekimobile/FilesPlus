@@ -23,7 +23,12 @@
         <translation>关于</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+7"/>
+        <source>More Apps</source>
+        <translation>更多的节目</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
@@ -225,7 +230,12 @@
         <translation>关于</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+7"/>
+        <source>More Apps</source>
+        <translation>更多的节目</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
@@ -256,7 +266,7 @@
     <message>
         <location line="+0"/>
         <source>Exit</source>
-        <translation>关闭</translation>
+        <translation>退出</translation>
     </message>
 </context>
 <context>
@@ -1000,8 +1010,14 @@ Deleting %1 is aborted.</translatorcomment>
         <translation>关于</translation>
     </message>
     <message>
-        <location line="+14"/>
-        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+16"/>
+        <location line="+7"/>
+        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+8"/>
+        <source>More Apps</source>
+        <translation>更多的节目</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+8"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>

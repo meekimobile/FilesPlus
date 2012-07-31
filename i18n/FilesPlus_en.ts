@@ -23,7 +23,12 @@
         <translation>About</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+7"/>
+        <source>More Apps</source>
+        <translation>More Apps</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Exit</source>
         <translation>Exit</translation>
     </message>
@@ -226,7 +231,12 @@
         <translation>About</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+7"/>
+        <source>More Apps</source>
+        <translation>More Apps</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Exit</source>
         <translation>Exit</translation>
     </message>
@@ -985,8 +995,14 @@ And present in Pie view for easy understanding at glance.</translation>
         <translation>About</translation>
     </message>
     <message>
-        <location line="+14"/>
-        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+16"/>
+        <location line="+7"/>
+        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+8"/>
+        <source>More Apps</source>
+        <translation>More Apps</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+8"/>
         <source>Exit</source>
         <translation>Exit</translation>
     </message>

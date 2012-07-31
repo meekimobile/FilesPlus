@@ -104,13 +104,13 @@ Menu {
             }
         }
                 
-//        MenuItem {
-//            text: appInfo.emptyStr+qsTr("More Apps")
-//            platformInverted: window.platformInverted
-//            onClicked: {
-//                pageStack.push(Qt.resolvedUrl("MoreApps.qml"));
-//            }
-//        }
+        MenuItem {
+            text: appInfo.emptyStr+qsTr("More Apps")
+            platformInverted: window.platformInverted
+            onClicked: {
+                Qt.openUrlExternally("http://www.meeki.mobi/");
+            }
+        }
         
         MenuItem {
             text: appInfo.emptyStr+qsTr("Exit")

@@ -32,12 +32,12 @@ MenuWithIcon {
             }
         }
                 
-//        MenuItemWithIcon {
-//            text: appInfo.emptyStr+qsTr("More Apps")
-//            onClicked: {
-//                pageStack.push(Qt.resolvedUrl("MoreApps.qml"));
-//            }
-//        }
+        MenuItemWithIcon {
+            text: appInfo.emptyStr+qsTr("More Apps")
+            onClicked: {
+                Qt.openUrlExternally("http://www.meeki.mobi/");
+            }
+        }
         
         MenuItemWithIcon {
             text: appInfo.emptyStr+qsTr("Exit")
