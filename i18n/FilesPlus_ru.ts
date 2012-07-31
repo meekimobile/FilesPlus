@@ -1319,6 +1319,16 @@ FilesPlus сейчас закроется.
         <translation>Наблюдение за показателями (RAM, C.P.U.)</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Personalization</source>
+        <translation>Персонализация</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Developer</source>
+        <translation>Программник</translation>
+    </message>
+    <message>
         <location line="+28"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+28"/>
         <source>Monitoring</source>
@@ -1331,8 +1341,26 @@ FilesPlus сейчас закроется.
         <translation>Наблюдение включено. Файл лога это </translation>
     </message>
     <message>
-        <location line="-31"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-31"/>
+        <location line="+61"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+97"/>
+        <source>English</source>
+        <translation>Английский</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+11"/>
+        <source>Russian</source>
+        <translation>Русский</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+11"/>
+        <source>Chinese</source>
+        <translation>Китайский</translation>
+    </message>
+    <message>
+        <location line="-114"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-150"/>
         <source>Locale</source>
         <translation>Locale</translation>
     </message>

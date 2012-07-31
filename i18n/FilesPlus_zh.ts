@@ -1213,6 +1213,16 @@ Please confirm.</source>
         <translation></translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Personalization</source>
+        <translation>个性化</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Developer</source>
+        <translation>程序员</translation>
+    </message>
+    <message>
         <location line="+28"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+28"/>
         <source>Monitoring</source>
@@ -1225,8 +1235,26 @@ Please confirm.</source>
         <translation></translation>
     </message>
     <message>
-        <location line="-31"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-31"/>
+        <location line="+61"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+97"/>
+        <source>English</source>
+        <translation>英语</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+11"/>
+        <source>Russian</source>
+        <translation>俄语</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+11"/>
+        <source>Chinese</source>
+        <translation>中文</translation>
+    </message>
+    <message>
+        <location line="-114"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-150"/>
         <source>Locale</source>
         <translation></translation>
     </message>

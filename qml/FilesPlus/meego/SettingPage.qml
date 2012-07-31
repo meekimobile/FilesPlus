@@ -112,16 +112,16 @@ Page {
             group: "FolderPie"
         }
         ListElement {
-            name: "Theme.inverted"
-            title: ""
-            type: "switch"
-            group: "Theme"
-        }
-        ListElement {
             name: "locale"
             title: ""
             type: "locale"
-            group: "Localization"
+            group: "Personalization"
+        }
+        ListElement {
+            name: "Theme.inverted"
+            title: ""
+            type: "switch"
+            group: "Personalization"
         }
 //        ListElement {
 //            name: "Monitoring.enabled"
@@ -162,6 +162,8 @@ Page {
         else if (name == "locale") return qsTr("Locale") + appInfo.emptyStr;
         else if (name == "Logging.enabled") return qsTr("Logging (Debug)") + appInfo.emptyStr;
         else if (name == "Monitoring.enabled") return qsTr("Monitoring (RAM,CPU)") + appInfo.emptyStr;
+        else if (name == "Personalization") return qsTr("Personalization") + appInfo.emptyStr;
+        else if (name == "Developer") return qsTr("Developer") + appInfo.emptyStr;
         else return qsTr(name) + appInfo.emptyStr;
     }
 
@@ -251,7 +253,7 @@ Page {
                 Button {
                     id: localeEN
                     property string locale: "en"
-                    text: "English"
+                    text: appInfo.emptyStr+qsTr("English")
                     checkable: true
                     onClicked: {
                         appInfo.setLocale(locale);
@@ -261,7 +263,7 @@ Page {
                 Button {
                     id: localeRU
                     property string locale: "ru"
-                    text: "Russian"
+                    text: appInfo.emptyStr+qsTr("Russian")
                     checkable: true
                     onClicked: {
                         appInfo.setLocale(locale);
@@ -271,7 +273,7 @@ Page {
                 Button {
                     id: localeCN
                     property string locale: "zh"
-                    text: "Chinese"
+                    text: appInfo.emptyStr+qsTr("Chinese")
                     checkable: true
                     onClicked: {
                         appInfo.setLocale(locale);
@@ -305,7 +307,7 @@ Page {
                 spacing: 5
                 Text {
                     id: sectionText
-                    text: section + appInfo.emptyStr
+                    text: getTitle(section)
                     color: (theme.inverted) ? "grey" : "black"
                     font.pointSize: 14
                 }

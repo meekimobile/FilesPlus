@@ -1251,6 +1251,16 @@ Please confirm.</translation>
         <translation>Monitoring (RAM,CPU)</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Personalization</source>
+        <translation>Personalization</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Developer</source>
+        <translation>Developer</translation>
+    </message>
+    <message>
         <location line="+28"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+28"/>
         <source>Monitoring</source>
@@ -1263,8 +1273,26 @@ Please confirm.</translation>
         <translation>Monitoring is enabled. Log file is </translation>
     </message>
     <message>
-        <location line="-31"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-31"/>
+        <location line="+61"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+97"/>
+        <source>English</source>
+        <translation>English</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+11"/>
+        <source>Russian</source>
+        <translation>Russian</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+11"/>
+        <source>Chinese</source>
+        <translation>Chinese</translation>
+    </message>
+    <message>
+        <location line="-114"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-150"/>
         <source>Locale</source>
         <translation>Locale</translation>
     </message>
