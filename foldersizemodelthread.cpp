@@ -265,7 +265,7 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
             emit copyProgress(method, sourceAbsFilePath, targetAbsFilePath, totalBytes, sourceFile.size());
 
             // TODO Commented below line can speedup copying.
-            QApplication::processEvents(QEventLoop::AllEvents, 50);
+//            QApplication::processEvents(QEventLoop::AllEvents, 50);
 
             // Read next buffer.
             //            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::copyFile before read";

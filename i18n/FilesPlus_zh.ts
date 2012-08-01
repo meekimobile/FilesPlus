@@ -1109,13 +1109,13 @@ Deleting %1 is aborted.</translatorcomment>
         <location filename="../qml/FilesPlus/meego/PrintJobsPage.qml" line="+43"/>
         <location filename="../qml/FilesPlus/symbian/PrintJobsPage.qml" line="+49"/>
         <source>Delete print jobs</source>
-        <translation>删除打印作业</translation>
+        <translation>删除打印活动</translation>
     </message>
     <message>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/PrintJobsPage.qml" line="+1"/>
         <source>Delete all print jobs ?</source>
-        <translation>删除所有打印作业？</translation>
+        <translation>删除所有打印活动？</translation>
     </message>
     <message>
         <location line="+69"/>
@@ -1131,7 +1131,7 @@ Deleting %1 is aborted.</translatorcomment>
         <location line="-19"/>
         <location filename="../qml/FilesPlus/symbian/PrintJobsPage.qml" line="-20"/>
         <source>Print Jobs</source>
-        <translation>打印作业</translation>
+        <translation>打印活动</translation>
     </message>
 </context>
 <context>
@@ -1257,7 +1257,7 @@ FilesPlus 现在正在退出。
         <source>Show cloud print jobs</source>
         <translatorcomment>[Edited text copy]
 Shows CloudPrint jobs</translatorcomment>
-        <translation>显示 CloudPrint 工作</translation>
+        <translation>显示 CloudPrint 活动</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1271,7 +1271,7 @@ Shows CloudPrint jobs</translatorcomment>
         <source>Show cloud drive jobs</source>
         <translatorcomment>[Edited text copy]
 Shows CloudDrive jobs</translatorcomment>
-        <translation>显示 CloudDrive 工作</translation>
+        <translation>显示 CloudDrive 活动</translation>
     </message>
     <message>
         <location line="+3"/>
