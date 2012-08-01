@@ -89,7 +89,7 @@
         <source>Sync %n item(s) to</source>
         <comment>disambiguation</comment>
         <translation>
-            <numerusform>同步 %n 个项目</numerusform>
+            <numerusform>同步 %n 项目</numerusform>
         </translation>
     </message>
     <message>
@@ -328,7 +328,7 @@ FilesPlus provides more features than file manager.
         <location line="+0"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+0"/>
         <source>Sync current folder</source>
-        <translation>Sync 当前文件夹</translation>
+        <translation>同步当前文件夹</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -584,13 +584,13 @@ Please click OK to continue.</source>
         <location line="+47"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+47"/>
         <source>Cancel sync jobs</source>
-        <translation>取消 CloudDrive 工作</translation>
+        <translation>取消 CloudDrive 活动</translation>
     </message>
     <message>
         <location line="+12"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+12"/>
         <source>Cancel file action jobs</source>
-        <translation>取消文件的行动工作</translation>
+        <translation>取消文件的行动活动</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -776,7 +776,7 @@ Please click OK to continue.</source>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1"/>
         <source>%n file(s)</source>
         <translation>
-            <numerusform>%n 个文件</numerusform>
+            <numerusform>%n 文件</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -785,7 +785,7 @@ Please click OK to continue.</source>
         <source>Delete %n file(s)
 </source>
         <translation>
-            <numerusform>删除 %n 个文件
+            <numerusform>删除 %n 文件
 </numerusform>
         </translation>
     </message>
@@ -795,7 +795,7 @@ Please click OK to continue.</source>
         <source>Copy %n file(s)
 </source>
         <translation>
-            <numerusform>复制 %n 个文件
+            <numerusform>复制 %n 文件
 </numerusform>
         </translation>
     </message>
@@ -805,7 +805,7 @@ Please click OK to continue.</source>
         <source>Move %n file(s)
 </source>
         <translation>
-            <numerusform>移动 %n 个文件
+            <numerusform>移动 %n 文件
 </numerusform>
         </translation>
     </message>
@@ -827,7 +827,7 @@ Please click OK to continue.</source>
         <location line="-1498"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1485"/>
         <source>Sync connected items</source>
-        <translation>Sync 连接文件夹</translation>
+        <translation>同步连接文件夹</translation>
     </message>
 </context>
 <context>
@@ -983,13 +983,13 @@ Deleting %1 is aborted.</translatorcomment>
         <location line="+8"/>
         <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+9"/>
         <source>Sync connected items</source>
-        <translation>Sync 连接文件夹</translation>
+        <translation>同步连接文件夹</translation>
     </message>
     <message>
         <location line="+8"/>
         <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+9"/>
         <source>Sync current folder</source>
-        <translation>Sync 当前文件夹</translation>
+        <translation>同步当前文件夹</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -1091,7 +1091,7 @@ Deleting %1 is aborted.</translatorcomment>
         <location line="+1"/>
         <source>%n file(s)</source>
         <translation>
-            <numerusform>%n 个文件</numerusform>
+            <numerusform>%n 文件</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -1099,7 +1099,7 @@ Deleting %1 is aborted.</translatorcomment>
         <source>%n file(s)</source>
         <comment>disambiguation</comment>
         <translation>
-            <numerusform>%n 个文件</numerusform>
+            <numerusform>%n 文件</numerusform>
         </translation>
     </message>
 </context>

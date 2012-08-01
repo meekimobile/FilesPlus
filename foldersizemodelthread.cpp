@@ -725,6 +725,9 @@ void FolderSizeModelThread::run()
 {
     qDebug() << "FolderSizeModelThread::run m_runMethod" << m_runMethod << "m_clearCache" << m_clearCache << "m_sourcePath" << m_sourcePath << "m_targetPath" << m_targetPath;
 
+    // TODO Process UI events before start.
+    QApplication::processEvents(QEventLoop::AllEvents, 50);
+
     // Reset flags.
     setAbortFlag(false);
     setRollbackFlag(true);
