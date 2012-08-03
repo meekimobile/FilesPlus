@@ -149,11 +149,11 @@ Page {
 
     ConfirmDialog {
         id: privacyConsent
-        titleText: "Privacy Policy"
-        contentText: "+ FilesPlus stores only your email during authorization but will not share to any persons/services.\
+        titleText: appInfo.emptyStr+qsTr("Privacy Policy")
+        contentText: appInfo.emptyStr+qsTr("+ FilesPlus stores only your email during authorization but will not share to any persons/services.\
 \n+ FilesPlus never stores your password. It stores only received token which will be used for communicating only with its provider.\
 \n+ FilesPlus get your language information and stores selected language internally. It will not share to any persons/services.\
-\n\nPlease click 'OK' to continue."
+\n\nPlease click 'OK' to continue.")
 
         onReject: {
             pageStack.pop();

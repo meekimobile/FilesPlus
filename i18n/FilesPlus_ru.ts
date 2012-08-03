@@ -4,10 +4,35 @@
 <context>
     <name>AuthPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/AuthPage.qml" line="+127"/>
-        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+130"/>
+        <location filename="../qml/FilesPlus/meego/AuthPage.qml" line="+133"/>
+        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+136"/>
         <source>^API Request Authorized</source>
         <translation>^API запросу уполномоченного</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+19"/>
+        <source>Privacy Policy</source>
+        <translation>Политика конфиденциальности</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+1"/>
+        <source>+ FilesPlus stores only your email during authorization but will not share to any persons/services.
++ FilesPlus never stores your password. It stores only received token which will be used for communicating only with its provider.
++ FilesPlus get your language information and stores selected language internally. It will not share to any persons/services.
+
+Please click &apos;OK&apos; to continue.</source>
+        <translatorcomment>+ FilesPlus stores only your email during authorization but will not share to any persons/services.
++ FilesPlus never stores your password. It stores only access key which will be used for communicating only with its provider.
++ FilesPlus get your language information and stores selected language. It will not share to any persons/services.
+
+Please click &apos;Yes&apos; to continue.</translatorcomment>
+        <translation>+ FilesPlus хранятся только электронной почты при авторизации, но не будет передавать любым лицам / услуг.
++ FilesPlus никогда не сохраняет пароль. Он хранит только ключ доступа, который будет использоваться для общения только с ее поставщиком.
++ FilesPlus получить информацию о языке и сохраняет выбранный язык. Это не будет делиться любым лицам / услуг.
+
+Пожалуйста, нажмите &quot;Да&quot;, чтобы продолжить.</translation>
     </message>
 </context>
 <context>
@@ -375,18 +400,16 @@ Please click OK to continue.</source>
         <translation type="obsolete">Этот тип файлов не поддерживается. Используйте только JPED, PNG, PDF или текстовые файлы.</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+8"/>
         <source>FilesPlus print via Google CloudPrint service.
 Please enable printer on your desktop with Chrome or with CloudPrint-ready printer.
 You will redirect to authorization page.</source>
-        <translation>FilesPlus печатает через Google CloudPrint.
+        <translation type="obsolete">FilesPlus печатает через Google CloudPrint.
 Пожалуйста включите принтер на вашем настольном компьютере с Хромом (браузер) илис принтером совместимым с GooglePrint.
 Вы будете направлены на страницу авторизации.</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+3"/>
+        <location line="+11"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+11"/>
         <source>Print with CloudPrint</source>
         <translation>Печать с CloudPrint</translation>
     </message>
@@ -507,8 +530,18 @@ File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
 Этот тип файлов не поддерживается. Используйте только JPED, PNG, PDF или текстовые файлы.</translation>
     </message>
     <message>
-        <location line="+198"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+198"/>
+        <location line="+7"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+7"/>
+        <source>FilesPlus prints via Google CloudPrint service.
+Please enable printer on your desktop with Chrome or with CloudPrint-ready printer.
+You will be redirected to authorization page.</source>
+        <translation>FilesPlus печатает через Google CloudPrint.
+Пожалуйста включите принтер на вашем настольном компьютере с Хромом (браузер) илис принтером совместимым с GooglePrint.
+Вы будете направлены на страницу авторизации.</translation>
+    </message>
+    <message>
+        <location line="+191"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+191"/>
         <source>Thank you for download FilesPlus.
 This is first time running, FilesPlus needs to load information from your drive.
 
@@ -978,7 +1011,7 @@ And present in Pie view for easy understanding at glance.</source>
         <translation>Удаление %1 завершено успешно.</translation>
     </message>
     <message>
-        <location line="+420"/>
+        <location line="+423"/>
         <source>Deleting %1 is aborted.</source>
         <translation>Удаление %1 прервано.</translation>
     </message>
