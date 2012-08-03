@@ -8,6 +8,7 @@ CommonDialog {
     buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
     
     signal confirm()
+    signal reject()
 
     onButtonClicked: {
         if (index == 0) {

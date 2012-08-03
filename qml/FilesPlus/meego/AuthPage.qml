@@ -18,7 +18,7 @@ Page {
             iconId: "toolbar-back"
 
             onClicked: {
-                pageStack.pop(authPage);
+                pageStack.pop();
             }
         }
 
@@ -34,6 +34,12 @@ Page {
                 if (p) p.dropboxAccessTokenSlot();
                 pageStack.pop();
             }
+        }
+    }
+
+    onStatusChanged: {
+        if (status == PageStatus.Active) {
+            privacyConsent.open();
         }
     }
 
@@ -138,6 +144,19 @@ Page {
 //                    console.debug("DropboxClient html " + html);
                 }
             }
+        }
+    }
+
+    ConfirmDialog {
+        id: privacyConsent
+        titleText: "Privacy Policy"
+        contentText: "+ FilesPlus stores only your email during authorization but will not share to any persons/services.\
+\n+ FilesPlus never stores your password. It stores only received token which will be used for communicating only with its provider.\
+\n+ FilesPlus get your language information and stores selected language internally. It will not share to any persons/services.\
+\n\nPlease click 'OK' to continue."
+
+        onReject: {
+            pageStack.pop();
         }
     }
 }

@@ -21,11 +21,13 @@ CommonDialog {
     }
     
     signal confirm()
+    signal reject()
     signal closed()
     signal opening()
     
     onButtonClicked: {
         if (index === 0) confirm();
+        else reject();
     }
 
     onStatusChanged: {

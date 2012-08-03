@@ -1,5 +1,5 @@
 filesplus (1.0.3) unstable; urgency=low
-  * Add theme switcher and implement black/white theme.
+  * Add theme switcher and implement black/white theme. Add Russian and Chinese translations.
 
  -- Taweesak Kittipuree <>  Thu, 19 Jul 2012 18:16:49 +0700
 

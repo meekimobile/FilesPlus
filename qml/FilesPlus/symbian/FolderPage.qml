@@ -215,9 +215,9 @@ Page {
         }
 
         if (!gcpClient.isAuthorized()) {
-            messageDialog.message = appInfo.emptyStr+qsTr("FilesPlus print via Google CloudPrint service.\
+            messageDialog.message = appInfo.emptyStr+qsTr("FilesPlus prints via Google CloudPrint service.\
 \nPlease enable printer on your desktop with Chrome or with CloudPrint-ready printer.\
-\nYou will redirect to authorization page.");
+\nYou will be redirected to authorization page.");
             messageDialog.titleText = appInfo.emptyStr+qsTr("Print with CloudPrint");
             messageDialog.open();
 
