@@ -28,9 +28,9 @@ Please click &apos;OK&apos; to continue.</source>
 + FilesPlus get your language information and saves chosen language. It will not share your information to any persons/services.
 
 Please click &apos;OK&apos; to continue.</translatorcomment>
-        <translation>+ FilesPlus节省只有您的电子邮件。它不会分享您的信息向任何人/服务。
+        <translation>+ FilesPlus节省只有您的电子邮件。它不会共享您的信息向任何人/服务。
 + FilesPlus永远保存你的密码。它节省了访问键将用于验证。
-+ FilesPlus得到您的语言信息，并保存所选择的语言。它不会分享您的信息向任何人/服务。
++ FilesPlus得到您的语言信息，并保存所选择的语言。它不会共享您的信息向任何人/服务。
 
 请点击“好”继续。</translation>
     </message>

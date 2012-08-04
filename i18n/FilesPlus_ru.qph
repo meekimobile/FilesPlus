@@ -65,10 +65,6 @@
     <target>О&apos;КЕЙ</target>
 </phrase>
 <phrase>
-    <source>OK</source>
-    <target>Да</target>
-</phrase>
-<phrase>
     <source>Cancel</source>
     <target>Нет</target>
 </phrase>
@@ -94,7 +90,7 @@
 </phrase>
 <phrase>
     <source>More Apps</source>
-    <target>Больше Apps</target>
+    <target>Ещё приложения</target>
 </phrase>
 <phrase>
     <source>Settings</source>
@@ -293,10 +289,6 @@ Please click OK to continue.</source>
     <target>Отмените работы действия архива</target>
 </phrase>
 <phrase>
-    <source>Cancel file action jobs</source>
-    <target>Отмените работы действия архива</target>
-</phrase>
-<phrase>
     <source>Rollback changes</source>
     <target>Изменения отката назад</target>
 </phrase>
@@ -351,18 +343,6 @@ Please proceed your sync action.</source>
     <target>Положенный архив</target>
 </phrase>
 <phrase>
-    <source>File Get</source>
-    <target>Архив загрузки</target>
-</phrase>
-<phrase>
-    <source>File Put</source>
-    <target>Архив Upload</target>
-</phrase>
-<phrase>
-    <source>File Get</source>
-    <target>Архив загрузки</target>
-</phrase>
-<phrase>
     <source>was removed remotely.
 Link will be removed.</source>
     <target>извлекался отдаленно.
@@ -383,10 +363,6 @@ Link will be removed.</source>
 <phrase>
     <source>Share</source>
     <target>Доля</target>
-</phrase>
-<phrase>
-    <source>is deleted.</source>
-    <target>удаляет.</target>
 </phrase>
 <phrase>
     <source>FolderPie helps you collect each folder actual size on your disk space.
@@ -545,10 +521,6 @@ FilesPlus выходит теперь.
     <target>Переустановите CloudPrint</target>
 </phrase>
 <phrase>
-    <source>Show cloud print jobs</source>
-    <target>Покажите работы CloudPrint</target>
-</phrase>
-<phrase>
     <source>Show cloud drive jobs</source>
     <target>Покажите работы CloudDrive</target>
 </phrase>
@@ -609,36 +581,12 @@ FilesPlus выходит теперь.
     <target>Вы можете повернуть в установки.</target>
 </phrase>
 <phrase>
-    <source>Sort by Type</source>
-    <target>Вид типом</target>
-</phrase>
-<phrase>
-    <source>About</source>
-    <target>О приложении</target>
-</phrase>
-<phrase>
     <source>Sync %1 to</source>
     <target>Синхронизировать %1 к</target>
 </phrase>
 <phrase>
     <source>Sync %n item(s) to</source>
     <target>Синхронизация 1 элемент к</target>
-</phrase>
-<phrase>
-    <source>Sync %n item(s) to</source>
-    <target>Синхронизация 1 элемент к</target>
-</phrase>
-<phrase>
-    <source>Sync %n item(s) to</source>
-    <target>Синхронизация 1 элемент к</target>
-</phrase>
-<phrase>
-    <source>Sync %n item(s) to</source>
-    <target>Синхронизация %n элемент к</target>
-</phrase>
-<phrase>
-    <source>Sync %n item(s) to</source>
-    <target>Синхронизация %n элемент к</target>
 </phrase>
 <phrase>
     <source>Upload %1 to</source>
@@ -649,20 +597,12 @@ FilesPlus выходит теперь.
     <target>Скачать 1 от</target>
 </phrase>
 <phrase>
-    <source>Download %1 from</source>
-    <target>Скачать %1 от</target>
-</phrase>
-<phrase>
     <source>Share link of %1 from</source>
     <target>Поделиться ссылкой %1 от</target>
 </phrase>
 <phrase>
     <source>Unsync %1 from</source>
     <target>Остановить синхронизацию %1</target>
-</phrase>
-<phrase>
-    <source>Copy %1 to %2 is failed.</source>
-    <target>Копирование %1 в %2 не удалось.</target>
 </phrase>
 <phrase>
     <source>Cancel %n job(s) and abort file action ?</source>
@@ -709,24 +649,12 @@ Link will be removed.</source>
     <target>Ведение лога включено. Файл лога это в %1</target>
 </phrase>
 <phrase>
-    <source>Developed by </source>
-    <target>Разработано </target>
-</phrase>
-<phrase>
     <source>%n dir(s)</source>
     <target>%n папка</target>
 </phrase>
 <phrase>
     <source>%n file(s)</source>
     <target>%n файл</target>
-</phrase>
-<phrase>
-    <source>%n file(s)</source>
-    <target>%n файл</target>
-</phrase>
-<phrase>
-    <source>About</source>
-    <target>О программе</target>
 </phrase>
 <phrase>
     <source>Can&apos;t print %1 
@@ -737,10 +665,6 @@ File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
 <phrase>
     <source>%1 is deleted.</source>
     <target>%1 удалён</target>
-</phrase>
-<phrase>
-    <source>%1 is deleted.</source>
-    <target>%1 удалён.</target>
 </phrase>
 <phrase>
     <source>Copy %n file(s)
