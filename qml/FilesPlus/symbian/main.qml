@@ -167,5 +167,16 @@ PageStackWindow {
 
         // Set to portrait to show splash screen. Then it will set back to default once it's destroyed.
         screen.allowedOrientations = Screen.Portrait;
+
+        // Connect activation signal to slot.
+        symbian.foregroundChanged.connect(activateSlot);
+    }
+
+    function activateSlot() {
+        console.debug("window activateSlot symbian.foreground " + symbian.foreground);
+        if (symbian.foreground) {
+            var p = pageStack.find(function (page) { return page.name == "folderPage"; });
+            if (p) p.activateSlot();
+        }
     }
 }

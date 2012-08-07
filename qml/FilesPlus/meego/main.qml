@@ -147,8 +147,8 @@ PageStackWindow {
         running: false
         onTriggered: {
             // Load folderPage then push drivePage to increase performance.
-            pageStack.push(Qt.resolvedUrl("FolderPage.qml"));
-            pageStack.push(Qt.resolvedUrl("DrivePage.qml"));
+            pageStack.push(Qt.resolvedUrl("FolderPage.qml"), {}, true);
+            pageStack.push(Qt.resolvedUrl("DrivePage.qml"), {}, true);
         }
     }
 
@@ -157,5 +157,15 @@ PageStackWindow {
 
         // Set to portrait to show splash screen. Then it will set back to default once it's destroyed.
         screen.allowedOrientations = Screen.Portrait;
+
+        platformWindow.activeChanged.connect(activateSlot);
+    }
+
+    function activateSlot() {
+        console.debug("window activateSlot platformWindow.active " + platformWindow.active);
+        if (platformWindow.active) {
+            var p = pageStack.find(function (page) { return page.name == "folderPage"; });
+            if (p) p.activateSlot();
+        }
     }
 }

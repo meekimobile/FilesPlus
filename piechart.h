@@ -47,7 +47,7 @@ public:
 
     QString formatFileSize(double size, int len = 0);
 
-    Q_INVOKABLE void refreshItems();
+    Q_INVOKABLE void refreshItems(bool forceRefresh = false);
 protected slots:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     bool sceneEventFilter(QGraphicsItem *watched, QEvent *event);

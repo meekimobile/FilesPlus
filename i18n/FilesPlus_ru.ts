@@ -235,7 +235,7 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         <location line="+134"/>
         <location filename="../qml/FilesPlus/symbian/DriveGrid.qml" line="+134"/>
         <source>Free</source>
-        <translation>свободно</translation>
+        <translation>Свободно</translation>
     </message>
     <message>
         <location line="+1"/>

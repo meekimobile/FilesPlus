@@ -187,6 +187,12 @@ Page {
         }
     }
 
+    function activateSlot() {
+        if (pieChartView && folderPage.state == "chart") {
+            pieChartView.refreshItems(true);
+        }
+    }
+
     function quitSlot() {
         if (fsModel.isRunning()) {
             messageDialog.titleText = appInfo.emptyStr+qsTr("Notify");
