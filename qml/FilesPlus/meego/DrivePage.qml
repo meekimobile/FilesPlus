@@ -60,6 +60,9 @@ Page {
 
         for (var i=0; i<drives.length; i++)
         {
+            // Hide root.
+            if (drives[i] == "/") continue;
+
             // Workaround for QtSimulator
             var driveName = drives[i];
             if (i < simulatedDriveNames.length) {
