@@ -8,12 +8,14 @@
 #include <QHash>
 #include <QThread>
 #include <QApplication>
+#include <QtSql>
 
 class FolderSizeModelThread : public QThread
 {
     Q_OBJECT
 public:
     static const QString CACHE_FILE_PATH;
+    static const QString CACHE_DB_PATH;
     static const QString DEFAULT_CURRENT_DIR;
     static const int FILE_READ_BUFFER;
 
@@ -33,6 +35,7 @@ public:
     };
 
     FolderSizeModelThread(QObject *parent = 0);
+    ~FolderSizeModelThread();
 
     QString currentDir() const;
     void setCurrentDir(const QString currentDir);
@@ -50,11 +53,11 @@ public:
     void saveDirSizeCache();
 
     void getDirContent(const QString dirPath, QList<FolderSizeItem> &itemList);
-    void sortItemList(QList<FolderSizeItem> &itemList);
+    void sortItemList(QList<FolderSizeItem> &itemList, bool sortAll = true);
     bool isDirSizeCacheExisting();
     void removeDirSizeCache(const QString key);
     bool changeDir(const QString dirName);
-    FolderSizeItem getItem(const QFileInfo fileInfo) const;
+    FolderSizeItem getItem(const QFileInfo fileInfo);
 
     void setRunMethod(int method);
     void setSourcePath(const QString sourcePath);
@@ -73,8 +76,23 @@ signals:
     void deleteFinished(int fileAction, QString localPath, QString msg, int err);
 private:
     FolderSizeItem getCachedDir(const QFileInfo dir, const bool clearCache = false);
-    FolderSizeItem getFileItem(const QFileInfo fileInfo) const;
-    FolderSizeItem getDirItem(const QFileInfo dirInfo) const;
+    FolderSizeItem getFileItem(const QFileInfo fileInfo);
+    FolderSizeItem getDirItem(const QFileInfo dirInfo);
+
+    QSqlDatabase m_db;
+    QSqlQuery m_selectPS;
+    QSqlQuery m_insertPS;
+    QSqlQuery m_updatePS;
+    QSqlQuery m_deletePS;
+    QSqlQuery m_countPS;
+
+    void initializeDB();
+    void closeDB();
+    FolderSizeItem selectDirSizeCacheFromDB(const QString id);
+    int insertDirSizeCacheToDB(const FolderSizeItem item);
+    int updateDirSizeCacheToDB(const FolderSizeItem item);
+    int deleteDirSizeCacheToDB(const QString id);
+    int countDirSizeCacheDB();
 
     // Thread methods.
     void loadDirSizeCache();
@@ -87,6 +105,7 @@ private:
     bool cleanItem(const FolderSizeItem &item);
 
     QHash<QString, FolderSizeItem> *dirSizeCache;
+    QHash<QString, FolderSizeItem> *m_itemCache;
     QString m_currentDir;
     bool m_clearCache;
     int m_sortFlag;

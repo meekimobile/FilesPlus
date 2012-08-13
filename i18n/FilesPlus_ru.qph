@@ -1,584 +1,64 @@
 <!DOCTYPE QPH>
 <QPH language="ru">
 <phrase>
-    <source>Remove cloud drive account</source>
-    <target>Извлекайте учет привода облака</target>
+    <source>^API Request Authorized</source>
+    <target>^API запросу уполномоченного</target>
 </phrase>
 <phrase>
-    <source>Cloud Drive Accounts</source>
-    <target>Учет привода облака</target>
+    <source>Privacy Policy</source>
+    <target>Политика конфиденциальности</target>
 </phrase>
 <phrase>
-    <source>Please confirm to remove </source>
-    <target>Пожалуйста подтвердите для того чтобы извлечь</target>
+    <source>+ FilesPlus stores only your email during authorization but will not share to any persons/services.
++ FilesPlus never stores your password. It stores only received token which will be used for communicating only with its provider.
++ FilesPlus get your language information and stores selected language internally. It will not share to any persons/services.
+
+Please click &apos;OK&apos; to continue.</source>
+    <target>+ FilesPlus хранятся только электронной почты при авторизации, но не будет передавать любым лицам / услуг.
++ FilesPlus никогда не сохраняет пароль. Он хранит только ключ доступа, который будет использоваться для общения только с ее поставщиком.
++ FilesPlus получить информацию о языке и сохраняет выбранный язык. Это не будет делиться любым лицам / услуг.
+
+Пожалуйста, нажмите Да чтобы продолжить.</target>
 </phrase>
 <phrase>
-    <source>Cloud Drive Jobs</source>
-    <target>Работы привода облака</target>
-</phrase>
-<phrase>
-    <source>Running</source>
-    <target>Работать</target>
-</phrase>
-<phrase>
-    <source>Queued</source>
-    <target>Очередь</target>
-</phrase>
-<phrase>
-    <source>Sync</source>
-    <target>Синхронизируйте</target>
-</phrase>
-<phrase>
-    <source>item</source>
-    <target>деталь</target>
-</phrase>
-<phrase>
-    <source>items</source>
-    <target>детали</target>
-</phrase>
-<phrase>
-    <source>to</source>
-    <target>к</target>
-</phrase>
-<phrase>
-    <source>Upload</source>
-    <target>Upload</target>
-</phrase>
-<phrase>
-    <source>Download</source>
-    <target>Загрузка</target>
-</phrase>
-<phrase>
-    <source>from</source>
-    <target>от</target>
-</phrase>
-<phrase>
-    <source>Share link of</source>
-    <target>Соединение доли</target>
-</phrase>
-<phrase>
-    <source>Unsync</source>
-    <target>разъединение</target>
-</phrase>
-<phrase>
-    <source>OK</source>
-    <target>О&apos;КЕЙ</target>
-</phrase>
-<phrase>
-    <source>Cancel</source>
-    <target>Нет</target>
-</phrase>
-<phrase>
-    <source>Downloading</source>
-    <target>Загружать</target>
-</phrase>
-<phrase>
-    <source>Free</source>
-    <target>Загружать</target>
-</phrase>
-<phrase>
-    <source>Total</source>
-    <target>Итог</target>
-</phrase>
-<phrase>
-    <source>Drives</source>
-    <target>Хранения</target>
+    <source>Settings</source>
+    <target>Настройки</target>
 </phrase>
 <phrase>
     <source>About</source>
-    <target>О</target>
+    <target>О приложении</target>
 </phrase>
 <phrase>
     <source>More Apps</source>
     <target>Ещё приложения</target>
 </phrase>
 <phrase>
-    <source>Settings</source>
-    <target>Установки</target>
-</phrase>
-<phrase>
     <source>Exit</source>
     <target>Выход</target>
 </phrase>
 <phrase>
-    <source>FilesPlus provides extended functions beyond file manager.
-   + Print with Google Cloud Print.
-   + Sync with Cloud Drive.
-   + Preview images in your folder.
-   + Present folders in Pie view.</source>
-    <target>FilesPlus обеспечивает выдвинутые функции за файловым менеджером.
-   + Печать с печатью облака Google.
-   + Синхронизация с приводом облака.
-   + Изображения предваротельного просмотра в вашем скоросшивателе.
-   + Присутствующие скоросшиватели в взгляде расстегая.</target>
+    <source>Cloud Drive Accounts</source>
+    <target>Аккаунты облачных хранилищ</target>
 </phrase>
 <phrase>
-    <source>Developed by </source>
-    <target>Превращено мимо</target>
+    <source>Remove cloud drive account</source>
+    <target>Удаление облачных аккаунтов</target>
 </phrase>
 <phrase>
-    <source>Paste</source>
-    <target>Затир</target>
+    <source>Please confirm to remove </source>
+    <target>Пожалуйста, подтвердите удаление</target>
 </phrase>
 <phrase>
-    <source>Mark multiple items</source>
-    <target>Маркируйте множественные детали</target>
+    <source>Cloud Drive Jobs</source>
+    <target>Операции в облаке</target>
 </phrase>
 <phrase>
-    <source>Clear clipboard</source>
-    <target>Ясная доска сзажимом для бумаги</target>
+    <source>Running</source>
+    <target>Запущено</target>
 </phrase>
 <phrase>
-    <source>New folder</source>
-    <target>Новый скоросшиватель</target>
-</phrase>
-<phrase>
-    <source>Sync current folder</source>
-    <target>Скоросшиватель течения синхронизации</target>
-</phrase>
-<phrase>
-    <source>Sort by</source>
-    <target>Вид мимо</target>
-</phrase>
-<phrase>
-    <source>Reset folder cache</source>
-    <target>Переустановите тайник скоросшивателя</target>
-</phrase>
-<phrase>
-    <source>Resetting folder cache will take time depends on numbers of sub folders/files under current folder.
-
-Please click OK to continue.</source>
-    <target>Переустановить тайник скоросшивателя примет номера быть в зависимости от времени скоросшивателей/архивов под настоящий скоросшиватель.
-
-Пожалуйста щелкните да для того чтобы продолжать.</target>
-</phrase>
-<phrase>
-    <source>Notify</source>
-    <target>Сообщите</target>
-</phrase>
-<phrase>
-    <source>Reset Cache is running. Please wait until it&apos;s done.</source>
-    <target>Тайник возврата работает. Пожалуйста ждите до тех пор пока он не будет делать.</target>
-</phrase>
-<phrase>
-    <source>Can&apos;t print</source>
-    <target>Не смогите напечатать</target>
-</phrase>
-<phrase>
-    <source>File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
-    <target>Тип архива не поддержан. Только поддержаны JPEG, PNG, текст и PDF.</target>
-</phrase>
-<phrase>
-    <source>FilesPlus print via Google CloudPrint service.
-Please enable printer on your desktop with Chrome or with CloudPrint-ready printer.
-You will redirect to authorization page.</source>
-    <target>Печать FilesPlus через обслуживание Google CloudPrint.
-Пожалуйста включите принтер на вашем настольном компьютере с кромом или с CloudPrint-готовым принтером.
-Вы перенаправите к странице утверждения.</target>
-</phrase>
-<phrase>
-    <source>Print with CloudPrint</source>
-    <target>Печать с CloudPrint</target>
-</phrase>
-<phrase>
-    <source>Search for printers</source>
-    <target>Поиск для принтеров</target>
-</phrase>
-<phrase>
-    <source>FilesPlus syncs your files via Dropbox service.
-You will be redirected to authorization page.</source>
-    <target>FilesPlus синхронизирует ваши архивы через обслуживание Dropbox.
-Вы будете перенаправлены к странице утверждения.</target>
-</phrase>
-<phrase>
-    <source>Sync with Dropbox</source>
-    <target>Синхронизация с Dropbox</target>
-</phrase>
-<phrase>
-    <source>Copy</source>
-    <target>Экземпляр</target>
-</phrase>
-<phrase>
-    <source>Move</source>
-    <target>Движение</target>
-</phrase>
-<phrase>
-    <source>Delete</source>
-    <target>Удаление</target>
-</phrase>
-<phrase>
-    <source>First time loading</source>
-    <target>Нагрузка первого раза</target>
-</phrase>
-<phrase>
-    <source>Thank you for download FilesPlus.
-This is first time running, FolderPie needs to load information from your drive.
-
-It will take time depends on numbers of sub folders/files under current folder.
-
-Please click OK to continue.</source>
-    <target>Вы для загрузки FilesPlus.
-Этому ход первого раза, FolderPie нужно нагрузить информацию от вашего привода.
-
-Оно примет номера быть в зависимости от времени скоросшивателей/архивов под настоящий скоросшиватель.
-
-Пожалуйста щелкните да для того чтобы продолжать.</target>
-</phrase>
-<phrase>
-    <source>error</source>
-    <target>ошибка</target>
-</phrase>
-<phrase>
-    <source>failed</source>
-    <target>неудачно</target>
-</phrase>
-<phrase>
-    <source>Deleting</source>
-    <target>Удалять</target>
-</phrase>
-<phrase>
-    <source>is deleted.</source>
-    <target>удаляет.</target>
-</phrase>
-<phrase>
-    <source>last modified</source>
-    <target>время даты</target>
-</phrase>
-<phrase>
-    <source>Multiple actions</source>
-    <target>Множественные действия</target>
-</phrase>
-<phrase>
-    <source>Invalid action</source>
-    <target>Инвалидное действие</target>
-</phrase>
-<phrase>
-    <source>I can&apos;t </source>
-    <target>Я не могу</target>
-</phrase>
-<phrase>
-    <source>file</source>
-    <target>архив</target>
-</phrase>
-<phrase>
-    <source>Rename</source>
-    <target>Переименуйте</target>
-</phrase>
-<phrase>
-    <source>Please input new name.</source>
-    <target>Пожалуйста имя входного сигнала новое.</target>
-</phrase>
-<phrase>
-    <source>Please input new file name.</source>
-    <target>Пожалуйста имя файла входного сигнала.</target>
-</phrase>
-<phrase>
-    <source>Overwrite existing file</source>
-    <target>Переписывайте существующий архивs</target>
-</phrase>
-<phrase>
-    <source>Cancel sync jobs</source>
-    <target>Отмените работы синхронизации</target>
-</phrase>
-<phrase>
-    <source>jobs</source>
-    <target>работы</target>
-</phrase>
-<phrase>
-    <source>Cancel file action jobs</source>
-    <target>Отмените работы действия архива</target>
-</phrase>
-<phrase>
-    <source>Rollback changes</source>
-    <target>Изменения отката назад</target>
-</phrase>
-<phrase>
-    <source>jobs and abort file action ?</source>
-    <target>работы и действие архива прекращени прекращения ?</target>
-</phrase>
-<phrase>
-    <source>Abort file action ?</source>
-    <target>Действие архива прекращени прекращения ?</target>
-</phrase>
-<phrase>
-    <source>Printing</source>
-    <target>Печатать</target>
-</phrase>
-<phrase>
-    <source>Reset CloudPrint</source>
-    <target>Переустановите CloudPrint</target>
-</phrase>
-<phrase>
-    <source>Resetting is done.</source>
-    <target>Переустановить сделан.</target>
-</phrase>
-<phrase>
-    <source>Error</source>
-    <target>Ошибка</target>
-</phrase>
-<phrase>
-    <source>CloudDrive Request Token</source>
-    <target>Знак внимания запроса CloudDrive</target>
-</phrase>
-<phrase>
-    <source>CloudDrive Access Token</source>
-    <target>Знак внимания доступа CloudDrive</target>
-</phrase>
-<phrase>
-    <source>Cloud drive user is authorized.
-Please proceed your sync action.</source>
-    <target>Пользователь CloudDrive утвержен.
-Пожалуйста продолжает ваше действие синхронизации.</target>
-</phrase>
-<phrase>
-    <source>CloudDrive Account Info</source>
-    <target>Данные по учета CloudDrive</target>
-</phrase>
-<phrase>
-    <source>File Get</source>
-    <target>Архив загрузки</target>
-</phrase>
-<phrase>
-    <source>File Put</source>
-    <target>Положенный архив</target>
-</phrase>
-<phrase>
-    <source>was removed remotely.
-Link will be removed.</source>
-    <target>извлекался отдаленно.
-Соединение извлекается.</target>
-</phrase>
-<phrase>
-    <source>Create Folder</source>
-    <target>Создайте скоросшиватель</target>
-</phrase>
-<phrase>
-    <source>Share file on Dropbox</source>
-    <target>Архив доли на Dropbox</target>
-</phrase>
-<phrase>
-    <source>Please download file with below link.</source>
-    <target>Пожалуйста загрузите архив с внизу соединением.</target>
-</phrase>
-<phrase>
-    <source>Share</source>
-    <target>Доля</target>
-</phrase>
-<phrase>
-    <source>FolderPie helps you collect each folder actual size on your disk space.
-And present in Pie view for easy understanding at glance.</source>
-    <target>Помощь FolderPie вы собираете каждый действительный размер скоросшивателя на вашем космосе диска.
-И представьте в взгляде расстегая для легкого вникания на блестняне.</target>
-</phrase>
-<phrase>
-    <source>Source and Target path can&apos;t be the same.</source>
-    <target>Путь источника и цели не может быть этим же.</target>
-</phrase>
-<phrase>
-    <source>Target path can&apos;t be inside source path.</source>
-    <target>Путь цели не может быть внутренним путем источника.</target>
-</phrase>
-<phrase>
-    <source>Show running on targetPath&apos;s parent</source>
-    <target>Покажите ход на родителе путя цели</target>
-</phrase>
-<phrase>
-    <source>Rename %1 to %2 done.</source>
-    <target>Переименуйте сделанные %1 к %2.</target>
-</phrase>
-<phrase>
-    <source>Rename %1 to %2 failed.</source>
-    <target>Переименуйте ые %1 к %2.</target>
-</phrase>
-<phrase>
-    <source>Copy %1 to %2 is aborted.</source>
-    <target>Экземпляр %1 до %2 выкинут.</target>
-</phrase>
-<phrase>
-    <source>Copy %1 to %2 is done successfully.</source>
-    <target>Экземпляр %1 до %2 сделан успешно.</target>
-</phrase>
-<phrase>
-    <source>Copy %1 to %2 is failed.</source>
-    <target>Экземпляр %1 до %2 неудачен.</target>
-</phrase>
-<phrase>
-    <source>Both source/target path can&apos;t be the same file.</source>
-    <target>Оба путь источника/цели не может быть таким же архивом.</target>
-</phrase>
-<phrase>
-    <source>Both source %1 and target %2 can&apos;t be read/written.</source>
-    <target>И источник %1 и цель %2 нельзя прочитать/написать.</target>
-</phrase>
-<phrase>
-    <source>Deleting sub item %1 is failed.</source>
-    <target>Удалять деталь %1 неудачен.</target>
-</phrase>
-<phrase>
-    <source>Deleting sub item %1 is done.</source>
-    <target>Удалять деталь %1 сделан.</target>
-</phrase>
-<phrase>
-    <source>Deleting %1 is aborted.</source>
-    <target>Удалять %1 выкинут.</target>
-</phrase>
-<phrase>
-    <source>Sync connected items</source>
-    <target>Синхронизировать выделенные элементы</target>
-</phrase>
-<phrase>
-    <source>Mark all</source>
-    <target>Маркируйте все</target>
-</phrase>
-<phrase>
-    <source>Unmark all</source>
-    <target>Извлекайте все метки</target>
-</phrase>
-<phrase>
-    <source>Copy marked items</source>
-    <target>Скопируйте маркированные детали</target>
-</phrase>
-<phrase>
-    <source>Cut marked items</source>
-    <target>Отрежьте маркированные детали</target>
-</phrase>
-<phrase>
-    <source>Delete marked items</source>
-    <target>Детали удаления маркированные</target>
-</phrase>
-<phrase>
-    <source>Sync marked items</source>
-    <target>Детали синхронизации маркированные</target>
-</phrase>
-<phrase>
-    <source>Delete print jobs</source>
-    <target>Печатные работы удаления</target>
-</phrase>
-<phrase>
-    <source>Delete all print jobs ?</source>
-    <target>Удальте все печатные работы ?</target>
-</phrase>
-<phrase>
-    <source>Print Jobs</source>
-    <target>Печатные работы</target>
-</phrase>
-<phrase>
-    <source>Print</source>
-    <target>Печать</target>
-</phrase>
-<phrase>
-    <source>Progressing</source>
-    <target>Развивать</target>
-</phrase>
-<phrase>
-    <source>Send</source>
-    <target>Пошлите</target>
-</phrase>
-<phrase>
-    <source>to favorite</source>
-    <target>к фавориту</target>
-</phrase>
-<phrase>
-    <source>Show CloudPrint jobs</source>
-    <target>Покажите работы CloudPrint</target>
-</phrase>
-<phrase>
-    <source>Register new Dropbox account</source>
-    <target>Учет Dropbox регистра новый</target>
-</phrase>
-<phrase>
-    <source>Reset current folder cache</source>
-    <target>Переустановите настоящий тайник скоросшивателя</target>
-</phrase>
-<phrase>
-    <source>Cancel queued jobs</source>
-    <target>Отмените работы очереди</target>
-</phrase>
-<phrase>
-    <source>Sync all connected items</source>
-    <target>Синхронизация все соединенные детали</target>
-</phrase>
-<phrase>
-    <source>Logging (Debug)</source>
-    <target>Вносить в журнал (отлаживайте)</target>
-</phrase>
-<phrase>
-    <source>Changing logging switch requires restart.
-FilesPlus is exiting now.
-
-Please confirm.</source>
-    <target>Изменяя внося в журнал переключатель требует рестарта.
-FilesPlus выходит теперь.
-
-Пожалуйста подтвердите.</target>
-</phrase>
-<phrase>
-    <source>Show cloud print jobs</source>
-    <target>Покажите печатные работы облака</target>
-</phrase>
-<phrase>
-    <source>Reset cloud print</source>
-    <target>Переустановите CloudPrint</target>
-</phrase>
-<phrase>
-    <source>Show cloud drive jobs</source>
-    <target>Покажите работы CloudDrive</target>
-</phrase>
-<phrase>
-    <source>Show accounts</source>
-    <target>Покажите учет CloudDrive</target>
-</phrase>
-<phrase>
-    <source>FolderPie feature</source>
-    <target>Характеристика FolderPie</target>
-</phrase>
-<phrase>
-    <source>Monitoring (RAM,CPU)</source>
-    <target>Контролирующ (RAM, C.P.U.)</target>
-</phrase>
-<phrase>
-    <source>Monitoring</source>
-    <target>Контролировать</target>
-</phrase>
-<phrase>
-    <source>Monitoring is enabled. Log file is </source>
-    <target>Контроль позволен. Архив журнала </target>
-</phrase>
-<phrase>
-    <source>Sort by Name</source>
-    <target>Вид именем</target>
-</phrase>
-<phrase>
-    <source>Sort by Type</source>
-    <target>Sort by Type</target>
-</phrase>
-<phrase>
-    <source>Sort by Time</source>
-    <target>Вид к время</target>
-</phrase>
-<phrase>
-    <source>Sort by Size</source>
-    <target>Вид размером</target>
-</phrase>
-<phrase>
-    <source>Mark</source>
-    <target>Марк</target>
-</phrase>
-<phrase>
-    <source>Uploading</source>
-    <target>Загружать</target>
-</phrase>
-<phrase>
-    <source>Please wait while loading.</source>
-    <target>Пожалуйста ждите пока нагружающ.</target>
-</phrase>
-<phrase>
-    <source>Logging is enabled. Log file is at </source>
-    <target>Вносить в журнал позволен. Архив журнала на</target>
-</phrase>
-<phrase>
-    <source>You may turn off in Settings.</source>
-    <target>Вы можете повернуть в установки.</target>
+    <source>Queued</source>
+    <target>В очереди</target>
 </phrase>
 <phrase>
     <source>Sync %1 to</source>
@@ -586,7 +66,8 @@ FilesPlus выходит теперь.
 </phrase>
 <phrase>
     <source>Sync %n item(s) to</source>
-    <target>Синхронизация 1 элемент к</target>
+    <target>Синхронизация %n элемент к@Синхронизация %n-х элементов к@Синхронизация %n элемента к</target>
+    <definition>disambiguation</definition>
 </phrase>
 <phrase>
     <source>Upload %1 to</source>
@@ -594,7 +75,7 @@ FilesPlus выходит теперь.
 </phrase>
 <phrase>
     <source>Download %1 from</source>
-    <target>Скачать 1 от</target>
+    <target>Скачать %1 от</target>
 </phrase>
 <phrase>
     <source>Share link of %1 from</source>
@@ -605,20 +86,32 @@ FilesPlus выходит теперь.
     <target>Остановить синхронизацию %1</target>
 </phrase>
 <phrase>
-    <source>Cancel %n job(s) and abort file action ?</source>
-    <target>Остановите и отмените %n деятельность с заказом?</target>
+    <source>OK</source>
+    <target>Да</target>
 </phrase>
 <phrase>
-    <source>CloudDrive user is authorized.
-Please proceed your sync action.</source>
-    <target>Вы авторизованы.
-Продолжите процесс синхронизации.</target>
+    <source>Cancel</source>
+    <target>Нет</target>
 </phrase>
 <phrase>
-    <source>%1 was removed remotely.
-Link will be removed.</source>
-    <target>%1 был удалён.
-Ссылка будет удалена.</target>
+    <source>OK</source>
+    <target>Да</target>
+</phrase>
+<phrase>
+    <source>Cancel</source>
+    <target>Нет</target>
+</phrase>
+<phrase>
+    <source>Downloading</source>
+    <target>Загружается</target>
+</phrase>
+<phrase>
+    <source>OK</source>
+    <target>Да</target>
+</phrase>
+<phrase>
+    <source>No Drive</source>
+    <target>Не диск</target>
 </phrase>
 <phrase>
     <source>Internal Drive</source>
@@ -645,16 +138,196 @@ Link will be removed.</source>
     <target>Хранение RAM</target>
 </phrase>
 <phrase>
-    <source>Logging is enabled. Log file is at %1</source>
-    <target>Ведение лога включено. Файл лога это в %1</target>
+    <source>Free</source>
+    <target>Бесплатно</target>
 </phrase>
 <phrase>
-    <source>%n dir(s)</source>
-    <target>%n папка</target>
+    <source>Total</source>
+    <target>Всего</target>
 </phrase>
 <phrase>
-    <source>%n file(s)</source>
-    <target>%n файл</target>
+    <source>Settings</source>
+    <target>Настройки</target>
+</phrase>
+<phrase>
+    <source>About</source>
+    <target>О программе</target>
+</phrase>
+<phrase>
+    <source>More Apps</source>
+    <target>Ещё приложения</target>
+</phrase>
+<phrase>
+    <source>Exit</source>
+    <target>Выход</target>
+</phrase>
+<phrase>
+    <source>Drives</source>
+    <target>Диски</target>
+</phrase>
+<phrase>
+    <source>About</source>
+    <target>О программе</target>
+</phrase>
+<phrase>
+    <source>More Apps</source>
+    <target>Ещё приложения</target>
+</phrase>
+<phrase>
+    <source>Settings</source>
+    <target>Настройки</target>
+</phrase>
+<phrase>
+    <source>Exit</source>
+    <target>Выход</target>
+</phrase>
+<phrase>
+    <source>FilesPlus provides extended functions beyond file manager.
+   + Print with Google Cloud Print.
+   + Sync with Cloud Drive.
+   + Preview images in your folder.
+   + Present folders in Pie view.</source>
+    <target>FilesPlus это файловый менеджер с полезными функциями.
+   + Печать с помощью Google Cloud Print.
+   + Синхронизация с облачными хранилищами.
+   + Предварительный просмотр ваших изображений.
+   + Отображение папок в виде круговой диаграммы/pie view.</target>
+</phrase>
+<phrase>
+    <source>Developed by </source>
+    <target>Разработано </target>
+</phrase>
+<phrase>
+    <source>Paste</source>
+    <target>Вставить</target>
+</phrase>
+<phrase>
+    <source>Mark multiple items</source>
+    <target>Выделить несколько элементов</target>
+</phrase>
+<phrase>
+    <source>Clear clipboard</source>
+    <target>Очистить буфер обмена</target>
+</phrase>
+<phrase>
+    <source>New folder</source>
+    <target>Новая папка</target>
+</phrase>
+<phrase>
+    <source>Sync current folder</source>
+    <target>Синхронизировать текущую папку</target>
+</phrase>
+<phrase>
+    <source>Sort by</source>
+    <target>Сортировка по</target>
+</phrase>
+<phrase>
+    <source>Reset folder cache</source>
+    <target>Обновить кэш папок</target>
+</phrase>
+<phrase>
+    <source>Resetting folder cache will take time depends on numbers of sub folders/files under current folder.
+
+Please click OK to continue.</source>
+    <target>Обновление кэша папок может занять некоторое время в зависимости от кол-ва подпапок или файлов в них.
+
+Пожалуйста, нажмите Да чтобы продолжить.</target>
+</phrase>
+<phrase>
+    <source>Notify</source>
+    <target>Уведомление</target>
+</phrase>
+<phrase>
+    <source>Reset Cache is running. Please wait until it&apos;s done.</source>
+    <target>Обновляем кэш. Пожалуйста, подождите.</target>
+</phrase>
+<phrase>
+    <source>Print Error</source>
+    <target>Ошибка печати</target>
+</phrase>
+<phrase>
+    <source>Can&apos;t print</source>
+    <target>Не получилось напечатать</target>
+</phrase>
+<phrase>
+    <source>File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
+    <target>Этот тип файлов не поддерживается. Используйте только JPED, PNG, PDF или текстовые файлы.</target>
+</phrase>
+<phrase>
+    <source>FilesPlus print via Google CloudPrint service.
+Please enable printer on your desktop with Chrome or with CloudPrint-ready printer.
+You will redirect to authorization page.</source>
+    <target>FilesPlus печатает через Google CloudPrint.
+Пожалуйста включите принтер на вашем настольном компьютере с Хромом (браузер) илис принтером совместимым с GooglePrint.
+Вы будете направлены на страницу авторизации.</target>
+</phrase>
+<phrase>
+    <source>Print with CloudPrint</source>
+    <target>Печать с CloudPrint</target>
+</phrase>
+<phrase>
+    <source>Search for printers</source>
+    <target>Поиск принтеров</target>
+</phrase>
+<phrase>
+    <source>FilesPlus syncs your files via Dropbox service.
+You will be redirected to authorization page.</source>
+    <target>FilesPlus синхронизирует ваши папки с сервисом Dropbox.
+Вы будете направлены на страницу авторизации.</target>
+</phrase>
+<phrase>
+    <source>Sync with Dropbox</source>
+    <target>Синхронизация с Dropbox</target>
+</phrase>
+<phrase>
+    <source>Copy</source>
+    <target>Копировать</target>
+</phrase>
+<phrase>
+    <source>Move</source>
+    <target>Переместить</target>
+</phrase>
+<phrase>
+    <source>Delete</source>
+    <target>Удалить</target>
+</phrase>
+<phrase>
+    <source>First time loading</source>
+    <target>Первый запуск</target>
+</phrase>
+<phrase>
+    <source>Thank you for download FilesPlus.
+This is first time running, FolderPie needs to load information from your drive.
+
+It will take time depends on numbers of sub folders/files under current folder.
+
+Please click OK to continue.</source>
+    <target>Спасибо за загрузку FilesPlus.
+Это первый запуск программы. FolderPie нужно время чтобы собрать информацию о ваших файлах.
+
+Это займёт некоторое время, в зависимости от кол-ва папок и файлов в них.
+
+Пожалуйста, нажмите Да чтобы продолжить.</target>
+</phrase>
+<phrase>
+    <source>to</source>
+    <target>в</target>
+</phrase>
+<phrase>
+    <source>error</source>
+    <target>ошибка</target>
+</phrase>
+<phrase>
+    <source>failed</source>
+    <target>неудачно</target>
+</phrase>
+<phrase>
+    <source>Deleting</source>
+    <target>Удаление</target>
+</phrase>
+<phrase>
+    <source>is deleted.</source>
+    <target>удалён</target>
 </phrase>
 <phrase>
     <source>Can&apos;t print %1 
@@ -663,13 +336,61 @@ File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
 Этот тип файлов не поддерживается. Используйте только JPED, PNG, PDF или текстовые файлы.</target>
 </phrase>
 <phrase>
+    <source>FilesPlus prints via Google CloudPrint service.
+Please enable printer on your desktop with Chrome or with CloudPrint-ready printer.
+You will be redirected to authorization page.</source>
+    <target>FilesPlus печатает через Google CloudPrint.
+Пожалуйста включите принтер на вашем настольном компьютере с Хромом (браузер) илис принтером совместимым с GooglePrint.
+Вы будете направлены на страницу авторизации.</target>
+</phrase>
+<phrase>
+    <source>Thank you for download FilesPlus.
+This is first time running, FilesPlus needs to load information from your drive.
+
+It will take time depends on numbers of sub folders/files under current folder.
+
+Please click OK to continue.</source>
+    <target>Спасибо за загрузку FilesPlus.
+Это первый запуск программы. FilesPlus нужно время чтобы собрать информацию о ваших файлах.
+
+Это займёт некоторое время, в зависимости от кол-ва папок и файлов в них.
+
+Пожалуйста, нажмите Да чтобы продолжить.</target>
+</phrase>
+<phrase>
     <source>%1 is deleted.</source>
-    <target>%1 удалён</target>
+    <target>%1 удалён.</target>
+</phrase>
+<phrase>
+    <source>%n dir(s)</source>
+    <target>%n папка@%n папки@%n папок</target>
+</phrase>
+<phrase>
+    <source>%n file(s)</source>
+    <target>%n файл@%n файла@%n файлов</target>
+</phrase>
+<phrase>
+    <source>Delete %n file(s)
+</source>
+    <target>Удаление %n файл
+@Удаление %n файла
+@Удаление %n файлов
+</target>
 </phrase>
 <phrase>
     <source>Copy %n file(s)
 </source>
     <target>Скопируйте %n файл
+@Скопируйте %n файла
+@Скопируйте %n файлов
+</target>
+</phrase>
+<phrase>
+    <source>Move %n file(s)
+</source>
+    <target>Переместить %n файл
+@Переместить %n файла
+@Переместить %n файлов
 </target>
 </phrase>
 <phrase>
@@ -678,14 +399,537 @@ File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
 </phrase>
 <phrase>
     <source>Cancel %n job(s) ?</source>
-    <target>Отмена %n работа заказ?</target>
+    <target>Отмена %n работа заказ?@Отмена %n порядка работы?@Отмена %n порядков работы?</target>
+</phrase>
+<phrase>
+    <source>last modified</source>
+    <target>последний изменённый</target>
+</phrase>
+<phrase>
+    <source>Multiple actions</source>
+    <target>Множественные действия</target>
+</phrase>
+<phrase>
+    <source>Invalid action</source>
+    <target>Невозможное действие</target>
+</phrase>
+<phrase>
+    <source>Can&apos;t %1 %2 to %3.</source>
+    <target>Можно не %1 %2 в %3.</target>
+</phrase>
+<phrase>
+    <source>Cancel %n job(s) and abort file action ?</source>
+    <target>Остановите и отмените %n деятельность с заказом?@Остановите и отмените %n деятельности с заказом?@Остановите и отмените %n деятельностей с заказом?</target>
+</phrase>
+<phrase>
+    <source>CloudDrive user is authorized.
+Please proceed your sync action.</source>
+    <target>Вы авторизованы.
+Продолжите процесс синхронизации.</target>
+</phrase>
+<phrase>
+    <source>%1 was removed remotely.
+Link will be removed.</source>
+    <target>%1 был удалён.
+Ссылка будет удалена.</target>
+</phrase>
+<phrase>
+    <source>New Folder</source>
+    <target>Новая Папка</target>
+</phrase>
+<phrase>
+    <source>%n dir(s)</source>
+    <target>%n папка@%n папки@%n папок</target>
+    <definition>disambiguation</definition>
+</phrase>
+<phrase>
+    <source>%n file(s)</source>
+    <target>%n файл@%n файла@%n файлов</target>
+    <definition>disambiguation</definition>
+</phrase>
+<phrase>
+    <source>OK</source>
+    <target>Да</target>
+</phrase>
+<phrase>
+    <source>Cancel</source>
+    <target>Нет</target>
+</phrase>
+<phrase>
+    <source>Please input folder name.</source>
+    <target>Пожалуйста, введите имя папки.</target>
+</phrase>
+<phrase>
+    <source>Rename</source>
+    <target>Переименовать</target>
+</phrase>
+<phrase>
+    <source>Please input new name.</source>
+    <target>Пожалуйста, введите новое имя.</target>
+</phrase>
+<phrase>
+    <source>File overwrite</source>
+    <target>Перезаписать файл</target>
+</phrase>
+<phrase>
+    <source>Please input new file name.</source>
+    <target>Пожалуйста, введите новое имя файла.</target>
+</phrase>
+<phrase>
+    <source>Overwrite existing file</source>
+    <target>Заменить текущий файл</target>
+</phrase>
+<phrase>
+    <source>Cancel sync jobs</source>
+    <target>Отменить синхронизацию заказов</target>
+</phrase>
+<phrase>
+    <source>jobs</source>
+    <target>заказы</target>
+</phrase>
+<phrase>
+    <source>Cancel file action jobs</source>
+    <target>Отмените действие с заказом</target>
+</phrase>
+<phrase>
+    <source>Rollback changes</source>
+    <target>Отменить изменения</target>
+</phrase>
+<phrase>
+    <source>Abort file action ?</source>
+    <target>Остановить действие с заказом ?</target>
+</phrase>
+<phrase>
+    <source>Printing</source>
+    <target>Печатается</target>
+</phrase>
+<phrase>
+    <source>Reset CloudPrint</source>
+    <target>Перезапустить CloudPrint</target>
+</phrase>
+<phrase>
+    <source>Resetting is done.</source>
+    <target>Перезапуск завершён.</target>
+</phrase>
+<phrase>
+    <source>Error</source>
+    <target>Ошибка</target>
+</phrase>
+<phrase>
+    <source>CloudDrive Request Token</source>
+    <target>Запрашиваем ключ доступа CloudDrive</target>
+</phrase>
+<phrase>
+    <source>CloudDrive Access Token</source>
+    <target>Ключ доступа CloudDrive</target>
+</phrase>
+<phrase>
+    <source>CloudDrive Account Info</source>
+    <target>Данные аккаунта</target>
+</phrase>
+<phrase>
+    <source>File Get</source>
+    <target>Получение файла</target>
+</phrase>
+<phrase>
+    <source>File Put</source>
+    <target>Положить файл</target>
+</phrase>
+<phrase>
+    <source>Create Folder</source>
+    <target>Создать папку</target>
+</phrase>
+<phrase>
+    <source>Share file on Dropbox</source>
+    <target>Поделиться файлом через Dropbox</target>
+</phrase>
+<phrase>
+    <source>Please download file with below link.</source>
+    <target>Пожалуйста, загрузите файл по ссылке ниже.</target>
+</phrase>
+<phrase>
+    <source>Share</source>
+    <target>Поделиться</target>
+</phrase>
+<phrase>
+    <source>Sync connected items</source>
+    <target>Синхронизировать выделенные элементы</target>
+</phrase>
+<phrase>
+    <source>FolderPie helps you collect each folder actual size on your disk space.
+And present in Pie view for easy understanding at glance.</source>
+    <target>FolderPie определит размер каждой папки на диске и покажет вам этов виде понятной круговой диаграммы.
+</target>
+</phrase>
+<phrase>
+    <source>Developed by</source>
+    <target>Разработано</target>
+</phrase>
+<phrase>
+    <source>Source and Target path can&apos;t be the same.</source>
+    <target>Источник и выбранная папка не могут быть одинаковыми.</target>
+</phrase>
+<phrase>
+    <source>Target path can&apos;t be inside source path.</source>
+    <target>Выбранная папка не может быть внутри источника.</target>
+</phrase>
+<phrase>
+    <source>Show running on targetPath&apos;s parent</source>
+    <target>Покажите ход на родителе путя цели</target>
+</phrase>
+<phrase>
+    <source>Rename %1 to %2 done.</source>
+    <target>Переименовано успешно %1 в %2.</target>
+</phrase>
+<phrase>
+    <source>Rename %1 to %2 failed.</source>
+    <target>Переименовывание %1 к %2 прошло неудачно.</target>
+</phrase>
+<phrase>
+    <source>Copy</source>
+    <target>Копировать</target>
+</phrase>
+<phrase>
+    <source>_Copy</source>
+    <target>_Копирование</target>
+</phrase>
+<phrase>
+    <source>_Copy%1</source>
+    <target>_Копирование%1</target>
+</phrase>
+<phrase>
+    <source>Copy %1 to %2 is aborted.</source>
+    <target>Копирование %1 в %2 отменено.</target>
+</phrase>
+<phrase>
+    <source>Copy %1 to %2 is done successfully.</source>
+    <target>Копирование %1 в %2 завершено.</target>
+</phrase>
+<phrase>
+    <source>Copy %1 to %2 is failed.</source>
+    <target>Копирование %1 в %2 не удалось.</target>
+</phrase>
+<phrase>
+    <source>Both source/target path can&apos;t be the same file.</source>
+    <target>Путь к источнику и выбранному файлу не может быть одинаковым.</target>
+</phrase>
+<phrase>
+    <source>Both source %1 and target %2 can&apos;t be read/written.</source>
+    <target>И источник %1 и файл %2 не могут быть открыты/перезаписаны.</target>
+</phrase>
+<phrase>
+    <source>Deleting sub item %1 is failed.</source>
+    <target>Удаление %1 завершено неудачно.</target>
+</phrase>
+<phrase>
+    <source>Deleting sub item %1 is done.</source>
+    <target>Удаление %1 завершено успешно.</target>
+</phrase>
+<phrase>
+    <source>Deleting %1 is aborted.</source>
+    <target>Удаление %1 прервано.</target>
+</phrase>
+<phrase>
+    <source>Paste</source>
+    <target>Вставить</target>
+</phrase>
+<phrase>
+    <source>Mark multiple items</source>
+    <target>Выделить несколько элементов</target>
+</phrase>
+<phrase>
+    <source>Clear clipboard</source>
+    <target>Очистить буфер обмена</target>
+</phrase>
+<phrase>
+    <source>New folder</source>
+    <target>Новая папка</target>
+</phrase>
+<phrase>
+    <source>Sync connected items</source>
+    <target>Синхронизировать выделенные элементы</target>
+</phrase>
+<phrase>
+    <source>Sync current folder</source>
+    <target>Синхронизировать текущую папку</target>
+</phrase>
+<phrase>
+    <source>Sort by</source>
+    <target>Сортировка по</target>
+</phrase>
+<phrase>
+    <source>Settings</source>
+    <target>Настройки</target>
+</phrase>
+<phrase>
+    <source>About</source>
+    <target>О программе</target>
+</phrase>
+<phrase>
+    <source>More Apps</source>
+    <target>Ещё приложения</target>
+</phrase>
+<phrase>
+    <source>Exit</source>
+    <target>Выход</target>
+</phrase>
+<phrase>
+    <source>Mark all</source>
+    <target>Отметить все элементы</target>
+</phrase>
+<phrase>
+    <source>Mark all</source>
+    <target>Отметить все элементы</target>
+</phrase>
+<phrase>
+    <source>Unmark all</source>
+    <target>Снять метки со всех элементов</target>
+</phrase>
+<phrase>
+    <source>Copy marked items</source>
+    <target>Скопировать отмеченные элементы</target>
+</phrase>
+<phrase>
+    <source>Cut marked items</source>
+    <target>Вырезать отмеченные элементы</target>
+</phrase>
+<phrase>
+    <source>Delete marked items</source>
+    <target>Удалить отмеченные элементы</target>
+</phrase>
+<phrase>
+    <source>Sync marked items</source>
+    <target>Синхронизировать отмеченные элементы</target>
+</phrase>
+<phrase>
+    <source>OK</source>
+    <target>Да</target>
+</phrase>
+<phrase>
+    <source>%n dir(s)</source>
+    <target>%n папка@%n папки@%n папок</target>
+</phrase>
+<phrase>
+    <source>%n file(s)</source>
+    <target>%n файл@%n файла@%n файлов</target>
+</phrase>
+<phrase>
+    <source>%n file(s)</source>
+    <target>%n файл@%n файла@%n файлов</target>
+    <definition>disambiguation</definition>
+</phrase>
+<phrase>
+    <source>Delete print jobs</source>
+    <target>Удалить заказы на печать</target>
+</phrase>
+<phrase>
+    <source>Delete all print jobs ?</source>
+    <target>Удальте все заказы на печать ?</target>
+</phrase>
+<phrase>
+    <source>Deleting</source>
+    <target>Удаление</target>
+</phrase>
+<phrase>
+    <source>Print Jobs</source>
+    <target>Заказы на печать</target>
+</phrase>
+<phrase>
+    <source>Print</source>
+    <target>Печать</target>
+</phrase>
+<phrase>
+    <source>to</source>
+    <target>к</target>
+</phrase>
+<phrase>
+    <source>Print %1 to</source>
+    <target>Печать %1 к</target>
+</phrase>
+<phrase>
+    <source>Printing</source>
+    <target>Печатать</target>
+</phrase>
+<phrase>
+    <source>Progressing</source>
+    <target>В процессе..</target>
+</phrase>
+<phrase>
+    <source>OK</source>
+    <target>Да</target>
+</phrase>
+<phrase>
+    <source>Cancel</source>
+    <target>Нет</target>
+</phrase>
+<phrase>
+    <source>Send</source>
+    <target>Отослать</target>
+</phrase>
+<phrase>
+    <source>to favorite</source>
+    <target>в избранное</target>
 </phrase>
 <phrase>
     <source>Send %1 to</source>
     <target>Пошлите %1 к</target>
 </phrase>
 <phrase>
-    <source>Print %1 to</source>
-    <target>Печать %1 к</target>
+    <source>Show CloudPrint jobs</source>
+    <target>Показать заказы CloudPrint</target>
+</phrase>
+<phrase>
+    <source>Reset CloudPrint</source>
+    <target>Перезапустить CloudPrint</target>
+</phrase>
+<phrase>
+    <source>Register new Dropbox account</source>
+    <target>Зарегистрировать новый аккаунт Dropbox</target>
+</phrase>
+<phrase>
+    <source>Reset current folder cache</source>
+    <target>Обновить кэш текущей папки</target>
+</phrase>
+<phrase>
+    <source>Cancel queued jobs</source>
+    <target>Отменить всю очередь заказов</target>
+</phrase>
+<phrase>
+    <source>Sync all connected items</source>
+    <target>Синхронизация всех выбранных элементов</target>
+</phrase>
+<phrase>
+    <source>Settings</source>
+    <target>Настройки</target>
+</phrase>
+<phrase>
+    <source>Logging (Debug)</source>
+    <target>Сохранять данные в лог файл (Debug)</target>
+</phrase>
+<phrase>
+    <source>Changing logging switch requires restart.
+FilesPlus is exiting now.
+
+Please confirm.</source>
+    <target>Смена логина требует перезапуска приложения.
+FilesPlus сейчас закроется.
+
+Пожалуйста, согласитесь с закрытием.</target>
+</phrase>
+<phrase>
+    <source>Show cloud print jobs</source>
+    <target>Покажите заказы CloudPrint</target>
+</phrase>
+<phrase>
+    <source>Reset cloud print</source>
+    <target>Переустановите CloudPrint</target>
+</phrase>
+<phrase>
+    <source>Show cloud drive jobs</source>
+    <target>Показать заказы в CloudDrive</target>
+</phrase>
+<phrase>
+    <source>Show accounts</source>
+    <target>Показать аккаунты</target>
+</phrase>
+<phrase>
+    <source>FolderPie feature</source>
+    <target>Функция FolderPie</target>
+</phrase>
+<phrase>
+    <source>Reset current folder cache</source>
+    <target>Обновите кэш текущей папки</target>
+</phrase>
+<phrase>
+    <source>Theme</source>
+    <target>Тема</target>
+</phrase>
+<phrase>
+    <source>Monitoring (RAM,CPU)</source>
+    <target>Наблюдение за показателями (RAM, C.P.U.)</target>
+</phrase>
+<phrase>
+    <source>Personalization</source>
+    <target>Персонализация</target>
+</phrase>
+<phrase>
+    <source>Developer</source>
+    <target>Программник</target>
+</phrase>
+<phrase>
+    <source>Monitoring</source>
+    <target>Наблюдение</target>
+</phrase>
+<phrase>
+    <source>Monitoring is enabled. Log file is </source>
+    <target>Наблюдение включено. Файл лога это </target>
+</phrase>
+<phrase>
+    <source>English</source>
+    <target>Английский</target>
+</phrase>
+<phrase>
+    <source>Russian</source>
+    <target>Русский</target>
+</phrase>
+<phrase>
+    <source>Chinese</source>
+    <target>Китайский</target>
+</phrase>
+<phrase>
+    <source>Locale</source>
+    <target>Locale</target>
+</phrase>
+<phrase>
+    <source>Sort by Name</source>
+    <target>Сортировка по Имени</target>
+</phrase>
+<phrase>
+    <source>Sort by Type</source>
+    <target>Сортировка по Типу</target>
+</phrase>
+<phrase>
+    <source>Sort by Time</source>
+    <target>Сортировка по Времени</target>
+</phrase>
+<phrase>
+    <source>Sort by Size</source>
+    <target>Сортировка по Размеру</target>
+</phrase>
+<phrase>
+    <source>Mark</source>
+    <target>Отметить</target>
+</phrase>
+<phrase>
+    <source>New Folder</source>
+    <target>Новая папка</target>
+</phrase>
+<phrase>
+    <source>Rename</source>
+    <target>Переименовать</target>
+</phrase>
+<phrase>
+    <source>Uploading</source>
+    <target>Загрузить</target>
+</phrase>
+<phrase>
+    <source>OK</source>
+    <target>Да</target>
+</phrase>
+<phrase>
+    <source>Please wait while loading.</source>
+    <target>Пожалуйста, подождите пока загружается.</target>
+</phrase>
+<phrase>
+    <source>Notify</source>
+    <target>Уведомление</target>
+</phrase>
+<phrase>
+    <source>Logging is enabled. Log file is at %1</source>
+    <target>Ведение лога включено. Файл лога это в %1</target>
+</phrase>
+<phrase>
+    <source>You may turn off in Settings.</source>
+    <target>Вы можете выключить в настройках.</target>
 </phrase>
 </QPH>

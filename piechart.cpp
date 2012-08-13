@@ -84,7 +84,7 @@ QString PieChart::formatFileSize(double size, int len) {
 
 void PieChart::refreshItems(bool forceRefresh)
 {
-    qDebug() << "PieChart::refreshItems isActive()" << isActive() << "visible()" << visible() << "forceRefresh" << forceRefresh;
+//    qDebug() << "PieChart::refreshItems isActive()" << isActive() << "visible()" << visible() << "forceRefresh" << forceRefresh;
     if ((isActive() && visible()) || forceRefresh) {
         removeAllExistingItems();
         createItemFromModel();

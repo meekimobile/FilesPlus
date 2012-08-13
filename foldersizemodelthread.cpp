@@ -55,10 +55,12 @@ bool sizeGreaterThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
 const QString FolderSizeModelThread::CACHE_FILE_PATH = "/home/user/.folderpie/FolderPieCache.dat";
+const QString FolderSizeModelThread::CACHE_DB_PATH = "/home/user/.folderpie/FolderPieCache.db";
 const QString FolderSizeModelThread::DEFAULT_CURRENT_DIR = "/home/user/";
 const int FolderSizeModelThread::FILE_READ_BUFFER = 32768;
 #else
 const QString FolderSizeModelThread::CACHE_FILE_PATH = "C:/FolderPieCache.dat";
+const QString FolderSizeModelThread::CACHE_DB_PATH = "FolderPieCache.db"; // Symbian supports only default database file location.
 const QString FolderSizeModelThread::DEFAULT_CURRENT_DIR = "C:/";
 const int FolderSizeModelThread::FILE_READ_BUFFER = 32768;
 #endif
@@ -68,6 +70,200 @@ FolderSizeModelThread::FolderSizeModelThread(QObject *parent) : QThread(parent)
     m_currentDir = DEFAULT_CURRENT_DIR;
     m_sortFlag = SortByType;
     dirSizeCache = new QHash<QString, FolderSizeItem>();
+    m_itemCache = new QHash<QString, FolderSizeItem>();
+
+    // TODO Initialize SQLLITE DB.
+    initializeDB();
+}
+
+FolderSizeModelThread::~FolderSizeModelThread()
+{
+    // Close database before destroyed.
+    closeDB();
+}
+
+void FolderSizeModelThread::initializeDB()
+{
+    // Create cache database path if it's not exist.
+    QFile file(CACHE_DB_PATH);
+    QFileInfo info(file);
+    if (!info.absoluteDir().exists()) {
+        qDebug() << "FolderSizeModelThread::initializeDB dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
+        bool res = QDir::home().mkpath(info.absolutePath());
+        if (!res) {
+            qDebug() << "FolderSizeModelThread::initializeDB can't make dir" << info.absolutePath();
+        } else {
+            qDebug() << "FolderSizeModelThread::initializeDB make dir" << info.absolutePath();
+        }
+    }
+
+    // TODO First initialization.
+    m_db = QSqlDatabase::addDatabase("QSQLITE");
+    m_db.setDatabaseName(CACHE_DB_PATH);
+    bool ok = m_db.open();
+    qDebug() << "FolderSizeModelThread::initializeDB" << ok << "connectionName" << m_db.connectionName() << "databaseName" << m_db.databaseName() << "driverName" << m_db.driverName();
+
+    QSqlQuery query(m_db);
+    bool res = false;
+
+    res = query.exec("CREATE TABLE folderpie_cache(id TEXT PRIMARY_KEY, name TEXT, absolute_path TEXT, last_modified TEXT, size INTEGER, is_dir INTEGER, sub_dir_count INTEGER, sub_file_count INTEGER, file_type TEXT)");
+    if (res) {
+        qDebug() << "FolderSizeModelThread::initializeDB CREATE TABLE folderpie_cache is done.";
+    } else {
+        qDebug() << "FolderSizeModelThread::initializeDB CREATE TABLE folderpie_cache is failed. Error" << query.lastError();
+    }
+
+    res = query.exec("CREATE UNIQUE INDEX IF NOT EXISTS folderpie_cache_pk ON folderpie_cache (id)");
+    if (res) {
+        qDebug() << "FolderSizeModelThread::initializeDB CREATE INDEX folderpie_cache_pk is done.";
+    } else {
+        qDebug() << "FolderSizeModelThread::initializeDB CREATE INDEX folderpie_cache_pk is failed. Error" << query.lastError();
+    }
+
+    m_selectPS = QSqlQuery(m_db);
+    m_selectPS.prepare("SELECT * FROM folderpie_cache WHERE id = :id");
+
+    m_insertPS = QSqlQuery(m_db);
+    m_insertPS.prepare("INSERT INTO folderpie_cache(id, name, absolute_path, last_modified, size, is_dir, sub_dir_count, sub_file_count, file_type)"
+                       " VALUES (:id, :name, :absolute_path, :last_modified, :size, :is_dir, :sub_dir_count, :sub_file_count, :file_type)");
+
+    m_updatePS = QSqlQuery(m_db);
+    m_updatePS.prepare("UPDATE folderpie_cache SET"
+                       " name = :name, absolute_path = :absolute_path, last_modified = :last_modified, size = :size,"
+                       " is_dir = :is_dir, sub_dir_count = :sub_dir_count, sub_file_count = :sub_file_count, file_type = :file_type"
+                       " WHERE id = :id");
+
+    m_deletePS = QSqlQuery(m_db);
+    m_deletePS.prepare("DELETE FROM folderpie_cache WHERE id = :id");
+
+    m_countPS = QSqlQuery(m_db);
+    m_countPS.prepare("SELECT count(*) count FROM folderpie_cache");
+}
+
+void FolderSizeModelThread::closeDB()
+{
+    qDebug() << "FolderSizeModelThread::closeDB" << countDirSizeCacheDB();
+    m_db.close();
+}
+
+FolderSizeItem FolderSizeModelThread::selectDirSizeCacheFromDB(const QString id)
+{
+    FolderSizeItem item;
+    bool res;
+    QSqlRecord rec = m_selectPS.record();
+
+    // Find in itemCache, return if found.
+    if (m_itemCache->contains(id)) {
+        item = m_itemCache->value(id);
+        qDebug() << "FolderSizeModelThread::selectDirSizeCacheFromDB cached id" << id << "item" << item;
+        return item;
+    }
+
+    m_selectPS.bindValue(":id", id);
+    res = m_selectPS.exec();
+    if (res && m_selectPS.next()) {
+//        qDebug() << "FolderSizeModelThread::selectDirSizeCacheFromDB id" << id << "is found. id" << m_selectPS.value(rec.indexOf("id")).toString() << "size" << m_selectPS.value(rec.indexOf("size")).toLongLong();
+        item.name = m_selectPS.value(rec.indexOf("name")).toString();
+        item.absolutePath = m_selectPS.value(rec.indexOf("absolute_path")).toString();
+        item.lastModified = m_selectPS.value(rec.indexOf("last_modified")).toDateTime();
+        item.size = m_selectPS.value(rec.indexOf("size")).toLongLong();
+        item.isDir = m_selectPS.value(rec.indexOf("is_dir")).toBool();
+        item.subDirCount = m_selectPS.value(rec.indexOf("sub_dir_count")).toInt();
+        item.subFileCount = m_selectPS.value(rec.indexOf("sub_file_count")).toInt();
+        item.fileType = m_selectPS.value(rec.indexOf("file_type")).toString();
+        qDebug() << "FolderSizeModelThread::selectDirSizeCacheFromDB id" << id << "item" << item;
+
+        // Insert item to itemCache.
+        m_itemCache->insert(id, item);
+    } else {
+        qDebug() << "FolderSizeModelThread::selectDirSizeCacheFromDB id" << id << " is not found.";
+    }
+
+    return item;
+}
+
+int FolderSizeModelThread::insertDirSizeCacheToDB(const FolderSizeItem item)
+{
+    bool res;
+
+    m_insertPS.bindValue(":id", item.absolutePath);
+    m_insertPS.bindValue(":name", item.name);
+    m_insertPS.bindValue(":absolute_path", item.absolutePath);
+    m_insertPS.bindValue(":last_modified", item.lastModified);
+    m_insertPS.bindValue(":size", item.size);
+    m_insertPS.bindValue(":is_dir", (item.isDir ? 1 : 0));
+    m_insertPS.bindValue(":sub_dir_count", item.subDirCount);
+    m_insertPS.bindValue(":sub_file_count", item.subFileCount);
+    m_insertPS.bindValue(":file_type", item.fileType);
+    res = m_insertPS.exec();
+    if (res) {
+        qDebug() << "FolderSizeModelThread::insertDirSizeCacheToDB insert done" << item << "res" << res << "numRowsAffected" << m_insertPS.numRowsAffected();
+        QSqlDatabase::database().commit();
+
+        // Insert item to itemCache.
+        m_itemCache->insert(item.absolutePath, item);
+    } else {
+        qDebug() << "FolderSizeModelThread::insertDirSizeCacheToDB insert failed" << item << "res" << res << m_insertPS.lastError();
+    }
+
+    return m_insertPS.numRowsAffected();
+}
+
+int FolderSizeModelThread::updateDirSizeCacheToDB(const FolderSizeItem item)
+{
+    bool res;
+
+    m_updatePS.bindValue(":id", item.absolutePath);
+    m_updatePS.bindValue(":name", item.name);
+    m_updatePS.bindValue(":absolute_path", item.absolutePath);
+    m_updatePS.bindValue(":last_modified", item.lastModified);
+    m_updatePS.bindValue(":size", item.size);
+    m_updatePS.bindValue(":is_dir", (item.isDir ? 1 : 0));
+    m_updatePS.bindValue(":sub_dir_count", item.subDirCount);
+    m_updatePS.bindValue(":sub_file_count", item.subFileCount);
+    m_updatePS.bindValue(":file_type", item.fileType);
+    res = m_updatePS.exec();
+    if (res) {
+        qDebug() << "FolderSizeModelThread::updateDirSizeCacheToDB update done" << item << "res" << res << "numRowsAffected" << m_updatePS.numRowsAffected();
+        QSqlDatabase::database().commit();
+
+        // Insert item to itemCache.
+        m_itemCache->insert(item.absolutePath, item);
+    } else {
+        qDebug() << "FolderSizeModelThread::updateDirSizeCacheToDB update failed" << item << "res" << res << m_updatePS.lastError();
+    }
+
+    return m_updatePS.numRowsAffected();
+}
+
+int FolderSizeModelThread::deleteDirSizeCacheToDB(const QString id)
+{
+    bool res;
+
+    m_deletePS.bindValue(":id", id);
+    res = m_deletePS.exec();
+    if (res) {
+        qDebug() << "FolderSizeModelThread::migrateDirSizeCacheToDB delete done" << id << "res" << res << "numRowsAffected" << m_deletePS.numRowsAffected();
+        QSqlDatabase::database().commit();
+
+        // Remove item to itemCache.
+        m_itemCache->remove(id);
+    } else {
+        qDebug() << "FolderSizeModelThread::migrateDirSizeCacheToDB delete failed" << id << "res" << res << m_deletePS.lastError();
+    }
+
+    return m_deletePS.numRowsAffected();
+}
+
+int FolderSizeModelThread::countDirSizeCacheDB()
+{
+    int c = 0;
+    bool res = m_countPS.exec();
+    if (res && m_countPS.next()) {
+        c = m_countPS.value(m_countPS.record().indexOf("count")).toInt();
+    }
+
+    return c;
 }
 
 QString FolderSizeModelThread::currentDir() const
@@ -92,6 +288,10 @@ void FolderSizeModelThread::loadDirSizeCache() {
 void FolderSizeModelThread::saveDirSizeCache() {
     if (!dirSizeCache->isEmpty()) {
         // TODO save caches from file.
+
+        // TODO Clean up invalid items.
+        cleanItems();
+
         QFile file(CACHE_FILE_PATH);
         QFileInfo info(file);
         if (!info.absoluteDir().exists()) {
@@ -187,11 +387,12 @@ bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QSt
         if (res) {
             qDebug() << "FolderSizeModelThread::copy method" << method << "sourceFile" << sourcePath << "targetFile" << targetPath << "is done.";
 
-            // TODO Copy cache for targetPath.
+            // TODO Copy cache (both DAT and DB) for targetPath.
             FolderSizeItem cachedItem = getCachedDir(sourceFileInfo);
             cachedItem.name = targetFileInfo.fileName();
             cachedItem.absolutePath = targetFileInfo.absoluteFilePath();
-            dirSizeCache->insert(targetPath, cachedItem);
+//            dirSizeCache->insert(targetPath, cachedItem);
+            insertDirSizeCacheToDB(cachedItem);
 
             emit copyFinished(method, sourcePath, targetPath, tr("Copy %1 to %2 is done successfully.").arg(sourcePath).arg(targetPath), 0, 0, itemSize);
         } else {
@@ -381,7 +582,7 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath)
 bool FolderSizeModelThread::isDirSizeCacheExisting()
 {
     // Return true if cache is not empty or cache is loading.
-    return ( (isRunning() && m_runMethod == LoadDirSizeCache) || dirSizeCache->count() > 0);
+    return ( (isRunning() && m_runMethod == LoadDirSizeCache) || dirSizeCache->count() > 0 || countDirSizeCacheDB() > 0);
 }
 
 void FolderSizeModelThread::removeDirSizeCache(const QString key)
@@ -390,6 +591,7 @@ void FolderSizeModelThread::removeDirSizeCache(const QString key)
 
     // Remove only specified key.
     dirSizeCache->remove(key);
+    deleteDirSizeCacheToDB(key);
 
     //    QFileInfo fileInfo(key);
     //    QDir dir;
@@ -408,6 +610,7 @@ void FolderSizeModelThread::removeDirSizeCache(const QString key)
     //    bool canCdup = true;
     //    while (canCdup) {
     //        dirSizeCache->remove(dir.absolutePath());
+    //        deleteDirSizeCacheToDB(dir.absolutePath());
     ////        qDebug() << "FolderSizeModelThread::removeDirSizeCache remove cache for " << dir.absolutePath();
 
     //        if (dir.isRoot()) {
@@ -424,65 +627,91 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
     double subFileCount = 0;
     FolderSizeItem cachedDir;
     bool isFound = false;
+    bool isValid = true;
+    bool isInDB = false;
 
     // Get cached dirSize if any and clearCache==false
-    if (!clearCache && dirSizeCache->contains(dir.absoluteFilePath())) {
-        //        qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir found " + dir.absoluteFilePath();
-
-        cachedDir = dirSizeCache->value(dir.absoluteFilePath());
-        if (cachedDir.lastModified >= dir.lastModified()) {
-            // cachedDir is still valid, just return it.
-            //            qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir %1 >= %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
+    if (!clearCache) {
+        // Get cachedDir from DB.
+        cachedDir = selectDirSizeCacheFromDB(dir.absoluteFilePath());
+        if (!isFound && cachedDir.absolutePath == dir.absoluteFilePath()) {
             isFound = true;
-        } else {
-            //            qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir %1 < %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
+            if (cachedDir.lastModified >= dir.lastModified()) {
+                // cachedDir is still valid, just return it.
+//                qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir DB %1 >= %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
+                isInDB = true;
+            } else {
+                qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir DB %1 < %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
+                isValid = false;
+            }
+        }
+
+        // Get cachedDir from DAT.
+        if (!isFound && dirSizeCache->contains(dir.absoluteFilePath())) {
+            //        qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir found " + dir.absoluteFilePath();
+            cachedDir = dirSizeCache->value(dir.absoluteFilePath());
+            if (cachedDir.lastModified >= dir.lastModified()) {
+                // cachedDir is still valid, just return it.
+//                qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir %1 >= %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
+                isFound = true;
+            } else {
+                qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir %1 < %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
+                isValid = false;
+            }
         }
     }
 
     // If (cache is invalidated or not found) and FolderSizeModelThread is ready, get cache recursively.
     // Otherwise return dummy dir item with 0 byte.
-    if (!isFound) {
+    if (!isFound || !isValid) {
         //        qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir NOT found " + dir.absoluteFilePath();
 
         // Avoid UI freezing by processEvents().
         QApplication::processEvents();
 
-        QDir d = QDir(dir.absoluteFilePath());
-        d.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
-        QFileInfoList subList = d.entryInfoList();
+        if (dir.isDir()) {
+            QDir d = QDir(dir.absoluteFilePath());
+            d.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
+            QFileInfoList subList = d.entryInfoList();
 
-        for (int i = 0; i < subList.size(); ++i) {
-            QFileInfo fileInfo = subList.at(i);
-            QString fileName = fileInfo.fileName();
+            for (int i = 0; i < subList.size(); ++i) {
+                QFileInfo fileInfo = subList.at(i);
+                QString fileName = fileInfo.fileName();
 
-            // Avoid UI freezing by processEvents().
-            QApplication::processEvents();
+                // Avoid UI freezing by processEvents().
+                QApplication::processEvents();
 
-            if (fileName == "." || fileName == "..") {
-                // do nothing.
-            } else if (fileInfo.isDir()) {
-                // drilldown to get dir tree size.
-                FolderSizeItem item = getCachedDir(fileInfo, clearCache);
-                double subDirSize = item.size;
-                dirSize += subDirSize;
-                subDirCount++;
-                // Count its sub dirs/files too.
-                subDirCount += item.subDirCount;
-                subFileCount += item.subFileCount;
-            } else {
-                dirSize += fileInfo.size();
-                subFileCount++;
+                FolderSizeItem item;
+                if (fileName == "." || fileName == "..") {
+                    // do nothing.
+                } else if (fileInfo.isDir()) {
+                    // drilldown to get dir tree size.
+                    item = getCachedDir(fileInfo, clearCache);
+                    double subDirSize = item.size;
+                    dirSize += subDirSize;
+                    subDirCount++;
+                    // Count its sub dirs/files too.
+                    subDirCount += item.subDirCount;
+                    subFileCount += item.subFileCount;
+                } else {
+                    item = getCachedDir(fileInfo, clearCache);
+                    dirSize += fileInfo.size();
+                    subFileCount++;
 
-                // Emit signal on file is count.
-                emit fetchDirSizeUpdated(fileInfo.absoluteFilePath());
+                    // Emit signal on file is count.
+                    emit fetchDirSizeUpdated(fileInfo.absoluteFilePath());
+                }
+
+                //            qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir path" << fileInfo.absoluteFilePath() << "dirSize" << dirSize << "subDirCount" << subDirCount << "subFileCount" << subFileCount;
             }
 
-            //            qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir path" << fileInfo.absoluteFilePath() << "dirSize" << dirSize << "subDirCount" << subDirCount << "subFileCount" << subFileCount;
+            // Put calculated dirSize to cache.
+            cachedDir = FolderSizeItem(dir.fileName(), dir.absoluteFilePath(), dir.lastModified(), dirSize, true, subDirCount, subFileCount);
+    //        dirSizeCache->insert(dir.absoluteFilePath(), cachedDir);
+        } else {
+            // Cache file.
+            cachedDir = getFileItem(dir);
         }
-
-        // Put calculated dirSize to cache.
-        cachedDir = FolderSizeItem(dir.fileName(), dir.absoluteFilePath(), dir.lastModified(), dirSize, true, subDirCount, subFileCount);
-        dirSizeCache->insert(dir.absoluteFilePath(), cachedDir);
     }
 
     //    // Emit signal on dir is cached.
@@ -490,10 +719,23 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
 
     //    qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir done " + cachedDir.name + ", " + QString("%1").arg(cachedDir.size);
 
+    // TODO Persists to DB.
+    if (!isFound || !isValid || !isInDB) {
+        if (!isFound) {
+            insertDirSizeCacheToDB(cachedDir);
+        } else {
+            updateDirSizeCacheToDB(cachedDir);
+        }
+
+        // TODO Remove from dirSizeCache after migrate to DB.
+        dirSizeCache->remove(cachedDir.absolutePath);
+        qDebug() << "FolderSizeModelThread::getCachedDir remove from dirSizeCache" << cachedDir << "dirSizeCache->count()" << dirSizeCache->count();
+    }
+
     return cachedDir;
 }
 
-void FolderSizeModelThread::sortItemList(QList<FolderSizeItem> &itemList) {
+void FolderSizeModelThread::sortItemList(QList<FolderSizeItem> &itemList, bool sortAll) {
     switch (m_sortFlag) {
     case SortByName:
         qSort(itemList.begin(), itemList.end(), nameLessThan);
@@ -505,7 +747,25 @@ void FolderSizeModelThread::sortItemList(QList<FolderSizeItem> &itemList) {
         qSort(itemList.begin(), itemList.end(), typeLessThan);
         break;
     case SortBySize:
-        qSort(itemList.begin(), itemList.end(), sizeGreaterThan);
+        int i;
+        for (i = 0; i < itemList.size(); i++) {
+            if (!itemList.at(i).isDir) {
+                break;
+            }
+        }
+
+        qDebug() << "FolderSizeModelThread::sortItemList sortBySize file start from" << i << "itemList.size" << itemList.size();
+        if (i == 0 || sortAll) {
+            qSort(itemList.begin(), itemList.end(), sizeGreaterThan);
+        } else {
+            QList<FolderSizeItem> dirList = itemList.mid(0, i);
+            QList<FolderSizeItem> fileList = itemList.mid(i);
+            qSort(dirList.begin(), dirList.end(), sizeGreaterThan);
+            itemList.clear();
+            itemList.append(dirList);
+            itemList.append(fileList);
+        }
+        qDebug() << "FolderSizeModelThread::sortItemList sortBySize file start from" << i << "sorted itemList.size" << itemList.size();
         break;
     }
 }
@@ -555,15 +815,28 @@ void FolderSizeModelThread::getDirContent(const QString dirPath, QList<FolderSiz
         } else if (fileInfo.isDir()) {
             // If running, return cache or dummy item.
             // If not running, drilldown to get dir content.
-            itemList.append(getDirItem(fileInfo));
+            if (isRunning()) {
+                itemList.append(getDirItem(fileInfo));
+            } else {
+                itemList.append(getCachedDir(fileInfo));
+            }
         } else {
-            itemList.append(getFileItem(fileInfo));
+            itemList.append(getCachedDir(fileInfo));
         }
     }
 
     // Sort itemList if sortFlag == SortBySize. To sort folder size.
     if (m_sortFlag == SortBySize) {
-        sortItemList(itemList);
+        int i;
+        for (i = 0; i < itemList.size(); i++) {
+            if (!itemList.at(i).isDir) {
+                break;
+            }
+        }
+        if (i > 0) {
+            // Sort only if there are mixed dir(s) and files.
+            sortItemList(itemList, false);
+        }
     }
 }
 
@@ -584,7 +857,7 @@ void FolderSizeModelThread::fetchDirSize(const bool clearCache) {
     qDebug() << QTime::currentTime() << "FolderSizeModelThread::fetchDirSize is done " << currentDir();
 }
 
-FolderSizeItem FolderSizeModelThread::getItem(const QFileInfo fileInfo) const {
+FolderSizeItem FolderSizeModelThread::getItem(const QFileInfo fileInfo) {
     if (fileInfo.isDir()) {
         return getDirItem(fileInfo);
     } else if (fileInfo.isFile()){
@@ -594,20 +867,38 @@ FolderSizeItem FolderSizeModelThread::getItem(const QFileInfo fileInfo) const {
     }
 }
 
-FolderSizeItem FolderSizeModelThread::getFileItem(const QFileInfo fileInfo) const {
-    // FileItem always get isDir=false, subDirCount=0 and subFileCount=0
-    FolderSizeItem item(fileInfo.fileName(),
-                        fileInfo.absoluteFilePath(),
-                        fileInfo.lastModified(),
-                        fileInfo.size(),
-                        false, 0, 0);
+FolderSizeItem FolderSizeModelThread::getFileItem(const QFileInfo fileInfo) {
+    FolderSizeItem item;
+
+    item = selectDirSizeCacheFromDB(fileInfo.absoluteFilePath());
+    if (item.absolutePath == fileInfo.absoluteFilePath()) {
+        // Get cache from DB.
+        // If found, do nothing and return found item.
+    } else if (dirSizeCache->contains(fileInfo.absoluteFilePath())) {
+        // Get cache from DAT.
+        item = dirSizeCache->value(fileInfo.absoluteFilePath());
+    } else {
+        // FileItem always get isDir=false, subDirCount=0 and subFileCount=0
+        item = FolderSizeItem(fileInfo.fileName(),
+                            fileInfo.absoluteFilePath(),
+                            fileInfo.lastModified(),
+                            fileInfo.size(),
+                            false, 0, 0);
+        // TODO Emit signal to queue refreshDir job.
+    }
 
     return item;
 }
 
-FolderSizeItem FolderSizeModelThread::getDirItem(const QFileInfo dirInfo) const {
+FolderSizeItem FolderSizeModelThread::getDirItem(const QFileInfo dirInfo) {
     FolderSizeItem item;
-    if (dirSizeCache->contains(dirInfo.absoluteFilePath())) {
+
+    item = selectDirSizeCacheFromDB(dirInfo.absoluteFilePath());
+    if (item.absolutePath == dirInfo.absoluteFilePath()) {
+        // Get cache from DB.
+        // If found, do nothing and return found item.
+    } else if (dirSizeCache->contains(dirInfo.absoluteFilePath())) {
+        // Get cache from DAT.
         //        if (isRunning()) {
         item = dirSizeCache->value(dirInfo.absoluteFilePath());
         //        } else {
@@ -621,6 +912,7 @@ FolderSizeItem FolderSizeModelThread::getDirItem(const QFileInfo dirInfo) const 
                               dirInfo.lastModified(),
                               dirInfo.size(),
                               true, 0, 0);
+        // TODO Emit signal to queue refreshDir job.
     }
 
     return item;

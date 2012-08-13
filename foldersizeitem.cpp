@@ -3,6 +3,11 @@
 
 FolderSizeItem::FolderSizeItem()
 {
+    this->isRunning = false;
+    this->runningOperation = 0;
+    this->runningValue = 0;
+    this->runningMaxValue = 0;
+    this->isChecked = false;
 }
 
 FolderSizeItem::FolderSizeItem(const QString &name, const QString &absolutePath, const QDateTime &lastModified, const qint64 &size, const bool isDir, const qint64 &subDirCount, const qint64 &subFileCount)

@@ -199,19 +199,19 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         <location line="+0"/>
         <location filename="../qml/FilesPlus/symbian/DriveGrid.qml" line="+0"/>
         <source>Internal Drive</source>
-        <translation>Внутреннее хранение</translation>
+        <translation>Системный диск</translation>
     </message>
     <message>
         <location line="+0"/>
         <location filename="../qml/FilesPlus/symbian/DriveGrid.qml" line="+0"/>
         <source>Removable Drive</source>
-        <translation>Отделяемое хранение</translation>
+        <translation>Съёмный диск</translation>
     </message>
     <message>
         <location line="+0"/>
         <location filename="../qml/FilesPlus/symbian/DriveGrid.qml" line="+0"/>
         <source>Remote Drive</source>
-        <translation>Дистанционное хранение</translation>
+        <translation>Удалённо-подкл. диск</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -627,7 +627,7 @@ Please click OK to continue.</source>
         <location line="+214"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+213"/>
         <source>Rename %1 to</source>
-        <translation>Переименуйте %1 к</translation>
+        <translation>Переименовать %1 на</translation>
     </message>
     <message numerus="yes">
         <location line="+112"/>
@@ -643,7 +643,8 @@ Please click OK to continue.</source>
         <location line="-605"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-609"/>
         <source>last modified</source>
-        <translation>последний изменённый</translation>
+        <translatorcomment>last change</translatorcomment>
+        <translation>последнее изменение</translation>
     </message>
     <message>
         <location line="+241"/>
@@ -743,7 +744,8 @@ Link will be removed.</source>
         <location line="+27"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+27"/>
         <source>Rename</source>
-        <translation>Переименовать</translation>
+        <translatorcomment>Change of name</translatorcomment>
+        <translation>Изменение имени</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -773,7 +775,7 @@ Link will be removed.</source>
         <location line="+47"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+47"/>
         <source>Cancel sync jobs</source>
-        <translation>Отменить синхронизацию заказов</translation>
+        <translation>Отмена заказов</translation>
     </message>
     <message>
         <source>jobs</source>
@@ -1046,7 +1048,7 @@ And present in Pie view for easy understanding at glance.</source>
         <location line="+8"/>
         <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+9"/>
         <source>Sync connected items</source>
-        <translation>Синхронизировать выделенные элементы</translation>
+        <translation>Синхр. выделен. элем.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -1295,13 +1297,13 @@ And present in Pie view for easy understanding at glance.</source>
         <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+156"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+157"/>
         <source>Cancel queued jobs</source>
-        <translation>Отменить всю очередь заказов</translation>
+        <translation>Отменить все заказы на печать</translation>
     </message>
     <message>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Sync all connected items</source>
-        <translation>Синхронизация всех выбранных элементов</translation>
+        <translation>Синхрон. всех выбр. элем</translation>
     </message>
     <message>
         <location line="-110"/>
@@ -1333,13 +1335,13 @@ FilesPlus сейчас закроется.
         <location line="+99"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+99"/>
         <source>Show cloud print jobs</source>
-        <translation>Покажите заказы CloudPrint</translation>
+        <translation>Показать заказы CloudPrint</translation>
     </message>
     <message>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Reset cloud print</source>
-        <translation>Переустановите CloudPrint</translation>
+        <translation>Залогиниться в CloudPrint</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1351,7 +1353,7 @@ FilesPlus сейчас закроется.
         <location line="+3"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+3"/>
         <source>Show accounts</source>
-        <translation>Показать аккаунты</translation>
+        <translation>Аккаунты обл. хранилищ</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1363,13 +1365,13 @@ FilesPlus сейчас закроется.
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Reset current folder cache</source>
-        <translation>Обновите кэш текущей папки</translation>
+        <translation>Обновить кэш</translation>
     </message>
     <message>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Theme</source>
-        <translation>Тема</translation>
+        <translation>Тема - тёмн/светл</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1387,7 +1389,7 @@ FilesPlus сейчас закроется.
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Developer</source>
-        <translation>Программник</translation>
+        <translation>Для разработчика</translation>
     </message>
     <message>
         <location line="+28"/>

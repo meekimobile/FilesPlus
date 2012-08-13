@@ -1,4 +1,4 @@
-AutoGenerateAegisFile
+#AutoGenerateAegisFile
 <!-- Aegis manifest declares the security credentials required by an
      application to run correctly. By default, a manifest file will be
      created or updated automatically as a part of build.
@@ -32,9 +32,7 @@ AutoGenerateAegisFile
 	<request policy="add">
 
 		<!-- Make a GSM call, send text messages (SMS). -->
-	<!--
 		<credential name="Cellular" />
-	-->
 
 		<!-- Access Facebook social data. -->
 	<!--
@@ -42,14 +40,13 @@ AutoGenerateAegisFile
 	-->
 
 		<!-- Read access to data stored in tracker. -->
-	<!--
 		<credential name="TrackerReadAccess" />
-	-->
 
 		<!-- Read and write access to data stored in tracker. -->
-	<!--
 		<credential name="TrackerWriteAccess" />
-	-->
+
+        <!-- For using QML Mobility ContactModel. -->
+        <credential name="GRP::metadata-users" />
 
 		<!-- Read Location information. -->
 	<!--
