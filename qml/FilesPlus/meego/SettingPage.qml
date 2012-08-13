@@ -123,6 +123,12 @@ Page {
             type: "switch"
             group: "Personalization"
         }
+        ListElement {
+            name: "popup.timer.interval"
+            title: ""
+            type: "popupInterval"
+            group: "Personalization"
+        }
 //        ListElement {
 //            name: "Monitoring.enabled"
 //            title: ""
@@ -159,6 +165,7 @@ Page {
         else if (name == "FolderPie.enabled") return qsTr("FolderPie feature") + appInfo.emptyStr;
         else if (name == "resetCache") return qsTr("Reset current folder cache") + appInfo.emptyStr;
         else if (name == "Theme.inverted") return qsTr("Theme") + appInfo.emptyStr;
+        else if (name == "popup.timer.interval") return qsTr("Popup timer interval") + appInfo.emptyStr;
         else if (name == "locale") return qsTr("Locale") + appInfo.emptyStr;
         else if (name == "Logging.enabled") return qsTr("Logging (Debug)") + appInfo.emptyStr;
         else if (name == "Monitoring.enabled") return qsTr("Monitoring (RAM,CPU)") + appInfo.emptyStr;
@@ -231,6 +238,43 @@ Page {
                             // Handle only if it's enabled.
                             buttonClickedHandler(name);
                         }
+                    }
+                }
+            }
+            Column {
+                visible: (type == "popupInterval")
+                width: parent.width - 40
+                height: parent.height
+                anchors.horizontalCenter: parent.horizontalCenter
+                Text {
+                    id: sliderLabel
+                    color: (theme.inverted) ? "white" : "black"
+                    font.pointSize: 18
+                    width: parent.width
+                    height: parent.height / 2
+                    verticalAlignment: Text.AlignVCenter
+                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                    text: (title=="") ? getTitle(name) : title
+                }
+                Slider {
+                    id: sliderValue
+                    width: parent.width
+                    height: parent.height / 2
+                    minimumValue: 2
+                    maximumValue: 8
+                    stepSize: 1
+                    valueIndicatorText: value
+                    valueIndicatorVisible: true
+
+                    onPressedChanged: {
+                        console.debug("popupInterval pressed " + pressed + " value " + value);
+                        if (!pressed) {
+                            appInfo.setSettingValue(name, value);
+                        }
+                    }
+
+                    Component.onCompleted: {
+                        value = appInfo.getSettingValue(name, 2);
                     }
                 }
             }

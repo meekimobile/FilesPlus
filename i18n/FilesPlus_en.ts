@@ -1296,7 +1296,7 @@ Please confirm.</translation>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Theme</source>
-        <translation>Theme</translation>
+        <translation>Theme white/black</translation>
     </message>
     <message>
         <location line="+3"/>

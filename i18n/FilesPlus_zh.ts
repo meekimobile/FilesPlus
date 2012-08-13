@@ -1330,7 +1330,7 @@ Shows CloudDrive accounts</translatorcomment>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Theme</source>
-        <translation>主题</translation>
+        <translation>主题 白/黑</translation>
     </message>
     <message>
         <location line="+3"/>

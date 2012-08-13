@@ -22,6 +22,11 @@ Page {
                 target: mainMenu
                 disabledMenus: [appInfo.emptyStr+qsTr("Paste"), appInfo.emptyStr+qsTr("Mark multiple items"), appInfo.emptyStr+qsTr("Clear clipboard"), appInfo.emptyStr+qsTr("New folder"), appInfo.emptyStr+qsTr("Sync current folder"), appInfo.emptyStr+qsTr("Sync connected items"), appInfo.emptyStr+qsTr("Sort by")]
             }
+            PropertyChanges {
+                target: fsModel
+                explicit: true
+                sortFlag: FolderSizeItemListModel.SortBySize
+            }
         },
         State {
             name: "list"
@@ -35,9 +40,9 @@ Page {
 
     onStateChanged: {
         console.debug("folderPage onStateChanged state=" + folderPage.state);
-        if (state == "chart") {
-            fsModel.sortFlag = FolderSizeItemListModel.SortBySize;
-        }
+//        if (state == "chart") {
+//            fsModel.sortFlag = FolderSizeItemListModel.SortBySize;
+//        }
     }
 
     Component.onCompleted: {
@@ -76,6 +81,15 @@ Page {
             text: "Mark mode"
             enabled: false
             visible: (fsListView.state == "mark")
+        }
+
+        ToolIcon {
+            id: cloudButton
+            iconSource: (theme.inverted ? "cloud.svg" : "cloud_inverted.svg")
+            visible: (fsListView.state == "")
+            onClicked: {
+                syncConnectedItemsSlot();
+            }
         }
 
         ToolIcon {
