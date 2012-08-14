@@ -36,7 +36,10 @@ Page {
     onStateChanged: {
         console.debug("folderPage onStateChanged state=" + folderPage.state);
         if (state == "chart") {
-            fsModel.sortFlag = FolderSizeItemListModel.SortBySize;
+            fsModel.setSortFlag(FolderSizeItemListModel.SortBySize, false);
+        } else {
+            // TODO revert back to stored sortFlag.
+            fsModel.revertSortFlag();
         }
     }
 
@@ -89,6 +92,16 @@ Page {
         }
 
         ToolButton {
+            id: cloudButton
+            iconSource: (!window.platformInverted ? "cloud.svg" : "cloud_inverted.svg")
+            platformInverted: window.platformInverted
+            visible: (fsListView.state == "")
+            onClicked: {
+                syncConnectedItemsSlot();
+            }
+        }
+
+        ToolButton {
             id: menuButton
             iconSource: "toolbar-menu"
             platformInverted: window.platformInverted
@@ -131,22 +144,6 @@ Page {
         }
     }
 
-//    SettingMenu {
-//        id: settingMenu
-//        onResetCache: {
-//            resetCacheSlot();
-//        }
-//        onResetCloudPrint: {
-//            resetCloudPrintSlot();
-//        }
-//        onRegisterDropboxUser: {
-//            registerDropboxUserSlot();
-//        }
-//        onShowCloudPrintJobs: {
-//            showCloudPrintJobsSlot();
-//        }
-//    }
-
     MarkMenu {
         id: markMenu
     }
@@ -171,9 +168,15 @@ Page {
 
     function goUpSlot() {
         if (fsModel.isRoot()) {
+            // Flip back to list view, then push drivePage.
+            flipable1.flipped = false;
             pageStack.push(Qt.resolvedUrl("DrivePage.qml"), {}, true);
         } else {
-            fsModel.changeDir("..");
+            if (state == "chart") {
+                fsModel.changeDir("..", FolderSizeItemListModel.SortBySize);
+            } else {
+                fsModel.changeDir("..");
+            }
         }
     }
 
@@ -286,14 +289,19 @@ Page {
         }
     }
 
-    function syncConnectedItemsSlot() {
+    function syncConnectedItemsSlot(onlyDirty) {
         for (var i=0; i<fsModel.count; i++) {
             var localPath = fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole);
+            var lastModified = fsModel.getProperty(i, FolderSizeItemListModel.LastModifiedRole);
             var isConnected = cloudDriveModel.isConnected(localPath);
-//            console.debug("folderPage synconnectedItemsSlot localPath " + localPath + " isConnected " + isConnected);
-            if (isConnected) {
-                console.debug("folderPage synconnectedItemsSlot localPath " + localPath + " isConnected " + isConnected + " is queued for syncing.");
-                cloudDriveModel.syncItem(localPath);
+            var isSyncing = cloudDriveModel.isSyncing(localPath);
+            var isDirty = cloudDriveModel.isDirty(localPath, lastModified);
+//            console.debug("folderPage synconnectedItemsSlot localPath " + localPath + " isConnected " + isConnected + " isSyncing " + isSyncing);
+            if (isConnected && !isSyncing) {
+                if (!onlyDirty || isDirty) {
+                    cloudDriveModel.syncItem(localPath);
+                    console.debug("folderPage synconnectedItemsSlot localPath " + localPath + " isConnected " + isConnected + " is queued for syncing.");
+                }
             }
         }
     }
@@ -407,6 +415,12 @@ Page {
 
             // Reset ListView currentIndex.
             fsListView.currentIndex = -1;
+
+            // Auto-sync after refresh. Only dirty items will be sync'd.
+            // TODO Suppress in PieView.
+            if (appInfo.getSettingValue("sync.after.refresh", false)) {
+                syncConnectedItemsSlot(true);
+            }
         }
 
         onRequestResetCache: {
@@ -627,7 +641,12 @@ Page {
         }
         onSliceClicked: {
             console.debug("QML pieChartView.onSliceClicked " + text + ", index=" + index + ", isDir=" + isDir);
-            if (isDir) fsModel.changeDir(text);
+            if (isDir) {
+                // TODO keep sortBySize in PieView.
+                fsModel.changeDir(text, FolderSizeItemListModel.SortBySize);
+            } else {
+                flipSlot();
+            }
         }
         onActiveFocusChanged: {
             console.debug("QML pieChartView.onActiveFocusChanged");
@@ -1062,6 +1081,7 @@ Page {
         ringRadius: 65
         buttonRadius: 25
         clipboardCount: clipboard.count
+        timeout: appInfo.emptySetting+appInfo.getSettingValue("popup.timer.interval", 2) * 1000
 
         onOpened: {
 //            console.debug("popupToolRing onOpened");
@@ -2082,6 +2102,9 @@ Page {
                             cloudDriveModel.fileGet(type, uid, remotePath, localPath, modelIndex);
                         } else if (jsonObj.rev < localPathHash) {
                             cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                        } else {
+                            // Update lastModified on cloudDriveItem.
+                            cloudDriveModel.addItem(type, uid, localPath, remotePath, jsonObj.rev);
                         }
                     }
                 }

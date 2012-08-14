@@ -82,21 +82,21 @@ Page {
         }
 
         ToolIcon {
-            id: cloudButton
-            iconSource: (theme.inverted ? "cloud.svg" : "cloud_inverted.svg")
-            visible: (fsListView.state == "")
-            onClicked: {
-                syncConnectedItemsSlot();
-            }
-        }
-
-        ToolIcon {
             id: flipButton
             iconSource: (folderPage.state != "list") ? (theme.inverted ? "list.svg" : "list_inverted.svg") : (theme.inverted ? "chart.svg" : "chart_inverted.svg")
             visible: (fsListView.state == "")
 
             Component.onCompleted: {
                 flipButton.clicked.connect(flipSlot);
+            }
+        }
+
+        ToolIcon {
+            id: cloudButton
+            iconSource: (theme.inverted ? "cloud.svg" : "cloud_inverted.svg")
+            visible: (fsListView.state == "")
+            onClicked: {
+                syncConnectedItemsSlot();
             }
         }
 

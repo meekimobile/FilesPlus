@@ -100,6 +100,12 @@ Page {
             type: "button"
             group: "CloudDrive"
         }
+        ListElement {
+            name: "sync.after.refresh"
+            title: ""
+            type: "switch"
+            group: "CloudDrive"
+        }
 //        ListElement {
 //            name: "FolderPie.enabled"
 //            title: ""
@@ -122,6 +128,12 @@ Page {
             name: "Theme.inverted"
             title: ""
             type: "switch"
+            group: "Personalization"
+        }
+        ListElement {
+            name: "popup.timer.interval"
+            title: ""
+            type: "popupInterval"
             group: "Personalization"
         }
         ListElement {
@@ -157,9 +169,11 @@ Page {
         else if (name == "cancelAllCloudDriveJobs") return qsTr("Cancel queued jobs") + appInfo.emptyStr;
         else if (name == "syncAllConnectedItems") return qsTr("Sync all connected items") + appInfo.emptyStr;
         else if (name == "showCloudDriveAccounts") return qsTr("Show accounts") + appInfo.emptyStr;
+        else if (name == "sync.after.refresh") return qsTr("Auto-sync after refresh") + appInfo.emptyStr;
         else if (name == "FolderPie.enabled") return qsTr("FolderPie feature") + appInfo.emptyStr;
         else if (name == "resetCache") return qsTr("Reset current folder cache") + appInfo.emptyStr;
         else if (name == "Theme.inverted") return qsTr("Theme") + appInfo.emptyStr;
+        else if (name == "popup.timer.interval") return qsTr("Popup interval") + appInfo.emptyStr;
         else if (name == "locale") return qsTr("Locale") + appInfo.emptyStr;
         else if (name == "Logging.enabled") return qsTr("Logging (Debug)") + appInfo.emptyStr;
         else if (name == "Monitoring.enabled") return qsTr("Monitoring (RAM,CPU)") + appInfo.emptyStr;
@@ -231,6 +245,45 @@ Page {
                             console.debug("settingListItemDelegate switch " + name + " checked " + checked + " is changed.");
                             // Handle only if it's enabled.
                             buttonClickedHandler(name);
+                        }
+                    }
+                }
+            }
+            Row {
+                visible: (type == "popupInterval")
+                width: parent.width - 40
+                height: parent.height
+                anchors.horizontalCenter: parent.horizontalCenter
+                Text {
+                    id: sliderLabel
+                    color: (!window.platformInverted) ? "white" : "black"
+                    font.pointSize: 7
+                    width: parent.width / 4
+                    verticalAlignment: Text.AlignVCenter
+                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                    text: (title=="") ? getTitle(name) : title
+                }
+                Slider {
+                    id: sliderValue
+                    width: parent.width - sliderLabel.width
+                    minimumValue: 2
+                    maximumValue: 8
+                    stepSize: 1
+                    valueIndicatorText: value
+                    valueIndicatorVisible: true
+
+                    onPressedChanged: {
+                        console.debug("popupInterval pressed " + pressed + " value " + value);
+                        if (!pressed) {
+                            appInfo.setSettingValue(name, value);
+                        }
+                    }
+
+                    Component.onCompleted: {
+                        if (type == "popupInterval") {
+                            var v = appInfo.getSettingValue(name, 2);
+                            console.debug("settingPage popupInterval getSettingValue " + v);
+                            value = v;
                         }
                     }
                 }
