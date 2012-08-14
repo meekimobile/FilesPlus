@@ -260,7 +260,7 @@ Please click &apos;OK&apos; to continue.</source>
 <context>
     <name>DrivePage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/DrivePage.qml" line="+101"/>
+        <location filename="../qml/FilesPlus/meego/DrivePage.qml" line="+104"/>
         <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+107"/>
         <source>Drives</source>
         <translation type="unfinished"></translation>
@@ -350,8 +350,8 @@ Please click &apos;OK&apos; to continue.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+149"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+133"/>
+        <location line="+145"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+130"/>
         <source>Reset folder cache</source>
         <translation type="unfinished"></translation>
     </message>
@@ -364,8 +364,8 @@ Please click OK to continue.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+35"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+35"/>
+        <location line="+47"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+47"/>
         <source>Notify</source>
         <translation type="unfinished"></translation>
     </message>
@@ -407,53 +407,53 @@ You will be redirected to authorization page.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+107"/>
-        <location line="+773"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+107"/>
-        <location line="+780"/>
+        <location line="+112"/>
+        <location line="+785"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+112"/>
+        <location line="+792"/>
         <source>Copy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-771"/>
-        <location line="+772"/>
-        <location line="+1126"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-778"/>
-        <location line="+779"/>
-        <location line="+1122"/>
+        <location line="-783"/>
+        <location line="+784"/>
+        <location line="+1129"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-790"/>
+        <location line="+791"/>
+        <location line="+1125"/>
         <source>Move</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1896"/>
-        <location line="+771"/>
-        <location line="+1150"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1899"/>
-        <location line="+778"/>
-        <location line="+1146"/>
+        <location line="-1911"/>
+        <location line="+783"/>
+        <location line="+1153"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1914"/>
+        <location line="+790"/>
+        <location line="+1149"/>
         <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1892"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1895"/>
+        <location line="-1901"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1904"/>
         <source>First time loading</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+17"/>
-        <location line="+735"/>
+        <location line="+741"/>
         <location line="+20"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+17"/>
-        <location line="+742"/>
+        <location line="+748"/>
         <location line="+20"/>
         <source>to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-735"/>
+        <location line="-741"/>
         <location line="+50"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-742"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-748"/>
         <location line="+50"/>
         <source>error</source>
         <translation type="unfinished"></translation>
@@ -468,17 +468,17 @@ You will be redirected to authorization page.</source>
     </message>
     <message>
         <location line="-25"/>
-        <location line="+774"/>
+        <location line="+780"/>
         <location line="+350"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-25"/>
-        <location line="+781"/>
+        <location line="+787"/>
         <location line="+346"/>
         <source>Deleting</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="-701"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-705"/>
+        <location line="-702"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-706"/>
         <source>%n dir(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -501,8 +501,8 @@ You will be redirected to authorization page.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+241"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+249"/>
+        <location line="+242"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+250"/>
         <source>Multiple actions</source>
         <translation type="unfinished"></translation>
     </message>
@@ -557,8 +557,8 @@ Link will be removed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1132"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1139"/>
+        <location line="-1149"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1156"/>
         <source>Can&apos;t print %1 
 File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
         <translation type="unfinished"></translation>
@@ -572,8 +572,8 @@ You will be redirected to authorization page.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+191"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+191"/>
+        <location line="+202"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+202"/>
         <source>Thank you for download FilesPlus.
 This is first time running, FilesPlus needs to load information from your drive.
 
@@ -589,8 +589,8 @@ Please click OK to continue.</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="+691"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+698"/>
+        <location line="+697"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+704"/>
         <source>Delete %n file(s)
 </source>
         <translation type="unfinished">
@@ -731,7 +731,7 @@ Please click OK to continue.</source>
         <location line="+25"/>
         <location line="+47"/>
         <location line="+36"/>
-        <location line="+116"/>
+        <location line="+119"/>
         <location line="+37"/>
         <location line="+141"/>
         <location line="+25"/>
@@ -742,7 +742,7 @@ Please click OK to continue.</source>
         <location line="+25"/>
         <location line="+47"/>
         <location line="+36"/>
-        <location line="+116"/>
+        <location line="+119"/>
         <location line="+37"/>
         <location line="+141"/>
         <location line="+25"/>
@@ -751,8 +751,8 @@ Please click OK to continue.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-510"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-510"/>
+        <location line="-513"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-513"/>
         <source>CloudDrive Request Token</source>
         <translation type="unfinished"></translation>
     </message>
@@ -783,8 +783,8 @@ Please click OK to continue.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+153"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+153"/>
+        <location line="+156"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+156"/>
         <source>Create Folder</source>
         <translation type="unfinished"></translation>
     </message>
@@ -826,7 +826,7 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>FolderSizeItemListModel</name>
     <message>
-        <location filename="../foldersizeitemlistmodel.cpp" line="+460"/>
+        <location filename="../foldersizeitemlistmodel.cpp" line="+465"/>
         <location line="+22"/>
         <source>Source and Target path can&apos;t be the same.</source>
         <translation type="unfinished"></translation>
@@ -872,8 +872,8 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>FolderSizeModelThread</name>
     <message>
-        <location filename="../foldersizemodelthread.cpp" line="+146"/>
-        <location line="+80"/>
+        <location filename="../foldersizemodelthread.cpp" line="+355"/>
+        <location line="+81"/>
         <location line="+64"/>
         <source>Copy %1 to %2 is aborted.</source>
         <translation type="unfinished"></translation>
@@ -911,7 +911,7 @@ And present in Pie view for easy understanding at glance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+423"/>
+        <location line="+550"/>
         <source>Deleting %1 is aborted.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1044,7 +1044,7 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>PieChart</name>
     <message numerus="yes">
-        <location filename="../piechart.cpp" line="+309"/>
+        <location filename="../piechart.cpp" line="+313"/>
         <source>%n dir(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -1169,8 +1169,8 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+156"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+157"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+168"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+169"/>
         <source>Cancel queued jobs</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1181,22 +1181,22 @@ And present in Pie view for easy understanding at glance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-110"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-110"/>
+        <location line="-122"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-122"/>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+110"/>
+        <location line="+124"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <location line="+110"/>
+        <location line="+124"/>
         <source>Logging (Debug)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-109"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-109"/>
+        <location line="-123"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-123"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -1204,8 +1204,8 @@ Please confirm.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+99"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+99"/>
+        <location line="+111"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+111"/>
         <source>Show cloud print jobs</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1230,6 +1230,12 @@ Please confirm.</source>
     <message>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Auto-sync after refresh</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>FolderPie feature</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1243,6 +1249,12 @@ Please confirm.</source>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Theme</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Popup interval</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1282,8 +1294,8 @@ Please confirm.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+61"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+97"/>
+        <location line="+100"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+136"/>
         <source>English</source>
         <translation type="unfinished"></translation>
     </message>

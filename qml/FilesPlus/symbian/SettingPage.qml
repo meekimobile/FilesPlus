@@ -160,6 +160,7 @@ Page {
         section.property: "group"
         section.criteria: ViewSection.FullString
         section.delegate: settingListSectionDelegate
+        cacheBuffer: 490
     }
 
     function getTitle(name) {
@@ -258,7 +259,8 @@ Page {
                     id: sliderLabel
                     color: (!window.platformInverted) ? "white" : "black"
                     font.pointSize: 7
-                    width: parent.width / 4
+                    width: parent.width / 3
+                    height: parent.height
                     verticalAlignment: Text.AlignVCenter
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     text: (title=="") ? getTitle(name) : title
@@ -266,6 +268,8 @@ Page {
                 Slider {
                     id: sliderValue
                     width: parent.width - sliderLabel.width
+                    height: parent.height
+                    platformInverted: window.platformInverted
                     minimumValue: 2
                     maximumValue: 8
                     stepSize: 1

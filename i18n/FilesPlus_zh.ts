@@ -268,7 +268,7 @@ Please click &apos;OK&apos; to continue.</translatorcomment>
 <context>
     <name>DrivePage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/DrivePage.qml" line="+101"/>
+        <location filename="../qml/FilesPlus/meego/DrivePage.qml" line="+104"/>
         <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+107"/>
         <source>Drives</source>
         <translation>数据存储</translation>
@@ -362,8 +362,8 @@ FilesPlus provides more features than file manager.
         <translation>排序</translation>
     </message>
     <message>
-        <location line="+149"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+133"/>
+        <location line="+145"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+130"/>
         <source>Reset folder cache</source>
         <translation>重置当前文件夹的缓存</translation>
     </message>
@@ -378,8 +378,8 @@ Please click OK to continue.</source>
 请单击“好”继续。</translation>
     </message>
     <message>
-        <location line="+35"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+35"/>
+        <location line="+47"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+47"/>
         <source>Notify</source>
         <translation>通知</translation>
     </message>
@@ -434,36 +434,36 @@ You will be redirected to authorization page.</source>
         <translation>与 Dropbox 同步</translation>
     </message>
     <message>
-        <location line="+107"/>
-        <location line="+773"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+107"/>
-        <location line="+780"/>
+        <location line="+112"/>
+        <location line="+785"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+112"/>
+        <location line="+792"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location line="-771"/>
-        <location line="+772"/>
-        <location line="+1126"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-778"/>
-        <location line="+779"/>
-        <location line="+1122"/>
+        <location line="-783"/>
+        <location line="+784"/>
+        <location line="+1129"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-790"/>
+        <location line="+791"/>
+        <location line="+1125"/>
         <source>Move</source>
         <translation>移动</translation>
     </message>
     <message>
-        <location line="-1896"/>
-        <location line="+771"/>
-        <location line="+1150"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1899"/>
-        <location line="+778"/>
-        <location line="+1146"/>
+        <location line="-1911"/>
+        <location line="+783"/>
+        <location line="+1153"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1914"/>
+        <location line="+790"/>
+        <location line="+1149"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="-1892"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1895"/>
+        <location line="-1901"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1904"/>
         <source>First time loading</source>
         <translation>第一次加载</translation>
     </message>
@@ -483,18 +483,18 @@ Please click OK to continue.</source>
     </message>
     <message>
         <location line="+17"/>
-        <location line="+735"/>
+        <location line="+741"/>
         <location line="+20"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+17"/>
-        <location line="+742"/>
+        <location line="+748"/>
         <location line="+20"/>
         <source>to</source>
         <translation>对</translation>
     </message>
     <message>
-        <location line="-735"/>
+        <location line="-741"/>
         <location line="+50"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-742"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-748"/>
         <location line="+50"/>
         <source>error</source>
         <translation>错误</translation>
@@ -509,23 +509,23 @@ Please click OK to continue.</source>
     </message>
     <message>
         <location line="-25"/>
-        <location line="+774"/>
+        <location line="+780"/>
         <location line="+350"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-25"/>
-        <location line="+781"/>
+        <location line="+787"/>
         <location line="+346"/>
         <source>Deleting</source>
         <translation>删去</translation>
     </message>
     <message>
-        <location line="-699"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-703"/>
+        <location line="-700"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-704"/>
         <source>last modified</source>
         <translation>最后修改</translation>
     </message>
     <message>
-        <location line="+241"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+249"/>
+        <location line="+242"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+250"/>
         <source>Multiple actions</source>
         <translation>多个动作</translation>
     </message>
@@ -662,7 +662,7 @@ Please click OK to continue.</source>
         <location line="+25"/>
         <location line="+47"/>
         <location line="+36"/>
-        <location line="+116"/>
+        <location line="+119"/>
         <location line="+37"/>
         <location line="+141"/>
         <location line="+25"/>
@@ -673,7 +673,7 @@ Please click OK to continue.</source>
         <location line="+25"/>
         <location line="+47"/>
         <location line="+36"/>
-        <location line="+116"/>
+        <location line="+119"/>
         <location line="+37"/>
         <location line="+141"/>
         <location line="+25"/>
@@ -682,8 +682,8 @@ Please click OK to continue.</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location line="-510"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-510"/>
+        <location line="-513"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-513"/>
         <source>CloudDrive Request Token</source>
         <translation>CloudDrive 请求令牌</translation>
     </message>
@@ -730,8 +730,8 @@ Link will be removed.</source>
 链接将被删除。</translation>
     </message>
     <message>
-        <location line="+107"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+107"/>
+        <location line="+110"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+110"/>
         <source>Create Folder</source>
         <translatorcomment>New folder</translatorcomment>
         <translation>创建新的文件夹</translation>
@@ -757,8 +757,8 @@ Link will be removed.</source>
         <translation>从 Dropbox 的共享文件</translation>
     </message>
     <message>
-        <location line="-2134"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2137"/>
+        <location line="-2154"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2157"/>
         <source>Can&apos;t print %1 
 File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
         <translation>不能打印 %1 
@@ -775,8 +775,8 @@ You will be redirected to authorization page.</source>
 你会去授权页。</translation>
     </message>
     <message>
-        <location line="+191"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+191"/>
+        <location line="+202"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+202"/>
         <source>Thank you for download FilesPlus.
 This is first time running, FilesPlus needs to load information from your drive.
 
@@ -797,8 +797,8 @@ Please click OK to continue.</source>
         <translation>%1 被删除。</translation>
     </message>
     <message numerus="yes">
-        <location line="+412"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+411"/>
+        <location line="+417"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+416"/>
         <source>%n dir(s)</source>
         <translation>
             <numerusform>%n 文件夹</numerusform>
@@ -813,8 +813,8 @@ Please click OK to continue.</source>
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+278"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+286"/>
+        <location line="+279"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+287"/>
         <source>Delete %n file(s)
 </source>
         <translation>
@@ -857,8 +857,8 @@ Please click OK to continue.</source>
         </translation>
     </message>
     <message>
-        <location line="-1498"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1485"/>
+        <location line="-1523"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1511"/>
         <source>Sync connected items</source>
         <translation>同步连接文件夹</translation>
     </message>
@@ -886,7 +886,7 @@ And shows pie chart view for easy understanding.</translatorcomment>
 <context>
     <name>FolderSizeItemListModel</name>
     <message>
-        <location filename="../foldersizeitemlistmodel.cpp" line="+460"/>
+        <location filename="../foldersizeitemlistmodel.cpp" line="+465"/>
         <location line="+22"/>
         <source>Source and Target path can&apos;t be the same.</source>
         <translation>源和目标路径不能是相同的。</translation>
@@ -934,8 +934,8 @@ Show running on parent path</translatorcomment>
 <context>
     <name>FolderSizeModelThread</name>
     <message>
-        <location filename="../foldersizemodelthread.cpp" line="+146"/>
-        <location line="+80"/>
+        <location filename="../foldersizemodelthread.cpp" line="+355"/>
+        <location line="+81"/>
         <location line="+64"/>
         <source>Copy %1 to %2 is aborted.</source>
         <translation>复制 %1 %2 中止。</translation>
@@ -979,7 +979,7 @@ Deleting %1 is done.</translatorcomment>
         <translation>删除 %1 完成。</translation>
     </message>
     <message>
-        <location line="+423"/>
+        <location line="+550"/>
         <source>Deleting %1 is aborted.</source>
         <translatorcomment>[Edited text copy]
 Deleting %1 is aborted.</translatorcomment>
@@ -1114,7 +1114,7 @@ Deleting %1 is aborted.</translatorcomment>
 <context>
     <name>PieChart</name>
     <message numerus="yes">
-        <location filename="../piechart.cpp" line="+309"/>
+        <location filename="../piechart.cpp" line="+313"/>
         <source>%n dir(s)</source>
         <translation>
             <numerusform>%n 文件夹</numerusform>
@@ -1240,8 +1240,8 @@ Reset current folder&apos;s cache</translatorcomment>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+156"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+157"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+168"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+169"/>
         <source>Cancel queued jobs</source>
         <translatorcomment>[Edited text copy]
 Cancel queued activities</translatorcomment>
@@ -1254,22 +1254,22 @@ Cancel queued activities</translatorcomment>
         <translation>同步所有连接的项目</translation>
     </message>
     <message>
-        <location line="-110"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-110"/>
+        <location line="-122"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-122"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+110"/>
+        <location line="+124"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <location line="+110"/>
+        <location line="+124"/>
         <source>Logging (Debug)</source>
         <translation>日志（调试）</translation>
     </message>
     <message>
-        <location line="-109"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-109"/>
+        <location line="-123"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-123"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -1285,8 +1285,8 @@ FilesPlus 现在正在退出。
 请证实。</translation>
     </message>
     <message>
-        <location line="+99"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+99"/>
+        <location line="+111"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+111"/>
         <source>Show cloud print jobs</source>
         <translatorcomment>[Edited text copy]
 Shows CloudPrint jobs</translatorcomment>
@@ -1317,6 +1317,12 @@ Shows CloudDrive accounts</translatorcomment>
     <message>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Auto-sync after refresh</source>
+        <translation>自动同步</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>FolderPie feature</source>
         <translation>FolderPie 功能</translation>
     </message>
@@ -1331,6 +1337,12 @@ Shows CloudDrive accounts</translatorcomment>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Theme</source>
         <translation>主题 白/黑</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Popup interval</source>
+        <translation>弹出间隔</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1363,8 +1375,8 @@ Shows CloudDrive accounts</translatorcomment>
         <translation>启用监视。日志文件 </translation>
     </message>
     <message>
-        <location line="+61"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+97"/>
+        <location line="+100"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+136"/>
         <source>English</source>
         <translation>英语</translation>
     </message>
@@ -1381,8 +1393,8 @@ Shows CloudDrive accounts</translatorcomment>
         <translation>中文</translation>
     </message>
     <message>
-        <location line="-114"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-152"/>
+        <location line="-153"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-191"/>
         <source>Locale</source>
         <translation>语言环境</translation>
     </message>
