@@ -22,11 +22,6 @@ Page {
                 target: mainMenu
                 disabledMenus: [appInfo.emptyStr+qsTr("Paste"), appInfo.emptyStr+qsTr("Mark multiple items"), appInfo.emptyStr+qsTr("Clear clipboard"), appInfo.emptyStr+qsTr("New folder"), appInfo.emptyStr+qsTr("Sync current folder"), appInfo.emptyStr+qsTr("Sync connected items"), appInfo.emptyStr+qsTr("Sort by")]
             }
-            PropertyChanges {
-                target: fsModel
-                explicit: true
-                sortFlag: FolderSizeItemListModel.SortBySize
-            }
         },
         State {
             name: "list"
@@ -40,9 +35,12 @@ Page {
 
     onStateChanged: {
         console.debug("folderPage onStateChanged state=" + folderPage.state);
-//        if (state == "chart") {
-//            fsModel.sortFlag = FolderSizeItemListModel.SortBySize;
-//        }
+        if (state == "chart") {
+            fsModel.setSortFlag(FolderSizeItemListModel.SortBySize, false);
+        } else {
+            // TODO revert back to stored sortFlag.
+            fsModel.revertSortFlag();
+        }
     }
 
     Component.onCompleted: {
@@ -185,9 +183,15 @@ Page {
 
     function goUpSlot() {
         if (fsModel.isRoot()) {
+            // Flip back to list view, then push drivePage.
+            flipable1.flipped = false;
             pageStack.push(Qt.resolvedUrl("DrivePage.qml"), {}, true);
         } else {
-            fsModel.changeDir("..");
+            if (state == "chart") {
+                fsModel.changeDir("..", FolderSizeItemListModel.SortBySize);
+            } else {
+                fsModel.changeDir("..");
+            }
         }
     }
 
@@ -427,7 +431,8 @@ Page {
             // Reset ListView currentIndex.
             fsListView.currentIndex = -1;
 
-            // TODO Auto-sync after refresh. Only dirty items will be sync'd.
+            // Auto-sync after refresh. Only dirty items will be sync'd.
+            // TODO Suppress in PieView.
             if (appInfo.getSettingValue("sync.after.refresh", false)) {
                 syncConnectedItemsSlot(true);
             }
@@ -651,7 +656,12 @@ Page {
         }
         onSliceClicked: {
             console.debug("QML pieChartView.onSliceClicked " + text + ", index=" + index + ", isDir=" + isDir);
-            if (isDir) fsModel.changeDir(text);
+            if (isDir) {
+                // TODO keep sortBySize in PieView.
+                fsModel.changeDir(text, FolderSizeItemListModel.SortBySize);
+            } else {
+                flipSlot();
+            }
         }
         onActiveFocusChanged: {
             console.debug("QML pieChartView.onActiveFocusChanged");

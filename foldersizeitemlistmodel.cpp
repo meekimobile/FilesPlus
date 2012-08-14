@@ -305,10 +305,10 @@ void FolderSizeItemListModel::jobDone()
     emit proceedNextJobSignal();
 }
 
-void FolderSizeItemListModel::changeDir(const QString &name)
+void FolderSizeItemListModel::changeDir(const QString &name, const int sortFlag)
 {
     // m.changeDir() reuses m.setCurrentDir().
-    bool isDirChanged = m.changeDir(name);
+    bool isDirChanged = m.changeDir(name, sortFlag);
 
     if (isDirChanged) {
         // Emit to update currentDir on UI.
@@ -386,14 +386,19 @@ int FolderSizeItemListModel::getSortFlag() const
     return m.sortFlag();
 }
 
-void FolderSizeItemListModel::setSortFlag(const int sortFlag)
+void FolderSizeItemListModel::setSortFlag(const int sortFlag, const bool saveSortFlag)
 {
-    if (m.setSortFlag(sortFlag)) {
+    if (m.setSortFlag(sortFlag, saveSortFlag)) {
         m.sortItemList(itemList);
 
         // If itemList is actually sorted, refreshItems to emit dataChanged.
         refreshItems();
     }
+}
+
+void FolderSizeItemListModel::revertSortFlag()
+{
+    setSortFlag(m.getSortFlagFromDB(m.currentDir(), m.sortFlag()));
 }
 
 QStringList FolderSizeItemListModel::getNameFilters() const

@@ -927,10 +927,14 @@ FolderSizeItem FolderSizeModelThread::getDirItem(const QFileInfo dirInfo) {
     return item;
 }
 
-void FolderSizeModelThread::setCurrentDir(const QString currentDir)
+void FolderSizeModelThread::setCurrentDir(const QString currentDir, const int sortFlag)
 {
     m_currentDir = currentDir;
-    m_sortFlag = getSortFlagFromDB(m_currentDir, SortByType);
+    if (sortFlag == -1) {
+        m_sortFlag = getSortFlagFromDB(m_currentDir, m_sortFlag);
+    } else {
+        m_sortFlag = sortFlag;
+    }
 }
 
 int FolderSizeModelThread::getSortFlagFromDB(const QString absolutePath, const int defaultSortFlag)
@@ -956,20 +960,22 @@ int FolderSizeModelThread::sortFlag() const
     return m_sortFlag;
 }
 
-bool FolderSizeModelThread::setSortFlag(int sortFlag)
+bool FolderSizeModelThread::setSortFlag(int sortFlag, bool saveSortFlag)
 {
     qDebug() << "FolderSizeModelThread::setSortFlag m_sortFlag " << m_sortFlag << " sortFlag " << sortFlag;
     if (m_sortFlag != sortFlag) {
         m_sortFlag = sortFlag;
 
         // TODO Save to DB
-        QSqlQuery query;
-        query.prepare("UPDATE folderpie_cache SET sort_flag = :sort_flag WHERE id = :id");
-        query.bindValue(":sort_flag", m_sortFlag);
-        query.bindValue(":id", m_currentDir);
-        if (query.exec()) {
-            QSqlDatabase::database().commit();
-            qDebug() << "FolderSizeModelThread::setSortFlag update sortFlag" << m_currentDir << " sortFlag " << m_sortFlag;
+        if (saveSortFlag) {
+            QSqlQuery query;
+            query.prepare("UPDATE folderpie_cache SET sort_flag = :sort_flag WHERE id = :id");
+            query.bindValue(":sort_flag", m_sortFlag);
+            query.bindValue(":id", m_currentDir);
+            if (query.exec()) {
+                QSqlDatabase::database().commit();
+                qDebug() << "FolderSizeModelThread::setSortFlag update sortFlag" << m_currentDir << " sortFlag " << m_sortFlag;
+            }
         }
 
         return true;
@@ -988,7 +994,7 @@ void FolderSizeModelThread::setNameFilters(const QStringList nameFilters)
     m_nameFilters = nameFilters;
 }
 
-bool FolderSizeModelThread::changeDir(const QString dirName)
+bool FolderSizeModelThread::changeDir(const QString dirName, const int sortFlag)
 {
     QDir dir = QDir(m_currentDir);
     if (dir.isRoot() && dirName == "..") {
@@ -996,7 +1002,7 @@ bool FolderSizeModelThread::changeDir(const QString dirName)
         return false;
     } else {
         dir.cd(dirName);
-        setCurrentDir(dir.absolutePath());
+        setCurrentDir(dir.absolutePath(), sortFlag);
         return true;
     }
 }

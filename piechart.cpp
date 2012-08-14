@@ -146,6 +146,9 @@ bool PieChart::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
             qDebug() << "PieChart::sceneEventFilter watched slice modelIndex" << slice->modelIndex() << "label" << slice->getTextLabel() << " is for files. Suppress event.";
 
             slice->mouseReleaseEvent(ge);
+
+            // Emit click for files's pie slice.
+            emit sliceClicked(slice->text(), slice->modelIndex(), false);
         }
 
         // Stop propagating.

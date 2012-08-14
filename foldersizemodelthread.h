@@ -38,9 +38,9 @@ public:
     ~FolderSizeModelThread();
 
     QString currentDir() const;
-    void setCurrentDir(const QString currentDir);
+    void setCurrentDir(const QString currentDir, const int sortFlag = -1);
     int sortFlag() const;
-    bool setSortFlag(int sortFlag);
+    bool setSortFlag(int sortFlag, bool saveSortFlag = true);
     QStringList nameFilters() const;
     void setNameFilters(const QStringList nameFilters);
     bool clearCache() const;
@@ -50,13 +50,15 @@ public:
     bool rollbackFlag() const;
     void setRollbackFlag(bool flag);
 
+    int getSortFlagFromDB(const QString absolutePath, const int defaultSortFlag);
+
     void saveDirSizeCache();
 
     void getDirContent(const QString dirPath, QList<FolderSizeItem> &itemList);
     void sortItemList(QList<FolderSizeItem> &itemList, bool sortAll = true);
     bool isDirSizeCacheExisting();
     void removeDirSizeCache(const QString key);
-    bool changeDir(const QString dirName);
+    bool changeDir(const QString dirName, const int sortFlag = -1);
     FolderSizeItem getItem(const QFileInfo fileInfo);
 
     void setRunMethod(int method);
@@ -103,8 +105,6 @@ private:
 
     void cleanItems();
     bool cleanItem(const FolderSizeItem &item);
-
-    int getSortFlagFromDB(const QString absolutePath, const int defaultSortFlag);
 
     QHash<QString, FolderSizeItem> *dirSizeCache;
     QHash<QString, FolderSizeItem> *m_itemCache;

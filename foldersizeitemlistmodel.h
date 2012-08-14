@@ -88,7 +88,8 @@ public:
     QString currentDir() const;
     void setCurrentDir(const QString &path);
     int getSortFlag() const;
-    void setSortFlag(const int sortFlag);
+    Q_INVOKABLE void setSortFlag(const int sortFlag, const bool saveSortFlag = true);
+    Q_INVOKABLE void revertSortFlag();
     QStringList getNameFilters() const;
     void setNameFilters(const QStringList nameFilters);
     Q_INVOKABLE QVariant getProperty(const int index, FolderSizeItemRoles role);
@@ -96,7 +97,7 @@ public:
     Q_INVOKABLE void setProperty(const QString localPath, FolderSizeItemRoles role, QVariant value);
 
     Q_INVOKABLE void refreshDir(const QString caller, const bool clearCache = false);
-    Q_INVOKABLE void changeDir(const QString &name);
+    Q_INVOKABLE void changeDir(const QString &name, const int sortFlag = -1);
     Q_INVOKABLE QString getUrl(const QString absPath);
     Q_INVOKABLE bool isRoot(); // Overload method for verifying on currentDir.
     Q_INVOKABLE bool isRoot(const QString absPath);
