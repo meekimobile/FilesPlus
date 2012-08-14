@@ -157,22 +157,6 @@ Page {
         }
     }
 
-//    SettingMenu {
-//        id: settingMenu
-//        onResetCache: {
-//            resetCacheSlot();
-//        }
-//        onResetCloudPrint: {
-//            resetCloudPrintSlot();
-//        }
-//        onRegisterDropboxUser: {
-//            registerDropboxUserSlot();
-//        }
-//        onShowCloudPrintJobs: {
-//            showCloudPrintJobsSlot();
-//        }
-//    }
-
     MarkMenu {
         id: markMenu
     }
@@ -316,14 +300,19 @@ Page {
         }
     }
 
-    function syncConnectedItemsSlot() {
+    function syncConnectedItemsSlot(onlyDirty) {
         for (var i=0; i<fsModel.count; i++) {
             var localPath = fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole);
+            var lastModified = fsModel.getProperty(i, FolderSizeItemListModel.LastModifiedRole);
             var isConnected = cloudDriveModel.isConnected(localPath);
-//            console.debug("folderPage synconnectedItemsSlot localPath " + localPath + " isConnected " + isConnected);
-            if (isConnected) {
-                console.debug("folderPage synconnectedItemsSlot localPath " + localPath + " isConnected " + isConnected + " is queued for syncing.");
-                cloudDriveModel.syncItem(localPath);
+            var isSyncing = cloudDriveModel.isSyncing(localPath);
+            var isDirty = cloudDriveModel.isDirty(localPath, lastModified);
+//            console.debug("folderPage synconnectedItemsSlot localPath " + localPath + " isConnected " + isConnected + " isSyncing " + isSyncing);
+            if (isConnected && !isSyncing) {
+                if (!onlyDirty || isDirty) {
+                    cloudDriveModel.syncItem(localPath);
+                    console.debug("folderPage synconnectedItemsSlot localPath " + localPath + " isConnected " + isConnected + " is queued for syncing.");
+                }
             }
         }
     }
@@ -437,6 +426,11 @@ Page {
 
             // Reset ListView currentIndex.
             fsListView.currentIndex = -1;
+
+            // TODO Auto-sync after refresh. Only dirty items will be sync'd.
+            if (appInfo.getSettingValue("sync.after.refresh", false)) {
+                syncConnectedItemsSlot(true);
+            }
         }
 
         onRequestResetCache: {
@@ -1085,6 +1079,7 @@ Page {
         ringRadius: 80
         buttonRadius: 30
         clipboardCount: clipboard.count
+        timeout: appInfo.emptySetting+appInfo.getSettingValue("popup.timer.interval", 2) * 1000
 
         onOpened: {
 //            console.debug("popupToolRing onOpened");
@@ -2109,6 +2104,9 @@ Page {
                             cloudDriveModel.fileGet(type, uid, remotePath, localPath, modelIndex);
                         } else if (jsonObj.rev < localPathHash) {
                             cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                        } else {
+                            // Update lastModified on cloudDriveItem.
+                            cloudDriveModel.addItem(type, uid, localPath, remotePath, jsonObj.rev);
                         }
                     }
                 }

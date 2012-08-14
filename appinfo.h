@@ -13,6 +13,7 @@ class AppInfo : public QDeclarativeItem
     Q_PROPERTY(QString app READ getAppName WRITE setAppName)
     Q_PROPERTY(QString emptyStr READ getEmptyStr NOTIFY localeChanged)
     Q_PROPERTY(QString locale READ getLocale WRITE setLocale NOTIFY localeChanged)
+    Q_PROPERTY(QString emptySetting READ getEmptySetting NOTIFY settingChanged)
 public:
     explicit AppInfo(QDeclarativeItem *parent = 0);
     
@@ -32,6 +33,7 @@ public:
     Q_INVOKABLE QString getLocale();
     Q_INVOKABLE void setLocale(const QString locale);
     QString getEmptyStr();
+    QString getEmptySetting();
 
     void componentComplete();
     void init();
@@ -39,6 +41,7 @@ signals:
     void notifyLoggingSignal(QString logFilePath);
     void notifyMonitoringSignal(QString monitoringFilePath);
     void localeChanged(QString locale);
+    void settingChanged();
 public slots:
 
 private:

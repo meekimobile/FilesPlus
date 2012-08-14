@@ -99,6 +99,12 @@ Page {
             type: "button"
             group: "CloudDrive"
         }
+        ListElement {
+            name: "sync.after.refresh"
+            title: ""
+            type: "switch"
+            group: "CloudDrive"
+        }
 //        ListElement {
 //            name: "FolderPie.enabled"
 //            title: ""
@@ -162,10 +168,11 @@ Page {
         else if (name == "cancelAllCloudDriveJobs") return qsTr("Cancel queued jobs") + appInfo.emptyStr;
         else if (name == "syncAllConnectedItems") return qsTr("Sync all connected items") + appInfo.emptyStr;
         else if (name == "showCloudDriveAccounts") return qsTr("Show accounts") + appInfo.emptyStr;
+        else if (name == "sync.after.refresh") return qsTr("Auto-sync after refresh") + appInfo.emptyStr;
         else if (name == "FolderPie.enabled") return qsTr("FolderPie feature") + appInfo.emptyStr;
         else if (name == "resetCache") return qsTr("Reset current folder cache") + appInfo.emptyStr;
         else if (name == "Theme.inverted") return qsTr("Theme") + appInfo.emptyStr;
-        else if (name == "popup.timer.interval") return qsTr("Popup timer interval") + appInfo.emptyStr;
+        else if (name == "popup.timer.interval") return qsTr("Popup interval") + appInfo.emptyStr;
         else if (name == "locale") return qsTr("Locale") + appInfo.emptyStr;
         else if (name == "Logging.enabled") return qsTr("Logging (Debug)") + appInfo.emptyStr;
         else if (name == "Monitoring.enabled") return qsTr("Monitoring (RAM,CPU)") + appInfo.emptyStr;
@@ -241,7 +248,7 @@ Page {
                     }
                 }
             }
-            Column {
+            Row {
                 visible: (type == "popupInterval")
                 width: parent.width - 40
                 height: parent.height
@@ -250,16 +257,14 @@ Page {
                     id: sliderLabel
                     color: (theme.inverted) ? "white" : "black"
                     font.pointSize: 18
-                    width: parent.width
-                    height: parent.height / 2
+                    width: parent.width / 4
                     verticalAlignment: Text.AlignVCenter
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     text: (title=="") ? getTitle(name) : title
                 }
                 Slider {
                     id: sliderValue
-                    width: parent.width
-                    height: parent.height / 2
+                    width: parent.width - sliderLabel.width
                     minimumValue: 2
                     maximumValue: 8
                     stepSize: 1
@@ -274,7 +279,11 @@ Page {
                     }
 
                     Component.onCompleted: {
-                        value = appInfo.getSettingValue(name, 2);
+                        if (type == "popupInterval") {
+                            var v = appInfo.getSettingValue(name, 2);
+                            console.debug("settingPage popupInterval getSettingValue " + v);
+                            value = v;
+                        }
                     }
                 }
             }

@@ -68,7 +68,7 @@ const int FolderSizeModelThread::FILE_READ_BUFFER = 32768;
 FolderSizeModelThread::FolderSizeModelThread(QObject *parent) : QThread(parent)
 {
     m_currentDir = DEFAULT_CURRENT_DIR;
-    m_sortFlag = SortByType;
+    m_sortFlag = getSortFlagFromDB(m_currentDir, SortByType);
     dirSizeCache = new QHash<QString, FolderSizeItem>();
     m_itemCache = new QHash<QString, FolderSizeItem>();
 
@@ -97,7 +97,7 @@ void FolderSizeModelThread::initializeDB()
         }
     }
 
-    // TODO First initialization.
+    // First initialization.
     m_db = QSqlDatabase::addDatabase("QSQLITE");
     m_db.setDatabaseName(CACHE_DB_PATH);
     bool ok = m_db.open();
@@ -120,6 +120,15 @@ void FolderSizeModelThread::initializeDB()
         qDebug() << "FolderSizeModelThread::initializeDB CREATE INDEX folderpie_cache_pk is failed. Error" << query.lastError();
     }
 
+    // TODO Additional initialization.
+    res = query.exec("ALTER TABLE folderpie_cache ADD COLUMN sort_flag INTEGER");
+    if (res) {
+        qDebug() << "FolderSizeModelThread::initializeDB adding column folderpie_cache.sort_flag is done.";
+    } else {
+        qDebug() << "FolderSizeModelThread::initializeDB adding column folderpie_cache.sort_flag is failed. Error" << query.lastError();
+    }
+
+    // Prepare queries.
     m_selectPS = QSqlQuery(m_db);
     m_selectPS.prepare("SELECT * FROM folderpie_cache WHERE id = :id");
 
@@ -155,7 +164,7 @@ FolderSizeItem FolderSizeModelThread::selectDirSizeCacheFromDB(const QString id)
     // Find in itemCache, return if found.
     if (m_itemCache->contains(id)) {
         item = m_itemCache->value(id);
-        qDebug() << "FolderSizeModelThread::selectDirSizeCacheFromDB cached id" << id << "item" << item;
+//        qDebug() << "FolderSizeModelThread::selectDirSizeCacheFromDB cached id" << id << "item" << item;
         return item;
     }
 
@@ -921,6 +930,25 @@ FolderSizeItem FolderSizeModelThread::getDirItem(const QFileInfo dirInfo) {
 void FolderSizeModelThread::setCurrentDir(const QString currentDir)
 {
     m_currentDir = currentDir;
+    m_sortFlag = getSortFlagFromDB(m_currentDir, SortByType);
+}
+
+int FolderSizeModelThread::getSortFlagFromDB(const QString absolutePath, const int defaultSortFlag)
+{
+    // TODO Get sortFlag from DB
+    int sortFlag;
+    QSqlQuery query;
+    query.prepare("SELECT sort_flag FROM folderpie_cache WHERE id = :id");
+    query.bindValue(":id", absolutePath);
+    if (query.exec()) {
+        if (query.next()) {
+            sortFlag = query.value(query.record().indexOf("sort_flag")).toInt();
+            qDebug() << "FolderSizeModelThread::getSortFlagFromDB" << absolutePath << "sortFlag" << sortFlag;
+            return sortFlag;
+        }
+    }
+
+    return defaultSortFlag;
 }
 
 int FolderSizeModelThread::sortFlag() const
@@ -933,6 +961,17 @@ bool FolderSizeModelThread::setSortFlag(int sortFlag)
     qDebug() << "FolderSizeModelThread::setSortFlag m_sortFlag " << m_sortFlag << " sortFlag " << sortFlag;
     if (m_sortFlag != sortFlag) {
         m_sortFlag = sortFlag;
+
+        // TODO Save to DB
+        QSqlQuery query;
+        query.prepare("UPDATE folderpie_cache SET sort_flag = :sort_flag WHERE id = :id");
+        query.bindValue(":sort_flag", m_sortFlag);
+        query.bindValue(":id", m_currentDir);
+        if (query.exec()) {
+            QSqlDatabase::database().commit();
+            qDebug() << "FolderSizeModelThread::setSortFlag update sortFlag" << m_currentDir << " sortFlag " << m_sortFlag;
+        }
+
         return true;
     } else {
         return false;

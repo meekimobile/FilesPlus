@@ -104,6 +104,8 @@ private:
     void cleanItems();
     bool cleanItem(const FolderSizeItem &item);
 
+    int getSortFlagFromDB(const QString absolutePath, const int defaultSortFlag);
+
     QHash<QString, FolderSizeItem> *dirSizeCache;
     QHash<QString, FolderSizeItem> *m_itemCache;
     QString m_currentDir;

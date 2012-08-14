@@ -60,6 +60,11 @@ QString AppInfo::getEmptyStr()
     return "";
 }
 
+QString AppInfo::getEmptySetting()
+{
+    return "";
+}
+
 bool AppInfo::isMonitoring() const
 {
     return m_settings->value("Monitoring.enabled", false).toBool();
@@ -100,6 +105,9 @@ bool AppInfo::setSettingValue(const QString key, const QVariant v)
 
         // Call startMonitoring.
         startMonitoring();
+
+        // Emit setting changed.
+        emit settingChanged();
 
         return true;
     } else {
