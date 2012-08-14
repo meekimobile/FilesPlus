@@ -53,7 +53,7 @@ QString FolderSizeItem::toJsonText()
 void FolderSizeItem::setFileType()
 {
     // Get file extension.
-    QRegExp rx("^(.+)(\\.)(.+)$");
+    QRegExp rx("^(.*)(\\.)(.+)$");
     rx.indexIn(name);
     if (rx.captureCount() == 3) {
         fileType = rx.cap(3);
@@ -87,7 +87,7 @@ QDataStream &operator>>(QDataStream &in, FolderSizeItem &item)
 
 QDebug &operator<<(QDebug &out, const FolderSizeItem &item)
 {
-    out << "FolderSizeItem(" << item.name << "," << item.absolutePath << "," << item.lastModified << "," << item.size << "," << item.isDir << ")";
+    out << "FolderSizeItem(" << item.name << "," << item.fileType << "," << item.absolutePath << "," << item.lastModified << "," << item.size << "," << item.isDir << ")";
 
     return out;
 }

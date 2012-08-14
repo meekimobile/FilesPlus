@@ -6,6 +6,7 @@
 
 bool nameLessThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
 {
+    qDebug() << "nameLessThan" << o1.name << o1.fileType << o2.name << o2.fileType;
     return o1.name < o2.name;
 }
 
@@ -26,6 +27,7 @@ bool typeLessThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
         // If both are dir, compare name.
         // If both are file, compare type and name.
         if (o1.isDir && o2.isDir) {
+            qDebug() << "typeLessThan" << o1.name << o1.fileType << o2.name << o2.fileType;
             return o1.name < o2.name;
         } else {
             if (o1.fileType == o2.fileType) {
@@ -56,7 +58,7 @@ bool sizeGreaterThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
 #if defined(Q_WS_HARMATTAN)
 const QString FolderSizeModelThread::CACHE_FILE_PATH = "/home/user/.folderpie/FolderPieCache.dat";
 const QString FolderSizeModelThread::CACHE_DB_PATH = "/home/user/.folderpie/FolderPieCache.db";
-const QString FolderSizeModelThread::DEFAULT_CURRENT_DIR = "/home/user/";
+const QString FolderSizeModelThread::DEFAULT_CURRENT_DIR = "/home/user/MyDocs";
 const int FolderSizeModelThread::FILE_READ_BUFFER = 32768;
 #else
 const QString FolderSizeModelThread::CACHE_FILE_PATH = "C:/FolderPieCache.dat";
@@ -653,6 +655,9 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
                 qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir DB %1 < %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
                 isValid = false;
             }
+        } else if (cachedDir.absolutePath == "") {
+            // Clean invalid entry.
+            deleteDirSizeCacheToDB(dir.absoluteFilePath());
         }
 
         // Get cachedDir from DAT.
