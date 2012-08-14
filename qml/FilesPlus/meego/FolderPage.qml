@@ -852,7 +852,13 @@ Page {
                 if (isDir) {
                     return "folder_list.svg";
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                    return "photos_list.svg";
+                    var showThumbnail = appInfo.getSettingValue("thumbnail.enabled", false);
+//                    console.debug("folderPage listDelegate getIconSource showThumbnail " + showThumbnail);
+                    if (showThumbnail == "true") {
+                        return "image://local/" + absolutePath;
+                    } else {
+                        return "photos_list.svg";
+                    }
                 } else {
                     return "notes_list.svg";
                 }
@@ -889,11 +895,14 @@ Page {
                     }
                     Image {
                         id: icon1
+                        asynchronous: true
+                        sourceSize.width: (fileType.toUpperCase() == "SVG") ? undefined : 48
+                        sourceSize.height: (fileType.toUpperCase() == "SVG") ? undefined : 48
                         width: 48
                         height: 48
                         fillMode: Image.PreserveAspectFit
                         anchors.centerIn: parent
-                        source: listItem.getIconSource()
+                        source: appInfo.emptySetting+listItem.getIconSource()
                     }
                 }
                 Column {
