@@ -916,7 +916,7 @@ Page {
                             id: sizeText
                             text: Utility.formatFileSize(size, 1)
                             color: (theme.inverted) ? "white" : "black"
-                            width: 80
+                            width: 85
                             height: parent.height
                             font.pointSize: 16
                             horizontalAlignment: Text.AlignRight
