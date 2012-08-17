@@ -91,10 +91,29 @@ QString SystemInfoHelper::getFileContent(const QString &localPath)
     if (file.open(QIODevice::ReadOnly)) {
         text.append(file.readAll());
     }
+    file.close();
 
     qDebug() << "SystemInfoHelper::getFileContent text.length() " << text.length();
 
     return text;
+}
+
+int SystemInfoHelper::saveFileContent(const QString &localPath, const QString &text)
+{
+    qDebug() << "SystemInfoHelper::saveFileContent localPath " << localPath;
+
+    if (localPath.isEmpty()) return -1;
+
+    qint64 c = -1;
+    QFile file(localPath);
+    if (file.open(QIODevice::WriteOnly)) {
+        c = file.write(text.toUtf8());
+    }
+    file.close();
+
+    qDebug() << "SystemInfoHelper::saveFileContent bytes write " << c;
+
+    return c;
 }
 
 QString SystemInfoHelper::getUrl(const QString absPath)

@@ -115,6 +115,7 @@ public:
     Q_INVOKABLE bool move(const QString sourcePath, const QString targetPath);
     Q_INVOKABLE bool createDir(const QString name);
     Q_INVOKABLE bool createDirPath(const QString absPath);
+    Q_INVOKABLE bool createEmptyFile(const QString name);
     Q_INVOKABLE bool renameFile(const QString fileName, const QString newFileName);
 
     // Informative methods which don't use FolderSizeModelThread.

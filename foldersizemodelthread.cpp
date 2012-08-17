@@ -6,7 +6,7 @@
 
 bool nameLessThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
 {
-    qDebug() << "nameLessThan" << o1.name << o1.fileType << o2.name << o2.fileType;
+//    qDebug() << "nameLessThan" << o1.name << o1.fileType << o2.name << o2.fileType;
     return o1.name < o2.name;
 }
 
@@ -27,7 +27,7 @@ bool typeLessThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
         // If both are dir, compare name.
         // If both are file, compare type and name.
         if (o1.isDir && o2.isDir) {
-            qDebug() << "typeLessThan" << o1.name << o1.fileType << o2.name << o2.fileType;
+//            qDebug() << "typeLessThan" << o1.name << o1.fileType << o2.name << o2.fileType;
             return o1.name < o2.name;
         } else {
             if (o1.fileType == o2.fileType) {
@@ -185,7 +185,9 @@ FolderSizeItem FolderSizeModelThread::selectDirSizeCacheFromDB(const QString id)
         qDebug() << "FolderSizeModelThread::selectDirSizeCacheFromDB id" << id << "item" << item;
 
         // Insert item to itemCache.
-        m_itemCache->insert(id, item);
+        if (item.absolutePath == id) {
+            m_itemCache->insert(id, item);
+        }
     } else {
         qDebug() << "FolderSizeModelThread::selectDirSizeCacheFromDB id" << id << " is not found.";
     }
@@ -655,9 +657,9 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
                 qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir DB %1 < %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
                 isValid = false;
             }
-        } else if (cachedDir.absolutePath == "") {
-            // Clean invalid entry.
-            deleteDirSizeCacheToDB(dir.absoluteFilePath());
+//        } else if (cachedDir.absolutePath == "") {
+//            // TODO Clean invalid entry.
+//            deleteDirSizeCacheToDB(dir.absoluteFilePath());
         }
 
         // Get cachedDir from DAT.
@@ -724,7 +726,7 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
     //        dirSizeCache->insert(dir.absoluteFilePath(), cachedDir);
         } else {
             // Cache file.
-            cachedDir = getFileItem(dir);
+            cachedDir = FolderSizeItem(dir.fileName(), dir.absoluteFilePath(), dir.lastModified(), dir.size(), false, 0, 0);
         }
     }
 

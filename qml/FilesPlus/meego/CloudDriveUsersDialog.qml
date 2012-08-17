@@ -7,6 +7,7 @@ SelectionDialog {
     id: uidDialog
     style: SelectionDialogStyle { dim: 0.9 }
 
+    property string caller
     property int operation
     property string localPath
     property int selectedCloudType
@@ -88,7 +89,7 @@ SelectionDialog {
             uidDialog.accept();
         }
     }
-
+        
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
             selectedIndex = -1;

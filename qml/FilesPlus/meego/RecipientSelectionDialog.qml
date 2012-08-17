@@ -6,11 +6,13 @@ SelectionDialog {
     id: recipientSelectionDialog
     style: SelectionDialogStyle { dim: 0.9 }
 
+    property string shareFileCaller
     property string srcFilePath
     property string selectedEmail
     property string senderEmail
     property string messageSubject
     property string messageBody
+    property string selectedNumber
     
     signal opening()
     signal opened()
@@ -37,7 +39,7 @@ SelectionDialog {
                     font.pointSize: 16
                     elide: Text.ElideMiddle
                     color: "grey"
-                    text: email
+                    text: (shareFileCaller == "mailFileSlot" ? email : phoneNumber)
                 }
             }
             Image {
@@ -48,9 +50,10 @@ SelectionDialog {
             }
         }
         onClicked: {
-            console.debug("recipientSelectionDialog recipientItem onClicked " + index + " email " + email);
+            console.debug("recipientSelectionDialog recipientItem onClicked " + index + " email " + email + " phoneNumber " + phoneNumber);
             recipientSelectionDialog.selectedIndex = index;
             recipientSelectionDialog.selectedEmail = email;
+            recipientSelectionDialog.selectedNumber = phoneNumber;
             recipientSelectionDialog.accept();
         }
     }

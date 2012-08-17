@@ -45,7 +45,7 @@ Menu {
 
         MenuItem {
             id: newFolderMenuItem
-            text: appInfo.emptyStr+qsTr("New folder")
+            text: appInfo.emptyStr+qsTr("New folder / file")
             platformInverted: window.platformInverted
             onClicked: {
                 newFolderDialog.open();

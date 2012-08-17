@@ -40,7 +40,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: newFolderMenuItem
-            text: appInfo.emptyStr+qsTr("New folder")
+            text: appInfo.emptyStr+qsTr("New folder / file")
             onClicked: {
                 newFolderDialog.open();
             }

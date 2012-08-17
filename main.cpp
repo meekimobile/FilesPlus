@@ -10,6 +10,8 @@
 #include <QAbstractListModel>
 #include "localfileimageprovider.h"
 #include "appinfo.h"
+#include "bluetoothclient.h"
+#include "messageclient.h"
 #include <QDebug>
 
 void customMessageHandler(QtMsgType type, const char *msg)
@@ -60,6 +62,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qmlRegisterType<DropboxClient>("DropboxClient", 1, 0, "DropboxClient");
     qmlRegisterType<QAbstractListModel>();
     qmlRegisterType<AppInfo>("AppInfo", 1, 0, "AppInfo");
+    qmlRegisterType<BluetoothClient>("BluetoothClient", 1, 0, "BluetoothClient");
+    qmlRegisterType<MessageClient>("MessageClient", 1, 0, "MessageClient");
 
     // Set properties for QSettings.
     QCoreApplication::setOrganizationName("MeekiMobile");

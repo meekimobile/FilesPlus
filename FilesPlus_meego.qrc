@@ -111,5 +111,16 @@
         <file alias="FilesPlus_en.qm">i18n/FilesPlus_en.qm</file>
         <file>qml/FilesPlus/question_inverted.svg</file>
         <file>qml/FilesPlus/question.svg</file>
+        <file alias="qml/FilesPlus/BluetoothSelectionDialog.qml">qml/FilesPlus/meego/BluetoothSelectionDialog.qml</file>
+        <file>qml/FilesPlus/share_inverted.svg</file>
+        <file>qml/FilesPlus/share.svg</file>
+        <file>qml/FilesPlus/messaging_inverted.svg</file>
+        <file>qml/FilesPlus/bluetooth.svg</file>
+        <file>qml/FilesPlus/bluetooth_inverted.svg</file>
+        <file>qml/FilesPlus/messaging.svg</file>
+        <file>qml/FilesPlus/back_inverted.svg</file>
+        <file>qml/FilesPlus/lock.svg</file>
+        <file alias="qml/FilesPlus/TouchScrollBar.qml">qml/FilesPlus/meego/TouchScrollBar.qml</file>
+        <file>qml/FilesPlus/save_inverted.svg</file>
     </qresource>
 </RCC>

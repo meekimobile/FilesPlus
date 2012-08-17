@@ -36,7 +36,7 @@ CommonDialog {
             
             onValueChanged: {
                 uploadProgressText.text = Utility.formatFileSize(value,3) + " / " + Utility.formatFileSize(maximumValue,3);
-                if (uploadProgressDialog.autoClose && value == maximumValue) {
+                if (uploadProgressDialog.autoClose && value === maximumValue && value !== 0 && maximumValue !== 0) {
                     uploadProgressDialog.close();
                 } else if (value == maximumValue) {
                     indeterminate = true;

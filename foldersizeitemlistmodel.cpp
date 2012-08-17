@@ -505,6 +505,8 @@ bool FolderSizeItemListModel::move(const QString sourcePath, const QString targe
 
 bool FolderSizeItemListModel::createDir(const QString name)
 {
+    if (name.trimmed().isEmpty()) return false;
+
     QDir dir(currentDir());
     bool res = dir.mkdir(name);
     if (res) {
@@ -515,12 +517,37 @@ bool FolderSizeItemListModel::createDir(const QString name)
 
 bool FolderSizeItemListModel::createDirPath(const QString absPath)
 {
+    if (absPath.trimmed().isEmpty()) return false;
+
     QDir dir(getDirPath(absPath));
     bool res = dir.mkdir(getFileName(absPath));
     if (res) {
         emit createFinished(absPath);
     }
     return res;
+}
+
+bool FolderSizeItemListModel::createEmptyFile(const QString name)
+{
+    if (name.trimmed().isEmpty()) return false;
+
+    QDir dir(currentDir());
+
+    QString absPath = dir.absoluteFilePath(name);
+    qint64 c = -1;
+    QFile file(absPath);
+    if (file.open(QIODevice::WriteOnly)) {
+        qDebug() << "FolderSizeItemListModel::createEmptyFile open file" << absPath << "for write.";
+        c = file.write("");
+    }
+    file.close();
+
+    qDebug() << "FolderSizeItemListModel::createEmptyFile file" << absPath << "size" << c;
+    if (c != -1) {
+        emit createFinished(dir.absoluteFilePath(name));
+        return true;
+    }
+    return false;
 }
 
 bool FolderSizeItemListModel::renameFile(const QString fileName, const QString newFileName)

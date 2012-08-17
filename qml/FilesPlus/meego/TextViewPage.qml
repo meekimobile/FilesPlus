@@ -28,6 +28,15 @@ Page {
         }
 
         ToolIcon {
+            id: saveButton
+            iconSource: (theme.inverted) ? "save.svg" : "save_inverted.svg"
+            onClicked: {
+                // TODO Save to file.
+                helper.saveFileContent(textViewPage.filePath, textView.text);
+            }
+        }
+
+        ToolIcon {
             id: printButton
             iconSource: (theme.inverted) ? "print.svg" : "print_inverted.svg"
             onClicked: {
@@ -87,7 +96,7 @@ Page {
         TextEdit {
             id: textView
             enabled: true
-            readOnly: true
+            readOnly: false
             width: textViewPage.width - 44
             font.pointSize: 16
             color: "black"

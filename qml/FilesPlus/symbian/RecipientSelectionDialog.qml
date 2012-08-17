@@ -5,11 +5,13 @@ import "Utility.js" as Utility
 SelectionDialog {
     id: recipientSelectionDialog
     
+    property string shareFileCaller
     property string srcFilePath
     property string selectedEmail
     property string senderEmail
     property string messageSubject
     property string messageBody
+    property string selectedNumber
     
     signal opening()
     signal opened()
@@ -32,7 +34,7 @@ SelectionDialog {
                 }
                 ListItemText {
                     width: parent.width - 20
-                    text: email
+                    text: (shareFileCaller == "mailFileSlot" ? email : phoneNumber)
                     mode: recipientItem.mode
                     role: "Subtitle"
                 }
@@ -45,9 +47,10 @@ SelectionDialog {
             }
         }
         onClicked: {
-            console.debug("recipientSelectionDialog recipientItem onClicked " + index + " email " + email);
+            console.debug("recipientSelectionDialog recipientItem onClicked " + index + " email " + email + " phoneNumber " + phoneNumber);
             recipientSelectionDialog.selectedIndex = index;
             recipientSelectionDialog.selectedEmail = email;
+            recipientSelectionDialog.selectedNumber = phoneNumber;
             recipientSelectionDialog.accept();
         }
     }

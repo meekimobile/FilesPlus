@@ -17,6 +17,10 @@ Rectangle {
                 target: buttonRing
                 model: mainButtonModel
             }
+            PropertyChanges {
+                target: toolButton
+                iconSource: (!window.platformInverted) ? "toolbar_extension.svg" : "toolbar_extension_inverted.svg"
+            }
         },
         State {
             name: "tools"
@@ -24,8 +28,22 @@ Rectangle {
                 target: buttonRing
                 model: toolsButtonModel
             }
+            PropertyChanges {
+                target: toolButton
+                iconSource: (!window.platformInverted) ? "toolbar_extension.svg" : "toolbar_extension_inverted.svg"
+            }
+        },
+        State {
+            name: "share"
+            PropertyChanges {
+                target: buttonRing
+                model: shareButtonModel
+            }
+            PropertyChanges {
+                target: toolButton
+                iconSource: (!window.platformInverted) ? "back.svg" : "back_inverted.svg"
+            }
         }
-
     ]
 
     property bool isDir
@@ -54,7 +72,9 @@ Rectangle {
     signal renameFile(string srcFilePath, int srcItemIndex)
     signal uploadFile(string srcFilePath, int srcItemIndex)
     signal unsyncFile(string srcFilePath, int srcItemIndex)
-    signal sendFile(string srcFilePath, int srcItemIndex)
+    signal mailFile(string srcFilePath, int srcItemIndex)
+    signal smsFile(string srcFilePath, int srcItemIndex)
+    signal bluetoothFile(string srcFilePath, int srcItemIndex)
 
     function open(panelX, panelY) {
 //        console.debug("popupToolRing open panelX " + panelX + " panelY " + panelY);
@@ -116,8 +136,15 @@ Rectangle {
         ListElement { buttonName: "newFolder"; icon: "folder_add.svg" }
         ListElement { buttonName: "upload"; icon: "upload.svg" }
         ListElement { buttonName: "unsync"; icon: "cloud_remove.svg" }
-        ListElement { buttonName: "send"; icon: "mail.svg" }
+        ListElement { buttonName: "share"; icon: "share.svg" }
         ListElement { buttonName: "rename"; icon: "rename.svg" }
+    }
+
+    ListModel {
+        id: shareButtonModel
+        ListElement { buttonName: "mail"; icon: "mail.svg" }
+        ListElement { buttonName: "sms"; icon: "messaging.svg" }
+        ListElement { buttonName: "bluetooth"; icon: "bluetooth.svg" }
     }
 
     Component {
@@ -147,8 +174,12 @@ Rectangle {
             return cloudDriveModel.isConnected(selectedFilePath);
         } else if (buttonName === "paste") {
             return (clipboardCount > 0);
-        } else if (buttonName == "send") {
+        } else if (buttonName == "mail") {
             return cloudDriveModel.isConnected(selectedFilePath);
+        } else if (buttonName == "sms") {
+            return cloudDriveModel.isConnected(selectedFilePath);
+        } else if (buttonName == "bluetooth") {
+            return fsModel.isFile(selectedFilePath);
         }
 
         return true;
@@ -180,8 +211,15 @@ Rectangle {
             renameFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "upload") {
             uploadFile(selectedFilePath, selectedFileIndex);
-        } else if (buttonName == "send") {
-            sendFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "share") {
+            popupToolPanel.state = "share";
+            return;
+        } else if (buttonName == "mail") {
+            mailFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "sms") {
+            smsFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "bluetooth") {
+            bluetoothFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "unsync") {
             unsyncFile(selectedFilePath, selectedFileIndex);
         }
@@ -211,13 +249,14 @@ Rectangle {
         anchors.centerIn: parent
         width: popupToolPanel.buttonRadius * 2
         height: popupToolPanel.buttonRadius * 2
-        iconSource: (!window.platformInverted) ? "toolbar_extension.svg" : "toolbar_extension_inverted.svg"
         platformInverted: window.platformInverted
         onClicked: {
             if (popupToolPanel.state == "main") {
                 popupToolPanel.state = "tools";
-            } else {
+            } else if (popupToolPanel.state == "tools") {
                 popupToolPanel.state = "main";
+            } else if (popupToolPanel.state == "share") {
+                popupToolPanel.state = "tools";
             }
 
             // Restart timer

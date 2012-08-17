@@ -30,6 +30,16 @@ Page {
         }
 
         ToolButton {
+            id: saveButton
+            iconSource: (!window.platformInverted) ? "save.svg" : "save_inverted.svg"
+            platformInverted: window.platformInverted
+            onClicked: {
+                // TODO Save to file.
+                helper.saveFileContent(textViewPage.filePath, textView.text);
+            }
+        }
+
+        ToolButton {
             id: printButton
             iconSource: (!window.platformInverted) ? "print.svg" : "print_inverted.svg"
             platformInverted: window.platformInverted
@@ -53,7 +63,7 @@ Page {
     PinchArea {
         anchors.top: textLabel.bottom
         width: parent.width
-        height: parent.height - textLabel.height
+        height: parent.height - textLabel.height - (inputContext.visible ? (inputContext.height - 50) : 0)
         pinch.dragAxis: Pinch.XandYAxis
 
         onPinchStarted: {
@@ -74,11 +84,8 @@ Page {
         TextArea {
             id: textView
             enabled: true
-            readOnly: true
+            readOnly: false
             anchors.fill: parent
-//            anchors.top: textLabel.bottom
-//            width: parent.width
-//            height: parent.height - textLabel.height
             font.pointSize: 6
             wrapMode: TextEdit.WordWrap
             textFormat: TextEdit.AutoText

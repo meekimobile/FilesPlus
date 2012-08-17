@@ -1,5 +1,5 @@
 # Add network, script
-QT += network script sql
+QT += declarative network script sql
 
 # Add more folders to ship with the application, here
 #folder_01.source = qml/FilesPlus
@@ -13,7 +13,7 @@ QML_IMPORT_PATH =
 #symbian:TARGET.UID3 = 0xE11DCC9D
 symbian:TARGET.UID3 = 0x20064E45
 
-VERSION = 1.0.3
+VERSION = 1.0.4
 
 # Smart Installer package's UID
 # This UID is from the protected range and therefore the package will
@@ -23,8 +23,7 @@ VERSION = 1.0.3
 symbian:DEPLOYMENT.installer_header = 0x2002CCCF
 
 # Allow network access on Symbian
-symbian:TARGET.CAPABILITY += NetworkServices ReadUserData
-
+symbian:TARGET.CAPABILITY += NetworkServices ReadUserData WriteUserData LocalServices Location ReadDeviceData WriteDeviceData
 # Set heap size. min 8M max 32M.
 #symbian:TARGET.EPOCHEAPSIZE = 0x800000 0x2000000
 # Set heap size. min 8M max 64M.
@@ -34,7 +33,7 @@ symbian:TARGET.EPOCHEAPSIZE = 0x800000 0x4000000
 # If your application uses the Qt Mobility libraries, uncomment the following
 # lines and add the respective components to the MOBILITY variable.
 CONFIG += mobility
-MOBILITY = systeminfo contacts
+MOBILITY = systeminfo contacts connectivity messaging
 
 # Speed up launching on MeeGo/Harmattan when using applauncherd daemon
 CONFIG += qdeclarative-boostable
@@ -78,7 +77,9 @@ SOURCES += main.cpp \
     foldersizemodelthread.cpp \
     monitoring.cpp \
     foldersizejob.cpp \
-    appinfo.cpp
+    appinfo.cpp \
+    bluetoothclient.cpp \
+    messageclient.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -104,7 +105,9 @@ HEADERS += \
     foldersizemodelthread.h \
     monitoring.h \
     foldersizejob.h \
-    appinfo.h
+    appinfo.h \
+    bluetoothclient.h \
+    messageclient.h
 
 OTHER_FILES += \
     qtc_packaging/debian_harmattan/rules \

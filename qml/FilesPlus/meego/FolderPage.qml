@@ -6,6 +6,9 @@ import GCPClient 1.0
 import CloudDriveModel 1.0
 import AppInfo 1.0
 import QtMobility.contacts 1.1
+import QtMobility.connectivity 1.2
+import BluetoothClient 1.0
+import MessageClient 1.0
 import "Utility.js" as Utility
 
 Page {
@@ -73,12 +76,6 @@ Page {
             Component.onCompleted: {
                 refreshButton.clicked.connect(refreshSlot);
             }
-        }
-
-        ToolButton {
-            text: "Mark mode"
-            enabled: false
-            visible: (fsListView.state == "mark")
         }
 
         ToolIcon {
@@ -338,12 +335,39 @@ Page {
         syncFileSlot(srcFilePath, selectedIndex, CloudDriveModel.FilePut);
     }
 
-    function sendFileSlot(srcFilePath, selectedIndex) {
-        console.debug("folderPage sendFileSlot srcFilePath=" + srcFilePath);
+    function mailFileSlot(srcFilePath, selectedIndex) {
+        console.debug("folderPage mailFileSlot srcFilePath=" + srcFilePath);
         if (cloudDriveModel.isConnected(srcFilePath)) {
             uidDialog.localPath = srcFilePath;
             uidDialog.operation = CloudDriveModel.ShareFile;
+            uidDialog.caller = "mailFileSlot";
             uidDialog.open();
+        }
+    }
+
+    function smsFileSlot(srcFilePath, selectedIndex) {
+        console.debug("folderPage smsFileSlot srcFilePath=" + srcFilePath);
+        if (cloudDriveModel.isConnected(srcFilePath)) {
+            uidDialog.localPath = srcFilePath;
+            uidDialog.operation = CloudDriveModel.ShareFile;
+            uidDialog.caller = "smsFileSlot";
+            uidDialog.open();
+        }
+    }
+
+    function bluetoothFileSlot(srcFilePath, selectedIndex) {
+        console.debug("folderPage bluetoothFileSlot srcFilePath=" + srcFilePath);
+        if (fsModel.isFile(srcFilePath)) {
+            btSelectionDialog.srcFilePath = srcFilePath;
+            if (btClient.isPowerOn) {
+                btSelectionDialog.open();
+            } else {
+                // TODO configurable suppress confirmation.
+//                btPowerOnDialog.open();
+
+                btClient.powerOn();
+                btSelectionDialog.open();
+            }
         }
     }
 
@@ -1044,7 +1068,7 @@ Page {
 
                         // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
                         var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-                        var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV"];
+                        var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
                         if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             fsModel.nameFilters = ["*.jpg", "*.png", "*.svg"];
                             fsModel.refreshDir("folderPage listItem onClicked", false);
@@ -1091,6 +1115,22 @@ Page {
 
     ClipboardModel {
         id: clipboard
+    }
+
+    Rectangle {
+        id: popupToolPanelBG
+        color: "black"
+        opacity: 0.7
+        z: 1
+        anchors.fill: parent
+        visible: popupToolPanel.visible
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                // do nothing.
+                popupToolPanel.visible = false;
+            }
+        }
     }
 
     PopupToolRing {
@@ -1169,8 +1209,16 @@ Page {
             uploadFileSlot(srcFilePath, srcItemIndex);
         }
 
-        onSendFile: {
-            sendFileSlot(srcFilePath, srcItemIndex);
+        onMailFile: {
+            mailFileSlot(srcFilePath, srcItemIndex);
+        }
+
+        onSmsFile: {
+            smsFileSlot(srcFilePath, srcItemIndex);
+        }
+
+        onBluetoothFile: {
+            bluetoothFileSlot(srcFilePath, srcItemIndex);
         }
     }
 
@@ -1390,25 +1438,45 @@ Page {
 
     CommonDialog {
         id: newFolderDialog
-        titleText: appInfo.emptyStr+qsTr("New Folder")
+        titleText: appInfo.emptyStr+qsTr("New folder / file")
         titleIcon: "FilesPlusIcon.svg"
         buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
-        content: Rectangle {
+        content: Column {
             width: parent.width - 10
-            height: 80
-            color: "transparent"
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 5
+
+            Row {
+                width: parent.width
+                spacing: 5
+                RadioButton {
+                    id: newFolderButton
+                    text: appInfo.emptyStr+qsTr("Folder")
+                    onClicked: {
+                        newFileButton.checked = false;
+                    }
+                }
+                RadioButton {
+                    id: newFileButton
+                    text: appInfo.emptyStr+qsTr("File")
+                    onClicked: {
+                        newFolderButton.checked = false;
+                    }
+                }
+            }
 
             TextField {
                 id: folderName
                 width: parent.width
-                anchors.verticalCenter: parent.verticalCenter
-                placeholderText: appInfo.emptyStr+qsTr("Please input folder name.")
+                placeholderText: appInfo.emptyStr+(newFolderButton.checked ? qsTr("Please input folder name.") : qsTr("Please input file name."))
             }
         }
 
         onStatusChanged: {
             if (status == DialogStatus.Open) {
-                folderName.forceActiveFocus();
+                newFolderButton.checked = true;
+                newFileButton.checked = false;
+                folderName.text = "";
             }
 
             if (status == DialogStatus.Closed) {
@@ -1417,8 +1485,16 @@ Page {
         }
 
         onButtonClicked: {
-            if (index === 0) {
-                var res = fsModel.createDir(folderName.text);
+            folderName.closeSoftwareInputPanel();
+
+            if (index === 0 && folderName.text !== "") {
+                var res = false;
+                if (newFolderButton.checked) {
+                    res = fsModel.createDir(folderName.text);
+                } else {
+                    res = fsModel.createEmptyFile(folderName.text);
+                }
+
                 refreshSlot();
             }
         }
@@ -1465,6 +1541,8 @@ Page {
         }
 
         onButtonClicked: {
+            newName.closeSoftwareInputPanel();
+
             if (index === 0) {
                 if (newName.text != "" && newName.text != fsModel.getFileName(renameDialog.sourcePath)) {
                     var res = fsModel.renameFile(fsModel.getFileName(renameDialog.sourcePath), newName.text);
@@ -1790,6 +1868,8 @@ Page {
 
     CloudDriveModel {
         id: cloudDriveModel
+
+        property string shareFileCaller: uidDialog.caller
 
         function syncClipboardItems() {
             uidDialog.localPath = "";
@@ -2382,6 +2462,7 @@ Page {
             var isRunning = json.is_running;
 
             if (err == 0) {
+                // TODO Select delivery service. (email, sms)
                 // Open recipientSelectionDialog for sending share link.
                 var senderEmail = getUidEmail(json.type, json.uid);
                 if (senderEmail != "") {
@@ -2519,6 +2600,7 @@ Page {
                 model.append({
                                  displayLabel: contact.displayLabel,
                                  email: contact.email.emailAddress,
+                                 phoneNumber: contact.phoneNumber.number,
                                  favorite: favorite
                              });
             }
@@ -2529,13 +2611,20 @@ Page {
 
     RecipientSelectionDialog {
         id: recipientSelectionDialog
-        model: favContactModel.getFavListModel()
+        shareFileCaller: cloudDriveModel.shareFileCaller
+        model: favContactModel.getFavListModel(shareFileCaller)
         onOpening: {
-            recipientSelectionDialog.model = favContactModel.getFavListModel();
+            recipientSelectionDialog.model = favContactModel.getFavListModel(shareFileCaller);
         }
         onAccepted: {
-            console.debug("recipientSelectionDialog onAccepted email " + selectedEmail + " senderEmail " + senderEmail);
-            Qt.openUrlExternally("mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody);
+            console.debug("recipientSelectionDialog onAccepted shareFileCaller " + shareFileCaller + " email " + selectedEmail + " senderEmail " + senderEmail + " selectedNumber " + selectedNumber);
+            if (shareFileCaller == "mailFileSlot") {
+                Qt.openUrlExternally("mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody);
+            } else if (shareFileCaller == "smsFileSlot") {
+                // TODO Doesn't work on meego. Needs to use MessageClient.
+//                Qt.openUrlExternally("sms:" + selectedNumber + "?body=" + messageBody);
+                msgClient.sendSMS(selectedNumber, messageBody);
+            }
         }
         onRejected: {
 //            // Reset popupToolPanel.
@@ -2543,5 +2632,111 @@ Page {
 //            popupToolPanel.selectedFileIndex = -1;
 //            srcFilePath = "";
         }
+    }
+
+    BluetoothSelectionDialog {
+        id: btSelectionDialog
+        model: ListModel {
+            id: btSelectionModel
+            function findDeviceAddress(deviceAddress) {
+                for (var i=0; i<btSelectionModel.count; i++) {
+                    var existingDeviceAddress = btSelectionModel.get(i).deviceAddress;
+                    if (existingDeviceAddress === deviceAddress) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+        }
+        discovery: btClient.discovery
+        onSelected: {
+            btClient.sendFile(localPath, deviceAddress);
+        }
+        onRejected: {
+            btClient.stopDiscovery();
+            btClient.powerOff();
+        }
+        onStatusChanged: {
+            if (status == DialogStatus.Open) {
+                btClient.startDiscovery();
+            }
+        }
+    }
+
+    UploadProgressDialog {
+        id: btUploadProgressDialog
+        titleText: appInfo.emptyStr+qsTr("Bluetooth transfering")
+        buttonTexts: [appInfo.emptyStr+qsTr("Cancel")]
+        onButtonClicked: {
+            if (index == 0) {
+                if (!btClient.isFinished) {
+                    btClient.uploadAbort();
+                }
+            }
+        }
+    }
+
+    ConfirmDialog {
+        id: btPowerOnDialog
+        titleText: appInfo.emptyStr+qsTr("Bluetooth transfering")
+        titleIcon: "FilesPlusIcon.svg"
+        contentText: appInfo.emptyStr+qsTr("Transfering requires Bluetooth.\
+\n\nPlease click 'OK' to turn Bluetooth on.")
+        onConfirm: {
+            btClient.powerOn();
+            btSelectionDialog.open();
+        }
+    }
+
+    BluetoothClient {
+        id: btClient
+
+        onDiscoveryChanged: {
+            console.debug("btClient.onDiscoveryChanged " + discovery);
+        }
+
+        onServiceDiscovered: {
+            console.debug("btClient.onServiceDiscovered " + deviceName + " " + deviceAddress + " " + isTrusted + " " + isPaired);
+            var i = btSelectionModel.findDeviceAddress(deviceAddress);
+            if (i === -1) {
+                btSelectionModel.append({
+                                            "deviceName": deviceName,
+                                            "deviceAddress": deviceAddress,
+                                            "isTrusted": isTrusted,
+                                            "isPaired": isPaired
+                                        });
+            }
+        }
+
+        onRequestPowerOn: {
+            btPowerOnDialog.open();
+        }
+
+        onUploadStarted: {
+            btUploadProgressDialog.srcFilePath = localPath;
+            btUploadProgressDialog.autoClose = true;
+            btUploadProgressDialog.min = 0;
+            btUploadProgressDialog.max = 0;
+            btUploadProgressDialog.value = 0;
+            btUploadProgressDialog.indeterminate = true;
+            btUploadProgressDialog.message = "";
+            btUploadProgressDialog.open();
+        }
+
+        onUploadProgress: {
+            btUploadProgressDialog.indeterminate = false;
+            btUploadProgressDialog.max = bytesTotal;
+            btUploadProgressDialog.value = bytesSent;
+        }
+
+        onUploadFinished: {
+            btUploadProgressDialog.indeterminate = false;
+            btUploadProgressDialog.message = msg;
+            btClient.powerOff();
+        }
+    }
+
+    MessageClient {
+        id: msgClient
     }
 }

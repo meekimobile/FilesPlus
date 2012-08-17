@@ -16,6 +16,7 @@ public:
     Q_INVOKABLE QStringList getDriveList();
 
     Q_INVOKABLE QString getFileContent(const QString &localPath);
+    Q_INVOKABLE int saveFileContent(const QString &localPath, const QString &text);
 
     Q_INVOKABLE QString getUrl(const QString absPath);
 signals:
