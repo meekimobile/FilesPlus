@@ -19,7 +19,7 @@ Rectangle {
             }
             PropertyChanges {
                 target: toolButton
-                iconSource: (!window.platformInverted) ? "toolbar_extension.svg" : "toolbar_extension_inverted.svg"
+                iconSource: (theme.inverted) ? "toolbar_extension.svg" : "toolbar_extension_inverted.svg"
             }
         },
         State {
@@ -30,7 +30,7 @@ Rectangle {
             }
             PropertyChanges {
                 target: toolButton
-                iconSource: (!window.platformInverted) ? "toolbar_extension.svg" : "toolbar_extension_inverted.svg"
+                iconSource: (theme.inverted) ? "toolbar_extension.svg" : "toolbar_extension_inverted.svg"
             }
         },
         State {
@@ -41,7 +41,7 @@ Rectangle {
             }
             PropertyChanges {
                 target: toolButton
-                iconSource: (!window.platformInverted) ? "back.svg" : "back_inverted.svg"
+                iconSource: (theme.inverted) ? "back.svg" : "back_inverted.svg"
             }
         }
     ]

@@ -1443,22 +1443,23 @@ Page {
         buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
         content: Column {
             width: parent.width - 10
+            height: 120
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: 5
 
             Row {
                 width: parent.width
-                spacing: 5
+                spacing: 10
                 RadioButton {
                     id: newFolderButton
-                    text: appInfo.emptyStr+qsTr("Folder")
+                    text: "<font color='white'>" + appInfo.emptyStr+qsTr("Folder") + "</font>"
                     onClicked: {
                         newFileButton.checked = false;
                     }
                 }
                 RadioButton {
                     id: newFileButton
-                    text: appInfo.emptyStr+qsTr("File")
+                    text: "<font color='white'>" + appInfo.emptyStr+qsTr("File") + "</font>"
                     onClicked: {
                         newFolderButton.checked = false;
                     }
