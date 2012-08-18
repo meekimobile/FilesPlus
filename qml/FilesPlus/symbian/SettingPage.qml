@@ -143,6 +143,12 @@ Page {
             group: "Personalization"
         }
         ListElement {
+            name: "keep.bluetooth.off"
+            title: ""
+            type: "switch"
+            group: "Personalization"
+        }
+        ListElement {
             name: "Monitoring.enabled"
             title: ""
             type: "switch"
@@ -183,6 +189,7 @@ Page {
         else if (name == "popup.timer.interval") return qsTr("Popup interval") + appInfo.emptyStr;
         else if (name == "locale") return qsTr("Locale") + appInfo.emptyStr;
         else if (name == "thumbnail.enabled") return qsTr("Show thumbnail") + appInfo.emptyStr;
+        else if (name == "keep.bluetooth.off") return qsTr("Keep bluetooth off") + appInfo.emptyStr;
         else if (name == "Logging.enabled") return qsTr("Logging (Debug)") + appInfo.emptyStr;
         else if (name == "Monitoring.enabled") return qsTr("Monitoring (RAM,CPU)") + appInfo.emptyStr;
         else if (name == "Personalization") return qsTr("Personalization") + appInfo.emptyStr;

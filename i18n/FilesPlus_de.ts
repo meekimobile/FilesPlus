@@ -42,7 +42,7 @@ Please click &apos;OK&apos; to continue.</source>
 <context>
     <name>BluetoothSelectionDialog</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/BluetoothSelectionDialog.qml" line="+23"/>
+        <location filename="../qml/FilesPlus/meego/BluetoothSelectionDialog.qml" line="+20"/>
         <location filename="../qml/FilesPlus/symbian/BluetoothSelectionDialog.qml" line="+23"/>
         <source>Scanning...</source>
         <translation type="unfinished"></translation>
@@ -435,7 +435,7 @@ You will be redirected to authorization page.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+139"/>
+        <location line="+136"/>
         <location line="+818"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+139"/>
         <location line="+836"/>
@@ -603,9 +603,9 @@ Link will be removed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+511"/>
+        <location line="+513"/>
         <location line="+13"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+510"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+512"/>
         <location line="+13"/>
         <source>Bluetooth transfering</source>
         <translation type="unfinished"></translation>
@@ -619,8 +619,8 @@ Please click &apos;OK&apos; to turn Bluetooth on.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-2452"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2464"/>
+        <location line="-2451"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2466"/>
         <source>Can&apos;t print %1 
 File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
         <translation type="unfinished"></translation>
@@ -634,7 +634,7 @@ You will be redirected to authorization page.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+229"/>
+        <location line="+226"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+229"/>
         <source>Thank you for download FilesPlus.
 This is first time running, FilesPlus needs to load information from your drive.
@@ -694,17 +694,17 @@ Please click OK to continue.</source>
         <location line="-118"/>
         <location line="+68"/>
         <location line="+50"/>
-        <location line="+1109"/>
+        <location line="+1111"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-115"/>
         <location line="+67"/>
         <location line="+48"/>
-        <location line="+1106"/>
+        <location line="+1108"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1198"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1193"/>
+        <location line="-1200"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1195"/>
         <source>Please input folder name.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1233,8 +1233,8 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+175"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+176"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+181"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+182"/>
         <source>Cancel queued jobs</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1245,22 +1245,22 @@ And present in Pie view for easy understanding at glance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-129"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-129"/>
+        <location line="-135"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-135"/>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+132"/>
+        <location line="+139"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <location line="+132"/>
+        <location line="+139"/>
         <source>Logging (Debug)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-131"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-131"/>
+        <location line="-138"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-138"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -1268,8 +1268,8 @@ Please confirm.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+118"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+118"/>
+        <location line="+124"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+124"/>
         <source>Show cloud print jobs</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1331,6 +1331,12 @@ Please confirm.</source>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Show thumbnail</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Keep bluetooth off</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

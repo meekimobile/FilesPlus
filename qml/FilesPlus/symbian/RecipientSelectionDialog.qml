@@ -4,7 +4,12 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: recipientSelectionDialog
-    
+    height: content.height + 70
+
+    property alias model: recipientSelectionListView.model
+    property alias contentHeight: content.height
+    property alias delegate: recipientSelectionListView.delegate
+
     property string shareFileCaller
     property string srcFilePath
     property string selectedEmail
@@ -18,40 +23,57 @@ SelectionDialog {
 
     titleText: appInfo.emptyStr+qsTr("Send %1 to").arg(fsModel.getFileName(srcFilePath))
     titleIcon: "FilesPlusIcon.svg"
-    height: 280
-    delegate: ListItem {
-        id: recipientItem
-        Row {
-            anchors.fill: recipientItem.paddingItem
-            Column {
-                width: parent.width - favIcon.width - parent.spacing
-                spacing: 2
-                ListItemText {
-                    width: parent.width - 20
-                    text: displayLabel
-                    mode: recipientItem.mode
-                    role: "Title"
-                }
-                ListItemText {
-                    width: parent.width - 20
-                    text: (shareFileCaller == "mailFileSlot" ? email : phoneNumber)
-                    mode: recipientItem.mode
-                    role: "Subtitle"
-                }
-            }
-            Image {
-                id: favIcon
-                source: "favourite.svg"
-                visible: favorite
-                anchors.verticalCenter: parent.verticalCenter
-            }
+    content: Item {
+        id: content
+        width: parent.width
+        height: 180
+
+        ListView {
+            id: recipientSelectionListView
+            anchors.fill: parent
+            delegate: recipientItemDelegate
         }
-        onClicked: {
-            console.debug("recipientSelectionDialog recipientItem onClicked " + index + " email " + email + " phoneNumber " + phoneNumber);
-            recipientSelectionDialog.selectedIndex = index;
-            recipientSelectionDialog.selectedEmail = email;
-            recipientSelectionDialog.selectedNumber = phoneNumber;
-            recipientSelectionDialog.accept();
+    }
+
+    Component {
+        id: recipientItemDelegate
+
+        ListItem {
+            id: recipientItem
+            height: 60
+            Row {
+                width: parent.width - 20
+                anchors.centerIn: parent
+                Column {
+                    width: parent.width - favIcon.width - parent.spacing
+                    spacing: 2
+                    ListItemText {
+                        width: parent.width - 20
+                        text: displayLabel
+                        mode: recipientItem.mode
+                        role: "Title"
+                    }
+                    ListItemText {
+                        width: parent.width - 20
+                        text: (shareFileCaller == "mailFileSlot" ? email : phoneNumber)
+                        mode: recipientItem.mode
+                        role: "Subtitle"
+                    }
+                }
+                Image {
+                    id: favIcon
+                    source: "favourite.svg"
+                    visible: favorite
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+            onClicked: {
+                console.debug("recipientSelectionDialog recipientItem onClicked " + index + " email " + email + " phoneNumber " + phoneNumber);
+                recipientSelectionDialog.selectedIndex = index;
+                recipientSelectionDialog.selectedEmail = email;
+                recipientSelectionDialog.selectedNumber = phoneNumber;
+                recipientSelectionDialog.accept();
+            }
         }
     }
 

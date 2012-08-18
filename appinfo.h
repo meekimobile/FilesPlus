@@ -25,6 +25,7 @@ public:
     void setMonitoring(const bool flag);
     Q_INVOKABLE QString getMonitoringFilePath() const;
     Q_INVOKABLE QVariant getSettingValue(const QString key, const QVariant defaultValue);
+    Q_INVOKABLE bool getSettingBoolValue(const QString key, const bool defaultValue);
     Q_INVOKABLE bool setSettingValue(const QString key, const QVariant v);
     Q_INVOKABLE void startMonitoring();
     Q_INVOKABLE bool isLogging() const;

@@ -95,6 +95,11 @@ QVariant AppInfo::getSettingValue(const QString key, const QVariant defaultValue
     return m_settings->value(key, defaultValue);
 }
 
+bool AppInfo::getSettingBoolValue(const QString key, const bool defaultValue)
+{
+    return getSettingValue(key, defaultValue).toBool();
+}
+
 bool AppInfo::setSettingValue(const QString key, const QVariant v)
 {
     if (m_settings->value(key) != v) {

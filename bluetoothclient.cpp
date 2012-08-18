@@ -1,13 +1,28 @@
 #include "bluetoothclient.h"
 
+// Harmattan is a linux
+#if defined(Q_WS_HARMATTAN)
+const QString BluetoothClient::DATA_FILE_PATH = "/home/user/.filesplus/BluetoothClient.dat";
+#else
+const QString BluetoothClient::DATA_FILE_PATH = "C:/BluetoothClient.dat";
+#endif
+const int BluetoothClient::MAX_DISCOVERY_RETRY = 3;
+
 BluetoothClient::BluetoothClient(QDeclarativeItem *parent) :
     QDeclarativeItem(parent), m_localDevice(new QBluetoothLocalDevice(this)), m_serviceDiscoveryAgent(new QBluetoothServiceDiscoveryAgent(this))
 {
+    loadBtServiceHash();
+
     connect(m_localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)), this, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)) );
     connect(m_serviceDiscoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)), this, SLOT(serviceDiscoveredFilter(QBluetoothServiceInfo)) );
     connect(m_serviceDiscoveryAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)), this, SLOT(errorFilter(QBluetoothServiceDiscoveryAgent::Error)) );
     connect(m_serviceDiscoveryAgent, SIGNAL(canceled()), this, SLOT(canceledFilter()) );
     connect(m_serviceDiscoveryAgent, SIGNAL(finished()), this, SLOT(finishedFilter()) );
+}
+
+BluetoothClient::~BluetoothClient()
+{
+    saveBtServiceHash();
 }
 
 bool BluetoothClient::sendFile(const QString localPath, const QString deviceAddressStr)
@@ -65,19 +80,44 @@ void BluetoothClient::powerOff()
     }
 }
 
+void BluetoothClient::requestDiscoveredDevices()
+{
+    foreach (QString addr, m_btServiceHash.keys()) {
+        QString deviceName = m_btServiceHash.value(addr);
+        bool trusted = isTrusted(addr);
+        bool paired = isPaired(addr);
+        qDebug() << "BluetoothClient::requestDiscoveredDevices" << addr << deviceName << trusted << paired;
+        if (paired) {
+            emit serviceDiscovered(deviceName, addr, trusted, paired, false);
+        }
+    }
+
+    m_discoveryRetry = MAX_DISCOVERY_RETRY;
+}
+
 void BluetoothClient::startDiscovery(bool full, bool clear)
 {
-    qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "BluetoothClient::startDiscovery full" << full
+    // Return if power off.
+    if (!isPowerOn()) return;
+
+    // Return if it's discoverying.
+    if (isDiscovery()) return;
+
+    // Return if m_discoveryRetry == 0.
+    if (m_discoveryRetry <= 0) return;
+
+    qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "BluetoothClient::startDiscovery retry remain" << m_discoveryRetry << "full" << full << "clear" << clear
              << "discoveredServices" << m_serviceDiscoveryAgent->discoveredServices().count() << "uuidFilter" << QBluetoothUuid(QBluetoothUuid::ObexObjectPush).toString();
 
     if (clear) {
-        m_btServiceHash.clear();
         m_serviceDiscoveryAgent->clear();
     }
     m_serviceDiscoveryAgent->setUuidFilter(QBluetoothUuid(QBluetoothUuid::ObexObjectPush));
     m_serviceDiscoveryAgent->start( (full ? QBluetoothServiceDiscoveryAgent::FullDiscovery : QBluetoothServiceDiscoveryAgent::MinimalDiscovery) );
 
     emit discoveryChanged();
+
+    m_discoveryRetry--;
 }
 
 void BluetoothClient::stopDiscovery()
@@ -160,13 +200,9 @@ void BluetoothClient::serviceDiscoveredFilter(const QBluetoothServiceInfo &info)
 
     qDebug() << "BluetoothClient::serviceDiscoveredFilter" << info.device().name() << deviceAddressStr << info.serviceName() << info.serviceUuid().toString();
 
-    if (!m_btServiceHash.contains(deviceAddressStr)) {
-        m_btServiceHash[deviceAddressStr] = info.device().name();
+    m_btServiceHash[deviceAddressStr] = info.device().name();
 
-        emit serviceDiscovered(info.device().name(), deviceAddressStr, isTrusted(deviceAddressStr), isPaired(deviceAddressStr));
-    } else {
-        qDebug() << "BluetoothClient::serviceDiscoveredFilter" << info.device().name() << deviceAddressStr << "is suppressed.";
-    }
+    emit serviceDiscovered(info.device().name(), deviceAddressStr, isTrusted(deviceAddressStr), isPaired(deviceAddressStr), true);
 }
 
 void BluetoothClient::errorFilter(QBluetoothServiceDiscoveryAgent::Error error)
@@ -181,7 +217,7 @@ void BluetoothClient::finishedFilter()
     emit discoveryChanged();
 
     // TODO force re-discovery if bluetooth is still on.
-    if (!isDiscovery() && isPowerOn() && m_btServiceHash.empty()) {
+    if (!isDiscovery() && isPowerOn()) {
         startDiscovery(false, false);
     }
 }
@@ -191,4 +227,39 @@ void BluetoothClient::canceledFilter()
     qDebug() << "BluetoothClient::canceledFilter";
 
     emit discoveryChanged();
+}
+
+void BluetoothClient::loadBtServiceHash() {
+    QFile file(DATA_FILE_PATH);
+    if (file.open(QIODevice::ReadOnly)) {
+        QDataStream in(&file);    // read the data serialized from the file
+        in >> m_btServiceHash;
+
+        qDebug() << QTime::currentTime() << "BluetoothClient::loadBtServiceHash" << m_btServiceHash;
+    }
+}
+
+void BluetoothClient::saveBtServiceHash() {
+    // TODO workaround fix to remove tokenPair with key="".
+    m_btServiceHash.remove("");
+
+    // TODO To prevent invalid code to save damage data for testing only.
+//    if (m_btServiceHash.isEmpty()) return;
+
+    QFile file(DATA_FILE_PATH);
+    QFileInfo info(file);
+    if (!info.absoluteDir().exists()) {
+        qDebug() << "BluetoothClient::saveBtServiceHash dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
+        bool res = QDir::home().mkpath(info.absolutePath());
+        if (!res) {
+            qDebug() << "BluetoothClient::saveBtServiceHash can't make dir" << info.absolutePath();
+        } else {
+            qDebug() << "BluetoothClient::saveBtServiceHash make dir" << info.absolutePath();
+        }
+    }    if (file.open(QIODevice::WriteOnly)) {
+        QDataStream out(&file);   // we will serialize the data into the file
+        out << m_btServiceHash;
+
+        qDebug() << "BluetoothClient::saveBtServiceHash" << m_btServiceHash;
+    }
 }

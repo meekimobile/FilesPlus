@@ -56,57 +56,87 @@ Page {
         text: textViewPage.fileName
     }
 
-    BorderImage {
+    Rectangle {
         id: background
-        source: "image://theme/meegotouch-textedit-background"
-        width: parent.width
-        height: parent.height - textLabel.height
-        anchors.top: textLabel.bottom
-        border.left: 22; border.top: 22
-        border.right: 22; border.bottom: 22
+        anchors.top: flick.top
+        width: flick.width
+        height: flick.height
+        color: "white"
     }
 
     Rectangle {
         id: flickScrollbar
         anchors.right: flick.right
-        anchors.rightMargin: -17
+        anchors.rightMargin: 0
         radius: 2
-        y: flick.visibleArea.yPosition * flick.height + textLabel.height + flick.anchors.topMargin
+        y: flick.visibleArea.yPosition * flick.height + textLabel.height
         z: 1
         width: 4
         height: flick.visibleArea.heightRatio * flick.height
         color: "grey"
+        visible: flick.moving
     }
 
-    // TextArea is a superset of TextEdit to implement the Symbian-style look-and-feel.
-    // Meego needs to use Flickable + TextEdit.
+//     TextArea is a superset of TextEdit to implement the Symbian-style look-and-feel.
+//     Meego needs to use Flickable + TextArea.
+//     TODO Externalize to component.
     Flickable {
         id: flick
         anchors.top: textLabel.bottom
-        anchors.topMargin: 22
         anchors.left: parent.left
-        anchors.leftMargin: 22
-        width: parent.width - 44
-        height: parent.height - textLabel.height - 44
+        width: parent.width
+        height: parent.height - textLabel.height
         contentWidth: textView.width
         contentHeight: textView.height
         flickableDirection: Flickable.VerticalFlick
         clip: true
+        pressDelay: 200
 
-        TextEdit {
+        TextArea {
             id: textView
             enabled: true
             readOnly: false
-            width: textViewPage.width - 44
+            width: textViewPage.width
             font.pointSize: 16
-            color: "black"
             wrapMode: TextEdit.WordWrap
             textFormat: TextEdit.AutoText
             text: helper.getFileContent(textViewPage.filePath)
+            style: TextAreaStyle {
+                backgroundError: ""
+                backgroundDisabled: ""
+                backgroundSelected: ""
+                background: ""
+            }
+
+//            onActiveFocusChanged: {
+//                console.debug("textView onActiveFocusChanged " + textView.activeFocus);
+//            }
+
+//            onHeightChanged: {
+//                console.debug("textView onHeightChanged " + textView.height);
+//            }
+
+            onImplicitHeightChanged: {
+                console.debug("textView onImplicitHeightChanged " + textView.implicitHeight);
+                height = implicitHeight;
+            }
 
             property int startFontSize
 
+            states: [
+                State {
+                    name: "view"
+                    when: !textView.activeFocus
+                },
+                State {
+                    name: "edit"
+                    when: textView.activeFocus
+                }
+            ]
+
             PinchArea {
+                id: textViewPinchArea
+                enabled: !textView.activeFocus
                 anchors.fill: parent
                 pinch.dragAxis: Pinch.XandYAxis
 
@@ -125,19 +155,6 @@ Page {
                     textView.font.pointSize = newFontSize;
                 }
             }
-
-//            MouseArea {
-//                anchors.fill: parent
-
-//                onPressAndHold: {
-//                    console.debug("textView onPressAndHold");
-//                    console.debug("textView width " + textView.width + " height " + textView.height);
-//                    console.debug("textViewPage " + textViewPage.width + "," + textViewPage.height);
-//                    console.debug("textViewPage flick " + flick.width + "," + flick.height);
-//                    console.debug("textViewPage textView " + textView.width + "," + textView.height);
-//                    textView.closeSoftwareInputPanel();
-//                }
-//            }
         }
     }
 

@@ -46,7 +46,7 @@ Please click &apos;OK&apos; to continue.</translation>
 <context>
     <name>BluetoothSelectionDialog</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/BluetoothSelectionDialog.qml" line="+23"/>
+        <location filename="../qml/FilesPlus/meego/BluetoothSelectionDialog.qml" line="+20"/>
         <location filename="../qml/FilesPlus/symbian/BluetoothSelectionDialog.qml" line="+23"/>
         <source>Scanning...</source>
         <translation>Scanning...</translation>
@@ -448,7 +448,7 @@ You will be redirected to authorization page.</translation>
         <translation>Sync with Dropbox</translation>
     </message>
     <message>
-        <location line="+139"/>
+        <location line="+136"/>
         <location line="+818"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+139"/>
         <location line="+836"/>
@@ -573,17 +573,17 @@ Please click OK to continue.</translation>
         <location line="-118"/>
         <location line="+68"/>
         <location line="+50"/>
-        <location line="+1109"/>
+        <location line="+1111"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-115"/>
         <location line="+67"/>
         <location line="+48"/>
-        <location line="+1106"/>
+        <location line="+1108"/>
         <source>Cancel</source>
         <translation>Cancel</translation>
     </message>
     <message>
-        <location line="-1215"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1210"/>
+        <location line="-1217"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1212"/>
         <source>Folder</source>
         <translation>Folder</translation>
     </message>
@@ -787,9 +787,9 @@ Link will be removed.</translation>
         <translation>Share</translation>
     </message>
     <message>
-        <location line="+189"/>
+        <location line="+191"/>
         <location line="+13"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+188"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+190"/>
         <location line="+13"/>
         <source>Bluetooth transfering</source>
         <translation>Bluetooth transferring</translation>
@@ -805,8 +805,8 @@ Please click &apos;OK&apos; to turn Bluetooth on.</source>
 Please click &apos;OK&apos; to turn Bluetooth on.</translation>
     </message>
     <message>
-        <location line="-2452"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2464"/>
+        <location line="-2451"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2466"/>
         <source>Can&apos;t print %1 
 File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
         <translation>Can&apos;t print %1 
@@ -823,7 +823,7 @@ Please enable printer on your desktop with Chrome or with CloudPrint-ready print
 You will be redirected to authorization page.</translation>
     </message>
     <message>
-        <location line="+229"/>
+        <location line="+226"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+229"/>
         <source>Thank you for download FilesPlus.
 This is first time running, FilesPlus needs to load information from your drive.
@@ -920,7 +920,7 @@ Please click OK to continue.</translation>
         </translation>
     </message>
     <message>
-        <location line="-1608"/>
+        <location line="-1605"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1612"/>
         <source>Sync connected items</source>
         <translation>Sync connected items</translation>
@@ -1293,8 +1293,8 @@ And present in Pie view for easy understanding at glance.</translation>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+175"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+176"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+181"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+182"/>
         <source>Cancel queued jobs</source>
         <translation>Cancel queued jobs</translation>
     </message>
@@ -1305,22 +1305,22 @@ And present in Pie view for easy understanding at glance.</translation>
         <translation>Sync all connected items</translation>
     </message>
     <message>
-        <location line="-129"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-129"/>
+        <location line="-135"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-135"/>
         <source>Settings</source>
         <translation>Settings</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+132"/>
+        <location line="+139"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <location line="+132"/>
+        <location line="+139"/>
         <source>Logging (Debug)</source>
         <translation>Logging (Debug)</translation>
     </message>
     <message>
-        <location line="-131"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-131"/>
+        <location line="-138"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-138"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -1331,8 +1331,8 @@ FilesPlus is exiting now.
 Please confirm.</translation>
     </message>
     <message>
-        <location line="+118"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+118"/>
+        <location line="+124"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+124"/>
         <source>Show cloud print jobs</source>
         <translation>Show cloud print jobs</translation>
     </message>
@@ -1391,6 +1391,12 @@ Please confirm.</translation>
         <translation>Show thumbnail</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Keep bluetooth off</source>
+        <translation>Keep bluetooth off</translation>
+    </message>
+    <message>
         <location line="+2"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+2"/>
         <source>Monitoring (RAM,CPU)</source>
@@ -1439,8 +1445,8 @@ Please confirm.</translation>
         <translation>Chinese</translation>
     </message>
     <message>
-        <location line="-156"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-195"/>
+        <location line="-157"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-196"/>
         <source>Locale</source>
         <translation>Locale</translation>
     </message>

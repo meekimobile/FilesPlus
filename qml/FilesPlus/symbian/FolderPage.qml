@@ -353,10 +353,7 @@ Page {
                 btSelectionDialog.open();
             } else {
                 // TODO configurable suppress confirmation.
-//                btPowerOnDialog.open();
-
-                btClient.powerOn();
-                btSelectionDialog.open();
+                btPowerOnDialog.open();
             }
         }
     }
@@ -2567,10 +2564,10 @@ Page {
     ContactModel {
         id: favContactModel
         filter: DetailFilter {
-            detail: ContactDetail.Email
-            field: EmailAddress.emailAddress
-            matchFlags: Filter.MatchContains
-            value: "@"
+            detail: ContactDetail.Favorite
+            field: Favorite.favorite
+            matchFlags: Filter.MatchExactly
+            value: true
         }
         sortOrders: [
             SortOrder {
@@ -2595,7 +2592,7 @@ Page {
             var model = Qt.createQmlObject(
                         'import QtQuick 1.1; ListModel {}', folderPage);
 
-            console.debug("getFavListModel favContactModel.contacts.length " + favContactModel.contacts.length);
+            console.debug("getFavListModel favContactModel.contacts.length " + favContactModel.contacts.length + " error " + favContactModel.error);
             for (var i=0; i<favContactModel.contacts.length; i++)
             {
                 var contact = favContactModel.contacts[i];
@@ -2616,7 +2613,7 @@ Page {
     RecipientSelectionDialog {
         id: recipientSelectionDialog
         shareFileCaller: cloudDriveModel.shareFileCaller
-        model: favContactModel.getFavListModel(shareFileCaller)
+        contentHeight: 240
         onOpening: {
             recipientSelectionDialog.model = favContactModel.getFavListModel(shareFileCaller);
         }
@@ -2657,11 +2654,14 @@ Page {
         }
         onRejected: {
             btClient.stopDiscovery();
-            btClient.powerOff();
+            if (appInfo.getSettingBoolValue("keep.bluetooth.off", false)) {
+                btClient.powerOff();
+            }
         }
         onStatusChanged: {
             if (status == DialogStatus.Open) {
-                btClient.startDiscovery();
+                btClient.requestDiscoveredDevices();
+                btClient.startDiscovery(false, true);
             }
         }
     }
@@ -2694,20 +2694,29 @@ Page {
     BluetoothClient {
         id: btClient
 
+        onHostModeStateChanged: {
+            if (hostMode != BluetoothClient.HostPoweredOff) {
+                btClient.startDiscovery();
+            }
+        }
+
         onDiscoveryChanged: {
             console.debug("btClient.onDiscoveryChanged " + discovery);
         }
 
         onServiceDiscovered: {
-            console.debug("btClient.onServiceDiscovered " + deviceName + " " + deviceAddress + " " + isTrusted + " " + isPaired);
             var i = btSelectionModel.findDeviceAddress(deviceAddress);
+            console.debug("btClient.onServiceDiscovered " + deviceName + " " + deviceAddress + " " + isTrusted + " " + isPaired + " i " + i);
+            var jsonObj = {
+                "deviceName": deviceName,
+                "deviceAddress": deviceAddress,
+                "isTrusted": isTrusted,
+                "isPaired": isPaired
+            };
             if (i === -1) {
-                btSelectionModel.append({
-                                            "deviceName": deviceName,
-                                            "deviceAddress": deviceAddress,
-                                            "isTrusted": isTrusted,
-                                            "isPaired": isPaired
-                                        });
+                btSelectionModel.append(jsonObj);
+            } else {
+                btSelectionModel.set(i, jsonObj);
             }
         }
 

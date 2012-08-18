@@ -20,24 +20,37 @@ class BluetoothClient : public QDeclarativeItem
 {
     Q_OBJECT
     Q_ENUMS(ReplyErrorCode)
+    Q_ENUMS(HostModeState)
     Q_PROPERTY(int hostMode READ getHostMode NOTIFY hostModeStateChanged)
     Q_PROPERTY(bool isPowerOn READ isPowerOn NOTIFY hostModeStateChanged)
     Q_PROPERTY(bool isFinished READ isFinished NOTIFY uploadFinished)
     Q_PROPERTY(bool isRunning READ isRunning NOTIFY uploadFinished)
     Q_PROPERTY(bool discovery READ isDiscovery WRITE setDiscovery NOTIFY discoveryChanged)
 public:
+    static const QString DATA_FILE_PATH;
+    static const int MAX_DISCOVERY_RETRY;
+
     enum ReplyErrorCode {
         UploadAbort = -1
     };
 
+    enum HostModeState {
+        HostPoweredOff = 0,
+        HostConnectable,
+        HostDiscoverable,
+        HostDiscoverableLimitedInquiry
+    };
+
     explicit BluetoothClient(QDeclarativeItem *parent = 0);
-    
+    ~BluetoothClient();
+
     Q_INVOKABLE bool sendFile(const QString localPath, const QString deviceAddressStr);
     Q_INVOKABLE void uploadAbort();
     Q_INVOKABLE void powerOn();
     Q_INVOKABLE void powerOff();
 
-    Q_INVOKABLE void startDiscovery(bool full = false, bool clear = true);
+    Q_INVOKABLE void requestDiscoveredDevices();
+    Q_INVOKABLE void startDiscovery(bool full = false, bool clear = false);
     Q_INVOKABLE void stopDiscovery();
     bool isDiscovery();
     void setDiscovery(const bool discovery);
@@ -57,7 +70,7 @@ signals:
     void hostModeStateChanged(QBluetoothLocalDevice::HostMode hostMode);
     void requestPowerOn();
     void discoveryChanged();
-    void serviceDiscovered(const QString deviceName, const QString deviceAddress, const bool isTrusted, const bool isPaired);
+    void serviceDiscovered(const QString deviceName, const QString deviceAddress, const bool isTrusted, const bool isPaired, const bool isNear);
 public slots:
     void uploadProgressFilter(qint64 bytesSent, qint64 bytesTotal);
     void uploadFinishedFilter(QBluetoothTransferReply *reply);
@@ -66,6 +79,7 @@ public slots:
     void finishedFilter();
     void canceledFilter();
 private:
+    int m_discoveryRetry;
     QBluetoothLocalDevice *m_localDevice;
     QBluetoothServiceDiscoveryAgent *m_serviceDiscoveryAgent;
     QHash<QString, QString> m_btServiceHash;
@@ -74,6 +88,9 @@ private:
     QString m_deviceAddressStr;
     qint64 m_lastBytesSent;
     QBluetoothTransferReply *m_reply;
+
+    void loadBtServiceHash();
+    void saveBtServiceHash();
 };
 
 #endif // BLUETOOTHCLIENT_H

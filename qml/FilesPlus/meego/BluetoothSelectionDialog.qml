@@ -8,9 +8,6 @@ SelectionDialog {
 
     property string srcFilePath
     property bool discovery
-//    property alias model: btSelectionListView.model
-//    property alias contentHeight: content.height
-//    property alias delegate: btSelectionListView.delegate
 
     signal selected(string localPath, string deviceAddress)
 
@@ -32,18 +29,6 @@ SelectionDialog {
             }
         }
     ]
-//    titleIcon: "FilesPlusIcon.svg"
-//    content: Item {
-//        id: content
-//        width: parent.width
-//        height: 180
-
-//        ListView {
-//            id: btSelectionListView
-//            anchors.fill: parent
-//            delegate: btItemDelegate
-//        }
-//    }
 
     delegate: btItemDelegate
     Component {
@@ -53,7 +38,7 @@ SelectionDialog {
             id: btItem
             height: 70
             Row {
-                width: parent.width - 20
+                width: parent.width - 40
                 height: parent.height
                 anchors.centerIn: parent
                 spacing: 5
