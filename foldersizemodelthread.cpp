@@ -74,6 +74,36 @@ FolderSizeModelThread::FolderSizeModelThread(QObject *parent) : QThread(parent)
     dirSizeCache = new QHash<QString, FolderSizeItem>();
     m_itemCache = new QHash<QString, FolderSizeItem>();
 
+    // TODO For testing only.
+//#if defined(Q_WS_HARMATTAN)
+//    QFile dbFile(CACHE_DB_PATH);
+//    if (dbFile.remove()) {
+//        qDebug() << "FolderSizeModelThread constructor removed" << CACHE_DB_PATH;
+//    } else {
+//        qDebug() << "FolderSizeModelThread constructor can't remove" << CACHE_DB_PATH;
+//    }
+//#elif defined(Q_OS_SYMBIAN)
+//    QString privatePathQt(QApplication::applicationDirPath());
+//    qDebug() << "FolderSizeModelThread constructor private" << privatePathQt;
+
+//    QFileInfo dbFileInfo(CACHE_DB_PATH);
+//    qDebug() << "FolderSizeModelThread constructor dbFileInfo" << dbFileInfo.absoluteFilePath() << dbFileInfo.exists();
+
+//    m_db = QSqlDatabase::addDatabase("QSQLITE");
+//    m_db.setDatabaseName(CACHE_DB_PATH);
+//    bool ok = m_db.open();
+//    QSqlQuery deleteQuery("DELETE FROM folderpie_cache");
+//    if (deleteQuery.exec()) {
+//        m_db.commit();
+//        qDebug() << "FolderSizeModelThread constructor deleted folderpie_cache." << deleteQuery.size();
+//        qDebug() << "FolderSizeModelThread constructor count folderpie_cache." << countDirSizeCacheDB();
+//    } else {
+//        m_db.rollback();
+//        qDebug() << "FolderSizeModelThread constructor can't delete folderpie_cache." << deleteQuery.lastError();
+//    }
+//    m_db.close();
+//#endif
+
     // TODO Initialize SQLLITE DB.
     initializeDB();
 }
@@ -101,7 +131,7 @@ void FolderSizeModelThread::initializeDB()
 
     // First initialization.
     m_db = QSqlDatabase::addDatabase("QSQLITE");
-    m_db.setDatabaseName(CACHE_DB_PATH);
+    m_db.setDatabaseName(CACHE_DB_PATH);    
     bool ok = m_db.open();
     qDebug() << "FolderSizeModelThread::initializeDB" << ok << "connectionName" << m_db.connectionName() << "databaseName" << m_db.databaseName() << "driverName" << m_db.driverName();
 

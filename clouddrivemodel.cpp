@@ -243,7 +243,7 @@ QString CloudDriveModel::getFileType(QString localPath)
         fileType = "";
     }
 
-    qDebug() << "CloudDriveModel::getFileType" << localPath << "fileType" << fileType;
+//    qDebug() << "CloudDriveModel::getFileType" << localPath << "fileType" << fileType;
     return fileType;
 }
 
