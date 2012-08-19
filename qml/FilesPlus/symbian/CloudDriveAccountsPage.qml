@@ -193,7 +193,7 @@ Page {
                             width: 24
                             height: 24
                             anchors.right: parent.right
-                            source: "refresh.svg"
+                            source: (!window.platformInverted ? "refresh.svg" : "refresh_inverted.svg")
                             visible: (quota <= 0)
                         }
                     }

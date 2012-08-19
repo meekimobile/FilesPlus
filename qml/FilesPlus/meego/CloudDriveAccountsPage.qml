@@ -190,7 +190,7 @@ Page {
                             width: 24
                             height: 24
                             anchors.right: parent.right
-                            source: "refresh.svg"
+                            source: (theme.inverted ? "refresh.svg" : "refresh_inverted.svg")
                             visible: (quota <= 0)
                         }
                     }
