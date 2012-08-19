@@ -616,7 +616,7 @@ Page {
         }
 
         onFetchDirSizeUpdated: {
-            refreshButton.rotation = 360 + (refreshButton.rotation - 6);
+            refreshButton.rotation = 360 + (refreshButton.rotation - 12);
         }
 
         onFetchDirSizeFinished: {
@@ -1579,7 +1579,7 @@ Page {
 
             CheckBox {
                 id: overwriteFile
-                text: appInfo.emptyStr+qsTr("Overwrite existing file")
+                text: "<font color='white'>" + appInfo.emptyStr+qsTr("Overwrite existing file") + "</font>"
                 checked: false
 
                 onClicked: {

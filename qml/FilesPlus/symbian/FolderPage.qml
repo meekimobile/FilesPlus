@@ -606,7 +606,7 @@ Page {
         }
 
         onFetchDirSizeUpdated: {
-            refreshButton.rotation = 360 + (refreshButton.rotation - 6);
+            refreshButton.rotation = 360 + (refreshButton.rotation - 12);
         }
 
         onFetchDirSizeFinished: {
