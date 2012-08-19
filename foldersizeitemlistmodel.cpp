@@ -391,6 +391,9 @@ void FolderSizeItemListModel::setSortFlag(const int sortFlag, const bool saveSor
     if (m.setSortFlag(sortFlag, saveSortFlag)) {
         m.sortItemList(itemList);
 
+        // Reset m_indexOnCurrentDirHash.
+        m_indexOnCurrentDirHash->clear();
+
         // If itemList is actually sorted, refreshItems to emit dataChanged.
         refreshItems();
     }
