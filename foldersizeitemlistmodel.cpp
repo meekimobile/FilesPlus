@@ -37,7 +37,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(fetchDirSizeFinished()), this, SLOT(fetchDirSizeFinishedFilter()) );
     connect(&m, SIGNAL(copyStarted(int,QString,QString,QString,int)), this, SIGNAL(copyStarted(int,QString,QString,QString,int)) );
     connect(&m, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)), this, SLOT(copyProgressFilter(int,QString,QString,qint64,qint64)) , Qt::QueuedConnection);
-    connect(&m, SIGNAL(copyFinished(int,QString,QString,QString,int,qint64,qint64)), this, SLOT(copyFinishedFilter(int,QString,QString,QString,int,qint64,qint64)) );
+    connect(&m, SIGNAL(copyFinished(int,QString,QString,QString,int,qint64,qint64,bool)), this, SLOT(copyFinishedFilter(int,QString,QString,QString,int,qint64,qint64,bool)) );
     connect(&m, SIGNAL(fetchDirSizeUpdated(QString)), this, SIGNAL(fetchDirSizeUpdated(QString)) );
     connect(&m, SIGNAL(deleteStarted(int,QString)), this, SIGNAL(deleteStarted(int,QString)) );
     connect(&m, SIGNAL(deleteProgress(int,QString,QString,int)), this, SLOT(deleteProgressFilter(int,QString,QString,int)) );
@@ -817,19 +817,21 @@ void FolderSizeItemListModel::copyProgressFilter(int fileAction, QString sourceP
     emit copyProgress(fileAction, sourcePath, targetPath, bytes, bytesTotal);
 }
 
-void FolderSizeItemListModel::copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes)
+void FolderSizeItemListModel::copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes, bool isSourceRoot)
 {
+    // TODO Only make it dirty, not remove.
     // Remove cache of path up to root.
-    removeCache(targetPath);
+    if (isSourceRoot) {
+        removeCache(targetPath);
+    }
 
-    // TODO it's not required as progressDialog will shows during copying/moving
-//    refreshItemList();
-
-    emit copyFinished(fileAction, sourcePath, targetPath, msg, err, bytes, totalBytes);
+    emit copyFinished(fileAction, sourcePath, targetPath, msg, err, bytes, totalBytes, isSourceRoot);
 }
 
 void FolderSizeItemListModel::deleteProgressFilter(int fileAction, QString sourceSubPath, QString msg, int err)
 {
+    // TODO Suppress some overflow events.
+
 //    qDebug() << "FolderSizeItemListModel::deleteProgressFilter" << sourceSubPath;
     if (err >= 0) {
         int i = getIndexOnCurrentDir(sourceSubPath);
@@ -847,8 +849,9 @@ void FolderSizeItemListModel::deleteProgressFilter(int fileAction, QString sourc
         }
     }
 
+    // TODO Not require as deleteFinishedFilter have done.
     // Remove cache of path up to root.
-    removeCache(sourceSubPath);
+//    removeCache(sourceSubPath);
 
     // Emit deleteFinished
     emit deleteProgress(fileAction, sourceSubPath, msg, err);
@@ -857,7 +860,7 @@ void FolderSizeItemListModel::deleteProgressFilter(int fileAction, QString sourc
 }
 
 void FolderSizeItemListModel::deleteFinishedFilter(int fileAction, QString sourcePath, QString msg, int err)
-{    
+{
 //    qDebug() << "FolderSizeItemListModel::deleteFinishedFilter" << sourcePath;
     // Remove item from ListView.
     // TODO streamline flow to remove item correctly.
@@ -907,7 +910,7 @@ void FolderSizeItemListModel::proceedNextJob()
     m.setClearCache(job.clearCache);
     m.setSourcePath(job.sourcePath);
     m.setTargetPath(job.targetPath);
-    m.start();
+    m.start(QThread::LowPriority);
 
 //    FolderSizeModelThread *t;
 //    t->setRunMethod(job.operation);

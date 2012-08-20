@@ -5,14 +5,14 @@ import "Utility.js" as Utility
 CommonDialog {
     id: progressDialog
     
-    property alias source: source.text
-    property alias target: target.text
-    property alias message: message.text
+    property string source
+    property string target
+    property string message
     property alias min: progressBar.minimumValue
     property alias max: progressBar.maximumValue
-    property alias value: progressBar.value
-    property int newValue
-    property int lastValue
+    property double value
+    property double newValue
+    property double lastValue
     property int minCount
     property int maxCount
     property int count
@@ -20,6 +20,8 @@ CommonDialog {
     property bool autoClose: false
     property int autoCloseInterval: 3000
     property bool formatValue: false
+    property alias updateInterval: progressTimer.interval
+    property int accuDeltaValue: 0
 
     signal opened()
     signal closing()
@@ -39,11 +41,8 @@ CommonDialog {
         var deltaValue = newValue - lastValue;
 //        console.debug("progressDialog deltaValue " + deltaValue);
         value += deltaValue;
+        accuDeltaValue += deltaValue;
         lastValue = newValue;
-    }
-
-    onCountChanged: {
-        countText.text = count + " / " + maxCount;
     }
 
     SequentialAnimation {
@@ -52,6 +51,26 @@ CommonDialog {
         PauseAnimation { duration: autoCloseInterval }
         ScriptAction {
             script: close();
+        }
+    }
+
+    Timer {
+        id: progressTimer
+        running: (parent.status == DialogStatus.Open)
+        repeat: true
+        interval: 200
+        onTriggered: {
+//            console.debug("progressDialog timer onTriggered");
+            progressBar.value = parent.value;
+            if (parent.count > 0 || parent.maxCount > 0) {
+                countText.text = parent.count + " / " + parent.maxCount;
+            }
+            source.text = parent.source;
+            target.text = parent.target;
+            message.text = parent.message;
+
+//            console.debug("progressTimer accuDeltaValue " + accuDeltaValue + " bps " + ((1000 * accuDeltaValue) / interval) );
+            parent.accuDeltaValue = 0;
         }
     }
 

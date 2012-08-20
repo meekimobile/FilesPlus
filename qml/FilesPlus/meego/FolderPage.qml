@@ -526,8 +526,8 @@ Page {
             console.debug("folderPage fsModel onDeleteStarted " + fileAction + " sourcePath " + sourcePath);
             if (fileAction == FolderSizeItemListModel.DeleteFile) {
                 deleteProgressDialog.source = sourcePath;
-                deleteProgressDialog.indeterminate = false;
                 if (deleteProgressDialog.status != DialogStatus.Open) {
+                    deleteProgressDialog.indeterminate = false;
                     deleteProgressDialog.titleText = appInfo.emptyStr+qsTr("Deleting");
                     deleteProgressDialog.open();
                 }
@@ -537,6 +537,7 @@ Page {
         onDeleteProgress: {
             console.debug("folderPage fsModel onDeleteProgress " + fileAction + " sourceSubPath " + sourceSubPath);
             // Update progress only.
+            // TODO Save state to property only. Use timer to update state on UI.
             if (fileAction == FolderSizeItemListModel.DeleteFile) {
                 deleteProgressDialog.value += 1;
                 deleteProgressDialog.message = appInfo.emptyStr+qsTr("%1 is deleted.").arg(sourceSubPath);
@@ -1449,6 +1450,7 @@ Page {
                 spacing: 10
                 RadioButton {
                     id: newFolderButton
+                    width: (parent.width - parent.spacing) / 2
                     text: "<font color='white'>" + appInfo.emptyStr+qsTr("Folder") + "</font>"
                     onClicked: {
                         newFileButton.checked = false;
@@ -1456,6 +1458,7 @@ Page {
                 }
                 RadioButton {
                     id: newFileButton
+                    width: (parent.width - parent.spacing) / 2
                     text: "<font color='white'>" + appInfo.emptyStr+qsTr("File") + "</font>"
                     onClicked: {
                         newFolderButton.checked = false;
@@ -1579,6 +1582,7 @@ Page {
 
             CheckBox {
                 id: overwriteFile
+                width: parent.width
                 text: "<font color='white'>" + appInfo.emptyStr+qsTr("Overwrite existing file") + "</font>"
                 checked: false
 

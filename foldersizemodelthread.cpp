@@ -60,11 +60,15 @@ const QString FolderSizeModelThread::CACHE_FILE_PATH = "/home/user/.folderpie/Fo
 const QString FolderSizeModelThread::CACHE_DB_PATH = "/home/user/.folderpie/FolderPieCache.db";
 const QString FolderSizeModelThread::DEFAULT_CURRENT_DIR = "/home/user/MyDocs";
 const int FolderSizeModelThread::FILE_READ_BUFFER = 32768;
+const int FolderSizeModelThread::FILE_COPY_DELAY = 50;
+const int FolderSizeModelThread::FILE_DELETE_DELAY = 200;
 #else
 const QString FolderSizeModelThread::CACHE_FILE_PATH = "C:/FolderPieCache.dat";
 const QString FolderSizeModelThread::CACHE_DB_PATH = "FolderPieCache.db"; // Symbian supports only default database file location.
-const QString FolderSizeModelThread::DEFAULT_CURRENT_DIR = "C:/";
+const QString FolderSizeModelThread::DEFAULT_CURRENT_DIR = "E:/";
 const int FolderSizeModelThread::FILE_READ_BUFFER = 32768;
+const int FolderSizeModelThread::FILE_COPY_DELAY = 50;
+const int FolderSizeModelThread::FILE_DELETE_DELAY = 200;
 #endif
 
 FolderSizeModelThread::FolderSizeModelThread(QObject *parent) : QThread(parent)
@@ -73,6 +77,9 @@ FolderSizeModelThread::FolderSizeModelThread(QObject *parent) : QThread(parent)
     m_sortFlag = getSortFlagFromDB(m_currentDir, SortByType);
     dirSizeCache = new QHash<QString, FolderSizeItem>();
     m_itemCache = new QHash<QString, FolderSizeItem>();
+
+    // TODO To be implemented which file type to be indexed.
+    m_isFileCached = false;
 
     // TODO For testing only.
 //#if defined(Q_WS_HARMATTAN)
@@ -286,13 +293,13 @@ int FolderSizeModelThread::deleteDirSizeCacheToDB(const QString id)
     m_deletePS.bindValue(":id", id);
     res = m_deletePS.exec();
     if (res) {
-        qDebug() << "FolderSizeModelThread::migrateDirSizeCacheToDB delete done" << id << "res" << res << "numRowsAffected" << m_deletePS.numRowsAffected();
+        qDebug() << "FolderSizeModelThread::deleteDirSizeCacheToDB delete done" << id << "res" << res << "numRowsAffected" << m_deletePS.numRowsAffected();
         QSqlDatabase::database().commit();
 
         // Remove item to itemCache.
         m_itemCache->remove(id);
     } else {
-        qDebug() << "FolderSizeModelThread::migrateDirSizeCacheToDB delete failed" << id << "res" << res << m_deletePS.lastError();
+        qDebug() << "FolderSizeModelThread::deleteDirSizeCacheToDB delete failed" << id << "res" << res << m_deletePS.lastError();
     }
 
     return m_deletePS.numRowsAffected();
@@ -385,8 +392,10 @@ bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QSt
     // targetPath is always actual file/folder name, not parent folder.
     qDebug() << "FolderSizeModelThread::copy method" << method << "sourceFile" << sourcePath << "targetFile" << targetPath;
 
+    bool isSourceRoot = (sourcePath == m_sourcePath);
+
     if (m_abortFlag) {
-        emit copyFinished(method, sourcePath, targetPath, tr("Copy %1 to %2 is aborted.").arg(sourcePath).arg(targetPath), -2, 0, -1);
+        emit copyFinished(method, sourcePath, targetPath, tr("Copy %1 to %2 is aborted.").arg(sourcePath).arg(targetPath), -2, 0, -1, isSourceRoot);
         return false;
     }
 
@@ -434,13 +443,13 @@ bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QSt
             FolderSizeItem cachedItem = getCachedDir(sourceFileInfo);
             cachedItem.name = targetFileInfo.fileName();
             cachedItem.absolutePath = targetFileInfo.absoluteFilePath();
-//            dirSizeCache->insert(targetPath, cachedItem);
             insertDirSizeCacheToDB(cachedItem);
+            m_itemCache->insert(cachedItem.absolutePath, cachedItem);
 
-            emit copyFinished(method, sourcePath, targetPath, tr("Copy %1 to %2 is done successfully.").arg(sourcePath).arg(targetPath), 0, 0, itemSize);
+            emit copyFinished(method, sourcePath, targetPath, tr("Copy %1 to %2 is done successfully.").arg(sourcePath).arg(targetPath), 0, 0, itemSize, isSourceRoot);
         } else {
             qDebug() << "FolderSizeModelThread::copy method" << method << "sourceFile" << sourcePath << "targetFile" << targetPath << "is failed. err = -1";
-            emit copyFinished(method, sourcePath, targetPath, tr("Copy %1 to %2 is failed.").arg(sourcePath).arg(targetPath), -1, 0, itemSize);
+            emit copyFinished(method, sourcePath, targetPath, tr("Copy %1 to %2 is failed.").arg(sourcePath).arg(targetPath), -1, 0, itemSize, isSourceRoot);
         }
     } else {
         // TODO Copy with bundled method QFile::copy() may consume less CPU power.
@@ -465,9 +474,11 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
 
     qDebug() << "FolderSizeModelThread::copyFile method" << method << "sourceFile" << sourcePath << "targetFile" << targetPath;
 
+    bool isSourceRoot = (sourcePath == m_sourcePath);
+
     // Return false if aborted.
     if (m_abortFlag) {
-        emit copyFinished(method, sourcePath, targetPath, tr("Copy %1 to %2 is aborted.").arg(sourcePath).arg(targetPath), -2, 0, -1);
+        emit copyFinished(method, sourcePath, targetPath, tr("Copy %1 to %2 is aborted.").arg(sourcePath).arg(targetPath), -2, 0, -1, isSourceRoot);
         return false;
     }
 
@@ -488,7 +499,7 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
 
     if (sourceAbsFilePath == targetAbsFilePath) {
         qDebug() << "FolderSizeModelThread::copyFile Error sourceFile" << sourceAbsFilePath << "targetFile" << targetAbsFilePath;
-        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, tr("Both source/target path can't be the same file."), -2, 0, itemSize);
+        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, tr("Both source/target path can't be the same file."), -2, 0, itemSize, isSourceRoot);
         return false;
     }
 
@@ -509,19 +520,20 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
             emit copyProgress(method, sourceAbsFilePath, targetAbsFilePath, totalBytes, sourceFile.size());
 
             // TODO Commented below line can speedup copying.
-//            QApplication::processEvents(QEventLoop::AllEvents, 50);
+//            QApplication::processEvents(QEventLoop::AllEvents, 200);
+            delay(FILE_COPY_DELAY);
 
             // Read next buffer.
-            //            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::copyFile before read";
+//            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::copyFile before read";
             c = sourceFile.read(buf, sizeof(buf));
-            //            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::copyFile after read" << c;
+//            qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << "FolderSizeModelThread::copyFile after read" << c;
         }
 
         qDebug() << "FolderSizeModelThread::copyFile done method" << method << "sourceFile" << sourceAbsFilePath << "targetFile" << targetAbsFilePath << "totalBytes" << totalBytes;
         res = !m_abortFlag;
     } else {
         qDebug() << "FolderSizeModelThread::copyFile Error method" << method << "sourceFile" << sourceAbsFilePath << "targetFile" << targetAbsFilePath;
-        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, tr("Both source %1 and target %2 can't be read/written.").arg(sourceAbsFilePath).arg(targetAbsFilePath), -3, totalBytes, itemSize);
+        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, tr("Both source %1 and target %2 can't be read/written.").arg(sourceAbsFilePath).arg(targetAbsFilePath), -3, totalBytes, itemSize, isSourceRoot);
         return false;
     }
 
@@ -531,15 +543,15 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
 
     // Return false if aborted.
     if (m_abortFlag) {
-        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, tr("Copy %1 to %2 is aborted.").arg(sourceAbsFilePath).arg(targetAbsFilePath), -4, totalBytes, itemSize);
+        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, tr("Copy %1 to %2 is aborted.").arg(sourceAbsFilePath).arg(targetAbsFilePath), -4, totalBytes, itemSize, isSourceRoot);
         return false;
     }
 
     // Emit signal as finish.
     if (res) {
-        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, tr("Copy %1 to %2 is done successfully.").arg(sourceAbsFilePath).arg(targetAbsFilePath), 0, totalBytes, itemSize);
+        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, tr("Copy %1 to %2 is done successfully.").arg(sourceAbsFilePath).arg(targetAbsFilePath), 0, totalBytes, itemSize, isSourceRoot);
     } else {
-        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, tr("Copy %1 to %2 is failed.").arg(sourceAbsFilePath).arg(targetAbsFilePath), -1, totalBytes, itemSize);
+        emit copyFinished(method, sourceAbsFilePath, targetAbsFilePath, tr("Copy %1 to %2 is failed.").arg(sourceAbsFilePath).arg(targetAbsFilePath), -1, totalBytes, itemSize, isSourceRoot);
     }
 
     // Sleep after emit signal.
@@ -548,17 +560,24 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
     return res;
 }
 
+void FolderSizeModelThread::delay(const int interval)
+{
+#ifdef Q_WS_HARMATTAN
+//    QApplication::sendPostedEvents();
+//    msleep(interval);
+    QApplication::processEvents(QEventLoop::AllEvents, interval);
+#else
+//    QApplication::sendPostedEvents();
+//    msleep(interval);
+    QApplication::processEvents(QEventLoop::AllEvents, interval);
+#endif
+}
+
 bool FolderSizeModelThread::deleteDir(const QString sourcePath)
 {
     qDebug() << "FolderSizeModelThread::deleteDir sourcePath" << sourcePath;
 
     emit deleteStarted(m_runMethod, sourcePath);
-
-#ifdef Q_OS_SYMBIAN
-    // This sleep is a must.
-    // Sleep for process deleteStarted signal.
-//    msleep(50);
-#endif
 
     // Return false if aborted.
     if (m_abortFlag) {
@@ -605,19 +624,9 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath)
         //        removeDirSizeCache(sourcePath);
     }
 
-#ifdef Q_OS_SYMBIAN
     // This sleep is a must.
     // Sleep for process deleteFinished signal.
-    QApplication::sendPostedEvents();
-    msleep(200);
-    QApplication::processEvents();
-#elif defined(Q_WS_HARMATTAN)
-    // This sleep is a must.
-    // Sleep for process deleteFinished signal.
-    QApplication::sendPostedEvents();
-    msleep(200);
-    QApplication::processEvents();
-#endif
+    delay(FILE_DELETE_DELAY);
 
     return res;
 }
@@ -634,34 +643,12 @@ void FolderSizeModelThread::removeDirSizeCache(const QString key)
 
     // Remove only specified key.
     dirSizeCache->remove(key);
-    deleteDirSizeCacheToDB(key);
 
-    //    QFileInfo fileInfo(key);
-    //    QDir dir;
-    //    if (!fileInfo.isDir()) {
-    //        dir = fileInfo.absoluteDir();
-    //    } else {
-    //        dir = QDir(key);
-    //    }
-
-    //    // Return if cache doesn't contain key.
-    //    if (!dirSizeCache->contains(dir.absolutePath())) {
-    //        qDebug() << "FolderSizeModelThread::removeDirSizeCache key" << dir.absolutePath() << "is not found. It may have been removed.";
-    //        return;
-    //    }
-
-    //    bool canCdup = true;
-    //    while (canCdup) {
-    //        dirSizeCache->remove(dir.absolutePath());
-    //        deleteDirSizeCacheToDB(dir.absolutePath());
-    ////        qDebug() << "FolderSizeModelThread::removeDirSizeCache remove cache for " << dir.absolutePath();
-
-    //        if (dir.isRoot()) {
-    //            canCdup = false;
-    //        } else {
-    //            canCdup = dir.cdUp();
-    //        }
-    //    }
+    // Dirty cache.
+    FolderSizeItem item = selectDirSizeCacheFromDB(key);
+    item.isDir = true;
+    item.lastModified = QDateTime::fromMSecsSinceEpoch(0);
+    updateDirSizeCacheToDB(item);
 }
 
 FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bool clearCache) {
@@ -674,7 +661,7 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
     bool isInDB = false;
 
     // Get cached dirSize if any and clearCache==false
-    if (!clearCache) {
+    if (!clearCache && (dir.isDir() || m_isFileCached) ) {
         // Get cachedDir from DB.
         cachedDir = selectDirSizeCacheFromDB(dir.absoluteFilePath());
         if (!isFound && cachedDir.absolutePath == dir.absoluteFilePath()) {
@@ -687,9 +674,9 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
                 qDebug() << QTime::currentTime() << QString("FolderSizeModelThread::getCachedDir DB %1 < %2").arg(cachedDir.lastModified.toString()).arg(dir.lastModified().toString());
                 isValid = false;
             }
-//        } else if (cachedDir.absolutePath == "") {
-//            // TODO Clean invalid entry.
-//            deleteDirSizeCacheToDB(dir.absoluteFilePath());
+        } else if (cachedDir.absolutePath == "") {
+            // TODO Clean invalid entry.
+            isFound = false;
         }
 
         // Get cachedDir from DAT.
@@ -766,16 +753,23 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
     //    qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir done " + cachedDir.name + ", " + QString("%1").arg(cachedDir.size);
 
     // TODO Persists to DB.
-    if (!isFound || !isValid || !isInDB) {
-        if (!isFound) {
-            insertDirSizeCacheToDB(cachedDir);
-        } else {
-            updateDirSizeCacheToDB(cachedDir);
-        }
+    if (dir.isDir() || m_isFileCached) {
+        if (!isFound || !isValid || !isInDB) {
+            if (!isFound) {
+                if (insertDirSizeCacheToDB(cachedDir) <= 0) {
+                    // Workaround. In case it can't be inserted, try update.
+                    updateDirSizeCacheToDB(cachedDir);
+                }
+            } else {
+                updateDirSizeCacheToDB(cachedDir);
+            }
 
-        // TODO Remove from dirSizeCache after migrate to DB.
-        dirSizeCache->remove(cachedDir.absolutePath);
-        qDebug() << "FolderSizeModelThread::getCachedDir remove from dirSizeCache" << cachedDir << "dirSizeCache->count()" << dirSizeCache->count();
+            // TODO Remove from dirSizeCache after migrate to DB.
+            dirSizeCache->remove(cachedDir.absolutePath);
+            qDebug() << "FolderSizeModelThread::getCachedDir remove from dirSizeCache" << cachedDir << "dirSizeCache->count()" << dirSizeCache->count();
+        }
+    } else {
+        qDebug() << "FolderSizeModelThread::getCachedDir m_isFileCached" << m_isFileCached << "skip update cache" << cachedDir;
     }
 
     return cachedDir;
@@ -911,6 +905,11 @@ FolderSizeItem FolderSizeModelThread::getItem(const QFileInfo fileInfo) {
     } else {
         return FolderSizeItem();
     }
+}
+
+QString FolderSizeModelThread::getSourcePath()
+{
+    return m_sourcePath;
 }
 
 FolderSizeItem FolderSizeModelThread::getFileItem(const QFileInfo fileInfo) {

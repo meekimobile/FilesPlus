@@ -18,6 +18,8 @@ public:
     static const QString CACHE_DB_PATH;
     static const QString DEFAULT_CURRENT_DIR;
     static const int FILE_READ_BUFFER;
+    static const int FILE_COPY_DELAY;
+    static const int FILE_DELETE_DELAY;
 
     enum SortFlags {
         SortByName,
@@ -61,6 +63,7 @@ public:
     bool changeDir(const QString dirName, const int sortFlag = -1);
     FolderSizeItem getItem(const QFileInfo fileInfo);
 
+    QString getSourcePath();
     void setRunMethod(int method);
     void setSourcePath(const QString sourcePath);
     void setTargetPath(const QString targetPath);
@@ -71,7 +74,7 @@ signals:
     void fetchDirSizeFinished();
     void copyStarted(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
-    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 bytesTotal);
+    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 bytesTotal, bool isSourceRoot);
     void fetchDirSizeUpdated(QString dirPath);
     void deleteStarted(int fileAction, QString localPath);
     void deleteProgress(int fileAction, QString subLocalPath, QString msg, int err);
@@ -102,6 +105,7 @@ private:
     bool copy(int method, const QString sourcePath, const QString targetPath);
     bool copyFile(int method, const QString sourcePath, const QString targetPath);
     bool deleteDir(const QString sourcePath);
+    void delay(const int interval = 100);
 
     void cleanItems();
     bool cleanItem(const FolderSizeItem &item);
@@ -119,6 +123,8 @@ private:
 
     bool m_abortFlag;
     bool m_rollbackFlag;
+
+    bool m_isFileCached;
 };
 
 #endif // FOLDERSIZEMODELTHREAD_H

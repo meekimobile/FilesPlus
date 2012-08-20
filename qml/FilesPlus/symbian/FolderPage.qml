@@ -516,8 +516,8 @@ Page {
             console.debug("folderPage fsModel onDeleteStarted " + fileAction + " sourcePath " + sourcePath);
             if (fileAction == FolderSizeItemListModel.DeleteFile) {
                 deleteProgressDialog.source = sourcePath;
-                deleteProgressDialog.indeterminate = false;
                 if (deleteProgressDialog.status != DialogStatus.Open) {
+                    deleteProgressDialog.indeterminate = false;
                     deleteProgressDialog.titleText = appInfo.emptyStr+qsTr("Deleting");
                     deleteProgressDialog.open();
                 }
@@ -527,6 +527,7 @@ Page {
         onDeleteProgress: {
             console.debug("folderPage fsModel onDeleteProgress " + fileAction + " sourceSubPath " + sourceSubPath);
             // Update progress only.
+            // TODO Save state to property only. Use timer to update state on UI.
             if (fileAction == FolderSizeItemListModel.DeleteFile) {
                 deleteProgressDialog.value += 1;
                 deleteProgressDialog.message = appInfo.emptyStr+qsTr("%1 is deleted.").arg(sourceSubPath);
