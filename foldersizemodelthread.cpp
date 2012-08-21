@@ -452,9 +452,6 @@ bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QSt
             emit copyFinished(method, sourcePath, targetPath, tr("Copy %1 to %2 is failed.").arg(sourcePath).arg(targetPath), -1, 0, itemSize, isSourceRoot);
         }
     } else {
-        // TODO Copy with bundled method QFile::copy() may consume less CPU power.
-//        res = QFile::copy(sourcePath, targetPath);
-
         // Method copyFile. Method copyFile will emit copyFinished once it's done.
         res = copyFile(method, sourcePath, targetPath);
     }
@@ -487,6 +484,8 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
     QString sourceAbsFilePath = sourcePath;
     QString targetAbsFilePath;
     qint64 itemSize = sourceFileInfo.size();
+    qint64 totalBytes = 0;
+    bool res = false;
 
     // Verify targetPath is file or folder. It will be prepared to file path.
     if (targetFileInfo.isDir()) {
@@ -503,12 +502,23 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
         return false;
     }
 
+#ifdef USE_SYSTEM_COPY
+    // Copy with bundled method QFile::copy() may consume less CPU power.
+
+    res = QFile::copy(sourcePath, targetPath);
+    if (res) {
+        totalBytes = (res ? itemSize : 0);
+
+        // Emit copy progress.
+        emit copyProgress(method, sourcePath, targetPath, totalBytes, itemSize);
+    }
+    res = res && !m_abortFlag;
+#else
+    // Copy with feedback progress to QML.
+
     QFile sourceFile(sourceAbsFilePath);
     QFile targetFile(targetAbsFilePath);
 
-    // TODO copy with feedback progress to QML.
-    qint64 totalBytes = 0;
-    bool res = false;
     if (sourceFile.open(QFile::ReadOnly) && targetFile.open(QFile::WriteOnly)) {
         char buf[FolderSizeModelThread::FILE_READ_BUFFER];
         qint64 c = sourceFile.read(buf, sizeof(buf));
@@ -519,8 +529,7 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
             // Emit copy progress.
             emit copyProgress(method, sourceAbsFilePath, targetAbsFilePath, totalBytes, sourceFile.size());
 
-            // TODO Commented below line can speedup copying.
-//            QApplication::processEvents(QEventLoop::AllEvents, 200);
+            // Delay to update UI.
             delay(FILE_COPY_DELAY);
 
             // Read next buffer.
@@ -540,6 +549,7 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
     // Close files.
     sourceFile.close();
     targetFile.close();
+#endif
 
     // Return false if aborted.
     if (m_abortFlag) {
@@ -1141,6 +1151,9 @@ void FolderSizeModelThread::run()
         }
         break;
     case DeleteFile:
+        // Delay to let deleteProgressDialog show before progressing.
+        msleep(100);
+
         if (deleteDir(m_sourcePath)) {
             qDebug() << "FolderSizeModelThread::run delete sourcePath" << m_sourcePath << "is done.";
             emit deleteFinished(m_runMethod, m_sourcePath, "Deleting " + m_sourcePath + " is done.", 0);

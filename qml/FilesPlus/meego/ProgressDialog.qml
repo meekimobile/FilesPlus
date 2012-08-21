@@ -4,7 +4,7 @@ import "Utility.js" as Utility
 
 CommonDialog {
     id: progressDialog
-    width: parent.width * 0.80
+    width: parent.width * 0.90
 
     property string source
     property string target
