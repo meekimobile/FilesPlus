@@ -1,0 +1,730 @@
+﻿<!DOCTYPE QPH>
+<QPH language="it">
+<phrase>
+    <source>^API Request Authorized</source>
+    <target>^API autorizzata</target>
+</phrase>
+<phrase>
+    <source>Privacy Policy</source>
+    <target>Privacy Policy</target>
+</phrase>
+<phrase>
+    <source>+ FilesPlus stores only your email during authorization but will not share to any persons/services.
++ FilesPlus never stores your password. It stores only received token which will be used for communicating only with its provider.
++ FilesPlus get your language information and stores selected language internally. It will not share to any persons/services.
+
+Please click &apos;OK&apos; to continue.</source>
+    <target>+ FilesPlus memorizza solo la tua e-mail durante l'autorizzazione ma non condivide nulla con altre persone e/o servizi.
++ FilesPlus non memorizza mai la tua password. Memorizza solamente i Token ricevuti che saranno utilizzati per comunicare soltanto con il proprio fornitore.
++ FilesPlus memorizza le informazioni sulla vostra lingua selezionata internamente. Non condivide nessuna informazione con altre persone e/o servizi.
+
+Premi &apos;OK&apos; per continuare.</target>
+</phrase>
+<phrase>
+    <source>Settings</source>
+    <target>Impostazioni</target>
+</phrase>
+<phrase>
+    <source>About</source>
+    <target>Info</target>
+</phrase>
+<phrase>
+    <source>About</source>
+    <target>Scarica altre App</target>
+</phrase>
+<phrase>
+    <source>Exit</source>
+    <target>Esci</target>
+</phrase>
+<phrase>
+    <source>Cloud Drive Accounts</source>
+    <target>Account Dropbox</target>
+</phrase>
+<phrase>
+    <source>Remove cloud drive account</source>
+    <target>Rimuovi l'account Cloud</target>
+</phrase>
+<phrase>
+    <source>Please confirm to remove </source>
+    <target>Conferma la rimozione </target>
+</phrase>
+<phrase>
+    <source>Cloud Drive Jobs</source>
+    <target>Processi Cloud</target>
+</phrase>
+<phrase>
+    <source>Running</source>
+    <target>In esecuzione</target>
+</phrase>
+<phrase>
+    <source>Queued</source>
+    <target>In coda</target>
+</phrase>
+<phrase>
+    <source>Sync %1 to</source>
+    <target>Sto sincronizzando %1 in</target>
+</phrase>
+<phrase>
+    <source>Sync %n item(s) to</source>
+    <target>Sincronizzazione di %n elementi in@Sync %n elementi in</target>
+    <definition>disambiguation</definition>
+</phrase>
+<phrase>
+    <source>Upload %1 to</source>
+    <target>Upload di %1 in</target>
+</phrase>
+<phrase>
+    <source>Download %1 from</source>
+    <target>Download in %1 da</target>
+</phrase>
+<phrase>
+    <source>Share link of %1 from</source>
+    <target>Condividi link di %1 da</target>
+</phrase>
+<phrase>
+    <source>Unsync %1 from</source>
+    <target>Unsync %1 from</target>
+</phrase>
+<phrase>
+    <source>OK</source>
+    <target>OK</target>
+</phrase>
+<phrase>
+    <source>Cancel</source>
+    <target>Cancella</target>
+</phrase>
+<phrase>
+    <source>Downloading</source>
+    <target>Sto scaricando</target>
+</phrase>
+<phrase>
+    <source>No Drive</source>
+    <target>Nessun Drive</target>
+</phrase>
+<phrase>
+    <source>Internal Drive</source>
+    <target>Drive interno</target>
+</phrase>
+<phrase>
+    <source>Removable Drive</source>
+    <target>Drive removibile</target>
+</phrase>
+<phrase>
+    <source>Remote Drive</source>
+    <target>Drive remoto</target>
+</phrase>
+<phrase>
+    <source>Cdrom Drive</source>
+    <target>Cdrom </target>
+</phrase>
+<phrase>
+    <source>Internal Flash Drive</source>
+    <target>Memoria Flash interna</target>
+</phrase>
+<phrase>
+    <source>Ram Drive</source>
+    <target>Ram Drive</target>
+</phrase>
+<phrase>
+    <source>Free</source>
+    <target>Libero</target>
+</phrase>
+<phrase>
+    <source>Total</source>
+    <target>Totale</target>
+</phrase>
+<phrase>
+    <source>Drives</source>
+    <target>Drives</target>
+</phrase>
+<phrase>
+    <source>FilesPlus provides extended functions beyond file manager.
+   + Print with Google Cloud Print.
+   + Sync with Cloud Drive.
+   + Preview images in your folder.
+   + Present folders in Pie view.</source>
+    <target> FilesPlus fornisce funzioni estese al di lเ del del semplice file manager.
+   + Stampa con Google Print Cloud.
+   + Sincronizzazione con Drive Cloud.
+   + Anteprima delle immagini nella cartella.
+   + Cartelle presente in vista Pie.</target>
+</phrase>
+<phrase>
+    <source>Developed by </source>
+    <target>Sviluppato by </target>
+</phrase>
+<phrase>
+    <source>Paste</source>
+    <target>Incolla</target>
+</phrase>
+<phrase>
+    <source>Mark multiple items</source>
+    <target>Seleziona pi๙ Elementi</target>
+</phrase>
+<phrase>
+    <source>Clear clipboard</source>
+    <target>Svuota la clipboard</target>
+</phrase>
+<phrase>
+    <source>New folder</source>
+    <target>Nuova Cartella</target>
+</phrase>
+<phrase>
+    <source>Sync current folder</source>
+    <target>Sincronizza la Cartella corrente</target>
+</phrase>
+<phrase>
+    <source>Sort by</source>
+    <target>Disponi per</target>
+</phrase>
+<phrase>
+    <source>Reset folder cache</source>
+    <target>Resetta la cache della Cartella</target>
+</phrase>
+<phrase>
+    <source>Resetting folder cache will take time depends on numbers of sub folders/files under current folder.
+
+Please click OK to continue.</source>
+    <target>Lo svuotamento della cache impiegherเ del tempo, dipende dal numero di cartelle/sotto cartelle o file spresenti.
+
+Premi OK per continuaree.</target>
+</phrase>
+<phrase>
+    <source>Notify</source>
+    <target>Notifica</target>
+</phrase>
+<phrase>
+    <source>Reset Cache is running. Please wait until it&apos;s done.</source>
+    <target>Svuotamento della Cache in corso. Prego attendere.</target>
+</phrase>
+<phrase>
+    <source>Print Error</source>
+    <target>Errore stampa</target>
+</phrase>
+<phrase>
+    <source>FilesPlus print via Google CloudPrint service.
+Please enable printer on your desktop with Chrome or with CloudPrint-ready printer.
+You will redirect to authorization page.</source>
+    <target>Servizio di stampa di FilesPlus via Google CloudPrint.
+Si prega di abilitare la stampante sul desktop con Chrome o con della stampanti CloudPrint-ready.
+Sarai reindirizzato alla pagina di autorizzazione.</target>
+</phrase>
+<phrase>
+    <source>Print with CloudPrint</source>
+    <target>Stampa con CloudPrint</target>
+</phrase>
+<phrase>
+    <source>Search for printers</source>
+    <target>Ricerca delle stampanti in corso</target>
+</phrase>
+<phrase>
+    <source>FilesPlus syncs your files via Dropbox service.
+You will be redirected to authorization page.</source>
+    <target>FilesPlus sincronizza i tuoi files via Dropbox .
+Sarai reindirizzato alla pagina di autorizzazione.</target>
+</phrase>
+<phrase>
+    <source>Sync with Dropbox</source>
+    <target>Sincronizzazione con Dropbox</target>
+</phrase>
+<phrase>
+    <source>Copy</source>
+    <target>Copia</target>
+</phrase>
+<phrase>
+    <source>Move</source>
+    <target>Sposta</target>
+</phrase>
+<phrase>
+    <source>Delete</source>
+    <target>Elimina</target>
+</phrase>
+<phrase>
+    <source>First time loading</source>
+    <target>Primo avvio</target>
+</phrase>
+<phrase>
+    <source>Thank you for download FilesPlus.
+This is first time running, FolderPie needs to load information from your drive.
+
+It will take time depends on numbers of sub folders/files under current folder.
+
+Please click OK to continue.</source>
+    <target>Grazie per aver scaricato FilesPlus.
+Questo ่ il tuo primo avvio, FolderPie ha bisogno di caricare le informazioni dal disco.
+
+Ci vorrเ del tempo dipende dal numero di cartelle/sotto cartelle o file presenti.
+
+Si prega di fare clic su OK per continuare.</target>
+</phrase>
+<phrase>
+    <source>to</source>
+    <target>in</target>
+</phrase>
+<phrase>
+    <source>error</source>
+    <target>errore</target>
+</phrase>
+<phrase>
+    <source>failed</source>
+    <target>fallito</target>
+</phrase>
+<phrase>
+    <source>Deleting</source>
+    <target>Eliminazione in corso</target>
+</phrase>
+<phrase>
+    <source>last modified</source>
+    <target>ultima modifica</target>
+</phrase>
+<phrase>
+    <source>Multiple actions</source>
+    <target>Azione multipla</target>
+</phrase>
+<phrase>
+    <source>Invalid action</source>
+    <target>Azione non valida</target>
+</phrase>
+<phrase>
+    <source>Can&apos;t %1 %2 to %3.</source>
+    <target>Impossibile %1 %2 in %3.</target>
+</phrase>
+<phrase>
+    <source>New Folder</source>
+    <target>Nuova Cartella</target>
+</phrase>
+<phrase>
+    <source>Please input folder name.</source>
+    <target>Inserisci il nome Cartella.</target>
+</phrase>
+<phrase>
+    <source>Rename</source>
+    <target>Rinomina</target>
+</phrase>
+<phrase>
+    <source>Please input new name.</source>
+    <target>Inserisci il nuovo nome.</target>
+</phrase>
+<phrase>
+    <source>File overwrite</source>
+    <target>File sovrascritto</target>
+</phrase>
+<phrase>
+    <source>Please input new file name.</source>
+    <target>Inserisci il nuovo nome.</target>
+</phrase>
+<phrase>
+    <source>Overwrite existing file</source>
+    <target>Sovrascrivi file esistente</target>
+</phrase>
+<phrase>
+    <source>Cancel sync jobs</source>
+    <target>Interrompi la sincronizzazione<</target>
+</phrase>
+<phrase>
+    <source>Cancel file action jobs</source>
+    <target>Interrompi azione sul file</target>
+</phrase>
+<phrase>
+    <source>Rollback changes</source>
+    <target>Annulla modifiche</target>
+</phrase>
+<phrase>
+    <source>Cancel %n job(s) and abort file action ?</source>
+    <target>Interrompere %n azione(i) sul file ?</target>
+</phrase>
+<phrase>
+    <source>Abort file action ?</source>
+    <target>Sei sicuro ?</target>
+</phrase>
+<phrase>
+    <source>Printing</source>
+    <target>Stampa in corso</target>
+</phrase>
+<phrase>
+    <source>Reset CloudPrint</source>
+    <target>Annulla CloudPrint</target>
+</phrase>
+<phrase>
+    <source>Resetting is done.</source>
+    <target>Fatto.</target>
+</phrase>
+<phrase>
+    <source>Error</source>
+    <target>Errore</target>
+</phrase>
+<phrase>
+    <source>CloudDrive Request Token</source>
+    <target>Richiesta Token di accesso CloudDrive</target>
+</phrase>
+<phrase>
+    <source>CloudDrive Access Token</source>
+    <target>Token di accesso CloudDrive</target>
+</phrase>
+<phrase>
+    <source>CloudDrive user is authorized.
+Please proceed your sync action.</source>
+    <target>Utente CloudDrive autorizzato.
+Si prega di continuare l'azione di sincronizzazione.</target>
+</phrase>
+<phrase>
+    <source>CloudDrive Account Info</source>
+    <target>Info Account CloudDrive</target>
+</phrase>
+<phrase>
+    <source>File Get</source>
+    <target>Ricezione File</target>
+</phrase>
+<phrase>
+    <source>File Put</source>
+    <target>Collocazone File</target>
+</phrase>
+<phrase>
+    <source>%1 was removed remotely.
+Link will be removed.</source>
+    <target>%1 ่ stato rimosso in remoto.
+Il link verrเ rimosso.</target>
+</phrase>
+<phrase>
+    <source>Create Folder</source>
+    <target>Crea Cartella</target>
+</phrase>
+<phrase>
+    <source>Share file on Dropbox</source>
+    <target>Condivisione di file su Dropbox</target>
+</phrase>
+<phrase>
+    <source>Please download file with below link.</source>
+    <target>Si prega di scaricare il file con i link qui sotto.</target>
+</phrase>
+<phrase>
+    <source>Share</source>
+    <target>Condividi</target>
+</phrase>
+<phrase>
+    <source>Can&apos;t print %1 
+File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
+    <target>Impossibile stampare %1 
+Tipo di file non ่ supportato. Solo file JPEG, PNG, Testo e PDF sono supportati.</target>
+</phrase>
+<phrase>
+    <source>FilesPlus prints via Google CloudPrint service.
+Please enable printer on your desktop with Chrome or with CloudPrint-ready printer.
+You will be redirected to authorization page.</source>
+    <target>Servizio di stampa di FilesPlus via Google CloudPrint.
+Si prega di abilitare la stampante sul desktop con Chrome o con della stampanti CloudPrint-ready.
+Sarai reindirizzato alla pagina di autorizzazione.</target>
+</phrase>
+<phrase>
+    <source>Thank you for download FilesPlus.
+This is first time running, FilesPlus needs to load information from your drive.
+
+It will take time depends on numbers of sub folders/files under current folder.
+
+Please click OK to continue.</source>
+    <target>Grazie per aver scaricato FilesPlus.
+Questo ่ il tuo primo avvio, FolderPie ha bisogno di caricare le informazioni dal disco.
+
+Ci vorrเ del tempo dipende dal numero di cartelle/sotto cartelle o file presenti.
+
+Si prega di fare clic su OK per continuare.</target>
+</phrase>
+<phrase>
+    <source>%1 is deleted.</source>
+    <target>%1 eliminato.</target>
+</phrase>
+<phrase>
+    <source>%n dir(s)</source>
+    <target>%n dir@%n dir(s)</target>
+</phrase>
+<phrase>
+    <source>%n file(s)</source>
+    <target>%n file@%n files</target>
+</phrase>
+<phrase>
+    <source>Delete %n file(s)
+</source>
+    <target>Elimina %n file
+@Elimina %n files
+</target>
+</phrase>
+<phrase>
+    <source>Copy %n file(s)
+</source>
+    <target>Copia %n file
+@Copia %n files
+</target>
+</phrase>
+<phrase>
+    <source>Move %n file(s)
+</source>
+    <target>Sposta %n file
+@Sposta %n files
+</target>
+</phrase>
+<phrase>
+    <source>Rename %1 to</source>
+    <target>Rinomina %1 in</target>
+</phrase>
+<phrase>
+    <source>Cancel %n job(s) ?</source>
+    <target>Interrompi %n operazione(i) ?@Interrompi %n operazione(i) ?</target>
+</phrase>
+<phrase>
+    <source>Sync connected items</source>
+    <target>Sincronizza gli elementi collegati</target>
+</phrase>
+<phrase>
+    <source>FolderPie helps you collect each folder actual size on your disk space.
+And present in Pie view for easy understanding at glance.</source>
+    <target>FolderPie consente di visualizzare lo spazio occupa di ogni cartella sul vostro disco.
+Il tutto presentato con un Diagramma a torta.</target>
+</phrase>
+<phrase>
+    <source>Developed by</source>
+    <target>Sviluppato da</target>
+</phrase>
+<phrase>
+    <source>Source and Target path can&apos;t be the same.</source>
+    <target>Il percorso di origine e destinazione non possono coincidere.</target>
+</phrase>
+<phrase>
+    <source>Target path can&apos;t be inside source path.</source>
+    <target>Percorso di destinazione non pu๒ essere all'interno del percorso di origine.</target>
+</phrase>
+<phrase>
+    <source>Show running on targetPath&apos;s parent</source>
+    <target>Mostra in esecuzione nel percorso di destinazione</target>
+</phrase>
+<phrase>
+    <source>Rename %1 to %2 done.</source>
+    <target>Rinomia %1 in %2 fatto.</target>
+</phrase>
+<phrase>
+    <source>Rename %1 to %2 failed.</source>
+    <target>Rinomina %1 in %2 fallita.</target>
+</phrase>
+<phrase>
+    <source>_Copy</source>
+    <target>_Copia</target>
+</phrase>
+<phrase>
+    <source>_Copy%1</source>
+    <target>_Copia%1</target>
+</phrase>
+<phrase>
+    <source>Copia %1 su %2 annullata.</source>
+    <target>Copia %1 su %2 annullata.</target>
+</phrase>
+<phrase>
+    <source>Copia %1 su %2 eseguita con successo.</source>
+    <target>Copia %1 su %2 eseguita con successo.</target>
+</phrase>
+<phrase>
+    <source>Copia %1 su %2 fallita.</source>
+    <target>Copia %1 su %2 fallita.</target>
+</phrase>
+<phrase>
+    <source>Both source/target path can&apos;t be the same file.</source>
+    <target>La cartella di origine e destinazione non possono coincidere per questa operazione.</target>
+</phrase>
+<phrase>
+    <source>Both source %1 and target %2 can&apos;t be read/written.</source>
+    <target>Origine e Destinazione non possono essere lette/scritte.</target>
+</phrase>
+<phrase>
+    <source>Deleting sub item %1 is failed.</source>
+    <target>Eliminazione di sub articolo 1% non riuscito.</target>
+</phrase>
+<phrase>
+    <source>Deleting sub item %1 is done.</source>
+    <target>Eliminazione di sub articolo 1% completato.</target>
+</phrase>
+<phrase>
+    <source>Deleting %1 is aborted.</source>
+    <target>Eliminazione di %1 interrotto.</target>
+</phrase>
+<phrase>
+    <source>Mark all</source>
+    <target>Seleziona tutto</target>
+</phrase>
+<phrase>
+    <source>Unmark all</source>
+    <target>Deseleziona tutto</target>
+</phrase>
+<phrase>
+    <source>Copy marked items</source>
+    <target>Copia gli elementi contrassegnati</target>
+</phrase>
+<phrase>
+    <source>Cut marked items</source>
+    <target>Taglia gli elementi contrassegnati</target>
+</phrase>
+<phrase>
+    <source>Delete marked items</source>
+    <target>Elimina gli elementi contrassegnati</target>
+</phrase>
+<phrase>
+    <source>Sync marked items</source>
+    <target>Sincronizza gli elementi contrassegnati</target>
+</phrase>
+<phrase>
+    <source>%n file</source>
+    <target>%n file@%n files</target>
+    <definition>disambiguation</definition>
+</phrase>
+<phrase>
+    <source>Delete print jobs</source>
+    <target>Elimina tutti i processi di stampa</target>
+</phrase>
+<phrase>
+    <source>Delete all print jobs ?</source>
+    <target>Eliminare tutti i processi di stampa ?</target>
+</phrase>
+<phrase>
+    <source>Print Jobs</source>
+    <target>Lavori di stampa</target>
+</phrase>
+<phrase>
+    <source>Print %1 to</source>
+    <target>Stampa %1 con</target>
+</phrase>
+<phrase>
+    <source>Progressing</source>
+    <target>Avanzamento</target>
+</phrase>
+<phrase>
+    <source>Send %1 to</source>
+    <target>Invia %1 a</target>
+</phrase>
+<phrase>
+    <source>Show CloudPrint jobs</source>
+    <target>Mostra processi Cloud Print</target>
+</phrase>
+<phrase>
+    <source>Register new Dropbox account</source>
+    <target>Registra un nuovo account Dropbox</target>
+</phrase>
+<phrase>
+    <source>Reset current folder cache</source>
+    <target>Azzera cache cartella corrente</target>
+</phrase>
+<phrase>
+    <source>Cancel queued jobs</source>
+    <target>Annullare i processi in coda</target>
+</phrase>
+<phrase>
+    <source>Sync all connected items</source>
+    <target>Sincronizzare tutti gli elementi collegati</target>
+</phrase>
+<phrase>
+    <source>Logging (Debug)</source>
+    <target>Logging (Debug)</target>
+</phrase>
+<phrase>
+    <source>Changing logging switch requires restart.
+FilesPlus is exiting now.
+
+Please confirm.</source>
+    <target>La modifica del tipo di registrazione richiede il riavvio.
+FilesPlus si chiuderเ adesso.
+
+Conferma.</target>
+</phrase>
+<phrase>
+    <source>Show cloud print jobs</source>
+    <target>Mostra i processi Cloud Print</target>
+</phrase>
+<phrase>
+    <source>Reset cloud print</source>
+    <target>Resetta Cloud Print</target>
+</phrase>
+<phrase>
+    <source>Show cloud drive jobs</source>
+    <target>Mostra processi Cloud Drive</target>
+</phrase>
+<phrase>
+    <source>Show accounts</source>
+    <target>Mostra Accounts</target>
+</phrase>
+<phrase>
+    <source>FolderPie feature</source>
+    <target>Funzione FolderPie</target>
+</phrase>
+<phrase>
+    <source>Theme</source>
+    <target>Tema</target>
+</phrase>
+<phrase>
+    <source>Monitoring (RAM,CPU)</source>
+    <target>Monitoraggio (RAM,CPU)</target>
+</phrase>
+<phrase>
+    <source>Personalization</source>
+    <target>Personalizzazione</target>
+</phrase>
+<phrase>
+    <source>Developer</source>
+    <target>Sviluppatore</target>
+</phrase>
+<phrase>
+    <source>Monitoring</source>
+    <target>Monitoraggio</target>
+</phrase>
+<phrase>
+    <source>Monitoring is enabled. Log file is </source>
+    <target>Il monitoraggio attivato. File di log </target>
+</phrase>
+<phrase>
+    <source>English</source>
+    <target>Inglese</target>
+</phrase>
+<phrase>
+    <source>Russian</source>
+    <target>Russo</target>
+</phrase>
+<phrase>
+    <source>Chinese</source>
+    <target>Cinese</target>
+</phrase>
+<phrase>
+    <source>Locale</source>
+    <target>Locale</target>
+</phrase>
+<phrase>
+    <source>Sort by Name</source>
+    <target>Ordina per Nome</target>
+</phrase>
+<phrase>
+    <source>Sort by Type</source>
+    <target>Ordina per Tipo</target>
+</phrase>
+<phrase>
+    <source>Sort by Time</source>
+    <target>Ordina per Data</target>
+</phrase>
+<phrase>
+    <source>Sort by Size</source>
+    <target>Ordina per Dimensione</target>
+</phrase>
+<phrase>
+    <source>Mark</source>
+    <target>Seleziona</target>
+</phrase>
+<phrase>
+    <source>Uploading</source>
+    <target>Caricamento</target>
+</phrase>
+<phrase>
+    <source>Please wait while loading.</source>
+    <target>Attendere il caricamento.</target>
+</phrase>
+<phrase>
+    <source>Logging is enabled. Log file is at %1</source>
+    <target>La registrazione ่ attivata. File di registro ่ a %1</target>
+</phrase>
+<phrase>
+    <source>You may turn off in Settings.</source>
+    <target>Si pu๒ disattivare in Impostazioni.</target>
+</phrase>
+</QPH>
