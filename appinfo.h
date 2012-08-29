@@ -14,6 +14,7 @@ class AppInfo : public QDeclarativeItem
     Q_PROPERTY(QString emptyStr READ getEmptyStr NOTIFY localeChanged)
     Q_PROPERTY(QString locale READ getLocale WRITE setLocale NOTIFY localeChanged)
     Q_PROPERTY(QString emptySetting READ getEmptySetting NOTIFY settingChanged)
+    Q_PROPERTY(QString version READ getVersion NOTIFY versionChanged)
 public:
     explicit AppInfo(QDeclarativeItem *parent = 0);
     
@@ -21,6 +22,8 @@ public:
     void setDomainName(const QString domainName);
     QString getAppName() const;
     void setAppName(const QString appName);
+    QString getVersion() const;
+
     Q_INVOKABLE bool isMonitoring() const;
     void setMonitoring(const bool flag);
     Q_INVOKABLE QString getMonitoringFilePath() const;
@@ -45,6 +48,7 @@ signals:
     void notifyMonitoringSignal(QString monitoringFilePath);
     void localeChanged(QString locale);
     void settingChanged();
+    void versionChanged();
 public slots:
 
 private:

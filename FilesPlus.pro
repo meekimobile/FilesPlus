@@ -13,7 +13,11 @@ QML_IMPORT_PATH =
 #symbian:TARGET.UID3 = 0xE11DCC9D
 symbian:TARGET.UID3 = 0x20064E45
 
-VERSION = 1.0.4
+VERSION = 1.0.5
+
+# Define VER to use in cpp.
+VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
+DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
 
 # Smart Installer package's UID
 # This UID is from the protected range and therefore the package will

@@ -25,6 +25,12 @@ void AppInfo::setAppName(const QString appName)
     m_appName = appName;
 }
 
+QString AppInfo::getVersion() const
+{
+    qDebug() << "AppInfo::getVersion" << VER;
+    return VER;
+}
+
 bool AppInfo::isLogging() const
 {
     return m_settings->value("Logging.enabled", false).toBool();
