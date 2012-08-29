@@ -65,6 +65,12 @@ QString AppInfo::getEmptySetting()
     return "";
 }
 
+void AppInfo::addToClipboard(const QString text)
+{
+    qDebug() << "AppInfo::addToClipboard text" << text;
+    QApplication::clipboard()->setText(text);
+}
+
 bool AppInfo::isMonitoring() const
 {
     return m_settings->value("Monitoring.enabled", false).toBool();
@@ -92,7 +98,11 @@ QVariant AppInfo::getSettingValue(const QString key, const QVariant defaultValue
     // TODO Why sync to backend here?
     m_settings->sync();
 
-    return m_settings->value(key, defaultValue);
+    QVariant v = m_settings->value(key, defaultValue);
+
+    qDebug() << "AppInfo::getSettingValue key" << key << "v" << v;
+
+    return v;
 }
 
 bool AppInfo::getSettingBoolValue(const QString key, const bool defaultValue)
@@ -102,7 +112,9 @@ bool AppInfo::getSettingBoolValue(const QString key, const bool defaultValue)
 
 bool AppInfo::setSettingValue(const QString key, const QVariant v)
 {
-    if (m_settings->value(key) != v) {
+    if (m_settings->value(key) != v.toString()) {
+        qDebug() << "AppInfo::setSettingValue key" << key << "settingValue" << m_settings->value(key) << "v" << v;
+
         m_settings->setValue(key, v);
 
         // Sync to backend.
@@ -184,7 +196,7 @@ bool AppInfo::loadTS(const QString localeName)
 
     qApp->removeTranslator(m_ts);
     bool res = false;
-    res = m_ts->load("FilesPlus_" + localeName, ":/");
+    res = m_ts->load(m_appName + "_" + localeName, ":/");
     if (res) {
         qDebug() << "appInfo.loadTS m_ts is loaded. isEmpty" << m_ts->isEmpty();
         qApp->installTranslator(m_ts);

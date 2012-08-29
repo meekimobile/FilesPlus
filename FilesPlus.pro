@@ -142,5 +142,6 @@ contains(MEEGO_EDITION, harmattan) {
 TRANSLATIONS += \
     i18n/FilesPlus_en.ts \
     i18n/FilesPlus_ru.ts \
-    i18n/FilesPlus_zh.ts
-
+    i18n/FilesPlus_zh.ts \
+    i18n/FilesPlus_de.ts \
+    i18n/FilesPlus_it.ts

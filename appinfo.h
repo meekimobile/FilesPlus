@@ -36,6 +36,8 @@ public:
     QString getEmptyStr();
     QString getEmptySetting();
 
+    Q_INVOKABLE void addToClipboard(const QString text);
+
     void componentComplete();
     void init();
 signals:
