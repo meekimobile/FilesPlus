@@ -1584,8 +1584,8 @@ Il tutto presentato con un Diagramma a torta.</translation>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+47"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+48"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+48"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+49"/>
         <source>Settings</source>
         <translation>Impostazioni</translation>
     </message>
@@ -1681,14 +1681,30 @@ Conferma.</translation>
         <translation>Intervallo di popup</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
-        <source>Locale</source>
-        <translation>Locale</translation>
+        <location line="+210"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+249"/>
+        <source>Languages</source>
+        <translation>Lingue</translation>
     </message>
     <message>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Cancel</source>
+        <translation>Cancella</translation>
+    </message>
+    <message>
+        <source>Locale</source>
+        <translation type="obsolete">Locale</translation>
+    </message>
+    <message>
+        <location line="-210"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-249"/>
         <source>Show thumbnail</source>
         <translation>Mostra anteprima</translation>
     </message>
@@ -1717,8 +1733,8 @@ Conferma.</translation>
         <translation>Sviluppatore</translation>
     </message>
     <message>
-        <location line="+28"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+28"/>
+        <location line="+30"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+30"/>
         <source>Monitoring</source>
         <translation>Monitoraggio</translation>
     </message>

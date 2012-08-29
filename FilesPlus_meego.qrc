@@ -122,5 +122,7 @@
         <file>qml/FilesPlus/lock.svg</file>
         <file alias="qml/FilesPlus/TouchScrollBar.qml">qml/FilesPlus/meego/TouchScrollBar.qml</file>
         <file>qml/FilesPlus/save_inverted.svg</file>
+        <file alias="FilesPlus_it.qm">i18n/FilesPlus_it.qm</file>
+        <file alias="FilesPlus_de.qm">i18n/FilesPlus_de.qm</file>
     </qresource>
 </RCC>

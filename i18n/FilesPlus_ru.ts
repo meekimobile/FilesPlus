@@ -1374,8 +1374,8 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+181"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+182"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+182"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+183"/>
         <source>Cancel queued jobs</source>
         <translation>Отменить все заказы на печать</translation>
     </message>
@@ -1497,8 +1497,8 @@ FilesPlus сейчас закроется.
         <translation>Для разработчика</translation>
     </message>
     <message>
-        <location line="+28"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+28"/>
+        <location line="+30"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+30"/>
         <source>Monitoring</source>
         <translation>Наблюдение</translation>
     </message>
@@ -1527,10 +1527,26 @@ FilesPlus сейчас закроется.
         <translation>Китайский</translation>
     </message>
     <message>
-        <location line="-157"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-196"/>
+        <location line="+50"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+50"/>
+        <source>Languages</source>
+        <translation>Языки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>OK</source>
+        <translation>Да</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Cancel</source>
+        <translation>Нет</translation>
+    </message>
+    <message>
         <source>Locale</source>
-        <translation>Locale</translation>
+        <translation type="obsolete">Locale</translation>
     </message>
 </context>
 <context>

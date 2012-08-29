@@ -1,3 +1,8 @@
+filesplus (1.0.5) unstable; urgency=low
+  * Add de,it translations.
+
+ -- Taweesak Kittipuree <>  Wed, 29 Aug 2012 16:55:46 +0700
+
 filesplus (1.0.4) unstable; urgency=low
   * Add sharing options (BT, mail, sms), Add thumbnail.
 

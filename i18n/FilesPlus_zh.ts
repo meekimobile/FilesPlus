@@ -1316,8 +1316,8 @@ Reset current folder&apos;s cache</translatorcomment>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+181"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+182"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+182"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+183"/>
         <source>Cancel queued jobs</source>
         <translatorcomment>[Edited text copy]
 Cancel queued activities</translatorcomment>
@@ -1452,8 +1452,8 @@ Shows CloudDrive accounts</translatorcomment>
         <translation>程序员</translation>
     </message>
     <message>
-        <location line="+28"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+28"/>
+        <location line="+30"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+30"/>
         <source>Monitoring</source>
         <translation>监控</translation>
     </message>
@@ -1482,10 +1482,26 @@ Shows CloudDrive accounts</translatorcomment>
         <translation>中文</translation>
     </message>
     <message>
-        <location line="-157"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-196"/>
+        <location line="+50"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+50"/>
+        <source>Languages</source>
+        <translation>语文</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>OK</source>
+        <translation>好</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
         <source>Locale</source>
-        <translation>语言环境</translation>
+        <translation type="obsolete">语言环境</translation>
     </message>
 </context>
 <context>

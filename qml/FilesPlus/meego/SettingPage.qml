@@ -1,6 +1,7 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
 import AppInfo 1.0
+import com.nokia.extras 1.0
 
 Page {
     id: settingPage
@@ -120,7 +121,7 @@ Page {
         ListElement {
             name: "locale"
             title: ""
-            type: "locale"
+            type: "button"
             group: "Personalization"
         }
         ListElement {
@@ -186,7 +187,7 @@ Page {
         else if (name == "resetCache") return qsTr("Reset current folder cache") + appInfo.emptyStr;
         else if (name == "Theme.inverted") return qsTr("Theme") + appInfo.emptyStr;
         else if (name == "popup.timer.interval") return qsTr("Popup interval") + appInfo.emptyStr;
-        else if (name == "locale") return qsTr("Locale") + appInfo.emptyStr;
+        else if (name == "locale") return languageModel.getLanguage(appInfo.getLocale()) + appInfo.emptyStr;
         else if (name == "thumbnail.enabled") return qsTr("Show thumbnail") + appInfo.emptyStr;
         else if (name == "keep.bluetooth.off") return qsTr("Keep bluetooth off") + appInfo.emptyStr;
         else if (name == "Logging.enabled") return qsTr("Logging (Debug)") + appInfo.emptyStr;
@@ -216,6 +217,8 @@ Page {
                 p.resetCacheSlot();
             } else if (name == "Theme.inverted") {
                 theme.inverted = !theme.inverted;
+            } else if (name == "locale") {
+                languageSelector.open();
             } else if (name == "Logging.enabled") {
                 quitConfirmation.open();
             } else if (name == "Monitoring.enabled") {
@@ -387,6 +390,59 @@ Page {
                     anchors.verticalCenter: sectionText.verticalCenter
                     color: (theme.inverted) ? "grey" : "black"
                 }
+            }
+        }
+    }
+
+    TumblerDialog {
+        id: languageSelector
+        titleText: appInfo.emptyStr+qsTr("Languages")
+        acceptButtonText: appInfo.emptyStr+qsTr("OK")
+        rejectButtonText: appInfo.emptyStr+qsTr("Cancel")
+        columns: [ languageColumn ]
+        onStatusChanged: {
+            if (status == DialogStatus.Opening) {
+                columns[0].selectedIndex = languageModel.getIndexByLocale(appInfo.getLocale());
+            }
+        }
+
+        onAccepted: {
+            var index = columns[0].selectedIndex;
+            var selectedLocale = columns[0].items.get(index).locale;
+            console.debug("languageSelector onAccepted locale " + selectedLocale);
+            appInfo.setLocale(selectedLocale);
+        }
+    }
+
+    TumblerColumn {
+        id: languageColumn
+        selectedIndex: 0
+        items: ListModel {
+            id: languageModel
+            ListElement { locale: "en"; value: "English" }
+            ListElement { locale: "ru"; value: "Русский" }
+            ListElement { locale: "zh"; value: "中文(中国大陆)" }
+            ListElement { locale: "de"; value: "Deutsch" }
+            ListElement { locale: "it"; value: "Italiano" }
+
+            function getIndexByLocale(locale) {
+                for (var i=0; i<languageModel.count; i++) {
+                    var item = languageModel.get(i);
+                    if (locale.indexOf(item.locale) == 0) {
+                        return i;
+                    }
+                }
+
+                return -1;
+            }
+
+            function getLanguage(locale) {
+                var i = getIndexByLocale(locale)
+                if (i > -1) {
+                    return languageModel.get(i).value;
+                }
+
+                return "Invalid locale";
             }
         }
     }

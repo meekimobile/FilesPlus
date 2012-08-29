@@ -15,10 +15,6 @@ symbian:TARGET.UID3 = 0x20064E45
 
 VERSION = 1.0.5
 
-# Define VER to use in cpp.
-VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
-DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
-
 # Smart Installer package's UID
 # This UID is from the protected range and therefore the package will
 # fail to install if self-signed. By default qmake uses the unprotected
@@ -132,15 +128,25 @@ OTHER_FILES += \
 
 simulator {
     RESOURCES += FilesPlus_symbian.qrc
+    # Define VER to use in cpp.
+    VERSTR = '$${VERSION}'  # place quotes around the version string
+    DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
 }
 symbian {
     RESOURCES += FilesPlus_symbian.qrc
+    # Define VER to use in cpp.
+    VERSTR = '$${VERSION}'  # place quotes around the version string
+    DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
 }
 contains(MEEGO_EDITION, harmattan) {
     message( MEEGO_EDITION $${MEEGO_EDITION} $${MEEGO_VERSION_MAJOR} $${MEEGO_VERSION_MINOR} $${MEEGO_VERSION_PATCH} )
 
     RESOURCES += FilesPlus_meego.qrc
     DEFINES += Q_WS_HARMATTAN
+
+    # Define VER to use in cpp.
+    VERSTR = '\\"$${VERSION}\\"'  # place quotes around the version string
+    DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
 }
 
 TRANSLATIONS += \

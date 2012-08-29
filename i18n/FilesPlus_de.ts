@@ -100,7 +100,7 @@ Bitte klicken Sie auf &apos;OK&apos;, um fortzufahren.</translation>
         <location line="+6"/>
         <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+6"/>
         <source>Please confirm to remove </source>
-        <translation>Bitte bestätigen zu entfernen</translation>
+        <translation>Bitte bestätigen zu entfernen </translation>
     </message>
 </context>
 <context>
@@ -334,17 +334,17 @@ Bitte klicken Sie auf &apos;OK&apos;, um fortzufahren.</translation>
    + Sync with Cloud Drive.
    + Preview images in your folder.
    + Present folders in Pie view.</source>
-        <translation>FilesPlus bietet darüber hinaus erweiterte Funktionen Datei-Manager.
-    + Print mit Google Cloud Print.
-    + Mit Cloud Drive synchronisieren.
-    + Vorschau Bilder in Ihrem Ordner.
-    + Gegenwart Ordner in Pie Ansicht.</translation>
+        <translation>FilesPlus bietet erweiterte Funktionen auf Datei-Manager.
+   + Druck mit Google Cloud Print.
+   + Mit Cloud Drive synchronisieren.
+   + Vorschau Bilder in Ihrem Ordner.
+   + Gegenwart Ordner in Kreisdiagramm.</translation>
     </message>
     <message>
         <location line="+41"/>
         <location filename="../qml/FilesPlus/symbian/FilesPlusInfo.qml" line="+41"/>
         <source>Developed by </source>
-        <translation>entwickelt von</translation>
+        <translation>Entwickelt von </translation>
     </message>
 </context>
 <context>
@@ -1287,8 +1287,8 @@ Es zeigt in Pie Blick zum leichteren Verständnis auf einen Blick.</translation>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+181"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+182"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+182"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+183"/>
         <source>Cancel queued jobs</source>
         <translation>Abbrechen Jobs in der Warteschlange</translation>
     </message>
@@ -1379,14 +1379,30 @@ Bitte bestätigen Sie.</translation>
         <translation>Popup-Intervall</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
-        <source>Locale</source>
-        <translation>Locale</translation>
+        <location line="+210"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+249"/>
+        <source>Languages</source>
+        <translation>Sprachen</translation>
     </message>
     <message>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Cancel</source>
+        <translation>Abbrechen</translation>
+    </message>
+    <message>
+        <source>Locale</source>
+        <translation type="obsolete">Locale</translation>
+    </message>
+    <message>
+        <location line="-210"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-249"/>
         <source>Show thumbnail</source>
         <translation>Zeige Miniaturbild</translation>
     </message>
@@ -1415,8 +1431,8 @@ Bitte bestätigen Sie.</translation>
         <translation>Entwickler</translation>
     </message>
     <message>
-        <location line="+28"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+28"/>
+        <location line="+30"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+30"/>
         <source>Monitoring</source>
         <translation>Überwachung</translation>
     </message>
