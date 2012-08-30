@@ -392,8 +392,8 @@ FilesPlus provides more features than file manager.
         <translation>排序</translation>
     </message>
     <message>
-        <location line="+139"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+130"/>
+        <location line="+151"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+142"/>
         <source>Reset folder cache</source>
         <translation>重置当前文件夹的缓存</translation>
     </message>
@@ -465,35 +465,35 @@ You will be redirected to authorization page.</source>
     </message>
     <message>
         <location line="+136"/>
-        <location line="+819"/>
+        <location line="+812"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+136"/>
-        <location line="+837"/>
+        <location line="+830"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location line="-817"/>
-        <location line="+818"/>
+        <location line="-810"/>
+        <location line="+811"/>
         <location line="+1165"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-835"/>
-        <location line="+836"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-828"/>
+        <location line="+829"/>
         <location line="+1157"/>
         <source>Move</source>
         <translation>移动</translation>
     </message>
     <message>
-        <location line="-1981"/>
-        <location line="+817"/>
+        <location line="-1974"/>
+        <location line="+810"/>
         <location line="+1189"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1991"/>
-        <location line="+835"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1984"/>
+        <location line="+828"/>
         <location line="+1181"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="-1971"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1981"/>
+        <location line="-2275"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2285"/>
         <source>First time loading</source>
         <translation>第一次加载</translation>
     </message>
@@ -512,10 +512,10 @@ Please click OK to continue.</source>
 请单击“确定”继续。</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+321"/>
         <location line="+775"/>
         <location line="+20"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+17"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+321"/>
         <location line="+793"/>
         <location line="+20"/>
         <source>to</source>
@@ -589,17 +589,17 @@ Please click OK to continue.</source>
         <location line="-120"/>
         <location line="+70"/>
         <location line="+50"/>
-        <location line="+1113"/>
+        <location line="+1115"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-115"/>
         <location line="+67"/>
         <location line="+48"/>
-        <location line="+1109"/>
+        <location line="+1112"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="-1220"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1213"/>
+        <location line="-1222"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1216"/>
         <source>Folder</source>
         <translation>文件夹</translation>
     </message>
@@ -805,9 +805,9 @@ Link will be removed.</source>
         <translation>从 Dropbox 的共享文件</translation>
     </message>
     <message>
-        <location line="+192"/>
+        <location line="+194"/>
         <location line="+13"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+191"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+194"/>
         <location line="+13"/>
         <source>Bluetooth transfering</source>
         <translation>蓝牙传输</translation>
@@ -823,8 +823,8 @@ Please click &apos;OK&apos; to turn Bluetooth on.</source>
 请点击&apos;好&apos;，打开蓝牙。</translation>
     </message>
     <message>
-        <location line="-2456"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2465"/>
+        <location line="-2451"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2461"/>
         <source>Can&apos;t print %1 
 File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
         <translation>不能打印 %1 
@@ -841,8 +841,8 @@ You will be redirected to authorization page.</source>
 你会去授权页。</translation>
     </message>
     <message>
-        <location line="+226"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+226"/>
+        <location line="-85"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-85"/>
         <source>Thank you for download FilesPlus.
 This is first time running, FilesPlus needs to load information from your drive.
 
@@ -857,8 +857,8 @@ Please click OK to continue.</source>
 请单击“好”继续。</translation>
     </message>
     <message>
-        <location line="+78"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+78"/>
+        <location line="+382"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+382"/>
         <source>%1 is deleted.</source>
         <translation>%1 被删除。</translation>
     </message>
@@ -929,8 +929,8 @@ Please click OK to continue.</source>
         </translation>
     </message>
     <message>
-        <location line="-1609"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1610"/>
+        <location line="-1614"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1615"/>
         <source>Sync connected items</source>
         <translation>同步连接文件夹</translation>
     </message>

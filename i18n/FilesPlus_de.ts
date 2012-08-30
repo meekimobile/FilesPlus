@@ -392,8 +392,8 @@ Bitte klicken Sie auf &apos;OK&apos;, um fortzufahren.</translation>
         <translation>Synchronisieren verbundenen Elementen</translation>
     </message>
     <message>
-        <location line="+139"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+130"/>
+        <location line="+151"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+142"/>
         <source>Reset folder cache</source>
         <translation>Zurücksetzen Ordner Cache</translation>
     </message>
@@ -453,43 +453,43 @@ Du wirst zu einer Genehmigung weitergeleitet.</translation>
     </message>
     <message>
         <location line="+136"/>
-        <location line="+819"/>
+        <location line="+812"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+136"/>
-        <location line="+837"/>
+        <location line="+830"/>
         <source>Copy</source>
         <translation>kopieren</translation>
     </message>
     <message>
-        <location line="-817"/>
-        <location line="+818"/>
+        <location line="-810"/>
+        <location line="+811"/>
         <location line="+1165"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-835"/>
-        <location line="+836"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-828"/>
+        <location line="+829"/>
         <location line="+1157"/>
         <source>Move</source>
         <translation>bewegen</translation>
     </message>
     <message>
-        <location line="-1981"/>
-        <location line="+817"/>
+        <location line="-1974"/>
+        <location line="+810"/>
         <location line="+1189"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1991"/>
-        <location line="+835"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1984"/>
+        <location line="+828"/>
         <location line="+1181"/>
         <source>Delete</source>
         <translation>löschen</translation>
     </message>
     <message>
-        <location line="-1971"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1981"/>
+        <location line="-2275"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2285"/>
         <source>First time loading</source>
         <translation>Zum ersten Mal Beladung</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+321"/>
         <location line="+775"/>
         <location line="+20"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+17"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+321"/>
         <location line="+793"/>
         <location line="+20"/>
         <source>to</source>
@@ -627,9 +627,9 @@ Link will be removed.</source>
 Link wird entfernt.</translation>
     </message>
     <message>
-        <location line="+514"/>
+        <location line="+516"/>
         <location line="+13"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+513"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+516"/>
         <location line="+13"/>
         <source>Bluetooth transfering</source>
         <translation>Bluetooth Übertragung</translation>
@@ -649,8 +649,8 @@ Bitte klicken Sie auf &quot;OK&quot;, um Bluetooth einzuschalten.</translation>
         <translation type="obsolete">Neuer Ordner</translation>
     </message>
     <message>
-        <location line="-2456"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2465"/>
+        <location line="-2451"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2461"/>
         <source>Can&apos;t print %1 
 File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
         <translation>Drucken nicht möglich %1
@@ -667,8 +667,8 @@ Bitte aktivieren Sie auf Ihrem Desktop-Drucker mit Chrom oder mit CloudPrint-fä
 Du wirst zu einer Genehmigung weitergeleitet.</translation>
     </message>
     <message>
-        <location line="+226"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+226"/>
+        <location line="-85"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-85"/>
         <source>Thank you for download FilesPlus.
 This is first time running, FilesPlus needs to load information from your drive.
 
@@ -683,8 +683,8 @@ Es wird einige Zeit dauern, je nach Anzahl der Unterordner / Dateien unter aktue
 Klicken Sie auf OK, um fortzufahren.</translation>
     </message>
     <message>
-        <location line="+78"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+78"/>
+        <location line="+382"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+382"/>
         <source>%1 is deleted.</source>
         <translation>%1 wird gelöscht.</translation>
     </message>
@@ -738,17 +738,17 @@ Klicken Sie auf OK, um fortzufahren.</translation>
         <location line="-120"/>
         <location line="+70"/>
         <location line="+50"/>
-        <location line="+1113"/>
+        <location line="+1115"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-115"/>
         <location line="+67"/>
         <location line="+48"/>
-        <location line="+1109"/>
+        <location line="+1112"/>
         <source>Cancel</source>
         <translation>Abbrechen</translation>
     </message>
     <message>
-        <location line="-1202"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1196"/>
+        <location line="-1204"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1199"/>
         <source>Please input folder name.</source>
         <translation>Bitte geben Sie Ordnername.</translation>
     </message>

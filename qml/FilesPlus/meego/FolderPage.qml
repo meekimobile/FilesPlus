@@ -161,6 +161,18 @@ Page {
     }
 
     ConfirmDialog {
+        id: requestResetCacheConfirmation
+        titleText: appInfo.emptyStr+qsTr("First time loading");
+        contentText: appInfo.emptyStr+qsTr("Thank you for download FilesPlus.\
+\nThis is first time running, FilesPlus needs to load information from your drive.\
+\n\nIt will take time depends on numbers of sub folders/files under current folder.\
+\n\nPlease click OK to continue.");
+        onConfirm: {
+            fsModel.refreshDir("folderPage requestResetCacheConfirmation", true);
+        }
+    }
+
+    ConfirmDialog {
         id: resetCacheConfirmation
         titleText: appInfo.emptyStr+qsTr("Reset folder cache")
         contentText: appInfo.emptyStr+qsTr("Resetting folder cache will take time depends on numbers of sub folders/files under current folder.\n\nPlease click OK to continue.")
@@ -419,6 +431,8 @@ Page {
     FolderSizeItemListModel {
         id: fsModel
 
+        // Test only. ISSUE: Setting currentDir to path that requires long caching time ("/home/user") will freeze UI at splash screen.
+
         function getActionName(fileAction) {
             switch (fileAction) {
             case FolderSizeItemListModel.CopyFile:
@@ -461,14 +475,7 @@ Page {
 
         onRequestResetCache: {
             console.debug("QML FolderSizeItemListModel::onRequestResetCache");
-            messageDialog.titleText = appInfo.emptyStr+qsTr("First time loading");
-            messageDialog.message = appInfo.emptyStr+qsTr("Thank you for download FilesPlus.\
-\nThis is first time running, FilesPlus needs to load information from your drive.\
-\n\nIt will take time depends on numbers of sub folders/files under current folder.\
-\n\nPlease click OK to continue.");
-            messageDialog.open();
-
-            fsModel.refreshDir("folderPage onRequestResetCache", true);
+            requestResetCacheConfirmation.open();
         }
 
         onCopyStarted: {
@@ -2562,14 +2569,13 @@ Page {
         }
     }
 
-    // TODO meego can't filter by favorite.
     ContactModel {
         id: favContactModel
         filter: DetailFilter {
-            detail: ContactDetail.Email
-            field: EmailAddress.EmailAddress
-            matchFlags: Filter.MatchContains
-            value: "@"
+            detail: ContactDetail.Favorite
+            field: Favorite.Favorite
+            matchFlags: Filter.MatchFixedString // Meego only
+            value: "true"
         }
         sortOrders: [
             SortOrder {
@@ -2590,6 +2596,9 @@ Page {
         ]
 
         function getFavListModel() {
+            // Update model.
+            favContactModel.update();
+
             // Construct model.
             var model = Qt.createQmlObject(
                         'import QtQuick 1.1; ListModel {}', folderPage);
@@ -2698,7 +2707,7 @@ Page {
 
         Component.onCompleted: {
             // Workaround for meego to initialize SelectionDialog height.
-            console.debug("btClient onCompleted");
+            console.debug(Utility.nowText() + " folderPage btClient completed");
             btClient.requestDiscoveredDevices();
         }
 

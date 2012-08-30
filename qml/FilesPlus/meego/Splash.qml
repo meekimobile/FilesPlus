@@ -38,10 +38,11 @@ Rectangle {
     SequentialAnimation {
         id: hideSplashScreen
 
-        PauseAnimation { duration: interval-500 }
+        PauseAnimation { duration: (interval > 500 ? (interval-500) : 0) }
         NumberAnimation { target: splashScreen; property: "opacity"; to: 0; duration: 500; easing.type: Easing.Linear }
         ScriptAction {
             script: {
+                splashScreen.visible = false;
                 splashScreen.destroy();
             }
         }

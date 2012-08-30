@@ -146,8 +146,11 @@ PageStackWindow {
         interval: 200
         running: false
         onTriggered: {
+            // TODO PageStack pushs page in blocking mode. Push returns once page is completed.
             // Load folderPage then push drivePage to increase performance.
+            console.debug(Utility.nowText() + " window pushPagesTimer push folderPage");
             pageStack.push(Qt.resolvedUrl("FolderPage.qml"), {}, true);
+            console.debug(Utility.nowText() + " window pushPagesTimer push drivePage");
             pageStack.push(Qt.resolvedUrl("DrivePage.qml"), {}, true);
         }
     }

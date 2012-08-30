@@ -703,8 +703,8 @@ Premi &apos;OK&apos; per continuare.</translation>
         <translation>Disponi per</translation>
     </message>
     <message>
-        <location line="+139"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+130"/>
+        <location line="+151"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+142"/>
         <source>Reset folder cache</source>
         <translation>Resetta la cache della Cartella</translation>
     </message>
@@ -782,35 +782,35 @@ Sarai reindirizzato alla pagina di autorizzazione.</translation>
     </message>
     <message>
         <location line="+136"/>
-        <location line="+819"/>
+        <location line="+812"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+136"/>
-        <location line="+837"/>
+        <location line="+830"/>
         <source>Copy</source>
         <translation>Copia</translation>
     </message>
     <message>
-        <location line="-817"/>
-        <location line="+818"/>
+        <location line="-810"/>
+        <location line="+811"/>
         <location line="+1165"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-835"/>
-        <location line="+836"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-828"/>
+        <location line="+829"/>
         <location line="+1157"/>
         <source>Move</source>
         <translation>Sposta</translation>
     </message>
     <message>
-        <location line="-1981"/>
-        <location line="+817"/>
+        <location line="-1974"/>
+        <location line="+810"/>
         <location line="+1189"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1991"/>
-        <location line="+835"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1984"/>
+        <location line="+828"/>
         <location line="+1181"/>
         <source>Delete</source>
         <translation>Elimina</translation>
     </message>
     <message>
-        <location line="-1971"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1981"/>
+        <location line="-2275"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2285"/>
         <source>First time loading</source>
         <translation>Primo avvio</translation>
     </message>
@@ -824,17 +824,17 @@ It will take time depends on numbers of sub folders/files under current folder.
 
 Please click OK to continue.</source>
         <translation>Grazie per aver scaricato FilesPlus.
-Questo ่ il tuo primo avvio, FolderPie ha bisogno di caricare le informazioni dal disco.
+Questo&apos; il tuo primo avvio, FilesPlus ha bisogno di caricare le informazioni dal disco.
 
-Ci vorrเ del tempo dipende dal numero di cartelle/sotto cartelle o file presenti.
+Ci vorrà del tempo dipende dal numero di cartelle/sotto cartelle o file presenti.
 
 Si prega di fare clic su OK per continuare.</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+320"/>
         <location line="+775"/>
         <location line="+20"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+16"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+320"/>
         <location line="+793"/>
         <location line="+20"/>
         <source>to</source>
@@ -971,17 +971,17 @@ Si prega di fare clic su OK per continuare.</translation>
         <location line="-120"/>
         <location line="+70"/>
         <location line="+50"/>
-        <location line="+1113"/>
+        <location line="+1115"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-115"/>
         <location line="+67"/>
         <location line="+48"/>
-        <location line="+1109"/>
+        <location line="+1112"/>
         <source>Cancel</source>
         <translation>Cancella</translation>
     </message>
     <message>
-        <location line="-1220"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1213"/>
+        <location line="-1222"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1216"/>
         <source>Folder</source>
         <translation>Cartella</translation>
     </message>
@@ -1203,9 +1203,9 @@ Il link verrà rimosso.</translation>
         <translation>Condividi</translation>
     </message>
     <message>
-        <location line="+192"/>
+        <location line="+194"/>
         <location line="+13"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+191"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+194"/>
         <location line="+13"/>
         <source>Bluetooth transfering</source>
         <translation>Bluetooth il trasferimento</translation>

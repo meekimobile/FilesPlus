@@ -42,7 +42,7 @@ void customMessageHandler(QtMsgType type, const char *msg)
     ts << txt << endl;
 #elif defined(Q_WS_HARMATTAN)
     // Append to file.
-    QString filePath = QString("/home/user/FilesPlus_Debug_%1.log").arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
+    QString filePath = QString("/home/user/MyDocs/FilesPlus_Debug_%1.log").arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
     QFile outFile(filePath);
     outFile.open(QIODevice::WriteOnly | QIODevice::Append);
     QTextStream ts(&outFile);

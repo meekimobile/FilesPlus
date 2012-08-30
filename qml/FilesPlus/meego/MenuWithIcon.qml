@@ -79,7 +79,7 @@ Menu {
     }
 
     onContentChanged: {
-        console.debug("MenuWithIcon onContentChanged");
+//        console.debug("MenuWithIcon onContentChanged");
         toggleMenuItems();
         updateBgImageSources();
     }

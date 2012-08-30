@@ -73,14 +73,6 @@ const int FolderSizeModelThread::FILE_DELETE_DELAY = 200;
 
 FolderSizeModelThread::FolderSizeModelThread(QObject *parent) : QThread(parent)
 {
-    m_currentDir = DEFAULT_CURRENT_DIR;
-    m_sortFlag = getSortFlagFromDB(m_currentDir, SortByType);
-    dirSizeCache = new QHash<QString, FolderSizeItem>();
-    m_itemCache = new QHash<QString, FolderSizeItem>();
-
-    // TODO To be implemented which file type to be indexed.
-    m_isFileCached = false;
-
     // TODO For testing only.
 //#if defined(Q_WS_HARMATTAN)
 //    QFile dbFile(CACHE_DB_PATH);
@@ -113,6 +105,14 @@ FolderSizeModelThread::FolderSizeModelThread(QObject *parent) : QThread(parent)
 
     // TODO Initialize SQLLITE DB.
     initializeDB();
+
+    m_currentDir = DEFAULT_CURRENT_DIR;
+    m_sortFlag = getSortFlagFromDB(m_currentDir, SortByType);
+    dirSizeCache = new QHash<QString, FolderSizeItem>();
+    m_itemCache = new QHash<QString, FolderSizeItem>();
+
+    // TODO To be implemented which file type to be indexed.
+    m_isFileCached = false;
 }
 
 FolderSizeModelThread::~FolderSizeModelThread()
@@ -779,7 +779,7 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
             qDebug() << "FolderSizeModelThread::getCachedDir remove from dirSizeCache" << cachedDir << "dirSizeCache->count()" << dirSizeCache->count();
         }
     } else {
-        qDebug() << "FolderSizeModelThread::getCachedDir m_isFileCached" << m_isFileCached << "skip update cache" << cachedDir;
+//        qDebug() << "FolderSizeModelThread::getCachedDir m_isFileCached" << m_isFileCached << "skip update cache" << cachedDir;
     }
 
     return cachedDir;
