@@ -102,7 +102,7 @@ QVariant AppInfo::getSettingValue(const QString key, const QVariant defaultValue
     init();
 
     // TODO Why sync to backend here?
-    m_settings->sync();
+//    m_settings->sync();
 
     QVariant v = m_settings->value(key, defaultValue);
 

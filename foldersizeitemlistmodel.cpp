@@ -806,7 +806,8 @@ void FolderSizeItemListModel::loadDirSizeCacheFinishedFilter()
 void FolderSizeItemListModel::fetchDirSizeFinishedFilter()
 {
     refreshItemList();
-    emit refreshCompleted();
+    // Emited in refreshItemList() already.
+//    emit refreshCompleted();
     emit fetchDirSizeFinished();
 }
 

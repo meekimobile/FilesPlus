@@ -786,7 +786,8 @@ Klicken Sie auf OK, um fortzufahren.</translation>
         <location line="+17"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+15"/>
         <source>Overwrite existing file</source>
-        <translation>Bestehende Datei überschreiben</translation>
+        <translatorcomment>Overwrite existing</translatorcomment>
+        <translation>Bestehende überschreiben</translation>
     </message>
     <message>
         <location line="+47"/>
@@ -1057,7 +1058,7 @@ Es zeigt in Pie Blick zum leichteren Verständnis auf einen Blick.</translation>
         <location line="+8"/>
         <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+9"/>
         <source>New folder / file</source>
-        <translation>Neuer Ordner / Dateien</translation>
+        <translation>Neuer Ordner / Datei</translation>
     </message>
     <message>
         <location line="+8"/>

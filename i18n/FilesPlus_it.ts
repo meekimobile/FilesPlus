@@ -645,7 +645,7 @@ Premi &apos;OK&apos; per continuare.</translation>
    + Sync with Cloud Drive.
    + Preview images in your folder.
    + Present folders in Pie view.</source>
-        <translation> FilesPlus fornisce funzioni estese al di lเ del del semplice file manager.
+        <translation> FilesPlus fornisce funzioni estese al di là del del semplice file manager.
    + Stampa con Google Print Cloud.
    + Sincronizzazione con Drive Cloud.
    + Anteprima delle immagini nella cartella.
