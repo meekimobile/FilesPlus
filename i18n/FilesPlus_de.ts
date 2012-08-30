@@ -572,7 +572,7 @@ Kann nicht übertragen A bis B.</translatorcomment>
         <location line="+48"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+48"/>
         <source>New folder / file</source>
-        <translation>Neuer Ordner / Dateien</translation>
+        <translation>Neuer Ordner / Datei</translation>
     </message>
     <message>
         <location line="+15"/>
