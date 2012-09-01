@@ -17,7 +17,8 @@ const QString DropboxClient::consumerKey = "u4f161p2wonac7p"; // Key from DropBo
 const QString DropboxClient::consumerSecret = "itr3zb95dwequun"; // Secret from Dropbox
 const QString DropboxClient::dropboxRoot = "sandbox"; // For app folder access, root will be app folder.
 
-const QString DropboxClient::signatureMethod = "HMAC-SHA1";
+//const QString DropboxClient::signatureMethod = "HMAC-SHA1"; // Failed since 1-Sep-12
+const QString DropboxClient::signatureMethod = "PLAINTEXT";
 const QString DropboxClient::requestTokenURI = "https://api.dropbox.com/1/oauth/request_token";
 const QString DropboxClient::authorizeURI = "https://www.dropbox.com/1/oauth/authorize";
 const QString DropboxClient::accessTokenURI = "https://api.dropbox.com/1/oauth/access_token";
@@ -143,6 +144,17 @@ QString DropboxClient::createSignatureWithHMACSHA1(QString consumerSecret, QStri
     QByteArray hashed = QCryptographicHash::hash(total, QCryptographicHash::Sha1);
 
     return hashed.toBase64();
+}
+
+QString DropboxClient::createSignatureWithPLAINTEXT(QString consumerSecret, QString tokenSecret, QByteArray baseString)
+{
+    // Join secrets into key.
+    QByteArray key;
+    key.append(consumerSecret);
+    key.append("&");
+    key.append(tokenSecret);
+
+    return key;
 }
 
 QString DropboxClient::createNormalizedQueryString(QMap<QString, QString> sortMap) {
@@ -319,9 +331,15 @@ QByteArray DropboxClient::createOAuthHeaderForUid(QString nonce, QString uid, QS
     QByteArray baseString = createBaseString(method, encodedURI, queryString);
 //    qDebug() << "baseString " << baseString;
 
-    // Construct key for HMACSHA1 by using consumer 'Secret' and request token secret.
-    QString signature = createSignatureWithHMACSHA1(consumerSecret, accessTokenPairMap[uid].secret, baseString);
-//    qDebug() << "signature " << signature;
+    QString signature;
+    if (signatureMethod == "HMAC-SHA1") {
+        // Construct key for HMACSHA1 by using consumer 'Secret' and request token secret.
+        signature = createSignatureWithHMACSHA1(consumerSecret, accessTokenPairMap[uid].secret, baseString);
+    } else if (signatureMethod == "PLAINTEXT") {
+        // Construct key for PLAINTEXT by using consumer 'Secret' and request token secret.
+        signature = createSignatureWithPLAINTEXT(consumerSecret, accessTokenPairMap[uid].secret, baseString);
+    }
+    qDebug() << "signature" << signatureMethod << signature;
 
     // Set Authorization header with added signature.
     sortMap["oauth_signature"] = signature;

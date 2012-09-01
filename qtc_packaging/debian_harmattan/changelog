@@ -1,3 +1,8 @@
+filesplus (1.0.6) unstable; urgency=low
+  * Fix to use Dropbox PLAINTEXT OAuth signature.
+
+ -- Taweesak Kittipuree <>  Sat, 01 Sep 2012 08:52:41 +0700
+
 filesplus (1.0.5) unstable; urgency=low
   * Add de,it translations.
 

@@ -168,7 +168,7 @@ void AppInfo::init()
 #ifdef Q_OS_SYMBIAN
         emit notifyLoggingSignal("E:/");
 #elif defined(Q_WS_HARMATTAN)
-        emit notifyLoggingSignal("/home/user/");
+        emit notifyLoggingSignal("/home/user/MyDocs/");
 #endif
     }
 
@@ -176,7 +176,7 @@ void AppInfo::init()
 #ifdef Q_OS_SYMBIAN
         emit notifyMonitoringSignal("E:/");
 #elif defined(Q_WS_HARMATTAN)
-        emit notifyMonitoringSignal("/home/user/");
+        emit notifyMonitoringSignal("/home/user/MyDocs/");
 #endif
     }
 
