@@ -36,6 +36,7 @@ public:
 //    QString createNonce();
     QString createNormalizedQueryString(QMap<QString, QString> sortMap);
     QByteArray createBaseString(QString method, QString uri, QString queryString);
+    QString createSignature(QString signatureMethod, QString consumerSecret, QString tokenSecret, QByteArray baseString);
     QString createSignatureWithHMACSHA1(QString consumerSecret, QString tokenSecret, QByteArray baseString);
     QString createSignatureWithPLAINTEXT(QString consumerSecret, QString tokenSecret, QByteArray baseString);
     QByteArray createPostData(QString signature, QString queryString);

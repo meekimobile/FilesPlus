@@ -113,6 +113,22 @@ QByteArray DropboxClient::createBaseString(QString method, QString uri, QString 
     return baseString;
 }
 
+QString DropboxClient::createSignature(QString signatureMethod, QString consumerSecret, QString tokenSecret, QByteArray baseString)
+{
+    QString signature = "";
+
+    if (signatureMethod == "HMAC-SHA1") {
+        // Construct key for HMACSHA1 by using consumer 'Secret' and request token secret.
+        signature = createSignatureWithHMACSHA1(consumerSecret, tokenSecret, baseString);
+    } else if (signatureMethod == "PLAINTEXT") {
+        // Construct key for PLAINTEXT by using consumer 'Secret' and request token secret.
+        signature = createSignatureWithPLAINTEXT(consumerSecret, tokenSecret, baseString);
+    }
+    qDebug() << "DropboxClient::createSignature signature" << signatureMethod << signature;
+
+    return signature;
+}
+
 QString DropboxClient::createSignatureWithHMACSHA1(QString consumerSecret, QString tokenSecret, QByteArray baseString)
 {
     // Join secrets into key.
@@ -208,8 +224,8 @@ void DropboxClient::requestToken(QString nonce)
     QByteArray baseString = createBaseString("POST", requestTokenURI, queryString);
     qDebug() << "baseString " << baseString;
 
-    // Construct key for HMACSHA1 by using consumer 'Secret' and no request token secret.
-    QString signature = createSignatureWithHMACSHA1(consumerSecret, "", baseString);
+    // Construct key for HMACSHA1 or PLAINTEXT by using consumer 'Secret' and no request token secret.
+    QString signature = createSignature(signatureMethod, consumerSecret, "", baseString);
     qDebug() << "signature " << signature;
 
     QByteArray postData = createPostData(signature, queryString);
@@ -259,8 +275,8 @@ void DropboxClient::accessToken(QString nonce)
     QByteArray baseString = createBaseString("POST", accessTokenURI, queryString);
     qDebug() << "baseString " << baseString;
 
-    // Construct key for HMACSHA1 by using consumer 'Secret' and request token secret.
-    QString signature = createSignatureWithHMACSHA1(consumerSecret, requestTokenPair.secret, baseString);
+    // Construct key for HMACSHA1 or PLAINTEXT by using consumer 'Secret' and request token secret.
+    QString signature = createSignature(signatureMethod, consumerSecret, requestTokenPair.secret, baseString);
     qDebug() << "signature " << signature;
 
     QByteArray postData = createPostData(signature, queryString);
@@ -331,14 +347,7 @@ QByteArray DropboxClient::createOAuthHeaderForUid(QString nonce, QString uid, QS
     QByteArray baseString = createBaseString(method, encodedURI, queryString);
 //    qDebug() << "baseString " << baseString;
 
-    QString signature;
-    if (signatureMethod == "HMAC-SHA1") {
-        // Construct key for HMACSHA1 by using consumer 'Secret' and request token secret.
-        signature = createSignatureWithHMACSHA1(consumerSecret, accessTokenPairMap[uid].secret, baseString);
-    } else if (signatureMethod == "PLAINTEXT") {
-        // Construct key for PLAINTEXT by using consumer 'Secret' and request token secret.
-        signature = createSignatureWithPLAINTEXT(consumerSecret, accessTokenPairMap[uid].secret, baseString);
-    }
+    QString signature = createSignature(signatureMethod, consumerSecret, accessTokenPairMap[uid].secret, baseString);
     qDebug() << "signature" << signatureMethod << signature;
 
     // Set Authorization header with added signature.

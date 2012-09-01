@@ -2230,11 +2230,11 @@ Page {
                 } else {
                     cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
                 }
-            } else if (err == 202) { // Nonce already in used.
-                console.debug("MetadataReply Error " + err + " " + errMsg + " " + msg + ". I will retry again.");
+//            } else if (err == 202) { // Nonce already in used.
+//                console.debug("MetadataReply Error " + err + " " + errMsg + " " + msg + ". I will retry again.");
 
-                // Retry request metadata as
-                metadata(type, uid, localPath, remotePath, modelIndex);
+//                // Retry request metadata as
+//                metadata(type, uid, localPath, remotePath, modelIndex);
             } else {
                 messageDialog.titleText = getCloudName(type) + " Metadata";
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
