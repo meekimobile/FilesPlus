@@ -21,44 +21,60 @@ Dialog {
     signal closed()
     signal buttonClicked(int index)
 
-    buttons: Row {
-        id: buttonRow
-        width: parent.width - 20
-        anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 5
+    buttons: Rectangle {
+        width: parent.width
+        height: 70
+        color: "black"
 
-        property int buttonWidth: (width / buttonTexts.length) - spacing
+        Row {
+            id: buttonRow
+            width: parent.width - 20
+            height: parent.height
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 5
 
-        Repeater {
-            model: buttonTexts
-            Button {
-                text: modelData
-                width: buttonRow.buttonWidth
-                onClicked: {
-                    buttonClicked(index);
-                    close();
+            property int buttonWidth: (width / buttonTexts.length) - spacing
+
+            Repeater {
+                model: buttonTexts
+                Button {
+                    text: modelData
+                    width: buttonRow.buttonWidth
+                    anchors.verticalCenter: parent.verticalCenter
+                    onClicked: {
+                        buttonClicked(index);
+                        close();
+                    }
                 }
             }
         }
     }
 
-    title: Row {
-        width: parent.width - 20
-        height: implicitHeight
-        anchors.horizontalCenter: parent.horizontalCenter
-        Text {
-            id: title
-            color: "white"
-            font.pointSize: 20
-            wrapMode: Text.Wrap
-            elide: Text.ElideRight
-            width: parent.width - titleIcon.width
-            height: implicitHeight
-        }
-        Image {
-            id: titleIcon
-            width: 48
-            height: 48
+    title: Rectangle {
+        width: parent.width
+        height: 70
+        color: "black"
+
+        Row {
+            id: titleRow
+            width: parent.width - 20
+            height: parent.height
+            anchors.horizontalCenter: parent.horizontalCenter
+            Text {
+                id: title
+                color: "white"
+                font.pointSize: 20
+                wrapMode: Text.Wrap
+                elide: Text.ElideRight
+                width: parent.width - titleIcon.width
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Image {
+                id: titleIcon
+                width: 48
+                height: 48
+                anchors.verticalCenter: parent.verticalCenter
+            }
         }
     }
 

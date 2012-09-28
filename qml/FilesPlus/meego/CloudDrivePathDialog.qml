@@ -81,7 +81,7 @@ CommonDialog {
         // Reset busy.
         cloudDrivePathDialog.isBusy = false;
         if (selectedIndex > -1) {
-            cloudDrivePathListView.positionViewAtIndex(selectedIndex, ListView.Center);
+            cloudDrivePathListView.positionViewAtIndex(selectedIndex, ListView.Contain); // Issue: ListView.Center will cause list item displayed out of list view in Meego only.
         }
     }
 
@@ -112,11 +112,6 @@ CommonDialog {
     content: Column {
         width: parent.width
         spacing: 5
-
-        Item {
-            width: parent.width
-            height: 5
-        }
 
         Rectangle {
             id: toolBar
@@ -244,7 +239,6 @@ CommonDialog {
             highlightFollowsCurrentItem: true
             highlightMoveSpeed: 2000
             pressDelay: 100
-
             onMovementStarted: {
                 if (currentItem) {
                     currentItem.pressed = false;
