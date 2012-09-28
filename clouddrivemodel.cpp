@@ -308,6 +308,13 @@ bool CloudDriveModel::isConnected(CloudDriveModel::ClientTypes type, QString uid
     return (item.localPath == localPath);
 }
 
+bool CloudDriveModel::isRemotePathConnected(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
+{
+    int c = countItemByTypeAndUidAndRemotePathFromDB(type, uid, remotePath);
+//    qDebug() << "CloudDriveModel::isRemotePathConnected" << type << uid << remotePath << c;
+    return (c > 0);
+}
+
 bool CloudDriveModel::isDirty(QString localPath, QDateTime lastModified)
 {
     if (m_isDirtyCache->contains(localPath)) {
@@ -512,6 +519,8 @@ void CloudDriveModel::removeItem(CloudDriveModel::ClientTypes type, QString uid,
 
 void CloudDriveModel::removeItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
 {
+    if (localPath == "") return;
+
     int removeCount = 0;
     int deleteCount = 0;
 
@@ -1429,7 +1438,9 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
         // Disconnect deleted local path.
         if (job.type == Dropbox) {
             // TODO Remove local cloudDriveItems with it children.
-            removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
+            if (job.localFilePath != "") {
+                removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
+            }
         }
     } else if (err == 203) {
         // Not Found {"error": "Path '???' not found"}
@@ -1438,7 +1449,9 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
         // Disconnect deleted local path.
         if (job.type == Dropbox) {
             // TODO Remove local cloudDriveItems with it children.
-            removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
+            if (job.localFilePath != "") {
+                removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
+            }
         }
     }
 
@@ -1729,6 +1742,16 @@ QList<CloudDriveItem> CloudDriveModel::selectChildrenByPrimaryKeyFromDB(ClientTy
     return getItemListFromPS(m_selectChildrenByPrimaryKeyPS);
 }
 
+QList<CloudDriveItem> CloudDriveModel::selectItemsByTypeAndUidAndRemotePathFromDB(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
+{
+    QSqlQuery qry(m_db);
+    qry.prepare("SELECT * FROM cloud_drive_item WHERE type = :type AND uid = :uid AND remote_path = :remote_path");
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":remote_path", remotePath);
+    return getItemListFromPS(qry);
+}
+
 int CloudDriveModel::insertItemToDB(const CloudDriveItem item)
 {
     bool res;
@@ -1841,6 +1864,26 @@ int CloudDriveModel::countItemByLocalPathDB(const QString localPath)
         c = m_countByLocalPathPS.value(m_countByLocalPathPS.record().indexOf("count")).toInt();
     } else {
         qDebug() << "CloudDriveModel::countItemByLocalPathDB count failed" << m_countByLocalPathPS.lastError();
+    }
+
+    return c;
+}
+
+int CloudDriveModel::countItemByTypeAndUidAndRemotePathFromDB(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
+{
+    // TODO Cache.
+    int c = 0;
+
+    QSqlQuery qry(m_db);
+    qry.prepare("SELECT count(*) count FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":remote_path", remotePath);
+    bool res = qry.exec();
+    if (res && qry.next()) {
+        c = qry.value(qry.record().indexOf("count")).toInt();
+    } else {
+        qDebug() << "CloudDriveModel::countItemByTypeAndUidAndRemotePathFromDB count failed" << qry.lastError();
     }
 
     return c;

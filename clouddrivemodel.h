@@ -81,6 +81,7 @@ public:
     // CloudDriveItem management.
     Q_INVOKABLE bool isConnected(QString localPath);
     Q_INVOKABLE bool isConnected(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
+    Q_INVOKABLE bool isRemotePathConnected(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     Q_INVOKABLE bool isDirty(QString localPath, QDateTime lastModified);
     Q_INVOKABLE bool isSyncing(QString localPath);
     Q_INVOKABLE bool isParentConnected(QString localPath);
@@ -219,12 +220,14 @@ private:
     QList<CloudDriveItem> selectItemsByTypeFromDB(CloudDriveModel::ClientTypes type);
     QList<CloudDriveItem> selectItemsByTypeAndUidFromDB(CloudDriveModel::ClientTypes type, QString uid);
     QList<CloudDriveItem> selectChildrenByPrimaryKeyFromDB(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
+    QList<CloudDriveItem> selectItemsByTypeAndUidAndRemotePathFromDB(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     int insertItemToDB(const CloudDriveItem item);
     int updateItemToDB(const CloudDriveItem item);
     int updateItemHashByLocalPathToDB(const QString localPath, const QString hash);
     int deleteItemToDB(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     int countItemDB();
     int countItemByLocalPathDB(const QString localPath);
+    int countItemByTypeAndUidAndRemotePathFromDB(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     QString getItemCacheKey(int type, QString uid, QString localPath);
 
     QHash<QString, CloudDriveItem> *m_itemCache;

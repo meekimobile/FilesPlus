@@ -2666,18 +2666,25 @@ Page {
                 messageDialog.open();
             }
 
-            // Update ProgressBar on listItem.
-            // TODO also show running on its parents.
-            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
+            // Update ProgressBar if localPath is specified.
+            if (json.local_file_path != "") {
+                fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
 
-            // Show indicator on parent up to root.
-            // Skip i=0 as it's notified above already.
-            var pathList = fsModel.getPathToRoot(json.local_file_path);
-            for(var i=1; i<pathList.length; i++) {
-                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                // Show indicator on parent up to root.
+                // Skip i=0 as it's notified above already.
+                var pathList = fsModel.getPathToRoot(json.local_file_path);
+                for(var i=1; i<pathList.length; i++) {
+                    modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                    if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
+                        fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                    }
                 }
+            }
+
+            // Refresh cloudDrivePathDialog if it's opened.
+            console.debug("folderPage cloudDriveModel onDeleteFileReplySignal cloudDrivePathDialog.status " + cloudDrivePathDialog.status + " DialogStatus.Open " + DialogStatus.Open);
+            if (cloudDrivePathDialog.status == DialogStatus.Open) {
+                cloudDrivePathDialog.refresh();
             }
         }
 
@@ -2979,6 +2986,11 @@ Page {
             // Browse remote parent path.
             remoteParentPath = cloudDriveModel.getRemoteParentPath(remotePath)
             cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
+        }
+
+        onDeleteRemotePath: {
+            // Delete remote file/folder.
+            cloudDriveModel.deleteFile(selectedCloudType, selectedUid, "", remotePath);
         }
     }
 

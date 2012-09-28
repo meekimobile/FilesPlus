@@ -26,6 +26,7 @@ CommonDialog {
     signal opened()
     signal createRemoteFolder(string newRemotePath)
     signal refreshRequested()
+    signal deleteRemotePath(string remotePath)
 
     function proceedOperation(type, uid, localPath, remotePath, modelIndex) {
         console.debug("cloudDrivePathDialog proceedOperation() implementation is required.");
@@ -127,16 +128,6 @@ CommonDialog {
                 width: parent.width - 10
                 anchors.centerIn: parent
                 spacing: 5
-                Button {
-                    id: cdUpButton
-                    width: 50
-                    height: 50
-                    visible: !newFolderNameInput.visible
-                    iconSource: "back.svg"
-                    onClicked: {
-                        changeRemotePath(remoteParentPath);
-                    }
-                }
 
                 Button {
                     id: refreshButton
@@ -146,6 +137,17 @@ CommonDialog {
                     iconSource: "refresh.svg"
                     onClicked: {
                         refresh();
+                    }
+                }
+
+                Button {
+                    id: cdUpButton
+                    width: 50
+                    height: 50
+                    visible: !newFolderNameInput.visible
+                    iconSource: "back.svg"
+                    onClicked: {
+                        changeRemotePath(remoteParentPath);
                     }
                 }
 
@@ -238,7 +240,6 @@ CommonDialog {
             highlightFollowsCurrentItem: true
             highlightMoveSpeed: 2000
             pressDelay: 100
-
             onMovementStarted: {
                 if (currentItem) {
                     currentItem.pressed = false;
@@ -363,6 +364,27 @@ CommonDialog {
                     }
                 }
             }
+
+            onPressAndHold: {
+                var res = cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, path);
+                console.debug("cloudDrivePathItem path " + path + " isRemotePathConnected " + res);
+                if (!res) {
+                    deleteCloudItemConfirmation.remotePath = path;
+                    deleteCloudItemConfirmation.open();
+                }
+            }
+        }
+    }
+
+    ConfirmDialog {
+        id: deleteCloudItemConfirmation
+
+        property string remotePath
+
+        titleText: appInfo.emptyStr+qsTr("Delete")
+        contentText: appInfo.emptyStr+qsTr("Delete %1 ?").arg(deleteCloudItemConfirmation.remotePath);
+        onConfirm: {
+            deleteRemotePath(deleteCloudItemConfirmation.remotePath);
         }
     }
 
