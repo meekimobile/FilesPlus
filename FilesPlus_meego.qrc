@@ -79,33 +79,34 @@
         <file alias="qml/FilesPlus/PrinterSelectionDialog.qml">qml/FilesPlus/meego/PrinterSelectionDialog.qml</file>
         <file alias="qml/FilesPlus/ImageViewPage.qml">qml/FilesPlus/meego/ImageViewPage.qml</file>
         <file alias="qml/FilesPlus/TextViewPage.qml">qml/FilesPlus/meego/TextViewPage.qml</file>
+        <file alias="qml/FilesPlus/ChartMenu.qml">qml/FilesPlus/meego/ChartMenu.qml</file>
+        <file alias="qml/FilesPlus/DriveMenu.qml">qml/FilesPlus/meego/DriveMenu.qml</file>
+        <file alias="qml/FilesPlus/MarkAllMenu.qml">qml/FilesPlus/meego/MarkAllMenu.qml</file>
         <file>qml/FilesPlus/folder_list.svg</file>
         <file>qml/FilesPlus/notes_list.svg</file>
         <file>qml/FilesPlus/photos_list.svg</file>
-        <file alias="qml/FilesPlus/ChartMenu.qml">qml/FilesPlus/meego/ChartMenu.qml</file>
-        <file alias="qml/FilesPlus/DriveMenu.qml">qml/FilesPlus/meego/DriveMenu.qml</file>
         <file>qml/FilesPlus/cloud_remove.svg</file>
-        <file alias="qml/FilesPlus/MarkAllMenu.qml">qml/FilesPlus/meego/MarkAllMenu.qml</file>
-        <file>qml/FilesPlus/trim_inverted.svg</file>
+        <file>qml/FilesPlus/favourite.svg</file>
+        <file>qml/FilesPlus/upload_inverted.svg</file>
         <file>qml/FilesPlus/chart_inverted.svg</file>
         <file>qml/FilesPlus/check_mark_inverted.svg</file>
+        <file>qml/FilesPlus/cloud_inverted.svg</file>
+        <file>qml/FilesPlus/cloud_remove_inverted.svg</file>
+        <file>qml/FilesPlus/copy_inverted.svg</file>
         <file>qml/FilesPlus/delete_inverted.svg</file>
+        <file>qml/FilesPlus/download_inverted.svg</file>
         <file>qml/FilesPlus/folder_add_inverted.svg</file>
         <file>qml/FilesPlus/list_inverted.svg</file>
+        <file>qml/FilesPlus/mail_inverted.svg</file>
         <file>qml/FilesPlus/notes_inverted.svg</file>
         <file>qml/FilesPlus/ok_inverted.svg</file>
+        <file>qml/FilesPlus/paste_inverted.svg</file>
         <file>qml/FilesPlus/photos_inverted.svg</file>
         <file>qml/FilesPlus/print_inverted.svg</file>
         <file>qml/FilesPlus/refresh_inverted.svg</file>
         <file>qml/FilesPlus/rename_inverted.svg</file>
         <file>qml/FilesPlus/toolbar_extension_inverted.svg</file>
-        <file>qml/FilesPlus/upload_inverted.svg</file>
-        <file>qml/FilesPlus/cloud_inverted.svg</file>
-        <file>qml/FilesPlus/copy_inverted.svg</file>
-        <file>qml/FilesPlus/mail_inverted.svg</file>
-        <file>qml/FilesPlus/paste_inverted.svg</file>
-        <file>qml/FilesPlus/cloud_remove_inverted.svg</file>
-        <file>qml/FilesPlus/download_inverted.svg</file>
+        <file>qml/FilesPlus/trim_inverted.svg</file>
         <file alias="FilesPlus_ru.qm">i18n/FilesPlus_ru.qm</file>
         <file alias="FilesPlus_zh.qm">i18n/FilesPlus_zh.qm</file>
         <file alias="FilesPlus_en.qm">i18n/FilesPlus_en.qm</file>
@@ -124,5 +125,13 @@
         <file>qml/FilesPlus/save_inverted.svg</file>
         <file alias="FilesPlus_it.qm">i18n/FilesPlus_it.qm</file>
         <file alias="FilesPlus_de.qm">i18n/FilesPlus_de.qm</file>
+        <file alias="qml/FilesPlus/CloudDrivePathDialog.qml">qml/FilesPlus/meego/CloudDrivePathDialog.qml</file>
+        <file>qml/FilesPlus/cloud_options.svg</file>
+        <file>qml/FilesPlus/cloud_options_inverted.svg</file>
+        <file>qml/FilesPlus/cloud_settings_inverted.svg</file>
+        <file>qml/FilesPlus/cloud_settings.svg</file>
+        <file>qml/FilesPlus/close_stop_inverted.svg</file>
+        <file>qml/FilesPlus/cloud_disconnect_inverted.svg</file>
+        <file>qml/FilesPlus/cloud_disconnect.svg</file>
     </qresource>
 </RCC>

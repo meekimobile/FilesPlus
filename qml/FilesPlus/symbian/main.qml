@@ -1,7 +1,7 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
-import "Utility.js" as Utility
 import AppInfo 1.0
+import "Utility.js" as Utility
 
 PageStackWindow {
     id: window
@@ -40,6 +40,11 @@ PageStackWindow {
         });
     }
 
+    function updateLoadingProgressSlot(message, progressValue) {
+        console.debug("window updateLoadingProgressSlot " + message + " " + progressValue);
+        splashScreen.updateLoadingProgress(message, progressValue)
+    }
+
     AppInfo {
         id: appInfo
         domain: "MeekiMobile"
@@ -49,7 +54,7 @@ PageStackWindow {
             appInfo.startMonitoring();
         }
 
-        onNotifyLoggingSignal: {
+        onNotifyLoggingSignal: { // Symbian only.
             messageDialog.titleText = appInfo.emptyStr+qsTr("Notify");
             messageDialog.message = appInfo.emptyStr+qsTr("Logging is enabled. Log file is at %1").arg(logFilePath) + "\n" + appInfo.emptyStr+qsTr("You may turn off in Settings.");
             messageDialog.open();
@@ -62,7 +67,7 @@ PageStackWindow {
         }
     }
 
-    MessageDialog {
+    MessageDialog { // Symbian only.
         id: messageDialog
     }
 
@@ -143,7 +148,7 @@ PageStackWindow {
 
     Splash {
         id: splashScreen
-        interval: 3000
+        interval: 1000
 
         onLoaded: {
             // Set timer to push pages later after shows splash screen.
@@ -156,14 +161,18 @@ PageStackWindow {
         interval: 200
         running: false
         onTriggered: {
+            // TODO PageStack pushs page in blocking mode. Push returns once page is completed.
             // Load folderPage then push drivePage to increase performance.
-            pageStack.push(Qt.resolvedUrl("FolderPage.qml"));
-            pageStack.push(Qt.resolvedUrl("DrivePage.qml"));
+            console.debug(Utility.nowText() + " window pushPagesTimer push folderPage");
+            var folderPage = pageStack.push(Qt.resolvedUrl("FolderPage.qml"));
+            console.debug(Utility.nowText() + " window pushPagesTimer push drivePage");
+            folderPage.showDrivePageSlot(); // Push drivePage from folderPage to pass reference to cloudDriveModel.
         }
     }
 
     Component.onCompleted: {
         console.debug(Utility.nowText() + " window onCompleted");
+        window.updateLoadingProgressSlot(qsTr("Loading"), 0.1);
 
         // Set to portrait to show splash screen. Then it will set back to default once it's destroyed.
         screen.allowedOrientations = Screen.Portrait;

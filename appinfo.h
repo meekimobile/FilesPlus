@@ -24,14 +24,15 @@ public:
     void setAppName(const QString appName);
     QString getVersion() const;
 
-    Q_INVOKABLE bool isMonitoring() const;
+    Q_INVOKABLE bool isMonitoring();
     void setMonitoring(const bool flag);
     Q_INVOKABLE QString getMonitoringFilePath() const;
     Q_INVOKABLE QVariant getSettingValue(const QString key, const QVariant defaultValue);
     Q_INVOKABLE bool getSettingBoolValue(const QString key, const bool defaultValue);
-    Q_INVOKABLE bool setSettingValue(const QString key, const QVariant v);
+    Q_INVOKABLE bool setSettingValue(const QString key, const QVariant v, const bool forceUpdate = false);
+    Q_INVOKABLE bool hasSettingValue(const QString key);
     Q_INVOKABLE void startMonitoring();
-    Q_INVOKABLE bool isLogging() const;
+    Q_INVOKABLE bool isLogging();
 
     Q_INVOKABLE QString getSystemLocale() const;
     Q_INVOKABLE QString getLocale();
@@ -57,6 +58,7 @@ private:
     QSettings *m_settings;
     Monitoring *mon;
     QTranslator *m_ts;
+    QHash<QString, QVariant> *m_settingsCache;
 
     void initTS();
     bool loadTS(const QString localeName);

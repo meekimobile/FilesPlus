@@ -4,20 +4,21 @@ import "Utility.js" as Utility
 
 CommonDialog {
     id: messageDialog
+    height: contentText.implicitHeight + 120
     
     property alias message: contentText.text
     property bool autoClose: false
-    property int autoCloseInterval: 3000
+    property int autoCloseInterval: 5000
 
     titleIcon: "FilesPlusIcon.svg"
     buttonTexts: [appInfo.emptyStr+qsTr("OK")]
+
     content: Text {
         id: contentText
         width: parent.width - 20
-        height: implicitHeight + 40
         color: "white"
         font.pointSize: 6
-        wrapMode: Text.WordWrap
+        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
         anchors.horizontalCenter: parent.horizontalCenter
     }
     
@@ -39,6 +40,7 @@ CommonDialog {
             hideAction.stop();
             titleText = "";
             message = "";
+            autoClose = false;
         }
     }
 }

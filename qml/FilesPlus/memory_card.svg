@@ -1,14 +1,93 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Converted with SVG Converter - Version 0.9.5 (Compiled Mon May 30 09:08:51 2011) - Copyright (C) 2011 Nokia -->
-<svg xmlns="http://www.w3.org/2000/svg" width="67px" x="0px" version="1.1" y="0px" height="57px" viewBox="0 0 67 57" xmlns:xlink="http://www.w3.org/1999/xlink" baseProfile="tiny" id="Ebene_1" xml:space="preserve">
- <rect width="67" fill="none" height="57"/>
- <path stroke-opacity="0.15" fill-opacity="0.15" d="M11,48c-1.654,0-3-1.346-3-3V24c0-1.354,0.75-3.164,1.707-4.121l8.172-8.172&#xd;&#xa;&#x9;C18.836,10.75,20.646,10,22,10h35c1.654,0,3,1.346,3,3v32c0,1.654-1.346,3-3,3H11z M22,43v-2h-8v2H22z M22,37v-2h-8v2H22z M22,31v-2&#xd;&#xa;&#x9;h-8v2H22z M22,25v-2h-8v2H22z"/>
- <path stroke-opacity="0.3" fill-opacity="0.3" d="M57,12H22c-1.1,0-2.637,0.637-3.414,1.414l-8.172,8.172&#xd;&#xa;&#x9;C9.637,22.363,9,23.9,9,25v21c0,1.1,0.9,2,2,2h46c1.1,0,2-0.9,2-2V14C59,12.9,58.1,12,57,12z M23,45H13v-4h10V45z M23,39H13v-4h10&#xd;&#xa;&#x9;V39z M23,33H13v-4h10V33z M23,27H13v-4h10V27z"/>
- <linearGradient gradientTransform="matrix(1 0 0 -1 -137.48 -203.0195)" id="SVGID_1_" y1="-250.0195" x1="171.4805" y2="-214.0195" gradientUnits="userSpaceOnUse" x2="171.4805">
-  <stop offset="0" style="stop-color:#D0CBC5"/>
-  <stop offset="0.5031" style="stop-color:#FAFCEF"/>
-  <stop offset="0.9693" style="stop-color:#FFFFFF"/>
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="67px"
+   x="0px"
+   version="1.1"
+   y="0px"
+   height="57px"
+   viewBox="0 0 67 57"
+   id="Ebene_1"
+   xml:space="preserve"
+   inkscape:version="0.48.2 r9819"
+   sodipodi:docname="memory_card.svg"><metadata
+   id="metadata24"><rdf:RDF><cc:Work
+       rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+         rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
+   id="defs22" /><sodipodi:namedview
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1"
+   objecttolerance="10"
+   gridtolerance="10"
+   guidetolerance="10"
+   inkscape:pageopacity="0"
+   inkscape:pageshadow="2"
+   inkscape:window-width="1890"
+   inkscape:window-height="985"
+   id="namedview20"
+   showgrid="false"
+   inkscape:zoom="14.175439"
+   inkscape:cx="38.473391"
+   inkscape:cy="28.5"
+   inkscape:window-x="26"
+   inkscape:window-y="-4"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="Ebene_1" />
+ <rect
+   width="67"
+   fill="none"
+   height="57"
+   id="rect3" />
+ <path
+   stroke-opacity="0.15"
+   fill-opacity="0.15"
+   d="M11,48c-1.654,0-3-1.346-3-3V24c0-1.354,0.75-3.164,1.707-4.121l8.172-8.172  C18.836,10.75,20.646,10,22,10h35c1.654,0,3,1.346,3,3v32c0,1.654-1.346,3-3,3H11z M22,43v-2h-8v2H22z M22,37v-2h-8v2H22z M22,31v-2  h-8v2H22z M22,25v-2h-8v2H22z"
+   id="path5"
+   style="fill:#000000;fill-opacity:1;opacity:1" />
+ <path
+   stroke-opacity="0.3"
+   fill-opacity="0.3"
+   d="M57,12H22c-1.1,0-2.637,0.637-3.414,1.414l-8.172,8.172  C9.637,22.363,9,23.9,9,25v21c0,1.1,0.9,2,2,2h46c1.1,0,2-0.9,2-2V14C59,12.9,58.1,12,57,12z M23,45H13v-4h10V45z M23,39H13v-4h10  V39z M23,33H13v-4h10V33z M23,27H13v-4h10V27z"
+   id="path7" />
+ <linearGradient
+   gradientTransform="matrix(1 0 0 -1 -137.48 -203.0195)"
+   id="SVGID_1_"
+   y1="-250.0195"
+   x1="171.4805"
+   y2="-214.0195"
+   gradientUnits="userSpaceOnUse"
+   x2="171.4805">
+  <stop
+   offset="0"
+   style="stop-color:#D0CBC5"
+   id="stop10" />
+  <stop
+   offset="0.5031"
+   style="stop-color:#FAFCEF"
+   id="stop12" />
+  <stop
+   offset="0.9693"
+   style="stop-color:#FFFFFF"
+   id="stop14" />
  </linearGradient>
- <path fill="url(#SVGID_1_)" d="M57,11H22c-1.1,0-2.637,0.637-3.414,1.414l-8.172,8.172C9.637,21.363,9,22.9,9,24v21c0,1.1,0.9,2,2,2&#xd;&#xa;&#x9;h46c1.1,0,2-0.9,2-2V13C59,11.9,58.1,11,57,11z M23,44H13v-4h10V44z M23,38H13v-4h10V38z M23,32H13v-4h10V32z M23,26H13v-4h10V26z"/>
- <path fill="#FFFFFF" d="M57,11H22c-1.1,0-2.637,0.637-3.414,1.414l-8.172,8.172C9.637,21.363,9,22.9,9,24v1&#xd;&#xa;&#x9;c0-1.1,0.637-2.637,1.414-3.414l8.172-8.172C19.363,12.637,20.9,12,22,12h35c1.1,0,2,0.9,2,2v-1C59,11.9,58.1,11,57,11z M13,39h10&#xd;&#xa;&#x9;v-1H13V39z M13,45h10v-1H13V45z M13,33h10v-1H13V33z M13,27h10v-1H13V27z"/>
-</svg>
+ <path
+   fill="url(#SVGID_1_)"
+   d="M57,11H22c-1.1,0-2.637,0.637-3.414,1.414l-8.172,8.172C9.637,21.363,9,22.9,9,24v21c0,1.1,0.9,2,2,2  h46c1.1,0,2-0.9,2-2V13C59,11.9,58.1,11,57,11z M23,44H13v-4h10V44z M23,38H13v-4h10V38z M23,32H13v-4h10V32z M23,26H13v-4h10V26z"
+   id="path16" />
+ <path
+   fill="#FFFFFF"
+   d="M57,11H22c-1.1,0-2.637,0.637-3.414,1.414l-8.172,8.172C9.637,21.363,9,22.9,9,24v1  c0-1.1,0.637-2.637,1.414-3.414l8.172-8.172C19.363,12.637,20.9,12,22,12h35c1.1,0,2,0.9,2,2v-1C59,11.9,58.1,11,57,11z M13,39h10  v-1H13V39z M13,45h10v-1H13V45z M13,33h10v-1H13V33z M13,27h10v-1H13V27z"
+   id="path18" />
+<path
+   style="fill:none;stroke:#000000;stroke-opacity:1"
+   d="m 22,9.5625 c -1.512751,0 -3.370805,0.777055 -4.4375,1.84375 L 9.40625,19.5625 C 8.3395553,20.629195 7.5625,22.487249 7.5625,24 l 0,21 c 0,1.883632 1.5538677,3.4375 3.4375,3.4375 l 46,0 c 1.883632,0 3.4375,-1.553868 3.4375,-3.4375 l 0,-32 C 60.4375,11.116368 58.883632,9.5625 57,9.5625 l -35,0 z"
+   id="path3771" /></svg>

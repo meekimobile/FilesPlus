@@ -31,9 +31,9 @@ QString AppInfo::getVersion() const
     return VER;
 }
 
-bool AppInfo::isLogging() const
+bool AppInfo::isLogging()
 {
-    return m_settings->value("Logging.enabled", false).toBool();
+    return getSettingBoolValue("Logging.enabled", false);
 }
 
 QString AppInfo::getSystemLocale() const
@@ -53,8 +53,7 @@ void AppInfo::setLocale(const QString locale)
         loadTS(locale);
 
         // Save locale to settings.
-        m_settings->setValue("locale", locale);
-        m_settings->sync();
+        setSettingValue("locale", locale);
 
         // Emit signal
         emit localeChanged(locale);
@@ -77,9 +76,9 @@ void AppInfo::addToClipboard(const QString text)
     QApplication::clipboard()->setText(text);
 }
 
-bool AppInfo::isMonitoring() const
+bool AppInfo::isMonitoring()
 {
-    return m_settings->value("Monitoring.enabled", false).toBool();
+    return getSettingBoolValue("Monitoring.enabled", false);
 }
 
 void AppInfo::setMonitoring(const bool flag)
@@ -101,12 +100,17 @@ QVariant AppInfo::getSettingValue(const QString key, const QVariant defaultValue
     // Initialize if it's not done.
     init();
 
-    // TODO Why sync to backend here?
-//    m_settings->sync();
+    if (m_settingsCache->contains(key)) {
+        QVariant cachedV = m_settingsCache->value(key);
+//        qDebug() << "AppInfo::getSettingValue cached key" << key << "cachedV" << cachedV;
+        return cachedV;
+    }
 
     QVariant v = m_settings->value(key, defaultValue);
 
     qDebug() << "AppInfo::getSettingValue key" << key << "v" << v;
+
+    m_settingsCache->insert(key, v);
 
     return v;
 }
@@ -116,12 +120,14 @@ bool AppInfo::getSettingBoolValue(const QString key, const bool defaultValue)
     return getSettingValue(key, defaultValue).toBool();
 }
 
-bool AppInfo::setSettingValue(const QString key, const QVariant v)
+bool AppInfo::setSettingValue(const QString key, const QVariant v, const bool forceUpdate)
 {
-    if (m_settings->value(key) != v.toString()) {
+    if (forceUpdate || m_settings->value(key) != v.toString()) {
         qDebug() << "AppInfo::setSettingValue key" << key << "settingValue" << m_settings->value(key) << "v" << v;
 
         m_settings->setValue(key, v);
+
+        m_settingsCache->insert(key, v);
 
         // Sync to backend.
         m_settings->sync();
@@ -136,6 +142,13 @@ bool AppInfo::setSettingValue(const QString key, const QVariant v)
     } else {
         return false;
     }
+}
+
+bool AppInfo::hasSettingValue(const QString key)
+{
+    bool res =  m_settings->contains(key);
+    qDebug() << "AppInfo::hasSettingValue key" << key << "contains" << res;
+    return res;
 }
 
 void AppInfo::startMonitoring()
@@ -159,6 +172,9 @@ void AppInfo::startMonitoring()
 void AppInfo::init()
 {
     if (m_settings != 0) return;
+
+    // Initialize cache.
+    m_settingsCache = new QHash<QString, QVariant>();
 
     // Check settings if monitoring is enabled.
     m_settings = new QSettings(m_domainName, m_appName);
@@ -190,7 +206,7 @@ void AppInfo::initTS()
     connect(this, SIGNAL(destroyed()), m_ts, SIGNAL(destroyed()));
 
     QString localeName = getLocale();
-    qDebug() << "appInfo.initTS settings localeName" << localeName << "translationPath" << QLibraryInfo::location(QLibraryInfo::TranslationsPath);
+    qDebug() << "AppInfo::initTS settings localeName" << localeName << "translationPath" << QLibraryInfo::location(QLibraryInfo::TranslationsPath);
 
     // Install app translator.
     loadTS(localeName);
@@ -198,16 +214,16 @@ void AppInfo::initTS()
 
 bool AppInfo::loadTS(const QString localeName)
 {
-    qDebug() << "appInfo.loadTS" << getLocale() << "is changing to" << localeName;
+    qDebug() << "AppInfo::loadTS" << getLocale() << "is changing to" << localeName;
 
     qApp->removeTranslator(m_ts);
     bool res = false;
     res = m_ts->load(m_appName + "_" + localeName, ":/");
     if (res) {
-        qDebug() << "appInfo.loadTS m_ts is loaded. isEmpty" << m_ts->isEmpty();
+        qDebug() << "AppInfo::loadTS m_ts is loaded. isEmpty" << m_ts->isEmpty();
         qApp->installTranslator(m_ts);
     } else {
-        qDebug() << "appInfo.loadTS m_ts loading failed. isEmpty" << m_ts->isEmpty();
+        qDebug() << "AppInfo::loadTS m_ts loading failed. isEmpty" << m_ts->isEmpty();
     }
 
     return res;

@@ -4,7 +4,7 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: printerSelectionDialog
-    style: SelectionDialogStyle { dim: 0.9 }
+    style: SelectionDialogStyle { dim: 0.9; pressDelay: 100 }
 
     property string srcFilePath
     

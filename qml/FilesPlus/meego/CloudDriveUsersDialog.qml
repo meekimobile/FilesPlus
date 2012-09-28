@@ -5,7 +5,7 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: uidDialog
-    style: SelectionDialogStyle { dim: 0.9 }
+    style: SelectionDialogStyle { dim: 0.9; pressDelay: 100 }
 
     property string caller
     property int operation
@@ -39,13 +39,19 @@ SelectionDialog {
             text += qsTr("Upload %1 to").arg(fsModel.getFileName(localPath));
             break;
         case CloudDriveModel.FileGet:
-            text += qsTr("Download %1 from").arg(fsModel.getFileName(localPath));
+            text += qsTr("Download from");
             break;
         case CloudDriveModel.ShareFile:
             text += qsTr("Share link of %1 from").arg(fsModel.getFileName(localPath));
             break;
         case CloudDriveModel.DeleteFile:
             text += qsTr("Unsync %1 from").arg(fsModel.getFileName(localPath));
+            break;
+        case CloudDriveModel.Disconnect:
+            text += qsTr("Disconnect %1 from").arg(fsModel.getFileName(localPath));
+            break;
+        case CloudDriveModel.Browse:
+            text += qsTr("Connect %1 to").arg(fsModel.getFileName(localPath));
             break;
         }
 
@@ -77,12 +83,13 @@ SelectionDialog {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 30
                 height: 30
-                source: "cloud.svg"
+                source: (hash == CloudDriveModel.dirtyHash ? "cloud_dirty.svg" : "cloud.svg")  // TODO On ListView also check isDirty from lastModified.
                 visible: (hash != "")
             }
         }
         
         onClicked: {
+//            console.debug("uidDialogListViewItem onClicked email " + email + " hash " + hash + " isDirty " + (hash == CloudDriveModel.dirtyHash));
             uidDialog.selectedIndex = index;
             uidDialog.selectedCloudType = uidDialog.model.get(uidDialog.selectedIndex).type;
             uidDialog.selectedUid = uidDialog.model.get(uidDialog.selectedIndex).uid;

@@ -7,7 +7,7 @@ CommonDialog {
     
     property alias message: messageDialog.contentText
     property bool autoClose: false
-    property int autoCloseInterval: 3000
+    property int autoCloseInterval: 5000
 
     titleIcon: "FilesPlusIcon.svg"
     buttonTexts: [appInfo.emptyStr+qsTr("OK")]
@@ -36,6 +36,7 @@ CommonDialog {
             hideAction.stop();
             titleText = "";
             message = "";
+            autoClose = false;
         }
     }
 }

@@ -6,11 +6,11 @@ Rectangle {
     id: driveGridRect
     color: "transparent"
 
-    signal driveSelected (string driveName)
+    signal driveSelected (string driveName, int index)
 
     property alias model: driveGrid.model
-    property variant driveTypeTexts: [appInfo.emptyStr+qsTr("No Drive"), appInfo.emptyStr+qsTr("Internal Drive"), appInfo.emptyStr+qsTr("Removable Drive"), appInfo.emptyStr+qsTr("Remote Drive"), appInfo.emptyStr+qsTr("Cdrom Drive"), appInfo.emptyStr+qsTr("Internal Flash Drive"), appInfo.emptyStr+qsTr("Ram Drive")]
-    property variant driveIcons:     ["", "device.svg", "memory_card.svg", "", "music_player_update.svg", "memory_card.svg", "device.svg"]
+    property variant driveTypeTexts: [appInfo.emptyStr+qsTr("No Drive"), appInfo.emptyStr+qsTr("Internal Drive"), appInfo.emptyStr+qsTr("Removable Drive"), appInfo.emptyStr+qsTr("Remote Drive"), appInfo.emptyStr+qsTr("Cdrom Drive"), appInfo.emptyStr+qsTr("Internal Flash Drive"), appInfo.emptyStr+qsTr("Ram Drive"), appInfo.emptyStr+qsTr("Cloud Drive")]
+    property variant driveIcons:     ["", "device.svg", "memory_card.svg", "", "music_player_update.svg", "memory_card.svg", "device.svg", ""]
     property int currentIndex: driveGrid.currentIndex
 
     GridView {
@@ -77,8 +77,9 @@ Rectangle {
                     id: driveIcon
                     width: 67
                     height: 57
-                    source: driveIcons[model.driveType]
+                    source: (iconSource != "") ? iconSource : driveIcons[model.driveType]
                     anchors.verticalCenter: parent.verticalCenter
+                    fillMode: Image.PreserveAspectFit
                 }
 
                 Column {
@@ -170,7 +171,7 @@ Rectangle {
                     // console.debug("driveCellItem clicked " + (parent.x + mouseX) + ", " + (parent.y + mouseY) );
                     driveGrid.currentItem.state = "normal";
                     driveGrid.currentDriveName = model.logicalDrive;
-                    driveGridRect.driveSelected(model.logicalDrive);
+                    driveGridRect.driveSelected(model.logicalDrive, index);
                 }
             }
         }

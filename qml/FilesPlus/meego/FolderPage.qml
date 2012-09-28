@@ -48,6 +48,32 @@ Page {
 
     Component.onCompleted: {
         console.debug(Utility.nowText() + " folderPage onCompleted");
+        window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("FolderPage"), 0.1);
+
+        // Proceeds queued jobs during constructions.
+        fsModel.proceedNextJob();
+        cloudDriveModel.resumeNextJob();
+    }
+
+    onStatusChanged: {
+        if (status == PageStatus.Active) {
+            // Ask whether user want to change to have full access to Dropbox.
+            if (!appInfo.hasSettingValue("dropbox.fullaccess.enabled")) {
+                if (cloudDriveModel.isAuthorized(CloudDriveModel.Dropbox)) {
+                    // Show confirm dialog and return.
+                    showDropboxFullAccessConfirmationSlot();
+                    return;
+                } else {
+                    // New user always get full access.
+                    appInfo.setSettingValue("dropbox.fullaccess.enabled", true);
+                }
+            }
+
+            // Check for cloud data migration.
+            if (!appInfo.hasSettingValue("cloudItems.migration.confirmation") && cloudDriveModel.getCloudDriveItemsCount() > 0) {
+                cloudItemsMigrationConfirmation.open();
+            }
+        }
     }
 
     tools: toolBarLayout
@@ -63,6 +89,8 @@ Page {
                     fsListView.state = "";
                     fsListView.unmarkAll();
                 } else {
+                    // Specify local path to focus after cd to parent directory..
+                    fsListView.focusLocalPath = fsModel.currentDir;
                     goUpSlot();
                 }
             }
@@ -194,7 +222,7 @@ Page {
         if (fsModel.isRoot()) {
             // Flip back to list view, then push drivePage.
             flipable1.flipped = false;
-            pageStack.push(Qt.resolvedUrl("DrivePage.qml"), {}, true);
+            showDrivePageSlot();
         } else {
             if (state == "chart") {
                 fsModel.changeDir("..", FolderSizeItemListModel.SortBySize);
@@ -202,6 +230,10 @@ Page {
                 fsModel.changeDir("..");
             }
         }
+    }
+
+    function showDrivePageSlot() {
+        pageStack.push(Qt.resolvedUrl("DrivePage.qml"), { cloudDriveModel: cloudDriveModel }, true);
     }
 
     function flipSlot() {
@@ -314,6 +346,8 @@ Page {
     }
 
     function syncConnectedItemsSlot(onlyDirty) {
+        cloudDriveModel.suspendNextJob();
+
         for (var i=0; i<fsModel.count; i++) {
             var localPath = fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole);
             var lastModified = fsModel.getProperty(i, FolderSizeItemListModel.LastModifiedRole);
@@ -328,6 +362,8 @@ Page {
                 }
             }
         }
+
+        cloudDriveModel.resumeNextJob();
     }
 
     function unsyncFileSlot(srcFilePath, selectedIndex) {
@@ -342,9 +378,34 @@ Page {
         uidDialog.open();
     }
 
+    function disconnectFileSlot(srcFilePath, selectedIndex) {
+        console.debug("folderPage disconnectFileSlot srcFilePath=" + srcFilePath);
+
+        if (!cloudDriveModel.isConnected(srcFilePath)) return;
+
+        // Delete remote file/folder.
+        uidDialog.localPath = srcFilePath;
+        uidDialog.selectedModelIndex = selectedIndex;
+        uidDialog.operation = CloudDriveModel.Disconnect;
+        uidDialog.open();
+    }
+
+    function browseRemoteFileSlot(srcFilePath, selectedIndex) {
+        console.debug("folderPage browseRemoteFileSlot srcFilePath=" + srcFilePath);
+        uidDialog.localPath = srcFilePath;
+        uidDialog.selectedModelIndex = selectedIndex;
+        uidDialog.operation = CloudDriveModel.Browse;
+        uidDialog.open();
+    }
+
     function uploadFileSlot(srcFilePath, selectedIndex) {
         console.debug("folderPage uploadFileSlot srcFilePath=" + srcFilePath);
         syncFileSlot(srcFilePath, selectedIndex, CloudDriveModel.FilePut);
+    }
+
+    function downloadFileSlot(srcFilePath, selectedIndex) {
+        console.debug("folderPage downloadFileSlot srcFilePath=" + srcFilePath);
+        syncFileSlot(srcFilePath, selectedIndex, CloudDriveModel.FileGet);
     }
 
     function mailFileSlot(srcFilePath, selectedIndex) {
@@ -428,6 +489,10 @@ Page {
         cloudDriveModel.requestJobQueueStatus();
     }
 
+    function showDropboxFullAccessConfirmationSlot() {
+        dropboxFullAccessConfirmation.open();
+    }
+
     FolderSizeItemListModel {
         id: fsModel
 
@@ -452,6 +517,9 @@ Page {
         onRefreshBegin: {
             console.debug("QML FolderSizeItemListModel::refreshBegin");
 //            window.state = "busy";
+
+            fsListView.lastCenterIndex = fsListView.indexAt(0, fsListView.contentY + (fsListView.height / 2));
+//            console.debug("QML FolderSizeItemListModel::refreshBegin fsListView.lastCenterIndex " + fsListView.lastCenterIndex);
         }
 
         onDataChanged: {
@@ -468,7 +536,7 @@ Page {
 
             // Auto-sync after refresh. Only dirty items will be sync'd.
             // TODO Suppress in PieView.
-            if (appInfo.getSettingValue("sync.after.refresh", false)) {
+            if (appInfo.getSettingBoolValue("sync.after.refresh", false)) {
                 syncConnectedItemsSlot(true);
             }
         }
@@ -487,6 +555,7 @@ Page {
             copyProgressDialog.source = appInfo.emptyStr+getActionName(fileAction) + " " + sourceFileName;
             copyProgressDialog.target = appInfo.emptyStr+qsTr("to") + " " + ((sourceFileName == targetFileName) ? targetDirPath : targetFileName);
             copyProgressDialog.lastValue = 0;
+            copyProgressDialog.newValue = 0;
             copyProgressDialog.indeterminate = false;
             if (copyProgressDialog.status != DialogStatus.Open) {
                 copyProgressDialog.formatValue = true;
@@ -496,12 +565,12 @@ Page {
 
         onCopyProgress: {
 //            console.debug("folderPage fsModel onCopyProgress " + fileAction + " from " + sourcePath + " to " + targetPath + " " + bytes + " / " + bytesTotal);
-            copyProgressDialog.newValue = bytes;
+            copyProgressDialog.newValue = bytes+0;
         }
 
         onCopyFinished: {
-            console.debug("folderPage fsModel onCopyFinished " + fileAction + " from " + sourcePath + " to " + targetPath + " " + err + " " + msg + " " + bytes + " " + totalBytes);
-            copyProgressDialog.count += 1;
+            console.debug("folderPage fsModel onCopyFinished " + fileAction + " from " + sourcePath + " to " + targetPath + " " + err + " " + msg + " " + bytes + " " + totalBytes + " " + count);
+            copyProgressDialog.count += count;
 
             // Show message if error.
             if (err < 0) {
@@ -518,7 +587,6 @@ Page {
                 // TODO Connect to cloud if copied/moved file/folder is in connected folder.
 
                 // TODO stop queued jobs
-                // TODO Reset popupToolPanel and clipboard ?
             } else {
                 // Reset popupToolPanel
                 popupToolPanel.srcFilePath = "";
@@ -594,8 +662,17 @@ Page {
 
         onCreateFinished: {
             console.debug("folderPage fsModel onCreateFinished " + targetPath);
+
+            // If created item is not found, refresh.
+            var targetIndex = fsModel.getIndexOnCurrentDir(targetPath);
+            console.debug("folderPage fsModel onCreateFinished targetIndex " + targetIndex + " FolderSizeItemListModel.IndexOnCurrentDirButNotFound " + FolderSizeItemListModel.IndexOnCurrentDirButNotFound);
+            if (targetIndex === FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
+                fsModel.clearIndexOnCurrentDir();
+                refreshSlot();
+            }
+
             // Reset cloudDriveModel hash on parent.
-            // TODO reset has upto root.
+            // Reset hash upto root.
             var paths = fsModel.getPathToRoot(targetPath);
             for (var i=0; i<paths.length; i++) {
                 console.debug("folderPage fsModel onCreateFinished updateItems paths[" + i + "] " + paths[i]);
@@ -616,7 +693,8 @@ Page {
                     switch (json[i].type) {
                     case CloudDriveModel.Dropbox:
                         console.debug("folderPage fsModel onRenameFinished item " + json[i].type + " " + json[i].uid + " " + json[i].local_path + " " + json[i].remote_path);
-                        cloudDriveModel.moveFile(CloudDriveModel.Dropbox, json[i].uid, sourcePath, json[i].remote_path, targetPath, cloudDriveModel.getDefaultRemoteFilePath(targetPath));
+                        var newRemotePath = cloudDriveModel.getRemoteParentPath(json[i].remote_path) + "/" + fsModel.getFileName(targetPath);
+                        cloudDriveModel.moveFile(CloudDriveModel.Dropbox, json[i].uid, sourcePath, json[i].remote_path, targetPath, newRemotePath);
                         break;
                     }
                 }
@@ -632,6 +710,11 @@ Page {
 
             // Refresh itemList to show changes on ListView.
             fsModel.refreshItems();
+        }
+
+        Component.onCompleted: {
+            console.debug(Utility.nowText() + " folderPage fsModel onCompleted");
+            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("FolderModel"), 0.1);
         }
     }
 
@@ -702,6 +785,11 @@ Page {
             console.debug("QML pieChartView.onSwipe " + swipeAngle);
             flipSlot();
         }
+
+        Component.onCompleted: {
+            console.debug(Utility.nowText() + " folderPage pieChartView onCompleted");
+            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("PieChartView"), 0.1);
+        }
     }
 
     ListView {
@@ -719,6 +807,7 @@ Page {
         }
         clip: true
         focus: true
+        pressDelay: 100
         model: fsModel
         delegate: listDelegate
         states: [
@@ -726,6 +815,9 @@ Page {
                 name: "mark"
             }
         ]
+
+        property int lastCenterIndex
+        property string focusLocalPath
 
         function isAnyItemChecked() {
             for (var i=0; i<model.count; i++) {
@@ -820,7 +912,7 @@ Page {
         }
 
         function syncMarkedItems() {
-            // Always clear clipboard before delete marked items.
+            // Always clear clipboard before sync marked items.
             clipboard.clear();
 
             for (var i=0; i<model.count; i++) {
@@ -846,6 +938,29 @@ Page {
                 currentItem.pressed = false;
 //                console.debug("fsListView onMovementStarted currentItem.pressed " + currentItem.pressed);
             }
+        }
+
+        onCountChanged: {
+//            console.debug("fsListView onCountChanged " + count + " model.count " + model.count);
+            if (count == model.count) {
+                if (fsListView.focusLocalPath != "") {
+                    // Focus on specified local path's index.
+                    // The path is set by back button or listItem onClicked as "." to avoid focusing any item.
+                    var focusIndex = fsModel.getIndexOnCurrentDir(fsListView.focusLocalPath);
+                    if (focusIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
+                        fsListView.positionViewAtIndex(focusIndex, ListView.Center);
+                    }
+                    fsListView.focusLocalPath = "";
+                } else {
+                    // Keep focus on last center index.
+                    fsListView.positionViewAtIndex(lastCenterIndex, ListView.Center);
+                }
+            }
+        }
+
+        Component.onCompleted: {
+            console.debug(Utility.nowText() + " folderPage fsListView onCompleted");
+            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("FolderListView"), 0.1);
         }
     }
 
@@ -881,9 +996,9 @@ Page {
                 if (isDir) {
                     return "folder_list.svg";
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                    var showThumbnail = appInfo.getSettingValue("thumbnail.enabled", false);
+                    var showThumbnail = appInfo.getSettingBoolValue("thumbnail.enabled", false);
 //                    console.debug("folderPage listDelegate getIconSource showThumbnail " + showThumbnail);
-                    if (showThumbnail == "true") {
+                    if (showThumbnail) {
                         return "image://local/" + absolutePath;
                     } else {
                         return "photos_list.svg";
@@ -910,7 +1025,7 @@ Page {
                         width: 32
                         height: 32
                         visible: (listItem.clipboardIndex != -1)
-                        source: clipboard.getActionIcon(listItem.clipboardIndex)
+                        source: appInfo.emptySetting+clipboard.getActionIcon(listItem.clipboardIndex)
                     }
                     Image {
                         id: markIcon
@@ -983,7 +1098,7 @@ Page {
                                 width: parent.width
                                 height: parent.height
                                 font.pointSize: 16
-                                elide: Text.ElideMiddle
+                                elide: Text.ElideRight
                                 verticalAlignment: Text.AlignVCenter
                                 visible: !isRunning
                             }
@@ -1027,11 +1142,11 @@ Page {
                         }
                         Image {
                             id: syncIcon
-                            width: 32
+                            width: (visible) ? 32 : 0
                             height: parent.height
                             fillMode: Image.PreserveAspectFit
                             z: 1
-                            visible: cloudDriveModel.isConnected(absolutePath);
+                            visible: cloudDriveModel.isConnected(absolutePath) || cloudDriveModel.isSyncing(absolutePath);
                             source: {
                                 if (cloudDriveModel.isSyncing(absolutePath)) {
                                     return "cloud_wait.svg";
@@ -1066,6 +1181,7 @@ Page {
                     }
                 } else {
                     if (isDir) {
+                        fsListView.focusLocalPath = "."; // Put dummy path to avoid focus on lastCenterIndex.
                         fsModel.changeDir(name);
                     } else {
                         // If file is running, disable preview.
@@ -1189,6 +1305,14 @@ Page {
             unsyncFileSlot(srcFilePath, srcItemIndex);
         }
 
+        onDisconnectFile: {
+            disconnectFileSlot(srcFilePath, srcItemIndex);
+        }
+
+        onBrowseRemoteFile: {
+            browseRemoteFileSlot(srcFilePath, srcItemIndex);
+        }
+
         onShowTools: {
             fsListView.currentIndex = srcItemIndex;
             toolMenu.selectedIndex = srcItemIndex;
@@ -1212,6 +1336,10 @@ Page {
 
         onUploadFile: {
             uploadFileSlot(srcFilePath, srcItemIndex);
+        }
+
+        onDownloadFile: {
+            downloadFileSlot(srcFilePath, srcItemIndex);
         }
 
         onMailFile: {
@@ -1267,7 +1395,7 @@ Page {
                 var copyCount = 0;
                 var deleteCount = 0;
                 for (var i=0; i<clipboard.count; i++) {
-                    console.debug("fileActionDialog getText clipboard i " + i + " action " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
+//                    console.debug("fileActionDialog getText clipboard i " + i + " action " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
                     if (clipboard.get(i).action == "copy") {
                         copyCount++;
                     } else if (clipboard.get(i).action == "cut") {
@@ -1277,9 +1405,9 @@ Page {
                     }
                 }
 
-                if (deleteCount>0) text = text + (qsTr("Delete %n file(s)\n", "", deleteCount));
-                if (copyCount>0) text = text + (qsTr("Copy %n file(s)\n", "", copyCount));
-                if (cutCount>0) text = text + (qsTr("Move %n file(s)\n", "", cutCount));
+                if (deleteCount>0) text = text + (qsTr("Delete %n item(s)\n", "", deleteCount));
+                if (copyCount>0) text = text + (qsTr("Copy %n item(s)\n", "", copyCount));
+                if (cutCount>0) text = text + (qsTr("Move %n item(s)\n", "", cutCount));
                 if (copyCount>0 || cutCount>0) text = text + qsTr("to") + " " + targetPath;
                 text = text + " ?";
             }
@@ -1300,7 +1428,7 @@ Page {
                     var jsonText = fsModel.getItemJson(sourcePath);
 //                    console.debug("fileActionDialog openCopyProgressDialog estimate total jsonText " + jsonText);
                     var itemJson = Utility.createJsonObj(jsonText);
-//                    console.debug("fileActionDialog openCopyProgressDialog estimate total itemJson " + itemJson + " itemJson.size " + itemJson.size + " itemJson.sub_file_count " + itemJson.sub_file_count);
+                    console.debug("fileActionDialog openCopyProgressDialog estimate total itemJson " + itemJson + " itemJson.size " + itemJson.size + " itemJson.sub_dir_count " + itemJson.sub_dir_count + " itemJson.sub_file_count " + itemJson.sub_file_count);
                     totalBytes += itemJson.size;
                     totalFiles += itemJson.sub_file_count + ((itemJson.is_dir) ? 0 : 1);  // +1 for file.
                     totalFolders += itemJson.sub_dir_count + ((itemJson.is_dir) ? 1 : 0);  // +1 for folder.
@@ -1312,11 +1440,12 @@ Page {
                 copyProgressDialog.min = 0;
                 copyProgressDialog.max = totalBytes;
                 copyProgressDialog.value = 0;
+                copyProgressDialog.newValue = 0;
                 copyProgressDialog.minCount = 0;
                 copyProgressDialog.maxCount = totalFiles + totalFolders;
                 copyProgressDialog.count = 0;
                 copyProgressDialog.indeterminate = true;
-                copyProgressDialog.autoClose = false;
+                copyProgressDialog.autoClose = true;
                 copyProgressDialog.formatValue = true;
                 copyProgressDialog.titleText = fileActionDialog.titleText;
                 copyProgressDialog.message = "";
@@ -1349,6 +1478,7 @@ Page {
                 deleteProgressDialog.min = 0;
                 deleteProgressDialog.max = totalFiles + totalFolders;
                 deleteProgressDialog.value = 0;
+                deleteProgressDialog.autoClose = true;
                 deleteProgressDialog.titleText = appInfo.emptyStr+qsTr("Deleting");
                 deleteProgressDialog.message = "";
                 deleteProgressDialog.open();
@@ -1372,6 +1502,8 @@ Page {
                     return;
                 }
 
+                fsModel.suspendNextJob();
+
                 var res = false;
                 var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(clipboard.get(0).sourcePath));
                 if (clipboard.get(0).action == "copy") {
@@ -1381,6 +1513,7 @@ Page {
                 } else if (clipboard.get(0).action == "delete") {
                     res = fsModel.deleteFile(clipboard.get(0).sourcePath);
                 }
+
                 if (res) {
                     // Reset both source and target.
                     clipboard.clear();
@@ -1410,6 +1543,8 @@ Page {
 
                 // TODO openOverwriteDialog.
                 // It always replace existing names.
+
+                fsModel.suspendNextJob();
 
                 // TODO Copy/Move/Delete all files from clipboard.
                 // Action is {copy, cut, delete}
@@ -1685,6 +1820,71 @@ Page {
         }
     }
 
+    ConfirmDialog {
+        id: dropboxFullAccessConfirmation
+        titleText: appInfo.emptyStr+appInfo.emptySetting
+                   + ( appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", true)
+                      ? qsTr("Dropbox full access")
+                      : qsTr("Dropbox app access") )
+        contentText: appInfo.emptyStr+appInfo.emptySetting
+                     + ( appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", true)
+                        ? qsTr("Change to have full access to your Dropbox?")
+                        : qsTr("Change to have app access to your Dropbox?") )
+                     + "\n\n" + qsTr("FilesPlus needs to convert its database. It will not effect your data.")
+                     + "\n\n" + qsTr("Please click OK to continue.")
+        onConfirm: {
+            // Update setting.
+            if (!appInfo.hasSettingValue("dropbox.fullaccess.enabled")) {
+                // Set to full access if no setting.
+                appInfo.setSettingValue("dropbox.fullaccess.enabled", true);
+            } else {
+                // Do nothing, value has been set by setting page.
+            }
+
+            // Migrate DAT to DB.
+            appInfo.setSettingValue("cloudItems.migration.confirmation", true);
+            cloudDriveModel.migrateCloudDriveItemsToDB();
+
+            // Update DB.
+            cloudDriveModel.updateDropboxPrefix(appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", false));
+
+            messageDialog.titleText = "Dropbox " + appInfo.emptyStr+qsTr("notify");
+            messageDialog.message = appInfo.emptyStr+qsTr("You have changed Dropbox access method.\
+\nPlease re-authorize your accounts before proceed your actions.");
+            messageDialog.open();
+        }
+        onReject: {
+            // Update setting.
+            if (!appInfo.hasSettingValue("dropbox.fullaccess.enabled")) {
+                // Set to app access if no setting.
+                appInfo.setSettingValue("dropbox.fullaccess.enabled", false);
+            } else {
+                // Rollback.
+                appInfo.setSettingValue("dropbox.fullaccess.enabled", !appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", false) );
+            }
+
+            // Check for cloud data migration.
+            if (!appInfo.hasSettingValue("cloudItems.migration.confirmation") && cloudDriveModel.getCloudDriveItemsCount() > 0) {
+                cloudItemsMigrationConfirmation.open();
+            }
+        }
+    }
+
+    ConfirmDialog {
+        id: cloudItemsMigrationConfirmation
+        titleText: appInfo.emptyStr+qsTr("Cloud data conversion")
+        contentText: appInfo.emptyStr+qsTr("FilesPlus needs to convert its database. It will not effect your data.")
+                     + "\n\n" + qsTr("Please click OK to continue.")
+        onConfirm: {
+            // Migrate DAT to DB.
+            cloudDriveModel.migrateCloudDriveItemsToDB();
+            appInfo.setSettingValue("cloudItems.migration.confirmation", "true");
+        }
+        onReject: {
+            appInfo.setSettingValue("cloudItems.migration.confirmation", "false");
+        }
+    }
+
     PrinterSelectionDialog {
         id: printerSelectionDialog
         onAccepted: {
@@ -1728,6 +1928,9 @@ Page {
             // Refresh view after copied/moved.
             refreshSlot();
         }
+        onOpened: {
+            fsModel.resumeNextJob();
+        }
     }
 
     ProgressDialog {
@@ -1743,6 +1946,16 @@ Page {
             // Refresh view after copied/moved.
             refreshSlot();
         }
+        onOpened: {
+            fsModel.resumeNextJob();
+        }
+    }
+
+    ProgressDialog {
+        id: migrateProgressDialog
+        formatValue: false
+        autoClose: true
+        titleText: appInfo.emptyStr+qsTr("Cloud data conversion")
     }
 
     GCPClient {
@@ -1873,10 +2086,16 @@ Page {
             uploadProgressDialog.max = bytesTotal;
             uploadProgressDialog.value = bytesSent;
         }
+
+        Component.onCompleted: {
+            console.debug(Utility.nowText() + " folderPage gcpClient onCompleted");
+            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("GCPClient"), 0.1);
+        }
     }
 
     CloudDriveModel {
         id: cloudDriveModel
+        dropboxFullAccess: appInfo.emptySetting+appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", false)
 
         property string shareFileCaller: uidDialog.caller
 
@@ -1962,6 +2181,24 @@ Page {
             }
         }
 
+        function getRemoteParentPath(remotePath) {
+            var remoteParentPath = "";
+            if (remotePath != "") {
+                remoteParentPath = remotePath.substr(0, remotePath.lastIndexOf("/"));
+            }
+
+            return remoteParentPath;
+        }
+
+        function getRemoteName(remotePath) {
+            var name = "";
+            if (remotePath != "") {
+                name = remotePath.substr(remotePath.lastIndexOf("/") + 1);
+            }
+
+            return name;
+        }
+
         onRequestTokenReplySignal: {
             console.debug("folderPage cloudDriveModel onRequestTokenReplySignal " + err + " " + errMsg + " " + msg);
 
@@ -2029,7 +2266,14 @@ Page {
                 console.debug("jsonObj.email " + jsonObj.email);
 
                 // Send info to cloudDriveAccountsPage.
-                var p = pageStack.find(function (page) { return (page.name == "cloudDriveAccountsPage"); });
+                var p;
+                p = pageStack.find(function (page) { return (page.name == "cloudDriveAccountsPage"); });
+                if (p) {
+                    p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email, jsonObj.quota_info.shared, jsonObj.quota_info.normal, jsonObj.quota_info.quota);
+                }
+
+                // Send info to drivePage.
+                p = pageStack.find(function (page) { return (page.name == "drivePage"); });
                 if (p) {
                     p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email, jsonObj.quota_info.shared, jsonObj.quota_info.normal, jsonObj.quota_info.quota);
                 }
@@ -2062,7 +2306,7 @@ Page {
             var pathList = fsModel.getPathToRoot(json.local_file_path);
             for(var i=1; i<pathList.length; i++) {
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex > -1) {
+                if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                 }
             }
@@ -2109,7 +2353,7 @@ Page {
             var pathList = fsModel.getPathToRoot(json.local_file_path);
             for(var i=1; i<pathList.length; i++) {
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex > -1) {
+                if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                 }
             }
@@ -2144,34 +2388,25 @@ Page {
                 var jsonObj = Utility.createJsonObj(msg);
                 var localPathHash = cloudDriveModel.getItemHash(localPath, type, uid);
 
-                // TODO why don't it use json.remote_file_path ?
-                // Get remotePath if localPath is already connected if localPathHash exists. Otherwise getDefaultRemoteFilePath().
-                if (localPathHash == "") {
-                    remotePath = cloudDriveModel.getDefaultRemoteFilePath(localPath);
-                } else {
-                    remotePath = cloudDriveModel.getItemRemotePath(localPath, type, uid);
-                }
-//                console.debug("cloudDriveModel onMetadataReplySignal folder localPathHash " + localPathHash + " localPath " + localPath + " remotePath " + remotePath);
-
                 // If remotePath was deleted, remove link from localPath.
                 if (jsonObj.is_deleted) {
-                    // TODO if dir, should remove all sub items.
-                    cloudDriveModel.removeItem(type, uid, localPath);
+                    // If dir, should remove all sub items.
+                    cloudDriveModel.removeItemWithChildren(type, uid, localPath);
+
                     // Update ProgressBar on listItem.
                     fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
 
                     // Notify removed link.
-
                     messageDialog.titleText = getCloudName(type) + " Metadata";
                     messageDialog.message = appInfo.emptyStr+qsTr("%1 was removed remotely.\nLink will be removed.").arg(localPath);
                     messageDialog.autoClose = true;
                     messageDialog.open();
-//                    return;
                 } else {
                     // Sync starts from itself.
                     if (jsonObj.is_dir) { // Sync folder.
-                        // TODO if there is no local folder, create it and connect.
+                        // If there is no local folder, create it and connect.
                         if (!fsModel.isDir(localPath)) {
+                            // TODO Add item to ListView.
                             fsModel.createDirPath(localPath);
                         }
 
@@ -2180,7 +2415,7 @@ Page {
                         if (jsonObj.hash != localPathHash) { // Sync all json(remote)'s contents.
                             for(var i=0; i<jsonObj.contents.length; i++) {
                                 var item = jsonObj.contents[i];
-                                var itemLocalPath = cloudDriveModel.getDefaultLocalFilePath(item.path);
+                                var itemLocalPath = fsModel.getAbsolutePath(localPath, cloudDriveModel.getRemoteName(item.path));
                                 var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, type, uid);
                                 if (item.is_dir) {
                                     // This flow will trigger recursive metadata calling.
@@ -2206,9 +2441,9 @@ Page {
                     } else { // Sync file.
 //                        console.debug("cloudDriveModel onMetadataReplySignal file jsonObj.rev " + jsonObj.rev + " localPathHash " + localPathHash);
 
-                        // TODO if (rev is newer or there is no local file), get from remote.
+                        // If (rev is newer or there is no local file), get from remote.
                         if (jsonObj.rev > localPathHash || !fsModel.isFile(localPath)) {
-                            // TODO it should be specified with localPath instead of always use defaultLocalPath.
+                            // TODO Add item to ListView.
                             cloudDriveModel.fileGet(type, uid, remotePath, localPath, modelIndex);
                         } else if (jsonObj.rev < localPathHash) {
                             cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
@@ -2219,6 +2454,7 @@ Page {
                     }
                 }
             } else if (err == 203) { // If metadata is not found, put it to cloud right away recursively.
+                console.debug("cloudDriveModel onMetadataReplySignal " + err + " " + errMsg + " " + msg);
                 if (fsModel.isDir(localPath)) {
                     // Remote folder will be created in syncFromLocal if it's required.
                     cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex);
@@ -2239,17 +2475,16 @@ Page {
                 messageDialog.titleText = getCloudName(type) + " Metadata";
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
+
+                // Reset running.
+                isRunning = false;
             }
 
-            // Update ProgressBar on listItem.
-            fsModel.setProperty(localPath, FolderSizeItemListModel.IsRunningRole, isRunning);
-
-            // Show indicator on parent up to root.
-            // Skip i=0 as it's notified above already.
+            // Show indicator on path up to root.
             var pathList = fsModel.getPathToRoot(localPath);
-            for(var i=1; i<pathList.length; i++) {
+            for(var i=0; i<pathList.length; i++) {
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex > -1) {
+                if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                 }
             }
@@ -2275,22 +2510,29 @@ Page {
             } else {
                 messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Create Folder");
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.autoClose = true;
                 messageDialog.open();
             }
 
-            // Update ProgressBar on listItem.
-            // TODO also show running on its parents.
-            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
+            // Update ProgressBar if localPath is specified.
+            if (json.local_file_path != "") {
+                fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
 
-            // Show indicator on parent up to root.
-            // Skip i=0 as it's notified above already.
-            var pathList = fsModel.getPathToRoot(json.local_file_path);
-            for(var i=1; i<pathList.length; i++) {
-                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex > -1) {
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                // Show indicator on parent up to root.
+                // Skip i=0 as it's notified above already.
+                var pathList = fsModel.getPathToRoot(json.local_file_path);
+                for(var i=1; i<pathList.length; i++) {
+                    modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                    if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
+                        fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                    }
                 }
+            }
+
+            // Refresh cloudDrivePathDialog if it's opened.
+            console.debug("folderPage cloudDriveModel onCreateFolderReplySignal cloudDrivePathDialog.status " + cloudDrivePathDialog.status + " DialogStatus.Open " + DialogStatus.Open);
+            if (cloudDrivePathDialog.status == DialogStatus.Open) {
+                cloudDrivePathDialog.selectedRemotePath = json.new_remote_file_path;
+                cloudDrivePathDialog.refresh();
             }
         }
 
@@ -2305,7 +2547,7 @@ Page {
 
             // Update ProgressBar on listItem.
             var modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
-            if (modelIndex > -1) {
+            if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, mapToFolderSizeListModelOperation(json.operation) );
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesReceived);
@@ -2317,7 +2559,7 @@ Page {
             var pathList = fsModel.getPathToRoot(json.local_file_path);
             for(var i=1; i<pathList.length; i++) {
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex > -1) {
+                if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
                 }
@@ -2335,7 +2577,7 @@ Page {
 
             // Update ProgressBar on listItem.
             var modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
-            if (modelIndex > -1) {
+            if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, mapToFolderSizeListModelOperation(json.operation) );
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesSent);
@@ -2347,7 +2589,7 @@ Page {
             var pathList = fsModel.getPathToRoot(json.local_file_path);
             for(var i=1; i<pathList.length; i++) {
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex > -1) {
+                if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
                 }
@@ -2373,57 +2615,37 @@ Page {
                     p.updateCloudDriveItemCount(itemCount);
                 }
             }
+
+            // Refresh if no more running jobs and jobs in queue.
+            if (runningJobCount <= 0 && jobQueueCount <= 0) {
+                refreshSlot();
+            }
         }
 
         onMoveFileReplySignal: {
             console.debug("folderPage cloudDriveModel onMoveFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var json = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
-            console.debug("folderPage cloudDriveModel onMoveFileReplySignal jobJson " + cloudDriveModel.getJobJson(nonce));
+            console.debug("folderPage cloudDriveModel onMoveFileReplySignal json " + cloudDriveModel.getJobJson(nonce));
 
             // Remove finished job.
             cloudDriveModel.removeJob(nonce);
 
             if (err == 0) {
-                var msgJson = Utility.createJsonObj(msg);
-                if (msgJson.is_dir) {
-                    // Connect folder to cloud.
-                    switch (jobJson.type) {
-                    case CloudDriveModel.Dropbox:
-                        cloudDriveModel.removeItem(CloudDriveModel.Dropbox, jobJson.uid, jobJson.local_file_path);
-                        cloudDriveModel.addItem(CloudDriveModel.Dropbox, jobJson.uid, jobJson.new_local_file_path, jobJson.new_remote_file_path, msgJson.hash);
-                        for (var i=0; i<msgJson.contents.length; i++) {
-                            var contentJson = msgJson.contents[i];
-                            if (contentJson.is_dir) {
-                                // TODO connect its sub files/folders.
-                                cloudDriveModel.addItem(CloudDriveModel.Dropbox, jobJson.uid, cloudDriveModel.getDefaultLocalFilePath(contentJson.path), contentJson.path, contentJson.rev);
-                            } else {
-                                cloudDriveModel.addItem(CloudDriveModel.Dropbox, jobJson.uid, cloudDriveModel.getDefaultLocalFilePath(contentJson.path), contentJson.path, contentJson.rev);
-                            }
-                        }
-                        break;
-                    }
-                } else {
-                    // Connect file to cloud.
-                    switch (json.type) {
-                    case CloudDriveModel.Dropbox:
-                        cloudDriveModel.removeItem(CloudDriveModel.Dropbox, jobJson.uid, jobJson.local_file_path);
-                        cloudDriveModel.addItem(CloudDriveModel.Dropbox, jobJson.uid, jobJson.new_local_file_path, jobJson.new_remote_file_path, msgJson.rev);
-                        break;
-                    }
-                }
+                // Cloud items have been managed by CloudDriveModel::moveFileReplyFilter.
+                // Sync after move.
+                cloudDriveModel.metadata(json.type, json.uid, json.new_local_file_path, json.new_remote_file_path, json.model_index);
             } else {
                 messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Move");
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.autoClose = true;
                 messageDialog.open();
             }
 
             // Update ProgressBar on listItem.
             // TODO also show running on its parents.
-            fsModel.setProperty(jobJson.new_local_file_path, FolderSizeItemListModel.IsRunningRole, false);
-            fsModel.refreshItem(jobJson.new_local_file_path);
+            fsModel.setProperty(json.new_local_file_path, FolderSizeItemListModel.IsRunningRole, false);
+            fsModel.refreshItem(json.new_local_file_path);
         }
 
         onDeleteFileReplySignal: {
@@ -2441,7 +2663,6 @@ Page {
             } else {
                 messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Delete");
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.autoClose = true;
                 messageDialog.open();
             }
 
@@ -2454,7 +2675,7 @@ Page {
             var pathList = fsModel.getPathToRoot(json.local_file_path);
             for(var i=1; i<pathList.length; i++) {
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex > -1) {
+                if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                 }
             }
@@ -2481,13 +2702,9 @@ Page {
                     recipientSelectionDialog.senderEmail = senderEmail;
                     recipientSelectionDialog.open();
                 }
-            } else if (err == 202) { // Forbidden nonce is already used.
-                // Retry.
-                cloudDriveModel.shareFile(json.type, json.uid, json.local_file_path, json.remote_file_path);
             } else {
                 messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Share");
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.autoClose = true;
                 messageDialog.open();
             }
 
@@ -2500,6 +2717,44 @@ Page {
             console.debug("folderPage cloudDriveModel onJobEnqueuedSignal " + nonce + " " + localPath);
             fsModel.refreshItem(localPath);
         }
+
+        onBrowseReplySignal: {
+            console.debug("folderPage cloudDriveModel onBrowseReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
+
+            var json = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+
+            if (err == 0) {
+                cloudDrivePathDialog.parseCloudDriveMetadataJson(msg);
+                cloudDrivePathDialog.open();
+            } else {
+                messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Browse");
+                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
+                messageDialog.open();
+
+                // Reset cloudDrivePathDialog.isBusy.
+                cloudDrivePathDialog.isBusy = false;
+                cloudDrivePathDialog.close();
+            }
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+        }
+
+        onMigrateProgressSignal: {
+            if (migrateProgressDialog.status != DialogStatus.Open) {
+                migrateProgressDialog.indeterminate = false;
+                migrateProgressDialog.min = 0;
+                migrateProgressDialog.open();
+            }
+            migrateProgressDialog.source = localFilePath;
+            migrateProgressDialog.value = count;
+            migrateProgressDialog.max = total;
+        }
+
+        Component.onCompleted: {
+            console.debug(Utility.nowText() + " folderPage cloudDriveModel onCompleted");
+            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("CloudDriveModel"), 0.1);
+        }
     }
 
     CloudDriveUsersDialog {
@@ -2509,28 +2764,47 @@ Page {
             // TODO
         }
 
-        function proceedOperation(type, uid, localPath, remotePath, modelIndex) {
+        function proceedOperation(type, uid, localPath, remotePath, modelIndex, suppressBrowsing) {
             switch (operation) {
             case CloudDriveModel.Metadata:
-                cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
-                break;
-            case CloudDriveModel.FilePut:
-                if (fsModel.isDir(localPath)) {
-                    cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex, true);
-                    // Get metadata for newly sync'd folder.
-//                    cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
+                // TODO Check connection for specified type, uid, localPath.
+                if (cloudDriveModel.isConnected(type, uid, localPath) || suppressBrowsing) {
+                    // If already connected, sync it right away.
+                    cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
                 } else {
-                    cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                    // If it's not connected, show cloudDrivePathDialog.
+                    cloudDrivePathDialog.open();
+                    cloudDrivePathDialog.remotePath = remotePath;
+                    cloudDrivePathDialog.refresh();
                 }
                 break;
+            case CloudDriveModel.FilePut:
+                // Show cloudDrivePathDialog.
+                cloudDrivePathDialog.open();
+                cloudDrivePathDialog.remotePath = remotePath;
+                cloudDrivePathDialog.refresh();
+                break;
             case CloudDriveModel.FileGet:
-                cloudDriveModel.fileGet(type, uid, localPath, remotePath, modelIndex);
+                // Show cloudDrivePathDialog.
+                cloudDrivePathDialog.open();
+                cloudDrivePathDialog.remotePath = "/"; // Download start browsing from root.
+                cloudDrivePathDialog.refresh();
                 break;
             case CloudDriveModel.ShareFile:
                 cloudDriveModel.shareFile(type, uid, localPath, remotePath);
                 break;
             case CloudDriveModel.DeleteFile:
                 cloudDriveModel.deleteFile(type, uid, localPath, remotePath);
+                break;
+            case CloudDriveModel.Disconnect:
+                cloudDriveModel.removeItemWithChildren(type, uid, localPath);
+                fsModel.refreshItem(localPath);
+                break;
+            case CloudDriveModel.Browse:
+                // Show cloudDrivePathDialog.
+                cloudDrivePathDialog.open();
+                cloudDrivePathDialog.remotePath = remotePath;
+                cloudDrivePathDialog.refresh();
                 break;
             }
         }
@@ -2539,33 +2813,172 @@ Page {
             uidDialog.model = cloudDriveModel.getUidListModel(localPath);
         }
 
+        onRejected: {
+            console.debug("uidDialog onRejected");
+
+            // Clear clipboard.
+            clipboard.clear();
+        }
+
         onAccepted: {
             // TODO Proceed for GoogleDrive
 
             // Proceed for Dropbox
             if (uidDialog.localPath != "") {
                 // sync localPath.
-                var remoteFilePath = cloudDriveModel.getDefaultRemoteFilePath(uidDialog.localPath);
-                console.debug("uidDialog.selectedIndex " + uidDialog.selectedIndex + " type " + uidDialog.selectedCloudType + " uid " + uidDialog.selectedUid + " localPath " + uidDialog.localPath + " remoteFilePath " + remoteFilePath);
+                var remoteFilePath = cloudDriveModel.getItemRemotePath(uidDialog.localPath, uidDialog.selectedCloudType, uidDialog.selectedUid);
+                console.debug("uidDialog onAccepted uidDialog.selectedIndex " + uidDialog.selectedIndex + " type " + uidDialog.selectedCloudType + " uid " + uidDialog.selectedUid + " localPath " + uidDialog.localPath + " remoteFilePath " + remoteFilePath);
+//                if (remoteFilePath == "") {
+//                    remoteFilePath = cloudDriveModel.getDefaultRemoteFilePath(uidDialog.localPath);
+//                    console.debug("uidDialog onAccepted adjusted remoteFilePath " + remoteFilePath);
+//                }
                 proceedOperation(uidDialog.selectedCloudType, uidDialog.selectedUid, uidDialog.localPath, remoteFilePath, selectedModelIndex);
             } else if (clipboard.count > 0){
                 // Sync from clipboard.
+
+                // Suspend for queuing.
+                cloudDriveModel.suspendNextJob();
+
                 for (var i=0; i<clipboard.count; i++) {
                     if (clipboard.get(i).action == "sync") {
-                        console.debug("uidDialog onAccepted clipboard item i " + i + " " + clipboard.get(i).action + " " + clipboard.get(i).sourcePath);
+                        console.debug("uidDialog onAccepted clipboard item i " + i + " " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
 
                         var sourcePath = clipboard.get(i).sourcePath;
                         var remotePath = cloudDriveModel.getItemRemotePath(sourcePath, uidDialog.selectedCloudType, uidDialog.selectedUid);
-                        if (remotePath == "") {
-                            remotePath = cloudDriveModel.getDefaultRemoteFilePath(sourcePath);
+                        if (remotePath != "") {
+                            // Proceed sync only connected items which already has remotePath
+                            proceedOperation(uidDialog.selectedCloudType, uidDialog.selectedUid, sourcePath, remotePath, -1, true);
+                        } else {
+                            console.debug("uidDialog onAccepted skipped clipboard item i " + i + " " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath + " remotePath " + remotePath);
                         }
-                        proceedOperation(uidDialog.selectedCloudType, uidDialog.selectedUid, sourcePath, remotePath, -1);
                     }
                 }
 
                 // Clear clipboard.
                 clipboard.clear();
+
+                // Resume proceed queued jobs.
+                cloudDriveModel.resumeNextJob();
             }
+        }
+    }
+
+    CloudDrivePathDialog {
+        id: cloudDrivePathDialog
+        caller: uidDialog.caller
+        operation: uidDialog.operation
+        localPath: uidDialog.localPath
+        selectedCloudType: uidDialog.selectedCloudType
+        selectedUid: uidDialog.selectedUid
+        selectedModelIndex: uidDialog.selectedModelIndex
+
+        function proceedOperation(type, uid, localPath, remotePath, isDir, remoteParentPath, modelIndex) {
+            console.debug("cloudDrivePathDialog proceedOperation operation " + operation + " type " + type + " uid " + uid + " localPath " + localPath + " remotePath " + remotePath + " isDir " + isDir + " remoteParentPath " + remoteParentPath + " modelIndex " + modelIndex);
+
+            switch (operation) {
+            case CloudDriveModel.FilePut:
+                console.debug("cloudDrivePathDialog proceedOperation FilePut localPath " + localPath + " to remotePath " + remotePath + " isDir " + isDir
+                              + " remoteParentPath " + remoteParentPath
+                              + " fsModel.getDirPath(localPath) " + fsModel.getDirPath(localPath)
+                              + " cloudDriveModel.getRemoteName(remotePath) " + cloudDriveModel.getRemoteName(remotePath));
+
+                // Upload selected local path into remote parent path.
+                if (remoteParentPath != "") {
+                    // Use remoteParentPath + "/" + local file/folder name.
+                    remotePath = (remoteParentPath == "/" ? "" : remoteParentPath) + "/" + fsModel.getFileName(localPath);
+                    console.debug("cloudDrivePathDialog proceedOperation FilePut adjusted remotePath " + remotePath);
+
+                    if (fsModel.isDir(localPath)) {
+                        cloudDriveModel.suspendNextJob();
+                        // Put from local.
+                        cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex, true);
+                        // Queue sync selected local path after all put to refresh hash.
+                        cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
+                        cloudDriveModel.resumeNextJob();
+                    } else {
+                        cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                    }
+                } else {
+                    console.debug("cloudDrivePathDialog proceedOperation FilePut ignored remoteParentPath " + remoteParentPath + " is empty.");
+                }
+
+                break;
+            case CloudDriveModel.FileGet:
+                console.debug("cloudDrivePathDialog proceedOperation FileGet localPath " + localPath + " from remotePath " + remotePath + " isDir " + isDir
+                              + " remoteParentPath " + remoteParentPath
+                              + " fsModel.getDirPath(localPath) " + fsModel.getDirPath(localPath)
+                              + " cloudDriveModel.getRemoteName(remotePath) " + cloudDriveModel.getRemoteName(remotePath));
+
+                // Download selected remote folder/file to parent folder of selected local path.
+                if (remotePath != "") {
+                    var targetLocalPath = fsModel.getAbsolutePath(fsModel.getDirPath(localPath), cloudDriveModel.getRemoteName(remotePath));
+                    console.debug("cloudDrivePathDialog proceedOperation FileGet targetLocalPath " + targetLocalPath);
+                    cloudDriveModel.metadata(type, uid, targetLocalPath, remotePath, modelIndex);
+                } else {
+                    console.debug("cloudDrivePathDialog proceedOperation FileGet ignored remotePath " + remotePath + " is empty.");
+                }
+
+                break;
+            case CloudDriveModel.Browse:
+                // Only folder can change connection.
+                if (isDir != fsModel.isDir(localPath)) {
+                    console.debug("cloudDrivePathDialog proceedOperation Browse localPath isDir " + fsModel.isDir(localPath) + " and remotePath isDir " + isDir + " must be the same object type.");
+                    return;
+                }
+
+                if (fsModel.isDir(localPath) && remotePath != "") {
+                    var originalRemotePath = cloudDriveModel.getItemRemotePath(localPath, type, uid);
+                    if (remotePath != originalRemotePath) {
+                        console.debug("cloudDrivePathDialog proceedOperation Browse move from " + originalRemotePath + " to " + remotePath);
+                        // Set children hash to empty to hint syncFromLocal to put remained files with empty hash.
+                        cloudDriveModel.updateItemWithChildren(type, uid, localPath, originalRemotePath, localPath, remotePath, "");
+                        cloudDriveModel.metadata(type, uid, localPath, remotePath, selectedModelIndex);
+                    }
+                } else if (!fsModel.isDir(localPath)) {
+                    console.debug("cloudDrivePathDialog proceedOperation Browse ignored move localPath " + localPath + " is a file.");
+                } else {
+                    console.debug("cloudDrivePathDialog proceedOperation Browse ignored move from " + originalRemotePath + " to " + remotePath + " remotePath is empty.");
+                }
+
+                break;
+            case CloudDriveModel.Metadata:
+                if (fsModel.isDir(localPath) && remotePath != "") {
+                    console.debug("cloudDrivePathDialog proceedOperation Metadata sync from " + localPath + " to " + remotePath);
+                    cloudDriveModel.metadata(type, uid, localPath, remotePath, selectedModelIndex);
+                } else {
+                    // If localPath is file or remotePath is not specified.
+                    // Use remoteParentPath + "/" + folderName.
+                    remotePath = (remoteParentPath == "/" ? "" : remoteParentPath) + "/" + fsModel.getFileName(localPath);
+                    console.debug("cloudDrivePathDialog proceedOperation Metadata sync from " + localPath + " to " + remotePath);
+                    cloudDriveModel.metadata(type, uid, localPath, remotePath, selectedModelIndex);
+                }
+
+                break;
+            }
+        }
+
+        onButtonClicked: {
+            if (index === 0 && selectedIsValid) { // OK button is clicked.
+                console.debug("cloudDrivePathDialog onButtonClicked index " + index
+                              + " selectedCloudType " + selectedCloudType + " selectedUid " + selectedUid
+                              + " localPath " + localPath
+                              + " selectedRemotePath " + selectedRemotePath
+                              + " selectedModelIndex " + selectedModelIndex
+                              + " remoteParentPath " + remoteParentPath);
+
+                proceedOperation(selectedCloudType, selectedUid, localPath, selectedRemotePath, selectedIsDir, remoteParentPath, selectedModelIndex);
+            }
+        }
+
+        onCreateRemoteFolder: {
+            // Create remote folder.
+            cloudDriveModel.createFolder(selectedCloudType, selectedUid, "", newRemotePath, -1);
+        }
+
+        onRefreshRequested: {
+            // Browse remote parent path.
+            remoteParentPath = cloudDriveModel.getRemoteParentPath(remotePath)
+            cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
         }
     }
 
@@ -2618,6 +3031,11 @@ Page {
             }
 
             return model;
+        }
+
+        Component.onCompleted: {
+            console.debug(Utility.nowText() + " folderPage favContactModel onCompleted");
+            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("ContactModel"), 0.1);
         }
     }
 
@@ -2705,12 +3123,6 @@ Page {
     BluetoothClient {
         id: btClient
 
-        Component.onCompleted: {
-            // Workaround for meego to initialize SelectionDialog height.
-            console.debug(Utility.nowText() + " folderPage btClient completed");
-            btClient.requestDiscoveredDevices();
-        }
-
         onHostModeStateChanged: {
             if (hostMode != BluetoothClient.HostPoweredOff) {
                 btClient.startDiscovery();
@@ -2762,6 +3174,14 @@ Page {
             btUploadProgressDialog.indeterminate = false;
             btUploadProgressDialog.message = msg;
             btClient.powerOff();
+        }
+
+        Component.onCompleted: {
+            console.debug(Utility.nowText() + " folderPage btClient onCompleted");
+            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("BTClient"), 0.1);
+
+            // Workaround for meego to initialize SelectionDialog height.
+            btClient.requestDiscoveredDevices();
         }
     }
 

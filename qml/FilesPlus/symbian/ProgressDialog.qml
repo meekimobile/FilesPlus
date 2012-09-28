@@ -18,7 +18,7 @@ CommonDialog {
     property int count
     property alias indeterminate: progressBar.indeterminate
     property bool autoClose: false
-    property int autoCloseInterval: 3000
+    property int autoCloseInterval: 5000
     property bool formatValue: false
     property alias updateInterval: progressTimer.interval
     property int accuDeltaValue: 0
@@ -38,11 +38,14 @@ CommonDialog {
     }
 
     onNewValueChanged: {
-        var deltaValue = newValue - lastValue;
-//        console.debug("progressDialog deltaValue " + deltaValue);
-        value += deltaValue;
-        accuDeltaValue += deltaValue;
-        lastValue = newValue;
+        var deltaValue = 0;
+        if (newValue > 0) {
+            deltaValue = newValue - lastValue;
+            value += deltaValue;
+            accuDeltaValue += deltaValue;
+            lastValue = newValue;
+        }
+//        console.debug("progressDialog newValue " + newValue + " lastValue " + lastValue + " deltaValue " + deltaValue + " accuDeltaValue " + accuDeltaValue + " value " + value);
     }
 
     SequentialAnimation {
@@ -60,7 +63,7 @@ CommonDialog {
         repeat: true
         interval: 200
         onTriggered: {
-//            console.debug("progressDialog timer onTriggered");
+//            console.debug("progressDialog timer onTriggered parent.value " + parent.value);
             progressBar.value = parent.value;
             if (parent.count > 0 || parent.maxCount > 0) {
                 countText.text = parent.count + " / " + parent.maxCount;
@@ -110,8 +113,10 @@ CommonDialog {
                     progressText.text = value + " / " + maximumValue;
                 }
 
+//                console.debug("ProgressDialog progressBar onValueChanged value " + value + " maximumValue " +maximumValue);
                 if (value >= maximumValue) {
                     console.debug("ProgressDialog progressBar onValueChanged " + value + " >= " +maximumValue);
+                    ok();
                     toggleHideAction();
                 }
             }
@@ -156,7 +161,7 @@ CommonDialog {
     
     onStatusChanged: {
         if (status == DialogStatus.Open) {
-            open();
+            opened();
         } else if (status == DialogStatus.Closing) {
             hideAction.stop();
 
@@ -166,6 +171,8 @@ CommonDialog {
             message = "";
             indeterminate = false;
             formatValue = false;
+            newValue = 0;
+            progressBar.value = 0;
 
             closing();
         }

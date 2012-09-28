@@ -9,6 +9,11 @@ Rectangle {
 
     signal loaded()
 
+    function updateLoadingProgress(message, progressValue) {
+        loadingProgressBar.value = loadingProgressBar.value + progressValue;
+        loadingComponentName.text = message;
+    }
+
     z: 3
     anchors.fill: parent
     color: "black"
@@ -22,6 +27,31 @@ Rectangle {
         version: appInfo.version
     }
 
+    Label {
+        id: loadingComponentName
+        text: ""
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: loadingProgressBar.top
+    }
+
+    ProgressBar {
+        id: loadingProgressBar
+        width: parent.width / 2
+        z: 1
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 10
+        minimumValue: 0
+        maximumValue: 1
+        value: 0
+
+        onValueChanged: {
+            if (value == maximumValue) {
+                hideSplashScreen.start();
+            }
+        }
+    }
+
     Timer {
         id: splashTimer
         interval: 100
@@ -29,7 +59,7 @@ Rectangle {
 
         onTriggered: {
             console.debug(Utility.nowText() + " splashScreen is loaded.");
-            hideSplashScreen.start();
+//            hideSplashScreen.start();
             loaded();
             console.debug(Utility.nowText() + " splashScreen hideSplashScreen.start()");
         }

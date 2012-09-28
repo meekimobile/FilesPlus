@@ -1,7 +1,7 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
-import "Utility.js" as Utility
 import AppInfo 1.0
+import "Utility.js" as Utility
 
 PageStackWindow {
     id: window
@@ -37,6 +37,11 @@ PageStackWindow {
                 page.orientationChangeSlot();
             }
         });
+    }
+
+    function updateLoadingProgressSlot(message, progressValue) {
+        console.debug("window updateLoadingProgressSlot " + message + " " + progressValue);
+        splashScreen.updateLoadingProgress(message, progressValue)
     }
 
     AppInfo {
@@ -130,11 +135,12 @@ PageStackWindow {
 
     Splash {
         id: splashScreen
-        interval: 3000
+        interval: 1000
 
         onLoaded: {
             // Set theme.inverted = true -> black theme.
-            theme.inverted = appInfo.getSettingValue("Theme.inverted", true);
+            theme.inverted = appInfo.getSettingBoolValue("Theme.inverted", true);
+            appInfo.setSettingValue("Theme.inverted", theme.inverted);
 
             // Set timer to push pages later after shows splash screen.
             pushPagesTimer.start();
@@ -149,14 +155,15 @@ PageStackWindow {
             // TODO PageStack pushs page in blocking mode. Push returns once page is completed.
             // Load folderPage then push drivePage to increase performance.
             console.debug(Utility.nowText() + " window pushPagesTimer push folderPage");
-            pageStack.push(Qt.resolvedUrl("FolderPage.qml"), {}, true);
+            var folderPage = pageStack.push(Qt.resolvedUrl("FolderPage.qml"));
             console.debug(Utility.nowText() + " window pushPagesTimer push drivePage");
-            pageStack.push(Qt.resolvedUrl("DrivePage.qml"), {}, true);
+            folderPage.showDrivePageSlot(); // Push drivePage from folderPage to pass reference to cloudDriveModel.
         }
     }
 
     Component.onCompleted: {
         console.debug(Utility.nowText() + " window onCompleted");
+        window.updateLoadingProgressSlot(qsTr("Loading"), 0.1);
 
         // Set to portrait to show splash screen. Then it will set back to default once it's destroyed.
         screen.allowedOrientations = Screen.Portrait;

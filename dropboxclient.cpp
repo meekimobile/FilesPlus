@@ -10,12 +10,12 @@ const QString DropboxClient::KeyStoreFilePath = "/home/user/.filesplus/DropboxCl
 #else
 const QString DropboxClient::KeyStoreFilePath = "C:/DropboxClient.dat";
 #endif
-//const QString DropboxClient::consumerKey = "4i5z1mwqh60x832"; // Key from DropBox
-//const QString DropboxClient::consumerSecret = "tcf4h7zo5c5nuzr"; // Secret from Dropbox
-//const QString DropboxClient::dropboxRoot = "dropbox"; // For full access
-const QString DropboxClient::consumerKey = "u4f161p2wonac7p"; // Key from DropBox
-const QString DropboxClient::consumerSecret = "itr3zb95dwequun"; // Secret from Dropbox
-const QString DropboxClient::dropboxRoot = "sandbox"; // For app folder access, root will be app folder.
+const QString DropboxClient::DropboxConsumerKey = "7y9bttvg6gu57x0"; // Key from DropBox
+const QString DropboxClient::DropboxConsumerSecret = "xw5wq7hz5cnd5zo"; // Secret from Dropbox
+const QString DropboxClient::DropboxRoot = "dropbox"; // For full access
+const QString DropboxClient::SandboxConsumerKey = "u4f161p2wonac7p"; // Key from DropBox
+const QString DropboxClient::SandboxConsumerSecret = "itr3zb95dwequun"; // Secret from Dropbox
+const QString DropboxClient::SandboxRoot = "sandbox"; // For app folder access, root will be app folder.
 
 //const QString DropboxClient::signatureMethod = "HMAC-SHA1"; // Failed since 1-Sep-12
 const QString DropboxClient::signatureMethod = "PLAINTEXT";
@@ -33,9 +33,20 @@ const QString DropboxClient::deleteFileURI = "https://api.dropbox.com/1/fileops/
 const QString DropboxClient::sharesURI = "https://api.dropbox.com/1/shares/%1%2";
 const QString DropboxClient::mediaURI = "https://api.dropbox.com/1/media/%1%2";
 
-DropboxClient::DropboxClient(QDeclarativeItem *parent) :
+DropboxClient::DropboxClient(QDeclarativeItem *parent, bool fullAccess) :
     QObject(parent)
 {
+    isFullAccess = fullAccess;
+    if (isFullAccess) {
+        consumerKey = DropboxConsumerKey;
+        consumerSecret = DropboxConsumerSecret;
+        dropboxRoot = DropboxRoot;
+    } else {
+        consumerKey = SandboxConsumerKey;
+        consumerSecret = SandboxConsumerSecret;
+        dropboxRoot = SandboxRoot;
+    }
+
     // Load accessTokenPair from file
     loadAccessPairMap();
 
@@ -469,6 +480,26 @@ void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath)
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
+void DropboxClient::browse(QString nonce, QString uid, QString remoteFilePath)
+{
+    qDebug() << "----- DropboxClient::browse -----";
+
+    // TODO root dropbox(Full access) or sandbox(App folder access)
+    QString uri = metadataURI.arg(dropboxRoot).arg(remoteFilePath);
+    qDebug() << "DropboxClient::browse uri " << uri;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(browseReplyFinished(QNetworkReply*)));
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
+    QNetworkReply *reply = manager->get(req);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+}
+
 void DropboxClient::createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
 {
     qDebug() << "----- DropboxClient::createFolder -----";
@@ -783,6 +814,19 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
     emit metadataReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void DropboxClient::browseReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "DropboxClient::browseReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    emit browseReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 
     // TODO scheduled to delete later.
     reply->deleteLater();

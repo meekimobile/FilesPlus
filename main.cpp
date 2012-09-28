@@ -13,6 +13,9 @@
 #include "bluetoothclient.h"
 #include "messageclient.h"
 #include <QDebug>
+#include <QtSql>
+
+static const QString AppName = "FilesPlus";
 
 void customMessageHandler(QtMsgType type, const char *msg)
 {
@@ -35,14 +38,14 @@ void customMessageHandler(QtMsgType type, const char *msg)
 
 #ifdef Q_OS_SYMBIAN
     // Append to file.
-    QString filePath = QString("E:/FilesPlus_Debug_%1.log").arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
+    QString filePath = QString("E:/%1_Debug_%2.log").arg(AppName).arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
     QFile outFile(filePath);
     outFile.open(QIODevice::WriteOnly | QIODevice::Append);
     QTextStream ts(&outFile);
     ts << txt << endl;
 #elif defined(Q_WS_HARMATTAN)
     // Append to file.
-    QString filePath = QString("/home/user/MyDocs/FilesPlus_Debug_%1.log").arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
+    QString filePath = QString("/home/user/MyDocs/%1_Debug_%2.log").arg(AppName).arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
     QFile outFile(filePath);
     outFile.open(QIODevice::WriteOnly | QIODevice::Append);
     QTextStream ts(&outFile);
@@ -67,7 +70,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 
     // Set properties for QSettings.
     QCoreApplication::setOrganizationName("MeekiMobile");
-    QCoreApplication::setApplicationName("FilesPlus");
+    QCoreApplication::setApplicationName(AppName);
 
 #ifdef Q_OS_SYMBIAN
     // Check settings if logging is enabled.
@@ -90,6 +93,75 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
         qDebug() << "main m_settings Logging.enabled=false";
     }
 #endif
+
+/*
+    // TODO ***** test only.
+#ifdef Q_OS_SYMBIAN
+    // Rollback to DAT bak for testing.
+    qDebug() << "main TEST -------------------------------------------------------";
+    bool ok = false;
+
+    ok = QFile("C:/Data/.config/MeekiMobile/FilesPlus.conf").remove();
+    qDebug() << "main remove C:/Data/.config/MeekiMobile/FilesPlus.conf" << ok;
+
+    ok = QFile("C:/CloudDriveModel.dat").remove();
+    qDebug() << "main remove C:/CloudDriveModel.dat" << ok;
+
+    // For testing existing user case.
+    ok = QFile("C:/CloudDriveModel.dat.bak").copy("C:/CloudDriveModel.dat");
+    qDebug() << "main copy C:/CloudDriveModel.dat.bak to CloudDriveModel.dat" << ok;
+
+    // For testing newly user case.
+//    ok = QFile("C:/DropboxClient.dat").remove();
+//    qDebug() << "main remove C:/DropboxClient.dat" << ok;
+
+    QSqlDatabase m_db = QSqlDatabase::addDatabase("QSQLITE", "cloud_drive_model");
+    m_db.setDatabaseName("CloudDriveModel.db");
+    ok = m_db.open();
+    if (ok) {
+        QSqlQuery qry(m_db);
+        qry.exec("DROP INDEX cloud_drive_item_pk");
+        qDebug() << "main" << qry.lastError() << qry.lastQuery();
+        qry.exec("DROP TABLE cloud_drive_item");
+        qDebug() << "main" << qry.lastError() << qry.lastQuery();
+    }
+    m_db.close();
+
+//    m_settings->setValue("dropbox.fullaccess.enabled", false);
+//    qDebug() << "main setting dropbox.fullaccess.enabled" << m_settings->value("dropbox.fullaccess.enabled");
+
+    qDebug() << "main TEST -------------------------------------------------------";
+#elif defined(Q_WS_HARMATTAN)
+    // Rollback to DAT bak for testing.
+    qDebug() << "main TEST -------------------------------------------------------";
+    bool ok = false;
+
+    ok = QFile("/home/developer/.config/MeekiMobile/FilesPlus.conf").remove();
+    qDebug() << "main remove /home/developer/.config/MeekiMobile/FilesPlus.conf" << ok;
+
+    ok = QFile("/home/user/.config/MeekiMobile/FilesPlus.conf").remove();
+    qDebug() << "main remove /home/user/.config/MeekiMobile/FilesPlus.conf" << ok;
+
+    ok = QFile("/home/user/.filesplus/CloudDriveModel.dat").remove();
+    qDebug() << "main remove /home/user/.filesplus/CloudDriveModel.dat" << ok;
+
+    // For testing existing user case.
+    ok = QFile("/home/user/.filesplus/CloudDriveModel.dat.bak").copy("/home/user/.filesplus/CloudDriveModel.dat");
+    qDebug() << "main copy /home/user/.filesplus/CloudDriveModel.dat.bak to CloudDriveModel.dat" << ok;
+
+    // For testing newly user case.
+//    ok = QFile("/home/user/.filesplus/DropboxClient.dat").remove();
+//    qDebug() << "main remove /home/user/.filesplus/DropboxClient.dat" << ok;
+
+    ok = QFile("/home/user/.filesplus/CloudDriveModel.db").remove();
+    qDebug() << "main remove C:/CloudDriveModel.db" << ok;
+
+//    m_settings->setValue("dropbox.fullaccess.enabled", false);
+//    qDebug() << "main setting dropbox.fullaccess.enabled" << m_settings->value("dropbox.fullaccess.enabled");
+
+    qDebug() << "main TEST -------------------------------------------------------";
+#endif
+*/
 
     QScopedPointer<QApplication> app(createApplication(argc, argv));
 

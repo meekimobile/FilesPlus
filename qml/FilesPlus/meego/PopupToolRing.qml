@@ -43,6 +43,17 @@ Rectangle {
                 target: toolButton
                 iconSource: (theme.inverted) ? "back.svg" : "back_inverted.svg"
             }
+        },
+        State {
+            name: "cloud"
+            PropertyChanges {
+                target: buttonRing
+                model: cloudButtonModel
+            }
+            PropertyChanges {
+                target: toolButton
+                iconSource: (theme.inverted) ? "back.svg" : "back_inverted.svg"
+            }
         }
     ]
 
@@ -71,7 +82,10 @@ Rectangle {
     signal markClicked(string srcFilePath, int srcItemIndex)
     signal renameFile(string srcFilePath, int srcItemIndex)
     signal uploadFile(string srcFilePath, int srcItemIndex)
+    signal downloadFile(string srcFilePath, int srcItemIndex)
     signal unsyncFile(string srcFilePath, int srcItemIndex)
+    signal disconnectFile(string srcFilePath, int srcItemIndex)
+    signal browseRemoteFile(string srcFilePath, int srcItemIndex)
     signal mailFile(string srcFilePath, int srcItemIndex)
     signal smsFile(string srcFilePath, int srcItemIndex)
     signal bluetoothFile(string srcFilePath, int srcItemIndex)
@@ -102,13 +116,13 @@ Rectangle {
     onVisibleChanged: {
         if (visible) {
             opened();
+            state = "main";
             popupTimer.restart();
         } else {
             selectedFilePath = "";
             selectedFileIndex = -1;
             srcFilePath = "";
             pastePath = "";
-            state = "main";
             closed();
         }
     }
@@ -134,8 +148,8 @@ Rectangle {
         id: toolsButtonModel
         ListElement { buttonName: "mark"; icon: "ok.svg" }
         ListElement { buttonName: "newFolder"; icon: "folder_add.svg" }
-        ListElement { buttonName: "upload"; icon: "upload.svg" }
-        ListElement { buttonName: "unsync"; icon: "cloud_remove.svg" }
+        ListElement { buttonName: "cloud"; icon: "cloud_options.svg" }
+        ListElement { buttonName: "cloudSettings"; icon: "cloud_settings.svg" }
         ListElement { buttonName: "share"; icon: "share.svg" }
         ListElement { buttonName: "rename"; icon: "rename.svg" }
     }
@@ -145,6 +159,14 @@ Rectangle {
         ListElement { buttonName: "mail"; icon: "mail.svg" }
         ListElement { buttonName: "sms"; icon: "messaging.svg" }
         ListElement { buttonName: "bluetooth"; icon: "bluetooth.svg" }
+    }
+
+    ListModel {
+        id: cloudButtonModel
+        ListElement { buttonName: "disconnect"; icon: "cloud_disconnect.svg" }
+        ListElement { buttonName: "upload"; icon: "upload.svg" }
+        ListElement { buttonName: "unsync"; icon: "cloud_remove.svg" }
+        ListElement { buttonName: "download"; icon: "download.svg" }
     }
 
     Component {
@@ -168,8 +190,14 @@ Rectangle {
         if (buttonName === "sync") {
             return !fsModel.isRoot(selectedFilePath) && cloudDriveModel.canSync(selectedFilePath);
         } else if (buttonName === "upload") {
-            return !fsModel.isRoot(selectedFilePath) && cloudDriveModel.canSync(selectedFilePath);
+            return !fsModel.isRoot(selectedFilePath) && cloudDriveModel.canSync(selectedFilePath) && !cloudDriveModel.isParentConnected(selectedFilePath);
+        } else if (buttonName === "download") {
+            return !fsModel.isRoot(selectedFilePath) && cloudDriveModel.canSync(selectedFilePath) && !cloudDriveModel.isParentConnected(selectedFilePath);
+        } else if (buttonName === "disconnect") {
+            return cloudDriveModel.isConnected(selectedFilePath);
         } else if (buttonName === "unsync") {
+            return cloudDriveModel.isConnected(selectedFilePath);
+        } else if (buttonName === "cloudSettings") {
             return cloudDriveModel.isConnected(selectedFilePath);
         } else if (buttonName === "paste") {
             return (clipboardCount > 0);
@@ -208,10 +236,23 @@ Rectangle {
             markClicked(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "rename") {
             renameFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "cloud") {
+            popupToolPanel.state = "cloud";
+            popupTimer.restart();
+            return;
         } else if (buttonName == "upload") {
             uploadFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "download") {
+            downloadFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "unsync") {
+            unsyncFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "disconnect") {
+            disconnectFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "cloudSettings") {
+            browseRemoteFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "share") {
             popupToolPanel.state = "share";
+            popupTimer.restart();
             return;
         } else if (buttonName == "mail") {
             mailFile(selectedFilePath, selectedFileIndex);
@@ -219,8 +260,6 @@ Rectangle {
             smsFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "bluetooth") {
             bluetoothFile(selectedFilePath, selectedFileIndex);
-        } else if (buttonName == "unsync") {
-            unsyncFile(selectedFilePath, selectedFileIndex);
         }
         popupToolPanel.visible = false;
     }
@@ -255,6 +294,8 @@ Rectangle {
             } else if (popupToolPanel.state == "tools") {
                 popupToolPanel.state = "main";
             } else if (popupToolPanel.state == "share") {
+                popupToolPanel.state = "tools";
+            } else if (popupToolPanel.state == "cloud") {
                 popupToolPanel.state = "tools";
             }
 

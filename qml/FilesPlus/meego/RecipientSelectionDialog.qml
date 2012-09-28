@@ -4,7 +4,7 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: recipientSelectionDialog
-    style: SelectionDialogStyle { dim: 0.9 }
+    style: SelectionDialogStyle { dim: 0.9; pressDelay: 100 }
 
     property string shareFileCaller
     property string srcFilePath

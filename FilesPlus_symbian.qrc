@@ -119,5 +119,13 @@
         <file>qml/FilesPlus/save_inverted.svg</file>
         <file alias="FilesPlus_it.qm">i18n/FilesPlus_it.qm</file>
         <file alias="FilesPlus_de.qm">i18n/FilesPlus_de.qm</file>
+        <file alias="qml/FilesPlus/CloudDrivePathDialog.qml">qml/FilesPlus/symbian/CloudDrivePathDialog.qml</file>
+        <file>qml/FilesPlus/cloud_options.svg</file>
+        <file>qml/FilesPlus/cloud_options_inverted.svg</file>
+        <file>qml/FilesPlus/cloud_settings_inverted.svg</file>
+        <file>qml/FilesPlus/cloud_settings.svg</file>
+        <file>qml/FilesPlus/close_stop_inverted.svg</file>
+        <file>qml/FilesPlus/cloud_disconnect_inverted.svg</file>
+        <file>qml/FilesPlus/cloud_disconnect.svg</file>
     </qresource>
 </RCC>

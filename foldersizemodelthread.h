@@ -16,6 +16,7 @@ class FolderSizeModelThread : public QThread
 public:
     static const QString CACHE_FILE_PATH;
     static const QString CACHE_DB_PATH;
+    static const QString CACHE_DB_CONNECTION_NAME;
     static const QString DEFAULT_CURRENT_DIR;
     static const int FILE_READ_BUFFER;
     static const int FILE_COPY_DELAY;
@@ -33,7 +34,8 @@ public:
         LoadDirSizeCache,
         CopyFile,
         MoveFile,
-        DeleteFile
+        DeleteFile,
+        InitializeDB
     };
 
     FolderSizeModelThread(QObject *parent = 0);
@@ -70,11 +72,13 @@ public:
     void run();
 signals:
     void loadDirSizeCacheFinished();
+    void initializeDBStarted();
+    void initializeDBFinished();
     void fetchDirSizeStarted();
     void fetchDirSizeFinished();
     void copyStarted(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
-    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 bytesTotal, bool isSourceRoot);
+    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 bytesTotal, qint64 count, bool isSourceRoot);
     void fetchDirSizeUpdated(QString dirPath);
     void deleteStarted(int fileAction, QString localPath);
     void deleteProgress(int fileAction, QString subLocalPath, QString msg, int err);
@@ -96,12 +100,15 @@ private:
     FolderSizeItem selectDirSizeCacheFromDB(const QString id);
     int insertDirSizeCacheToDB(const FolderSizeItem item);
     int updateDirSizeCacheToDB(const FolderSizeItem item);
+    int updateDirSizeCacheTreeToDB(const QString oldAbsPath, const QString newAbsPath);
     int deleteDirSizeCacheToDB(const QString id);
+    int deleteDirSizeCacheTreeToDB(const QString id);
     int countDirSizeCacheDB();
 
     // Thread methods.
     void loadDirSizeCache();
     void fetchDirSize(const bool clearCache = false);
+    bool move(const QString sourcePath, const QString targetPath);
     bool copy(int method, const QString sourcePath, const QString targetPath);
     bool copyFile(int method, const QString sourcePath, const QString targetPath);
     bool deleteDir(const QString sourcePath);

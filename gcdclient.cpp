@@ -6,7 +6,11 @@
 #include <QScriptValue>
 #include <QScriptValueIterator>
 
+#ifdef Q_WS_HARMATTAN
+const QString GCDClient::KeyStoreFilePath = "/home/user/.filesplus/GCDClient.dat";
+#else
 const QString GCDClient::KeyStoreFilePath = "C:/GCDClient.dat";
+#endif
 const QString GCDClient::consumerKey = "196573379494.apps.googleusercontent.com";
 const QString GCDClient::consumerSecret = "il59cyz3dwBW6tsHBkZYGSWj";
 //const QString GCDClient::consumerKey = "196573379494-0krnqcmnltleb7gsm3pjgduuj7stu0el.apps.googleusercontent.com";

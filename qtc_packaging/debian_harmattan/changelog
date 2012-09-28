@@ -1,3 +1,8 @@
+filesplus (1.1.0) unstable; urgency=low
+  * Add support for Dropbox full access, managable Cloud connections.
+
+ -- Taweesak Kittipuree <>  Wed, 05 Sep 2012 16:42:04 +0700
+
 filesplus (1.0.6) unstable; urgency=low
   * Fix to use Dropbox PLAINTEXT OAuth signature.
 

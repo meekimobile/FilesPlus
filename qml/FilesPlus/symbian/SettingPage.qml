@@ -108,6 +108,12 @@ Page {
             group: "CloudDrive"
         }
 //        ListElement {
+//            name: "drivepage.clouddrive.enabled"
+//            title: ""
+//            type: "switch"
+//            group: "CloudDrive"
+//        }
+//        ListElement {
 //            name: "FolderPie.enabled"
 //            title: ""
 //            type: "switch"
@@ -161,6 +167,12 @@ Page {
             type: "switch"
             group: "Developer"
         }
+        ListElement {
+            name: "dropbox.fullaccess.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
     }
 
     ListView {
@@ -184,14 +196,16 @@ Page {
         else if (name == "syncAllConnectedItems") return qsTr("Sync all connected items") + appInfo.emptyStr;
         else if (name == "showCloudDriveAccounts") return qsTr("Show accounts") + appInfo.emptyStr;
         else if (name == "sync.after.refresh") return qsTr("Auto-sync after refresh") + appInfo.emptyStr;
+//        else if (name == "drivepage.clouddrive.enabled") return qsTr("Show cloud storage on drive page") + appInfo.emptyStr;
         else if (name == "FolderPie.enabled") return qsTr("FolderPie feature") + appInfo.emptyStr;
         else if (name == "resetCache") return qsTr("Reset current folder cache") + appInfo.emptyStr;
         else if (name == "Theme.inverted") return qsTr("Theme") + appInfo.emptyStr;
         else if (name == "popup.timer.interval") return qsTr("Popup interval") + appInfo.emptyStr;
-        else if (name == "locale") return languageModel.getLanguage(appInfo.getLocale()) + appInfo.emptyStr;
+        else if (name == "locale") return languageModel.getLanguage(appInfo.getLocale(), "en") + appInfo.emptyStr;
         else if (name == "thumbnail.enabled") return qsTr("Show thumbnail") + appInfo.emptyStr;
         else if (name == "keep.bluetooth.off") return qsTr("Keep bluetooth off") + appInfo.emptyStr;
         else if (name == "Logging.enabled") return qsTr("Logging (Debug)") + appInfo.emptyStr;
+        else if (name == "dropbox.fullaccess.enabled") return qsTr("Dropbox full access") + appInfo.emptyStr;
         else if (name == "Monitoring.enabled") return qsTr("Monitoring (RAM,CPU)") + appInfo.emptyStr;
         else if (name == "Personalization") return qsTr("Personalization") + appInfo.emptyStr;
         else if (name == "Developer") return qsTr("Developer") + appInfo.emptyStr;
@@ -222,6 +236,9 @@ Page {
                 languageSelector.open();
             } else if (name == "Logging.enabled") {
                 quitConfirmation.open();
+            } else if (name == "dropbox.fullaccess.enabled") {
+                pageStack.pop();
+                p.showDropboxFullAccessConfirmationSlot();
             } else if (name == "Monitoring.enabled") {
                 if (appInfo.isMonitoring()) {
                     messageDialog.titleText = appInfo.emptyStr+qsTr("Monitoring");
@@ -476,13 +493,18 @@ Page {
                 return -1;
             }
 
-            function getLanguage(locale) {
+            function getLanguage(locale, defaultLocale) {
                 var i = getIndexByLocale(locale)
                 if (i > -1) {
                     return languageModel.get(i).value;
+                } else {
+                    i = getIndexByLocale(defaultLocale);
+                    if (i > -1) {
+                        return languageModel.get(i).value;
+                    }
                 }
 
-                return "Invalid locale";
+                return "Locale not found";
             }
         }
     }

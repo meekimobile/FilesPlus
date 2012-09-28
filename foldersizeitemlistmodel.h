@@ -74,8 +74,8 @@ public:
     };
 
     enum IndexOnCurrentDir {
-        IndexNotOnCurrentDir = -1,
-        IndexOnCurrentDirButNotFound = -2
+        IndexNotOnCurrentDir = 100001,
+        IndexOnCurrentDirButNotFound = 100002
     };
 
     explicit FolderSizeItemListModel(QObject *parent = 0);
@@ -104,6 +104,7 @@ public:
     Q_INVOKABLE QString getItemJson(const QString absFilePath);
     Q_INVOKABLE QString getDirContentJson(const QString dirPath);
     Q_INVOKABLE int getIndexOnCurrentDir(const QString absFilePath);
+    Q_INVOKABLE void clearIndexOnCurrentDir();
     Q_INVOKABLE void removeCache(const QString absPath);
     Q_INVOKABLE bool isRunning();
 
@@ -141,6 +142,10 @@ public:
     void removeItem(const int index);
     FolderSizeItem getItem(const int index);
     void setItem(const int index, FolderSizeItem &item);
+
+    Q_INVOKABLE void proceedNextJob();
+    Q_INVOKABLE void suspendNextJob();
+    Q_INVOKABLE void resumeNextJob();
 private:
     Q_DISABLE_COPY(FolderSizeItemListModel)
     FolderSizeModelThread m;
@@ -149,6 +154,7 @@ private:
     QQueue<FolderSizeJob> m_jobQueue;
     int runningJobCount;
     QString createNonce();
+    bool m_isSuspended;
 
     QList<FolderSizeItem> itemList;
     void refreshItemList();
@@ -167,19 +173,21 @@ public slots:
     void loadDirSizeCacheFinishedFilter();
     void fetchDirSizeFinishedFilter();
     void copyProgressFilter(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
-    void copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes, bool isSourceRoot);
+    void copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes, qint64 count, bool isSourceRoot);
     void deleteProgressFilter(int fileAction, QString sourceSubPath, QString msg, int err);
     void deleteFinishedFilter(int fileAction, QString sourcePath, QString msg, int err);
-    void proceedNextJob();
     void jobDone();
 Q_SIGNALS:
+    void loadDirSizeCacheFinished();
+    void initializeDBStarted();
+    void initializeDBFinished();
     void currentDirChanged();
     void refreshBegin();
     void refreshCompleted();
     void requestResetCache();
     void copyStarted(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
-    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes, bool isSourceRoot = true);
+    void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes, qint64 count, bool isSourceRoot = true);
     void deleteStarted(int fileAction, QString sourcePath);
     void deleteProgress(int fileAction, QString sourceSubPath, QString msg, int err);
     void deleteFinished(int fileAction, QString sourcePath, QString msg, int err);
