@@ -123,6 +123,15 @@ Page {
             onClicked: {
                 syncConnectedItemsSlot();
             }
+
+            TextIndicator {
+                id: cloudButtonIndicator
+                color: "#00AAFF"
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 10
+            }
         }
 
         ToolIcon {
@@ -2615,6 +2624,9 @@ Page {
                     p.updateCloudDriveItemCount(itemCount);
                 }
             }
+
+            // Update (runningJobCount + jobQueueCount) on cloudButton.
+            cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
 
             // Refresh if no more running jobs and jobs in queue.
             if (runningJobCount <= 0 && jobQueueCount <= 0) {
