@@ -96,7 +96,7 @@ public:
     Q_INVOKABLE void setProperty(const int index, FolderSizeItemRoles role, QVariant value);
     Q_INVOKABLE void setProperty(const QString localPath, FolderSizeItemRoles role, QVariant value);
 
-    Q_INVOKABLE void refreshDir(const QString caller, const bool clearCache = false);
+    Q_INVOKABLE void refreshDir(const QString caller, const bool clearCache = false, const bool clearItems = false);
     Q_INVOKABLE void changeDir(const QString &name, const int sortFlag = -1);
     Q_INVOKABLE QString getUrl(const QString absPath);
     Q_INVOKABLE bool isRoot(); // Overload method for verifying on currentDir.
@@ -149,7 +149,6 @@ public:
 private:
     Q_DISABLE_COPY(FolderSizeItemListModel)
     FolderSizeModelThread m;
-    QTimer *timer;
 
     QQueue<FolderSizeJob> m_jobQueue;
     int runningJobCount;

@@ -142,8 +142,8 @@ public:
     Q_INVOKABLE void shareFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
-    void initializeDBStarted();
-    void initializeDBFinished();
+    void initializeDBStarted(QString nonce);
+    void initializeDBFinished(QString nonce);
     void proceedNextJobSignal();
     void jobQueueStatusSignal(int runningJobCount, int jobQueueCount, int itemCount);
     void localChangedSignal(QString localPath);
@@ -209,7 +209,7 @@ private:
     QSqlQuery m_countPS;
     QSqlQuery m_countByLocalPathPS;
 
-    void initializeDB();
+    void initializeDB(QString nonce);
     void cleanDB();
     void closeDB();
 

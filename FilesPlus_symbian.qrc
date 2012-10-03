@@ -127,5 +127,6 @@
         <file>qml/FilesPlus/close_stop_inverted.svg</file>
         <file>qml/FilesPlus/cloud_disconnect_inverted.svg</file>
         <file>qml/FilesPlus/cloud_disconnect.svg</file>
+        <file alias="qml/FilesPlus/TextIndicator.qml">qml/FilesPlus/symbian/TextIndicator.qml</file>
     </qresource>
 </RCC>

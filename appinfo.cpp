@@ -158,6 +158,7 @@ void AppInfo::startMonitoring()
     if (isMonitoring()) {
         mon = new Monitoring();
         mon->start();
+        qDebug() << "AppInfo m_settings mon" << mon << "is started.";
     } else {
         qDebug() << "AppInfo m_settings mon" << mon;
         if (mon != 0) {

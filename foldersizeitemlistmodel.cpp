@@ -121,8 +121,8 @@ void FolderSizeItemListModel::setCurrentDir(const QString &path)
     // Emit to update currentDir on UI.
     emit currentDirChanged();
 
-    // Invoke background refresh
-    refreshDir("FolderSizeItemListModel::setCurrentDir");
+    // Invoke background refresh by clearing items while refreshing.
+    refreshDir("FolderSizeItemListModel::setCurrentDir", false, true);
 
     qDebug() << QTime::currentTime() << "FolderSizeItemListModel::setCurrentDir";
 }
@@ -288,7 +288,10 @@ QString FolderSizeItemListModel::createNonce() {
 
 void FolderSizeItemListModel::jobDone()
 {
-    qDebug() << "FolderSizeItemListModel::jobDone runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue.count();
+    qDebug() << "FolderSizeItemListModel::jobDone started runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue.count() << "m.isFinished()" << m.isFinished();
+    if (!m.isFinished()) {
+        m.wait();
+    }
 
     if (runningJobCount > 0) {
         mutex.lock();
@@ -296,7 +299,7 @@ void FolderSizeItemListModel::jobDone()
         mutex.unlock();
     }
 
-    qDebug() << "FolderSizeItemListModel::jobDone runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue.count();
+    qDebug() << "FolderSizeItemListModel::jobDone finished runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue.count() << "m.isFinished()" << m.isFinished();
 
     emit proceedNextJobSignal();
 }
@@ -318,7 +321,7 @@ void FolderSizeItemListModel::changeDir(const QString &name, const int sortFlag)
     }
 }
 
-void FolderSizeItemListModel::refreshDir(const QString caller, const bool clearCache)
+void FolderSizeItemListModel::refreshDir(const QString caller, const bool clearCache, const bool clearItems)
 {
     qDebug() << "FolderSizeItemListModel::refreshDir clearCache" << clearCache << "sender" << sender() << "caller" << caller;
 
@@ -338,6 +341,12 @@ void FolderSizeItemListModel::refreshDir(const QString caller, const bool clearC
         // Once thread is done, it will invoke refreshItemList() in fetchDirSizeFinishedFilter().
         if (clearCache) {
             refreshItemList();
+            refreshItems();
+        }
+
+        // Clear items while refreshing.
+        if (clearItems) {
+            itemList.clear();
             refreshItems();
         }
     } else {

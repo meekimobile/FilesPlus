@@ -1492,9 +1492,9 @@ void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMs
     emit shareFileReplySignal(nonce, err, errMsg, msg, url, expires);
 }
 
-void CloudDriveModel::initializeDB()
+void CloudDriveModel::initializeDB(QString nonce)
 {
-    emit initializeDBStarted();
+    emit initializeDBStarted(nonce);
 
     // Create cache database path if it's not exist.
     QFile file(ITEM_DB_PATH);
@@ -1579,7 +1579,13 @@ void CloudDriveModel::initializeDB()
     m_countByLocalPathPS = QSqlQuery(m_db);
     m_countByLocalPathPS.prepare("SELECT count(*) count FROM cloud_drive_item where local_path = :local_path");
 
-    emit initializeDBFinished();
+    // Notify job done.
+    jobDone();
+
+    // RemoveJob
+    removeJob(nonce);
+
+    emit initializeDBFinished(nonce);
 }
 
 void CloudDriveModel::closeDB()
@@ -1936,6 +1942,10 @@ void CloudDriveModel::proceedNextJob() {
     qDebug() << "CloudDriveModel::proceedNextJob jobId " << nonce;
     CloudDriveJob job = m_cloudDriveJobs[nonce];
 
+    mutex.lock();
+    runningJobCount++;
+    mutex.unlock();
+
     // TODO
     // If job.type==Dropbox, call DropboxClient.run() directly.
     // If job.type==Any, start thread.
@@ -1950,7 +1960,8 @@ void CloudDriveModel::proceedNextJob() {
         m_thread.start();
         break;
     case InitializeDB:
-        initializeDB();
+        // Execute initialize locally.
+        initializeDB(job.jobId);
         break;
     case FileGet:
         switch (job.type) {
@@ -2045,10 +2056,6 @@ void CloudDriveModel::proceedNextJob() {
         break;
     }
 
-    mutex.lock();
-    runningJobCount++;
-    mutex.unlock();
-
     emit proceedNextJobSignal();
 }
 
@@ -2064,6 +2071,8 @@ void CloudDriveModel::loadCloudDriveItemsFilter(QString nonce)
     m_cloudDriveItems = m_thread.getCloudDriveItems();
 
     m_thread.getCloudDriveItems().clear();
+
+    // Notify job done is done by threadFinishedFilter.
 
     // RemoveJob
     removeJob(nonce);

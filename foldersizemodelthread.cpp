@@ -126,6 +126,7 @@ FolderSizeModelThread::~FolderSizeModelThread()
 
 void FolderSizeModelThread::initializeDB()
 {
+    qDebug() << "FolderSizeModelThread::initializeDB started";
     emit initializeDBStarted();
 
     // Create cache database path if it's not exist.
@@ -366,8 +367,13 @@ int FolderSizeModelThread::countDirSizeCacheDB()
 {
     int c = 0;
     bool res = m_countPS.exec();
-    if (res && m_countPS.next()) {
-        c = m_countPS.value(m_countPS.record().indexOf("count")).toInt();
+    if (res) {
+        if (m_countPS.next()) {
+            c = m_countPS.value(m_countPS.record().indexOf("count")).toInt();
+            qDebug() << "FolderSizeModelThread::countDirSizeCacheDB res" << res << "count" << c;
+        }
+    } else {
+        qDebug() << "FolderSizeModelThread::countDirSizeCacheDB res" << res << "error" << m_countPS.lastError();
     }
 
     return c;
@@ -748,6 +754,7 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath)
 bool FolderSizeModelThread::isDirSizeCacheExisting()
 {
     // Return true if cache is not empty or cache is loading.
+//    qDebug() << "FolderSizeModelThread::isDirSizeCacheExisting isRunning(LoadDirSizeCache)" << (isRunning() && m_runMethod == LoadDirSizeCache) << "dirSizeCache" << (dirSizeCache->count()) << "countDirSizeCacheDB" << (countDirSizeCacheDB());
     return ( (isRunning() && m_runMethod == LoadDirSizeCache) || dirSizeCache->count() > 0 || countDirSizeCacheDB() > 0);
 }
 
