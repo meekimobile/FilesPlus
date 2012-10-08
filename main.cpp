@@ -72,28 +72,6 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("MeekiMobile");
     QCoreApplication::setApplicationName(AppName);
 
-#ifdef Q_OS_SYMBIAN
-    // Check settings if logging is enabled.
-    QSettings *m_settings = new QSettings();
-    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
-    if (m_settings->value("Logging.enabled", false).toBool()) {
-        qDebug() << "main m_settings Logging.enabled=true";
-        qInstallMsgHandler(customMessageHandler);
-    } else {
-        qDebug() << "main m_settings Logging.enabled=false";
-    }
-#elif defined(Q_WS_HARMATTAN)
-    // Check settings if logging is enabled.
-    QSettings *m_settings = new QSettings();
-    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
-    if (m_settings->value("Logging.enabled", false).toBool()) {
-        qDebug() << "main m_settings Logging.enabled=true";
-        qInstallMsgHandler(customMessageHandler);
-    } else {
-        qDebug() << "main m_settings Logging.enabled=false";
-    }
-#endif
-
 /*
     // TODO ***** test only.
 #ifdef Q_OS_SYMBIAN
@@ -101,8 +79,20 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qDebug() << "main TEST -------------------------------------------------------";
     bool ok = false;
 
-    ok = QFile("C:/Data/.config/MeekiMobile/FilesPlus.conf").remove();
-    qDebug() << "main remove C:/Data/.config/MeekiMobile/FilesPlus.conf" << ok;
+//    ok = QFile("C:/Data/.config/MeekiMobile/FilesPlus.conf").remove();
+//    qDebug() << "main remove C:/Data/.config/MeekiMobile/FilesPlus.conf" << ok;
+
+    QSqlDatabase f_db = QSqlDatabase::addDatabase("QSQLITE", "folderpie_cache");
+    f_db.setDatabaseName("FolderPieCache.db");
+    ok = f_db.open();
+    if (ok) {
+        QSqlQuery qry(f_db);
+        qry.exec("DROP INDEX folderpie_cache_pk");
+        qDebug() << "main" << qry.lastError() << qry.lastQuery();
+        qry.exec("DROP TABLE folderpie_cache");
+        qDebug() << "main" << qry.lastError() << qry.lastQuery();
+    }
+    f_db.close();
 
     ok = QFile("C:/CloudDriveModel.dat").remove();
     qDebug() << "main remove C:/CloudDriveModel.dat" << ok;
@@ -115,17 +105,17 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 //    ok = QFile("C:/DropboxClient.dat").remove();
 //    qDebug() << "main remove C:/DropboxClient.dat" << ok;
 
-    QSqlDatabase m_db = QSqlDatabase::addDatabase("QSQLITE", "cloud_drive_model");
-    m_db.setDatabaseName("CloudDriveModel.db");
-    ok = m_db.open();
+    QSqlDatabase c_db = QSqlDatabase::addDatabase("QSQLITE", "cloud_drive_model");
+    c_db.setDatabaseName("CloudDriveModel.db");
+    ok = c_db.open();
     if (ok) {
-        QSqlQuery qry(m_db);
+        QSqlQuery qry(c_db);
         qry.exec("DROP INDEX cloud_drive_item_pk");
         qDebug() << "main" << qry.lastError() << qry.lastQuery();
         qry.exec("DROP TABLE cloud_drive_item");
         qDebug() << "main" << qry.lastError() << qry.lastQuery();
     }
-    m_db.close();
+    c_db.close();
 
 //    m_settings->setValue("dropbox.fullaccess.enabled", false);
 //    qDebug() << "main setting dropbox.fullaccess.enabled" << m_settings->value("dropbox.fullaccess.enabled");
@@ -136,18 +126,21 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qDebug() << "main TEST -------------------------------------------------------";
     bool ok = false;
 
-    ok = QFile("/home/developer/.config/MeekiMobile/FilesPlus.conf").remove();
-    qDebug() << "main remove /home/developer/.config/MeekiMobile/FilesPlus.conf" << ok;
+//    ok = QFile("/home/developer/.config/MeekiMobile/FilesPlus.conf").remove();
+//    qDebug() << "main remove /home/developer/.config/MeekiMobile/FilesPlus.conf" << ok;
 
-    ok = QFile("/home/user/.config/MeekiMobile/FilesPlus.conf").remove();
-    qDebug() << "main remove /home/user/.config/MeekiMobile/FilesPlus.conf" << ok;
+//    ok = QFile("/home/user/.config/MeekiMobile/FilesPlus.conf").remove();
+//    qDebug() << "main remove /home/user/.config/MeekiMobile/FilesPlus.conf" << ok;
+
+    ok = QFile("/home/user/.folderpie/FolderPieCache.db").remove();
+    qDebug() << "main remove /home/user/.folderpie/FolderPieCache.db" << ok;
 
     ok = QFile("/home/user/.filesplus/CloudDriveModel.dat").remove();
     qDebug() << "main remove /home/user/.filesplus/CloudDriveModel.dat" << ok;
 
     // For testing existing user case.
-    ok = QFile("/home/user/.filesplus/CloudDriveModel.dat.bak").copy("/home/user/.filesplus/CloudDriveModel.dat");
-    qDebug() << "main copy /home/user/.filesplus/CloudDriveModel.dat.bak to CloudDriveModel.dat" << ok;
+//    ok = QFile("/home/user/.filesplus/CloudDriveModel.dat.bak").copy("/home/user/.filesplus/CloudDriveModel.dat");
+//    qDebug() << "main copy /home/user/.filesplus/CloudDriveModel.dat.bak to CloudDriveModel.dat" << ok;
 
     // For testing newly user case.
 //    ok = QFile("/home/user/.filesplus/DropboxClient.dat").remove();
@@ -162,6 +155,28 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qDebug() << "main TEST -------------------------------------------------------";
 #endif
 */
+
+#ifdef Q_OS_SYMBIAN
+    // Default logging is enabled on first startup. It will be uninstalled and disabled once DrivePage is loaded successfully.
+    QSettings *m_settings = new QSettings();
+    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
+    if (m_settings->value("Logging.enabled", true).toBool()) {
+        qDebug() << "main m_settings Logging.enabled=true";
+        qInstallMsgHandler(customMessageHandler);
+    } else {
+        qDebug() << "main m_settings Logging.enabled=false";
+    }
+#elif defined(Q_WS_HARMATTAN)
+    // Default logging is enabled on first startup. It will be uninstalled and disabled once DrivePage is loaded successfully.
+    QSettings *m_settings = new QSettings();
+    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
+    if (m_settings->value("Logging.enabled", true).toBool()) {
+        qDebug() << "main m_settings Logging.enabled=true";
+        qInstallMsgHandler(customMessageHandler);
+    } else {
+        qDebug() << "main m_settings Logging.enabled=false";
+    }
+#endif
 
     QScopedPointer<QApplication> app(createApplication(argc, argv));
 

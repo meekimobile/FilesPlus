@@ -880,6 +880,9 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
         if (!isFound || !isValid || !isInDB) {
             if (!isFound) {
                 if (insertDirSizeCacheToDB(cachedDir) <= 0) {
+                    // Avoid UI freezing by processEvents().
+                    QApplication::processEvents();
+
                     // Workaround. In case it can't be inserted, try update.
                     updateDirSizeCacheToDB(cachedDir);
                 }

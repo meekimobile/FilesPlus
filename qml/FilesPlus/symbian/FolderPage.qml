@@ -104,6 +104,16 @@ Page {
             flat: true
             visible: (fsListView.state == "")
 
+            Timer {
+                id: refreshButtonTimer
+                interval: 100
+                repeat: true
+                running: false
+                onTriggered: {
+                    refreshButton.rotation = 360 + (refreshButton.rotation - 12);
+                }
+            }
+
             Component.onCompleted: {
                 refreshButton.clicked.connect(refreshSlot);
             }
@@ -698,11 +708,15 @@ Page {
             }
         }
 
+        onFetchDirSizeStarted: {
+            refreshButtonTimer.restart();
+        }
+
         onFetchDirSizeUpdated: {
-            refreshButton.rotation = 360 + (refreshButton.rotation - 12);
         }
 
         onFetchDirSizeFinished: {
+            refreshButtonTimer.stop();
             refreshButton.rotation = 0;
 
             // Refresh itemList to show changes on ListView.

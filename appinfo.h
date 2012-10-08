@@ -33,6 +33,7 @@ public:
     Q_INVOKABLE bool hasSettingValue(const QString key);
     Q_INVOKABLE void startMonitoring();
     Q_INVOKABLE bool isLogging();
+    Q_INVOKABLE void stopLogging();
 
     Q_INVOKABLE QString getSystemLocale() const;
     Q_INVOKABLE QString getLocale();

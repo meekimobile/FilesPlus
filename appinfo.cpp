@@ -36,6 +36,17 @@ bool AppInfo::isLogging()
     return getSettingBoolValue("Logging.enabled", false);
 }
 
+void AppInfo::stopLogging()
+{
+    if (!isLogging()) {
+        qInstallMsgHandler(0);
+        setSettingValue("Logging.enabled", false);
+        qDebug() << "AppInfo::stopLogging is done.";
+    } else {
+        qDebug() << "AppInfo::stopLogging is ignored. Logging is enabled.";
+    }
+}
+
 QString AppInfo::getSystemLocale() const
 {
     return QLocale::system().name();

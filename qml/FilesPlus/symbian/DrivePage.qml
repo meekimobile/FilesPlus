@@ -175,6 +175,9 @@ Page {
             if (appInfo.getSettingBoolValue("drivepage.clouddrive.enabled", false)) {
                 parseCloudStorage(CloudDriveModel.Dropbox, driveGridModel);
             }
+
+            // Stop startup logging.
+            appInfo.stopLogging();
         }
     }
 
