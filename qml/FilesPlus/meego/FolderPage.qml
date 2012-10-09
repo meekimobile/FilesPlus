@@ -350,6 +350,7 @@ Page {
             messageDialog.message = appInfo.emptyStr+qsTr("FilesPlus syncs your files via Dropbox service.\
 \nYou will be redirected to authorization page.");
             messageDialog.titleText = appInfo.emptyStr+qsTr("Sync with Dropbox");
+            messageDialog.autoClose = true;
             messageDialog.open();
 
             cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
@@ -629,12 +630,16 @@ Page {
         }
 
         onDeleteProgress: {
-            console.debug("folderPage fsModel onDeleteProgress " + fileAction + " sourceSubPath " + sourceSubPath);
+            console.debug("folderPage fsModel onDeleteProgress " + fileAction + " sourceSubPath " + sourceSubPath + " err " + err + " msg " + msg);
             // Update progress only.
             // TODO Save state to property only. Use timer to update state on UI.
             if (fileAction == FolderSizeItemListModel.DeleteFile) {
-                deleteProgressDialog.value += 1;
-                deleteProgressDialog.message = appInfo.emptyStr+qsTr("%1 is deleted.").arg(sourceSubPath);
+                if (err >= 0) {
+                    deleteProgressDialog.value += 1;
+                    deleteProgressDialog.message = msg;
+                } else {
+                    deleteProgressDialog.message = msg;
+                }
             }
         }
 
@@ -1464,6 +1469,8 @@ Page {
                 copyProgressDialog.max = totalBytes;
                 copyProgressDialog.value = 0;
                 copyProgressDialog.newValue = 0;
+                copyProgressDialog.lastValue = 0;
+                copyProgressDialog.accuDeltaValue = 0;
                 copyProgressDialog.minCount = 0;
                 copyProgressDialog.maxCount = totalFiles + totalFolders;
                 copyProgressDialog.count = 0;
@@ -1501,6 +1508,9 @@ Page {
                 deleteProgressDialog.min = 0;
                 deleteProgressDialog.max = totalFiles + totalFolders;
                 deleteProgressDialog.value = 0;
+                deleteProgressDialog.newValue = 0;
+                deleteProgressDialog.lastValue = 0;
+                deleteProgressDialog.accuDeltaValue = 0;
                 deleteProgressDialog.autoClose = true;
                 deleteProgressDialog.titleText = appInfo.emptyStr+qsTr("Deleting");
                 deleteProgressDialog.message = "";
