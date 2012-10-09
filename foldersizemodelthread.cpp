@@ -454,6 +454,7 @@ bool FolderSizeModelThread::move(const QString sourcePath, const QString targetP
     // Try rename(move) first, then copy/delete if it failed.
     QFileInfo sourceFileInfo(sourcePath);
     qDebug() << "FolderSizeModelThread::move sourceFileInfo" << sourceFileInfo.absoluteFilePath() << "isDir" << sourceFileInfo.isDir() << "isFile" << sourceFileInfo.isFile() << "exists" << sourceFileInfo.exists();
+    FolderSizeItem sourceItem = getItem(sourceFileInfo);
 
     if (sourceFileInfo.absoluteDir().rename(sourcePath, targetPath)) {
         qDebug() << "FolderSizeModelThread::move Moving is done. sourceFile" << sourcePath << "targetFile" << targetPath;
@@ -461,7 +462,6 @@ bool FolderSizeModelThread::move(const QString sourcePath, const QString targetP
         // TODO include total size in signal.
         emit copyStarted(MoveFile, sourcePath, targetPath, "", 0);
 
-        FolderSizeItem sourceItem = getItem(sourceFileInfo);
         // TODO getItem return default object with incorrect size, count.
         qDebug() << "FolderSizeModelThread::move sourceItem" << sourceItem;
 
