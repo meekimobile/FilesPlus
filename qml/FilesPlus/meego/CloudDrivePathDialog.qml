@@ -241,6 +241,7 @@ CommonDialog {
             highlightFollowsCurrentItem: true
             highlightMoveSpeed: 2000
             pressDelay: 100
+            clip: true
             onMovementStarted: {
                 if (currentItem) {
                     currentItem.pressed = false;
