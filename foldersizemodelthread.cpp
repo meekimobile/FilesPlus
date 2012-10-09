@@ -513,6 +513,9 @@ bool FolderSizeModelThread::copy(int method, const QString sourcePath, const QSt
             } else {
                 // Create folder successfully, result = true;
                 res = true;
+
+                // Emit copy progress.
+                emit copyProgress(method, sourcePath, targetPath, targetFileInfo.size(), itemSize);
             }
         }
 
@@ -864,7 +867,7 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
             }
 
             // Put calculated dirSize to cache.
-            cachedDir = FolderSizeItem(dir.fileName(), dir.absoluteFilePath(), dir.lastModified(), dirSize, true, subDirCount, subFileCount);
+            cachedDir = FolderSizeItem(dir.fileName(), dir.absoluteFilePath(), dir.lastModified(), dirSize + dir.size(), true, subDirCount, subFileCount);
     //        dirSizeCache->insert(dir.absoluteFilePath(), cachedDir);
         } else {
             // Cache file.

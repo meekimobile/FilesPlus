@@ -305,9 +305,9 @@ Page {
                     height: parent.height
                     platformInverted: window.platformInverted
                     minimumValue: 2
-                    maximumValue: 8
+                    maximumValue: 10
                     stepSize: 1
-                    valueIndicatorText: value
+                    valueIndicatorText: appInfo.emptyStr+qsTr("%n sec.", "", value)
                     valueIndicatorVisible: true
 
                     onPressedChanged: {
@@ -319,7 +319,7 @@ Page {
 
                     Component.onCompleted: {
                         if (type == "popupInterval") {
-                            var v = appInfo.getSettingValue(name, 2);
+                            var v = appInfo.getSettingValue(name, 5);
                             console.debug("settingPage popupInterval getSettingValue " + v);
                             value = v;
                         }
