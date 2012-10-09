@@ -3,8 +3,7 @@ import com.nokia.meego 1.0
 
 Dialog {
     id: commonDialog
-    width: 400
-    height: 400
+    width: parent.width - 40
     opacity: 0.6
     style: DialogStyle {
         dim: 0.9
@@ -21,72 +20,82 @@ Dialog {
     signal closed()
     signal buttonClicked(int index)
 
-    buttons: Rectangle {
-        width: parent.width
-        height: 70
-        color: "black"
+    buttons: Row {
+        id: buttonRow
+        width: parent.width - 20
+        anchors.horizontalCenter: parent.horizontalCenter
+        spacing: 5
 
-        Row {
-            id: buttonRow
-            width: parent.width - 20
-            height: parent.height
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 5
+        property int buttonWidth: (width / buttonTexts.length) - spacing
 
-            property int buttonWidth: (width / buttonTexts.length) - spacing
-
-            Repeater {
-                model: buttonTexts
-                Button {
-                    text: modelData
-                    width: buttonRow.buttonWidth
-                    anchors.verticalCenter: parent.verticalCenter
-                    onClicked: {
-                        buttonClicked(index);
-                        close();
-                    }
+        Repeater {
+            model: buttonTexts
+            Button {
+                text: modelData
+                width: buttonRow.buttonWidth
+                onClicked: {
+                    buttonClicked(index);
+                    close();
                 }
             }
         }
     }
 
-    title: Rectangle {
-        width: parent.width
-        height: 70
-        color: "black"
+    title: Row {
+        id: titleRow
+        width: parent.width - 20
+        height: implicitHeight
+        anchors.horizontalCenter: parent.horizontalCenter
+        Text {
+            id: title
+            color: "white"
+            font.pointSize: 20
+            wrapMode: Text.Wrap
+            elide: Text.ElideRight
+            width: parent.width - titleIcon.width
+            height: implicitHeight
+        }
+        Image {
+            id: titleIcon
+            width: 48
+            height: 48
+        }
 
-        Row {
-            id: titleRow
-            width: parent.width - 20
-            height: parent.height
-            anchors.horizontalCenter: parent.horizontalCenter
-            Text {
-                id: title
-                color: "white"
-                font.pointSize: 20
-                wrapMode: Text.Wrap
-                elide: Text.ElideRight
-                width: parent.width - titleIcon.width
-                anchors.verticalCenter: parent.verticalCenter
-            }
-            Image {
-                id: titleIcon
-                width: 48
-                height: 48
-                anchors.verticalCenter: parent.verticalCenter
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                // To stop mouse click event to emit reject.
+                console.debug("commonDialog title onClicked");
             }
         }
     }
 
-    content: Text {
-        id: content
-        color: "grey"
-        font.pointSize:  16
-        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-        verticalAlignment: Text.AlignVCenter
-        width: parent.width - 20
-        height: implicitHeight + 20
-        anchors.horizontalCenter: parent.horizontalCenter
+    content: Flickable {
+        width: parent.width
+        height: Math.min(content.implicitHeight, commonDialog.parent.height - 160)
+        contentWidth: content.width
+        contentHeight: content.height
+        flickableDirection: Flickable.VerticalFlick
+        clip: true
+
+        Text {
+            id: content
+            color: "grey"
+            font.pointSize:  16
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            verticalAlignment: Text.AlignVCenter
+            width: commonDialog.width - 20
+            height: implicitHeight
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    // To stop mouse click event to emit reject.
+                    console.debug("commonDialog content onClicked");
+                }
+            }
+        }
     }
     
     onStatusChanged: {

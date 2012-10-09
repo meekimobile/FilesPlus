@@ -9,17 +9,27 @@ CommonDialog {
     z: 2
     titleIcon: "FilesPlusIcon.svg"
     buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
-    content: Text {
-        id: content
-        color: "white"
-        font.pointSize: 6
-        wrapMode: Text.Wrap
-        verticalAlignment: Text.AlignVCenter
+    content: Flickable {
+        id: contentFlick
         width: parent.width - 20
-        height: implicitHeight + 20
+        height: Math.min(content.implicitHeight, screen.height - ((screen.height > screen.width) ? 260 : 180) )
         anchors.horizontalCenter: parent.horizontalCenter
+        contentWidth: content.width
+        contentHeight: content.height
+        flickableDirection: Flickable.VerticalFlick
+        clip: true
+
+        Text {
+            id: content
+            color: "white"
+            font.pointSize: 6
+            wrapMode: Text.Wrap
+            verticalAlignment: Text.AlignVCenter
+            width: contentFlick.width - 20
+            height: implicitHeight
+        }
     }
-    
+
     signal confirm()
     signal reject()
     signal closed()
