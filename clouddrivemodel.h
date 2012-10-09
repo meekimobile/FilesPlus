@@ -190,9 +190,9 @@ public slots:
     void deleteFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
 private:
-    QMultiMap<QString, CloudDriveItem> m_cloudDriveItems;
-    QHash<QString, CloudDriveJob> m_cloudDriveJobs;
-    QQueue<QString> m_jobQueue;
+    QMultiMap<QString, CloudDriveItem> *m_cloudDriveItems;
+    QHash<QString, CloudDriveJob> *m_cloudDriveJobs;
+    QQueue<QString> *m_jobQueue;
     int runningJobCount;
     bool m_isSuspended;
 

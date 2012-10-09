@@ -17,10 +17,10 @@ void CloudDriveModelThread::setHashFilePath(const QString hashFilePath)
     m_hashFilePath = hashFilePath;
 }
 
-QMultiMap<QString, CloudDriveItem> CloudDriveModelThread::getCloudDriveItems()
-{
-    return m_cloudDriveItems;
-}
+//QMultiMap<QString, CloudDriveItem> CloudDriveModelThread::getCloudDriveItems()
+//{
+//    return m_cloudDriveItems;
+//}
 
 //bool CloudDriveModelThread::isAuthorized()
 //{
@@ -79,6 +79,11 @@ void CloudDriveModelThread::setNonce(QString nonce)
 void CloudDriveModelThread::setRunMethod(int method)
 {
     m_runMethod = method;
+}
+
+void CloudDriveModelThread::setCloudDriveItems(QMultiMap<QString, CloudDriveItem> *cloudDriveItems)
+{
+    m_cloudDriveItems = cloudDriveItems;
 }
 
 //void CloudDriveModelThread::initializeDropboxClient() {
@@ -201,10 +206,10 @@ void CloudDriveModelThread::loadCloudDriveItems() {
     QFile file(m_hashFilePath);
     if (file.open(QIODevice::ReadOnly)) {
         QDataStream in(&file);    // read the data serialized from the file
-        in >> m_cloudDriveItems;
+        in >> *m_cloudDriveItems;
     }
 
-    qDebug() << QTime::currentTime() << "CloudDriveModel::loadCloudDriveItems " << m_cloudDriveItems.size();
+    qDebug() << QTime::currentTime() << "CloudDriveModel::loadCloudDriveItems " << m_cloudDriveItems->size();
 
     emit loadCloudDriveItemsFinished(m_nonce);
 }

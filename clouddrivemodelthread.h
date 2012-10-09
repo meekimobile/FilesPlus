@@ -34,7 +34,7 @@ public:
 //        AccountInfo,
     };
 
-    QMultiMap<QString, CloudDriveItem> getCloudDriveItems();
+//    QMultiMap<QString, CloudDriveItem> getCloudDriveItems();
 
 //    bool isAuthorized();
 //    bool isAuthorized(ClientTypes type);
@@ -44,6 +44,7 @@ public:
     void setHashFilePath(const QString hashFilePath);
     void setNonce(QString nonce);
     void setRunMethod(int method);
+    void setCloudDriveItems(QMultiMap<QString, CloudDriveItem> *cloudDriveItems);
 //    void setClientType(ClientTypes clientType);
 //    void setUid(QString uid);
 //    void setLocalFilePath(QString localFilePath);
@@ -66,7 +67,7 @@ public slots:
 
 private:
     QString m_hashFilePath;
-    QMultiMap<QString, CloudDriveItem> m_cloudDriveItems;
+    QMultiMap<QString, CloudDriveItem> *m_cloudDriveItems;
 //    DropboxClient *dbClient;
 //    GCDClient *gcdClient;
 
