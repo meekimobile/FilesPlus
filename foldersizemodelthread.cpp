@@ -724,7 +724,9 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath)
         }
 
         // Delete dir.
-        res = res && sourceFileInfo.dir().rmdir(sourceFileInfo.fileName());
+        if (res) {
+            res = res && sourceFileInfo.dir().rmdir(sourceFileInfo.fileName());
+        }
     } else {
         // Delete file.
         QFile sourceFile(sourcePath);
@@ -733,11 +735,11 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath)
 
     if (!res) {
         qDebug() << "FolderSizeModelThread::deleteDir sourcePath" << sourcePath << "failed.";
-        emit deleteProgress(m_runMethod, sourcePath, tr("Deleting sub item %1 is failed.").arg(sourcePath), -1);
+        emit deleteProgress(m_runMethod, sourcePath, tr("Deleting %1 is failed.").arg(sourcePath), -1);
     } else {
         // TODO Move to emit only once per thread call.
         qDebug() << "FolderSizeModelThread::deleteDir sourcePath" << sourcePath << "done.";
-        emit deleteProgress(m_runMethod, sourcePath, tr("Deleting sub item %1 is done.").arg(sourcePath), 0);
+        emit deleteProgress(m_runMethod, sourcePath, tr("Deleting %1 is done.").arg(sourcePath), 0);
 
         // Move to deleteFinishedFilter
         //        // Remove cache up to parent.
