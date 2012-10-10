@@ -87,6 +87,19 @@ void AppInfo::addToClipboard(const QString text)
     QApplication::clipboard()->setText(text);
 }
 
+QString AppInfo::getFromClipboard()
+{
+    QString text = QApplication::clipboard()->text();
+    qDebug() << "AppInfo::getFromClipboard text" << text;
+    return text;
+}
+
+QString AppInfo::clearClipboard()
+{
+    QApplication::clipboard()->clear();
+    qDebug() << "AppInfo::clearClipboard";
+}
+
 bool AppInfo::isMonitoring()
 {
     return getSettingBoolValue("Monitoring.enabled", false);

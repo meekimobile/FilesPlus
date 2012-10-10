@@ -6,8 +6,11 @@ SelectionDialog {
     id: printerSelectionDialog
     
     property string srcFilePath
+    property string srcURL
     
-    titleText: appInfo.emptyStr+qsTr("Print %1 to").arg(fsModel.getFileName(srcFilePath))
+    titleText: (srcFilePath != "")
+               ? appInfo.emptyStr+qsTr("Print %1 to").arg(fsModel.getFileName(srcFilePath))
+               : appInfo.emptyStr+qsTr("Print URL to")
     titleIcon: "FilesPlusIcon.svg"
     
     onStatusChanged: {

@@ -42,6 +42,8 @@ public:
     QString getEmptySetting();
 
     Q_INVOKABLE void addToClipboard(const QString text);
+    Q_INVOKABLE QString getFromClipboard();
+    Q_INVOKABLE QString clearClipboard();
 
     void componentComplete();
     void init();

@@ -323,6 +323,39 @@ Page {
         }
     }
 
+    function printURLSlot(url) {
+        console.debug("folderPage printURLSlot url=" + url);
+
+        // Set source URL to GCPClient.
+        gcpClient.selectedURL = url;
+        if (url == "") return;
+
+        if (!gcpClient.isAuthorized()) {
+            messageDialog.message = appInfo.emptyStr+qsTr("FilesPlus prints via Google CloudPrint service.\
+\nPlease enable printer on your desktop with Chrome or with CloudPrint-ready printer.\
+\nYou will be redirected to authorization page.");
+            messageDialog.titleText = appInfo.emptyStr+qsTr("Print with CloudPrint");
+            messageDialog.open();
+
+            gcpClient.authorize();
+        } else {
+            var printerList = gcpClient.getStoredPrinterList();
+            console.debug("folderPage printURLSlot gcpClient.getStoredPrinterList()=" + printerList);
+            if (printerList.length > 0) {
+                printerSelectionDialog.srcFilePath = "";
+                printerSelectionDialog.srcURL = url;
+                printerSelectionDialog.model = printerList;
+                printerSelectionDialog.open();
+            } else {
+                // TODO Open progress dialog.
+                downloadProgressDialog.titleText = appInfo.emptyStr+qsTr("Search for printers");
+                downloadProgressDialog.indeterminate = true;
+                downloadProgressDialog.open();
+                gcpClient.search("");
+            }
+        }
+    }
+
     function setGCPClientAuthCode(code) {
         var res = gcpClient.parseAuthorizationCode(code);
         if (res) {
@@ -1959,15 +1992,25 @@ Page {
         onAccepted: {
             // Print on selected printer index.
             var pid = gcpClient.getPrinterId(printerSelectionDialog.selectedIndex);
-            console.debug("printerSelectionDialog onAccepted pid=" + pid + " srcFilePath=" + srcFilePath);
+            console.debug("printerSelectionDialog onAccepted pid=" + pid + " srcFilePath=" + srcFilePath + " srcURL=" + srcURL);
             if (pid != "") {
-                // Open uploadProgressBar for printing.
-                uploadProgressDialog.srcFilePath = srcFilePath;
-                uploadProgressDialog.titleText = appInfo.emptyStr+qsTr("Printing");
-                uploadProgressDialog.autoClose = false;
-                uploadProgressDialog.open();
+                if (srcFilePath != "") {
+                    // Open uploadProgressBar for printing.
+                    uploadProgressDialog.srcFilePath = srcFilePath;
+                    uploadProgressDialog.titleText = appInfo.emptyStr+qsTr("Printing");
+                    uploadProgressDialog.autoClose = false;
+                    uploadProgressDialog.open();
 
-                gcpClient.submit(pid, srcFilePath);
+                    gcpClient.submit(pid, srcFilePath);
+                } else if (srcURL != "") {
+                    // Open uploadProgressBar for printing.
+                    uploadProgressDialog.srcFilePath = srcURL;
+                    uploadProgressDialog.titleText = appInfo.emptyStr+qsTr("Printing");
+                    uploadProgressDialog.autoClose = false;
+                    uploadProgressDialog.open();
+
+                    gcpClient.submit(pid, srcURL, "", srcURL, "url", "");
+                }
             }
         }
         onRejected: {
@@ -2031,6 +2074,7 @@ Page {
         id: gcpClient
 
         property string selectedFilePath
+        property string selectedURL
 
         function getPrinterListModel() {
             var printerList = gcpClient.getStoredPrinterList();
@@ -2050,6 +2094,18 @@ Page {
             return model;
         }
 
+        function resumePrinting() {
+            if (gcpClient.selectedFilePath.trim() != "") {
+                printFileSlot(gcpClient.selectedFilePath);
+                return true;
+            } else if (gcpClient.selectedURL.trim() != "") {
+                printURLSlot(gcpClient.selectedURL);
+                return true;
+            }
+
+            return false;
+        }
+
         onAuthorizeRedirectSignal: {
             console.debug("folderPage gcpClient onAuthorizeRedirectSignal " + url);
             pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: "GCPClient" }, true);
@@ -2060,7 +2116,7 @@ Page {
 
             if (err == 0) {
                 // Resume printing
-                printFileSlot(gcpClient.selectedFilePath);
+                resumePrinting();
             } else {
                 gcpClient.refreshAccessToken();
             }
@@ -2071,8 +2127,8 @@ Page {
 
             if (err == 0) {
                 // Resume printing if selectedFilePath exists.
-                if (gcpClient.selectedFilePath != "") {
-                    printFileSlot(gcpClient.selectedFilePath);
+                if (resumePrinting()) {
+                    // Do nothing if printing is resumed.
                 } else {
                     messageDialog.titleText = appInfo.emptyStr+qsTr("Reset CloudPrint");
                     messageDialog.message = appInfo.emptyStr+qsTr("Resetting is done.");
@@ -2096,7 +2152,7 @@ Page {
             if (err == 0) {
                 // Once search done, open printerSelectionDialog
                 // TODO any case that error=0 but no printers returned.
-                printFileSlot(gcpClient.selectedFilePath);
+                resumePrinting();
             } else {
                 gcpClient.refreshAccessToken();
             }
@@ -2125,6 +2181,7 @@ Page {
 
             // Reset popupToolPanel selectedFile.
             gcpClient.selectedFilePath = "";
+            gcpClient.selectedURL = "";
             popupToolPanel.selectedFilePath = "";
             popupToolPanel.selectedFileIndex = -1;
         }
