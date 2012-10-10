@@ -62,86 +62,98 @@ Page {
         }
     }
 
-    WebView {
-        id: webView
+    Flickable {
+        id: flickable
         width: parent.width
         height: parent.height
-        preferredWidth: width
-        preferredHeight: height
-//        z: 1
-        visible: true
+        contentWidth: webView.width
+        contentHeight: webView.implicitHeight
+        anchors.top: parent.top
+        pressDelay: 200
 
-        onLoadStarted: {
-            webViewBusy.visible = true;
-            okButton.visible = false;
-        }
+        WebView {
+            id: webView
+            preferredWidth: authPage.width
+            preferredHeight: authPage.height
+            visible: true
 
-        onLoadFinished: {
-            // Workaround for transparent background ( https://bugreports.qt-project.org/browse/QTWEBKIT-352 )
-            webView.evaluateJavaScript("if (!document.body.style.backgroundColor) document.body.style.backgroundColor='white';");
+            onContentsSizeChanged: {
+                console.debug("onContentsSizeChanged webView.contentsScale " + webView.contentsScale + " webView.contentsSize width height " + webView.contentsSize.width + " " + webView.contentsSize.height);
+                height = Math.max(flickable.height, contentsSize.height);
+            }
 
-            webViewBusy.visible = false;
+            onLoadStarted: {
+                webViewBusy.visible = true;
+                okButton.visible = false;
+            }
 
-            if (authPage.redirectFrom == "GCPClient") {
-                // GCPClient handler.
-                console.debug("GCPClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom + " title = " + title);
-                if (title.match("^Success")) {
-                    var p = pageStack.find(function(page) {
-                        return (page.name == "folderPage");
-                    });
-                    // TODO Remove dependency to make authPage reusable for other REST API.
-                    if (p) p.setGCPClientAuthCode(title);
-                    pageStack.pop();
-                }
+            onLoadFinished: {
+                // Workaround for transparent background ( https://bugreports.qt-project.org/browse/QTWEBKIT-352 )
+                webView.evaluateJavaScript("if (!document.body.style.backgroundColor) document.body.style.backgroundColor='white';");
 
-                if (title.match("^Denied")) {
-                    pageStack.pop();
-                }
-            } else if (authPage.redirectFrom == "GCDClient") {
-                // GCDClient handler.
-                console.debug("GCDClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom + " title = " + title);
-                if (title.match("^Success")) {
-                    var p = pageStack.find(function(page) {
-                        return (page.name == "folderPage");
-                    });
-                    // TODO Remove dependency to make authPage reusable for other REST API.
-                    if (p) p.setGCDClientAuthCode(title);
-                    pageStack.pop();
-                }
+                webViewBusy.visible = false;
 
-                if (title.match("^Denied")) {
-                    pageStack.pop();
-                }
-            } else if (authPage.redirectFrom == "DropboxClient") {
-                okButton.visible = true;
+                if (authPage.redirectFrom == "GCPClient") {
+                    // GCPClient handler.
+                    console.debug("GCPClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom + " title = " + title);
+                    if (title.match("^Success")) {
+                        var p = pageStack.find(function(page) {
+                            return (page.name == "folderPage");
+                        });
+                        // TODO Remove dependency to make authPage reusable for other REST API.
+                        if (p) p.setGCPClientAuthCode(title);
+                        pageStack.pop();
+                    }
 
-                // DropboxClient handler
-                console.debug("DropboxClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom);
-                console.debug("DropboxClient title " + title);
-                console.debug("DropboxClient html " + html);
-                var uidIndex = html.indexOf("uid:");
-                if (uidIndex != -1) {
-                    console.debug("found uid! at " + uidIndex);
-//                    console.debug("DropboxClient html " + html);
+                    if (title.match("^Denied")) {
+                        pageStack.pop();
+                    }
+                } else if (authPage.redirectFrom == "GCDClient") {
+                    // GCDClient handler.
+                    console.debug("GCDClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom + " title = " + title);
+                    if (title.match("^Success")) {
+                        var p = pageStack.find(function(page) {
+                            return (page.name == "folderPage");
+                        });
+                        // TODO Remove dependency to make authPage reusable for other REST API.
+                        if (p) p.setGCDClientAuthCode(title);
+                        pageStack.pop();
+                    }
 
-                    var p = pageStack.find(function(page) {
-                        return (page.name == "folderPage");
-                    });
-                    // TODO Remove dependency to make authPage reusable for other REST API.
-                    if (p) p.dropboxAccessTokenSlot();
-                    pageStack.pop();
-                } else if (title.match(appInfo.emptyStr+qsTr("^API Request Authorized"))) {
-//                    console.debug("DropboxClient title " + title);
+                    if (title.match("^Denied")) {
+                        pageStack.pop();
+                    }
+                } else if (authPage.redirectFrom == "DropboxClient") {
+                    okButton.visible = true;
 
-                    var p = pageStack.find(function(page) {
-                        return (page.name == "folderPage");
-                    });
-                    // TODO Remove dependency to make authPage reusable for other REST API.
-                    if (p) p.dropboxAccessTokenSlot();
-                    pageStack.pop();
-                } else {
-//                    console.debug("DropboxClient title " + title);
-//                    console.debug("DropboxClient html " + html);
+                    // DropboxClient handler
+                    console.debug("DropboxClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom);
+                    console.debug("DropboxClient title " + title);
+                    console.debug("DropboxClient html " + html);
+                    var uidIndex = html.indexOf("uid:");
+                    if (uidIndex != -1) {
+                        console.debug("found uid! at " + uidIndex);
+    //                    console.debug("DropboxClient html " + html);
+
+                        var p = pageStack.find(function(page) {
+                            return (page.name == "folderPage");
+                        });
+                        // TODO Remove dependency to make authPage reusable for other REST API.
+                        if (p) p.dropboxAccessTokenSlot();
+                        pageStack.pop();
+                    } else if (title.match(appInfo.emptyStr+qsTr("^API Request Authorized"))) {
+    //                    console.debug("DropboxClient title " + title);
+
+                        var p = pageStack.find(function(page) {
+                            return (page.name == "folderPage");
+                        });
+                        // TODO Remove dependency to make authPage reusable for other REST API.
+                        if (p) p.dropboxAccessTokenSlot();
+                        pageStack.pop();
+                    } else {
+    //                    console.debug("DropboxClient title " + title);
+    //                    console.debug("DropboxClient html " + html);
+                    }
                 }
             }
         }

@@ -7,8 +7,11 @@ SelectionDialog {
     style: SelectionDialogStyle { dim: 0.9; pressDelay: 100 }
 
     property string srcFilePath
+    property string srcURL
     
-    titleText: appInfo.emptyStr+qsTr("Print %1 to").arg(fsModel.getFileName(srcFilePath))
+    titleText: (srcFilePath != "")
+               ? appInfo.emptyStr+qsTr("Print %1 to").arg(fsModel.getFileName(srcFilePath))
+               : appInfo.emptyStr+qsTr("Print URL to")
 //    titleIcon: "FilesPlusIcon.svg"
 
     onStatusChanged: {

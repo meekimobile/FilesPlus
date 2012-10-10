@@ -133,5 +133,6 @@
         <file>qml/FilesPlus/cloud_disconnect_inverted.svg</file>
         <file>qml/FilesPlus/cloud_disconnect.svg</file>
         <file alias="qml/FilesPlus/TextIndicator.qml">qml/FilesPlus/meego/TextIndicator.qml</file>
+        <file alias="qml/FilesPlus/WebViewPage.qml">qml/FilesPlus/meego/WebViewPage.qml</file>
     </qresource>
 </RCC>
