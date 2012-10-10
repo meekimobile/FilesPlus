@@ -75,6 +75,7 @@
         <file alias="qml/FilesPlus/RecipientSelectionDialog.qml">qml/FilesPlus/symbian/RecipientSelectionDialog.qml</file>
         <file alias="qml/FilesPlus/AuthPage.qml">qml/FilesPlus/symbian/AuthPage.qml</file>
         <file alias="qml/FilesPlus/PrinterSelectionDialog.qml">qml/FilesPlus/symbian/PrinterSelectionDialog.qml</file>
+        <file alias="qml/FilesPlus/MarkAllMenu.qml">qml/FilesPlus/symbian/MarkAllMenu.qml</file>
         <file>qml/FilesPlus/folder_list.svg</file>
         <file>qml/FilesPlus/notes_list.svg</file>
         <file>qml/FilesPlus/photos_list.svg</file>

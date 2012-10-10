@@ -158,7 +158,11 @@ Page {
             flat: true
             onClicked: {
                 if (fsListView.state == "mark") {
-                    markMenu.open();
+                    if (!fsListView.isAnyItemChecked()) {
+                        markAllMenu.open();
+                    } else {
+                        markMenu.open();
+                    }
                 } else {
 					mainMenu.open();
                 }
@@ -196,6 +200,10 @@ Page {
 
     MarkMenu {
         id: markMenu
+    }
+
+    MarkAllMenu {
+        id: markAllMenu
     }
 
     ConfirmDialog {
@@ -869,6 +877,22 @@ Page {
 //                if (!model.getProperty(i, FolderSizeItemListModel.IsDirRole)) {
                     model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, true);
 //                }
+            }
+        }
+
+        function markAllFiles() {
+            for (var i=0; i<model.count; i++) {
+                if (!model.getProperty(i, FolderSizeItemListModel.IsDirRole)) {
+                    model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, true);
+                }
+            }
+        }
+
+        function markAllFolders() {
+            for (var i=0; i<model.count; i++) {
+                if (model.getProperty(i, FolderSizeItemListModel.IsDirRole)) {
+                    model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, true);
+                }
             }
         }
 

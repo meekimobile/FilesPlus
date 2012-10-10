@@ -884,6 +884,22 @@ Page {
             }
         }
 
+        function markAllFiles() {
+            for (var i=0; i<model.count; i++) {
+                if (!model.getProperty(i, FolderSizeItemListModel.IsDirRole)) {
+                    model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, true);
+                }
+            }
+        }
+
+        function markAllFolders() {
+            for (var i=0; i<model.count; i++) {
+                if (model.getProperty(i, FolderSizeItemListModel.IsDirRole)) {
+                    model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, true);
+                }
+            }
+        }
+
         function unmarkAll() {
             for (var i=0; i<model.count; i++) {
                 model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
