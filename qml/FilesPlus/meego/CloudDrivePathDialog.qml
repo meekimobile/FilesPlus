@@ -119,9 +119,11 @@ CommonDialog {
             width: parent.width
             height: 70
             z: 1
-            radius: 20
+            radius: 0
             gradient: Gradient {
-                GradientStop { position: 0.0; color: "#808080" }
+                GradientStop { position: 0.0; color: "#000000" }
+                GradientStop { position: 0.05; color: "#000000" }
+                GradientStop { position: 0.05; color: "#808080" }
                 GradientStop { position: 1.0; color: "#404040" }
             }
 
