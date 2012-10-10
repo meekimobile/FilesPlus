@@ -1111,22 +1111,22 @@ Page {
                         height: parent.height / 2
                         Text {
                             text: name
-                            color: (theme.inverted) ? "white" : "black"
                             width: parent.width - sizeText.width
                             height: parent.height
                             font.pointSize: 18
                             elide: Text.ElideMiddle
                             verticalAlignment: Text.AlignVCenter
+                            color: (theme.inverted) ? "white" : "black"
                         }
                         Text {
                             id: sizeText
                             text: Utility.formatFileSize(size, 1)
-                            color: (theme.inverted) ? "white" : "black"
                             width: 85
                             height: parent.height
                             font.pointSize: 16
                             horizontalAlignment: Text.AlignRight
                             verticalAlignment: Text.AlignVCenter
+                            color: (theme.inverted) ? "white" : "black"
                         }
                     }
                     Row {
@@ -1147,13 +1147,13 @@ Page {
 
                                     return sub;
                                 }
-                                color: "grey"
                                 width: parent.width
                                 height: parent.height
                                 font.pointSize: 16
                                 elide: Text.ElideRight
                                 verticalAlignment: Text.AlignVCenter
                                 visible: !isRunning
+                                color: "grey"
                             }
                             Row {
                                 width: parent.width
@@ -1195,7 +1195,7 @@ Page {
                         }
                         Image {
                             id: syncIcon
-                            width: (visible) ? 32 : 0
+                            width: (visible) ? 30 : 0
                             height: parent.height
                             fillMode: Image.PreserveAspectFit
                             z: 1

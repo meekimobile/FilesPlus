@@ -171,6 +171,7 @@ CommonDialog {
                     visible: false
                     width: parent.width - newFolderCancelButton.width - newFolderOkButton.width - (2*parent.spacing)
                     height: 60
+                    placeholderText: appInfo.emptyStr+qsTr("New folder name")
                 }
 
                 Button {
@@ -180,7 +181,7 @@ CommonDialog {
                     visible: newFolderNameInput.visible
                     iconSource: (theme.inverted ? "close_stop.svg" : "close_stop_inverted.svg")
                     onClicked: {
-                        newFolderNameInput.focus = false;
+                        newFolderButton.focus = true;
                         newFolderNameInput.text = "";
                         newFolderNameInput.visible = false;
                     }
@@ -193,7 +194,7 @@ CommonDialog {
                     visible: newFolderNameInput.visible
                     iconSource: (theme.inverted ? "ok.svg" : "ok_inverted.svg")
                     onClicked: {
-                        newFolderNameInput.focus = false;
+                        newFolderButton.focus = true;
                         if (newFolderNameInput.text.trim() != "") {
                             createRemoteFolder(remoteParentPath + "/" + newFolderNameInput.text.trim())
                             newFolderNameInput.visible = false;
@@ -209,10 +210,9 @@ CommonDialog {
                     visible: !newFolderNameInput.visible
                     iconSource: (theme.inverted ? "folder_add.svg" : "folder_add_inverted.svg")
                     onClicked: {
-                        // TODO Show new folder name field.
+                        // Show new folder name field.
                         newFolderNameInput.visible = true;
                         newFolderNameInput.text = "";
-                        newFolderNameInput.focus = true;
                     }
                 }
             }
@@ -305,7 +305,7 @@ CommonDialog {
                 }
 
                 Column {
-                    width: parent.width - iconRect.width - parent.spacing
+                    width: parent.width - iconRect.width - (2*parent.spacing) - connectionIcon.width - parent.spacing
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 2
                     Text {
@@ -322,6 +322,16 @@ CommonDialog {
                         color: "lightgray"
                         elide: Text.ElideMiddle
                     }
+                }
+
+                Image {
+                    id: connectionIcon
+                    width: (visible) ? 30 : 0
+                    height: parent.height
+                    fillMode: Image.PreserveAspectFit
+                    z: 1
+                    visible: cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, path);
+                    source: "cloud.svg"
                 }
             }
 

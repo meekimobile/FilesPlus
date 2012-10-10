@@ -1189,7 +1189,7 @@ Page {
                         }
                         Image {
                             id: syncIcon
-                            width: (visible) ? 32 : 0
+                            width: (visible) ? 30 : 0
                             height: parent.height
                             fillMode: Image.PreserveAspectFit
                             z: 1
