@@ -38,6 +38,11 @@ function createJsonObj(jsonText) {
     return jsonObj;
 }
 
+function createJsonText(jsonObj) {
+    var jsonText = JSON.stringify(jsonObj);
+    return jsonText;
+}
+
 function limit(v, min, max) {
     var newValue = v;
     newValue = Math.min(Math.max(v, min), max);
@@ -49,7 +54,7 @@ function now() {
 }
 
 function nowText() {
-    return Qt.formatDateTime(now(), "d MMM yyyy h:mm:ss ap");
+    return Qt.formatDateTime(now(), "d MMM yyyy h:mm:ss.zzz ap");
 }
 
 function replace(text, oldText, newText) {

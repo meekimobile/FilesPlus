@@ -1,4 +1,5 @@
 import QtQuick 1.1
+import "Utility.js" as Utility
 
 // Clipboard element = { "action": "cut", "sourcePath": sourcePath }
 
@@ -38,9 +39,10 @@ ListModel {
     function addItem(jsobj) {
         var i = getModelIndex(jsobj.sourcePath);
         if (i > -1) {
+            console.debug(Utility.nowText() + "clipboard.addItem found and replace index " + i + " action " + jsobj.action + " sourcePath " + jsobj.sourcePath);
             clipboard.set(i, jsobj);
-            console.debug("clipboard.addItem found and replace index " + i + " action " + jsobj.action + " sourcePath " + jsobj.sourcePath);
         } else {
+            console.debug(Utility.nowText() + "clipboard.addItem new item action " + jsobj.action + " sourcePath " + jsobj.sourcePath);
             clipboard.append(jsobj);
         }
     }

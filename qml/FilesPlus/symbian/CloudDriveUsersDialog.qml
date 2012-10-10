@@ -26,12 +26,7 @@ SelectionDialog {
             if (localPath != "") {
                 text += qsTr("Sync %1 to").arg(fsModel.getFileName(localPath));
             } else if (clipboard.count > 0){
-                var syncCount = 0;
-                for (var i=0; i<clipboard.count; i++) {
-                    if (clipboard.get(i).action == "sync") {
-                        syncCount++;
-                    }
-                }
+                var syncCount = clipboard.countByAction("sync");
                 text += qsTr("Sync %n item(s) to", "disambiguation", syncCount);
             }
             break;

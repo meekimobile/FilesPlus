@@ -9,6 +9,7 @@ import QtMobility.contacts 1.1
 import QtMobility.connectivity 1.2
 import BluetoothClient 1.0
 import MessageClient 1.0
+import ClipboardModel 1.0
 import "Utility.js" as Utility
 
 Page {
@@ -891,16 +892,21 @@ Page {
         function cutMarkedItems() {
             for (var i=0; i<model.count; i++) {
                 if (model.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
-                    console.debug("fsListView cutMarkedItems item"
+                    console.debug(Utility.nowText() + "fsListView cutMarkedItems item"
                                   + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
                                   + " isChecked " + model.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
 
-                    clipboard.addItem({ "action": "cut", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
+                    clipboard.addItemWithSuppressCountChanged({ "action": "cut", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
                 }
 
                 // Reset isChecked.
+//                console.debug(Utility.nowText() + "fsListView clear check item"
+//                              + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole));
                 model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
             }
+
+            // Emit suppressed signal.
+            clipboard.emitCountChanged();
         }
 
         function copyMarkedItems() {
@@ -910,12 +916,15 @@ Page {
                                   + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
                                   + " isChecked " + model.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
 
-                    clipboard.addItem({ "action": "copy", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
+                    clipboard.addItemWithSuppressCountChanged({ "action": "copy", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
                 }
 
                 // Reset isChecked.
                 model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
             }
+
+            // Emit suppressed signal.
+            clipboard.emitCountChanged();
         }
 
         function deleteMarkedItems() {
@@ -1015,7 +1024,6 @@ Page {
 
             property string fileName: name
             property string filePath: absolutePath
-            property int clipboardIndex: clipboard.getModelIndex(absolutePath)
 
             function getIconSource() {
                 var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
@@ -1052,8 +1060,8 @@ Page {
                         z: 1
                         width: 32
                         height: 32
-                        visible: (listItem.clipboardIndex != -1)
-                        source: appInfo.emptySetting+clipboard.getActionIcon(listItem.clipboardIndex)
+                        visible: (source != "")
+                        source: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath) : ""
                     }
                     Image {
                         id: markIcon
@@ -1204,9 +1212,7 @@ Page {
 
             onClicked: {
                 if (fsListView.state == "mark") {
-                    if (listItem.clipboardIndex == -1) {
-                        fsModel.setProperty(index, FolderSizeItemListModel.IsCheckedRole, !isChecked);
-                    }
+                    fsModel.setProperty(index, FolderSizeItemListModel.IsCheckedRole, !isChecked);
                 } else {
                     if (isDir) {
                         fsListView.focusLocalPath = "."; // Put dummy path to avoid focus on lastCenterIndex.
@@ -1239,23 +1245,6 @@ Page {
 
     TitlePanel {
         id: currentPath
-
-//        MouseArea {
-//            anchors.fill: parent
-
-//            onPressAndHold: {
-//                if (folderPage.state == "list") {
-//                    popupToolPanel.forFile = false;
-//                    popupToolPanel.selectedFilePath = currentPath.text
-//                    popupToolPanel.pastePath = currentPath.text;
-//                    var panelX = currentPath.x + mouseX;
-//                    var panelY = currentPath.y + mouseY;
-//                    popupToolPanel.x = panelX;
-//                    popupToolPanel.y = panelY;
-//                    popupToolPanel.visible = true;
-//                }
-//            }
-//        }
     }
 
     MessageDialog {
@@ -1264,6 +1253,41 @@ Page {
 
     ClipboardModel {
         id: clipboard
+
+        function getActionIcon(localPath) {
+            var jsonText = clipboard.getItemJsonText(localPath);
+            if (jsonText != "") {
+                var json = Utility.createJsonObj(jsonText);
+                if (json) {
+                    if (json.action == "copy") {
+                        return (!window.platformInverted) ? "copy.svg" : "copy_inverted.svg";
+                    } else if (json.action == "cut") {
+                        return (!window.platformInverted) ? "trim.svg" : "trim_inverted.svg";
+                    }
+                }
+            }
+            return "";
+        }
+
+        function get(index) {
+            var jsonText = clipboard.getItemJsonText(index);
+            if (jsonText != "") {
+                var json = Utility.createJsonObj(jsonText);
+                return json;
+            }
+
+            return null;
+        }
+
+        function addItem(json) {
+            console.debug(Utility.nowText() + "clipboard additem json " + json);
+            clipboard.addClipboardItem(json.sourcePath, Utility.createJsonText(json) );
+        }
+
+        function addItemWithSuppressCountChanged(json) {
+            console.debug(Utility.nowText() + "clipboard addItemWithSuppressCountChanged json " + json);
+            clipboard.addClipboardItem(json.sourcePath, Utility.createJsonText(json), true);
+        }
     }
 
     Rectangle {

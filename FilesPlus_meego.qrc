@@ -63,7 +63,6 @@
         <file alias="qml/FilesPlus/Splash.qml">qml/FilesPlus/meego/Splash.qml</file>
         <file alias="qml/FilesPlus/MenuWithIcon.qml">qml/FilesPlus/meego/MenuWithIcon.qml</file>
         <file alias="qml/FilesPlus/PopupToolRing.qml">qml/FilesPlus/meego/PopupToolRing.qml</file>
-        <file alias="qml/FilesPlus/ClipboardModel.qml">qml/FilesPlus/meego/ClipboardModel.qml</file>
         <file alias="qml/FilesPlus/MarkMenu.qml">qml/FilesPlus/meego/MarkMenu.qml</file>
         <file alias="qml/FilesPlus/PrintJobsPage.qml">qml/FilesPlus/meego/PrintJobsPage.qml</file>
         <file alias="qml/FilesPlus/UploadProgressDialog.qml">qml/FilesPlus/meego/UploadProgressDialog.qml</file>

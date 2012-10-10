@@ -79,7 +79,8 @@ SOURCES += main.cpp \
     foldersizejob.cpp \
     appinfo.cpp \
     bluetoothclient.cpp \
-    messageclient.cpp
+    messageclient.cpp \
+    clipboardmodel.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -107,7 +108,8 @@ HEADERS += \
     foldersizejob.h \
     appinfo.h \
     bluetoothclient.h \
-    messageclient.h
+    messageclient.h \
+    clipboardmodel.h
 
 OTHER_FILES += \
     qtc_packaging/debian_harmattan/rules \

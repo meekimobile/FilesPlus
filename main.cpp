@@ -12,6 +12,7 @@
 #include "appinfo.h"
 #include "bluetoothclient.h"
 #include "messageclient.h"
+#include "clipboardmodel.h"
 #include <QDebug>
 #include <QtSql>
 
@@ -67,6 +68,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qmlRegisterType<AppInfo>("AppInfo", 1, 0, "AppInfo");
     qmlRegisterType<BluetoothClient>("BluetoothClient", 1, 0, "BluetoothClient");
     qmlRegisterType<MessageClient>("MessageClient", 1, 0, "MessageClient");
+    qmlRegisterType<ClipboardModel>("ClipboardModel", 1, 0, "ClipboardModel");
 
     // Set properties for QSettings.
     QCoreApplication::setOrganizationName("MeekiMobile");

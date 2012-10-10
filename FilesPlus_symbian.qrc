@@ -63,7 +63,6 @@
         <file alias="qml/FilesPlus/ImageViewPage.qml">qml/FilesPlus/symbian/ImageViewPage.qml</file>
         <file alias="qml/FilesPlus/TextViewPage.qml">qml/FilesPlus/symbian/TextViewPage.qml</file>
         <file alias="qml/FilesPlus/PopupToolRing.qml">qml/FilesPlus/symbian/PopupToolRing.qml</file>
-        <file alias="qml/FilesPlus/ClipboardModel.qml">qml/FilesPlus/symbian/ClipboardModel.qml</file>
         <file alias="qml/FilesPlus/MarkMenu.qml">qml/FilesPlus/symbian/MarkMenu.qml</file>
         <file alias="qml/FilesPlus/PrintJobsPage.qml">qml/FilesPlus/symbian/PrintJobsPage.qml</file>
         <file alias="qml/FilesPlus/UploadProgressDialog.qml">qml/FilesPlus/symbian/UploadProgressDialog.qml</file>
