@@ -1931,6 +1931,11 @@ void CloudDriveModel::jobDone() {
 
     qDebug() << "CloudDriveModel::jobDone runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count();
 
+    // Refresh if no more running jobs and jobs in queue.
+    if (runningJobCount <= 0 && m_jobQueue->count() <= 0) {
+        emit refreshRequestSignal();
+    }
+
     emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), getItemCount());
     emit proceedNextJobSignal();
 }

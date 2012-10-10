@@ -229,9 +229,10 @@ Page {
         }
     }
 
-    function refreshSlot() {
+    function refreshSlot(caller) {
+        caller = (!caller) ? "folderPage refreshSlot" : caller;
         fsModel.nameFilters = [];
-        fsModel.refreshDir("folderPage refreshSlot", false);
+        fsModel.refreshDir(caller, false);
     }
 
     function resetCacheSlot() {
@@ -2675,11 +2676,10 @@ Page {
 
             // Update (runningJobCount + jobQueueCount) on cloudButton.
             cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
+        }
 
-            // Refresh if no more running jobs and jobs in queue.
-            if (runningJobCount <= 0 && jobQueueCount <= 0) {
-                refreshSlot();
-            }
+        onRefreshRequestSignal: {
+            refreshSlot("cloudDriveModel onRefreshRequestSignal");
         }
 
         onMoveFileReplySignal: {
