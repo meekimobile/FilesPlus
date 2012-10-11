@@ -520,6 +520,10 @@ Page {
         pageStack.push(Qt.resolvedUrl("PrintJobsPage.qml"));
     }
 
+    function showWebViewPageSlot() {
+        pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
+    }
+
     function showCloudDriveJobsSlot() {
         pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"), { }, false);
     }

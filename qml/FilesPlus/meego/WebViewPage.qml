@@ -8,16 +8,51 @@ Page {
 
     property alias url: webView.url
 
+    function pasteURL() {
+        urlInput.text = appInfo.getFromClipboard();
+        if (urlInput.text.trim() == "") {
+            messageDialog.titleText = appInfo.emptyStr+"CloudPrint "+qsTr("Notify");
+            messageDialog.message = appInfo.emptyStr+qsTr("There is no URL in clipboard. Please copy a URL with web browser.");
+            messageDialog.open();
+        } else {
+            webView.url = urlInput.text;
+        }
+    }
+
     tools: ToolBarLayout {
         id: toolBarLayout
         x: 0
 
         ToolIcon {
-            id:backButton
+            id: backButton
             iconId: "toolbar-back"
 
             onClicked: {
                 pageStack.pop();
+            }
+        }
+
+        ToolIcon {
+            id: pasteButton
+            iconSource: (theme.inverted) ? "paste.svg" : "paste_inverted.svg"
+
+            onClicked: {
+                pasteURL();
+            }
+        }
+
+        ToolIcon {
+            id: actionButton
+            iconSource: (webViewBusy.visible)
+                        ? ((theme.inverted) ? "close_stop.svg" : "close_stop_inverted.svg")
+                        : ((theme.inverted) ? "refresh.svg" : "refresh_inverted.svg")
+
+            onClicked: {
+                if (webViewBusy.visible) {
+                    webView.stop.trigger();
+                } else {
+                    webView.reload.trigger();
+                }
             }
         }
 
@@ -37,12 +72,7 @@ Page {
 
     onStatusChanged: {
         if (status == PageStatus.Active) {
-            webView.url = appInfo.getFromClipboard();
-            if (webView.url == "") {
-                messageDialog.titleText = appInfo.emptyStr+"CloudPrint "+qsTr("Notify");
-                messageDialog.message = appInfo.emptyStr+qsTr("There is no URL in clipboard. Please copy a URL with web browser.");
-                messageDialog.open();
-            }
+            pasteURL();
         }
     }
 
@@ -52,7 +82,9 @@ Page {
 
     Rectangle {
         id: webViewBusy
-        anchors.fill: parent
+        width: parent.width
+        height: parent.height - urlPanel.height
+        anchors.top: urlPanel.bottom
         color: "black"
         visible: false
         smooth: false
@@ -62,20 +94,46 @@ Page {
         BusyIndicator {
             id: busyIdicator
             style: BusyIndicatorStyle { size: "large" }
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.centerIn: parent
             visible: parent.visible
             running: parent.visible
+        }
+
+        Text {
+            text: Math.floor(webView.progress * 100) + "%"
+            font.pointSize: 16
+            color: "white"
+            anchors.centerIn: parent
+        }
+    }
+
+    TitlePanel {
+        id: urlPanel
+        height: urlInput.height
+        z: 2
+
+        TextField {
+            id: urlInput
+            text: webView.url
+            anchors.fill: parent
+            Keys.onPressed: {
+                // console.debug("urlInput Keys.onPressed " + event.key + " Return " + Qt.Key_Return + " Enter " + Qt.Key_Enter);
+                if (event.key == Qt.Key_Return || event.key == Qt.Key_Enter) {
+                    console.debug("urlInput Keys.onPressed text " + urlInput.text);
+                    webView.url = urlInput.text;
+                    webView.focus = true;
+                }
+            }
         }
     }
 
     Flickable {
         id: flickable
         width: parent.width
-        height: parent.height
+        height: parent.height - urlPanel.height
         contentWidth: webView.width
         contentHeight: webView.implicitHeight
-        anchors.top: parent.top
+        anchors.top: urlPanel.bottom
         pressDelay: 200
 
         WebView {
@@ -83,6 +141,9 @@ Page {
             preferredWidth: webViewPage.width
             preferredHeight: webViewPage.height
             visible: true
+            settings.javaEnabled: false
+            settings.javascriptEnabled: false
+            settings.pluginsEnabled: false
 
             onContentsSizeChanged: {
                 console.debug("onContentsSizeChanged webView.contentsScale " + webView.contentsScale + " webView.contentsSize width height " + webView.contentsSize.width + " " + webView.contentsSize.height);
@@ -91,6 +152,11 @@ Page {
 
             onLoadStarted: {
                 webViewBusy.visible = true;
+            }
+
+            onLoadFailed: {
+                console.debug("webViewPage webView onLoadFailed " + webView.progress);
+                webViewBusy.visible = false;
             }
 
             onLoadFinished: {

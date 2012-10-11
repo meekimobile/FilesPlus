@@ -71,6 +71,12 @@ Page {
             group: "CloudPrint"
         }
         ListElement {
+            name: "printFromURL"
+            title: ""
+            type: "button"
+            group: "CloudPrint"
+        }
+        ListElement {
             name: "resetCloudPrint"
             title: ""
             type: "button"
@@ -189,6 +195,7 @@ Page {
 
     function getTitle(name) {
         if (name == "showCloudPrintJobs") return qsTr("Show cloud print jobs") + appInfo.emptyStr;
+        else if (name == "printFromURL") return qsTr("Print from URL") + appInfo.emptyStr;
         else if (name == "resetCloudPrint") return qsTr("Reset cloud print") + appInfo.emptyStr;
         else if (name == "showCloudDriveJobs") return qsTr("Show cloud drive jobs") + appInfo.emptyStr;
         else if (name == "cancelAllCloudDriveJobs") return qsTr("Cancel queued jobs") + appInfo.emptyStr;
@@ -216,6 +223,8 @@ Page {
         if (p) {
             if (name == "showCloudPrintJobs") {
                 p.showCloudPrintJobsSlot();
+            } else if (name == "printFromURL") {
+                p.showWebViewPageSlot();
             } else if (name == "resetCloudPrint") {
                 p.resetCloudPrintSlot();
             } else if (name == "showCloudDriveJobs") {

@@ -87,14 +87,6 @@ MenuWithIcon {
         }
 
         MenuItemWithIcon {
-            id: printURLMenuItem
-            text: appInfo.emptyStr+qsTr("Print URL")
-            onClicked: {
-                pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
-            }
-        }
-
-        MenuItemWithIcon {
             text: appInfo.emptyStr+qsTr("About")
             onClicked: {
                 pageStack.push(Qt.resolvedUrl("AboutPage.qml"));

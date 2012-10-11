@@ -97,15 +97,6 @@ Menu {
         }
 
         MenuItem {
-            id: printURLMenuItem
-            text: appInfo.emptyStr+qsTr("Print URL")
-            platformInverted: window.platformInverted
-            onClicked: {
-                pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
-            }
-        }
-
-        MenuItem {
             text: appInfo.emptyStr+qsTr("About")
             platformInverted: window.platformInverted
             onClicked: {
