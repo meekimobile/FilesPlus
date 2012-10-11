@@ -96,7 +96,7 @@ SelectionDialog {
                 Image {
                     id: checkIcon
                     visible: (cronExp == localPathCronExp)
-                    source: (theme.inverted) ? "ok.svg" : "ob_inverted.svg"
+                    source: "ok.svg"
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
