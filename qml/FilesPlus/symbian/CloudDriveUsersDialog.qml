@@ -48,6 +48,9 @@ SelectionDialog {
         case CloudDriveModel.Browse:
             text += qsTr("Connect %1 to").arg(fsModel.getFileName(localPath));
             break;
+        case CloudDriveModel.ScheduleSync:
+            text += qsTr("Schedule Sync %1").arg(fsModel.getFileName(localPath));
+            break;
         }
 
         return text;

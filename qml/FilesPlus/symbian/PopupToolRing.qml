@@ -86,6 +86,7 @@ Rectangle {
     signal unsyncFile(string srcFilePath, int srcItemIndex)
     signal disconnectFile(string srcFilePath, int srcItemIndex)
     signal browseRemoteFile(string srcFilePath, int srcItemIndex)
+    signal scheduleSyncFile(string srcFilePath, int srcItemIndex)
     signal mailFile(string srcFilePath, int srcItemIndex)
     signal smsFile(string srcFilePath, int srcItemIndex)
     signal bluetoothFile(string srcFilePath, int srcItemIndex)
@@ -149,7 +150,7 @@ Rectangle {
         ListElement { buttonName: "mark"; icon: "ok.svg" }
         ListElement { buttonName: "newFolder"; icon: "folder_add.svg" }
         ListElement { buttonName: "cloud"; icon: "cloud_options.svg" }
-        ListElement { buttonName: "cloudSettings"; icon: "cloud_settings.svg" }
+        ListElement { buttonName: "info"; icon: "info.svg" }
         ListElement { buttonName: "share"; icon: "share.svg" }
         ListElement { buttonName: "rename"; icon: "rename.svg" }
     }
@@ -165,6 +166,8 @@ Rectangle {
         id: cloudButtonModel
         ListElement { buttonName: "disconnect"; icon: "cloud_disconnect.svg" }
         ListElement { buttonName: "upload"; icon: "upload.svg" }
+        ListElement { buttonName: "cloudScheduler"; icon: "cloud_wait.svg" }
+        ListElement { buttonName: "cloudSettings"; icon: "cloud_settings.svg" }
         ListElement { buttonName: "unsync"; icon: "cloud_remove.svg" }
         ListElement { buttonName: "download"; icon: "download.svg" }
     }
@@ -200,6 +203,8 @@ Rectangle {
             return cloudDriveModel.isConnected(selectedFilePath);
         } else if (buttonName === "cloudSettings") {
             return cloudDriveModel.isConnected(selectedFilePath);
+        } else if (buttonName === "cloudScheduler") {
+            return isDir && cloudDriveModel.isConnected(selectedFilePath);
         } else if (buttonName === "paste") {
             return (clipboardCount > 0);
         } else if (buttonName == "mail") {
@@ -249,6 +254,8 @@ Rectangle {
             unsyncFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "disconnect") {
             disconnectFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "cloudScheduler") {
+            scheduleSyncFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "cloudSettings") {
             browseRemoteFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "share") {

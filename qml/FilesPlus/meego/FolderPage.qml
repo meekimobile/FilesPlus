@@ -453,6 +453,14 @@ Page {
         uidDialog.open();
     }
 
+    function scheduleSyncFileSlot(srcFilePath, selectedIndex) {
+        console.debug("folderPage scheduleSyncFileSlot srcFilePath=" + srcFilePath);
+        uidDialog.localPath = srcFilePath;
+        uidDialog.selectedModelIndex = selectedIndex;
+        uidDialog.operation = CloudDriveModel.ScheduleSync;
+        uidDialog.open();
+    }
+
     function uploadFileSlot(srcFilePath, selectedIndex) {
         console.debug("folderPage uploadFileSlot srcFilePath=" + srcFilePath);
         syncFileSlot(srcFilePath, selectedIndex, CloudDriveModel.FilePut);
@@ -1417,6 +1425,10 @@ Page {
 
         onBrowseRemoteFile: {
             browseRemoteFileSlot(srcFilePath, srcItemIndex);
+        }
+
+        onScheduleSyncFile: {
+            scheduleSyncFileSlot(srcFilePath, srcItemIndex)
         }
 
         onShowTools: {
@@ -2950,6 +2962,10 @@ Page {
                 cloudDrivePathDialog.remotePath = remotePath;
                 cloudDrivePathDialog.refresh();
                 break;
+            case CloudDriveModel.ScheduleSync:
+                cloudDriveSchedulerDialog.localPathCronExp = cloudDriveModel.getItemCronExp(type, uid, localPath);
+                cloudDriveSchedulerDialog.open();
+                break;
             }
         }
 
@@ -3128,6 +3144,22 @@ Page {
         onDeleteRemotePath: {
             // Delete remote file/folder.
             cloudDriveModel.deleteFile(selectedCloudType, selectedUid, "", remotePath);
+        }
+    }
+
+    CloudDriveSchedulerDialog {
+        id: cloudDriveSchedulerDialog
+        titleText: appInfo.emptyStr+qsTr("Schedule sync %1").arg(fsModel.getFileName(localPath))
+        caller: uidDialog.caller
+        operation: uidDialog.operation
+        localPath: uidDialog.localPath
+        selectedCloudType: uidDialog.selectedCloudType
+        selectedUid: uidDialog.selectedUid
+        selectedModelIndex: uidDialog.selectedModelIndex
+
+        onSelectedCronExp: {
+            console.debug("folderPage cloudDriveSchedulerDialog onSelectedCronExp " + cronExp);
+            cloudDriveModel.updateItemCronExp(selectedCloudType, selectedUid, localPath, cronExp);
         }
     }
 

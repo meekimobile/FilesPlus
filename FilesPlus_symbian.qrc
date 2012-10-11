@@ -129,5 +129,6 @@
         <file>qml/FilesPlus/cloud_disconnect.svg</file>
         <file alias="qml/FilesPlus/TextIndicator.qml">qml/FilesPlus/symbian/TextIndicator.qml</file>
         <file alias="qml/FilesPlus/WebViewPage.qml">qml/FilesPlus/symbian/WebViewPage.qml</file>
+        <file alias="qml/FilesPlus/CloudDriveSchedulerDialog.qml">qml/FilesPlus/symbian/CloudDriveSchedulerDialog.qml</file>
     </qresource>
 </RCC>

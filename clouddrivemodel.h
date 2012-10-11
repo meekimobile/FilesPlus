@@ -60,7 +60,8 @@ public:
         CopyFile,
         ShareFile,
         Browse,
-        Disconnect
+        Disconnect,
+        ScheduleSync
     };
 
     explicit CloudDriveModel(QDeclarativeItem *parent = 0);
@@ -112,10 +113,17 @@ public:
     Q_INVOKABLE void suspendNextJob();
     Q_INVOKABLE void resumeNextJob();
 
+    // Scheduler.
+    Q_INVOKABLE int updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp);
+    Q_INVOKABLE QString getItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
+    Q_INVOKABLE void loadScheduledItems(QString cronValue);
+    Q_INVOKABLE void syncScheduledItems();
+
     // Sync items.
     Q_INVOKABLE void syncItems();
     Q_INVOKABLE void syncItems(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE void syncItem(const QString localFilePath);
+    Q_INVOKABLE void syncItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
 
     // Migrate DAT to DB.
     Q_INVOKABLE int getCloudDriveItemsCount();
@@ -170,6 +178,9 @@ signals:
     void migrateStartedSignal(qint64 total);
     void migrateProgressSignal(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, qint64 count, qint64 total);
     void migrateFinishedSignal(qint64 count, qint64 total);
+
+    // Scheduler.
+    void schedulerTimeoutSignal();
 public slots:
     void proceedNextJob();
 
@@ -190,10 +201,14 @@ public slots:
     void copyFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void deleteFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+
+    // Scheduler
+    void schedulerTimeoutFilter();
 private:
     QMultiMap<QString, CloudDriveItem> *m_cloudDriveItems;
     QHash<QString, CloudDriveJob> *m_cloudDriveJobs;
     QQueue<QString> *m_jobQueue;
+    QQueue<CloudDriveItem> *m_scheduledItems;
     int runningJobCount;
     bool m_isSuspended;
 
@@ -252,6 +267,11 @@ private:
 //    CloudDriveModelThread::ClientTypes mapToThreadClientTypes(int type);
 
     bool m_dropboxFullAccess;
+
+    // Scheduler.
+    QTimer m_schedulerTimer;
+    void initScheduler();
+    bool matchCronExp(QString cronExp, QString cronValue);
 };
 
 #endif // CLOUDDRIVEMODEL_H

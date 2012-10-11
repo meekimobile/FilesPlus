@@ -48,6 +48,10 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     m_cloudDriveJobs = new QHash<QString, CloudDriveJob>();
     m_jobQueue = new QQueue<QString>();
 
+    // Initialize scheduler queue.
+    initScheduler();
+    m_scheduledItems = new QQueue<CloudDriveItem>();
+
     // Enqueue initialization jobs. Queued jobs will proceed after foldePage is loaded.
     CloudDriveJob loadCloudDriveItemsJob(createNonce(), LoadCloudDriveItems, -1, "", "", "", -1);
     m_cloudDriveJobs->insert(loadCloudDriveItemsJob.jobId, loadCloudDriveItemsJob);
@@ -391,6 +395,13 @@ QString CloudDriveModel::getParentLocalPath(QString localPath)
     return parentPath;
 }
 
+void CloudDriveModel::initScheduler()
+{
+    connect(&m_schedulerTimer, SIGNAL(timeout()), this, SLOT(schedulerTimeoutFilter()) );
+    m_schedulerTimer.setInterval(60000);
+    m_schedulerTimer.start();
+}
+
 QString CloudDriveModel::getFileType(QString localPath)
 {
     int i = localPath.lastIndexOf(".");
@@ -634,6 +645,134 @@ void CloudDriveModel::updateItemWithChildren(CloudDriveModel::ClientTypes type, 
     }
 
     qDebug() << "CloudDriveModel::updateItemWithChildren updateCount" << updateCount;
+}
+
+int CloudDriveModel::updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp)
+{
+    QSqlQuery qry(m_db);
+    qry.prepare("UPDATE cloud_drive_item SET cron_exp = :cron_exp WHERE type = :type AND uid = :uid AND local_path = :local_path");
+    qry.bindValue(":cron_exp", cronExp);
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":local_path", localPath);
+    bool res = qry.exec();
+    if (res) {
+        qDebug() << "CloudDriveModel::updateItemCronExpToDB done" << qry.numRowsAffected();
+        return qry.numRowsAffected();
+    } else {
+        qDebug() << "CloudDriveModel::updateItemCronExpToDB failed" << qry.lastError();
+        return qry.numRowsAffected();
+    }
+}
+
+QString CloudDriveModel::getItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
+{
+    QString cronExp = "";
+
+    QSqlQuery qry(m_db);
+    qry.prepare("SELECT cron_exp FROM cloud_drive_item WHERE type = :type AND uid = :uid AND local_path = :local_path");
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":local_path", localPath);
+    bool res = qry.exec();
+    if (res && qry.next()) {
+        cronExp = qry.value(qry.record().indexOf("cron_exp")).toString();
+        qDebug() << "CloudDriveModel::getItemCronExp done" << cronExp;
+    } else {
+        qDebug() << "CloudDriveModel::getItemCronExp failed" << qry.lastError();
+    }
+
+    return cronExp;
+}
+
+void CloudDriveModel::loadScheduledItems(QString cronValue)
+{
+    // TODO match each item in next minute. Cache matched items for next firing.
+    QString cronExp;
+    CloudDriveItem item;
+    QSqlQuery ps(m_db);
+    ps.prepare("SELECT * FROM cloud_drive_item WHERE cron_exp <> ''");
+    if (ps.exec()) {
+        QSqlRecord rec = ps.record();
+        while (ps.next()) {
+            if (ps.isValid()) {
+                item.type = ps.value(rec.indexOf("type")).toInt();
+                item.uid = ps.value(rec.indexOf("uid")).toString();
+                item.localPath = ps.value(rec.indexOf("local_path")).toString();
+                item.remotePath = ps.value(rec.indexOf("remote_path")).toString();
+                item.hash = ps.value(rec.indexOf("hash")).toString();
+                item.lastModified = ps.value(rec.indexOf("last_modified")).toDateTime();
+
+                cronExp = ps.value(rec.indexOf("cron_exp")).toString();
+                // TODO Match cronExp with cronValue. Ex. cronValue 0 8 12 10 5 <-- 8:00 on 12-Oct Friday
+                if (matchCronExp(cronExp, cronValue)) {
+                    qDebug() << "CloudDriveModel::loadScheduledItems schedule sync item" << item;
+                    m_scheduledItems->enqueue(item);
+                } else {
+                    qDebug() << "CloudDriveModel::loadScheduledItems discard item" << item;
+                }
+            } else {
+                qDebug() << "CloudDriveModel::loadScheduledItems record position is invalid. ps.lastError()" << ps.lastError();
+                break;
+            }
+        }
+    }
+}
+
+void CloudDriveModel::syncScheduledItems()
+{
+    while (!m_scheduledItems->isEmpty()) {
+        CloudDriveItem item = m_scheduledItems->dequeue();
+        switch (item.type) {
+        case Dropbox:
+            qDebug() << "CloudDriveModel::syncScheduledItems dequeue and sync item" << item;
+            metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
+            break;
+        }
+    }
+}
+
+bool CloudDriveModel::matchCronExp(QString cronExp, QString cronValue)
+{
+    qDebug() << "CloudDriveModel::matchCronExp start cronExp" << cronExp << "cronValue" << cronValue;
+
+    QStringList cronExpList = cronExp.split(" ");
+    QStringList cronValueList = cronValue.split(" ");
+
+    if (cronExpList.length() != cronValueList.length()) {
+        qDebug() << "CloudDriveModel::matchCronExp failed cronValueList" << cronValueList << "length" << cronValueList.length();
+        return false;
+    }
+
+    QString e;
+    QString v;
+    for (int i = 0; i < cronExpList.length(); i++) {
+        e = cronExpList.at(i);
+        v = cronValueList.at(i);
+        qDebug() << "CloudDriveModel::matchCronExp i" << i << "e" << e << "v" << v;
+
+        // TODO Support - and , in e.
+        if (e == "*") {
+            // continue.
+        } else if (e.indexOf("*/") == 0) {
+            int div = e.mid(e.indexOf("/")+1).toInt();
+            int mod = v.toInt() % div;
+            if (mod == 0) {
+                // continue.
+            } else {
+                qDebug() << "CloudDriveModel::matchCronExp failed i" << i << "e" << e << "v" << v << "div" << div << "mod" << mod;
+                return false;
+            }
+        } else if (e.toInt() == v.toInt()) {
+            // continue.
+        } else {
+            qDebug() << "CloudDriveModel::matchCronExp failed i" << i << "e" << e << "v" << v;
+            return false;
+        }
+    }
+
+    qDebug() << "CloudDriveModel::matchCronExp success cronExp" << cronExp << "cronValue" << cronValue;
+    return true;
 }
 
 int CloudDriveModel::getItemCount()
@@ -905,6 +1044,18 @@ void CloudDriveModel::syncItem(const QString localFilePath)
     foreach (CloudDriveItem item, getItemList(localFilePath)) {
         qDebug() << "CloudDriveModel::syncItem item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
 
+        switch (item.type) {
+        case Dropbox:
+            metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
+            break;
+        }
+    }
+}
+
+void CloudDriveModel::syncItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
+{
+    CloudDriveItem item = getItem(localPath, type, uid);
+    if (item.localPath == localPath) {
         switch (item.type) {
         case Dropbox:
             metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
@@ -1501,6 +1652,20 @@ void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMs
     emit shareFileReplySignal(nonce, err, errMsg, msg, url, expires);
 }
 
+void CloudDriveModel::schedulerTimeoutFilter()
+{
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter" << QDateTime::currentDateTime().toString("d/M/yyyy hh:mm:ss.zzz");
+
+    QString cronValue = QDateTime::currentDateTime().toString("m h d M ddd");
+
+    loadScheduledItems(cronValue);
+    suspendNextJob();
+    syncScheduledItems();
+    resumeNextJob();
+
+    emit schedulerTimeoutSignal();
+}
+
 void CloudDriveModel::initializeDB(QString nonce)
 {
     emit initializeDBStarted(nonce);
@@ -1542,12 +1707,12 @@ void CloudDriveModel::initializeDB(QString nonce)
     }
 
     // TODO Additional initialization.
-//    res = query.exec("ALTER TABLE cloud_drive_item ADD COLUMN xxx INTEGER");
-//    if (res) {
-//        qDebug() << "CloudDriveModel::initializeDB adding column cloud_drive_item.xxx is done.";
-//    } else {
-//        qDebug() << "CloudDriveModel::initializeDB adding column cloud_drive_item.xxx is failed. Error" << query.lastError();
-//    }
+    res = query.exec("ALTER TABLE cloud_drive_item ADD COLUMN cron_exp TEXT");
+    if (res) {
+        qDebug() << "CloudDriveModel::initializeDB adding column cloud_drive_item.cron_exp is done.";
+    } else {
+        qDebug() << "CloudDriveModel::initializeDB adding column cloud_drive_item.cron_exp is failed. Error" << query.lastError();
+    }
 
     // Prepare queries.
     m_selectByPrimaryKeyPS = QSqlQuery(m_db);
