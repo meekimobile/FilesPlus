@@ -136,5 +136,7 @@
         <file alias="qml/FilesPlus/TextIndicator.qml">qml/FilesPlus/meego/TextIndicator.qml</file>
         <file alias="qml/FilesPlus/WebViewPage.qml">qml/FilesPlus/meego/WebViewPage.qml</file>
         <file alias="qml/FilesPlus/CloudDriveSchedulerDialog.qml">qml/FilesPlus/meego/CloudDriveSchedulerDialog.qml</file>
+        <file>qml/FilesPlus/info_inverted.svg</file>
+        <file>qml/FilesPlus/info.svg</file>
     </qresource>
 </RCC>

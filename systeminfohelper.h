@@ -2,6 +2,8 @@
 #define SYSTEMINFOHELPER_H
 
 #include <QDeclarativeItem>
+#include <QCache>
+#include <QFileInfo>
 #include <qsystemstorageinfo.h>
 
 using namespace QtMobility;
@@ -18,6 +20,8 @@ public:
     Q_INVOKABLE QString getFileContent(const QString &localPath);
     Q_INVOKABLE int saveFileContent(const QString &localPath, const QString &text);
 
+    Q_INVOKABLE QVariant getFileAttribute(const QString &localPath, const QString &attributeName);
+
     Q_INVOKABLE QString getUrl(const QString absPath);
 signals:
     
@@ -25,6 +29,7 @@ public slots:
     
 private:
     QSystemStorageInfo *m_ssi;
+    QCache<QString, QFileInfo> *m_fileInfoCache;
 };
 
 #endif // SYSTEMINFOHELPER_H

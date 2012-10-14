@@ -6,6 +6,7 @@ SystemInfoHelper::SystemInfoHelper(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
 {
     m_ssi = new QSystemStorageInfo(this);
+    m_fileInfoCache = new QCache<QString, QFileInfo>();
 }
 
 int SystemInfoHelper::getDriveTypeInt(const QString &drive)
@@ -114,6 +115,21 @@ int SystemInfoHelper::saveFileContent(const QString &localPath, const QString &t
     qDebug() << "SystemInfoHelper::saveFileContent bytes write " << c;
 
     return c;
+}
+
+QVariant SystemInfoHelper::getFileAttribute(const QString &localPath, const QString &attributeName)
+{
+    QFileInfo *fi = m_fileInfoCache->object(localPath);
+    if (fi == 0) {
+        fi = new QFileInfo(localPath);
+    }
+
+    // Issue: QFileInfo and QFile dont' have method to set attributes.
+    if (attributeName == "permission.ReadOwner") {
+        return fi->permission(QFile::ReadOwner);
+    } else {
+        return NULL;
+    }
 }
 
 QString SystemInfoHelper::getUrl(const QString absPath)

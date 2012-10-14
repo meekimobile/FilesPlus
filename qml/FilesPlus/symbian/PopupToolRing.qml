@@ -90,6 +90,7 @@ Rectangle {
     signal mailFile(string srcFilePath, int srcItemIndex)
     signal smsFile(string srcFilePath, int srcItemIndex)
     signal bluetoothFile(string srcFilePath, int srcItemIndex)
+    signal showFileInfo(string srcFilePath, int srcItemIndex)
 
     function open(panelX, panelY) {
 //        console.debug("popupToolRing open panelX " + panelX + " panelY " + panelY);
@@ -268,6 +269,8 @@ Rectangle {
             smsFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "bluetooth") {
             bluetoothFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "info") {
+            showFileInfo(selectedFilePath, selectedFileIndex);
         }
         popupToolPanel.visible = false;
     }
