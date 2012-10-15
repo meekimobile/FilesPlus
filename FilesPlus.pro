@@ -79,7 +79,9 @@ SOURCES += main.cpp \
     foldersizejob.cpp \
     appinfo.cpp \
     bluetoothclient.cpp \
-    messageclient.cpp
+    messageclient.cpp \
+    customqnetworkaccessmanagerfactory.cpp \
+    customqnetworkaccessmanager.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -107,7 +109,9 @@ HEADERS += \
     foldersizejob.h \
     appinfo.h \
     bluetoothclient.h \
-    messageclient.h
+    messageclient.h \
+    customqnetworkaccessmanagerfactory.h \
+    customqnetworkaccessmanager.h
 
 OTHER_FILES += \
     qtc_packaging/debian_harmattan/rules \

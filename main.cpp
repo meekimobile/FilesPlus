@@ -13,6 +13,9 @@
 #include "bluetoothclient.h"
 #include "messageclient.h"
 #include <QDebug>
+#ifdef Q_OS_SYMBIAN
+#include "customqnetworkaccessmanagerfactory.h"
+#endif
 
 void customMessageHandler(QtMsgType type, const char *msg)
 {
@@ -121,6 +124,11 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 
     QDeclarativeEngine *engine = viewer.engine();
     engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider());
+
+#ifdef Q_OS_SYMBIAN
+    // Add custom NAMF to change User-Agent to fix problem with Dropbox login page.
+    viewer.engine()->setNetworkAccessManagerFactory(new CustomQNetworkAccessManagerFactory());
+#endif
 
     return app->exec();
 }
