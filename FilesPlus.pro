@@ -80,7 +80,9 @@ SOURCES += main.cpp \
     appinfo.cpp \
     bluetoothclient.cpp \
     messageclient.cpp \
-    clipboardmodel.cpp
+    clipboardmodel.cpp \
+    customqnetworkaccessmanagerfactory.cpp \
+    customqnetworkaccessmanager.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -109,7 +111,9 @@ HEADERS += \
     appinfo.h \
     bluetoothclient.h \
     messageclient.h \
-    clipboardmodel.h
+    clipboardmodel.h \
+    customqnetworkaccessmanagerfactory.h \
+    customqnetworkaccessmanager.h
 
 OTHER_FILES += \
     qtc_packaging/debian_harmattan/rules \

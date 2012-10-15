@@ -15,6 +15,9 @@
 #include "clipboardmodel.h"
 #include <QDebug>
 #include <QtSql>
+#ifdef Q_OS_SYMBIAN
+#include "customqnetworkaccessmanagerfactory.h"
+#endif
 
 static const QString AppName = "FilesPlus";
 
@@ -210,6 +213,11 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 
     QDeclarativeEngine *engine = viewer.engine();
     engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider());
+
+#ifdef Q_OS_SYMBIAN
+    // Add custom NAMF to change User-Agent to fix problem with Dropbox login page.
+    viewer.engine()->setNetworkAccessManagerFactory(new CustomQNetworkAccessManagerFactory());
+#endif
 
     return app->exec();
 }
