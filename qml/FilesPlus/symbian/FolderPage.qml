@@ -1480,10 +1480,6 @@ Page {
         onBluetoothFile: {
             bluetoothFileSlot(srcFilePath, srcItemIndex);
         }
-
-        onShowFileInfo: {
-            showFileInfoSlot(srcFilePath, srcItemIndex);
-        }
     }
 
     ConfirmDialog {
@@ -3365,16 +3361,6 @@ Page {
         Component.onCompleted: {
             console.debug(Utility.nowText() + " folderPage btClient onCompleted");
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("BTClient"), 0.1);
-        }
-    }
-
-    FileAttributesDialog {
-        id: fileInfoDialog
-
-        onConfirm: {
-            console.debug("fileInfoDialog onConfirm");
-            // TODO update file's attributes.
-            console.debug("fileInfoDialog onConfirm attribute1 " + attribute1);
         }
     }
 }
