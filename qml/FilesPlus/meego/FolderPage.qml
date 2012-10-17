@@ -1471,6 +1471,11 @@ Page {
         onBluetoothFile: {
             bluetoothFileSlot(srcFilePath, srcItemIndex);
         }
+
+        onEditFile: {
+            pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
+                           { filePath: srcFilePath, fileName: fsModel.getFileName(srcFilePath) });
+        }
     }
 
     ConfirmDialog {
@@ -2635,6 +2640,9 @@ Page {
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                 }
             }
+
+            // Workaround: Refresh item once got reply. To fix unexpected showing cloud_wait icon.
+            fsModel.refreshItem(localPath);
         }
 
         onCreateFolderReplySignal: {

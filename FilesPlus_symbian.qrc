@@ -131,7 +131,7 @@
         <file alias="qml/FilesPlus/TextIndicator.qml">qml/FilesPlus/symbian/TextIndicator.qml</file>
         <file alias="qml/FilesPlus/WebViewPage.qml">qml/FilesPlus/symbian/WebViewPage.qml</file>
         <file alias="qml/FilesPlus/CloudDriveSchedulerDialog.qml">qml/FilesPlus/symbian/CloudDriveSchedulerDialog.qml</file>
-        <file>qml/FilesPlus/info_inverted.svg</file>
-        <file>qml/FilesPlus/info.svg</file>
+        <file>qml/FilesPlus/edit_inverted.svg</file>
+        <file>qml/FilesPlus/edit.svg</file>
     </qresource>
 </RCC>

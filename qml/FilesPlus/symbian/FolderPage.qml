@@ -502,12 +502,6 @@ Page {
         }
     }
 
-    function showFileInfoSlot(srcFilePath, selectedIndex) {
-        console.debug("folderPage showFileInfoSlot srcFilePath=" + srcFilePath);
-        fileInfoDialog.srcFilePath = srcFilePath;
-        fileInfoDialog.open();
-    }
-
     function dropboxAccessTokenSlot() {
         cloudDriveModel.accessToken(CloudDriveModel.Dropbox);
     }
@@ -1479,6 +1473,11 @@ Page {
 
         onBluetoothFile: {
             bluetoothFileSlot(srcFilePath, srcItemIndex);
+        }
+
+        onEditFile: {
+            pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
+                           { filePath: srcFilePath, fileName: fsModel.getFileName(srcFilePath) });
         }
     }
 
@@ -2632,10 +2631,15 @@ Page {
             var pathList = fsModel.getPathToRoot(localPath);
             for(var i=0; i<pathList.length; i++) {
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                console.debug("folderPage cloudDriveModel onMetadataReplySignal fsModel.setProperty path " + pathList[i] + " modelIndex " + modelIndex + " isRunning");
                 if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
+                    console.debug("folderPage cloudDriveModel onMetadataReplySignal fsModel.setProperty " + modelIndex + " isRunning");
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                 }
             }
+
+            // Workaround: Refresh item once got reply. To fix unexpected showing cloud_wait icon.
+            fsModel.refreshItem(localPath);
         }
 
         onCreateFolderReplySignal: {

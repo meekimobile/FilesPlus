@@ -90,8 +90,7 @@ Rectangle {
     signal mailFile(string srcFilePath, int srcItemIndex)
     signal smsFile(string srcFilePath, int srcItemIndex)
     signal bluetoothFile(string srcFilePath, int srcItemIndex)
-    signal showFileInfo(string srcFilePath, int srcItemIndex)
-    signal compressFile(string srcFilePath, int srcItemIndex)
+    signal editFile(string srcFilePath, int srcItemIndex)
 
     function open(panelX, panelY) {
 //        console.debug("popupToolRing open panelX " + panelX + " panelY " + panelY);
@@ -151,7 +150,7 @@ Rectangle {
         id: toolsButtonModel
         ListElement { buttonName: "mark"; icon: "ok.svg" }
         ListElement { buttonName: "newFolder"; icon: "folder_add.svg" }
-        ListElement { buttonName: "compress"; icon: "compress.svg" }
+        ListElement { buttonName: "editFile"; icon: "edit.svg" }
         ListElement { buttonName: "cloud"; icon: "cloud_options.svg" }
         ListElement { buttonName: "share"; icon: "share.svg" }
         ListElement { buttonName: "rename"; icon: "rename.svg" }
@@ -215,6 +214,8 @@ Rectangle {
             return cloudDriveModel.isConnected(selectedFilePath);
         } else if (buttonName == "bluetooth") {
             return fsModel.isFile(selectedFilePath);
+        } else if (buttonName == "editFile") {
+            return fsModel.isFile(selectedFilePath);
         }
 
         return true;
@@ -270,8 +271,8 @@ Rectangle {
             smsFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "bluetooth") {
             bluetoothFile(selectedFilePath, selectedFileIndex);
-        } else if (buttonName == "compress") {
-            compressFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "editFile") {
+            editFile(selectedFilePath, selectedFileIndex);
         }
         popupToolPanel.visible = false;
     }

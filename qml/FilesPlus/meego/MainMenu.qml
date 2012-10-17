@@ -93,12 +93,12 @@ MenuWithIcon {
             }
         }
                 
-        MenuItemWithIcon {
-            text: appInfo.emptyStr+qsTr("More Apps")
-            onClicked: {
-                Qt.openUrlExternally("http://www.meeki.mobi/");
-            }
-        }
+//        MenuItemWithIcon {
+//            text: appInfo.emptyStr+qsTr("More Apps")
+//            onClicked: {
+//                Qt.openUrlExternally("http://www.meeki.mobi/");
+//            }
+//        }
         
         MenuItemWithIcon {
             text: appInfo.emptyStr+qsTr("Exit")
