@@ -133,5 +133,8 @@
         <file alias="qml/FilesPlus/CloudDriveSchedulerDialog.qml">qml/FilesPlus/symbian/CloudDriveSchedulerDialog.qml</file>
         <file>qml/FilesPlus/edit_inverted.svg</file>
         <file>qml/FilesPlus/edit.svg</file>
+        <file>qml/FilesPlus/search_inverted.svg</file>
+        <file>qml/FilesPlus/search.svg</file>
+        <file alias="qml/FilesPlus/NameFilterPanel.qml">qml/FilesPlus/symbian/NameFilterPanel.qml</file>
     </qresource>
 </RCC>

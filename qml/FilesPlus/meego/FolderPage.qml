@@ -231,7 +231,16 @@ Page {
 
     function refreshSlot(caller) {
         caller = (!caller) ? "folderPage refreshSlot" : caller;
-        fsModel.nameFilters = [];
+        fsModel.refreshDir(caller, false);
+    }
+
+    function setNameFiltersAndRefreshSlot(caller) {
+        caller = (!caller) ? "folderPage setNameFiltersAndRefreshSlot" : caller;
+        if (nameFilterPanel.nameFilters.trim() == "") {
+            fsModel.nameFilters = [];
+        } else {
+            fsModel.nameFilters = [nameFilterPanel.nameFilters.trim()];
+        }
         fsModel.refreshDir(caller, false);
     }
 
@@ -240,6 +249,9 @@ Page {
     }
 
     function goUpSlot() {
+        nameFilterPanel.close();
+        fsModel.nameFilters = [];
+
         if (fsModel.isRoot()) {
             // Flip back to list view, then push drivePage.
             flipable1.flipped = false;
@@ -253,11 +265,24 @@ Page {
         }
     }
 
+    function changeDirSlot(name, sortBy) {
+        nameFilterPanel.close();
+        fsModel.nameFilters = [];
+
+        if (sortBy) {
+            fsModel.changeDir(name, sortBy);
+        } else {
+            fsModel.changeDir(name);
+        }
+    }
+
     function showDrivePageSlot() {
         pageStack.push(Qt.resolvedUrl("DrivePage.qml"), { cloudDriveModel: cloudDriveModel }, true);
     }
 
     function flipSlot() {
+        nameFilterPanel.close();
+
         flipable1.flipped = !flipable1.flipped;
     }
 
@@ -845,7 +870,7 @@ Page {
             console.debug("QML pieChartView.onSliceClicked " + text + ", index=" + index + ", isDir=" + isDir);
             if (isDir) {
                 // TODO keep sortBySize in PieView.
-                fsModel.changeDir(text, FolderSizeItemListModel.SortBySize);
+                changeDirSlot(text, FolderSizeItemListModel.SortBySize);
             } else {
                 flipSlot();
             }
@@ -1278,7 +1303,7 @@ Page {
                 } else {
                     if (isDir) {
                         fsListView.focusLocalPath = "."; // Put dummy path to avoid focus on lastCenterIndex.
-                        fsModel.changeDir(name);
+                        changeDirSlot(name);
                     } else {
                         // If file is running, disable preview.
                         if (isRunning) return;
@@ -1307,6 +1332,15 @@ Page {
 
     TitlePanel {
         id: currentPath
+    }
+
+    NameFilterPanel {
+        id: nameFilterPanel
+        anchors.bottom: parent.bottom
+
+        onRequestRefresh: {
+            setNameFiltersAndRefreshSlot(caller);
+        }
     }
 
     MessageDialog {

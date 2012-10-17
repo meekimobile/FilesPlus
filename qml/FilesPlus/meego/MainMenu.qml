@@ -64,6 +64,15 @@ MenuWithIcon {
         }
 
         MenuItemWithIcon {
+            id: filterMenuItem
+            text: appInfo.emptyStr+qsTr("Set name filter")
+
+            onClicked: {
+                nameFilterPanel.open();
+            }
+        }
+
+        MenuItemWithIcon {
             id: sortByMenuItem
             text: appInfo.emptyStr+qsTr("Sort by")
             platformSubItemIndicator: true

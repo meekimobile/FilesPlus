@@ -72,6 +72,15 @@ Menu {
         }
 
         MenuItem {
+            id: filterMenuItem
+            text: appInfo.emptyStr+qsTr("Set name filter")
+            platformInverted: window.platformInverted
+            onClicked: {
+                nameFilterPanel.open();
+            }
+        }
+
+        MenuItem {
             id: sortByMenuItem
             text: appInfo.emptyStr+qsTr("Sort by")
             platformInverted: window.platformInverted

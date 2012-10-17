@@ -23,7 +23,7 @@ Page {
             when: flipable1.flipped
             PropertyChanges {
                 target: mainMenu
-                disabledMenus: [appInfo.emptyStr+qsTr("Paste"), appInfo.emptyStr+qsTr("Mark multiple items"), appInfo.emptyStr+qsTr("Clear clipboard"), appInfo.emptyStr+qsTr("New folder"), appInfo.emptyStr+qsTr("Sync current folder"), appInfo.emptyStr+qsTr("Sync connected items"), appInfo.emptyStr+qsTr("Sort by")]
+                disabledMenus: [appInfo.emptyStr+qsTr("Paste"), appInfo.emptyStr+qsTr("Mark multiple items"), appInfo.emptyStr+qsTr("Clear clipboard"), appInfo.emptyStr+qsTr("New folder / file"), appInfo.emptyStr+qsTr("Sync current folder"), appInfo.emptyStr+qsTr("Sync connected items"), appInfo.emptyStr+qsTr("Set name filter"), appInfo.emptyStr+qsTr("Sort by")]
             }
         },
         State {
@@ -229,7 +229,16 @@ Page {
 
     function refreshSlot(caller) {
         caller = (!caller) ? "folderPage refreshSlot" : caller;
-        fsModel.nameFilters = [];
+        fsModel.refreshDir(caller, false);
+    }
+
+    function setNameFiltersAndRefreshSlot(caller) {
+        caller = (!caller) ? "folderPage setNameFiltersAndRefreshSlot" : caller;
+        if (nameFilterPanel.nameFilters.trim() == "") {
+            fsModel.nameFilters = [];
+        } else {
+            fsModel.nameFilters = [nameFilterPanel.nameFilters.trim()];
+        }
         fsModel.refreshDir(caller, false);
     }
 
@@ -238,6 +247,9 @@ Page {
     }
 
     function goUpSlot() {
+        nameFilterPanel.close();
+        fsModel.nameFilters = [];
+
         if (fsModel.isRoot()) {
             // Flip back to list view, then push drivePage.
             flipable1.flipped = false;
@@ -251,11 +263,24 @@ Page {
         }
     }
 
+    function changeDirSlot(name, sortBy) {
+        nameFilterPanel.close();
+        fsModel.nameFilters = [];
+
+        if (sortBy) {
+            fsModel.changeDir(name, sortBy);
+        } else {
+            fsModel.changeDir(name);
+        }
+    }
+
     function showDrivePageSlot() {
         pageStack.push(Qt.resolvedUrl("DrivePage.qml"), { cloudDriveModel: cloudDriveModel }, true);
     }
 
     function flipSlot() {
+        nameFilterPanel.close();
+
         flipable1.flipped = !flipable1.flipped;
     }
 
@@ -841,7 +866,7 @@ Page {
             console.debug("QML pieChartView.onSliceClicked " + text + ", index=" + index + ", isDir=" + isDir);
             if (isDir) {
                 // TODO keep sortBySize in PieView.
-                fsModel.changeDir(text, FolderSizeItemListModel.SortBySize);
+                changeDirSlot(text, FolderSizeItemListModel.SortBySize);
             } else {
                 flipSlot();
             }
@@ -1272,7 +1297,7 @@ Page {
                 } else {
                     if (isDir) {
                         fsListView.focusLocalPath = "."; // Put dummy path to avoid focus on lastCenterIndex.
-                        fsModel.changeDir(name);
+                        changeDirSlot(name);
                     } else {
                         // If file is running, disable preview.
                         if (isRunning) return;
@@ -1310,6 +1335,15 @@ Page {
 
     TitlePanel {
         id: currentPath
+    }
+
+    NameFilterPanel {
+        id: nameFilterPanel
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: (inputContext.visible ? (inputContext.height - 60) : 0) // Symbian only
+        onRequestRefresh: {
+            setNameFiltersAndRefreshSlot(caller);
+        }
     }
 
     MessageDialog {
@@ -2631,9 +2665,7 @@ Page {
             var pathList = fsModel.getPathToRoot(localPath);
             for(var i=0; i<pathList.length; i++) {
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                console.debug("folderPage cloudDriveModel onMetadataReplySignal fsModel.setProperty path " + pathList[i] + " modelIndex " + modelIndex + " isRunning");
                 if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                    console.debug("folderPage cloudDriveModel onMetadataReplySignal fsModel.setProperty " + modelIndex + " isRunning");
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
                 }
             }

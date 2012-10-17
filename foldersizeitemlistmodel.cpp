@@ -426,6 +426,11 @@ QStringList FolderSizeItemListModel::getNameFilters() const
 void FolderSizeItemListModel::setNameFilters(const QStringList nameFilters)
 {
     m.setNameFilters(nameFilters);
+
+    // Reset m_indexOnCurrentDirHash.
+    if (m_indexOnCurrentDirHash != 0) {
+        m_indexOnCurrentDirHash->clear();
+    }
 }
 
 void FolderSizeItemListModel::refreshItems()
