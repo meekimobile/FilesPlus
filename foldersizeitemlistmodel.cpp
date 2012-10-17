@@ -121,6 +121,9 @@ void FolderSizeItemListModel::setCurrentDir(const QString &path)
     // Emit to update currentDir on UI.
     emit currentDirChanged();
 
+    // Reset m_indexOnCurrentDirHash.
+    m_indexOnCurrentDirHash->clear();
+
     // Invoke background refresh by clearing items while refreshing.
     refreshDir("FolderSizeItemListModel::setCurrentDir", false, true);
 
@@ -217,6 +220,7 @@ void FolderSizeItemListModel::setProperty(const int index, FolderSizeItemListMod
         }
 
         if (isChanged) {
+            qDebug() << "FolderSizeItemListModel::setProperty" << index << roleNames().value(role) << value << "isChanged" << isChanged;
             setItem(index, item);
             refreshItem(index);
         }
