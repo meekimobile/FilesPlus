@@ -52,6 +52,8 @@ SelectionDialog {
                 return qsTr("%n hour(s)", "", parseInt(value));
             } else if (value == "1d") {
                 return qsTr("Daily");
+            } else if (value == "Off") {
+                return qsTr("Off");
             } else {
                 return value;
             }
@@ -79,7 +81,7 @@ SelectionDialog {
                 width: parent.width - 20
                 anchors.centerIn: parent
                 Text {
-                    text: presetColumnModel.getLocalizedLabel(value)
+                    text: appInfo.emptyStr+presetColumnModel.getLocalizedLabel(value)
                     width: parent.width - parent.spacing - checkIcon.width
                     font.pointSize: 8
                     color: "white"

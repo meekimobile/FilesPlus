@@ -200,8 +200,7 @@ Please click &apos;OK&apos; to continue.</translatorcomment>
         <location filename="../qml/FilesPlus/symbian/CloudDriveSchedulerDialog.qml" line="+50"/>
         <source>%n minute(s)</source>
         <translation>
-            <numerusform>%n
- 分钟</numerusform>
+            <numerusform>%n 分钟</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -216,7 +215,13 @@ Please click &apos;OK&apos; to continue.</translatorcomment>
         <location line="+2"/>
         <location filename="../qml/FilesPlus/symbian/CloudDriveSchedulerDialog.qml" line="+2"/>
         <source>Daily</source>
-        <translation>日常</translation>
+        <translation>每天</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveSchedulerDialog.qml" line="+2"/>
+        <source>Off</source>
+        <translation>关</translation>
     </message>
 </context>
 <context>

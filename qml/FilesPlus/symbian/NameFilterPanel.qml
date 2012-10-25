@@ -50,6 +50,7 @@ Rectangle {
             platformInverted: window.platformInverted
             onClicked: {
                 nameFilterPanel.close();
+                requestRefresh("nameFilterPanel closeButton");
             }
         }
         

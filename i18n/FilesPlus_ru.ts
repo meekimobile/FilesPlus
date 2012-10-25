@@ -223,6 +223,13 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         <source>Daily</source>
         <translation>Ежедневно</translation>
     </message>
+    <message>
+        <location line="+2"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveSchedulerDialog.qml" line="+2"/>
+        <source>Off</source>
+        <translatorcomment>Turn off</translatorcomment>
+        <translation>Выключать</translation>
+    </message>
 </context>
 <context>
     <name>CloudDriveUsersDialog</name>

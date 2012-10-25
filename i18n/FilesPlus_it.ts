@@ -527,6 +527,13 @@ Premi &apos;OK&apos; per continuare.</translation>
         <source>Daily</source>
         <translation>Giornaliero</translation>
     </message>
+    <message>
+        <location line="+2"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveSchedulerDialog.qml" line="+2"/>
+        <source>Off</source>
+        <translatorcomment>Turn off</translatorcomment>
+        <translation>Spegnere</translation>
+    </message>
 </context>
 <context>
     <name>CloudDriveUsersDialog</name>
