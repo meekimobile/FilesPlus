@@ -387,12 +387,11 @@ Premi &apos;OK&apos; per continuare.</translation>
         <translation>Info</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>More Apps</source>
-        <translation>Altre Apps</translation>
+        <translation type="obsolete">Altre Apps</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+14"/>
         <source>Exit</source>
         <translation>Esci</translation>
     </message>
@@ -714,12 +713,11 @@ Premi &apos;OK&apos; per continuare.</translation>
         <translation>Info</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>More Apps</source>
-        <translation>Altre Apps</translation>
+        <translation type="obsolete">Altre Apps</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+14"/>
         <source>Exit</source>
         <translation>Esci</translation>
     </message>
@@ -757,24 +755,6 @@ Premi &apos;OK&apos; per continuare.</translation>
         <location line="+0"/>
         <source>Exit</source>
         <translation>Esci</translation>
-    </message>
-</context>
-<context>
-    <name>FileAttributesDialog</name>
-    <message>
-        <location filename="../qml/FilesPlus/symbian/FileAttributesDialog.qml" line="+12"/>
-        <source>%1 info</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+19"/>
-        <source>Attribute 1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Attribute 2</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -822,7 +802,6 @@ Premi &apos;OK&apos; per continuare.</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+0"/>
         <source>New folder</source>
         <translation>Nuova Cartella</translation>
     </message>
@@ -846,27 +825,27 @@ Premi &apos;OK&apos; per continuare.</translation>
     </message>
     <message>
         <location line="+25"/>
-        <location line="+740"/>
+        <location line="+765"/>
         <location line="+74"/>
         <location line="+196"/>
-        <location line="+1177"/>
-        <location line="+673"/>
+        <location line="+1191"/>
+        <location line="+676"/>
         <location line="+307"/>
         <location line="+143"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+25"/>
-        <location line="+743"/>
+        <location line="+762"/>
         <location line="+74"/>
         <location line="+192"/>
-        <location line="+1180"/>
-        <location line="+673"/>
+        <location line="+1194"/>
+        <location line="+676"/>
         <location line="+307"/>
         <location line="+143"/>
         <source>%1 is loaded.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-3137"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-3140"/>
+        <location line="-3179"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-3176"/>
         <source>Reset folder cache</source>
         <translation>Resetta la cache della Cartella</translation>
     </message>
@@ -881,8 +860,8 @@ Please click OK to continue.</source>
 Premi OK per continuaree.</translation>
     </message>
     <message>
-        <location line="+52"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+52"/>
+        <location line="+77"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+77"/>
         <source>Notify</source>
         <translation>Notifica</translation>
     </message>
@@ -950,35 +929,35 @@ Sarai reindirizzato alla pagina di autorizzazione.</translation>
     </message>
     <message>
         <location line="+184"/>
-        <location line="+926"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+188"/>
-        <location line="+933"/>
+        <location line="+940"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+182"/>
+        <location line="+947"/>
         <source>Copy</source>
         <translation>Copia</translation>
     </message>
     <message>
-        <location line="-924"/>
-        <location line="+925"/>
-        <location line="+1291"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-931"/>
-        <location line="+932"/>
-        <location line="+1283"/>
+        <location line="-938"/>
+        <location line="+939"/>
+        <location line="+1294"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-945"/>
+        <location line="+946"/>
+        <location line="+1286"/>
         <source>Move</source>
         <translation>Sposta</translation>
     </message>
     <message>
-        <location line="-2214"/>
-        <location line="+924"/>
-        <location line="+1314"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2213"/>
-        <location line="+931"/>
-        <location line="+1306"/>
+        <location line="-2231"/>
+        <location line="+938"/>
+        <location line="+1317"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2230"/>
+        <location line="+945"/>
+        <location line="+1309"/>
         <source>Delete</source>
         <translation>Elimina</translation>
     </message>
     <message>
-        <location line="-2600"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2603"/>
+        <location line="-2642"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2639"/>
         <source>First time loading</source>
         <translation>Primo avvio</translation>
     </message>
@@ -999,19 +978,19 @@ Ci vorrà del tempo dipende dal numero di cartelle/sotto cartelle o file present
 Si prega di fare clic su OK per continuare.</translation>
     </message>
     <message>
-        <location line="+409"/>
-        <location line="+886"/>
+        <location line="+434"/>
+        <location line="+900"/>
         <location line="+20"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+413"/>
-        <location line="+893"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+432"/>
+        <location line="+907"/>
         <location line="+20"/>
         <source>to</source>
         <translation>in</translation>
     </message>
     <message>
-        <location line="-885"/>
+        <location line="-899"/>
         <location line="+54"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-892"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-906"/>
         <location line="+54"/>
         <source>error</source>
         <translation>errore</translation>
@@ -1026,10 +1005,10 @@ Si prega di fare clic su OK per continuare.</translation>
     </message>
     <message>
         <location line="-30"/>
-        <location line="+932"/>
+        <location line="+946"/>
         <location line="+467"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-30"/>
-        <location line="+939"/>
+        <location line="+953"/>
         <location line="+459"/>
         <source>Deleting</source>
         <translation>Eliminazione in corso</translation>
@@ -1039,8 +1018,8 @@ Si prega di fare clic su OK per continuare.</translation>
         <translation type="obsolete">%1 è soppresso.</translation>
     </message>
     <message numerus="yes">
-        <location line="-883"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-883"/>
+        <location line="-897"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-897"/>
         <source>%n dir(s)</source>
         <translatorcomment>%n folder(s)</translatorcomment>
         <translation>
@@ -1064,8 +1043,8 @@ Si prega di fare clic su OK per continuare.</translation>
         <translation>ultima modifica</translation>
     </message>
     <message>
-        <location line="+299"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+307"/>
+        <location line="+313"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+321"/>
         <source>Multiple actions</source>
         <translation>Azione multipla</translation>
     </message>
@@ -1143,7 +1122,8 @@ Si prega di fare clic su OK per continuare.</translation>
     </message>
     <message>
         <location line="+50"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+50"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1670"/>
+        <location line="+1720"/>
         <source>New folder / file</source>
         <translation>Nuova cartella / file</translation>
     </message>
@@ -1161,17 +1141,17 @@ Si prega di fare clic su OK per continuare.</translation>
         <location line="-120"/>
         <location line="+70"/>
         <location line="+50"/>
-        <location line="+1456"/>
+        <location line="+1459"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-115"/>
         <location line="+67"/>
         <location line="+48"/>
-        <location line="+1453"/>
+        <location line="+1456"/>
         <source>Cancel</source>
         <translation>Cancella</translation>
     </message>
     <message>
-        <location line="-1563"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1557"/>
+        <location line="-1566"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1560"/>
         <source>Folder</source>
         <translation>Cartella</translation>
     </message>
@@ -1364,7 +1344,7 @@ Please re-authorize your accounts before proceed your actions.</source>
         <location line="+47"/>
         <location line="+36"/>
         <location line="+111"/>
-        <location line="+36"/>
+        <location line="+39"/>
         <location line="+131"/>
         <location line="+24"/>
         <location line="+49"/>
@@ -1376,7 +1356,7 @@ Please re-authorize your accounts before proceed your actions.</source>
         <location line="+47"/>
         <location line="+36"/>
         <location line="+111"/>
-        <location line="+36"/>
+        <location line="+39"/>
         <location line="+131"/>
         <location line="+24"/>
         <location line="+49"/>
@@ -1385,8 +1365,8 @@ Please re-authorize your accounts before proceed your actions.</source>
         <translation>Errore</translation>
     </message>
     <message>
-        <location line="-528"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-528"/>
+        <location line="-531"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-531"/>
         <source>CloudDrive Request Token</source>
         <translation>Richiesta Token di accesso CloudDrive</translation>
     </message>
@@ -1434,8 +1414,8 @@ Link will be removed.</source>
 Il link verrà rimosso.</translation>
     </message>
     <message>
-        <location line="+110"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+110"/>
+        <location line="+113"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+113"/>
         <source>Create Folder</source>
         <translation>Crea Cartella</translation>
     </message>
@@ -1487,6 +1467,11 @@ Please click &apos;OK&apos; to turn Bluetooth on.</source>
 
 Si prega di fare clic su &apos;OK&apos; per attivare il Bluetooth.</translation>
     </message>
+    <message>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-3307"/>
+        <source>Set name filter</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>FolderPieInfo</name>
@@ -1508,7 +1493,7 @@ Il tutto presentato con un Diagramma a torta.</translation>
 <context>
     <name>FolderSizeItemListModel</name>
     <message>
-        <location filename="../foldersizeitemlistmodel.cpp" line="+478"/>
+        <location filename="../foldersizeitemlistmodel.cpp" line="+487"/>
         <location line="+22"/>
         <source>Source and Target path can&apos;t be the same.</source>
         <translation>Il percorso di origine e destinazione non possono coincidere.</translation>
@@ -1667,6 +1652,12 @@ Il tutto presentato con un Diagramma a torta.</translation>
     <message>
         <location line="+9"/>
         <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+10"/>
+        <source>Set name filter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+9"/>
         <source>Sort by</source>
         <translation>Ordina per</translation>
     </message>
@@ -1683,14 +1674,12 @@ Il tutto presentato con un Diagramma a torta.</translation>
         <translation>Info</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+8"/>
         <source>More Apps</source>
-        <translation>Altre Apps</translation>
+        <translation type="obsolete">Altre Apps</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+8"/>
+        <location line="+14"/>
+        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+16"/>
         <source>Exit</source>
         <translation>Esci</translation>
     </message>
@@ -1762,6 +1751,15 @@ Il tutto presentato con un Diagramma a torta.</translation>
         <location filename="../qml/FilesPlus/symbian/MessageDialog.qml" line="+13"/>
         <source>OK</source>
         <translation>OK</translation>
+    </message>
+</context>
+<context>
+    <name>NameFilterPanel</name>
+    <message>
+        <location filename="../qml/FilesPlus/meego/NameFilterPanel.qml" line="+36"/>
+        <location filename="../qml/FilesPlus/symbian/NameFilterPanel.qml" line="+36"/>
+        <source>Please input name filter.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1871,64 +1869,51 @@ Il tutto presentato con un Diagramma a torta.</translation>
 <context>
     <name>RemoteFolderPage</name>
     <message numerus="yes">
-        <location filename="../qml/FilesPlus/symbian/RemoteFolderPage.qml" line="+422"/>
         <source>%n dir(s)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>%n cartella</numerusform>
             <numerusform>%n cartelle</numerusform>
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+1"/>
         <source>%n file(s)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>%n file</numerusform>
             <numerusform>%n file</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>last modified</source>
-        <translation type="unfinished">ultima modifica</translation>
+        <translation type="obsolete">ultima modifica</translation>
     </message>
     <message>
-        <location line="+257"/>
         <source>Multiple actions</source>
-        <translation type="unfinished">Azione multipla</translation>
+        <translation type="obsolete">Azione multipla</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>Copy</source>
-        <translation type="unfinished">Copia</translation>
+        <translation type="obsolete">Copia</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location line="+958"/>
         <source>Move</source>
-        <translation type="unfinished">Sposta</translation>
+        <translation type="obsolete">Sposta</translation>
     </message>
     <message>
-        <location line="-957"/>
-        <location line="+982"/>
         <source>Delete</source>
-        <translation type="unfinished">Elimina</translation>
+        <translation type="obsolete">Elimina</translation>
     </message>
     <message>
-        <location line="-981"/>
         <source>Invalid action</source>
-        <translation type="unfinished">Azione non valida</translation>
+        <translation type="obsolete">Azione non valida</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <location line="+20"/>
         <source>to</source>
-        <translation type="unfinished">in</translation>
+        <translation type="obsolete">in</translation>
     </message>
     <message numerus="yes">
-        <location line="-3"/>
         <source>Delete %n file(s)
 </source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>Elimina %n file
 </numerusform>
             <numerusform>Elimina %n file
@@ -1936,10 +1921,9 @@ Il tutto presentato con un Diagramma a torta.</translation>
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+1"/>
         <source>Copy %n file(s)
 </source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>Copia %n file
 </numerusform>
             <numerusform>Copia %n file
@@ -1947,10 +1931,9 @@ Il tutto presentato con un Diagramma a torta.</translation>
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+1"/>
         <source>Move %n file(s)
 </source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>Sposta %n file
 </numerusform>
             <numerusform>Sposta %n file
@@ -1958,171 +1941,127 @@ Il tutto presentato con un Diagramma a torta.</translation>
         </translation>
     </message>
     <message>
-        <location line="+70"/>
-        <location line="+307"/>
         <source>Deleting</source>
-        <translation type="unfinished">Eliminazione in corso</translation>
+        <translation type="obsolete">Eliminazione in corso</translation>
     </message>
     <message>
-        <location line="-261"/>
         <source>Can&apos;t %1 %2 to %3.</source>
-        <translation type="unfinished">Impossibile %1 %2 in %3.</translation>
+        <translation type="obsolete">Impossibile %1 %2 in %3.</translation>
     </message>
     <message>
-        <location line="+48"/>
         <source>New folder / file</source>
-        <translation type="unfinished">Nuova cartella / file</translation>
+        <translation type="obsolete">Nuova cartella / file</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <location line="+67"/>
-        <location line="+48"/>
         <source>OK</source>
-        <translation type="unfinished">OK</translation>
+        <translation type="obsolete">OK</translation>
     </message>
     <message>
-        <location line="-115"/>
-        <location line="+67"/>
-        <location line="+48"/>
         <source>Cancel</source>
-        <translation type="unfinished">Cancella</translation>
+        <translation type="obsolete">Cancella</translation>
     </message>
     <message>
-        <location line="-104"/>
         <source>Folder</source>
-        <translation type="unfinished">Cartella</translation>
+        <translation type="obsolete">Cartella</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>File</source>
-        <translation type="unfinished">File</translation>
+        <translation type="obsolete">File</translation>
     </message>
     <message>
-        <location line="+10"/>
         <source>Please input folder name.</source>
-        <translation type="unfinished">Inserisci il nome Cartella.</translation>
+        <translation type="obsolete">Inserisci il nome Cartella.</translation>
     </message>
     <message>
-        <location line="+0"/>
         <source>Please input file name.</source>
-        <translation type="unfinished">Inserisci il nome file.</translation>
+        <translation type="obsolete">Inserisci il nome file.</translation>
     </message>
     <message>
-        <location line="+37"/>
         <source>Rename</source>
-        <translation type="unfinished">Rinomina</translation>
+        <translation type="obsolete">Rinomina</translation>
     </message>
     <message>
-        <location line="+10"/>
         <source>Rename %1 to</source>
-        <translation type="unfinished">Rinominare %1 a</translation>
+        <translation type="obsolete">Rinominare %1 a</translation>
     </message>
     <message>
-        <location line="+8"/>
         <source>Please input new name.</source>
-        <translation type="unfinished">Inserisci il nuovo nome.</translation>
+        <translation type="obsolete">Inserisci il nuovo nome.</translation>
     </message>
     <message>
-        <location line="+30"/>
         <source>File overwrite</source>
-        <translation type="unfinished">File sovrascritto</translation>
+        <translation type="obsolete">File sovrascritto</translation>
     </message>
     <message>
-        <location line="+9"/>
         <source>Please input new file name.</source>
-        <translation type="unfinished">Inserisci il nuovo nome.</translation>
+        <translation type="obsolete">Inserisci il nuovo nome.</translation>
     </message>
     <message>
-        <location line="+15"/>
         <source>Overwrite existing file</source>
-        <translation type="unfinished">Sovrascrivi file esistente</translation>
+        <translation type="obsolete">Sovrascrivi file esistente</translation>
     </message>
     <message>
-        <location line="+47"/>
         <source>Cancel sync jobs</source>
-        <translation type="unfinished">Cancella processi Cloud</translation>
+        <translation type="obsolete">Cancella processi Cloud</translation>
     </message>
     <message numerus="yes">
-        <location line="+2"/>
         <source>Cancel %n job(s) ?</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>Cancella %n attività Cloud ?</numerusform>
             <numerusform>Cancella %n attività Cloud ?</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+134"/>
         <source>CloudDrive Request Token</source>
-        <translation type="unfinished">Richiesta Token di accesso CloudDrive</translation>
+        <translation type="obsolete">Richiesta Token di accesso CloudDrive</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location line="+37"/>
-        <location line="+25"/>
-        <location line="+47"/>
-        <location line="+36"/>
-        <location line="+119"/>
-        <location line="+37"/>
-        <location line="+141"/>
-        <location line="+25"/>
-        <location line="+46"/>
         <source>Error</source>
-        <translation type="unfinished">Errore</translation>
+        <translation type="obsolete">Errore</translation>
     </message>
     <message>
-        <location line="-486"/>
-        <location line="+9"/>
         <source>CloudDrive Access Token</source>
-        <translation type="unfinished">Token di accesso CloudDrive</translation>
+        <translation type="obsolete">Token di accesso CloudDrive</translation>
     </message>
     <message>
-        <location line="-8"/>
         <source>CloudDrive user is authorized.
 Please proceed your sync action.</source>
-        <translation type="unfinished">Utente CloudDrive autorizzato.
+        <translation type="obsolete">Utente CloudDrive autorizzato.
 Si prega di continuare l&apos;azione di sincronizzazione.</translation>
     </message>
     <message>
-        <location line="+33"/>
         <source>CloudDrive Account Info</source>
-        <translation type="unfinished">Info Account CloudDrive</translation>
+        <translation type="obsolete">Info Account CloudDrive</translation>
     </message>
     <message>
-        <location line="+47"/>
         <source>File Get</source>
-        <translation type="unfinished">Ricezione file</translation>
+        <translation type="obsolete">Ricezione file</translation>
     </message>
     <message>
-        <location line="+36"/>
         <source>File Put</source>
-        <translation type="unfinished">Collocazione file</translation>
+        <translation type="obsolete">Collocazione file</translation>
     </message>
     <message>
-        <location line="+46"/>
         <source>%1 was removed remotely.
 Link will be removed.</source>
-        <translation type="unfinished">%1 stato rimosso in remoto.
+        <translation type="obsolete">%1 stato rimosso in remoto.
 Il link verrà rimosso.</translation>
     </message>
     <message>
-        <location line="+110"/>
         <source>Create Folder</source>
-        <translation type="unfinished">Crea Cartella</translation>
+        <translation type="obsolete">Crea Cartella</translation>
     </message>
     <message>
-        <location line="+203"/>
         <source>Share file on Dropbox</source>
-        <translation type="unfinished">Condivisione di file su Dropbox</translation>
+        <translation type="obsolete">Condivisione di file su Dropbox</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>Please download file with below link.</source>
-        <translation type="unfinished">Si prega di scaricare il file con i link qui sotto.</translation>
+        <translation type="obsolete">Si prega di scaricare il file con i link qui sotto.</translation>
     </message>
     <message>
-        <location line="+8"/>
         <source>Share</source>
-        <translation type="unfinished">Condividi</translation>
+        <translation type="obsolete">Condividi</translation>
     </message>
 </context>
 <context>

@@ -72,12 +72,11 @@ Bitte klicken Sie auf &apos;OK&apos;, um fortzufahren.</translation>
         <translation>über</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>More Apps</source>
-        <translation>mehr Apps</translation>
+        <translation type="obsolete">mehr Apps</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+14"/>
         <source>Exit</source>
         <translation>Ausfahrt</translation>
     </message>
@@ -403,12 +402,11 @@ Bitte klicken Sie auf &apos;OK&apos;, um fortzufahren.</translation>
         <translation>über</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>More Apps</source>
-        <translation>mehr Apps</translation>
+        <translation type="obsolete">mehr Apps</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+14"/>
         <source>Exit</source>
         <translation>Ausfahrt</translation>
     </message>
@@ -446,24 +444,6 @@ Bitte klicken Sie auf &apos;OK&apos;, um fortzufahren.</translation>
         <location line="+0"/>
         <source>Exit</source>
         <translation>Ausfahrt</translation>
-    </message>
-</context>
-<context>
-    <name>FileAttributesDialog</name>
-    <message>
-        <location filename="../qml/FilesPlus/symbian/FileAttributesDialog.qml" line="+12"/>
-        <source>%1 info</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+19"/>
-        <source>Attribute 1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Attribute 2</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -511,7 +491,6 @@ Bitte klicken Sie auf &apos;OK&apos;, um fortzufahren.</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+0"/>
         <source>New folder</source>
         <translation>Neuer Ordner</translation>
     </message>
@@ -550,8 +529,8 @@ Please click OK to continue.</source>
 Bitte klicken Sie auf OK, um fortzufahren.</translation>
     </message>
     <message>
-        <location line="+52"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+52"/>
+        <location line="+77"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+77"/>
         <source>Notify</source>
         <translation>benachrichtigen</translation>
     </message>
@@ -599,73 +578,73 @@ Du wirst zu einer Genehmigung weitergeleitet.</translation>
     </message>
     <message>
         <location line="+184"/>
-        <location line="+926"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+188"/>
-        <location line="+933"/>
+        <location line="+940"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+182"/>
+        <location line="+947"/>
         <source>Copy</source>
         <translation>kopieren</translation>
     </message>
     <message>
-        <location line="-924"/>
-        <location line="+925"/>
-        <location line="+1291"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-931"/>
-        <location line="+932"/>
-        <location line="+1283"/>
+        <location line="-938"/>
+        <location line="+939"/>
+        <location line="+1294"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-945"/>
+        <location line="+946"/>
+        <location line="+1286"/>
         <source>Move</source>
         <translation>bewegen</translation>
     </message>
     <message>
-        <location line="-2214"/>
-        <location line="+924"/>
-        <location line="+1314"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2213"/>
-        <location line="+931"/>
-        <location line="+1306"/>
+        <location line="-2231"/>
+        <location line="+938"/>
+        <location line="+1317"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2230"/>
+        <location line="+945"/>
+        <location line="+1309"/>
         <source>Delete</source>
         <translation>löschen</translation>
     </message>
     <message>
-        <location line="-2600"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2603"/>
+        <location line="-2642"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2639"/>
         <source>First time loading</source>
         <translation>Zum ersten Mal Beladung</translation>
     </message>
     <message>
         <location line="-161"/>
-        <location line="+740"/>
+        <location line="+765"/>
         <location line="+74"/>
         <location line="+196"/>
-        <location line="+1177"/>
-        <location line="+673"/>
+        <location line="+1191"/>
+        <location line="+676"/>
         <location line="+307"/>
         <location line="+143"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-160"/>
-        <location line="+743"/>
+        <location line="+762"/>
         <location line="+74"/>
         <location line="+192"/>
-        <location line="+1180"/>
-        <location line="+673"/>
+        <location line="+1194"/>
+        <location line="+676"/>
         <location line="+307"/>
         <location line="+143"/>
         <source>%1 is loaded.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-2739"/>
-        <location line="+886"/>
+        <location line="-2756"/>
+        <location line="+900"/>
         <location line="+20"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2738"/>
-        <location line="+893"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2755"/>
+        <location line="+907"/>
         <location line="+20"/>
         <source>to</source>
         <translatorcomment>Kopieren von A nach B</translatorcomment>
         <translation>nach</translation>
     </message>
     <message>
-        <location line="-885"/>
+        <location line="-899"/>
         <location line="+54"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-892"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-906"/>
         <location line="+54"/>
         <source>error</source>
         <translation>Fehler</translation>
@@ -681,17 +660,17 @@ Du wirst zu einer Genehmigung weitergeleitet.</translation>
     </message>
     <message>
         <location line="-30"/>
-        <location line="+932"/>
+        <location line="+946"/>
         <location line="+467"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-30"/>
-        <location line="+939"/>
+        <location line="+953"/>
         <location line="+459"/>
         <source>Deleting</source>
         <translation>löschen</translation>
     </message>
     <message numerus="yes">
-        <location line="-883"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-883"/>
+        <location line="-897"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-897"/>
         <source>%n dir(s)</source>
         <translation>
             <numerusform>%n Ordner</numerusform>
@@ -715,8 +694,8 @@ Du wirst zu einer Genehmigung weitergeleitet.</translation>
         <translation>zuletzt geändert</translation>
     </message>
     <message>
-        <location line="+299"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+307"/>
+        <location line="+313"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+321"/>
         <source>Multiple actions</source>
         <translation>Mehrere Aktionen</translation>
     </message>
@@ -766,7 +745,8 @@ Kann nicht übertragen A bis B.</translatorcomment>
     </message>
     <message>
         <location line="+50"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+50"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1670"/>
+        <location line="+1720"/>
         <source>New folder / file</source>
         <translation>Neuer Ordner / Datei</translation>
     </message>
@@ -823,8 +803,8 @@ Link will be removed.</source>
 Link wird entfernt.</translation>
     </message>
     <message>
-        <location line="+338"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+338"/>
+        <location line="+341"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+341"/>
         <source>Browse</source>
         <translation type="unfinished"></translation>
     </message>
@@ -857,8 +837,8 @@ Bitte klicken Sie auf &quot;OK&quot;, um Bluetooth einzuschalten.</translation>
         <translation type="obsolete">Neuer Ordner</translation>
     </message>
     <message>
-        <location line="-2999"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-3002"/>
+        <location line="-3016"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-3013"/>
         <source>Can&apos;t print %1 
 File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
         <translation>Drucken nicht möglich %1
@@ -877,8 +857,8 @@ Bitte aktivieren Sie auf Ihrem Desktop-Drucker mit Chrom oder mit CloudPrint-fä
 Du wirst zu einer Genehmigung weitergeleitet.</translation>
     </message>
     <message>
-        <location line="-122"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-122"/>
+        <location line="-147"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-147"/>
         <source>Thank you for download FilesPlus.
 This is first time running, FilesPlus needs to load information from your drive.
 
@@ -927,10 +907,10 @@ Klicken Sie auf OK, um fortzufahren.</translation>
         </translation>
     </message>
     <message>
-        <location line="+1492"/>
+        <location line="+1531"/>
         <location line="+70"/>
         <location line="+50"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1503"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1536"/>
         <location line="+67"/>
         <location line="+48"/>
         <source>OK</source>
@@ -940,17 +920,17 @@ Klicken Sie auf OK, um fortzufahren.</translation>
         <location line="-120"/>
         <location line="+70"/>
         <location line="+50"/>
-        <location line="+1456"/>
+        <location line="+1459"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-115"/>
         <location line="+67"/>
         <location line="+48"/>
-        <location line="+1453"/>
+        <location line="+1456"/>
         <source>Cancel</source>
         <translation>Abbrechen</translation>
     </message>
     <message>
-        <location line="-1545"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1540"/>
+        <location line="-1548"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1543"/>
         <source>Please input folder name.</source>
         <translation>Bitte geben Sie Ordnername.</translation>
     </message>
@@ -1107,7 +1087,7 @@ Please re-authorize your accounts before proceed your actions.</source>
         <location line="+47"/>
         <location line="+36"/>
         <location line="+111"/>
-        <location line="+36"/>
+        <location line="+39"/>
         <location line="+131"/>
         <location line="+24"/>
         <location line="+49"/>
@@ -1119,7 +1099,7 @@ Please re-authorize your accounts before proceed your actions.</source>
         <location line="+47"/>
         <location line="+36"/>
         <location line="+111"/>
-        <location line="+36"/>
+        <location line="+39"/>
         <location line="+131"/>
         <location line="+24"/>
         <location line="+49"/>
@@ -1128,8 +1108,8 @@ Please re-authorize your accounts before proceed your actions.</source>
         <translation>Fehler</translation>
     </message>
     <message>
-        <location line="-528"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-528"/>
+        <location line="-531"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-531"/>
         <source>CloudDrive Request Token</source>
         <translation>CloudDrive Anforderungstoken</translation>
     </message>
@@ -1160,8 +1140,8 @@ Please re-authorize your accounts before proceed your actions.</source>
         <translation>Datei-setzen</translation>
     </message>
     <message>
-        <location line="+147"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+147"/>
+        <location line="+150"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+150"/>
         <source>Create Folder</source>
         <translation>Ordner erstellen</translation>
     </message>
@@ -1182,6 +1162,11 @@ Please re-authorize your accounts before proceed your actions.</source>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+5"/>
         <source>Share</source>
         <translation>Teilen Link</translation>
+    </message>
+    <message>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2873"/>
+        <source>Set name filter</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1206,7 +1191,7 @@ Es zeigt in Pie Blick zum leichteren Verständnis auf einen Blick.</translation>
 <context>
     <name>FolderSizeItemListModel</name>
     <message>
-        <location filename="../foldersizeitemlistmodel.cpp" line="+478"/>
+        <location filename="../foldersizeitemlistmodel.cpp" line="+487"/>
         <location line="+22"/>
         <source>Source and Target path can&apos;t be the same.</source>
         <translation>Quelle und Ziel Pfad kann nicht die gleiche sein.</translation>
@@ -1370,6 +1355,12 @@ Es zeigt in Pie Blick zum leichteren Verständnis auf einen Blick.</translation>
     <message>
         <location line="+9"/>
         <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+10"/>
+        <source>Set name filter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+9"/>
         <source>Sort by</source>
         <translation>Sortieren nach</translation>
     </message>
@@ -1386,14 +1377,12 @@ Es zeigt in Pie Blick zum leichteren Verständnis auf einen Blick.</translation>
         <translation>über</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+8"/>
         <source>More Apps</source>
-        <translation>mehr Apps</translation>
+        <translation type="obsolete">mehr Apps</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+8"/>
+        <location line="+14"/>
+        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+16"/>
         <source>Exit</source>
         <translation>Ausfahrt</translation>
     </message>
@@ -1465,6 +1454,15 @@ Es zeigt in Pie Blick zum leichteren Verständnis auf einen Blick.</translation>
         <location filename="../qml/FilesPlus/symbian/MessageDialog.qml" line="+13"/>
         <source>OK</source>
         <translation>OK</translation>
+    </message>
+</context>
+<context>
+    <name>NameFilterPanel</name>
+    <message>
+        <location filename="../qml/FilesPlus/meego/NameFilterPanel.qml" line="+36"/>
+        <location filename="../qml/FilesPlus/symbian/NameFilterPanel.qml" line="+36"/>
+        <source>Please input name filter.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1575,64 +1573,47 @@ Es zeigt in Pie Blick zum leichteren Verständnis auf einen Blick.</translation>
 <context>
     <name>RemoteFolderPage</name>
     <message numerus="yes">
-        <location filename="../qml/FilesPlus/symbian/RemoteFolderPage.qml" line="+422"/>
         <source>%n dir(s)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>%n Ordner</numerusform>
             <numerusform>%n Ordner</numerusform>
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+1"/>
         <source>%n file(s)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>%n Datei</numerusform>
             <numerusform>%n Dateien</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>last modified</source>
-        <translation type="unfinished">zuletzt geändert</translation>
+        <translation type="obsolete">zuletzt geändert</translation>
     </message>
     <message>
-        <location line="+257"/>
         <source>Multiple actions</source>
-        <translation type="unfinished">Mehrere Aktionen</translation>
+        <translation type="obsolete">Mehrere Aktionen</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Copy</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <location line="+958"/>
         <source>Move</source>
-        <translation type="unfinished">bewegen</translation>
+        <translation type="obsolete">bewegen</translation>
     </message>
     <message>
-        <location line="-957"/>
-        <location line="+982"/>
         <source>Delete</source>
-        <translation type="unfinished">löschen</translation>
+        <translation type="obsolete">löschen</translation>
     </message>
     <message>
-        <location line="-981"/>
         <source>Invalid action</source>
-        <translation type="unfinished">Ungültige Aktion</translation>
+        <translation type="obsolete">Ungültige Aktion</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <location line="+20"/>
         <source>to</source>
-        <translation type="unfinished">nach</translation>
+        <translation type="obsolete">nach</translation>
     </message>
     <message numerus="yes">
-        <location line="-3"/>
         <source>Delete %n file(s)
 </source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>Löschen %n Datei
 </numerusform>
             <numerusform>Löschen %n Dateien
@@ -1640,10 +1621,9 @@ Es zeigt in Pie Blick zum leichteren Verständnis auf einen Blick.</translation>
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+1"/>
         <source>Copy %n file(s)
 </source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>Kopieren %n Datei
 </numerusform>
             <numerusform>Kopieren %n Dateien
@@ -1651,10 +1631,9 @@ Es zeigt in Pie Blick zum leichteren Verständnis auf einen Blick.</translation>
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+1"/>
         <source>Move %n file(s)
 </source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>Bewegen %n Datei
 </numerusform>
             <numerusform>Bewegen %n Dateien
@@ -1662,171 +1641,123 @@ Es zeigt in Pie Blick zum leichteren Verständnis auf einen Blick.</translation>
         </translation>
     </message>
     <message>
-        <location line="+70"/>
-        <location line="+307"/>
-        <source>Deleting</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="-261"/>
         <source>Can&apos;t %1 %2 to %3.</source>
-        <translation type="unfinished">Kann nicht %1 %2 bis %3.</translation>
+        <translation type="obsolete">Kann nicht %1 %2 bis %3.</translation>
     </message>
     <message>
-        <location line="+48"/>
         <source>New folder / file</source>
-        <translation type="unfinished">Neuer Ordner / Datei</translation>
+        <translation type="obsolete">Neuer Ordner / Datei</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <location line="+67"/>
-        <location line="+48"/>
         <source>OK</source>
-        <translation type="unfinished">OK</translation>
+        <translation type="obsolete">OK</translation>
     </message>
     <message>
-        <location line="-115"/>
-        <location line="+67"/>
-        <location line="+48"/>
         <source>Cancel</source>
-        <translation type="unfinished">Abbrechen</translation>
+        <translation type="obsolete">Abbrechen</translation>
     </message>
     <message>
-        <location line="-104"/>
         <source>Folder</source>
-        <translation type="unfinished">Ordner</translation>
+        <translation type="obsolete">Ordner</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>File</source>
-        <translation type="unfinished">Datei</translation>
+        <translation type="obsolete">Datei</translation>
     </message>
     <message>
-        <location line="+10"/>
         <source>Please input folder name.</source>
-        <translation type="unfinished">Bitte geben Sie Ordnername.</translation>
+        <translation type="obsolete">Bitte geben Sie Ordnername.</translation>
     </message>
     <message>
-        <location line="+0"/>
         <source>Please input file name.</source>
-        <translation type="unfinished">Bitte geben Sie den Dateinamen.</translation>
+        <translation type="obsolete">Bitte geben Sie den Dateinamen.</translation>
     </message>
     <message>
-        <location line="+37"/>
         <source>Rename</source>
-        <translation type="unfinished">Umbenennen</translation>
+        <translation type="obsolete">Umbenennen</translation>
     </message>
     <message>
-        <location line="+10"/>
         <source>Rename %1 to</source>
-        <translation type="unfinished">Umbenennen %1 zu</translation>
+        <translation type="obsolete">Umbenennen %1 zu</translation>
     </message>
     <message>
-        <location line="+8"/>
         <source>Please input new name.</source>
-        <translation type="unfinished">Bitte geben Sie Ihre neuen Namen.</translation>
+        <translation type="obsolete">Bitte geben Sie Ihre neuen Namen.</translation>
     </message>
     <message>
-        <location line="+30"/>
         <source>File overwrite</source>
-        <translation type="unfinished">Datei überschreiben</translation>
+        <translation type="obsolete">Datei überschreiben</translation>
     </message>
     <message>
-        <location line="+9"/>
         <source>Please input new file name.</source>
-        <translation type="unfinished">Bitte geben Sie Ihre neuen Dateinamen ein.</translation>
+        <translation type="obsolete">Bitte geben Sie Ihre neuen Dateinamen ein.</translation>
     </message>
     <message>
-        <location line="+15"/>
         <source>Overwrite existing file</source>
-        <translation type="unfinished">Bestehende überschreiben</translation>
+        <translation type="obsolete">Bestehende überschreiben</translation>
     </message>
     <message>
-        <location line="+47"/>
         <source>Cancel sync jobs</source>
-        <translation type="unfinished">Abbrechen sync. Aktivitäten</translation>
+        <translation type="obsolete">Abbrechen sync. Aktivitäten</translation>
     </message>
     <message numerus="yes">
-        <location line="+2"/>
         <source>Cancel %n job(s) ?</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>Abbrechen %n-Aktivität ?</numerusform>
             <numerusform>Abbrechen %n Aktivitäten ?</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+134"/>
         <source>CloudDrive Request Token</source>
-        <translation type="unfinished">CloudDrive Anforderungstoken</translation>
+        <translation type="obsolete">CloudDrive Anforderungstoken</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location line="+37"/>
-        <location line="+25"/>
-        <location line="+47"/>
-        <location line="+36"/>
-        <location line="+119"/>
-        <location line="+37"/>
-        <location line="+141"/>
-        <location line="+25"/>
-        <location line="+46"/>
         <source>Error</source>
-        <translation type="unfinished">Fehler</translation>
+        <translation type="obsolete">Fehler</translation>
     </message>
     <message>
-        <location line="-486"/>
-        <location line="+9"/>
         <source>CloudDrive Access Token</source>
-        <translation type="unfinished">CloundDrive Zugang Token</translation>
+        <translation type="obsolete">CloundDrive Zugang Token</translation>
     </message>
     <message>
-        <location line="-8"/>
         <source>CloudDrive user is authorized.
 Please proceed your sync action.</source>
-        <translation type="unfinished">CloudDrive Benutzer autorisiert ist.
+        <translation type="obsolete">CloudDrive Benutzer autorisiert ist.
 Gehen Sie bitte Ihre sync Aktion.</translation>
     </message>
     <message>
-        <location line="+33"/>
         <source>CloudDrive Account Info</source>
-        <translation type="unfinished">CloudDrive Kundendaten</translation>
+        <translation type="obsolete">CloudDrive Kundendaten</translation>
     </message>
     <message>
-        <location line="+47"/>
         <source>File Get</source>
-        <translation type="unfinished">Datei-get</translation>
+        <translation type="obsolete">Datei-get</translation>
     </message>
     <message>
-        <location line="+36"/>
         <source>File Put</source>
-        <translation type="unfinished">Datei-setzen</translation>
+        <translation type="obsolete">Datei-setzen</translation>
     </message>
     <message>
-        <location line="+46"/>
         <source>%1 was removed remotely.
 Link will be removed.</source>
-        <translation type="unfinished">%1 wurde remote entfernt.
+        <translation type="obsolete">%1 wurde remote entfernt.
 Link wird entfernt.</translation>
     </message>
     <message>
-        <location line="+110"/>
         <source>Create Folder</source>
-        <translation type="unfinished">Ordner erstellen</translation>
+        <translation type="obsolete">Ordner erstellen</translation>
     </message>
     <message>
-        <location line="+203"/>
         <source>Share file on Dropbox</source>
-        <translation type="unfinished">Teilen Link auf Dropbox</translation>
+        <translation type="obsolete">Teilen Link auf Dropbox</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>Please download file with below link.</source>
-        <translation type="unfinished">Bitte laden Datei mit folgenden Link.</translation>
+        <translation type="obsolete">Bitte laden Datei mit folgenden Link.</translation>
     </message>
     <message>
-        <location line="+8"/>
         <source>Share</source>
-        <translation type="unfinished">Teilen Link</translation>
+        <translation type="obsolete">Teilen Link</translation>
     </message>
 </context>
 <context>

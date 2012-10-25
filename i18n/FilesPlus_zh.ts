@@ -78,12 +78,11 @@ Please click &apos;OK&apos; to continue.</translatorcomment>
         <translation>关于</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>More Apps</source>
-        <translation>更多的节目</translation>
+        <translation type="obsolete">更多的节目</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+14"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
@@ -401,12 +400,11 @@ Please click &apos;OK&apos; to continue.</translatorcomment>
         <translation>关于</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>More Apps</source>
-        <translation>更多的节目</translation>
+        <translation type="obsolete">更多的节目</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+14"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
@@ -444,24 +442,6 @@ Please click &apos;OK&apos; to continue.</translatorcomment>
         <location line="+0"/>
         <source>Exit</source>
         <translation>退出</translation>
-    </message>
-</context>
-<context>
-    <name>FileAttributesDialog</name>
-    <message>
-        <location filename="../qml/FilesPlus/symbian/FileAttributesDialog.qml" line="+12"/>
-        <source>%1 info</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+19"/>
-        <source>Attribute 1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Attribute 2</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -515,7 +495,6 @@ FilesPlus provides more features than file manager.
     </message>
     <message>
         <location line="+0"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+0"/>
         <source>New folder</source>
         <translation>创建新的文件夹</translation>
     </message>
@@ -533,27 +512,27 @@ FilesPlus provides more features than file manager.
     </message>
     <message>
         <location line="+25"/>
-        <location line="+740"/>
+        <location line="+765"/>
         <location line="+74"/>
         <location line="+196"/>
-        <location line="+1177"/>
-        <location line="+673"/>
+        <location line="+1191"/>
+        <location line="+676"/>
         <location line="+307"/>
         <location line="+143"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+25"/>
-        <location line="+743"/>
+        <location line="+762"/>
         <location line="+74"/>
         <location line="+192"/>
-        <location line="+1180"/>
-        <location line="+673"/>
+        <location line="+1194"/>
+        <location line="+676"/>
         <location line="+307"/>
         <location line="+143"/>
         <source>%1 is loaded.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-3137"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-3140"/>
+        <location line="-3179"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-3176"/>
         <source>Reset folder cache</source>
         <translation>重置当前文件夹的缓存</translation>
     </message>
@@ -568,8 +547,8 @@ Please click OK to continue.</source>
 请单击“好”继续。</translation>
     </message>
     <message>
-        <location line="+52"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+52"/>
+        <location line="+77"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+77"/>
         <source>Notify</source>
         <translation>通知</translation>
     </message>
@@ -629,35 +608,35 @@ You will be redirected to authorization page.</source>
     </message>
     <message>
         <location line="+184"/>
-        <location line="+926"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+188"/>
-        <location line="+933"/>
+        <location line="+940"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+182"/>
+        <location line="+947"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location line="-924"/>
-        <location line="+925"/>
-        <location line="+1291"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-931"/>
-        <location line="+932"/>
-        <location line="+1283"/>
+        <location line="-938"/>
+        <location line="+939"/>
+        <location line="+1294"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-945"/>
+        <location line="+946"/>
+        <location line="+1286"/>
         <source>Move</source>
         <translation>移动</translation>
     </message>
     <message>
-        <location line="-2214"/>
-        <location line="+924"/>
-        <location line="+1314"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2213"/>
-        <location line="+931"/>
-        <location line="+1306"/>
+        <location line="-2231"/>
+        <location line="+938"/>
+        <location line="+1317"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2230"/>
+        <location line="+945"/>
+        <location line="+1309"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="-2600"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2603"/>
+        <location line="-2642"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-2639"/>
         <source>First time loading</source>
         <translation>第一次加载</translation>
     </message>
@@ -676,19 +655,19 @@ Please click OK to continue.</source>
 请单击“确定”继续。</translation>
     </message>
     <message>
-        <location line="+410"/>
-        <location line="+886"/>
+        <location line="+435"/>
+        <location line="+900"/>
         <location line="+20"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+414"/>
-        <location line="+893"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+433"/>
+        <location line="+907"/>
         <location line="+20"/>
         <source>to</source>
         <translation>对</translation>
     </message>
     <message>
-        <location line="-885"/>
+        <location line="-899"/>
         <location line="+54"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-892"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-906"/>
         <location line="+54"/>
         <source>error</source>
         <translation>错误</translation>
@@ -703,23 +682,23 @@ Please click OK to continue.</source>
     </message>
     <message>
         <location line="-30"/>
-        <location line="+932"/>
+        <location line="+946"/>
         <location line="+467"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-30"/>
-        <location line="+939"/>
+        <location line="+953"/>
         <location line="+459"/>
         <source>Deleting</source>
         <translation>删去</translation>
     </message>
     <message>
-        <location line="-881"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-881"/>
+        <location line="-895"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-895"/>
         <source>last modified</source>
         <translation>最后修改</translation>
     </message>
     <message>
-        <location line="+299"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+307"/>
+        <location line="+313"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+321"/>
         <source>Multiple actions</source>
         <translation>多个动作</translation>
     </message>
@@ -780,17 +759,17 @@ Please click OK to continue.</source>
         <location line="-120"/>
         <location line="+70"/>
         <location line="+50"/>
-        <location line="+1456"/>
+        <location line="+1459"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-115"/>
         <location line="+67"/>
         <location line="+48"/>
-        <location line="+1453"/>
+        <location line="+1456"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="-1563"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1557"/>
+        <location line="-1566"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1560"/>
         <source>Folder</source>
         <translation>文件夹</translation>
     </message>
@@ -965,7 +944,7 @@ Please re-authorize your accounts before proceed your actions.</source>
         <location line="+47"/>
         <location line="+36"/>
         <location line="+111"/>
-        <location line="+36"/>
+        <location line="+39"/>
         <location line="+131"/>
         <location line="+24"/>
         <location line="+49"/>
@@ -977,7 +956,7 @@ Please re-authorize your accounts before proceed your actions.</source>
         <location line="+47"/>
         <location line="+36"/>
         <location line="+111"/>
-        <location line="+36"/>
+        <location line="+39"/>
         <location line="+131"/>
         <location line="+24"/>
         <location line="+49"/>
@@ -986,8 +965,8 @@ Please re-authorize your accounts before proceed your actions.</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location line="-528"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-528"/>
+        <location line="-531"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-531"/>
         <source>CloudDrive Request Token</source>
         <translation>CloudDrive 请求令牌</translation>
     </message>
@@ -1034,8 +1013,8 @@ Link will be removed.</source>
 链接将被删除。</translation>
     </message>
     <message>
-        <location line="+110"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+110"/>
+        <location line="+113"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+113"/>
         <source>Create Folder</source>
         <translatorcomment>New folder</translatorcomment>
         <translation>创建新的文件夹</translation>
@@ -1091,8 +1070,8 @@ Please click &apos;OK&apos; to turn Bluetooth on.</source>
 请点击&apos;好&apos;，打开蓝牙。</translation>
     </message>
     <message>
-        <location line="-2999"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-3002"/>
+        <location line="-3016"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-3013"/>
         <source>Can&apos;t print %1 
 File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
         <translation>不能打印 %1 
@@ -1111,8 +1090,8 @@ You will be redirected to authorization page.</source>
 你会去授权页。</translation>
     </message>
     <message>
-        <location line="-122"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-122"/>
+        <location line="-147"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-147"/>
         <source>Thank you for download FilesPlus.
 This is first time running, FilesPlus needs to load information from your drive.
 
@@ -1131,8 +1110,8 @@ Please click OK to continue.</source>
         <translation type="obsolete">%1 被删除。</translation>
     </message>
     <message numerus="yes">
-        <location line="+975"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+978"/>
+        <location line="+1000"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+997"/>
         <source>%n dir(s)</source>
         <translation>
             <numerusform>%n 文件夹</numerusform>
@@ -1171,8 +1150,9 @@ Please click OK to continue.</source>
         </translation>
     </message>
     <message>
-        <location line="+514"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+522"/>
+        <location line="+528"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1184"/>
+        <location line="+1720"/>
         <source>New folder / file</source>
         <translation>创建新的文件夹/文件</translation>
     </message>
@@ -1191,10 +1171,15 @@ Please click OK to continue.</source>
         </translation>
     </message>
     <message>
-        <location line="-1873"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1875"/>
+        <location line="-1912"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1908"/>
         <source>Sync connected items</source>
         <translation>同步连接文件夹</translation>
+    </message>
+    <message>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+0"/>
+        <source>Set name filter</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1220,7 +1205,7 @@ And shows pie chart view for easy understanding.</translatorcomment>
 <context>
     <name>FolderSizeItemListModel</name>
     <message>
-        <location filename="../foldersizeitemlistmodel.cpp" line="+478"/>
+        <location filename="../foldersizeitemlistmodel.cpp" line="+487"/>
         <location line="+22"/>
         <source>Source and Target path can&apos;t be the same.</source>
         <translation>源和目标路径不能是相同的。</translation>
@@ -1393,6 +1378,12 @@ Deleting %1 is aborted.</translatorcomment>
     <message>
         <location line="+9"/>
         <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+10"/>
+        <source>Set name filter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+9"/>
         <source>Sort by</source>
         <translation>排序</translation>
     </message>
@@ -1409,14 +1400,12 @@ Deleting %1 is aborted.</translatorcomment>
         <translation>关于</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+8"/>
         <source>More Apps</source>
-        <translation>更多的节目</translation>
+        <translation type="obsolete">更多的节目</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+8"/>
+        <location line="+14"/>
+        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+16"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
@@ -1488,6 +1477,15 @@ Deleting %1 is aborted.</translatorcomment>
         <location filename="../qml/FilesPlus/symbian/MessageDialog.qml" line="+13"/>
         <source>OK</source>
         <translation>好</translation>
+    </message>
+</context>
+<context>
+    <name>NameFilterPanel</name>
+    <message>
+        <location filename="../qml/FilesPlus/meego/NameFilterPanel.qml" line="+36"/>
+        <location filename="../qml/FilesPlus/symbian/NameFilterPanel.qml" line="+36"/>
+        <source>Please input name filter.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1594,249 +1592,190 @@ Deleting %1 is aborted.</translatorcomment>
 <context>
     <name>RemoteFolderPage</name>
     <message numerus="yes">
-        <location filename="../qml/FilesPlus/symbian/RemoteFolderPage.qml" line="+422"/>
         <source>%n dir(s)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>%n 文件夹</numerusform>
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+1"/>
         <source>%n file(s)</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>%n 文件</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>last modified</source>
-        <translation type="unfinished">最后修改</translation>
+        <translation type="obsolete">最后修改</translation>
     </message>
     <message>
-        <location line="+257"/>
         <source>Multiple actions</source>
-        <translation type="unfinished">多个动作</translation>
+        <translation type="obsolete">多个动作</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>Copy</source>
-        <translation type="unfinished">复制</translation>
+        <translation type="obsolete">复制</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location line="+958"/>
         <source>Move</source>
-        <translation type="unfinished">移动</translation>
+        <translation type="obsolete">移动</translation>
     </message>
     <message>
-        <location line="-957"/>
-        <location line="+982"/>
         <source>Delete</source>
-        <translation type="unfinished">删除</translation>
+        <translation type="obsolete">删除</translation>
     </message>
     <message>
-        <location line="-981"/>
         <source>Invalid action</source>
-        <translation type="unfinished">无效的行动</translation>
+        <translation type="obsolete">无效的行动</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <location line="+20"/>
         <source>to</source>
-        <translation type="unfinished">对</translation>
+        <translation type="obsolete">对</translation>
     </message>
     <message numerus="yes">
-        <location line="-3"/>
         <source>Delete %n file(s)
 </source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>删除 %n 文件
 </numerusform>
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+1"/>
         <source>Copy %n file(s)
 </source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>复制 %n 文件
 </numerusform>
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+1"/>
         <source>Move %n file(s)
 </source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>移动 %n 文件
 </numerusform>
         </translation>
     </message>
     <message>
-        <location line="+70"/>
-        <location line="+307"/>
         <source>Deleting</source>
-        <translation type="unfinished">删去</translation>
+        <translation type="obsolete">删去</translation>
     </message>
     <message>
-        <location line="-261"/>
         <source>Can&apos;t %1 %2 to %3.</source>
-        <translation type="unfinished">不能%1 %2 %3。</translation>
+        <translation type="obsolete">不能%1 %2 %3。</translation>
     </message>
     <message>
-        <location line="+48"/>
         <source>New folder / file</source>
-        <translation type="unfinished">创建新的文件夹/文件</translation>
+        <translation type="obsolete">创建新的文件夹/文件</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <location line="+67"/>
-        <location line="+48"/>
         <source>OK</source>
-        <translation type="unfinished">好</translation>
+        <translation type="obsolete">好</translation>
     </message>
     <message>
-        <location line="-115"/>
-        <location line="+67"/>
-        <location line="+48"/>
         <source>Cancel</source>
-        <translation type="unfinished">取消</translation>
+        <translation type="obsolete">取消</translation>
     </message>
     <message>
-        <location line="-104"/>
         <source>Folder</source>
-        <translation type="unfinished">文件夹</translation>
+        <translation type="obsolete">文件夹</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>File</source>
-        <translation type="unfinished">文件</translation>
+        <translation type="obsolete">文件</translation>
     </message>
     <message>
-        <location line="+10"/>
         <source>Please input folder name.</source>
-        <translation type="unfinished">请输入文件夹名称。</translation>
+        <translation type="obsolete">请输入文件夹名称。</translation>
     </message>
     <message>
-        <location line="+0"/>
         <source>Please input file name.</source>
-        <translation type="unfinished">请输入文件名称。</translation>
+        <translation type="obsolete">请输入文件名称。</translation>
     </message>
     <message>
-        <location line="+37"/>
         <source>Rename</source>
-        <translation type="unfinished">重命名</translation>
+        <translation type="obsolete">重命名</translation>
     </message>
     <message>
-        <location line="+10"/>
         <source>Rename %1 to</source>
-        <translation type="unfinished">重命名 %1</translation>
+        <translation type="obsolete">重命名 %1</translation>
     </message>
     <message>
-        <location line="+8"/>
         <source>Please input new name.</source>
-        <translation type="unfinished">请输入新的名称。</translation>
+        <translation type="obsolete">请输入新的名称。</translation>
     </message>
     <message>
-        <location line="+30"/>
         <source>File overwrite</source>
-        <translation type="unfinished">覆盖文件</translation>
+        <translation type="obsolete">覆盖文件</translation>
     </message>
     <message>
-        <location line="+9"/>
         <source>Please input new file name.</source>
-        <translation type="unfinished">请输入新的名称。</translation>
+        <translation type="obsolete">请输入新的名称。</translation>
     </message>
     <message>
-        <location line="+15"/>
         <source>Overwrite existing file</source>
-        <translation type="unfinished">覆盖现有文件</translation>
+        <translation type="obsolete">覆盖现有文件</translation>
     </message>
     <message>
-        <location line="+47"/>
         <source>Cancel sync jobs</source>
-        <translation type="unfinished">取消 CloudDrive 活动</translation>
+        <translation type="obsolete">取消 CloudDrive 活动</translation>
     </message>
     <message numerus="yes">
-        <location line="+2"/>
         <source>Cancel %n job(s) ?</source>
-        <translation type="unfinished">
+        <translation type="obsolete">
             <numerusform>取消 %n 操作 ?</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+134"/>
         <source>CloudDrive Request Token</source>
-        <translation type="unfinished">CloudDrive 请求令牌</translation>
+        <translation type="obsolete">CloudDrive 请求令牌</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location line="+37"/>
-        <location line="+25"/>
-        <location line="+47"/>
-        <location line="+36"/>
-        <location line="+119"/>
-        <location line="+37"/>
-        <location line="+141"/>
-        <location line="+25"/>
-        <location line="+46"/>
         <source>Error</source>
-        <translation type="unfinished">错误</translation>
+        <translation type="obsolete">错误</translation>
     </message>
     <message>
-        <location line="-486"/>
-        <location line="+9"/>
         <source>CloudDrive Access Token</source>
-        <translation type="unfinished">CloudDrive 访问令牌</translation>
+        <translation type="obsolete">CloudDrive 访问令牌</translation>
     </message>
     <message>
-        <location line="-8"/>
         <source>CloudDrive user is authorized.
 Please proceed your sync action.</source>
-        <translation type="unfinished">被授权 CloudDrive 用户。
+        <translation type="obsolete">被授权 CloudDrive 用户。
 请继续同步行动。</translation>
     </message>
     <message>
-        <location line="+33"/>
         <source>CloudDrive Account Info</source>
-        <translation type="unfinished">CloudDrive 帐户资讯</translation>
+        <translation type="obsolete">CloudDrive 帐户资讯</translation>
     </message>
     <message>
-        <location line="+47"/>
         <source>File Get</source>
-        <translation type="unfinished">下载文件</translation>
+        <translation type="obsolete">下载文件</translation>
     </message>
     <message>
-        <location line="+36"/>
         <source>File Put</source>
-        <translation type="unfinished">上传文件</translation>
+        <translation type="obsolete">上传文件</translation>
     </message>
     <message>
-        <location line="+46"/>
         <source>%1 was removed remotely.
 Link will be removed.</source>
-        <translation type="unfinished">远程删除 %1。
+        <translation type="obsolete">远程删除 %1。
 链接将被删除。</translation>
     </message>
     <message>
-        <location line="+110"/>
         <source>Create Folder</source>
-        <translation type="unfinished">创建新的文件夹</translation>
+        <translation type="obsolete">创建新的文件夹</translation>
     </message>
     <message>
-        <location line="+203"/>
         <source>Share file on Dropbox</source>
-        <translation type="unfinished">从 Dropbox 的共享文件</translation>
+        <translation type="obsolete">从 Dropbox 的共享文件</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>Please download file with below link.</source>
-        <translation type="unfinished">请与下面的链接下载文件。</translation>
+        <translation type="obsolete">请与下面的链接下载文件。</translation>
     </message>
     <message>
-        <location line="+8"/>
         <source>Share</source>
-        <translation type="unfinished">从 Dropbox 的共享文件</translation>
+        <translation type="obsolete">从 Dropbox 的共享文件</translation>
     </message>
 </context>
 <context>
