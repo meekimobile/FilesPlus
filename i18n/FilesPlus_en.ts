@@ -886,7 +886,7 @@ Please click OK to continue.</translation>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1"/>
         <location line="+43"/>
         <source>FilesPlus needs to convert its database. It will not effect your data.</source>
-        <translation>FilesPlus needs to convert its database. It will not effect your data.</translation>
+        <translation>FilesPlus needs to convert its database. It will not affect your data.</translation>
     </message>
     <message>
         <location line="-42"/>
