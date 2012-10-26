@@ -207,7 +207,7 @@ Page {
         else if (name == "resetCache") return qsTr("Reset current folder cache") + appInfo.emptyStr;
         else if (name == "Theme.inverted") return qsTr("Theme") + appInfo.emptyStr;
         else if (name == "popup.timer.interval") return qsTr("Popup interval") + appInfo.emptyStr;
-        else if (name == "locale") return languageModel.getLanguage(appInfo.getLocale(), "en") + appInfo.emptyStr;
+        else if (name == "locale") return languageModel.getLanguage(appInfo.getLocale(), appInfo.getSystemLocale()) + appInfo.emptyStr;
         else if (name == "thumbnail.enabled") return qsTr("Show thumbnail") + appInfo.emptyStr;
         else if (name == "keep.bluetooth.off") return qsTr("Keep bluetooth off") + appInfo.emptyStr;
         else if (name == "Logging.enabled") return qsTr("Logging (Debug)") + appInfo.emptyStr;
@@ -428,7 +428,7 @@ Page {
         columns: [ languageColumn ]
         onStatusChanged: {
             if (status == DialogStatus.Opening) {
-                columns[0].selectedIndex = languageModel.getIndexByLocale(appInfo.getLocale());
+                columns[0].selectedIndex = languageModel.getIndexByLocale( (appInfo.getLocale() !== "") ? appInfo.getLocale() : appInfo.getSystemLocale() );
             }
         }
 
