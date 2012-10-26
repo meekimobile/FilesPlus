@@ -190,7 +190,7 @@ Page {
         section.property: "group"
         section.criteria: ViewSection.FullString
         section.delegate: settingListSectionDelegate
-        cacheBuffer: 1000
+        cacheBuffer: 1600
     }
 
     function getTitle(name) {

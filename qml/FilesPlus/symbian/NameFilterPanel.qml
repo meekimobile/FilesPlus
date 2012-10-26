@@ -4,7 +4,22 @@ import "Utility.js" as Utility
 
 Rectangle {
     id: nameFilterPanel
-    color: "black"
+    gradient: Gradient {
+        GradientStop {
+            position: 0
+            color: (!window.platformInverted) ? "#242424" : "#FFFFFF"
+        }
+
+        GradientStop {
+            position: 0.790
+            color: (!window.platformInverted) ? "#0F0F0F" : "#F0F0F0"
+        }
+
+        GradientStop {
+            position: 1
+            color: (!window.platformInverted) ? "#000000" : "#DBDBDB"
+        }
+    }
     width: parent.width
     height: 60
     z: 1
@@ -16,11 +31,13 @@ Rectangle {
 
     function open() {
         nameFilterInput.text = "";
+        searchButton.focus = true;
         visible = true;
     }
     
     function close() {
         nameFilterInput.text = "";
+        closeButton.focus = true;
         visible = false;
     }
     
