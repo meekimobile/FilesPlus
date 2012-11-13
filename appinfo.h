@@ -43,7 +43,7 @@ public:
 
     Q_INVOKABLE void addToClipboard(const QString text);
     Q_INVOKABLE QString getFromClipboard();
-    Q_INVOKABLE QString clearClipboard();
+    Q_INVOKABLE void clearClipboard();
 
     void componentComplete();
     void init();

@@ -13,7 +13,7 @@ QML_IMPORT_PATH =
 #symbian:TARGET.UID3 = 0xE11DCC9D
 symbian:TARGET.UID3 = 0x20064E45
 
-VERSION = 1.1.0
+VERSION = 1.1.1
 
 # Smart Installer package's UID
 # This UID is from the protected range and therefore the package will
@@ -161,3 +161,6 @@ TRANSLATIONS += \
     i18n/FilesPlus_zh.ts \
     i18n/FilesPlus_de.ts \
     i18n/FilesPlus_it.ts
+
+message( VERSION $${VERSION} )
+message( VERSTR $${VERSTR} )

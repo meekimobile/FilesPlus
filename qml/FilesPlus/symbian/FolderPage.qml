@@ -2047,8 +2047,21 @@ Page {
         onAccepted: {
             // Print on selected printer index.
             var pid = gcpClient.getPrinterId(printerSelectionDialog.selectedIndex);
-            console.debug("printerSelectionDialog onAccepted pid=" + pid + " srcFilePath=" + srcFilePath + " srcURL=" + srcURL);
+            var printerType = gcpClient.getPrinterType(printerSelectionDialog.selectedIndex);
+            console.debug("printerSelectionDialog onAccepted pid=" + pid + "printerType=" + printerType + " srcFilePath=" + srcFilePath + " srcURL=" + srcURL);
             if (pid != "") {
+                // TODO Add options for PrintQualities and Colors.
+                // Issue: Fix HP ePrint to print in color by setting capabilities.
+                var capabilities = "";
+                if (printerType.toUpperCase() == "HP") {
+                    capabilities = "\
+{\"capabilities\":[ \
+{\"name\":\"ns1:PrintQualities\",\"type\":\"Feature\",\"options\":[{\"name\":\"Normal\"}]}, \
+{\"name\":\"ns1:Colors\",\"type\":\"Feature\",\"options\":[{\"name\":\"Color\"}]} \
+]}";
+                }
+                console.debug("printerSelectionDialog onAccepted capabilities=" + capabilities);
+
                 if (srcFilePath != "") {
                     // Open uploadProgressBar for printing.
                     uploadProgressDialog.srcFilePath = srcFilePath;
@@ -2056,7 +2069,7 @@ Page {
                     uploadProgressDialog.autoClose = false;
                     uploadProgressDialog.open();
 
-                    gcpClient.submit(pid, srcFilePath);
+                    gcpClient.submit(pid, srcFilePath, capabilities);
                 } else if (srcURL != "") {
                     // Open uploadProgressBar for printing.
                     uploadProgressDialog.srcFilePath = srcURL;
@@ -2064,7 +2077,7 @@ Page {
                     uploadProgressDialog.autoClose = false;
                     uploadProgressDialog.open();
 
-                    gcpClient.submit(pid, srcURL, "", srcURL, "url", "");
+                    gcpClient.submit(pid, srcURL, capabilities, srcURL, "url", "");
                 }
             }
         }

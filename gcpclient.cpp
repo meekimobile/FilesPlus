@@ -26,8 +26,8 @@ const QString GCPClient::deletejobURI = "http://www.google.com/cloudprint/delete
 const QString GCPClient::printerURI = "http://www.google.com/cloudprint/printer";
 const QString GCPClient::searchURI = "http://www.google.com/cloudprint/search";
 
-GCPClient::GCPClient(QDeclarativeItem *parent) :
-    QDeclarativeItem(parent)
+GCPClient::GCPClient(QDeclarativeItem *parent)
+    : QDeclarativeItem(parent)
 {
     loadParamMap();
 
@@ -53,6 +53,7 @@ bool GCPClient::isParamMapChanged() {
 }
 
 void GCPClient::loadParamMap() {
+    qDebug() << "GCPClient::loadParamMap KeyStoreFilePath" << KeyStoreFilePath;
     QFile file(KeyStoreFilePath);
     if (file.open(QIODevice::ReadOnly)) {
         QDataStream in(&file);    // read the data serialized from the file
@@ -216,8 +217,40 @@ QStringList GCPClient::getStoredPrinterList()
     return map.values();
 }
 
+QString GCPClient::getPrinterType(QString printerId)
+{
+    int i = getPrinterIndex(printerId);
+    if (i != -1) {
+        return getPrinterType(i);
+    }
+
+    return "N/A";
+}
+
+QString GCPClient::getPrinterType(int i) {
+    return m_printerHash[QString("printers.%1.type").arg(i)];
+}
+
 QString GCPClient::getPrinterId(int i) {
     return m_printerHash[QString("printers.%1.id").arg(i)];
+}
+
+int GCPClient::getPrinterIndex(QString printerId) {
+    qDebug() << "GCPClient::getPrinterIndex printerId" << printerId;
+
+    QRegExp rx("^(printers\\.)(\\d+)(\\.id)$");
+
+    foreach(QString key, m_printerHash.keys()) {
+        if (rx.indexIn(key) != -1) {
+            int i = rx.cap(2).toInt();
+            qDebug() << "GCPClient::getPrinterIndex key" << key << "i" << i;
+            if (m_printerHash[key] == printerId) {
+                return i;
+            }
+        }
+    }
+
+    return -1;
 }
 
 QByteArray GCPClient::encodeMultiPart(QString boundary, QMap<QString, QString> paramMap, QString fileParameter, QString fileName, QByteArray fileData, QString contentType) {
@@ -354,7 +387,8 @@ void GCPClient::search(QString q)
 
     qDebug() << "----- GCPClient::search -----";
 
-    QString uri = searchURI + "?q=" + q;
+    QString uri = searchURI;
+    if (q != "") uri += "?q=" + q;
 
     qDebug() << "GCPClient::search uri " << uri;
 
@@ -422,14 +456,14 @@ void GCPClient::submit(QString printerId, QString title, QString capabilities, Q
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
-void GCPClient::submit(QString printerId, QString contentPath)
+void GCPClient::submit(QString printerId, QString contentPath, QString capabilities)
 {
     QFile file(contentPath);
     QFileInfo fileInfo(file);
     if (file.open(QIODevice::ReadOnly)) {
         QString contentType = getContentType(fileInfo.fileName());
         if (contentType != "") {
-            submit(printerId, fileInfo.fileName(), "", contentPath, contentType, "");
+            submit(printerId, fileInfo.fileName(), capabilities, contentPath, contentType, "");
         } else {
             qDebug() << "GCPClient::submit file type is not supported. (" << contentPath << ")";
         }
@@ -488,6 +522,33 @@ void GCPClient::deletejob(QString jobId)
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
+void GCPClient::printer(QString printerId)
+{
+    // Check if token is changed, then reload.
+    if (isParamMapChanged()) loadParamMap();
+
+    qDebug() << "----- GCPClient::printer -----";
+
+    QString uri = printerURI + "?printerid=" + printerId;
+    qDebug() << "----- GCPClient::printer uri" << uri;
+
+    QByteArray authHeader;
+    authHeader.append("Bearer ");
+    authHeader.append(m_paramMap["access_token"]);
+
+    qDebug() << "GCPClient::printer authHeader " << authHeader;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(printerReplyFinished(QNetworkReply*)));
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setRawHeader("Authorization", authHeader) ;
+    req.setRawHeader("X-CloudPrint-Proxy", "Chrome");
+    QNetworkReply *reply = manager->get(req);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
+}
+
 QString GCPClient::getContentType(QString fileName) {
     // Parse fileName with RegExp
     QRegExp rx("(.+)(\\.)(\\w{3,4})$");
@@ -514,6 +575,9 @@ void GCPClient::accessTokenReplyFinished(QNetworkReply *reply)
 
         // Save tokens.
         saveParamMap();
+
+        // Reset stored printers.
+        m_printerHash.clear();
     }
 
     emit accessTokenReplySignal(reply->error(), reply->errorString(), replyBody );
@@ -599,6 +663,7 @@ void GCPClient::jobsReplyFinished(QNetworkReply *reply)
 {
     qDebug() << "GCPClient::jobsReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
+    // TODO Got ??? in title from Google CloudPrint.
     QString replyBody = QString(reply->readAll());
 
     emit jobsReplySignal(reply->error(), reply->errorString(), replyBody );
@@ -615,6 +680,22 @@ void GCPClient::deletejobReplyFinished(QNetworkReply *reply)
     QString replyBody = QString(reply->readAll());
 
     emit deletejobReplySignal(reply->error(), reply->errorString(), replyBody );
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void GCPClient::printerReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "GCPClient::printerReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    // TODO Got ??? in title from Google CloudPrint.
+    QString replyBody = QString(reply->readAll());
+
+    qDebug() << "GCPClient::printerReplyFinished replyBody" << replyBody;
+
+    emit printerReplySignal(reply->error(), reply->errorString(), replyBody );
 
     // Scheduled to delete later.
     reply->deleteLater();

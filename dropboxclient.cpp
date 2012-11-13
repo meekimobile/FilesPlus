@@ -390,6 +390,7 @@ void DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, 
     qDebug() << "----- DropboxClient::fileGet -----";
 
     QString uri = fileGetURI.arg(dropboxRoot, remoteFilePath);
+    uri = encodeURI(uri);
     qDebug() << "DropboxClient::fileGet uri " << uri;
 
     // Create localTargetFile for file getting.
@@ -400,7 +401,7 @@ void DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetReplyFinished(QNetworkReply*)));
-    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
     QNetworkReply *reply = manager->get(req);
@@ -425,6 +426,7 @@ void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, Q
     qDebug() << "----- DropboxClient::filePut -----";
 
     QString uri = filePutURI.arg(dropboxRoot, remoteFilePath);
+    uri = encodeURI(uri);
     qDebug() << "DropboxClient::filePut uri " << uri;
 
     m_localFileHash[nonce] = new QFile(localFilePath);
@@ -435,7 +437,7 @@ void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, Q
         // Send request.
         QNetworkAccessManager *manager = new QNetworkAccessManager(this);
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)));
-        QNetworkRequest req = QNetworkRequest(QUrl(uri));
+        QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
         req.setAttribute(QNetworkRequest::User, QVariant(nonce));
         req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "PUT", uri));
         req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize);
@@ -466,12 +468,13 @@ void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 
     // TODO root dropbox(Full access) or sandbox(App folder access)
     QString uri = metadataURI.arg(dropboxRoot).arg(remoteFilePath);
+    uri = encodeURI(uri);
     qDebug() << "DropboxClient::metadata uri " << uri;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(metadataReplyFinished(QNetworkReply*)));
-    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
     QNetworkReply *reply = manager->get(req);
@@ -482,16 +485,17 @@ void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 
 void DropboxClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "----- DropboxClient::browse -----";
+    qDebug() << "----- DropboxClient::browse -----" << remoteFilePath;
 
     // TODO root dropbox(Full access) or sandbox(App folder access)
     QString uri = metadataURI.arg(dropboxRoot).arg(remoteFilePath);
+    uri = encodeURI(uri);
     qDebug() << "DropboxClient::browse uri " << uri;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(browseReplyFinished(QNetworkReply*)));
-    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
     QNetworkReply *reply = manager->get(req);
@@ -632,6 +636,7 @@ void DropboxClient::shareFile(QString nonce, QString uid, QString remoteFilePath
 
     // TODO root dropbox(Full access) or sandbox(App folder access)
     QString uri = sharesURI.arg(dropboxRoot).arg(remoteFilePath);
+//    uri = encodeURI(uri);
     qDebug() << "DropboxClient::shareFile uri " << uri;
 
     QByteArray postData;

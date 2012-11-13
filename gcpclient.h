@@ -45,11 +45,15 @@ public:
     Q_INVOKABLE void search(QString q);
     Q_INVOKABLE QString getContentType(QString fileName);
     Q_INVOKABLE QString getPrinterId(int i);
+    Q_INVOKABLE int getPrinterIndex(QString printerId);
     Q_INVOKABLE QStringList getStoredPrinterList();
+    Q_INVOKABLE QString getPrinterType(int i);
+    Q_INVOKABLE QString getPrinterType(QString printerId);
     Q_INVOKABLE void submit(QString printerId, QString title, QString capabilities, QString contentPath, QString contentType, QString tag);
-    Q_INVOKABLE void submit(QString printerId, QString contentPath); // Simplify submit method
+    Q_INVOKABLE void submit(QString printerId, QString contentPath, QString capabilities); // Simplify submit method
     Q_INVOKABLE void jobs(QString printerId);
     Q_INVOKABLE void deletejob(QString jobId);
+    Q_INVOKABLE void printer(QString printerId);
 signals:
     void authorizeRedirectSignal(QString url);
     void accessTokenReplySignal(int err, QString errMsg, QString msg);
@@ -59,6 +63,7 @@ signals:
     void submitReplySignal(int err, QString errMsg, QString msg);
     void jobsReplySignal(int err, QString errMsg, QString msg);
     void deletejobReplySignal(int err, QString errMsg, QString msg);
+    void printerReplySignal(int err, QString errMsg, QString msg);
 
     void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
@@ -70,6 +75,7 @@ public slots:
     void submitReplyFinished(QNetworkReply *reply);
     void jobsReplyFinished(QNetworkReply *reply);
     void deletejobReplyFinished(QNetworkReply *reply);
+    void printerReplyFinished(QNetworkReply *reply);
 private:
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;

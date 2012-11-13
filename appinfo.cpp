@@ -94,7 +94,7 @@ QString AppInfo::getFromClipboard()
     return text;
 }
 
-QString AppInfo::clearClipboard()
+void AppInfo::clearClipboard()
 {
     QApplication::clipboard()->clear();
     qDebug() << "AppInfo::clearClipboard";
