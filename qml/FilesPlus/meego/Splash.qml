@@ -78,6 +78,14 @@ Rectangle {
         }
     }
 
+    // Manually close splash screen.
+    MouseArea {
+        anchors.fill: parent
+        onClicked: {
+            hideSplashScreen.start();
+        }
+    }
+
     Component.onDestruction: {
         screen.allowedOrientations = Screen.All;
     }

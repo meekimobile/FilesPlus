@@ -1,3 +1,8 @@
+filesplus (1.1.2) unstable; urgency=low
+  * Click on splash page's background to close manually.
+
+ -- Taweesak Kittipuree <>  Tue, 27 Nov 2012 09:17:42 +0700
+
 filesplus (1.1.1) unstable; urgency=low
   * Fix GCPClient to clear stored printer after reset account. Fix DropboxClient to support # in path. Fix to print in color to HP ePrint as it default as greyscale.
 
