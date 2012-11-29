@@ -21,6 +21,8 @@
 
 static const QString AppName = "FilesPlus";
 
+bool suppressWarningMsg;
+
 void customMessageHandler(QtMsgType type, const char *msg)
 {
     QString txt;
@@ -30,6 +32,9 @@ void customMessageHandler(QtMsgType type, const char *msg)
         txt = QString("%1 Debug: %2").arg(timestampString).arg(msg);
         break;
     case QtWarningMsg:
+        if (suppressWarningMsg) {
+            return;
+        }
         txt = QString("%1 Warning: %2").arg(timestampString).arg(msg);
         break;
     case QtCriticalMsg:
@@ -37,7 +42,7 @@ void customMessageHandler(QtMsgType type, const char *msg)
         break;
     case QtFatalMsg:
         txt = QString("%1 Fatal: %2").arg(timestampString).arg(msg);
-        abort();
+        break;
     }
 
 #ifdef Q_OS_SYMBIAN
@@ -55,6 +60,11 @@ void customMessageHandler(QtMsgType type, const char *msg)
     QTextStream ts(&outFile);
     ts << txt << endl;
 #endif
+
+    // Abort application if fatal msg occurs.
+    if (type == QtFatalMsg) {
+        abort();
+    }
 }
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
@@ -168,6 +178,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     if (m_settings->value("Logging.enabled", true).toBool()) {
         qDebug() << "main m_settings Logging.enabled=true";
         qInstallMsgHandler(customMessageHandler);
+        suppressWarningMsg = m_settings->value("Logging.suppressWarning", true).toBool();
     } else {
         qDebug() << "main m_settings Logging.enabled=false";
     }
@@ -178,6 +189,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     if (m_settings->value("Logging.enabled", true).toBool()) {
         qDebug() << "main m_settings Logging.enabled=true";
         qInstallMsgHandler(customMessageHandler);
+        suppressWarningMsg = m_settings->value("Logging.suppressWarning", true).toBool();
     } else {
         qDebug() << "main m_settings Logging.enabled=false";
     }
