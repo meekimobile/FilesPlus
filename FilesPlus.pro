@@ -82,7 +82,8 @@ SOURCES += main.cpp \
     messageclient.cpp \
     clipboardmodel.cpp \
     customqnetworkaccessmanagerfactory.cpp \
-    customqnetworkaccessmanager.cpp
+    customqnetworkaccessmanager.cpp \
+    ftpclient.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -113,7 +114,8 @@ HEADERS += \
     messageclient.h \
     clipboardmodel.h \
     customqnetworkaccessmanagerfactory.h \
-    customqnetworkaccessmanager.h
+    customqnetworkaccessmanager.h \
+    ftpclient.h
 
 OTHER_FILES += \
     qtc_packaging/debian_harmattan/rules \

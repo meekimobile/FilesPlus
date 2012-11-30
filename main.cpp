@@ -18,6 +18,7 @@
 #ifdef Q_OS_SYMBIAN
 #include "customqnetworkaccessmanagerfactory.h"
 #endif
+#include "ftpclient.h"
 
 static const QString AppName = "FilesPlus";
 
@@ -230,6 +231,10 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     // Add custom NAMF to change User-Agent to fix problem with Dropbox login page.
     viewer.engine()->setNetworkAccessManagerFactory(new CustomQNetworkAccessManagerFactory());
 #endif
+
+    // ***** Test FTP
+    FtpClient ftp;
+    ftp.test();
 
     return app->exec();
 }
