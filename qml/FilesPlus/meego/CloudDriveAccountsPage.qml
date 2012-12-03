@@ -216,10 +216,10 @@ Page {
                     cloudDriveAccountsPage.cloudDriveModel.accountInfo(type, uid);
                     break;
                 case CloudDriveModel.SkyDrive:
-//                    if (email == "") {
+                    if (email == "") {
                         cloudDriveAccountsPage.cloudDriveModel.accountInfo(type, uid);
-//                    }
-//                    cloudDriveAccountsPage.cloudDriveModel.quota(type, uid);
+                    }
+                    cloudDriveAccountsPage.cloudDriveModel.quota(type, uid);
                     break;
                 }
             }

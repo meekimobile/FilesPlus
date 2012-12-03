@@ -2560,8 +2560,6 @@ Page {
                         break;
                     }
                 }
-            } else if (err == 2) {
-                cloudDriveModel.refreshToken(cloudDriveJobJson.type, cloudDriveJobJson.uid);
             } else {
                 messageDialog.titleText = appInfo.emptyStr+qsTr("CloudDrive Quota");
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
