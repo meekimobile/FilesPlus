@@ -413,6 +413,7 @@ Page {
             messageDialog.autoClose = true;
             messageDialog.open();
 
+            // TODO Supports multiple cloud storage providers.
             cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
         } else {
             // [/] impl. in DropboxClient to store item(DropboxClient, uid, filePath, jsonObj(msg).rev) [Done on FilePutRely]
@@ -533,6 +534,17 @@ Page {
         cloudDriveModel.accessToken(CloudDriveModel.Dropbox);
     }
 
+    function skyDriveAccessTokenSlot(pin) {
+        console.debug("folderPage skyDriveAccessTokenSlot pin " + pin);
+        if (pin == "" || pin == "PinNotFound") {
+            messageDialog.titleText =  appInfo.emptyStr+"SkyDrive "+qsTr("Access Token");
+            messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + qsTr("PIN code is not found.");
+            messageDialog.open();
+        } else {
+            cloudDriveModel.accessToken(CloudDriveModel.SkyDrive, pin);
+        }
+    }
+
     function resetCloudPrintSlot() {
         popupToolPanel.selectedFilePath = "";
         popupToolPanel.selectedFileIndex = -1;
@@ -541,6 +553,10 @@ Page {
 
     function registerDropboxUserSlot() {
         cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
+    }
+
+    function registerSkyDriveAccountSlot() {
+        cloudDriveModel.authorize(CloudDriveModel.SkyDrive);
     }
 
     function showCloudDriveAccountsSlot() {
@@ -2322,20 +2338,20 @@ Page {
 
             // TODO Get uid list from GDClient.
 
-            // Get uid list from DropboxClient.
-            var dbUidList = cloudDriveModel.getStoredUidList(CloudDriveModel.Dropbox);
+            // Get uid list.
+            var uidList = cloudDriveModel.getStoredUidList();
 
             // Construct model.
             var model = Qt.createQmlObject(
                         'import QtQuick 1.1; ListModel {}', folderPage);
 
-            for (var i=0; i<dbUidList.length; i++)
+            for (var i=0; i<uidList.length; i++)
             {
-                var json = JSON.parse(dbUidList[i]);
-                var localHash = cloudDriveModel.getItemHash(localPath, CloudDriveModel.Dropbox, json.uid);
-                console.debug("getUidListModel i " + i + " uid " + json.uid + " email " + json.email + " localHash " + localHash);
+                var json = JSON.parse(uidList[i]);
+                var localHash = cloudDriveModel.getItemHash(localPath, getClientType(json.type), json.uid);
+                console.debug("getUidListModel i " + i + " type " + json.type + " uid " + json.uid + " email " + json.email + " localHash " + localHash);
                 model.append({
-                                 type: CloudDriveModel.Dropbox,
+                                 type: getClientType(json.type),
                                  uid: json.uid,
                                  email: json.email,
                                  hash: localHash,
@@ -2368,6 +2384,8 @@ Page {
                 return "dropbox_icon.png";
             case CloudDriveModel.GoogleDrive:
                 return "drive_icon.png";
+            case CloudDriveModel.SkyDrive:
+                return "skydrive_icon.png";
             }
         }
 
@@ -2377,6 +2395,16 @@ Page {
                 return "Dropbox";
             case CloudDriveModel.GoogleDrive:
                 return "GoogleDrive";
+            case CloudDriveModel.SkyDrive:
+                return "SkyDrive";
+            }
+        }
+
+        function getClientType(typeText) {
+            if (typeText.toLowerCase() == "dropbox") {
+                return CloudDriveModel.Dropbox;
+            } else if (typeText.toLowerCase() == "skydrive") {
+                return CloudDriveModel.SkyDrive;
             }
         }
 
@@ -2462,22 +2490,80 @@ Page {
 
             if (err == 0) {
                 var jsonObj = Utility.createJsonObj(msg);
-                console.debug("jsonObj.email " + jsonObj.email);
 
                 // Send info to cloudDriveAccountsPage.
                 var p;
                 p = pageStack.find(function (page) { return (page.name == "cloudDriveAccountsPage"); });
                 if (p) {
-                    p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email, jsonObj.quota_info.shared, jsonObj.quota_info.normal, jsonObj.quota_info.quota);
+                    switch (cloudDriveJobJson.type) {
+                    case CloudDriveModel.Dropbox:
+                        p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email, jsonObj.quota_info.shared, jsonObj.quota_info.normal, jsonObj.quota_info.quota);
+                        break;
+                    case CloudDriveModel.SkyDrive:
+                        p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email, 0, 0, 0);
+                        break;
+                    }
+
                 }
 
                 // Send info to drivePage.
                 p = pageStack.find(function (page) { return (page.name == "drivePage"); });
                 if (p) {
-                    p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email, jsonObj.quota_info.shared, jsonObj.quota_info.normal, jsonObj.quota_info.quota);
+                    switch (cloudDriveJobJson.type) {
+                    case CloudDriveModel.Dropbox:
+                        p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email, jsonObj.quota_info.shared, jsonObj.quota_info.normal, jsonObj.quota_info.quota);
+                        break;
+                    case CloudDriveModel.SkyDrive:
+                        p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email, 0, 0, 0);
+                        break;
+                    }
                 }
+            } else if (err == 204) {
+                cloudDriveModel.refreshToken(cloudDriveJobJson.type, cloudDriveJobJson.uid);
             } else {
                 messageDialog.titleText = appInfo.emptyStr+qsTr("CloudDrive Account Info");
+                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
+                messageDialog.open();
+            }
+        }
+
+        onQuotaReplySignal: {
+            console.debug("folderPage cloudDriveModel onQuotaReplySignal " + err + " " + errMsg + " " + msg);
+
+            var jsonText = cloudDriveModel.getJobJson(nonce);
+            var cloudDriveJobJson = JSON.parse(jsonText);
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+
+            if (err == 0) {
+                var jsonObj = Utility.createJsonObj(msg);
+
+                // Send info to cloudDriveAccountsPage.
+                var p;
+                p = pageStack.find(function (page) { return (page.name == "cloudDriveAccountsPage"); });
+                if (p) {
+                    switch (cloudDriveJobJson.type) {
+                    case CloudDriveModel.SkyDrive:
+                        p.updateAccountInfoSlot(cloudDriveJobJson.type, cloudDriveJobJson.uid, "", cloudDriveModel.getUidEmail(cloudDriveJobJson.type, cloudDriveJobJson.uid), 0, jsonObj.quota-jsonObj.available, jsonObj.quota);
+                        break;
+                    }
+
+                }
+
+                // Send info to drivePage.
+                p = pageStack.find(function (page) { return (page.name == "drivePage"); });
+                if (p) {
+                    switch (cloudDriveJobJson.type) {
+                    case CloudDriveModel.SkyDrive:
+                        p.updateAccountInfoSlot(cloudDriveJobJson.type, cloudDriveJobJson.uid, "", cloudDriveModel.getUidEmail(cloudDriveJobJson.type, cloudDriveJobJson.uid), 0, jsonObj.quota-jsonObj.available, jsonObj.quota);
+                        break;
+                    }
+                }
+            } else if (err == 2) {
+                cloudDriveModel.refreshToken(cloudDriveJobJson.type, cloudDriveJobJson.uid);
+            } else {
+                messageDialog.titleText = appInfo.emptyStr+qsTr("CloudDrive Quota");
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }

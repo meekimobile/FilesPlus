@@ -65,7 +65,10 @@ Page {
             iconId: "toolbar-add"
             onClicked: {
                 var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-                if (p) p.registerDropboxUserSlot();
+                if (p) {
+//                    p.registerDropboxUserSlot();
+                    p.registerSkyDriveAccountSlot();
+                }
             }
         }
     }
@@ -208,7 +211,17 @@ Page {
 
             Component.onCompleted: {
 //                console.debug("uid " + uid + " type " + type);
-                cloudDriveAccountsPage.cloudDriveModel.accountInfo(type, uid);
+                switch (type) {
+                case CloudDriveModel.Dropbox:
+                    cloudDriveAccountsPage.cloudDriveModel.accountInfo(type, uid);
+                    break;
+                case CloudDriveModel.SkyDrive:
+//                    if (email == "") {
+                        cloudDriveAccountsPage.cloudDriveModel.accountInfo(type, uid);
+//                    }
+//                    cloudDriveAccountsPage.cloudDriveModel.quota(type, uid);
+                    break;
+                }
             }
         }
     }

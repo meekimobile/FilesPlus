@@ -1,4 +1,4 @@
-#include "dropboxclient.h"
+#include "skydriveclient.h"
 #include <QtGlobal>
 #include <QCryptographicHash>
 #include <QCoreApplication>
@@ -6,47 +6,35 @@
 
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
-const QString DropboxClient::KeyStoreFilePath = "/home/user/.filesplus/DropboxClient.dat";
+const QString SkyDriveClient::KeyStoreFilePath = "/home/user/.filesplus/SkyDriveClient.dat";
 #else
-const QString DropboxClient::KeyStoreFilePath = "C:/DropboxClient.dat";
+const QString SkyDriveClient::KeyStoreFilePath = "C:/SkyDriveClient.dat";
 #endif
-const QString DropboxClient::DropboxConsumerKey = "7y9bttvg6gu57x0"; // Key from DropBox
-const QString DropboxClient::DropboxConsumerSecret = "xw5wq7hz5cnd5zo"; // Secret from Dropbox
-const QString DropboxClient::DropboxRoot = "dropbox"; // For full access
-const QString DropboxClient::SandboxConsumerKey = "u4f161p2wonac7p"; // Key from DropBox
-const QString DropboxClient::SandboxConsumerSecret = "itr3zb95dwequun"; // Secret from Dropbox
-const QString DropboxClient::SandboxRoot = "sandbox"; // For app folder access, root will be app folder.
+const QString SkyDriveClient::consumerKey = "00000000480E4F62";
+const QString SkyDriveClient::consumerSecret = "iulfMFYbOZqdgcSHOMeoR0mehcl0yFeO";
 
-//const QString DropboxClient::signatureMethod = "HMAC-SHA1"; // Failed since 1-Sep-12
-const QString DropboxClient::signatureMethod = "PLAINTEXT";
-const QString DropboxClient::requestTokenURI = "https://api.dropbox.com/1/oauth/request_token";
-const QString DropboxClient::authorizeURI = "https://www.dropbox.com/1/oauth/authorize";
-const QString DropboxClient::accessTokenURI = "https://api.dropbox.com/1/oauth/access_token";
-const QString DropboxClient::accountInfoURI = "https://api.dropbox.com/1/account/info";
-const QString DropboxClient::fileGetURI = "https://api-content.dropbox.com/1/files/%1%2";
-const QString DropboxClient::filePutURI = "https://api-content.dropbox.com/1/files_put/%1%2"; // Parameter if any needs to be appended here. ?param=val
-const QString DropboxClient::metadataURI = "https://api.dropbox.com/1/metadata/%1%2";
-const QString DropboxClient::createFolderURI = "https://api.dropbox.com/1/fileops/create_folder";
-const QString DropboxClient::moveFileURI = "https://api.dropbox.com/1/fileops/move";
-const QString DropboxClient::copyFileURI = "https://api.dropbox.com/1/fileops/copy";
-const QString DropboxClient::deleteFileURI = "https://api.dropbox.com/1/fileops/delete";
-const QString DropboxClient::sharesURI = "https://api.dropbox.com/1/shares/%1%2";
-const QString DropboxClient::mediaURI = "https://api.dropbox.com/1/media/%1%2";
+//const QString SkyDriveClient::signatureMethod = "HMAC-SHA1"; // Failed since 1-Sep-12
+const QString SkyDriveClient::signatureMethod = "PLAINTEXT";
+const QString SkyDriveClient::requestTokenURI = "";
+const QString SkyDriveClient::authorizeURI = "https://login.live.com/oauth20_authorize.srf"; // &display=touch
+const QString SkyDriveClient::accessTokenURI = "https://login.live.com/oauth20_token.srf";
+const QString SkyDriveClient::accountInfoURI = "https://apis.live.net/v5.0/me";
+const QString SkyDriveClient::quotaURI = "http://apis.live.net/v5.0/me/skydrive/quota";
+const QString SkyDriveClient::logoutURI = "https://login.live.com/oauth20_logout.srf";
 
-DropboxClient::DropboxClient(QDeclarativeItem *parent, bool fullAccess) :
+const QString SkyDriveClient::fileGetURI = "https://api-content.dropbox.com/1/files/%1%2";
+const QString SkyDriveClient::filePutURI = "https://api-content.dropbox.com/1/files_put/%1%2"; // Parameter if any needs to be appended here. ?param=val
+const QString SkyDriveClient::metadataURI = "https://api.dropbox.com/1/metadata/%1%2";
+const QString SkyDriveClient::createFolderURI = "https://api.dropbox.com/1/fileops/create_folder";
+const QString SkyDriveClient::moveFileURI = "https://api.dropbox.com/1/fileops/move";
+const QString SkyDriveClient::copyFileURI = "https://api.dropbox.com/1/fileops/copy";
+const QString SkyDriveClient::deleteFileURI = "https://api.dropbox.com/1/fileops/delete";
+const QString SkyDriveClient::sharesURI = "https://api.dropbox.com/1/shares/%1%2";
+const QString SkyDriveClient::mediaURI = "https://api.dropbox.com/1/media/%1%2";
+
+SkyDriveClient::SkyDriveClient(QDeclarativeItem *parent) :
     QObject(parent)
 {
-    isFullAccess = fullAccess;
-    if (isFullAccess) {
-        consumerKey = DropboxConsumerKey;
-        consumerSecret = DropboxConsumerSecret;
-        dropboxRoot = DropboxRoot;
-    } else {
-        consumerKey = SandboxConsumerKey;
-        consumerSecret = SandboxConsumerSecret;
-        dropboxRoot = SandboxRoot;
-    }
-
     // Load accessTokenPair from file
     loadAccessPairMap();
 
@@ -54,23 +42,23 @@ DropboxClient::DropboxClient(QDeclarativeItem *parent, bool fullAccess) :
     m_paramMap["oauth_signature_method"] = signatureMethod;
 }
 
-DropboxClient::~DropboxClient()
+SkyDriveClient::~SkyDriveClient()
 {
     // Save accessTokenPair to file
     saveAccessPairMap();
 }
 
-void DropboxClient::loadAccessPairMap() {
+void SkyDriveClient::loadAccessPairMap() {
     QFile file(KeyStoreFilePath);
     if (file.open(QIODevice::ReadOnly)) {
         QDataStream in(&file);    // read the data serialized from the file
         in >> accessTokenPairMap;
 
-        qDebug() << QTime::currentTime() << "DropboxClient::loadAccessPairMap " << accessTokenPairMap;
+        qDebug() << QTime::currentTime() << "SkyDriveClient::loadAccessPairMap " << accessTokenPairMap;
     }
 }
 
-void DropboxClient::saveAccessPairMap() {
+void SkyDriveClient::saveAccessPairMap() {
     // TODO workaround fix to remove tokenPair with key="".
     accessTokenPairMap.remove("");
 
@@ -80,28 +68,28 @@ void DropboxClient::saveAccessPairMap() {
     QFile file(KeyStoreFilePath);
     QFileInfo info(file);
     if (!info.absoluteDir().exists()) {
-        qDebug() << "DropboxClient::saveAccessPairMap dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
+        qDebug() << "SkyDriveClient::saveAccessPairMap dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
         bool res = QDir::home().mkpath(info.absolutePath());
         if (!res) {
-            qDebug() << "DropboxClient::saveAccessPairMap can't make dir" << info.absolutePath();
+            qDebug() << "SkyDriveClient::saveAccessPairMap can't make dir" << info.absolutePath();
         } else {
-            qDebug() << "DropboxClient::saveAccessPairMap make dir" << info.absolutePath();
+            qDebug() << "SkyDriveClient::saveAccessPairMap make dir" << info.absolutePath();
         }
     }    if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);   // we will serialize the data into the file
         out << accessTokenPairMap;
 
-        qDebug() << "DropboxClient::saveAccessPairMap " << accessTokenPairMap;
+        qDebug() << "SkyDriveClient::saveAccessPairMap " << accessTokenPairMap;
     }
 }
 
-QString DropboxClient::createTimestamp() {
+QString SkyDriveClient::createTimestamp() {
     qint64 seconds = QDateTime::currentMSecsSinceEpoch() / 1000;
 
     return QString("%1").arg(seconds);
 }
 
-//QString DropboxClient::createNonce() {
+//QString SkyDriveClient::createNonce() {
 //    QString ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 //    QString nonce;
 
@@ -113,7 +101,7 @@ QString DropboxClient::createTimestamp() {
 //    return nonce;
 //}
 
-QByteArray DropboxClient::createBaseString(QString method, QString uri, QString queryString) {
+QByteArray SkyDriveClient::createBaseString(QString method, QString uri, QString queryString) {
     QByteArray baseString;
     baseString.append(method);
     baseString.append("&");
@@ -124,7 +112,7 @@ QByteArray DropboxClient::createBaseString(QString method, QString uri, QString 
     return baseString;
 }
 
-QString DropboxClient::createSignature(QString signatureMethod, QString consumerSecret, QString tokenSecret, QByteArray baseString)
+QString SkyDriveClient::createSignature(QString signatureMethod, QString consumerSecret, QString tokenSecret, QByteArray baseString)
 {
     QString signature = "";
 
@@ -135,12 +123,12 @@ QString DropboxClient::createSignature(QString signatureMethod, QString consumer
         // Construct key for PLAINTEXT by using consumer 'Secret' and request token secret.
         signature = createSignatureWithPLAINTEXT(consumerSecret, tokenSecret, baseString);
     }
-    qDebug() << "DropboxClient::createSignature signature" << signatureMethod << signature;
+    qDebug() << "SkyDriveClient::createSignature signature" << signatureMethod << signature;
 
     return signature;
 }
 
-QString DropboxClient::createSignatureWithHMACSHA1(QString consumerSecret, QString tokenSecret, QByteArray baseString)
+QString SkyDriveClient::createSignatureWithHMACSHA1(QString consumerSecret, QString tokenSecret, QByteArray baseString)
 {
     // Join secrets into key.
     QByteArray key;
@@ -173,7 +161,7 @@ QString DropboxClient::createSignatureWithHMACSHA1(QString consumerSecret, QStri
     return hashed.toBase64();
 }
 
-QString DropboxClient::createSignatureWithPLAINTEXT(QString consumerSecret, QString tokenSecret, QByteArray baseString)
+QString SkyDriveClient::createSignatureWithPLAINTEXT(QString consumerSecret, QString tokenSecret, QByteArray baseString)
 {
     // Join secrets into key.
     QByteArray key;
@@ -184,7 +172,7 @@ QString DropboxClient::createSignatureWithPLAINTEXT(QString consumerSecret, QStr
     return key;
 }
 
-QString DropboxClient::createNormalizedQueryString(QMap<QString, QString> sortMap) {
+QString SkyDriveClient::createNormalizedQueryString(QMap<QString, QString> sortMap) {
     QString queryString;
     foreach (QString key, sortMap.keys()) {
         if (queryString != "") queryString.append("&");
@@ -194,7 +182,7 @@ QString DropboxClient::createNormalizedQueryString(QMap<QString, QString> sortMa
     return queryString;
 }
 
-QByteArray DropboxClient::createPostData(QString signature, QString queryString) {
+QByteArray SkyDriveClient::createPostData(QString signature, QString queryString) {
     QByteArray postData;
     postData.append("oauth_signature=");
     postData.append(QUrl::toPercentEncoding(signature));
@@ -204,7 +192,7 @@ QByteArray DropboxClient::createPostData(QString signature, QString queryString)
     return postData;
 }
 
-QByteArray DropboxClient::createOAuthHeaderString(QMap<QString, QString> sortMap) {
+QByteArray SkyDriveClient::createOAuthHeaderString(QMap<QString, QString> sortMap) {
     QByteArray authHeader;
     foreach (QString key, sortMap.keys()) {
         if (authHeader != "") authHeader.append(",");
@@ -218,79 +206,40 @@ QByteArray DropboxClient::createOAuthHeaderString(QMap<QString, QString> sortMap
     return authHeader;
 }
 
-void DropboxClient::requestToken(QString nonce)
+void SkyDriveClient::authorize(QString nonce)
 {
-    qDebug() << "----- DropboxClient::requestToken -----";
-
-    // Construct normalized query string.
-    QMap<QString, QString> sortMap;
-    sortMap["oauth_consumer_key"] = m_paramMap["oauth_consumer_key"];
-    sortMap["oauth_signature_method"] = m_paramMap["oauth_signature_method"];
-    sortMap["oauth_timestamp"] = createTimestamp();
-    sortMap["oauth_nonce"] = nonce;
-    QString queryString = createNormalizedQueryString(sortMap);
-    qDebug() << "queryString " << queryString;
-
-    // Construct baseString for creating signature.
-    QByteArray baseString = createBaseString("POST", requestTokenURI, queryString);
-    qDebug() << "baseString " << baseString;
-
-    // Construct key for HMACSHA1 or PLAINTEXT by using consumer 'Secret' and no request token secret.
-    QString signature = createSignature(signatureMethod, consumerSecret, "", baseString);
-    qDebug() << "signature " << signature;
-
-    QByteArray postData = createPostData(signature, queryString);
-    qDebug() << "postData" << postData;
-
-    // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(requestTokenReplyFinished(QNetworkReply*)));
-    QNetworkRequest req = QNetworkRequest(QUrl(requestTokenURI));
-    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    QNetworkReply *reply = manager->post(req, postData);
-    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
-    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
-}
-
-void DropboxClient::authorize(QString nonce)
-{
-    qDebug() << "----- DropboxClient::authorize -----";
+    qDebug() << "----- SkyDriveClient::authorize -----";
 
     QString queryString;
-    queryString.append("oauth_token=" + m_paramMap["oauth_token"]);
-    queryString.append("&oauth_callback=" + m_paramMap["oauth_callback"]);
-    queryString.append("&display=mobile");
-    // TODO Force with locale=en.
-//    queryString.append("&locale=en");
+    queryString.append("client_id=" + consumerKey);
+    queryString.append("&response_type=code");
+    queryString.append("&scope=" + QUrl::toPercentEncoding("wl.signin wl.basic wl.offline_access wl.emails"));
+    queryString.append("&redirect_uri=http://www.meeki.mobi/products/filesplus/skd_oauth_callback");
+    queryString.append("&display=touch");
 
     // Send signal to redirect to URL.
-    emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, "DropboxClient");
+    emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, "SkyDriveClient");
 }
 
-void DropboxClient::accessToken(QString nonce)
+void SkyDriveClient::accessToken(QString nonce, QString pin)
 {
-    qDebug() << "----- DropboxClient::accessToken -----";
+    qDebug() << "----- SkyDriveClient::accessToken -----" << "pin" << pin;
+
+    refreshTokenUid = "";
 
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
-    sortMap["oauth_consumer_key"] = consumerKey;
-    sortMap["oauth_token"] = requestTokenPair.token;
-    sortMap["oauth_signature_method"] = signatureMethod;
-    sortMap["oauth_timestamp"] = createTimestamp();
-    sortMap["oauth_nonce"] = nonce;
+    sortMap["client_id"] = consumerKey;
+    sortMap["client_secret"] = consumerSecret;
+    sortMap["redirect_uri"] = "http://www.meeki.mobi/products/filesplus/skd_oauth_callback";
+    sortMap["code"] = pin;
+    sortMap["grant_type"] = "refresh_token";
+
     QString queryString = createNormalizedQueryString(sortMap);
     qDebug() << "queryString " << queryString;
 
-    // Construct baseString for creating signature.
-    QByteArray baseString = createBaseString("POST", accessTokenURI, queryString);
-    qDebug() << "baseString " << baseString;
-
-    // Construct key for HMACSHA1 or PLAINTEXT by using consumer 'Secret' and request token secret.
-    QString signature = createSignature(signatureMethod, consumerSecret, requestTokenPair.secret, baseString);
-    qDebug() << "signature " << signature;
-
-    QByteArray postData = createPostData(signature, queryString);
+    QByteArray postData;
+    postData.append(queryString);
     qDebug() << "postData" << postData;
 
     // Send request.
@@ -304,12 +253,44 @@ void DropboxClient::accessToken(QString nonce)
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
-bool DropboxClient::isAuthorized()
+void SkyDriveClient::refreshToken(QString nonce, QString uid)
+{
+    qDebug() << "----- SkyDriveClient::refreshToken -----" << "uid" << uid;
+
+    refreshTokenUid = uid;
+
+    // Construct normalized query string.
+    QMap<QString, QString> sortMap;
+    sortMap["client_id"] = consumerKey;
+    sortMap["client_secret"] = consumerSecret;
+    sortMap["redirect_uri"] = "https://login.live.com/oauth20_desktop.srf";
+    sortMap["refresh_token"] = accessTokenPairMap[uid].secret;
+    sortMap["grant_type"] = "refresh_token";
+
+    QString queryString = createNormalizedQueryString(sortMap);
+    qDebug() << "queryString " << queryString;
+
+    QByteArray postData;
+    postData.append(queryString);
+    qDebug() << "postData" << postData;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accessTokenReplyFinished(QNetworkReply*)));
+    QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    QNetworkReply *reply = manager->post(req, postData);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
+}
+
+bool SkyDriveClient::isAuthorized()
 {
     return (!accessTokenPairMap.isEmpty());
 }
 
-QStringList DropboxClient::getStoredUidList()
+QStringList SkyDriveClient::getStoredUidList()
 {
     QStringList list;
     foreach (QString s, accessTokenPairMap.keys()) {
@@ -318,7 +299,7 @@ QStringList DropboxClient::getStoredUidList()
         QString jsonText = "{ ";
         jsonText.append( QString("\"uid\": \"%1\", ").arg(s) );
         jsonText.append( QString("\"email\": \"%1\", ").arg(t.email) );
-        jsonText.append( QString("\"type\": \"%1\"").arg("Dropbox") );
+        jsonText.append( QString("\"type\": \"%1\"").arg("SkyDrive") );
         jsonText.append(" }");
 
         list.append(jsonText);
@@ -326,22 +307,22 @@ QStringList DropboxClient::getStoredUidList()
     return list;
 }
 
-int DropboxClient::removeUid(QString uid)
+int SkyDriveClient::removeUid(QString uid)
 {
-    qDebug() << "DropboxClient::removeUid uid" << uid;
+    qDebug() << "SkyDriveClient::removeUid uid" << uid;
     int n = accessTokenPairMap.remove(uid);
-    qDebug() << "DropboxClient::removeUid accessTokenPairMap" << accessTokenPairMap;
+    qDebug() << "SkyDriveClient::removeUid accessTokenPairMap" << accessTokenPairMap;
 
     return n;
 }
 
-QString DropboxClient::encodeURI(const QString uri) {
+QString SkyDriveClient::encodeURI(const QString uri) {
     // Example: https://api.dropbox.com/1/metadata/sandbox/C/B/NES/Solomon's Key (E) [!].nes
     // All non-alphanumeric except : and / must be encoded.
     return QUrl::toPercentEncoding(uri, ":/");
 }
 
-QByteArray DropboxClient::createOAuthHeaderForUid(QString nonce, QString uid, QString method, QString uri, QMap<QString, QString> addParamMap) {
+QByteArray SkyDriveClient::createOAuthHeaderForUid(QString nonce, QString uid, QString method, QString uri, QMap<QString, QString> addParamMap) {
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
     sortMap["oauth_consumer_key"] = consumerKey;
@@ -370,29 +351,55 @@ QByteArray DropboxClient::createOAuthHeaderForUid(QString nonce, QString uid, QS
     return authHeader;
 }
 
-void DropboxClient::accountInfo(QString nonce, QString uid)
+void SkyDriveClient::accountInfo(QString nonce, QString uid)
 {
-    qDebug() << "----- DropboxClient::accountInfo ----- uid" << uid;
+    qDebug() << "----- SkyDriveClient::accountInfo ----- uid" << uid;
 
     QString uri = accountInfoURI;
+    QString accessToken;
+    if (uid == "") {
+        // After accessToken, then uses temp access token..
+        accessToken = m_paramMap["access_token"];
+    } else {
+        accessToken = accessTokenPairMap[uid].token;
+    }
+    uri.append("?access_token=" + QUrl::toPercentEncoding(accessToken) );
+    qDebug() << "SkyDriveClient::accountInfo uri " << uri;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
     QNetworkReply *reply = manager->get(req);
     connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
-void DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath) {
-    qDebug() << "----- DropboxClient::fileGet -----";
+void SkyDriveClient::quota(QString nonce, QString uid)
+{
+    qDebug() << "----- SkyDriveClient::quota ----- uid" << uid;
 
-    QString uri = fileGetURI.arg(dropboxRoot, remoteFilePath);
+    QString uri = quotaURI;
+    uri.append("?access_token=" + QUrl::toPercentEncoding(accessTokenPairMap[uid].token) );
+    qDebug() << "SkyDriveClient::quota uri " << uri;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(quotaReplyFinished(QNetworkReply*)));
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    QNetworkReply *reply = manager->get(req);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
+}
+
+void SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath) {
+    qDebug() << "----- SkyDriveClient::fileGet -----";
+
+    QString uri = fileGetURI.arg(remoteFilePath);
     uri = encodeURI(uri);
-    qDebug() << "DropboxClient::fileGet uri " << uri;
+    qDebug() << "SkyDriveClient::fileGet uri " << uri;
 
     // Create localTargetFile for file getting.
 //    QFile localTargetFile(localFilePath);
@@ -411,7 +418,7 @@ void DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, 
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-QString DropboxClient::getDefaultLocalFilePath(const QString &remoteFilePath)
+QString SkyDriveClient::getDefaultLocalFilePath(const QString &remoteFilePath)
 {
     QRegExp rx("^(/*)([C-F])(.+)$");
     rx.indexIn(remoteFilePath);
@@ -423,12 +430,12 @@ QString DropboxClient::getDefaultLocalFilePath(const QString &remoteFilePath)
     return "";
 }
 
-void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath) {
-    qDebug() << "----- DropboxClient::filePut -----";
+void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath) {
+    qDebug() << "----- SkyDriveClient::filePut -----";
 
-    QString uri = filePutURI.arg(dropboxRoot, remoteFilePath);
+    QString uri = filePutURI.arg(remoteFilePath);
     uri = encodeURI(uri);
-    qDebug() << "DropboxClient::filePut uri " << uri;
+    qDebug() << "SkyDriveClient::filePut uri " << uri;
 
     m_localFileHash[nonce] = new QFile(localFilePath);
     QFile *localSourceFile = m_localFileHash[nonce];
@@ -447,14 +454,14 @@ void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, Q
         connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
         connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
-//        qDebug() << "DropboxClient::filePut put file " << localFilePath << " to dropbox " << remoteFilePath;
+//        qDebug() << "SkyDriveClient::filePut put file " << localFilePath << " to dropbox " << remoteFilePath;
     } else {
-        qDebug() << "DropboxClient::filePut file " << localFilePath << " can't be opened.";
+        qDebug() << "SkyDriveClient::filePut file " << localFilePath << " can't be opened.";
         emit filePutReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");
     }
 }
 
-QString DropboxClient::getDefaultRemoteFilePath(const QString &localFilePath)
+QString SkyDriveClient::getDefaultRemoteFilePath(const QString &localFilePath)
 {
     QRegExp rx("^([C-F])(:)(/.+)$");
     rx.indexIn(localFilePath);
@@ -464,13 +471,13 @@ QString DropboxClient::getDefaultRemoteFilePath(const QString &localFilePath)
     return "";
 }
 
-void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
-    qDebug() << "----- DropboxClient::metadata -----";
+void SkyDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
+    qDebug() << "----- SkyDriveClient::metadata -----";
 
     // TODO root dropbox(Full access) or sandbox(App folder access)
-    QString uri = metadataURI.arg(dropboxRoot).arg(remoteFilePath);
+    QString uri = metadataURI.arg(remoteFilePath);
     uri = encodeURI(uri);
-    qDebug() << "DropboxClient::metadata uri " << uri;
+    qDebug() << "SkyDriveClient::metadata uri " << uri;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -484,14 +491,14 @@ void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath)
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-void DropboxClient::browse(QString nonce, QString uid, QString remoteFilePath)
+void SkyDriveClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "----- DropboxClient::browse -----" << remoteFilePath;
+    qDebug() << "----- SkyDriveClient::browse -----" << remoteFilePath;
 
     // TODO root dropbox(Full access) or sandbox(App folder access)
-    QString uri = metadataURI.arg(dropboxRoot).arg(remoteFilePath);
+    QString uri = metadataURI.arg(remoteFilePath);
     uri = encodeURI(uri);
-    qDebug() << "DropboxClient::browse uri " << uri;
+    qDebug() << "SkyDriveClient::browse uri " << uri;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -505,16 +512,15 @@ void DropboxClient::browse(QString nonce, QString uid, QString remoteFilePath)
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-void DropboxClient::createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
+void SkyDriveClient::createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
 {
-    qDebug() << "----- DropboxClient::createFolder -----";
+    qDebug() << "----- SkyDriveClient::createFolder -----";
 
     QString uri = createFolderURI;
-    qDebug() << "DropboxClient::createFolder uri " << uri;
+    qDebug() << "SkyDriveClient::createFolder uri " << uri;
 
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
-    sortMap["root"] = dropboxRoot;
     sortMap["path"] = remoteFilePath;
     QString queryString = createNormalizedQueryString(sortMap);
     qDebug() << "queryString " << queryString;
@@ -536,16 +542,15 @@ void DropboxClient::createFolder(QString nonce, QString uid, QString localFilePa
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-void DropboxClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
+void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
 {
-    qDebug() << "----- DropboxClient::moveFile -----";
+    qDebug() << "----- SkyDriveClient::moveFile -----";
 
     QString uri = moveFileURI;
-    qDebug() << "DropboxClient::moveFile uri " << uri;
+    qDebug() << "SkyDriveClient::moveFile uri " << uri;
 
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
-    sortMap["root"] = dropboxRoot;
     sortMap["from_path"] = remoteFilePath;
     sortMap["to_path"] = newRemoteFilePath;
     QString queryString = createNormalizedQueryString(sortMap);
@@ -568,16 +573,15 @@ void DropboxClient::moveFile(QString nonce, QString uid, QString remoteFilePath,
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-void DropboxClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
+void SkyDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
 {
-    qDebug() << "----- DropboxClient::copyFile -----";
+    qDebug() << "----- SkyDriveClient::copyFile -----";
 
     QString uri = copyFileURI;
-    qDebug() << "DropboxClient::copyFile uri " << uri;
+    qDebug() << "SkyDriveClient::copyFile uri " << uri;
 
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
-    sortMap["root"] = dropboxRoot;
     sortMap["from_path"] = remoteFilePath;
     sortMap["to_path"] = newRemoteFilePath;
     QString queryString = createNormalizedQueryString(sortMap);
@@ -600,16 +604,15 @@ void DropboxClient::copyFile(QString nonce, QString uid, QString remoteFilePath,
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-void DropboxClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
+void SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "----- DropboxClient::deleteFile -----";
+    qDebug() << "----- SkyDriveClient::deleteFile -----";
 
     QString uri = deleteFileURI;
-    qDebug() << "DropboxClient::deleteFile uri " << uri;
+    qDebug() << "SkyDriveClient::deleteFile uri " << uri;
 
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
-    sortMap["root"] = dropboxRoot;
     sortMap["path"] = remoteFilePath;
     QString queryString = createNormalizedQueryString(sortMap);
     qDebug() << "queryString " << queryString;
@@ -631,14 +634,14 @@ void DropboxClient::deleteFile(QString nonce, QString uid, QString remoteFilePat
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-void DropboxClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
+void SkyDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "----- DropboxClient::shareFile -----";
+    qDebug() << "----- SkyDriveClient::shareFile -----";
 
     // TODO root dropbox(Full access) or sandbox(App folder access)
-    QString uri = sharesURI.arg(dropboxRoot).arg(remoteFilePath);
+    QString uri = sharesURI.arg(remoteFilePath);
 //    uri = encodeURI(uri);
-    qDebug() << "DropboxClient::shareFile uri " << uri;
+    qDebug() << "SkyDriveClient::shareFile uri " << uri;
 
     QByteArray postData;
     qDebug() << "postData" << postData;
@@ -656,9 +659,9 @@ void DropboxClient::shareFile(QString nonce, QString uid, QString remoteFilePath
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-void DropboxClient::requestTokenReplyFinished(QNetworkReply *reply)
+void SkyDriveClient::requestTokenReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::requestTokenReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "SkyDriveClient::requestTokenReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -684,9 +687,9 @@ void DropboxClient::requestTokenReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::accessTokenReplyFinished(QNetworkReply *reply)
+void SkyDriveClient::accessTokenReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::accessTokenReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "SkyDriveClient::accessTokenReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -694,25 +697,19 @@ void DropboxClient::accessTokenReplyFinished(QNetworkReply *reply)
     QString replyBody = QString(reply->readAll());
 
     if (reply->error() == QNetworkReply::NoError) {
-        foreach (QString s, replyBody.split('&')) {
-            QStringList c = s.split('=');
-            m_paramMap[c.at(0)] = c.at(1);
-        }
-
-        TokenPair accessTokenPair;
-        accessTokenPair.token = m_paramMap["oauth_token"];
-        accessTokenPair.secret = m_paramMap["oauth_token_secret"];
-        QString uid = m_paramMap["uid"];
-
-        if (uid != "" && accessTokenPair.token != "" && accessTokenPair.secret != "") {
-            accessTokenPairMap[uid] = accessTokenPair;
-        }
-
-        // Save tokens.
-        saveAccessPairMap();
+        QScriptEngine engine;
+        QScriptValue sc;
+        sc = engine.evaluate("(" + replyBody + ")");
+        m_paramMap["access_token"] = sc.property("access_token").toString();
+        m_paramMap["refresh_token"] = sc.property("refresh_token").toString();
 
         qDebug() << "m_paramMap " << m_paramMap;
-        qDebug() << "accessTokenPairMap " << accessTokenPairMap;
+
+        // Updates for refreshToken.
+        if (refreshTokenUid != "") {
+            accessTokenPairMap[refreshTokenUid].token = sc.property("access_token").toString();
+            accessTokenPairMap[refreshTokenUid].secret = sc.property("refresh_token").toString();
+        }
 
         // Get email from accountInfo will be requested by CloudDriveModel.accessTokenReplyFilter().
     }
@@ -724,9 +721,9 @@ void DropboxClient::accessTokenReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::accountInfoReplyFinished(QNetworkReply *reply)
+void SkyDriveClient::accountInfoReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::accountInfoReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "SkyDriveClient::accountInfoReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -736,10 +733,25 @@ void DropboxClient::accountInfoReplyFinished(QNetworkReply *reply)
         QScriptEngine engine;
         QScriptValue sc;
         sc = engine.evaluate("(" + replyBody + ")");
-        QString uid = sc.property("uid").toString();
-        QString email = sc.property("email").toString();
+        QString uid = sc.property("id").toString();
+        QString name = sc.property("name").toString();
+        QString email = sc.property("emails").property("account").toString();
 
-        accessTokenPairMap[uid].email = email;
+        if (accessTokenPairMap.contains(uid)) {
+            accessTokenPairMap[uid].email = email;
+        } else {
+            TokenPair accessTokenPair;
+            accessTokenPair.token = m_paramMap["access_token"];
+            accessTokenPair.secret = m_paramMap["refresh_token"];
+            accessTokenPair.email = email;
+
+            if (uid != "" && accessTokenPair.token != "" && accessTokenPair.secret != "") {
+                accessTokenPairMap[uid] = accessTokenPair;
+            }
+        }
+
+        // Save account after got id and email.
+        saveAccessPairMap();
     }
 
     emit accountInfoReplySignal(nonce, reply->error(), reply->errorString(), replyBody );
@@ -749,8 +761,21 @@ void DropboxClient::accountInfoReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::fileGetReplyFinished(QNetworkReply *reply) {
-    qDebug() << "DropboxClient::fileGetReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+void SkyDriveClient::quotaReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "SkyDriveClient::quotaReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    emit quotaReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void SkyDriveClient::fileGetReplyFinished(QNetworkReply *reply) {
+    qDebug() << "SkyDriveClient::fileGetReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -781,7 +806,7 @@ void DropboxClient::fileGetReplyFinished(QNetworkReply *reply) {
             }
         }
 
-        qDebug() << "DropboxClient::fileGetReplyFinished reply totalBytes=" << totalBytes;
+        qDebug() << "SkyDriveClient::fileGetReplyFinished reply totalBytes=" << totalBytes;
 
         // Close target file.
         localTargetFile->close();
@@ -797,8 +822,8 @@ void DropboxClient::fileGetReplyFinished(QNetworkReply *reply) {
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::filePutReplyFinished(QNetworkReply *reply) {
-    qDebug() << "DropboxClient::filePutReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+void SkyDriveClient::filePutReplyFinished(QNetworkReply *reply) {
+    qDebug() << "SkyDriveClient::filePutReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -814,8 +839,8 @@ void DropboxClient::filePutReplyFinished(QNetworkReply *reply) {
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
-    qDebug() << "DropboxClient::metadataReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+void SkyDriveClient::metadataReplyFinished(QNetworkReply *reply) {
+    qDebug() << "SkyDriveClient::metadataReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -826,9 +851,9 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::browseReplyFinished(QNetworkReply *reply)
+void SkyDriveClient::browseReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::browseReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "SkyDriveClient::browseReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -839,9 +864,9 @@ void DropboxClient::browseReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::createFolderReplyFinished(QNetworkReply *reply)
+void SkyDriveClient::createFolderReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::createFolderReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "SkyDriveClient::createFolderReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -852,9 +877,9 @@ void DropboxClient::createFolderReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::moveFileReplyFinished(QNetworkReply *reply)
+void SkyDriveClient::moveFileReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::moveFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "SkyDriveClient::moveFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -865,9 +890,9 @@ void DropboxClient::moveFileReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::copyFileReplyFinished(QNetworkReply *reply)
+void SkyDriveClient::copyFileReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::copyFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "SkyDriveClient::copyFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -878,9 +903,9 @@ void DropboxClient::copyFileReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::deleteFileReplyFinished(QNetworkReply *reply)
+void SkyDriveClient::deleteFileReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::deleteFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "SkyDriveClient::deleteFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -891,9 +916,9 @@ void DropboxClient::deleteFileReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::shareFileReplyFinished(QNetworkReply *reply)
+void SkyDriveClient::shareFileReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::shareFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "SkyDriveClient::shareFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 

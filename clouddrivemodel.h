@@ -19,6 +19,7 @@
 #include "clouddrivemodelthread.h"
 #include "dropboxclient.h"
 //#include "gcdclient.h"
+#include "skydriveclient.h"
 
 class CloudDriveModel : public QDeclarativeItem
 {
@@ -40,8 +41,7 @@ public:
     enum ClientTypes {
         Dropbox,
         GoogleDrive,
-        SkyDrive,
-        SugarSync
+        SkyDrive
     };
 
     enum Operations {
@@ -54,7 +54,9 @@ public:
         RequestToken,
         Authorize,
         AccessToken,
+        RefreshToken,
         AccountInfo,
+        Quota,
         DeleteFile,
         MoveFile,
         CopyFile,
@@ -107,7 +109,8 @@ public:
     Q_INVOKABLE QString getDefaultRemoteFilePath(const QString &localFilePath); // TODO Avoid using.
     Q_INVOKABLE bool isAuthorized();
     Q_INVOKABLE bool isAuthorized(CloudDriveModel::ClientTypes type);
-    Q_INVOKABLE QStringList getStoredUidList(CloudDriveModel::ClientTypes type); // TODO Refactor to return all users as json.
+    Q_INVOKABLE QStringList getStoredUidList();
+    Q_INVOKABLE QStringList getStoredUidList(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE int removeUid(CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE void requestJobQueueStatus();
     Q_INVOKABLE void suspendNextJob();
@@ -136,8 +139,10 @@ public:
     Q_INVOKABLE void requestToken(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE void authorize(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE bool parseAuthorizationCode(CloudDriveModel::ClientTypes type, QString text);
-    Q_INVOKABLE void accessToken(CloudDriveModel::ClientTypes type);
+    Q_INVOKABLE void accessToken(CloudDriveModel::ClientTypes type, QString pin = "");
+    Q_INVOKABLE void refreshToken(CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE void accountInfo(CloudDriveModel::ClientTypes type, QString uid);
+    Q_INVOKABLE void quota(CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE void fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString localFilePath, int modelIndex);
     Q_INVOKABLE void filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
     Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
@@ -162,6 +167,7 @@ signals:
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
     void accessTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void accountInfoReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void quotaReplySignal(QString nonce, int err, QString errMsg, QString msg);
 
     void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
@@ -182,6 +188,7 @@ signals:
     // Scheduler.
     void schedulerTimeoutSignal();
 public slots:
+    // Job dispatcher
     void proceedNextJob();
 
     void threadFinishedFilter();
@@ -190,6 +197,7 @@ public slots:
     void authorizeRedirectFilter(QString nonce, QString url, QString redirectFrom);
     void accessTokenReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void accountInfoReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void quotaReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplyFilter(QString nonce, int err, QString errMsg, QString msg);
@@ -253,12 +261,15 @@ private:
 
     DropboxClient *dbClient;
 //    GCDClient *gcdClient;
+    SkyDriveClient *skdClient;
+    QString accessTokenPin;
     CloudDriveModelThread m_thread;
 
     QMutex mutex;
 
     void saveCloudDriveItems();
     void initializeDropboxClient();
+    void initializeSkyDriveClient();
     QString createNonce();
     void jobDone();
     QString getFileType(QString localPath);

@@ -233,6 +233,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 #endif
 
     // ***** Test FTP
+    qDebug() << "main TEST FtpClient";
     FtpClient ftp;
     ftp.test();
 

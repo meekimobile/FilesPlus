@@ -31,10 +31,33 @@ Page {
                     return (page.name == "folderPage");
                 });
                 // TODO Remove dependency to make authPage reusable for other REST API.
-                if (p) p.dropboxAccessTokenSlot();
+                if (p) {
+                    if (authPage.redirectFrom == "DropboxClient") {
+                        p.dropboxAccessTokenSlot();
+                    } else if (authPage.redirectFrom == "SkyDriveClient") {
+                        p.skyDriveAccessTokenSlot(authPage.parseSkyDriveCode(webView.url));
+                    }
+                }
+
                 pageStack.pop();
             }
         }
+    }
+
+    function parseSkyDriveCode(url) {
+        console.debug("authPage parseSkyDriveCode url " + url + " typeof " + (typeof url));
+        var urlStr = url + "";
+        var caps = urlStr.match("\\?code=([^&]*)");
+        if (caps) {
+            console.debug("authPage parseSkyDriveCode caps " + caps + " caps.length " + caps.length);
+            var code = caps[1];
+            if (code && code != "") {
+                console.debug("authPage parseSkyDriveCode code " + code);
+                return code;
+            }
+        }
+
+        return "PinNotFound";
     }
 
     onStatusChanged: {
@@ -154,7 +177,55 @@ Page {
     //                    console.debug("DropboxClient title " + title);
     //                    console.debug("DropboxClient html " + html);
                     }
+                } else if (authPage.redirectFrom == "SkyDriveClient") {
+                    // SkyDriveClient handler
+                    console.debug("SkyDriveClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom);
+                    console.debug("SkyDriveClient title " + title);
+                    console.debug("SkyDriveClient html " + html);
+
+                    var pin = authPage.parseSkyDriveCode(url);
+                    pinInputPanel.pin = pin;
+                    okButton.visible = (pin != "" && pin != "PinNotFound");
                 }
+            }
+        }
+    }
+
+    Rectangle {
+        id: pinInputPanel
+        color: "black"
+        opacity: 0.9
+        width: authPage.width - 10
+        height: pinInputPanelColumn.height + 20
+        radius: 10
+        anchors.horizontalCenter: flickable.horizontalCenter
+        anchors.bottom: flickable.bottom
+        anchors.bottomMargin: 5
+        z: 2
+        visible: okButton.visible
+
+        onVisibleChanged: {
+            pinInput.closeSoftwareInputPanel();
+        }
+
+        property alias pin: pinInput.text
+
+        Column {
+            id: pinInputPanelColumn
+            width: parent.width - 20
+            anchors.centerIn: parent
+            spacing: 5
+
+            Label {
+                text: appInfo.emptyStr+qsTr("Please confirm PIN.")
+            }
+
+            TextField {
+                id: pinInput
+                focus: pinInputPanel.visible
+                width: parent.width
+                font.pointSize: 16
+                readOnly: true
             }
         }
     }
@@ -167,7 +238,14 @@ Page {
 \n+ FilesPlus get your language information and stores selected language internally. It will not share to any persons/services.\
 \n\nPlease click 'OK' to continue.")
 
+        onConfirm: {
+            appInfo.setSettingValue("privacy.policy.accepted", true);
+            privacyConsent.close();
+        }
+
         onReject: {
+            appInfo.setSettingValue("privacy.policy.accepted", false);
+            privacyConsent.close();
             pageStack.pop();
         }
     }

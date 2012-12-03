@@ -66,8 +66,9 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     m_isDirtyCache = new QHash<QString, bool>();
     m_isSyncingCache = new QHash<QString, bool>();
 
-    // Initialize DropboxClient
+    // Initialize cloud storage clients.
     initializeDropboxClient();
+    initializeSkyDriveClient();
 }
 
 CloudDriveModel::~CloudDriveModel()
@@ -149,6 +150,33 @@ void CloudDriveModel::initializeDropboxClient() {
     connect(dbClient, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
+}
+
+void CloudDriveModel::initializeSkyDriveClient()
+{
+    qDebug() << "CloudDriveModel::initializeSkyDriveClient";
+
+    if (skdClient != 0) {
+        skdClient->deleteLater();
+    }
+
+    skdClient = new SkyDriveClient(this);
+    connect(skdClient, SIGNAL(uploadProgress(QString,qint64,qint64)), SLOT(uploadProgressFilter(QString,qint64,qint64)) );
+    connect(skdClient, SIGNAL(downloadProgress(QString,qint64,qint64)), SLOT(downloadProgressFilter(QString,qint64,qint64)) );
+    connect(skdClient, SIGNAL(requestTokenReplySignal(QString,int,QString,QString)), SLOT(requestTokenReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(authorizeRedirectSignal(QString,QString,QString)), SLOT(authorizeRedirectFilter(QString,QString,QString)) );
+    connect(skdClient, SIGNAL(accessTokenReplySignal(QString,int,QString,QString)), SLOT(accessTokenReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(accountInfoReplySignal(QString,int,QString,QString)), SLOT(accountInfoReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(quotaReplySignal(QString,int,QString,QString)), SLOT(quotaReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(fileGetReplySignal(QString,int,QString,QString)), SLOT(fileGetReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SLOT(filePutReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(browseReplySignal(QString,int,QString,QString)), SLOT(browseReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(createFolderReplySignal(QString,int,QString,QString)), SLOT(createFolderReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(moveFileReplySignal(QString,int,QString,QString)), SLOT(moveFileReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
 }
 
 //void CloudDriveModel::initializeGCDClient() {
@@ -893,7 +921,7 @@ QString CloudDriveModel::getDefaultRemoteFilePath(const QString &localFilePath)
 bool CloudDriveModel::isAuthorized()
 {
     // TODO check if any cloud drive is authorized.
-    return dbClient->isAuthorized();
+    return dbClient->isAuthorized() || skdClient->isAuthorized();
 }
 
 bool CloudDriveModel::isAuthorized(CloudDriveModel::ClientTypes type)
@@ -903,9 +931,22 @@ bool CloudDriveModel::isAuthorized(CloudDriveModel::ClientTypes type)
         return dbClient->isAuthorized();
 //    case GoogleDrive:
 //        return gcdClient->isAuthorized();
+    case SkyDrive:
+        return skdClient->isAuthorized();
     }
 
     return false;
+}
+
+QStringList CloudDriveModel::getStoredUidList()
+{
+    QStringList uidList;
+
+    uidList.append(dbClient->getStoredUidList());
+//    uidList.append(gcdClient->getStoredUidList());
+    uidList.append(skdClient->getStoredUidList());
+
+    return uidList;
 }
 
 QStringList CloudDriveModel::getStoredUidList(CloudDriveModel::ClientTypes type)
@@ -915,6 +956,8 @@ QStringList CloudDriveModel::getStoredUidList(CloudDriveModel::ClientTypes type)
         return dbClient->getStoredUidList();
 //    case GoogleDrive:
 //        return gcdClient->getStoredUidList();
+    case SkyDrive:
+        return skdClient->getStoredUidList();
     }
 
     return QStringList();
@@ -925,6 +968,8 @@ int CloudDriveModel::removeUid(CloudDriveModel::ClientTypes type, QString uid)
     switch (type) {
     case Dropbox:
         return dbClient->removeUid(uid);
+    case SkyDrive:
+        return skdClient->removeUid(uid);
     }
 
     return -1;
@@ -1126,10 +1171,23 @@ bool CloudDriveModel::parseAuthorizationCode(CloudDriveModel::ClientTypes type, 
     return false;
 }
 
-void CloudDriveModel::accessToken(CloudDriveModel::ClientTypes type)
+void CloudDriveModel::accessToken(CloudDriveModel::ClientTypes type, QString pin)
 {
+    // Store access token pin temporarily.
+    accessTokenPin = pin;
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), AccessToken, type, "", "", "", -1);
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    emit proceedNextJobSignal();
+}
+
+void CloudDriveModel::refreshToken(CloudDriveModel::ClientTypes type, QString uid)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), RefreshToken, type, uid, "", "", -1);
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -1140,6 +1198,16 @@ void CloudDriveModel::accountInfo(CloudDriveModel::ClientTypes type, QString uid
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), AccountInfo, type, uid, "", "", -1);
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    emit proceedNextJobSignal();
+}
+
+void CloudDriveModel::quota(CloudDriveModel::ClientTypes type, QString uid)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), Quota, type, uid, "", "", -1);
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -2183,6 +2251,9 @@ void CloudDriveModel::proceedNextJob() {
         case Dropbox:
             dbClient->authorize(job.jobId);
             break;
+        case SkyDrive:
+            skdClient->authorize(job.jobId);
+            break;
         }
         break;
     case AccessToken:
@@ -2190,12 +2261,32 @@ void CloudDriveModel::proceedNextJob() {
         case Dropbox:
             dbClient->accessToken(job.jobId);
             break;
+        case SkyDrive:
+            skdClient->accessToken(job.jobId, accessTokenPin);
+            break;
+        }
+        break;
+    case RefreshToken:
+        switch (job.type) {
+        case SkyDrive:
+            skdClient->refreshToken(job.jobId, job.uid);
+            break;
         }
         break;
     case AccountInfo:
         switch (job.type) {
         case Dropbox:
             dbClient->accountInfo(job.jobId, job.uid);
+            break;
+        case SkyDrive:
+            skdClient->accountInfo(job.jobId, job.uid);
+            break;
+        }
+        break;
+    case Quota:
+        switch (job.type) {
+        case SkyDrive:
+            skdClient->quota(job.jobId, job.uid);
             break;
         }
         break;
@@ -2298,19 +2389,21 @@ void CloudDriveModel::accessTokenReplyFilter(QString nonce, int err, QString err
     // Get accountInfo.
     if (err == QNetworkReply::NoError) {
         QHash<QString, QString> m_paramMap;
-        foreach (QString s, msg.split('&')) {
-            QStringList c = s.split('=');
-            m_paramMap[c.at(0)] = c.at(1);
-        }
 
-        QString uid = m_paramMap["uid"];
-
-        qDebug() << "CloudDriveModel::accessTokenReplyFilter uid" << uid;
-
-        // Get email from accountInfo
         switch (job.type) {
         case Dropbox:
-            accountInfo(Dropbox, uid);
+            // Dropbox provides uid but no email yet. Get email from accountInfo.
+            foreach (QString s, msg.split('&')) {
+                QStringList c = s.split('=');
+                m_paramMap[c.at(0)] = c.at(1);
+            }
+            qDebug() << "CloudDriveModel::accessTokenReplyFilter Dropbox uid" << m_paramMap["uid"];
+
+            accountInfo(Dropbox, m_paramMap["uid"]);
+            break;
+        case SkyDrive:
+            // SkyDrive's accessTokenReply doesn't provide uid yet. Continue to get account.
+            accountInfo(SkyDrive, job.uid);
             break;
         }
     }
@@ -2329,4 +2422,17 @@ void CloudDriveModel::accountInfoReplyFilter(QString nonce, int err, QString err
     jobDone();
 
     emit accountInfoReplySignal(nonce, err, errMsg, msg);
+}
+
+void CloudDriveModel::quotaReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    job.isRunning = false;
+    m_cloudDriveJobs->insert(nonce, job);
+
+    // Notify job done.
+    jobDone();
+
+    emit quotaReplySignal(nonce, err, errMsg, msg);
 }

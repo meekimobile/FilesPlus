@@ -141,5 +141,6 @@
         <file>qml/FilesPlus/search_inverted.svg</file>
         <file>qml/FilesPlus/search.svg</file>
         <file alias="qml/FilesPlus/NameFilterPanel.qml">qml/FilesPlus/meego/NameFilterPanel.qml</file>
+        <file>qml/FilesPlus/skydrive_icon.png</file>
     </qresource>
 </RCC>

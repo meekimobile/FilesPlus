@@ -13,7 +13,7 @@ QML_IMPORT_PATH =
 #symbian:TARGET.UID3 = 0xE11DCC9D
 symbian:TARGET.UID3 = 0x20064E45
 
-VERSION = 1.1.2
+VERSION = 1.2.0
 
 # Smart Installer package's UID
 # This UID is from the protected range and therefore the package will
@@ -83,7 +83,8 @@ SOURCES += main.cpp \
     clipboardmodel.cpp \
     customqnetworkaccessmanagerfactory.cpp \
     customqnetworkaccessmanager.cpp \
-    ftpclient.cpp
+    ftpclient.cpp \
+    skydriveclient.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -115,7 +116,8 @@ HEADERS += \
     clipboardmodel.h \
     customqnetworkaccessmanagerfactory.h \
     customqnetworkaccessmanager.h \
-    ftpclient.h
+    ftpclient.h \
+    skydriveclient.h
 
 OTHER_FILES += \
     qtc_packaging/debian_harmattan/rules \
