@@ -2401,11 +2401,13 @@ Page {
         }
 
         function getClientType(typeText) {
-            if (typeText.toLowerCase() == "dropbox") {
+            if (typeText.toLowerCase() == "dropboxclient") {
                 return CloudDriveModel.Dropbox;
-            } else if (typeText.toLowerCase() == "skydrive") {
+            } else if (typeText.toLowerCase() == "skydriveclient") {
                 return CloudDriveModel.SkyDrive;
             }
+
+            return -1;
         }
 
         function getRemoteParentPath(remotePath) {
