@@ -16,6 +16,7 @@ const QString DropboxClient::DropboxRoot = "dropbox"; // For full access
 const QString DropboxClient::SandboxConsumerKey = "u4f161p2wonac7p"; // Key from DropBox
 const QString DropboxClient::SandboxConsumerSecret = "itr3zb95dwequun"; // Secret from Dropbox
 const QString DropboxClient::SandboxRoot = "sandbox"; // For app folder access, root will be app folder.
+const QString DropboxClient::clientTypeName = "DropboxClient";
 
 //const QString DropboxClient::signatureMethod = "HMAC-SHA1"; // Failed since 1-Sep-12
 const QString DropboxClient::signatureMethod = "PLAINTEXT";
@@ -265,7 +266,7 @@ void DropboxClient::authorize(QString nonce)
 //    queryString.append("&locale=en");
 
     // Send signal to redirect to URL.
-    emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, "DropboxClient");
+    emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, clientTypeName);
 }
 
 void DropboxClient::accessToken(QString nonce)
@@ -318,7 +319,7 @@ QStringList DropboxClient::getStoredUidList()
         QString jsonText = "{ ";
         jsonText.append( QString("\"uid\": \"%1\", ").arg(s) );
         jsonText.append( QString("\"email\": \"%1\", ").arg(t.email) );
-        jsonText.append( QString("\"type\": \"%1\"").arg("Dropbox") );
+        jsonText.append( QString("\"type\": \"%1\"").arg(clientTypeName) );
         jsonText.append(" }");
 
         list.append(jsonText);

@@ -17,6 +17,8 @@ public:
     static const QString SandboxConsumerKey;
     static const QString SandboxConsumerSecret;
     static const QString SandboxRoot;
+    static const QString clientTypeName;
+
     static const QString signatureMethod;
     static const QString requestTokenURI;
     static const QString authorizeURI;
