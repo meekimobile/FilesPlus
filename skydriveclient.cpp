@@ -1,6 +1,5 @@
 #include "skydriveclient.h"
 #include <QtGlobal>
-#include <QCryptographicHash>
 #include <QCoreApplication>
 #include <QScriptEngine>
 
@@ -12,34 +11,29 @@ const QString SkyDriveClient::KeyStoreFilePath = "C:/SkyDriveClient.dat";
 #endif
 const QString SkyDriveClient::consumerKey = "00000000480E4F62";
 const QString SkyDriveClient::consumerSecret = "iulfMFYbOZqdgcSHOMeoR0mehcl0yFeO";
+const QString SkyDriveClient::clientTypeName = "SkyDriveClient";
 
-//const QString SkyDriveClient::signatureMethod = "HMAC-SHA1"; // Failed since 1-Sep-12
-const QString SkyDriveClient::signatureMethod = "PLAINTEXT";
-const QString SkyDriveClient::requestTokenURI = "";
 const QString SkyDriveClient::authorizeURI = "https://login.live.com/oauth20_authorize.srf"; // &display=touch
 const QString SkyDriveClient::accessTokenURI = "https://login.live.com/oauth20_token.srf";
 const QString SkyDriveClient::accountInfoURI = "https://apis.live.net/v5.0/me";
-const QString SkyDriveClient::quotaURI = "http://apis.live.net/v5.0/me/skydrive/quota";
+const QString SkyDriveClient::quotaURI = "https://apis.live.net/v5.0/me/skydrive/quota";
 const QString SkyDriveClient::logoutURI = "https://login.live.com/oauth20_logout.srf";
 
-const QString SkyDriveClient::fileGetURI = "https://api-content.dropbox.com/1/files/%1%2";
-const QString SkyDriveClient::filePutURI = "https://api-content.dropbox.com/1/files_put/%1%2"; // Parameter if any needs to be appended here. ?param=val
-const QString SkyDriveClient::metadataURI = "https://api.dropbox.com/1/metadata/%1%2";
-const QString SkyDriveClient::createFolderURI = "https://api.dropbox.com/1/fileops/create_folder";
-const QString SkyDriveClient::moveFileURI = "https://api.dropbox.com/1/fileops/move";
-const QString SkyDriveClient::copyFileURI = "https://api.dropbox.com/1/fileops/copy";
-const QString SkyDriveClient::deleteFileURI = "https://api.dropbox.com/1/fileops/delete";
-const QString SkyDriveClient::sharesURI = "https://api.dropbox.com/1/shares/%1%2";
-const QString SkyDriveClient::mediaURI = "https://api.dropbox.com/1/media/%1%2";
+const QString SkyDriveClient::fileGetURI = "https://apis.live.net/v5.0/%1/content?download=true";
+const QString SkyDriveClient::filePutURI = "https://apis.live.net/v5.0/%1/files/%2"; // PUT
+const QString SkyDriveClient::metadataURI = "https://apis.live.net/v5.0/%1/files";
+const QString SkyDriveClient::propertyURI = "https://apis.live.net/v5.0/%1"; // GET or PUT to update.
+const QString SkyDriveClient::createFolderURI = "https://apis.live.net/v5.0/%1"; // POST
+const QString SkyDriveClient::moveFileURI = "https://apis.live.net/v5.0/%1"; // MOVE to destination folder ID in content.
+const QString SkyDriveClient::copyFileURI = "https://apis.live.net/v5.0/%1"; // COPY to destination folder ID in content.
+const QString SkyDriveClient::deleteFileURI = "https://apis.live.net/v5.0/%1"; // DELETE
+const QString SkyDriveClient::sharesURI = "http://apis.live.net/v5.0/%1/shared_read_link";
 
 SkyDriveClient::SkyDriveClient(QDeclarativeItem *parent) :
     QObject(parent)
 {
     // Load accessTokenPair from file
     loadAccessPairMap();
-
-    m_paramMap["oauth_consumer_key"] = consumerKey;
-    m_paramMap["oauth_signature_method"] = signatureMethod;
 }
 
 SkyDriveClient::~SkyDriveClient()
@@ -89,89 +83,6 @@ QString SkyDriveClient::createTimestamp() {
     return QString("%1").arg(seconds);
 }
 
-//QString SkyDriveClient::createNonce() {
-//    QString ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-//    QString nonce;
-
-//    for(int i = 0; i <= 16; ++i)
-//    {
-//        nonce += ALPHANUMERIC.at( qrand() % ALPHANUMERIC.length() );
-//    }
-
-//    return nonce;
-//}
-
-QByteArray SkyDriveClient::createBaseString(QString method, QString uri, QString queryString) {
-    QByteArray baseString;
-    baseString.append(method);
-    baseString.append("&");
-    baseString.append(QUrl::toPercentEncoding(uri));
-    baseString.append("&");
-    baseString.append(QUrl::toPercentEncoding(queryString, "", "()"));
-
-    return baseString;
-}
-
-QString SkyDriveClient::createSignature(QString signatureMethod, QString consumerSecret, QString tokenSecret, QByteArray baseString)
-{
-    QString signature = "";
-
-    if (signatureMethod == "HMAC-SHA1") {
-        // Construct key for HMACSHA1 by using consumer 'Secret' and request token secret.
-        signature = createSignatureWithHMACSHA1(consumerSecret, tokenSecret, baseString);
-    } else if (signatureMethod == "PLAINTEXT") {
-        // Construct key for PLAINTEXT by using consumer 'Secret' and request token secret.
-        signature = createSignatureWithPLAINTEXT(consumerSecret, tokenSecret, baseString);
-    }
-    qDebug() << "SkyDriveClient::createSignature signature" << signatureMethod << signature;
-
-    return signature;
-}
-
-QString SkyDriveClient::createSignatureWithHMACSHA1(QString consumerSecret, QString tokenSecret, QByteArray baseString)
-{
-    // Join secrets into key.
-    QByteArray key;
-    key.append(QUrl::toPercentEncoding(consumerSecret));
-    key.append("&");
-    key.append(QUrl::toPercentEncoding(tokenSecret));
-
-    int blockSize = 64; // HMAC-SHA-1 block size, defined in SHA-1 standard
-    if (key.length() > blockSize) { // if key is longer than block size (64), reduce key length with SHA-1 compression
-        key = QCryptographicHash::hash(key, QCryptographicHash::Sha1);
-    }
-
-    QByteArray innerPadding(blockSize, char(0x36)); // initialize inner padding with char "6"
-    QByteArray outerPadding(blockSize, char(0x5c)); // initialize outer padding with char "\"
-    // ascii characters 0x36 ("6") and 0x5c ("\") are selected because they have large
-    // Hamming distance (http://en.wikipedia.org/wiki/Hamming_distance)
-
-    for (int i = 0; i < key.length(); i++) {
-        innerPadding[i] = innerPadding[i] ^ key.at(i); // XOR operation between every byte in key and innerpadding, of key length
-        outerPadding[i] = outerPadding[i] ^ key.at(i); // XOR operation between every byte in key and outerpadding, of key length
-    }
-
-    // result = hash ( outerPadding CONCAT hash ( innerPadding CONCAT baseString ) ).toBase64
-    QByteArray total = outerPadding;
-    QByteArray part = innerPadding;
-    part.append(baseString);
-    total.append(QCryptographicHash::hash(part, QCryptographicHash::Sha1));
-    QByteArray hashed = QCryptographicHash::hash(total, QCryptographicHash::Sha1);
-
-    return hashed.toBase64();
-}
-
-QString SkyDriveClient::createSignatureWithPLAINTEXT(QString consumerSecret, QString tokenSecret, QByteArray baseString)
-{
-    // Join secrets into key.
-    QByteArray key;
-    key.append(consumerSecret);
-    key.append("&");
-    key.append(tokenSecret);
-
-    return key;
-}
-
 QString SkyDriveClient::createNormalizedQueryString(QMap<QString, QString> sortMap) {
     QString queryString;
     foreach (QString key, sortMap.keys()) {
@@ -182,28 +93,10 @@ QString SkyDriveClient::createNormalizedQueryString(QMap<QString, QString> sortM
     return queryString;
 }
 
-QByteArray SkyDriveClient::createPostData(QString signature, QString queryString) {
-    QByteArray postData;
-    postData.append("oauth_signature=");
-    postData.append(QUrl::toPercentEncoding(signature));
-    postData.append("&");
-    postData.append(queryString);
-
-    return postData;
-}
-
-QByteArray SkyDriveClient::createOAuthHeaderString(QMap<QString, QString> sortMap) {
-    QByteArray authHeader;
-    foreach (QString key, sortMap.keys()) {
-        if (authHeader != "") authHeader.append(",");
-        authHeader.append(QUrl::toPercentEncoding(key));
-        authHeader.append("=\"");
-        authHeader.append(QUrl::toPercentEncoding(sortMap[key]));
-        authHeader.append("\"");
-    }
-    authHeader.prepend("OAuth ");
-
-    return authHeader;
+QString SkyDriveClient::encodeURI(const QString uri) {
+    // Example: https://api.dropbox.com/1/metadata/sandbox/C/B/NES/Solomon's Key (E) [!].nes
+    // All non-alphanumeric except : and / must be encoded.
+    return QUrl::toPercentEncoding(uri, ":/");
 }
 
 void SkyDriveClient::authorize(QString nonce)
@@ -213,12 +106,12 @@ void SkyDriveClient::authorize(QString nonce)
     QString queryString;
     queryString.append("client_id=" + consumerKey);
     queryString.append("&response_type=code");
-    queryString.append("&scope=" + QUrl::toPercentEncoding("wl.signin wl.basic wl.offline_access wl.emails"));
+    queryString.append("&scope=" + QUrl::toPercentEncoding("wl.signin wl.basic wl.offline_access wl.emails wl.skydrive"));
     queryString.append("&redirect_uri=http://www.meeki.mobi/products/filesplus/skd_oauth_callback");
     queryString.append("&display=touch");
 
     // Send signal to redirect to URL.
-    emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, "SkyDriveClient");
+    emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, clientTypeName);
 }
 
 void SkyDriveClient::accessToken(QString nonce, QString pin)
@@ -233,7 +126,7 @@ void SkyDriveClient::accessToken(QString nonce, QString pin)
     sortMap["client_secret"] = consumerSecret;
     sortMap["redirect_uri"] = "http://www.meeki.mobi/products/filesplus/skd_oauth_callback";
     sortMap["code"] = pin;
-    sortMap["grant_type"] = "refresh_token";
+    sortMap["grant_type"] = "authorization_code";
 
     QString queryString = createNormalizedQueryString(sortMap);
     qDebug() << "queryString " << queryString;
@@ -299,7 +192,7 @@ QStringList SkyDriveClient::getStoredUidList()
         QString jsonText = "{ ";
         jsonText.append( QString("\"uid\": \"%1\", ").arg(s) );
         jsonText.append( QString("\"email\": \"%1\", ").arg(t.email) );
-        jsonText.append( QString("\"type\": \"%1\"").arg("SkyDrive") );
+        jsonText.append( QString("\"type\": \"%1\"").arg(clientTypeName) );
         jsonText.append(" }");
 
         list.append(jsonText);
@@ -316,41 +209,6 @@ int SkyDriveClient::removeUid(QString uid)
     return n;
 }
 
-QString SkyDriveClient::encodeURI(const QString uri) {
-    // Example: https://api.dropbox.com/1/metadata/sandbox/C/B/NES/Solomon's Key (E) [!].nes
-    // All non-alphanumeric except : and / must be encoded.
-    return QUrl::toPercentEncoding(uri, ":/");
-}
-
-QByteArray SkyDriveClient::createOAuthHeaderForUid(QString nonce, QString uid, QString method, QString uri, QMap<QString, QString> addParamMap) {
-    // Construct normalized query string.
-    QMap<QString, QString> sortMap;
-    sortMap["oauth_consumer_key"] = consumerKey;
-    sortMap["oauth_token"] = accessTokenPairMap[uid].token;
-    sortMap["oauth_signature_method"] = signatureMethod;
-    sortMap["oauth_timestamp"] = createTimestamp();
-    sortMap["oauth_nonce"] = nonce;
-    sortMap.unite(addParamMap);
-    QString queryString = createNormalizedQueryString(sortMap);
-//    qDebug() << "queryString " << queryString;
-
-    // Construct baseString for creating signature.
-    QString encodedURI = encodeURI(uri);
-//    qDebug() << "encodedURI " << encodedURI;
-    QByteArray baseString = createBaseString(method, encodedURI, queryString);
-//    qDebug() << "baseString " << baseString;
-
-    QString signature = createSignature(signatureMethod, consumerSecret, accessTokenPairMap[uid].secret, baseString);
-    qDebug() << "signature" << signatureMethod << signature;
-
-    // Set Authorization header with added signature.
-    sortMap["oauth_signature"] = signature;
-    QByteArray authHeader = createOAuthHeaderString(sortMap);
-    qDebug() << "authHeader " << authHeader;
-
-    return authHeader;
-}
-
 void SkyDriveClient::accountInfo(QString nonce, QString uid)
 {
     qDebug() << "----- SkyDriveClient::accountInfo ----- uid" << uid;
@@ -363,7 +221,6 @@ void SkyDriveClient::accountInfo(QString nonce, QString uid)
     } else {
         accessToken = accessTokenPairMap[uid].token;
     }
-    uri.append("?access_token=" + QUrl::toPercentEncoding(accessToken) );
     qDebug() << "SkyDriveClient::accountInfo uri " << uri;
 
     // Send request.
@@ -371,6 +228,7 @@ void SkyDriveClient::accountInfo(QString nonce, QString uid)
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", QString("Bearer " + accessToken).toAscii() );
     QNetworkReply *reply = manager->get(req);
     connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
@@ -381,7 +239,6 @@ void SkyDriveClient::quota(QString nonce, QString uid)
     qDebug() << "----- SkyDriveClient::quota ----- uid" << uid;
 
     QString uri = quotaURI;
-    uri.append("?access_token=" + QUrl::toPercentEncoding(accessTokenPairMap[uid].token) );
     qDebug() << "SkyDriveClient::quota uri " << uri;
 
     // Send request.
@@ -389,6 +246,7 @@ void SkyDriveClient::quota(QString nonce, QString uid)
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(quotaReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
     connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
@@ -411,23 +269,11 @@ void SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath,
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
-}
-
-QString SkyDriveClient::getDefaultLocalFilePath(const QString &remoteFilePath)
-{
-    QRegExp rx("^(/*)([C-F])(.+)$");
-    rx.indexIn(remoteFilePath);
-    if (rx.captureCount() == 3) {
-        return rx.cap(2).append(":").append(rx.cap(3));
-    } else if (rx.captureCount() == 2) {
-        return rx.cap(1).append(":").append(rx.cap(2));
-    }
-    return "";
 }
 
 void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath) {
@@ -447,7 +293,7 @@ void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, 
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)));
         QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
         req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-        req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "PUT", uri));
+        req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
         req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize);
         QNetworkReply *reply = manager->put(req, localSourceFile);
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
@@ -461,21 +307,11 @@ void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, 
     }
 }
 
-QString SkyDriveClient::getDefaultRemoteFilePath(const QString &localFilePath)
-{
-    QRegExp rx("^([C-F])(:)(/.+)$");
-    rx.indexIn(localFilePath);
-    if (rx.captureCount() == 3) {
-        return "/" + rx.cap(1).append(rx.cap(3));
-    }
-    return "";
-}
-
 void SkyDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
     qDebug() << "----- SkyDriveClient::metadata -----";
 
     // TODO root dropbox(Full access) or sandbox(App folder access)
-    QString uri = metadataURI.arg(remoteFilePath);
+    QString uri = metadataURI.arg( (remoteFilePath == "") ? "me/skydrive" : remoteFilePath );
     uri = encodeURI(uri);
     qDebug() << "SkyDriveClient::metadata uri " << uri;
 
@@ -484,7 +320,7 @@ void SkyDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(metadataReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
@@ -495,8 +331,11 @@ void SkyDriveClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- SkyDriveClient::browse -----" << remoteFilePath;
 
+    QString propertyJsonText = property(nonce, uid, remoteFilePath);
+    qDebug() << "SkyDriveClient::browse propertyJsonText" << propertyJsonText;
+
     // TODO root dropbox(Full access) or sandbox(App folder access)
-    QString uri = metadataURI.arg(remoteFilePath);
+    QString uri = metadataURI.arg( (remoteFilePath == "") ? "me/skydrive" : remoteFilePath );
     uri = encodeURI(uri);
     qDebug() << "SkyDriveClient::browse uri " << uri;
 
@@ -505,11 +344,36 @@ void SkyDriveClient::browse(QString nonce, QString uid, QString remoteFilePath)
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(browseReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+}
+
+QString SkyDriveClient::property(QString nonce, QString uid, QString remoteFilePath)
+{
+    qDebug() << "----- SkyDriveClient::property -----" << remoteFilePath;
+
+    // TODO root dropbox(Full access) or sandbox(App folder access)
+    QString uri = propertyURI.arg( (remoteFilePath == "") ? "me/skydrive" : remoteFilePath );
+    uri = encodeURI(uri);
+    qDebug() << "SkyDriveClient::property uri " << uri;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    QNetworkReply *reply = manager->get(req);
+
+    // Execute the event loop here, now we will wait here until readyRead() signal is emitted
+    // which in turn will trigger event loop quit.
+    QEventLoop loop;
+    QObject::connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
+    loop.exec();
+
+    return reply->readAll();
 }
 
 void SkyDriveClient::createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
@@ -534,7 +398,7 @@ void SkyDriveClient::createFolder(QString nonce, QString uid, QString localFileP
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(createFolderReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "POST", uri, sortMap));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QNetworkReply *reply = manager->post(req, postData);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
@@ -565,7 +429,7 @@ void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)) );
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "POST", uri, sortMap));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QNetworkReply *reply = manager->post(req, postData);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
@@ -596,7 +460,7 @@ void SkyDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(copyFileReplyFinished(QNetworkReply*)) );
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "POST", uri, sortMap));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QNetworkReply *reply = manager->post(req, postData);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
@@ -626,7 +490,7 @@ void SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePa
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deleteFileReplyFinished(QNetworkReply*)) );
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "POST", uri, sortMap));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QNetworkReply *reply = manager->post(req, postData);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
@@ -651,40 +515,12 @@ void SkyDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePat
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "POST", uri));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QNetworkReply *reply = manager->post(req, postData);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
-}
-
-void SkyDriveClient::requestTokenReplyFinished(QNetworkReply *reply)
-{
-    qDebug() << "SkyDriveClient::requestTokenReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
-
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-
-    // Load response parameters into map.
-    QString replyBody = QString(reply->readAll());
-
-    if (reply->error() == QNetworkReply::NoError) {
-        foreach (QString s, replyBody.split('&')) {
-            QStringList c = s.split('=');
-            m_paramMap[c.at(0)] = c.at(1);
-        }
-
-        requestTokenPair.token = m_paramMap["oauth_token"];
-        requestTokenPair.secret = m_paramMap["oauth_token_secret"];
-
-        qDebug() << "m_paramMap " << m_paramMap;
-    }
-
-    emit requestTokenReplySignal(nonce, reply->error(), reply->errorString(), replyBody );
-
-    // TODO scheduled to delete later.
-    reply->deleteLater();
-    reply->manager()->deleteLater();
 }
 
 void SkyDriveClient::accessTokenReplyFinished(QNetworkReply *reply)
@@ -702,13 +538,16 @@ void SkyDriveClient::accessTokenReplyFinished(QNetworkReply *reply)
         sc = engine.evaluate("(" + replyBody + ")");
         m_paramMap["access_token"] = sc.property("access_token").toString();
         m_paramMap["refresh_token"] = sc.property("refresh_token").toString();
+        qDebug() << "SkyDriveClient::accessTokenReplyFinished m_paramMap " << m_paramMap;
 
-        qDebug() << "m_paramMap " << m_paramMap;
-
-        // Updates for refreshToken.
         if (refreshTokenUid != "") {
+            // Updates for refreshToken.
             accessTokenPairMap[refreshTokenUid].token = sc.property("access_token").toString();
             accessTokenPairMap[refreshTokenUid].secret = sc.property("refresh_token").toString();
+            qDebug() << "SkyDriveClient::accessTokenReplyFinished accessTokenPairMap" << accessTokenPairMap;
+
+            // Reset refreshTokenUid.
+            refreshTokenUid = "";
         }
 
         // Get email from accountInfo will be requested by CloudDriveModel.accessTokenReplyFilter().
@@ -739,6 +578,15 @@ void SkyDriveClient::accountInfoReplyFinished(QNetworkReply *reply)
 
         if (accessTokenPairMap.contains(uid)) {
             accessTokenPairMap[uid].email = email;
+
+            if (m_paramMap.contains("access_token")) {
+                accessTokenPairMap[uid].token = m_paramMap["access_token"];
+                accessTokenPairMap[uid].secret = m_paramMap["refresh_token"];
+
+                // Reset temp. accessToken and refreshToken.
+                m_paramMap.remove("access_token");
+                m_paramMap.remove("refresh_token");
+            }
         } else {
             TokenPair accessTokenPair;
             accessTokenPair.token = m_paramMap["access_token"];
@@ -748,7 +596,13 @@ void SkyDriveClient::accountInfoReplyFinished(QNetworkReply *reply)
             if (uid != "" && accessTokenPair.token != "" && accessTokenPair.secret != "") {
                 accessTokenPairMap[uid] = accessTokenPair;
             }
+
+            // Reset temp. accessToken and refreshToken.
+            m_paramMap.remove("access_token");
+            m_paramMap.remove("refresh_token");
         }
+
+        qDebug() << "SkyDriveClient::accountInfoReplyFinished accessTokenPairMap" << accessTokenPairMap;
 
         // Save account after got id and email.
         saveAccessPairMap();

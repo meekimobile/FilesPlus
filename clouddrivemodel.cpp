@@ -2216,12 +2216,18 @@ void CloudDriveModel::proceedNextJob() {
         case Dropbox:
             dbClient->fileGet(job.jobId, job.uid, job.remoteFilePath, job.localFilePath);
             break;
+        case SkyDrive:
+            skdClient->fileGet(job.jobId, job.uid, job.remoteFilePath, job.localFilePath);
+            break;
         }
         break;
     case FilePut:
         switch (job.type) {
         case Dropbox:
             dbClient->filePut(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
+            break;
+        case SkyDrive:
+            skdClient->filePut(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
             break;
         }
         break;
@@ -2230,12 +2236,18 @@ void CloudDriveModel::proceedNextJob() {
         case Dropbox:
             dbClient->metadata(job.jobId, job.uid, job.remoteFilePath);
             break;
+        case SkyDrive:
+            skdClient->metadata(job.jobId, job.uid, job.remoteFilePath);
+            break;
         }
         break;
     case Browse:
         switch (job.type) {
         case Dropbox:
             dbClient->browse(job.jobId, job.uid, job.remoteFilePath);
+            break;
+        case SkyDrive:
+            skdClient->browse(job.jobId, job.uid, job.remoteFilePath);
             break;
         }
         break;
@@ -2295,12 +2307,18 @@ void CloudDriveModel::proceedNextJob() {
         case Dropbox:
             dbClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
             break;
+        case SkyDrive:
+            skdClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
+            break;
         }
         break;
     case MoveFile:
         switch (job.type) {
         case Dropbox:
             dbClient->moveFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
+            break;
+        case SkyDrive:
+            skdClient->moveFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
             break;
         }
         break;
@@ -2309,6 +2327,9 @@ void CloudDriveModel::proceedNextJob() {
         case Dropbox:
             dbClient->copyFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
             break;
+        case SkyDrive:
+            skdClient->copyFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
+            break;
         }
         break;
     case DeleteFile:
@@ -2316,12 +2337,18 @@ void CloudDriveModel::proceedNextJob() {
         case Dropbox:
             dbClient->deleteFile(job.jobId, job.uid, job.remoteFilePath);
             break;
+        case SkyDrive:
+            skdClient->deleteFile(job.jobId, job.uid, job.remoteFilePath);
+            break;
         }
         break;
     case ShareFile:
         switch (job.type) {
         case Dropbox:
             dbClient->shareFile(job.jobId, job.uid, job.remoteFilePath);
+            break;
+        case SkyDrive:
+            skdClient->shareFile(job.jobId, job.uid, job.remoteFilePath);
             break;
         }
         break;

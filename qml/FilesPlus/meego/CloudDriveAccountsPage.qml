@@ -66,6 +66,7 @@ Page {
             onClicked: {
                 var p = pageStack.find(function (page) { return page.name == "folderPage"; });
                 if (p) {
+                    // TODO
 //                    p.registerDropboxUserSlot();
                     p.registerSkyDriveAccountSlot();
                 }

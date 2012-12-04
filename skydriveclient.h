@@ -13,8 +13,8 @@ public:
     static const QString KeyStoreFilePath;
     static const QString consumerKey;
     static const QString consumerSecret;
-    static const QString signatureMethod;
-    static const QString requestTokenURI;
+    static const QString clientTypeName;
+
     static const QString authorizeURI;
     static const QString accessTokenURI;
     static const QString accountInfoURI;
@@ -24,26 +24,18 @@ public:
     static const QString fileGetURI;
     static const QString filePutURI;
     static const QString metadataURI;
+    static const QString propertyURI;
     static const QString createFolderURI;
     static const QString moveFileURI;
     static const QString copyFileURI;
     static const QString deleteFileURI;
     static const QString sharesURI;
-    static const QString mediaURI;
 
     explicit SkyDriveClient(QDeclarativeItem *parent = 0);
     ~SkyDriveClient();
 
     QString createTimestamp();
-//    QString createNonce();
     QString createNormalizedQueryString(QMap<QString, QString> sortMap);
-    QByteArray createBaseString(QString method, QString uri, QString queryString);
-    QString createSignature(QString signatureMethod, QString consumerSecret, QString tokenSecret, QByteArray baseString);
-    QString createSignatureWithHMACSHA1(QString consumerSecret, QString tokenSecret, QByteArray baseString);
-    QString createSignatureWithPLAINTEXT(QString consumerSecret, QString tokenSecret, QByteArray baseString);
-    QByteArray createPostData(QString signature, QString queryString);
-    QByteArray createOAuthHeaderString(QMap<QString, QString> sortMap);
-    QByteArray createOAuthHeaderForUid(QString nonce, QString uid, QString method, QString uri, QMap<QString, QString> addParamMap = QMap<QString, QString>());
     QString encodeURI(const QString uri);
 
     Q_INVOKABLE void authorize(QString nonce);
@@ -61,13 +53,13 @@ public:
     Q_INVOKABLE QString getDefaultRemoteFilePath(const QString &localFilePath);
     Q_INVOKABLE void metadata(QString nonce, QString uid, QString remoteFilePath);
     Q_INVOKABLE void browse(QString nonce, QString uid, QString remoteFilePath);
+    Q_INVOKABLE QString property(QString nonce, QString uid, QString remoteFilePath);
     Q_INVOKABLE void createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
     Q_INVOKABLE void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
     Q_INVOKABLE void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
     Q_INVOKABLE void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     Q_INVOKABLE void shareFile(QString nonce, QString uid, QString remoteFilePath);
 signals:
-    void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
     void accessTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void accountInfoReplySignal(QString nonce, int err, QString errMsg, QString msg);
@@ -88,7 +80,6 @@ signals:
     void deleteFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
 public slots:
-    void requestTokenReplyFinished(QNetworkReply *reply);
     void accessTokenReplyFinished(QNetworkReply *reply);
     void accountInfoReplyFinished(QNetworkReply *reply);
     void quotaReplyFinished(QNetworkReply *reply);

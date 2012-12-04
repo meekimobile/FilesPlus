@@ -65,18 +65,39 @@ CommonDialog {
         originalRemotePath = (originalRemotePath == "") ? remotePath : originalRemotePath;
 
         var json = Utility.createJsonObj(jsonText);
-        remoteParentPath = json.path;
 
-        for (var i=0; i<json.contents.length; i++) {
-            var item = json.contents[i];
-            var modelItem = { "path": item.path, "lastModified": (new Date(item.modified)), "isDir": item.is_dir };
-            cloudDrivePathListModel.append(modelItem);
-            if (item.path == originalRemotePath) {
-                selectedIndex = i;
-                selectedRemotePath = item.path;
-                selectedIsDir = item.is_dir;
-                cloudDrivePathListView.currentIndex = i;
+        switch (selectedCloudType) {
+        case CloudDriveModel.Dropbox:
+            remoteParentPath = json.path;
+            for (var i=0; i<json.contents.length; i++) {
+                var item = json.contents[i];
+                var modelItem = { "name": cloudDriveModel.getRemoteName(item.path), "path": item.path, "lastModified": (new Date(item.modified)), "isDir": item.is_dir };
+                cloudDrivePathListModel.append(modelItem);
+                if (item.path == originalRemotePath) {
+                    selectedIndex = i;
+                    selectedRemotePath = item.path;
+                    selectedIsDir = item.is_dir;
+                    cloudDrivePathListView.currentIndex = i;
+                }
             }
+            break;
+        case CloudDriveModel.SkyDrive:
+            remoteParentPath = "";
+            for (var i=0; i<json.data.length; i++) {
+                var item = json.data[i];
+                var modelItem = { "name": item.name, "path": item.id, "lastModified": Utility.parseJSONDate(item.updated_time), "isDir": (item.type == "folder" || item.type == "album") };
+                cloudDrivePathListModel.append(modelItem);
+                if (item.path == originalRemotePath) {
+                    selectedIndex = i;
+                    selectedRemotePath = item.path;
+                    selectedIsDir = item.is_dir;
+                    cloudDrivePathListView.currentIndex = i;
+                }
+
+                // Set remote parent.
+                remoteParentPath = item.parent_id;
+            }
+            break;
         }
 
         // Reset busy.
@@ -196,7 +217,7 @@ CommonDialog {
                     onClicked: {
                         newFolderButton.focus = true;
                         if (newFolderNameInput.text.trim() != "") {
-                            createRemoteFolder(remoteParentPath + "/" + newFolderNameInput.text.trim())
+                            createRemoteFolder(newFolderNameInput.text.trim())
                             newFolderNameInput.visible = false;
                             isBusy = true;
                         }
@@ -310,7 +331,7 @@ CommonDialog {
                     spacing: 2
                     Text {
                         width: parent.width
-                        text: cloudDriveModel.getRemoteName(path)
+                        text: name
                         font.pointSize: 18
                         color: "white"
                         elide: Text.ElideMiddle
@@ -355,7 +376,14 @@ CommonDialog {
                 if (index == selectedIndex && isDir) {
                     // Second click on current item. Folder only.
                     // Use path with /. to guide onRefreshRequested to get parent path as itself.
-                    changeRemotePath(path + "/.");
+                    switch (selectedCloudType) {
+                    case CloudDriveModel.Dropbox:
+                        changeRemotePath(path + "/.");
+                        break;
+                    case CloudDriveModel.SkyDrive:
+                        changeRemotePath(path);
+                        break;
+                    }
                 } else {
                     // Always set selectedIndex to support changeRemotePath.
                     selectedIndex = index;

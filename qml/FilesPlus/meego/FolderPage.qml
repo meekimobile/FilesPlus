@@ -2519,6 +2519,7 @@ Page {
                     }
                 }
             } else if (err == 204) {
+                // TODO Refactor to support all SkyDriveClient services.
                 cloudDriveModel.refreshToken(cloudDriveJobJson.type, cloudDriveJobJson.uid);
             } else {
                 messageDialog.titleText = appInfo.emptyStr+qsTr("CloudDrive Account Info");
@@ -2560,6 +2561,9 @@ Page {
                         break;
                     }
                 }
+            } else if (err == 204) {
+                // TODO Refactor to support all SkyDriveClient services.
+                cloudDriveModel.refreshToken(cloudDriveJobJson.type, cloudDriveJobJson.uid);
             } else {
                 messageDialog.titleText = appInfo.emptyStr+qsTr("CloudDrive Quota");
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
@@ -3271,13 +3275,25 @@ Page {
 
         onCreateRemoteFolder: {
             // Create remote folder.
-            cloudDriveModel.createFolder(selectedCloudType, selectedUid, "", newRemotePath, -1);
+            switch (selectedCloudType) {
+            case CloudDriveModel.Dropbox:
+                cloudDriveModel.createFolder(selectedCloudType, selectedUid, "", remoteParentPath + "/" + newRemotePath, -1);
+                break;
+            default:
+                cloudDriveModel.createFolder(selectedCloudType, selectedUid, "", newRemotePath, -1);
+            }
         }
 
         onRefreshRequested: {
             // Browse remote parent path.
-            remoteParentPath = cloudDriveModel.getRemoteParentPath(remotePath)
-            cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
+            switch (selectedCloudType) {
+            case CloudDriveModel.Dropbox:
+                remoteParentPath = cloudDriveModel.getRemoteParentPath(remotePath);
+                cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
+                break;
+            default:
+                cloudDriveModel.browse(selectedCloudType, selectedUid, remotePath);
+            }
         }
 
         onDeleteRemotePath: {

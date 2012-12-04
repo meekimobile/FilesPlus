@@ -180,8 +180,8 @@ Page {
                 } else if (authPage.redirectFrom == "SkyDriveClient") {
                     // SkyDriveClient handler
                     console.debug("SkyDriveClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom);
-                    console.debug("SkyDriveClient title " + title);
-                    console.debug("SkyDriveClient html " + html);
+//                    console.debug("SkyDriveClient title " + title);
+//                    console.debug("SkyDriveClient html " + html);
 
                     var pin = authPage.parseSkyDriveCode(url);
                     pinInputPanel.pin = pin;
