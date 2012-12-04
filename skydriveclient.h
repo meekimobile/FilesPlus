@@ -48,9 +48,7 @@ public:
     Q_INVOKABLE void quota(QString nonce, QString uid);
 
     Q_INVOKABLE void fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
-    Q_INVOKABLE QString getDefaultLocalFilePath(const QString &remoteFilePath);
     Q_INVOKABLE void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
-    Q_INVOKABLE QString getDefaultRemoteFilePath(const QString &localFilePath);
     Q_INVOKABLE void metadata(QString nonce, QString uid, QString remoteFilePath);
     Q_INVOKABLE void browse(QString nonce, QString uid, QString remoteFilePath);
     Q_INVOKABLE QString property(QString nonce, QString uid, QString remoteFilePath);
