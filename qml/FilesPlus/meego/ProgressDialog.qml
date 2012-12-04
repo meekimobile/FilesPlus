@@ -19,7 +19,7 @@ CommonDialog {
     property int count
     property alias indeterminate: progressBar.indeterminate
     property bool autoClose: false
-    property int autoCloseInterval: 5000
+    property int autoCloseInterval: 2000
     property bool formatValue: false
     property alias updateInterval: progressTimer.interval
     property int accuDeltaValue: 0
