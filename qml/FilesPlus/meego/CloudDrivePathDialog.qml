@@ -17,6 +17,8 @@ CommonDialog {
     property int selectedModelIndex
     property string selectedRemotePath
     property string remoteParentPath
+    property string remoteParentPathName // Shows on titlebar
+    property string remoteParentParentPath
     property int selectedIndex
     property bool selectedIsDir
     property bool selectedIsValid
@@ -69,6 +71,7 @@ CommonDialog {
         switch (selectedCloudType) {
         case CloudDriveModel.Dropbox:
             remoteParentPath = json.path;
+            remoteParentPathName = json.path;
             for (var i=0; i<json.contents.length; i++) {
                 var item = json.contents[i];
                 var modelItem = { "name": cloudDriveModel.getRemoteName(item.path), "path": item.path, "lastModified": (new Date(item.modified)), "isDir": item.is_dir };
@@ -82,7 +85,8 @@ CommonDialog {
             }
             break;
         case CloudDriveModel.SkyDrive:
-            remoteParentPath = "";
+            remoteParentPath = json.property.id;
+            remoteParentPathName = json.property.name;
             for (var i=0; i<json.data.length; i++) {
                 var item = json.data[i];
                 var modelItem = { "name": item.name, "path": item.id, "lastModified": Utility.parseJSONDate(item.updated_time), "isDir": (item.type == "folder" || item.type == "album") };
@@ -93,9 +97,6 @@ CommonDialog {
                     selectedIsDir = item.is_dir;
                     cloudDrivePathListView.currentIndex = i;
                 }
-
-                // Set remote parent.
-                remoteParentPath = item.parent_id;
             }
             break;
         }
@@ -171,6 +172,7 @@ CommonDialog {
                     visible: !newFolderNameInput.visible
                     iconSource: (theme.inverted ? "back.svg" : "back_inverted.svg")
                     onClicked: {
+                        // TODO Supports SkyDrive.
                         changeRemotePath(remoteParentPath);
                     }
                 }
@@ -184,7 +186,7 @@ CommonDialog {
                     color: "white"
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     verticalAlignment: Text.AlignVCenter
-                    text: remoteParentPath
+                    text: remoteParentPathName
                 }
 
                 TextField {

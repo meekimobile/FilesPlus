@@ -23,7 +23,7 @@ public:
 
     static const QString fileGetURI;
     static const QString filePutURI;
-    static const QString metadataURI;
+    static const QString filesURI;
     static const QString propertyURI;
     static const QString createFolderURI;
     static const QString moveFileURI;
@@ -51,7 +51,8 @@ public:
     Q_INVOKABLE void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
     Q_INVOKABLE void metadata(QString nonce, QString uid, QString remoteFilePath);
     Q_INVOKABLE void browse(QString nonce, QString uid, QString remoteFilePath);
-    Q_INVOKABLE QString property(QString nonce, QString uid, QString remoteFilePath);
+    QNetworkReply *files(QString nonce, QString uid, QString remoteFilePath);
+    QNetworkReply *property(QString nonce, QString uid, QString remoteFilePath);
     Q_INVOKABLE void createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
     Q_INVOKABLE void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
     Q_INVOKABLE void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
