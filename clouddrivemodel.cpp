@@ -824,6 +824,12 @@ QString CloudDriveModel::getItemListJson(QString localPath)
     return "[ " + jsonText + " ]";
 }
 
+QString CloudDriveModel::getItemJson(QString localPath, CloudDriveModel::ClientTypes type, QString uid)
+{
+    CloudDriveItem item = getItem(localPath, type, uid);
+    return item.toJsonText();
+}
+
 QString CloudDriveModel::getItemRemotePath(QString localPath, CloudDriveModel::ClientTypes type, QString uid)
 {
     CloudDriveItem item = getItem(localPath, type, uid);
@@ -1228,8 +1234,13 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
 
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
-    if (job.type == Dropbox) {
+    switch (job.type) {
+    case Dropbox:
         addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        break;
+    case SkyDrive:
+        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        break;
     }
 
     emit proceedNextJobSignal();
@@ -1256,9 +1267,15 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
 
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
-    if (job.type == Dropbox) {
+    switch (job.type) {
+    case Dropbox:
         addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        break;
+    case SkyDrive:
+        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        break;
     }
+
 
     emit proceedNextJobSignal();
 }
@@ -1284,9 +1301,15 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
 
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
-    if (job.type == Dropbox) {
+    switch (job.type) {
+    case Dropbox:
         addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        break;
+    case SkyDrive:
+        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        break;
     }
+
 
     emit proceedNextJobSignal();
 }
@@ -1336,7 +1359,15 @@ void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString u
             // If dir/file don't have localHash which means it's not synced, put it right away.
             // If forcePut, put it right away.
             if (forcePut || localHash == "") {
-                QString remoteFilePath = remotePath + "/" + item.fileName();
+                QString remoteFilePath;
+                switch (type) {
+                case Dropbox:
+                    remoteFilePath = remotePath + "/" + item.fileName();
+                    break;
+                case SkyDrive:
+                    // TODO
+                    break;
+                }
                 // Sync dir/file then it will decide whether get/put/do nothing by metadataReply.
                 qDebug() << "CloudDriveModel::syncFromLocal new local item" << type << uid << localFilePath << remoteFilePath << localHash;
 
@@ -1376,9 +1407,15 @@ void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString ui
 
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
-    if (job.type == Dropbox) {
+    switch (job.type) {
+    case Dropbox:
         addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        break;
+    case SkyDrive:
+        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        break;
     }
+
 
     emit proceedNextJobSignal();
 }
@@ -1397,9 +1434,15 @@ void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, Q
 
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
-    if (job.type == Dropbox) {
+    switch (job.type) {
+    case Dropbox:
         addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        break;
+    case SkyDrive:
+        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        break;
     }
+
 
     emit proceedNextJobSignal();
 }
@@ -1418,9 +1461,15 @@ void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, Q
 
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
-    if (job.type == Dropbox) {
+    switch (job.type) {
+    case Dropbox:
         addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        break;
+    case SkyDrive:
+        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        break;
     }
+
 
     emit proceedNextJobSignal();
 }
@@ -1439,9 +1488,15 @@ void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid,
 
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
-    if (job.type == Dropbox) {
+    switch (job.type) {
+    case Dropbox:
         addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        break;
+    case SkyDrive:
+        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        break;
     }
+
 
     emit proceedNextJobSignal();
 }
@@ -1464,17 +1519,22 @@ void CloudDriveModel::shareFile(CloudDriveModel::ClientTypes type, QString uid, 
 void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    QScriptEngine engine;
+    QScriptValue sc;
+    QString hash;
 
     if (err == 0) {
-        // TODO generalize to support other clouds.
-        QScriptEngine engine;
-        QScriptValue sc;
-        sc = engine.evaluate("(" + msg + ")");
-        QString hash = sc.property("rev").toString();
-
         // TODO handle other clouds.
-        if (job.type == Dropbox) {
+        switch (job.type) {
+        case Dropbox:
+            sc = engine.evaluate("(" + msg + ")");
+            hash = sc.property("rev").toString();
             addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
+            break;
+        case SkyDrive:
+            // TODO
+            addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, DirtyHash);
+            break;
         }
 
         job.isRunning = false;
@@ -1490,25 +1550,36 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
 void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    QScriptEngine engine;
+    QScriptValue sc;
+    QString hash;
 
     if (err == 0) {
-        // TODO generalize to support other clouds.
-        QScriptEngine engine;
-        QScriptValue sc;
-        sc = engine.evaluate("(" + msg + ")");
-        QString hash = sc.property("rev").toString();
-
         // TODO handle other clouds.
-        if (job.type == Dropbox) {
+        switch (job.type) {
+        case Dropbox:
+            sc = engine.evaluate("(" + msg + ")");
+            hash = sc.property("rev").toString();
             addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
+            break;
+        case SkyDrive:
+            // TODO
+            addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, DirtyHash);
+            break;
         }
 
         job.isRunning = false;
         m_cloudDriveJobs->insert(nonce, job);
     } else if (err == -1) {
         // Remove failed item.
-        if (job.type == Dropbox) {
+        switch (job.type) {
+        case Dropbox:
             removeItem(Dropbox, job.uid, job.localFilePath);
+            break;
+        case SkyDrive:
+            // TODO
+            removeItem(SkyDrive, job.uid, job.localFilePath);
+            break;
         }
     }
 
@@ -1524,10 +1595,14 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
 
     if (err == 0) {
         // TODO generalize to support other clouds.
-        QScriptEngine engine;
-        QScriptValue sc;
-        sc = engine.evaluate("(" + msg + ")");
-        QString hash = sc.property("rev").toString();
+        switch (job.type) {
+        case Dropbox:
+            // TODO
+            break;
+        case SkyDrive:
+            // TODO
+            break;
+        }
 
         // Don't update hash to item yet. Hash will be updated by fileGet/filePut.
 
@@ -1563,31 +1638,46 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
 void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    QScriptEngine engine;
+    QScriptValue sc;
+    QString hash;
 
     if (err == 0) {
         // TODO generalize to support other clouds.
-        QScriptEngine engine;
-        QScriptValue sc;
-        sc = engine.evaluate("(" + msg + ")");
-        QString hash = sc.property("rev").toString();
-
-        // Add cloud item if localPath is specified.
-        if (job.localFilePath != "") {
-            // TODO handle other clouds.
-            if (job.type == Dropbox) {
+        switch (job.type) {
+        case Dropbox:
+            sc = engine.evaluate("(" + msg + ")");
+            hash = sc.property("rev").toString();
+            if (job.localFilePath != "") {
+                // Add cloud item if localPath is specified.
                 addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
             }
+            break;
+        case SkyDrive:
+            // TODO
+            if (job.localFilePath != "") {
+                // Add cloud item if localPath is specified.
+                addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, DirtyHash);
+            }
+            break;
         }
     } else if (err == 202) {
         // Forbidden {"error": " at path 'The folder '???' already exists.'"}
         // Do nothing.
     } else {
-        // Remove failed item if localPath is specified.
-        if (job.localFilePath != "") {
-            // TODO handle other clouds.
-            if (job.type == Dropbox) {
+        switch (job.type) {
+        case Dropbox:
+            // Remove failed item if localPath is specified.
+            if (job.localFilePath != "") {
                 removeItem(Dropbox, job.uid, job.localFilePath);
             }
+            break;
+        case SkyDrive:
+            // Remove failed item if localPath is specified.
+            if (job.localFilePath != "") {
+                removeItem(SkyDrive, job.uid, job.localFilePath);
+            }
+            break;
         }
     }
 
@@ -1604,21 +1694,28 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
 void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    QScriptEngine engine;
+    QScriptValue sc;
+    QString hash;
+    QString rev;
+    bool isDir;
 
     if (err == 0) {
         // TODO generalize to support other clouds.
-        QScriptEngine engine;
-        QScriptValue sc;
-        sc = engine.evaluate("(" + msg + ")");
-        QString hash = sc.property("hash").toString();
-        QString rev = sc.property("rev").toString();
-        bool isDir = sc.property("is_dir").toBool();
-
-        if (job.type == Dropbox) {
+        switch (job.type) {
+        case Dropbox:
+            sc = engine.evaluate("(" + msg + ")");
+            hash = sc.property("hash").toString();
+            rev = sc.property("rev").toString();
+            isDir = sc.property("is_dir").toBool();
             updateItemWithChildren(Dropbox, job.uid,
                                    job.localFilePath, job.remoteFilePath,
                                    job.newLocalFilePath, job.newRemoteFilePath, rev, (isDir ? hash : rev) );
             removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
+            break;
+        case SkyDrive:
+            // TODO
+            break;
         }
     }
 
@@ -1635,15 +1732,21 @@ void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg
 void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    QScriptEngine engine;
+    QScriptValue sc;
+    QString hash;
 
     if (err == 0) {
         // TODO generalize to support other clouds.
-        QScriptEngine engine;
-        QScriptValue sc;
-        sc = engine.evaluate("(" + msg + ")");
-        QString hash = sc.property("rev").toString();
-
-        // TODO To be implemented.
+        switch (job.type) {
+        case Dropbox:
+            sc = engine.evaluate("(" + msg + ")");
+            hash = sc.property("rev").toString();
+            break;
+        case SkyDrive:
+            // TODO
+            break;
+        }
     }
 
     // Stop running.
@@ -1663,22 +1766,38 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
     if (err == 0) {
         // TODO handle other clouds.
         // Disconnect deleted local path.
-        if (job.type == Dropbox) {
+        switch (job.type) {
+        case Dropbox:
             // TODO Remove local cloudDriveItems with it children.
             if (job.localFilePath != "") {
                 removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
             }
+            break;
+        case SkyDrive:
+            // TODO Remove local cloudDriveItems with it children.
+            if (job.localFilePath != "") {
+                removeItemWithChildren(SkyDrive, job.uid, job.localFilePath);
+            }
+            break;
         }
     } else if (err == 203) {
         // Not Found {"error": "Path '???' not found"}
 
         // TODO handle other clouds.
         // Disconnect deleted local path.
-        if (job.type == Dropbox) {
+        switch (job.type) {
+        case Dropbox:
             // TODO Remove local cloudDriveItems with it children.
             if (job.localFilePath != "") {
                 removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
             }
+            break;
+        case SkyDrive:
+            // TODO Remove local cloudDriveItems with it children.
+            if (job.localFilePath != "") {
+                removeItemWithChildren(SkyDrive, job.uid, job.localFilePath);
+            }
+            break;
         }
     }
 
@@ -1695,16 +1814,23 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
 void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
-
+    QScriptEngine engine;
+    QScriptValue sc;
     QString url = "";
     QString expires = "";
+
     if (err == 0) {
         // TODO generalize to support other clouds.
-        QScriptEngine engine;
-        QScriptValue sc;
-        sc = engine.evaluate("(" + msg + ")");
-        url = sc.property("url").toString();
-        expires = sc.property("expires").toString();
+        switch (job.type) {
+        case Dropbox:
+            sc = engine.evaluate("(" + msg + ")");
+            url = sc.property("url").toString();
+            expires = sc.property("expires").toString();
+            break;
+        case SkyDrive:
+            // TODO
+            break;
+        }
 
         job.isRunning = false;
         m_cloudDriveJobs->insert(nonce, job);

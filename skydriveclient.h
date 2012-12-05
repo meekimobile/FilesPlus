@@ -14,6 +14,7 @@ public:
     static const QString consumerKey;
     static const QString consumerSecret;
     static const QString clientTypeName;
+    static const QString SkyDriveRoot;
 
     static const QString authorizeURI;
     static const QString accessTokenURI;

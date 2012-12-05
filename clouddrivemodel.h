@@ -105,6 +105,7 @@ public:
     Q_INVOKABLE QString getItemHash(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE QString getItemRemotePath(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE QString getItemListJson(QString localPath);
+    Q_INVOKABLE QString getItemJson(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE QString getDefaultLocalFilePath(const QString &remoteFilePath); // TODO Avoid using.
     Q_INVOKABLE QString getDefaultRemoteFilePath(const QString &localFilePath); // TODO Avoid using.
     Q_INVOKABLE bool isAuthorized();
