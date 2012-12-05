@@ -43,9 +43,8 @@ Dialog {
 
     title: Row {
         id: titleRow
-        width: parent.width - 20
+        width: parent.width
         height: implicitHeight
-        anchors.horizontalCenter: parent.horizontalCenter
         Text {
             id: title
             color: "white"
