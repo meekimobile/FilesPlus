@@ -11,14 +11,14 @@ CommonDialog {
     property int operation
     property string localPath
     property string remotePath
+    property string remotePathName // Shows on titlebar
     property string originalRemotePath
     property int selectedCloudType
     property string selectedUid
     property int selectedModelIndex
     property string selectedRemotePath
+    property string selectedRemotePathName
     property string remoteParentPath
-    property string remoteParentPathName // Shows on titlebar
-    property string remoteParentParentPath
     property int selectedIndex
     property bool selectedIsDir
     property bool selectedIsValid
@@ -71,7 +71,7 @@ CommonDialog {
         switch (selectedCloudType) {
         case CloudDriveModel.Dropbox:
             remoteParentPath = json.path;
-            remoteParentPathName = json.path;
+            remotePathName = json.path;
             for (var i=0; i<json.contents.length; i++) {
                 var item = json.contents[i];
                 var modelItem = { "name": cloudDriveModel.getRemoteName(item.path), "path": item.path, "lastModified": (new Date(item.modified)), "isDir": item.is_dir };
@@ -85,8 +85,8 @@ CommonDialog {
             }
             break;
         case CloudDriveModel.SkyDrive:
-            remoteParentPath = json.property.id;
-            remoteParentPathName = json.property.name;
+            remoteParentPath = (json.property.parent_id ? json.property.parent_id : "");
+            remotePathName = json.property.name;
             for (var i=0; i<json.data.length; i++) {
                 var item = json.data[i];
                 var modelItem = { "name": item.name, "path": item.id, "lastModified": Utility.parseJSONDate(item.updated_time), "isDir": (item.type == "folder" || item.type == "album") };
@@ -109,6 +109,7 @@ CommonDialog {
     }
 
     function changeRemotePath(remotePath) {
+        console.debug("cloudDrivePathDialog changeRemotePath " + remotePath);
         cloudDrivePathDialog.remotePath = remotePath;
         refresh();
     }
@@ -130,7 +131,7 @@ CommonDialog {
     }
 
     titleIcon: "FilesPlusIcon.svg"
-    titleText: appInfo.emptyStr+getTitleText(localPath, selectedRemotePath, remoteParentPath)
+    titleText: appInfo.emptyStr+getTitleText(localPath, selectedRemotePathName, remotePathName)
     buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
     content: Column {
         width: parent.width
@@ -172,7 +173,6 @@ CommonDialog {
                     visible: !newFolderNameInput.visible
                     iconSource: (theme.inverted ? "back.svg" : "back_inverted.svg")
                     onClicked: {
-                        // TODO Supports SkyDrive.
                         changeRemotePath(remoteParentPath);
                     }
                 }
@@ -186,7 +186,7 @@ CommonDialog {
                     color: "white"
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     verticalAlignment: Text.AlignVCenter
-                    text: remoteParentPathName
+                    text: remotePathName
                 }
 
                 TextField {
@@ -394,15 +394,17 @@ CommonDialog {
                     // Other operations must select only the same item type that selected from local path.
                     if (fsModel.isDir(localPath) == isDir || operation == CloudDriveModel.FileGet || operation == CloudDriveModel.FilePut) {
                         selectedRemotePath = path;
+                        selectedRemotePathName = name;
                         selectedIsDir = isDir;
                         selectedIsValid = true;
-                        console.debug("cloudDrivePathDialog selectedIndex " + selectedIndex + " selectedRemotePath " + selectedRemotePath + " selectedIsDir " + selectedIsDir);
+                        console.debug("cloudDrivePathDialog selectedIndex " + selectedIndex + " selectedRemotePath " + selectedRemotePath + " selectedRemotePathName " + selectedRemotePathName + " selectedIsDir " + selectedIsDir);
                     } else {
                         selectedRemotePath = "";
+                        selectedRemotePathName = "";
                         selectedIsDir = isDir;
                         selectedIsValid = false;
                         cloudDrivePathListView.currentIndex = -1;
-                        console.debug("cloudDrivePathDialog invalid selectedIndex " + selectedIndex + " selectedRemotePath " + selectedRemotePath + " selectedIsDir " + selectedIsDir);
+                        console.debug("cloudDrivePathDialog invalid selectedIndex " + selectedIndex + " selectedRemotePath " + selectedRemotePath + " selectedRemotePathName " + selectedRemotePath + " selectedIsDir " + selectedIsDir);
                         // TODO Disable OK button.
                     }
                 }
