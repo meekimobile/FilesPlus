@@ -23,8 +23,9 @@ Dialog {
     buttons: Row {
         id: buttonRow
         width: parent.width - 20
-        anchors.horizontalCenter: parent.horizontalCenter
+        height: 60
         spacing: 5
+        anchors.horizontalCenter: parent.horizontalCenter
 
         property int buttonWidth: (width / buttonTexts.length) - spacing
 
@@ -41,23 +42,25 @@ Dialog {
         }
     }
 
-    title: Row {
+    title: Item {
         id: titleRow
         width: parent.width
-        height: implicitHeight
+        height: 60
         Text {
             id: title
             color: "white"
             font.pointSize: 20
-            wrapMode: Text.Wrap
             elide: Text.ElideRight
             width: parent.width - titleIcon.width
             height: implicitHeight
+            anchors.verticalCenter: parent.verticalCenter
         }
         Image {
             id: titleIcon
             width: 48
             height: 48
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
         }
 
         MouseArea {
