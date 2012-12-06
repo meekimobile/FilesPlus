@@ -27,7 +27,7 @@ CommonDialog {
 
     signal opening()
     signal opened()
-    signal createRemoteFolder(string newRemotePath)
+    signal createRemoteFolder(string newRemoteFolderName)
     signal refreshRequested()
     signal deleteRemotePath(string remotePath)
 
@@ -219,9 +219,9 @@ CommonDialog {
                     onClicked: {
                         newFolderButton.focus = true;
                         if (newFolderNameInput.text.trim() != "") {
-                            createRemoteFolder(newFolderNameInput.text.trim())
-                            newFolderNameInput.visible = false;
                             isBusy = true;
+                            newFolderNameInput.visible = false;
+                            createRemoteFolder(newFolderNameInput.text.trim())
                         }
                     }
                 }
@@ -421,6 +421,37 @@ CommonDialog {
         }
     }
 
+    CommonDialog {
+        id: newFolderDialog
+        titleText: appInfo.emptyStr+qsTr("New folder")
+        titleIcon: "FilesPlusIcon.svg"
+        buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
+        content: Column {
+            width: parent.width - 10
+            height: 80
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 5
+
+            TextField {
+                id: folderName
+                width: parent.width
+                placeholderText: appInfo.emptyStr+qsTr("Please input folder name.")
+            }
+        }
+
+        onStatusChanged: {
+            if (status == DialogStatus.Open) {
+                folderName.text = "";
+            }
+        }
+
+        onButtonClicked: {
+            if (index === 0 && folderName.text !== "") {
+                createRemoteFolder(folderName.text.trim());
+            }
+        }
+    }
+
     ConfirmDialog {
         id: deleteCloudItemConfirmation
 
@@ -429,6 +460,7 @@ CommonDialog {
         titleText: appInfo.emptyStr+qsTr("Delete")
         contentText: appInfo.emptyStr+qsTr("Delete %1 ?").arg(deleteCloudItemConfirmation.remotePath);
         onConfirm: {
+            isBusy = true;
             deleteRemotePath(deleteCloudItemConfirmation.remotePath);
         }
     }

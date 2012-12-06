@@ -24,7 +24,7 @@ const QString SkyDriveClient::fileGetURI = "https://apis.live.net/v5.0/%1/conten
 const QString SkyDriveClient::filePutURI = "https://apis.live.net/v5.0/%1/files/%2"; // PUT
 const QString SkyDriveClient::filesURI = "https://apis.live.net/v5.0/%1/files";
 const QString SkyDriveClient::propertyURI = "https://apis.live.net/v5.0/%1"; // GET or PUT to update.
-const QString SkyDriveClient::createFolderURI = "https://apis.live.net/v5.0/%1"; // POST
+const QString SkyDriveClient::createFolderURI = "https://apis.live.net/v5.0/%1"; // POST with json with name = new folder name.
 const QString SkyDriveClient::moveFileURI = "https://apis.live.net/v5.0/%1"; // MOVE to destination folder ID in content.
 const QString SkyDriveClient::copyFileURI = "https://apis.live.net/v5.0/%1"; // COPY to destination folder ID in content.
 const QString SkyDriveClient::deleteFileURI = "https://apis.live.net/v5.0/%1"; // DELETE
@@ -35,12 +35,18 @@ SkyDriveClient::SkyDriveClient(QDeclarativeItem *parent) :
 {
     // Load accessTokenPair from file
     loadAccessPairMap();
+
+    m_propertyReplyHash = new QHash<QString, QString>;
+    m_filesReplyHash = new QHash<QString, QString>;
 }
 
 SkyDriveClient::~SkyDriveClient()
 {
     // Save accessTokenPair to file
     saveAccessPairMap();
+
+    m_propertyReplyHash = 0;
+    m_filesReplyHash = 0;
 }
 
 void SkyDriveClient::loadAccessPairMap() {
@@ -107,7 +113,7 @@ void SkyDriveClient::authorize(QString nonce)
     QString queryString;
     queryString.append("client_id=" + consumerKey);
     queryString.append("&response_type=code");
-    queryString.append("&scope=" + QUrl::toPercentEncoding("wl.signin wl.basic wl.offline_access wl.emails wl.skydrive"));
+    queryString.append("&scope=" + QUrl::toPercentEncoding("wl.signin wl.basic wl.offline_access wl.emails wl.skydrive wl.skydrive_update"));
     queryString.append("&redirect_uri=http://www.meeki.mobi/products/filesplus/skd_oauth_callback");
     queryString.append("&display=touch");
 
@@ -254,9 +260,9 @@ void SkyDriveClient::quota(QString nonce, QString uid)
 }
 
 void SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath) {
-    qDebug() << "----- SkyDriveClient::fileGet -----";
+    qDebug() << "----- SkyDriveClient::fileGet -----" << remoteFilePath << "to" << localFilePath;
 
-    QString uri = fileGetURI.arg(remoteFilePath) + "?access_token=" + accessTokenPairMap[uid].token;
+    QString uri = fileGetURI.arg(remoteFilePath); // + "?access_token=" + accessTokenPairMap[uid].token;
     uri = encodeURI(uri);
     qDebug() << "SkyDriveClient::fileGet uri " << uri;
 
@@ -268,17 +274,18 @@ void SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath,
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-//    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath) {
-    qDebug() << "----- SkyDriveClient::filePut -----";
+void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath) {
+    qDebug() << "----- SkyDriveClient::filePut -----" << localFilePath << "to" << remoteParentPath;
 
-    QString uri = filePutURI.arg(remoteFilePath);
+    QFileInfo localFileInfo(localFilePath);
+    QString uri = filePutURI.arg(remoteParentPath).arg(localFileInfo.fileName());
     uri = encodeURI(uri);
     qDebug() << "SkyDriveClient::filePut uri " << uri;
 
@@ -299,7 +306,7 @@ void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, 
         connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
         connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
-//        qDebug() << "SkyDriveClient::filePut put file " << localFilePath << " to dropbox " << remoteFilePath;
+//        qDebug() << "SkyDriveClient::filePut put file" << localFilePath << "to" << remoteParentPath;
     } else {
         qDebug() << "SkyDriveClient::filePut file " << localFilePath << " can't be opened.";
         emit filePutReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");
@@ -309,10 +316,17 @@ void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, 
 void SkyDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
     qDebug() << "----- SkyDriveClient::metadata -----" << "uid" << uid << "remoteFilePath" << remoteFilePath;
 
+    if (remoteFilePath.isEmpty()) {
+        emit metadataReplySignal(nonce, -1, "remoteFilePath is empty.", "");
+        return;
+    }
+
     // Merge files and property into single JSON string.
     QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath);
     if (propertyReply->error() != QNetworkReply::NoError) {
-        metadataReplyFinished(propertyReply);
+        propertyReply->deleteLater();
+        propertyReply->manager()->deleteLater();
+        emit metadataReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), propertyReply->readAll());
         return;
     }
 
@@ -324,12 +338,15 @@ void SkyDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath
     QString propertyJsonText = propertyReply->readAll();
     scProperty = engine.evaluate("(" + propertyJsonText + ")");
     QString typeName = scProperty.property("type").toString();
-    qDebug() << "SkyDriveClient::metadata propertyJsonText" << propertyJsonText << "typeName" << typeName;
+//    qDebug() << "SkyDriveClient::metadata propertyJsonText" << propertyJsonText << "typeName" << typeName;
 
+    QNetworkReply *filesReply;
     if (typeName == "folder" || typeName == "album") {
-        QNetworkReply *filesReply = files(nonce, uid, remoteFilePath);
+        filesReply = files(nonce, uid, remoteFilePath);
         if (filesReply->error() != QNetworkReply::NoError) {
-            metadataReplyFinished(filesReply);
+            filesReply->deleteLater();
+            filesReply->manager()->deleteLater();
+            emit metadataReplySignal(nonce, filesReply->error(), filesReply->errorString(), filesReply->readAll());
             return;
         }
 
@@ -343,25 +360,35 @@ void SkyDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath
 //    qDebug() << "SkyDriveClient::metadata scJsonStringify.toString()" << scJsonStringify.toString();
 
     // TODO scheduled to delete later.
-//    reply->deleteLater();
-//    reply->manager()->deleteLater();
+    propertyReply->deleteLater();
+    propertyReply->manager()->deleteLater();
+    filesReply->deleteLater();
+    filesReply->manager()->deleteLater();
 
-    emit metadataReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), scJsonStringify.toString());
+    emit metadataReplySignal(nonce, QNetworkReply::NoError, "", scJsonStringify.toString());
 }
 
 void SkyDriveClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- SkyDriveClient::browse -----" << remoteFilePath;
+    if (remoteFilePath.isEmpty()) {
+        emit metadataReplySignal(nonce, -1, "remoteFilePath is empty.", "");
+        return;
+    }
 
     // Merge files and property into single JSON string.
     QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath);
     if (propertyReply->error() != QNetworkReply::NoError) {
-        browseReplyFinished(propertyReply);
+        propertyReply->deleteLater();
+        propertyReply->manager()->deleteLater();
+        emit browseReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), propertyReply->readAll());
         return;
     }
     QNetworkReply *filesReply = files(nonce, uid, remoteFilePath);
     if (filesReply->error() != QNetworkReply::NoError) {
-        browseReplyFinished(filesReply);
+        filesReply->deleteLater();
+        filesReply->manager()->deleteLater();
+        emit browseReplySignal(nonce, filesReply->error(), filesReply->errorString(), filesReply->readAll());
         return;
     }
 
@@ -377,15 +404,19 @@ void SkyDriveClient::browse(QString nonce, QString uid, QString remoteFilePath)
 //    qDebug() << "SkyDriveClient::browse scJsonStringify.toString()" << scJsonStringify.toString();
 
     // TODO scheduled to delete later.
-//    reply->deleteLater();
-//    reply->manager()->deleteLater();
+    propertyReply->deleteLater();
+    propertyReply->manager()->deleteLater();
+    filesReply->deleteLater();
+    filesReply->manager()->deleteLater();
 
-    emit browseReplySignal(nonce, filesReply->error(), filesReply->errorString(), scJsonStringify.toString());
+    emit browseReplySignal(nonce, QNetworkReply::NoError, "", scJsonStringify.toString());
 }
 
 QNetworkReply * SkyDriveClient::files(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- SkyDriveClient::files -----" << remoteFilePath;
+
+    QApplication::processEvents();
 
     QString uri = filesURI.arg(remoteFilePath);
     uri = encodeURI(uri);
@@ -400,9 +431,14 @@ QNetworkReply * SkyDriveClient::files(QString nonce, QString uid, QString remote
 
     // Execute the event loop here, now we will wait here until readyRead() signal is emitted
     // which in turn will trigger event loop quit.
-    QEventLoop loop;
-    QObject::connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
-    loop.exec();
+//    QEventLoop loop;
+//    QObject::connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
+//    loop.exec();
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 1000);
+        qDebug() << "SkyDriveClient::files processEvents";
+    }
 
     // Scheduled to delete later.
     reply->deleteLater();
@@ -414,6 +450,8 @@ QNetworkReply * SkyDriveClient::files(QString nonce, QString uid, QString remote
 QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- SkyDriveClient::property -----" << remoteFilePath;
+
+    QApplication::processEvents();
 
     // TODO root dropbox(Full access) or sandbox(App folder access)
     QString uri = propertyURI.arg(remoteFilePath);
@@ -429,9 +467,14 @@ QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString rem
 
     // Execute the event loop here, now we will wait here until readyRead() signal is emitted
     // which in turn will trigger event loop quit.
-    QEventLoop loop;
-    QObject::connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
-    loop.exec();
+//    QEventLoop loop;
+//    QObject::connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
+//    loop.exec();
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 1000);
+        qDebug() << "SkyDriveClient::property processEvents";
+    }
 
     // Scheduled to delete later.
     reply->deleteLater();
@@ -440,22 +483,26 @@ QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString rem
     return reply;
 }
 
-void SkyDriveClient::createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
+void SkyDriveClient::createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath)
 {
-    qDebug() << "----- SkyDriveClient::createFolder -----";
+    qDebug() << "----- SkyDriveClient::createFolder -----" << newRemoteFolderName << remoteParentPath;
 
-    QString uri = createFolderURI;
+    if (remoteParentPath.isEmpty()) {
+        emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
+        return;
+    }
+
+    if (newRemoteFolderName.isEmpty()) {
+        emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
+        return;
+    }
+
+    QString uri = createFolderURI.arg(remoteParentPath);
     qDebug() << "SkyDriveClient::createFolder uri " << uri;
 
-    // Construct normalized query string.
-    QMap<QString, QString> sortMap;
-    sortMap["path"] = remoteFilePath;
-    QString queryString = createNormalizedQueryString(sortMap);
-    qDebug() << "queryString " << queryString;
-
     QByteArray postData;
-    postData.append(queryString);
-    qDebug() << "postData" << postData;
+    postData.append(QString("{ \"name\": \"%1\" }").arg(newRemoteFolderName));
+    qDebug() << "SkyDriveClient::createFolder postData" << postData;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -463,11 +510,17 @@ void SkyDriveClient::createFolder(QString nonce, QString uid, QString localFileP
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QNetworkReply *reply = manager->post(req, postData);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 }
 
 void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
@@ -536,27 +589,17 @@ void SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePa
 {
     qDebug() << "----- SkyDriveClient::deleteFile -----";
 
-    QString uri = deleteFileURI;
+    QString uri = deleteFileURI.arg(remoteFilePath);
+//    uri = encodeURI(uri);
     qDebug() << "SkyDriveClient::deleteFile uri " << uri;
-
-    // Construct normalized query string.
-    QMap<QString, QString> sortMap;
-    sortMap["path"] = remoteFilePath;
-    QString queryString = createNormalizedQueryString(sortMap);
-    qDebug() << "queryString " << queryString;
-
-    QByteArray postData;
-    postData.append(queryString);
-    qDebug() << "postData" << postData;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deleteFileReplyFinished(QNetworkReply*)) );
-    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    QNetworkReply *reply = manager->post(req, postData);
+    QNetworkReply *reply = manager->deleteResource(req);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
@@ -666,7 +709,7 @@ void SkyDriveClient::accountInfoReplyFinished(QNetworkReply *reply)
             m_paramMap.remove("refresh_token");
         }
 
-        qDebug() << "SkyDriveClient::accountInfoReplyFinished accessTokenPairMap" << accessTokenPairMap;
+//        qDebug() << "SkyDriveClient::accountInfoReplyFinished accessTokenPairMap" << accessTokenPairMap;
 
         // Save account after got id and email.
         saveAccessPairMap();
@@ -788,6 +831,40 @@ void SkyDriveClient::browseReplyFinished(QNetworkReply *reply)
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
     emit browseReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void SkyDriveClient::propertyReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "SkyDriveClient::propertyReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    if (reply->error() == QNetworkReply::NoError) {
+        m_propertyReplyHash->insert(nonce, QString(reply->readAll()));
+    } else {
+        m_propertyReplyHash->remove(nonce);
+    }
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void SkyDriveClient::filesReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "SkyDriveClient::filesReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    if (reply->error() == QNetworkReply::NoError) {
+        m_filesReplyHash->insert(nonce, QString(reply->readAll()));
+    } else {
+        m_filesReplyHash->remove(nonce);
+    }
 
     // TODO scheduled to delete later.
     reply->deleteLater();

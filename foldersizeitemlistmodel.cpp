@@ -220,7 +220,7 @@ void FolderSizeItemListModel::setProperty(const int index, FolderSizeItemListMod
         }
 
         if (isChanged) {
-            qDebug() << "FolderSizeItemListModel::setProperty" << index << roleNames().value(role) << value << "isChanged" << isChanged;
+//            qDebug() << "FolderSizeItemListModel::setProperty" << index << roleNames().value(role) << value << "isChanged" << isChanged;
             setItem(index, item);
             refreshItem(index);
         }

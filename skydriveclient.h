@@ -3,6 +3,7 @@
 
 #include <QDeclarativeItem>
 #include <QtNetwork>
+#include <QApplication>
 #include "tokenpair.h"
 #include "qnetworkreplywrapper.h"
 
@@ -49,12 +50,12 @@ public:
     Q_INVOKABLE void quota(QString nonce, QString uid);
 
     Q_INVOKABLE void fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
-    Q_INVOKABLE void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
+    Q_INVOKABLE void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath);
     Q_INVOKABLE void metadata(QString nonce, QString uid, QString remoteFilePath);
     Q_INVOKABLE void browse(QString nonce, QString uid, QString remoteFilePath);
     QNetworkReply *files(QString nonce, QString uid, QString remoteFilePath);
     QNetworkReply *property(QString nonce, QString uid, QString remoteFilePath);
-    Q_INVOKABLE void createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
+    Q_INVOKABLE void createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath);
     Q_INVOKABLE void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
     Q_INVOKABLE void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
     Q_INVOKABLE void deleteFile(QString nonce, QString uid, QString remoteFilePath);
@@ -88,6 +89,8 @@ public slots:
     void filePutReplyFinished(QNetworkReply *reply);
     void metadataReplyFinished(QNetworkReply *reply);
     void browseReplyFinished(QNetworkReply *reply);
+    void propertyReplyFinished(QNetworkReply *reply);
+    void filesReplyFinished(QNetworkReply *reply);
 
     void createFolderReplyFinished(QNetworkReply *reply);
     void moveFileReplyFinished(QNetworkReply *reply);
@@ -101,6 +104,8 @@ private:
     QString localPath;
     QHash<QString, QFile*> m_localFileHash;
     QString refreshTokenUid;
+    QHash<QString, QString> *m_propertyReplyHash;
+    QHash<QString, QString> *m_filesReplyHash;
 
     void loadAccessPairMap();
     void saveAccessPairMap();
