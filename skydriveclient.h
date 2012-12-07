@@ -53,12 +53,12 @@ public:
     Q_INVOKABLE void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath);
     Q_INVOKABLE void metadata(QString nonce, QString uid, QString remoteFilePath);
     Q_INVOKABLE void browse(QString nonce, QString uid, QString remoteFilePath);
-    QNetworkReply *files(QString nonce, QString uid, QString remoteFilePath);
-    QNetworkReply *property(QString nonce, QString uid, QString remoteFilePath);
-    Q_INVOKABLE void createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath);
+    QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
+    QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
+    Q_INVOKABLE QNetworkReply * createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath, bool synchronous = false);
     Q_INVOKABLE void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
     Q_INVOKABLE void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
-    Q_INVOKABLE void deleteFile(QString nonce, QString uid, QString remoteFilePath);
+    Q_INVOKABLE QNetworkReply * deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
     Q_INVOKABLE void shareFile(QString nonce, QString uid, QString remoteFilePath);
 signals:
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
@@ -100,7 +100,6 @@ public slots:
 private:
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;
-    TokenPair requestTokenPair;
     QString localPath;
     QHash<QString, QFile*> m_localFileHash;
     QString refreshTokenUid;

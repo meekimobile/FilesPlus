@@ -770,7 +770,8 @@ Page {
                             cloudDriveModel.deleteFile(CloudDriveModel.Dropbox, json[i].uid, json[i].local_path, json[i].remote_path);
                             break;
                         case CloudDriveModel.SkyDrive:
-                            cloudDriveModel.deleteFile(CloudDriveModel.SkyDrive, json[i].uid, json[i].local_path, json[i].remote_path);
+                            // TODO
+//                            cloudDriveModel.deleteFile(CloudDriveModel.SkyDrive, json[i].uid, json[i].local_path, json[i].remote_path);
                             break;
                         }
                     }
@@ -2755,76 +2756,82 @@ Page {
 
                 // TODO Supports SkyDrive.
                 if (jobJson.type == CloudDriveModel.SkyDrive) {
-                    // Suspend next job.
-                    cloudDriveModel.suspendNextJob();
+                    console.debug("folderPage cloudDriveModel onMetadataReplySignal SkyDrive jobJson " + jobJson.type + " " + jobJson.uid + " " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + localPathHash);
 
-                    // Generate hash from updated_time.
-//                    console.debug("folderPage cloudDriveModel onMetadataReplySignal jsonObj.property.updated_time " + jsonObj.property.updated_time + " " + Utility.parseJSONDate(jsonObj.property.updated_time).getTime());
-                    var remotePathHash = jsonObj.property.updated_time;
+                    if (jsonObj.property) {
+                        // Suspend next job.
+                        cloudDriveModel.suspendNextJob();
 
-                    // Sync starts from itself.
-                    if (jsonObj.property.type == "folder" || jsonObj.property.type == "album") { // Sync folder.
-                        // If there is no local folder, create it and connect.
-                        if (!fsModel.isDir(jobJson.local_file_path)) {
-                            // TODO Add item to ListView.
-                            fsModel.createDirPath(jobJson.local_file_path);
-                        }
+                        // Generate hash from updated_time.
+                        var remotePathHash = jsonObj.property.updated_time;
+    //                    console.debug("folderPage cloudDriveModel onMetadataReplySignal remotePathHash " + remotePathHash);
 
-                        // Sync based on remote contents.
-//                        console.debug("cloudDriveModel onMetadataReplySignal folder jsonObj.rev " + jsonObj.rev + " jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
-                        if (remotePathHash != localPathHash) { // Sync all json(remote)'s contents.
-                            for(var i=0; i<jsonObj.data.length; i++) {
-                                var item = jsonObj.data[i];
-                                var itemLocalPath = fsModel.getAbsolutePath(jobJson.local_file_path, item.name);
-                                var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
-                                var itemRemotePath = item.id;
-                                var itemRemoteHash = item.updated_time;
-                                if (item.type == "folder" || item.type == "album") {
-                                    // This flow will trigger recursive metadata calling.
-                                    console.debug("cloudDriveModel onMetadataReplySignal dir itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
-                                    cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
-                                } else {
-                                    console.debug("cloudDriveModel onMetadataReplySignal file itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
-                                    if (itemRemoteHash > itemLocalHash) {
-                                        cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemLocalPath, -1);
-                                    } else if (itemRemoteHash < itemLocalHash) {
-                                        // Put file to remote parent path. Or root if parent_id is null.
-                                        itemRemotePath = (item.parent_id) ? item.parent_id : "me/skydrive";
-                                        cloudDriveModel.filePut(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
-                                    } else {
-                                        cloudDriveModel.addItem(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, itemRemoteHash);
-                                    }
-                                }
+                        // Sync starts from itself.
+                        if (jsonObj.property.type == "folder" || jsonObj.property.type == "album") { // Sync folder.
+                            // If there is no local folder, create it and connect.
+                            if (!fsModel.isDir(jobJson.local_file_path)) {
+                                // TODO Add item to ListView.
+                                fsModel.createDirPath(jobJson.local_file_path);
                             }
 
-                            // Add cloudDriveItem for currentDir.
-//                            cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jsonObj.hash);
-                        }
+                            // Sync based on remote contents.
+    //                        console.debug("cloudDriveModel onMetadataReplySignal folder jsonObj.rev " + jsonObj.rev + " jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
+                            if (remotePathHash != localPathHash) { // Sync all json(remote)'s contents.
+                                for(var i=0; i<jsonObj.data.length; i++) {
+                                    var item = jsonObj.data[i];
+                                    var itemLocalPath = fsModel.getAbsolutePath(jobJson.local_file_path, item.name);
+                                    var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
+                                    var itemRemotePath = item.id;
+                                    var itemRemoteHash = item.updated_time;
+                                    if (item.type == "folder" || item.type == "album") {
+                                        // This flow will trigger recursive metadata calling.
+                                        console.debug("cloudDriveModel onMetadataReplySignal dir itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
+                                        cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
+                                    } else {
+                                        console.debug("cloudDriveModel onMetadataReplySignal file itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
+                                        if (itemRemoteHash > itemLocalHash) {
+                                            cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemLocalPath, -1);
+                                        } else if (itemRemoteHash < itemLocalHash) {
+                                            // Put file to remote parent path. Or root if parent_id is null.
+                                            itemRemotePath = (item.parent_id) ? item.parent_id : "me/skydrive";
+                                            cloudDriveModel.filePut(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
+                                        } else {
+                                            cloudDriveModel.addItem(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, itemRemoteHash);
+                                        }
+                                    }
+                                }
 
-                        // Add or Update timestamp from local to cloudDriveItem.
-                        cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
+                                // Add cloudDriveItem for currentDir.
+    //                            cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jsonObj.hash);
+                            }
 
-                        // Sync based on local contents.
-                        cloudDriveModel.syncFromLocal_SkyDrive(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
-                    } else { // Sync file.
-                        console.debug("folderPage cloudDriveModel onMetadataReplySignal file jobJson " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + jobJson.type + " " + jobJson.uid + " remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
-
-                        // If (rev is newer or there is no local file), get from remote.
-                        if (remotePathHash > localPathHash || !fsModel.isFile(jobJson.local_file_path)) {
-                            // TODO Add item to ListView.
-                            cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.local_file_path, jobJson.modelIndex);
-                        } else if (remotePathHash < localPathHash) {
-                            // Put file to remote parent path. Or root if parent_id is null.
-                            var remoteParentPath = (jsonObj.property.parent_id) ? jsonObj.property.parent_id : "me/skydrive";
-                            cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
-                        } else {
-                            // Update lastModified on cloudDriveItem.
+                            // Add or Update timestamp from local to cloudDriveItem.
                             cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
-                        }
-                    }
 
-                    // Resume next jobs.
-                    cloudDriveModel.resumeNextJob();
+                            // Sync based on local contents.
+                            cloudDriveModel.syncFromLocal_SkyDrive(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
+                        } else { // Sync file.
+                            console.debug("folderPage cloudDriveModel onMetadataReplySignal file jobJson " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + jobJson.type + " " + jobJson.uid + " remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
+
+                            // If (rev is newer or there is no local file), get from remote.
+                            if (remotePathHash > localPathHash || !fsModel.isFile(jobJson.local_file_path)) {
+                                // TODO Add item to ListView.
+                                cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.local_file_path, jobJson.modelIndex);
+                            } else if (remotePathHash < localPathHash) {
+                                // Put file to remote parent path. Or root if parent_id is null.
+                                var remoteParentPath = (jsonObj.property.parent_id) ? jsonObj.property.parent_id : "me/skydrive";
+                                cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
+                            } else {
+                                // Update lastModified on cloudDriveItem.
+                                cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
+                            }
+                        }
+
+                        // Resume next jobs.
+                        cloudDriveModel.resumeNextJob();
+                    } else {
+                        console.debug("folderPage cloudDriveModel onMetadataReplySignal property is not found.");
+                    }
                 }
             } else if (err == 203) { // If metadata is not found, put it to cloud right away recursively.
                 console.debug("folderPage cloudDriveModel onMetadataReplySignal " + err + " " + errMsg + " " + msg);
@@ -3121,6 +3128,7 @@ Page {
             } else if (err == 204) { // Refresh token
                 // TODO Refactor to support all SkyDriveClient services.
                 if (json.type == CloudDriveModel.SkyDrive) {
+                    cloudDrivePathDialog.close();
                     cloudDriveModel.refreshToken(json.type, json.uid);
                 }
             } else {
