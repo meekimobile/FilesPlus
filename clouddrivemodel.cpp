@@ -455,7 +455,7 @@ bool CloudDriveModel::canSync(QString localPath)
     }
 
     QString remotePath = getDefaultRemoteFilePath(localPath);
-    qDebug() << "CloudDriveModel::canSync valid" << (remotePath != "") << "localPath" << localPath;
+//    qDebug() << "CloudDriveModel::canSync valid" << (remotePath != "") << "localPath" << localPath;
 
     return remotePath != "";
 }
@@ -754,6 +754,10 @@ void CloudDriveModel::syncScheduledItems()
         case Dropbox:
             qDebug() << "CloudDriveModel::syncScheduledItems dequeue and sync item" << item;
             metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
+            break;
+        case SkyDrive:
+            qDebug() << "CloudDriveModel::syncScheduledItems dequeue and sync item" << item;
+            metadata(SkyDrive, item.uid, item.localPath, item.remotePath, -1);
             break;
         }
     }
@@ -1401,7 +1405,7 @@ void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString u
     }
 }
 
-void CloudDriveModel::syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex, bool forcePut)
+void CloudDriveModel::syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut)
 {
     /* TODO Handling remotePath.
      *
@@ -1410,9 +1414,11 @@ void CloudDriveModel::syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, 
     */
 
     // This method is invoked from dir only as file which is not found will be put right away.
-    qDebug() << "----- CloudDriveModel::syncFromLocal_SkyDrive -----" << type << uid << localPath << remotePath << modelIndex << "forcePut" << forcePut;
+    qDebug() << "----- CloudDriveModel::syncFromLocal_SkyDrive -----" << type << uid << localPath << remoteParentPath << modelIndex << "forcePut" << forcePut;
 
     if (localPath == "") return;
+
+    QApplication::processEvents();
 
     QFileInfo info(localPath);
     if (info.isDir()) {
@@ -1422,8 +1428,8 @@ void CloudDriveModel::syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, 
         CloudDriveItem parentCloudDriveItem = getItem(localPath, type, uid);
         if (parentCloudDriveItem.localPath == "" || parentCloudDriveItem.hash == CloudDriveModel::DirtyHash) {
             qDebug() << "CloudDriveModel::syncFromLocal_SkyDrive not found parentCloudDriveItem. Invoke creatFolder.";
-            // Get remoteParentPath from localParentPath's cloudDriveItem.
-            QString remoteParentPath = getItemRemotePath(info.absolutePath(), type, uid);
+            // Get remoteParentPath from localParentPath's cloudDriveItem if it's not specified.
+            remoteParentPath = (remoteParentPath == "") ? getItemRemotePath(info.absolutePath(), type, uid) : remoteParentPath;
             qDebug() << "CloudDriveModel::syncFromLocal_SkyDrive remoteParentPath" << remoteParentPath;
 
             // TODO Request SkyDriveClient's createFolder synchronously.
@@ -1468,7 +1474,7 @@ void CloudDriveModel::syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, 
                 if (item.isDir()) {
                     // Drilldown local dir recursively.
                     // TODO Get new remote folder path.
-                    syncFromLocal_SkyDrive(type, uid, localFilePath, "pending_createFolder", -1, forcePut);
+                    syncFromLocal_SkyDrive(type, uid, localFilePath, parentCloudDriveItem.remotePath, -1, forcePut);
                 } else {
                     // Put file to remote parent path.
                     filePut(type, uid, localFilePath, parentCloudDriveItem.remotePath, -1);
@@ -1482,7 +1488,7 @@ void CloudDriveModel::syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, 
         // TODO avoid having below line. It caused infinite loop.
         // Update hash for itself will be requested from QML externally.
     } else {
-        qDebug() << "CloudDriveModel::syncFromLocal_SkyDrive file is not supported." << type << uid << localPath << remotePath << modelIndex << "forcePut" << forcePut;
+        qDebug() << "CloudDriveModel::syncFromLocal_SkyDrive file is not supported." << type << uid << localPath << remoteParentPath << modelIndex << "forcePut" << forcePut;
     }
 }
 
@@ -1938,7 +1944,8 @@ void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMs
             expires = sc.property("expires").toString();
             break;
         case SkyDrive:
-            // TODO
+            sc = engine.evaluate("(" + msg + ")");
+            url = sc.property("link").toString();
             break;
         }
 

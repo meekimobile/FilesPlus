@@ -2799,9 +2799,6 @@ Page {
                                         }
                                     }
                                 }
-
-                                // Add cloudDriveItem for currentDir.
-    //                            cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jsonObj.hash);
                             }
 
                             // Add or Update timestamp from local to cloudDriveItem.
@@ -3179,19 +3176,34 @@ Page {
                     // If it's not connected, show cloudDrivePathDialog.
                     cloudDrivePathDialog.open();
                     cloudDrivePathDialog.remotePath = remotePath;
+                    cloudDrivePathDialog.remoteParentPath = "";
                     cloudDrivePathDialog.refresh();
                 }
                 break;
             case CloudDriveModel.FilePut:
                 // Show cloudDrivePathDialog.
                 cloudDrivePathDialog.open();
-                cloudDrivePathDialog.remotePath = remotePath;
+                cloudDrivePathDialog.remotePath = ""; // Undefine remote path for local path.
+                if (selectedCloudType == CloudDriveModel.Dropbox) {
+                    cloudDrivePathDialog.remoteParentPath = "/"; // Upload start browsing from root.
+                } else if (selectedCloudType == CloudDriveModel.SkyDrive) {
+                    cloudDrivePathDialog.remoteParentPath = "me/skydrive"; // Upload start browsing from root.
+                } else {
+                    cloudDrivePathDialog.remoteParentPath = "/"; // Upload start browsing from root.
+                }
                 cloudDrivePathDialog.refresh();
                 break;
             case CloudDriveModel.FileGet:
                 // Show cloudDrivePathDialog.
                 cloudDrivePathDialog.open();
-                cloudDrivePathDialog.remotePath = "/"; // Download start browsing from root.
+                cloudDrivePathDialog.remotePath = ""; // Undefine remote path for local path.
+                if (selectedCloudType == CloudDriveModel.Dropbox) {
+                    cloudDrivePathDialog.remoteParentPath = "/"; // Download start browsing from root.
+                } else if (selectedCloudType == CloudDriveModel.SkyDrive) {
+                    cloudDrivePathDialog.remoteParentPath = "me/skydrive"; // Download start browsing from root.
+                } else {
+                    cloudDrivePathDialog.remoteParentPath = "/"; // Download start browsing from root.
+                }
                 cloudDrivePathDialog.refresh();
                 break;
             case CloudDriveModel.ShareFile:
@@ -3208,6 +3220,7 @@ Page {
                 // Show cloudDrivePathDialog.
                 cloudDrivePathDialog.open();
                 cloudDrivePathDialog.remotePath = remotePath;
+                cloudDrivePathDialog.remoteParentPath = "";
                 cloudDrivePathDialog.refresh();
                 break;
             case CloudDriveModel.ScheduleSync:
@@ -3280,7 +3293,7 @@ Page {
         selectedUid: uidDialog.selectedUid
         selectedModelIndex: uidDialog.selectedModelIndex
 
-        function proceedOperation(type, uid, localPath, remotePath, isDir, remoteParentPath, modelIndex) {
+        function proceedOperation(type, uid, localPath, remotePath, remotePathName, isDir, remoteParentPath, modelIndex) {
             console.debug("cloudDrivePathDialog proceedOperation operation " + operation + " type " + type + " uid " + uid + " localPath " + localPath + " remotePath " + remotePath + " isDir " + isDir + " remoteParentPath " + remoteParentPath + " modelIndex " + modelIndex);
 
             switch (operation) {
@@ -3292,19 +3305,33 @@ Page {
 
                 // Upload selected local path into remote parent path.
                 if (remoteParentPath != "") {
-                    // Use remoteParentPath + "/" + local file/folder name.
-                    remotePath = (remoteParentPath == "/" ? "" : remoteParentPath) + "/" + fsModel.getFileName(localPath);
-                    console.debug("cloudDrivePathDialog proceedOperation FilePut adjusted remotePath " + remotePath);
+                    switch (type) {
+                    case CloudDriveModel.Dropbox:
+                        // Use remoteParentPath + "/" + local file/folder name.
+                        remotePath = (remoteParentPath == "/" ? "" : remoteParentPath) + "/" + fsModel.getFileName(localPath);
+                        console.debug("cloudDrivePathDialog proceedOperation FilePut adjusted remotePath " + remotePath);
 
-                    if (fsModel.isDir(localPath)) {
-                        cloudDriveModel.suspendNextJob();
-                        // Put from local.
-                        cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex, true);
-                        // Queue sync selected local path after all put to refresh hash.
-                        cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
-                        cloudDriveModel.resumeNextJob();
-                    } else {
-                        cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                        if (fsModel.isDir(localPath)) {
+                            cloudDriveModel.suspendNextJob();
+                            // Put from local.
+                            cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex, true);
+                            // Queue sync selected local path after all put to refresh hash.
+                            cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
+                            cloudDriveModel.resumeNextJob();
+                        } else {
+                            cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                        }
+                        break;
+                    case CloudDriveModel.SkyDrive:
+                        if (fsModel.isDir(localPath)) {
+                            cloudDriveModel.suspendNextJob();
+                            // Put from local.
+                            cloudDriveModel.syncFromLocal_SkyDrive(type, uid, localPath, remoteParentPath, modelIndex, true);
+                            cloudDriveModel.resumeNextJob();
+                        } else {
+                            cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                        }
+                        break;
                     }
                 } else {
                     console.debug("cloudDrivePathDialog proceedOperation FilePut ignored remoteParentPath " + remoteParentPath + " is empty.");
@@ -3312,18 +3339,26 @@ Page {
 
                 break;
             case CloudDriveModel.FileGet:
-                console.debug("cloudDrivePathDialog proceedOperation FileGet localPath " + localPath + " from remotePath " + remotePath + " isDir " + isDir
+                console.debug("cloudDrivePathDialog proceedOperation FileGet localPath " + localPath + " from remotePath " + remotePath + " remotePathName " + remotePathName + " isDir " + isDir
                               + " remoteParentPath " + remoteParentPath
                               + " fsModel.getDirPath(localPath) " + fsModel.getDirPath(localPath)
                               + " cloudDriveModel.getRemoteName(remotePath) " + cloudDriveModel.getRemoteName(remotePath));
 
                 // Download selected remote folder/file to parent folder of selected local path.
                 if (remotePath != "") {
-                    var targetLocalPath = fsModel.getAbsolutePath(fsModel.getDirPath(localPath), cloudDriveModel.getRemoteName(remotePath));
+                    var targetLocalPath;
+                    switch (type) {
+                    case CloudDriveModel.Dropbox:
+                        targetLocalPath = fsModel.getAbsolutePath(fsModel.getDirPath(localPath), cloudDriveModel.getRemoteName(remotePath));
+                        break;
+                    case CloudDriveModel.SkyDrive:
+                        targetLocalPath = fsModel.getAbsolutePath(fsModel.getDirPath(localPath), remotePathName);
+                        break;
+                    }
                     console.debug("cloudDrivePathDialog proceedOperation FileGet targetLocalPath " + targetLocalPath);
                     cloudDriveModel.metadata(type, uid, targetLocalPath, remotePath, modelIndex);
                 } else {
-                    console.debug("cloudDrivePathDialog proceedOperation FileGet ignored remotePath " + remotePath + " is empty.");
+                    console.debug("cloudDrivePathDialog proceedOperation FileGet ignored remotePath " + remotePath + " remotePathName " + remotePathName + " is empty.");
                 }
 
                 break;
@@ -3335,12 +3370,25 @@ Page {
                 }
 
                 if (fsModel.isDir(localPath) && remotePath != "") {
-                    var originalRemotePath = cloudDriveModel.getItemRemotePath(localPath, type, uid);
-                    if (remotePath != originalRemotePath) {
-                        console.debug("cloudDrivePathDialog proceedOperation Browse move from " + originalRemotePath + " to " + remotePath);
-                        // Set children hash to empty to hint syncFromLocal to put remained files with empty hash.
-                        cloudDriveModel.updateItemWithChildren(type, uid, localPath, originalRemotePath, localPath, remotePath, "");
-                        cloudDriveModel.metadata(type, uid, localPath, remotePath, selectedModelIndex);
+                    switch (type) {
+                    case CloudDriveModel.Dropbox:
+                        var originalRemotePath = cloudDriveModel.getItemRemotePath(localPath, type, uid);
+                        if (remotePath != originalRemotePath) {
+                            console.debug("cloudDrivePathDialog proceedOperation Browse move from " + originalRemotePath + " to " + remotePath);
+                            // Set children hash to empty to hint syncFromLocal to put remained files with empty hash.
+                            cloudDriveModel.updateItemWithChildren(type, uid, localPath, originalRemotePath, localPath, remotePath, "");
+                            cloudDriveModel.metadata(type, uid, localPath, remotePath, selectedModelIndex);
+                        }
+                        break;
+                    case CloudDriveModel.SkyDrive:
+                        var originalRemotePath = cloudDriveModel.getItemRemotePath(localPath, type, uid);
+                        if (remotePath != originalRemotePath) {
+                            console.debug("cloudDrivePathDialog proceedOperation Browse move from " + originalRemotePath + " to " + remotePath);
+                            // Remove original cloudDriveItem of localPath. Then start sync with new remotePath.
+                            cloudDriveModel.removeItemWithChildren(type, uid, localPath);
+                            cloudDriveModel.metadata(type, uid, localPath, remotePath, selectedModelIndex);
+                        }
+                        break;
                     }
                 } else if (!fsModel.isDir(localPath)) {
                     console.debug("cloudDrivePathDialog proceedOperation Browse ignored move localPath " + localPath + " is a file.");
@@ -3354,6 +3402,7 @@ Page {
                     console.debug("cloudDrivePathDialog proceedOperation Metadata sync from " + localPath + " to " + remotePath);
                     cloudDriveModel.metadata(type, uid, localPath, remotePath, selectedModelIndex);
                 } else {
+                    // localPath is file or remotePath is empty.
                     if (type == CloudDriveModel.Dropbox) {
                         // If localPath is file or remotePath is not specified.
                         // Use remoteParentPath + "/" + folderName.
@@ -3373,10 +3422,11 @@ Page {
                               + " selectedCloudType " + selectedCloudType + " selectedUid " + selectedUid
                               + " localPath " + localPath
                               + " selectedRemotePath " + selectedRemotePath
+                              + " selectedRemotePathName " + selectedRemotePathName
                               + " selectedModelIndex " + selectedModelIndex
                               + " remoteParentPath " + remoteParentPath);
 
-                proceedOperation(selectedCloudType, selectedUid, localPath, selectedRemotePath, selectedIsDir, remoteParentPath, selectedModelIndex);
+                proceedOperation(selectedCloudType, selectedUid, localPath, selectedRemotePath, selectedRemotePathName, selectedIsDir, remoteParentPath, selectedModelIndex);
             }
         }
 
@@ -3385,7 +3435,7 @@ Page {
             if (selectedCloudType == CloudDriveModel.Dropbox) {
                 cloudDriveModel.createFolder(selectedCloudType, selectedUid, "", remoteParentPath + "/" + newRemoteFolderName, -1);
             } else if (selectedCloudType == CloudDriveModel.SkyDrive) {
-                cloudDriveModel.createFolder(selectedCloudType, selectedUid, newRemoteFolderName, remotePath, -1);
+                cloudDriveModel.createFolder(selectedCloudType, selectedUid, newRemoteFolderName, remoteParentPath, -1);
             }
         }
 
@@ -3395,11 +3445,11 @@ Page {
             // Browse remote parent path.
             // Issue: selectedCloudType which is linked from uidDialog doesn't work with switch.
             if (selectedCloudType == CloudDriveModel.Dropbox) {
-                remoteParentPath = cloudDriveModel.getRemoteParentPath(remotePath);
+                remoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getRemoteParentPath(remotePath) : remoteParentPath;
                 cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
             } else if (selectedCloudType == CloudDriveModel.SkyDrive) {
-                remotePath = (remotePath == "") ? "me/skydrive" : remotePath;
-                cloudDriveModel.browse(selectedCloudType, selectedUid, remotePath);
+                remoteParentPath = (remoteParentPath == "") ? "me/skydrive" : remoteParentPath;
+                cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
             }
         }
 

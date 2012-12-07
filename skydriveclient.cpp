@@ -28,7 +28,7 @@ const QString SkyDriveClient::createFolderURI = "https://apis.live.net/v5.0/%1";
 const QString SkyDriveClient::moveFileURI = "https://apis.live.net/v5.0/%1"; // MOVE to destination folder ID in content.
 const QString SkyDriveClient::copyFileURI = "https://apis.live.net/v5.0/%1"; // COPY to destination folder ID in content.
 const QString SkyDriveClient::deleteFileURI = "https://apis.live.net/v5.0/%1"; // DELETE
-const QString SkyDriveClient::sharesURI = "http://apis.live.net/v5.0/%1/shared_read_link";
+const QString SkyDriveClient::sharesURI = "https://apis.live.net/v5.0/%1/shared_read_link";
 
 SkyDriveClient::SkyDriveClient(QDeclarativeItem *parent) :
     QObject(parent)
@@ -667,27 +667,20 @@ QNetworkReply * SkyDriveClient::deleteFile(QString nonce, QString uid, QString r
 
 void SkyDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "----- SkyDriveClient::shareFile -----";
+    qDebug() << "----- SkyDriveClient::shareFile -----" << remoteFilePath;
 
     // TODO root dropbox(Full access) or sandbox(App folder access)
     QString uri = sharesURI.arg(remoteFilePath);
-//    uri = encodeURI(uri);
+    uri = encodeURI(uri);
     qDebug() << "SkyDriveClient::shareFile uri " << uri;
-
-    QByteArray postData;
-    qDebug() << "postData" << postData;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)));
-    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    QNetworkReply *reply = manager->post(req, postData);
-    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
-    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+    QNetworkReply *reply = manager->get(req);
 }
 
 void SkyDriveClient::accessTokenReplyFinished(QNetworkReply *reply)
