@@ -185,7 +185,7 @@ Page {
 
                     var pin = authPage.parseSkyDriveCode(url);
                     pinInputPanel.pin = pin;
-                    okButton.visible = (pin != "" && pin != "PinNotFound");
+                    okButton.visible = pinInputPanel.visible;
                 }
             }
         }
@@ -202,7 +202,7 @@ Page {
         anchors.bottom: flickable.bottom
         anchors.bottomMargin: 5
         z: 2
-        visible: okButton.visible
+        visible: (pin != "" && pin != "PinNotFound")
 
         onVisibleChanged: {
             pinInput.closeSoftwareInputPanel();
