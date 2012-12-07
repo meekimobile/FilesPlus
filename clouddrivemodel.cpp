@@ -1044,6 +1044,7 @@ void CloudDriveModel::syncItems()
     // TODO Refactor to support others cloud storage.
     syncItems(Dropbox);
 //    syncItems(GoogleDrive);
+    syncItems(SkyDrive);
 
     // Resume proceedNextJob().
     resumeNextJob();
@@ -1098,6 +1099,9 @@ void CloudDriveModel::syncItem(const QString localFilePath)
         case Dropbox:
             metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
             break;
+        case SkyDrive:
+            metadata(SkyDrive, item.uid, item.localPath, item.remotePath, -1);
+            break;
         }
     }
 }
@@ -1109,6 +1113,9 @@ void CloudDriveModel::syncItem(CloudDriveModel::ClientTypes type, QString uid, Q
         switch (item.type) {
         case Dropbox:
             metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
+            break;
+        case SkyDrive:
+            metadata(SkyDrive, item.uid, item.localPath, item.remotePath, -1);
             break;
         }
     }

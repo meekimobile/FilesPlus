@@ -2671,10 +2671,9 @@ Page {
         }
 
         onMetadataReplySignal: {
-            console.debug("folderPage cloudDriveModel onMetadataReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
-
             // Get job json.
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            console.debug("folderPage cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " " + err + " " + errMsg + " " + msg);
 
             // Remove finished job.
             cloudDriveModel.removeJob(nonce);
