@@ -64,12 +64,7 @@ Page {
             id: addButton
             iconId: "toolbar-add"
             onClicked: {
-                var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-                if (p) {
-                    // TODO
-//                    p.registerDropboxUserSlot();
-                    p.registerSkyDriveAccountSlot();
-                }
+                cloudTypeSelection.open();
             }
         }
     }
@@ -105,6 +100,65 @@ Page {
             running: false
             onTriggered: {
                 parent.visible = false;
+            }
+        }
+    }
+
+    SelectionDialog {
+        id: cloudTypeSelection
+        titleText: appInfo.emptyStr+qsTr("Select Cloud Storage")
+        style: SelectionDialogStyle { dim: 0.9; pressDelay: 100; itemHeight: 80 }
+        model: ListModel {
+            ListElement {
+                name: "Dropbox"
+                type: CloudDriveModel.Dropbox
+            }
+            ListElement {
+                name: "SkyDrive"
+                type: CloudDriveModel.SkyDrive
+            }
+        }
+        delegate: ListItem {
+            height: 80
+            Row {
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 5
+
+                Image {
+                    id: cloudIcon
+                    source: cloudDriveModel.getCloudIcon(type)
+                    width: 48
+                    height: 48
+                    fillMode: Image.PreserveAspectFit
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                Text {
+                    text: name
+                    width: parent.width - cloudIcon.width - parent.spacing
+                    font.pointSize: 18
+                    elide: Text.ElideMiddle
+                    color: (theme.inverted) ? "white" : "black"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+            onClicked: {
+                cloudTypeSelection.selectedIndex = index;
+                cloudTypeSelection.accept();
+            }
+        }
+        onAccepted: {
+            var p = pageStack.find(function (page) { return page.name == "folderPage"; });
+            if (p) {
+                var type = model.get(selectedIndex).type;
+                switch (type) {
+                case CloudDriveModel.Dropbox:
+                    p.registerDropboxUserSlot();
+                    break;
+                case CloudDriveModel.SkyDrive:
+                    p.registerSkyDriveAccountSlot();
+                    break;
+                }
             }
         }
     }
