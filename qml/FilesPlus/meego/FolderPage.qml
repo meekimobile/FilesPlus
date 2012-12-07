@@ -3092,7 +3092,7 @@ Page {
                 var senderEmail = getUidEmail(json.type, json.uid);
                 if (senderEmail != "") {
                     recipientSelectionDialog.srcFilePath = json.local_file_path;
-                    recipientSelectionDialog.messageSubject = appInfo.emptyStr+qsTr("Share file on Dropbox");
+                    recipientSelectionDialog.messageSubject = appInfo.emptyStr+qsTr("Share file on %1").arg(cloudDriveModel.getCloudName(json.type));
                     recipientSelectionDialog.messageBody = appInfo.emptyStr+qsTr("Please download file with below link.") + "\n" + url;
                     recipientSelectionDialog.senderEmail = senderEmail;
                     recipientSelectionDialog.open();

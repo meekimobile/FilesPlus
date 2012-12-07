@@ -156,6 +156,13 @@ CommonDialog {
                 GradientStop { position: 1.0; color: "#404040" }
             }
 
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    // DO nothing
+                }
+            }
+
             Row {
                 width: parent.width - 10
                 anchors.centerIn: parent

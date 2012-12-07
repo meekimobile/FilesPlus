@@ -34,6 +34,7 @@ Dialog {
             Button {
                 text: modelData
                 width: buttonRow.buttonWidth
+                anchors.verticalCenter: parent.verticalCenter
                 onClicked: {
                     buttonClicked(index);
                     close();
