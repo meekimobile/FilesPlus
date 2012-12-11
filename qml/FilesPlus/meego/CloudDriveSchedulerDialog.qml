@@ -4,7 +4,7 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: cloudDriveSchedulerDialog
-    style: SelectionDialogStyle { dim: 0.9; pressDelay: 100 }
+    style: SelectionDialogStyle { dim: 0.9; pressDelay: 100; itemHeight: 70 }
 
     property string caller
     property int operation

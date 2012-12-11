@@ -30,7 +30,7 @@ const QString SkyDriveClient::copyFileURI = "https://apis.live.net/v5.0/%1"; // 
 const QString SkyDriveClient::deleteFileURI = "https://apis.live.net/v5.0/%1"; // DELETE
 const QString SkyDriveClient::sharesURI = "https://apis.live.net/v5.0/%1/shared_read_link";
 
-SkyDriveClient::SkyDriveClient(QDeclarativeItem *parent) :
+SkyDriveClient::SkyDriveClient(QObject *parent) :
     QObject(parent)
 {
     // Load accessTokenPair from file
@@ -448,14 +448,9 @@ QNetworkReply * SkyDriveClient::files(QString nonce, QString uid, QString remote
         return reply;
     }
 
-    // Execute the event loop here, now we will wait here until readyRead() signal is emitted
-    // which in turn will trigger event loop quit.
-//    QEventLoop loop;
-//    QObject::connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
-//    loop.exec();
-
     while (!reply->isFinished()) {
-        QApplication::processEvents(QEventLoop::AllEvents, 1000);
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper().sleep(100);
     }
 
     // Scheduled to delete later.
@@ -492,14 +487,9 @@ QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString rem
         return reply;
     }
 
-    // Execute the event loop here, now we will wait here until readyRead() signal is emitted
-    // which in turn will trigger event loop quit.
-//    QEventLoop loop;
-//    QObject::connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
-//    loop.exec();
-
     while (!reply->isFinished()) {
-        QApplication::processEvents(QEventLoop::AllEvents, 1000);
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper().sleep(100);
     }
 
     // Scheduled to delete later.
@@ -546,14 +536,9 @@ QNetworkReply * SkyDriveClient::createFolder(QString nonce, QString uid, QString
         return reply;
     }
 
-    // Execute the event loop here, now we will wait here until readyRead() signal is emitted
-    // which in turn will trigger event loop quit.
-//    QEventLoop loop;
-//    QObject::connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
-//    loop.exec();
-
     while (!reply->isFinished()) {
-        QApplication::processEvents(QEventLoop::AllEvents, 1000);
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper().sleep(100);
     }
 
     // Scheduled to delete later.
@@ -648,14 +633,9 @@ QNetworkReply * SkyDriveClient::deleteFile(QString nonce, QString uid, QString r
         return reply;
     }
 
-    // Execute the event loop here, now we will wait here until readyRead() signal is emitted
-    // which in turn will trigger event loop quit.
-//    QEventLoop loop;
-//    QObject::connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
-//    loop.exec();
-
     while (!reply->isFinished()) {
-        QApplication::processEvents(QEventLoop::AllEvents, 1000);
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper().sleep(100);
     }
 
     // Scheduled to delete later.

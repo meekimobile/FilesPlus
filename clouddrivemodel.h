@@ -20,6 +20,7 @@
 #include "dropboxclient.h"
 //#include "gcdclient.h"
 #include "skydriveclient.h"
+#include "ftpclient.h"
 
 class CloudDriveModel : public QDeclarativeItem
 {
@@ -41,7 +42,8 @@ public:
     enum ClientTypes {
         Dropbox,
         GoogleDrive,
-        SkyDrive
+        SkyDrive,
+        Ftp
     };
 
     enum Operations {
@@ -135,6 +137,10 @@ public:
 
     // Dropbox specific functions.
     Q_INVOKABLE bool updateDropboxPrefix(bool fullAccess);
+
+    // FTP specific functions.
+    Q_INVOKABLE bool testConnection(QString hostname, quint16 port, QString username, QString password);
+    Q_INVOKABLE void saveConnection(QString id, QString hostname, quint16 port, QString username, QString password);
 
     // Service Proxy with Job Queuing.
     Q_INVOKABLE void requestToken(CloudDriveModel::ClientTypes type);
@@ -265,6 +271,7 @@ private:
     DropboxClient *dbClient;
 //    GCDClient *gcdClient;
     SkyDriveClient *skdClient;
+    FtpClient *ftpClient;
     QString accessTokenPin;
     CloudDriveModelThread m_thread;
 
@@ -273,6 +280,7 @@ private:
     void saveCloudDriveItems();
     void initializeDropboxClient();
     void initializeSkyDriveClient();
+    void initializeFtpClient();
     QString createNonce();
     void jobDone();
     QString getFileType(QString localPath);

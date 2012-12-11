@@ -1,7 +1,6 @@
 #ifndef DropboxClient_H
 #define DropboxClient_H
 
-#include <QDeclarativeItem>
 #include <QtNetwork>
 #include "tokenpair.h"
 #include "qnetworkreplywrapper.h"
@@ -39,7 +38,7 @@ public:
     QString consumerSecret;
     QString dropboxRoot;
 
-    explicit DropboxClient(QDeclarativeItem *parent = 0, bool fullAccess = false);
+    explicit DropboxClient(QObject *parent = 0, bool fullAccess = false);
     ~DropboxClient();
 
     QString createTimestamp();

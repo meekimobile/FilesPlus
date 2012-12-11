@@ -112,18 +112,14 @@ Page {
                 }
             }
 
-//            MouseArea {
-//                anchors.fill: parent
-//                onPressAndHold: {
-//                    console.debug("folderPage refreshButton onPressAndHold");
-//                }
-//                onPressed: {
-//                    mouse.accepted = false;
-//                }
-//            }
-
-            Component.onCompleted: {
-                refreshButton.clicked.connect(refreshSlot);
+            MouseArea {
+                anchors.fill: parent
+                onPressAndHold: {
+                    resetCacheSlot();
+                }
+                onClicked: {
+                    refreshSlot("refreshButton");
+                }
             }
         }
 
@@ -1435,7 +1431,7 @@ Page {
     PopupToolRing {
         id: popupToolPanel
         ringRadius: 80
-        buttonRadius: 30
+        buttonRadius: 35
         clipboardCount: clipboard.count
         timeout: appInfo.emptySetting+appInfo.getSettingValue("popup.timer.interval", 2) * 1000
 
@@ -2400,6 +2396,8 @@ Page {
                 return "drive_icon.png";
             case CloudDriveModel.SkyDrive:
                 return "skydrive_icon.png";
+            case CloudDriveModel.Ftp:
+                return "ftp_icon.png";
             }
         }
 
@@ -2411,6 +2409,8 @@ Page {
                 return "GoogleDrive";
             case CloudDriveModel.SkyDrive:
                 return "SkyDrive";
+            case CloudDriveModel.Ftp:
+                return "FTP";
             }
         }
 
@@ -2419,6 +2419,8 @@ Page {
                 return CloudDriveModel.Dropbox;
             } else if (typeText.toLowerCase() == "skydriveclient") {
                 return CloudDriveModel.SkyDrive;
+            } else if (typeText.toLowerCase() == "ftpclient") {
+                return CloudDriveModel.Ftp;
             }
 
             return -1;

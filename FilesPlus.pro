@@ -84,7 +84,8 @@ SOURCES += main.cpp \
     customqnetworkaccessmanagerfactory.cpp \
     customqnetworkaccessmanager.cpp \
     ftpclient.cpp \
-    skydriveclient.cpp
+    skydriveclient.cpp \
+    sleeper.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -117,7 +118,8 @@ HEADERS += \
     customqnetworkaccessmanagerfactory.h \
     customqnetworkaccessmanager.h \
     ftpclient.h \
-    skydriveclient.h
+    skydriveclient.h \
+    sleeper.h
 
 OTHER_FILES += \
     qtc_packaging/debian_harmattan/rules \

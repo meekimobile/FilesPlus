@@ -34,7 +34,7 @@ const QString DropboxClient::deleteFileURI = "https://api.dropbox.com/1/fileops/
 const QString DropboxClient::sharesURI = "https://api.dropbox.com/1/shares/%1%2";
 const QString DropboxClient::mediaURI = "https://api.dropbox.com/1/media/%1%2";
 
-DropboxClient::DropboxClient(QDeclarativeItem *parent, bool fullAccess) :
+DropboxClient::DropboxClient(QObject *parent, bool fullAccess) :
     QObject(parent)
 {
     isFullAccess = fullAccess;

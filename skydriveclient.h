@@ -1,11 +1,11 @@
 #ifndef SkyDriveClient_H
 #define SkyDriveClient_H
 
-#include <QDeclarativeItem>
 #include <QtNetwork>
 #include <QApplication>
 #include "tokenpair.h"
 #include "qnetworkreplywrapper.h"
+#include "sleeper.h"
 
 class SkyDriveClient : public QObject
 {
@@ -33,7 +33,7 @@ public:
     static const QString deleteFileURI;
     static const QString sharesURI;
 
-    explicit SkyDriveClient(QDeclarativeItem *parent = 0);
+    explicit SkyDriveClient(QObject *parent = 0);
     ~SkyDriveClient();
 
     QString createTimestamp();

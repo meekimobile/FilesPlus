@@ -69,6 +69,7 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     // Initialize cloud storage clients.
     initializeDropboxClient();
     initializeSkyDriveClient();
+    initializeFtpClient();
 }
 
 CloudDriveModel::~CloudDriveModel()
@@ -189,6 +190,13 @@ void CloudDriveModel::initializeSkyDriveClient()
 //    connect(gcdClient, SIGNAL(filePutReplySignal(int,QString,QString)), SIGNAL(filePutReplySignal(int,QString,QString)) );
 //    connect(gcdClient, SIGNAL(metadataReplySignal(int,QString,QString)), SIGNAL(metadataReplySignal(int,QString,QString)) );
 //}
+
+void CloudDriveModel::initializeFtpClient()
+{
+    qDebug() << "CloudDriveModel::initializeFtpClient";
+
+    ftpClient = new FtpClient(this);
+}
 
 QString CloudDriveModel::createNonce() {
     QString ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -930,7 +938,7 @@ QString CloudDriveModel::getDefaultRemoteFilePath(const QString &localFilePath)
 bool CloudDriveModel::isAuthorized()
 {
     // TODO check if any cloud drive is authorized.
-    return dbClient->isAuthorized() || skdClient->isAuthorized();
+    return dbClient->isAuthorized() || skdClient->isAuthorized() || ftpClient->isAuthorized();
 }
 
 bool CloudDriveModel::isAuthorized(CloudDriveModel::ClientTypes type)
@@ -942,6 +950,8 @@ bool CloudDriveModel::isAuthorized(CloudDriveModel::ClientTypes type)
 //        return gcdClient->isAuthorized();
     case SkyDrive:
         return skdClient->isAuthorized();
+    case Ftp:
+        return ftpClient->isAuthorized();
     }
 
     return false;
@@ -954,6 +964,7 @@ QStringList CloudDriveModel::getStoredUidList()
     uidList.append(dbClient->getStoredUidList());
 //    uidList.append(gcdClient->getStoredUidList());
     uidList.append(skdClient->getStoredUidList());
+    uidList.append(ftpClient->getStoredUidList());
 
     return uidList;
 }
@@ -967,6 +978,8 @@ QStringList CloudDriveModel::getStoredUidList(CloudDriveModel::ClientTypes type)
 //        return gcdClient->getStoredUidList();
     case SkyDrive:
         return skdClient->getStoredUidList();
+    case Ftp:
+        return ftpClient->getStoredUidList();
     }
 
     return QStringList();
@@ -979,6 +992,8 @@ int CloudDriveModel::removeUid(CloudDriveModel::ClientTypes type, QString uid)
         return dbClient->removeUid(uid);
     case SkyDrive:
         return skdClient->removeUid(uid);
+    case Ftp:
+        return ftpClient->removeUid(uid);
     }
 
     return -1;
@@ -2107,6 +2122,21 @@ bool CloudDriveModel::updateDropboxPrefix(bool fullAccess)
     }
 
     return res;
+}
+
+bool CloudDriveModel::testConnection(QString hostname, quint16 port, QString username, QString password)
+{
+    if (ftpClient != 0) {
+        return ftpClient->testConnection(hostname, port, username, password);
+    }
+    return false;
+}
+
+void CloudDriveModel::saveConnection(QString id, QString hostname, quint16 port, QString username, QString password)
+{
+    if (ftpClient != 0) {
+        ftpClient->saveConnection(id, hostname, port, username, password);
+    }
 }
 
 QString CloudDriveModel::getItemCacheKey(int type, QString uid, QString localPath)

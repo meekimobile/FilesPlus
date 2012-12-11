@@ -117,6 +117,10 @@ Page {
                 name: "SkyDrive"
                 type: CloudDriveModel.SkyDrive
             }
+            ListElement {
+                name: "FTP"
+                type: CloudDriveModel.Ftp
+            }
         }
         delegate: ListItem {
             height: 80
@@ -158,6 +162,9 @@ Page {
                 case CloudDriveModel.SkyDrive:
                     p.registerSkyDriveAccountSlot();
                     break;
+                case CloudDriveModel.Ftp:
+                    addAccountDialog.open();
+                    break;
                 }
             }
         }
@@ -175,6 +182,87 @@ Page {
         }
         onOpening: {
             contentText = appInfo.emptyStr+qsTr("Please confirm to remove ") + cloudDriveModel.getCloudName(accountListView.model.get(index).type) + " UID " + accountListView.model.get(index).uid + " ?";
+        }
+    }
+
+    CommonDialog {
+        id: addAccountDialog
+        z: 2
+        titleText: appInfo.emptyStr+qsTr("New FTP account")
+        titleIcon: "FilesPlusIcon.svg"
+        buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
+        content: Column {
+            width: parent.width
+            spacing: 5
+
+            TextField {
+                id: connectionName
+                width: parent.width
+                placeholderText: "Input connection name"
+                validator: RegExpValidator {
+                    regExp: /[\w.-]+/
+                }
+            }
+            TextField {
+                id: hostname
+                width: parent.width
+                placeholderText: "Input hostname"
+                validator: RegExpValidator {
+                    regExp: /[\w.-]+/
+                }
+            }
+            TextField {
+                id: username
+                width: parent.width
+                placeholderText: "Input username"
+                validator: RegExpValidator {
+                    regExp: /[\w.]+/
+                }
+            }
+            TextField {
+                id: password
+                width: parent.width
+                placeholderText: "Input password"
+                echoMode: TextInput.Password
+            }
+            Item {
+                width: parent.width
+                height: 80
+
+                Button {
+                    id: testConnectionButton
+                    text: appInfo.emptyStr+qsTr("Test connection")
+                    anchors.centerIn: parent
+                    onClicked: {
+                        console.debug("cloudDriveAccountsPage testConnectionButton.onClicked");
+                        if (hostname.text == "" || username.text == "") {
+                            return;
+                        }
+
+                        text = appInfo.emptyStr+qsTr("Connecting");
+
+                        var res = cloudDriveModel.testConnection(hostname.text, 21, username.text, password.text);
+                        console.debug("cloudDriveAccountsPage testConnectionButton.onClicked res " + res);
+                        if (res) {
+                            text = appInfo.emptyStr+qsTr("Connection success");
+                        } else {
+                            text = appInfo.emptyStr+qsTr("Connection failed");
+                        }
+                    }
+                }
+            }
+        }
+
+        onAccepted: {
+            cloudDriveModel.saveConnection(connectionName.text, hostname.text, 21, username.text, password.text);
+        }
+
+        onButtonClicked: {
+            if (index == 0) {
+                accepted();
+            } else {
+                rejected();
+            }
         }
     }
 
@@ -279,8 +367,5 @@ Page {
                 }
             }
         }
-    }
-
-    Component.onCompleted: {
     }
 }

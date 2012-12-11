@@ -6,7 +6,6 @@
 #include "systeminfohelper.h"
 #include "gcpclient.h"
 #include "clouddrivemodel.h"
-#include "dropboxclient.h"
 #include <QAbstractListModel>
 #include "localfileimageprovider.h"
 #include "appinfo.h"
@@ -18,7 +17,6 @@
 #ifdef Q_OS_SYMBIAN
 #include "customqnetworkaccessmanagerfactory.h"
 #endif
-#include "ftpclient.h"
 
 static const QString AppName = "FilesPlus";
 
@@ -77,7 +75,6 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qmlRegisterType<SystemInfoHelper>("SystemInfoHelper", 1, 0, "SystemInfoHelper");
     qmlRegisterType<GCPClient>("GCPClient", 1, 0, "GCPClient");
     qmlRegisterType<CloudDriveModel>("CloudDriveModel", 1, 0, "CloudDriveModel");
-    qmlRegisterType<DropboxClient>("DropboxClient", 1, 0, "DropboxClient");
     qmlRegisterType<QAbstractListModel>();
     qmlRegisterType<AppInfo>("AppInfo", 1, 0, "AppInfo");
     qmlRegisterType<BluetoothClient>("BluetoothClient", 1, 0, "BluetoothClient");
@@ -194,6 +191,9 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     } else {
         qDebug() << "main m_settings Logging.enabled=false";
     }
+#else
+    QSettings *m_settings = new QSettings();
+    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
 #endif
 
     QScopedPointer<QApplication> app(createApplication(argc, argv));
@@ -231,11 +231,6 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     // Add custom NAMF to change User-Agent to fix problem with Dropbox login page.
     viewer.engine()->setNetworkAccessManagerFactory(new CustomQNetworkAccessManagerFactory());
 #endif
-
-    // ***** Test FTP
-    qDebug() << "main TEST FtpClient";
-    FtpClient ftp;
-    ftp.test();
 
     return app->exec();
 }
