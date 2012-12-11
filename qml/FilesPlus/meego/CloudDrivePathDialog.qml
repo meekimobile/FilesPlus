@@ -105,6 +105,23 @@ CommonDialog {
                 }
             }
             break;
+        case CloudDriveModel.Ftp:
+            remoteParentPath = json.property.path;
+            remoteParentPathName = json.property.path;
+            remoteParentParentPath = cloudDriveModel.getRemoteParentPath(remoteParentPath);
+            for (var i=0; i<json.data.length; i++) {
+                var item = json.data[i];
+                var modelItem = { "name": item.name, "path": item.path, "lastModified": Utility.parseJSONDate(item.lastModified), "size": item.size, "isDir": item.isDir };
+                cloudDrivePathListModel.append(modelItem);
+                if (item.id == originalRemotePath) {
+                    selectedIndex = i;
+                    selectedRemotePath = modelItem.path;
+                    selectedRemotePathName = modelItem.name;
+                    selectedIsDir = modelItem.isDir;
+                    cloudDrivePathListView.currentIndex = i;
+                }
+            }
+            break;
         }
 
         // Reset busy.

@@ -24,6 +24,8 @@ FtpClient::FtpClient(QObject *parent) :
 
     // Load accessTokenPair from file
     loadAccessPairMap();
+
+    m_itemList = new QList<QUrlInfo>();
 }
 
 FtpClient::~FtpClient()
@@ -32,6 +34,7 @@ FtpClient::~FtpClient()
     saveAccessPairMap();
 
     m_ftp = 0;
+    m_itemList = 0;
 }
 
 bool FtpClient::isAuthorized()
@@ -78,6 +81,7 @@ void FtpClient::commandFinished(int id, bool error)
 void FtpClient::addToList(const QUrlInfo &i)
 {
     qDebug() << "FtpClient::addToList" << i.name() << i.isDir() << i.isFile() << i.lastModified();
+    m_itemList->append(i);
 }
 
 void FtpClient::updateDataTransferProgress(qint64 done, qint64 total)
@@ -133,40 +137,56 @@ void FtpClient::saveAccessPairMap() {
 
 void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
-    connectToHost(uid);
+    qDebug() << "FtpClient::browse" << uid << remoteFilePath;
 
+    QFtp *m_ftp = connectToHost(uid);
 
+    // Get item list.
+    m_itemList->clear();
+    m_ftp->cd(remoteFilePath);
+    m_ftp->list();
 
-    disconnectFromHost();
+    int c = 100;
+    while (!m_ftp->re && c-- > 0) {
+        qDebug() << "FtpClient::browse waitForDone" << c;
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper().sleep(100);
+    }
+
+    m_ftp->close();
+    m_ftp->deleteLater();
+
+    emit browseReplySignal(nonce, 0, "", getItemListJson());
 }
 
-void FtpClient::connectToHost(QString uid)
+QFtp * FtpClient::connectToHost(QString uid)
 {
     /* Notes:
      * Stores token as user@host --> Token(token=user@host, secret=password, email=user@host)
      */
     QString url = accessTokenPairMap[uid].token;
-    QString username, host;
+    QString username, hostname;
     quint16 port = 21; // Default ftp port = 21
     QRegExp rx("([^@]*)@([^:]*)(:.*)*");
-    if (rx.exactMatch(url) && rx.captureCount() >= 2) {
-        if (rx.captureCount() == 3) {
-            port = rx.cap(3).toInt();
+    if (rx.exactMatch(url)) {
+        qDebug() << "FtpClient::connectToHost" << rx.captureCount() << rx.capturedTexts();
+        if (rx.captureCount() >= 2) {
+            if (rx.captureCount() == 3) {
+                // Skip : by start at position 1.
+                port = rx.cap(3).mid(1).toInt();
+            }
+            username = rx.cap(1);
+            hostname = rx.cap(2);
         }
-        username = rx.cap(1);
-        host = rx.cap(2);
     }
     QString password = accessTokenPairMap[uid].secret;
+    qDebug() << "FtpClient::connectToHost" << hostname << port << username << password;
 
-    m_ftp->connectToHost(host, port);
+    QFtp *m_ftp = new QFtp(this);
+    m_ftp->connectToHost(hostname, port);
     m_ftp->login(username, password);
-}
 
-void FtpClient::disconnectFromHost()
-{
-    if (m_ftp != 0 && m_ftp->state() == QFtp::Connected) {
-        m_ftp->close();
-    }
+    return m_ftp;
 }
 
 void FtpClient::saveConnection(QString id, QString hostname, quint16 port, QString username, QString password)
@@ -183,6 +203,31 @@ void FtpClient::saveConnection(QString id, QString hostname, quint16 port, QStri
     saveAccessPairMap();
 }
 
+QString FtpClient::getItemListJson()
+{
+    QString dataJsonText;
+    QUrlInfo item;
+    for (int i = 0; i < m_itemList->count(); i++) {
+        item = m_itemList->at(i);
+        if (dataJsonText.length() > 0) {
+            dataJsonText.append(", ");
+        }
+        dataJsonText.append(QString("{ \"name\": \"%1\", \"path\": \"%2\", \"lastModified\": \"%3\", \"size\": %4, \"isDir\": %5 }")
+                            .arg(item.name())
+                            .arg(m_currentPath)
+                            .arg(item.lastModified().toUTC().toString(Qt::ISODate))
+                            .arg(item.size())
+                            .arg(item.isDir())
+                            );
+    }
+    dataJsonText.prepend("[ ").append(" ]");
+
+    QString propertyJsonText;
+    propertyJsonText.append(QString("{ \"path\": \"%1\" }").arg(m_currentPath));
+
+    return QString("{ \"data\": %1, \"property\": %2 }").arg(dataJsonText).arg(propertyJsonText);
+}
+
 bool FtpClient::testConnection(QString hostname, quint16 port, QString username, QString password)
 {
     qDebug() << "FtpClient::testConnection";
@@ -191,6 +236,7 @@ bool FtpClient::testConnection(QString hostname, quint16 port, QString username,
     m_isDone = false;
 
     bool res = false;
+    QFtp *m_ftp = new QFtp(this);
     m_ftp->connectToHost(hostname, port);
     m_ftp->login(username, password);
 
@@ -205,6 +251,7 @@ bool FtpClient::testConnection(QString hostname, quint16 port, QString username,
     res = (m_ftp->state() == QFtp::LoggedIn);
 
     m_ftp->close();
+    m_ftp->deleteLater();
 
     return res;
 }

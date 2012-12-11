@@ -196,6 +196,7 @@ void CloudDriveModel::initializeFtpClient()
     qDebug() << "CloudDriveModel::initializeFtpClient";
 
     ftpClient = new FtpClient(this);
+    connect(ftpClient, SIGNAL(browseReplySignal(QString,int,QString,QString)), SLOT(browseReplyFilter(QString,int,QString,QString)) );
 }
 
 QString CloudDriveModel::createNonce() {
@@ -2520,6 +2521,9 @@ void CloudDriveModel::proceedNextJob() {
             break;
         case SkyDrive:
             skdClient->browse(job.jobId, job.uid, job.remoteFilePath);
+            break;
+        case Ftp:
+            ftpClient->browse(job.jobId, job.uid, job.remoteFilePath);
             break;
         }
         break;

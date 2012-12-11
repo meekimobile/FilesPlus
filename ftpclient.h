@@ -3,6 +3,8 @@
 
 #include <QApplication>
 #include <QFtp>
+#include <QtNetwork>
+#include <QList>
 #include "sleeper.h"
 #include "tokenpair.h"
 
@@ -23,11 +25,12 @@ public:
     QStringList getStoredUidList();
     int removeUid(QString uid);
 
-    void connectToHost(QString uid);
-    void disconnectFromHost();
+    QFtp *connectToHost(QString uid);
 
     bool testConnection(QString hostname, quint16 port, QString username, QString password);
     void saveConnection(QString id, QString hostname, quint16 port, QString username, QString password);
+
+    QString getItemListJson();
 
 //    void fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
 //    void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath);
@@ -41,6 +44,20 @@ public:
 //    QNetworkReply * deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
 //    void shareFile(QString nonce, QString uid, QString remoteFilePath);
 signals:
+//    void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
+//    void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
+//    void metadataReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void browseReplySignal(QString nonce, int err, QString errMsg, QString msg);
+//    void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
+//    void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+//    void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
+//    void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
+
+//    void createFolderReplySignal(QString nonce, int err, QString errMsg, QString msg);
+//    void moveFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
+//    void copyFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
+//    void deleteFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
+//    void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
 
 public slots:
     void commandStarted(int id);
@@ -51,8 +68,8 @@ public slots:
     void doneFilter(bool error);
 
 private:
-    QFtp *m_ftp;
-    bool m_isDone;
+    QString m_currentPath;
+    QList<QUrlInfo> *m_itemList;
 
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;

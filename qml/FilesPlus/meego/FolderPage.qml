@@ -413,6 +413,7 @@ Page {
 
         if (!cloudDriveModel.isAuthorized()) {
             // TODO implement for other cloud drive.
+            // TODO Go to account page.
             messageDialog.message = appInfo.emptyStr+qsTr("FilesPlus syncs your files via Dropbox service.\
 \nYou will be redirected to authorization page.");
             messageDialog.titleText = appInfo.emptyStr+qsTr("Sync with Dropbox");
@@ -3451,6 +3452,9 @@ Page {
                 cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
             } else if (selectedCloudType == CloudDriveModel.SkyDrive) {
                 remoteParentPath = (remoteParentPath == "") ? "me/skydrive" : remoteParentPath;
+                cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
+            } else if (selectedCloudType == CloudDriveModel.Ftp) {
+                remoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getRemoteParentPath(remotePath) : remoteParentPath;
                 cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
             }
         }
