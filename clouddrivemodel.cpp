@@ -196,7 +196,17 @@ void CloudDriveModel::initializeFtpClient()
     qDebug() << "CloudDriveModel::initializeFtpClient";
 
     ftpClient = new FtpClient(this);
+    connect(ftpClient, SIGNAL(uploadProgress(QString,qint64,qint64)), SLOT(uploadProgressFilter(QString,qint64,qint64)) );
+    connect(ftpClient, SIGNAL(downloadProgress(QString,qint64,qint64)), SLOT(downloadProgressFilter(QString,qint64,qint64)) );
+    connect(ftpClient, SIGNAL(fileGetReplySignal(QString,int,QString,QString)), SLOT(fileGetReplyFilter(QString,int,QString,QString)) );
+    connect(ftpClient, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SLOT(filePutReplyFilter(QString,int,QString,QString)) );
+    connect(ftpClient, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(browseReplySignal(QString,int,QString,QString)), SLOT(browseReplyFilter(QString,int,QString,QString)) );
+    connect(ftpClient, SIGNAL(createFolderReplySignal(QString,int,QString,QString)), SLOT(createFolderReplyFilter(QString,int,QString,QString)) );
+    connect(ftpClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
+    connect(ftpClient, SIGNAL(moveFileReplySignal(QString,int,QString,QString)), SLOT(moveFileReplyFilter(QString,int,QString,QString)) );
+    connect(ftpClient, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
+    connect(ftpClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
 }
 
 QString CloudDriveModel::createNonce() {
@@ -1525,13 +1535,9 @@ void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString ui
     // TODO handle other clouds.
     switch (job.type) {
     case Dropbox:
-//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-        break;
-    case SkyDrive:
-//        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
         break;
     }
-
 
     emit proceedNextJobSignal();
 }
@@ -1792,6 +1798,13 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
                 addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, DirtyHash);
             }
             break;
+        case Ftp:
+            // TODO
+            if (job.localFilePath != "") {
+                // Add cloud item if localPath is specified.
+                addItem(Ftp, job.uid, job.localFilePath, job.remoteFilePath, DirtyHash);
+            }
+            break;
         }
     } else if (err == 202) {
         // Forbidden {"error": " at path 'The folder '???' already exists.'"}
@@ -1808,6 +1821,12 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
             // Remove failed item if localPath is specified.
             if (job.localFilePath != "") {
                 removeItem(SkyDrive, job.uid, job.localFilePath);
+            }
+            break;
+        case Ftp:
+            // Remove failed item if localPath is specified.
+            if (job.localFilePath != "") {
+                removeItem(Ftp, job.uid, job.localFilePath);
             }
             break;
         }
@@ -1911,6 +1930,12 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
                 removeItemWithChildren(SkyDrive, job.uid, job.localFilePath);
             }
             break;
+        case Ftp:
+            // TODO Remove local cloudDriveItems with it children.
+            if (job.localFilePath != "") {
+                removeItemWithChildren(Ftp, job.uid, job.localFilePath);
+            }
+            break;
         }
     } else if (err == 203) {
         // Not Found {"error": "Path '???' not found"}
@@ -1928,6 +1953,12 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
             // TODO Remove local cloudDriveItems with it children.
             if (job.localFilePath != "") {
                 removeItemWithChildren(SkyDrive, job.uid, job.localFilePath);
+            }
+            break;
+        case Ftp:
+            // TODO Remove local cloudDriveItems with it children.
+            if (job.localFilePath != "") {
+                removeItemWithChildren(Ftp, job.uid, job.localFilePath);
             }
             break;
         }
@@ -2586,6 +2617,9 @@ void CloudDriveModel::proceedNextJob() {
         case SkyDrive:
             skdClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
             break;
+        case Ftp:
+            ftpClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
+            break;
         }
         break;
     case MoveFile:
@@ -2615,6 +2649,9 @@ void CloudDriveModel::proceedNextJob() {
             break;
         case SkyDrive:
             skdClient->deleteFile(job.jobId, job.uid, job.remoteFilePath);
+            break;
+        case Ftp:
+            ftpClient->deleteFile(job.jobId, job.uid, job.remoteFilePath);
             break;
         }
         break;

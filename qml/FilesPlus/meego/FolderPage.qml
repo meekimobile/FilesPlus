@@ -2832,6 +2832,9 @@ Page {
                         console.debug("folderPage cloudDriveModel onMetadataReplySignal property is not found.");
                     }
                 }
+
+// TODO Supports FTP
+
             } else if (err == 203) { // If metadata is not found, put it to cloud right away recursively.
                 console.debug("folderPage cloudDriveModel onMetadataReplySignal " + err + " " + errMsg + " " + msg);
 
@@ -3439,11 +3442,13 @@ Page {
                 cloudDriveModel.createFolder(selectedCloudType, selectedUid, "", remoteParentPath + "/" + newRemoteFolderName, -1);
             } else if (selectedCloudType == CloudDriveModel.SkyDrive) {
                 cloudDriveModel.createFolder(selectedCloudType, selectedUid, newRemoteFolderName, remoteParentPath, -1);
+            } else if (selectedCloudType == CloudDriveModel.Ftp) {
+                cloudDriveModel.createFolder(selectedCloudType, selectedUid, "", remoteParentPath + "/" + newRemoteFolderName, -1);
             }
         }
 
         onRefreshRequested: {
-//            console.debug("cloudDrivePathDialog onRefreshRequested " + selectedCloudType + " " + remotePath + " " + remoteParentPath);
+            console.debug("cloudDrivePathDialog onRefreshRequested " + selectedCloudType + " " + remotePath + " " + remoteParentPath);
 
             // Browse remote parent path.
             // Issue: selectedCloudType which is linked from uidDialog doesn't work with switch.

@@ -14,13 +14,13 @@ const QString FtpClient::FtpRoot = "~";
 FtpClient::FtpClient(QObject *parent) :
     QObject(parent)
 {
-    m_ftp = new QFtp(this);
-    connect(m_ftp, SIGNAL(commandStarted(int)), this, SLOT(commandStarted(int)));
-    connect(m_ftp, SIGNAL(commandFinished(int,bool)), this, SLOT(commandFinished(int,bool)));
-    connect(m_ftp, SIGNAL(listInfo(QUrlInfo)), this, SLOT(addToList(QUrlInfo)));
-    connect(m_ftp, SIGNAL(dataTransferProgress(qint64,qint64)), this, SLOT(updateDataTransferProgress(qint64,qint64)));
-    connect(m_ftp, SIGNAL(stateChanged(int)), this, SLOT(stateChangedFilter(int)));
-    connect(m_ftp, SIGNAL(done(bool)), this, SLOT(doneFilter(bool)));
+//    m_ftp = new QFtp(this);
+//    connect(m_ftp, SIGNAL(commandStarted(int)), this, SLOT(commandStarted(int)));
+//    connect(m_ftp, SIGNAL(commandFinished(int,bool)), this, SLOT(commandFinished(int,bool)));
+//    connect(m_ftp, SIGNAL(listInfo(QUrlInfo)), this, SLOT(addToList(QUrlInfo)));
+//    connect(m_ftp, SIGNAL(dataTransferProgress(qint64,qint64)), this, SLOT(updateDataTransferProgress(qint64,qint64)));
+//    connect(m_ftp, SIGNAL(stateChanged(int)), this, SLOT(stateChangedFilter(int)));
+//    connect(m_ftp, SIGNAL(done(bool)), this, SLOT(doneFilter(bool)));
 
     // Load accessTokenPair from file
     loadAccessPairMap();
@@ -33,7 +33,6 @@ FtpClient::~FtpClient()
     // Save accessTokenPair to file
     saveAccessPairMap();
 
-    m_ftp = 0;
     m_itemList = 0;
 }
 
@@ -70,18 +69,30 @@ int FtpClient::removeUid(QString uid)
 
 void FtpClient::commandStarted(int id)
 {
-    m_isDone = false;
+    qDebug() << "FtpClient::commandStarted" << id;
 }
 
 void FtpClient::commandFinished(int id, bool error)
 {
-    qDebug() << "FtpClient::commandFinished" << id << error << m_ftp->errorString();
+    qDebug() << "FtpClient::commandFinished" << id << "error" << error;
 }
 
 void FtpClient::addToList(const QUrlInfo &i)
 {
     qDebug() << "FtpClient::addToList" << i.name() << i.isDir() << i.isFile() << i.lastModified();
     m_itemList->append(i);
+}
+
+void FtpClient::rawCommandReplyFinished(int replyCode, QString result)
+{
+    qDebug() << "FtpClient::rawCommandReplyFinished" << replyCode << result;
+    QRegExp rx(".*\"([^\"]+)\".*");
+    if (rx.exactMatch(result)) {
+        qDebug() << "FtpClient::rawCommandReplyFinished rx.capturedTexts()" << rx.capturedTexts();
+        if (rx.captureCount() > 0) {
+            m_currentPath = rx.cap(1);
+        }
+    }
 }
 
 void FtpClient::updateDataTransferProgress(qint64 done, qint64 total)
@@ -135,28 +146,104 @@ void FtpClient::saveAccessPairMap() {
     }
 }
 
-void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
+void FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath)
 {
-    qDebug() << "FtpClient::browse" << uid << remoteFilePath;
+}
 
-    QFtp *m_ftp = connectToHost(uid);
+void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath)
+{
+}
+
+void FtpClient::metadata(QString nonce, QString uid, QString remoteFilePath)
+{
+    qDebug() << "FtpClient::metadata" << uid << remoteFilePath;
+
+    m_ftp = connectToHost(uid);
 
     // Get item list.
     m_itemList->clear();
-    m_ftp->cd(remoteFilePath);
+    if (!remoteFilePath.isEmpty()) m_ftp->cd(remoteFilePath);
+    m_ftp->rawCommand("PWD");
     m_ftp->list();
 
     int c = 100;
-    while (!m_ftp->re && c-- > 0) {
-        qDebug() << "FtpClient::browse waitForDone" << c;
+    while (!m_isDone && c-- > 0) {
+        qDebug() << "FtpClient::metadata waitForDone" << m_isDone << c;
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper().sleep(100);
     }
 
+    emit metadataReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), getItemListJson());
+
     m_ftp->close();
     m_ftp->deleteLater();
+}
 
-    emit browseReplySignal(nonce, 0, "", getItemListJson());
+void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
+{
+    qDebug() << "FtpClient::browse" << uid << remoteFilePath;
+
+    m_ftp = connectToHost(uid);
+
+    // Get item list.
+    m_itemList->clear();
+    if (!remoteFilePath.isEmpty()) m_ftp->cd(remoteFilePath);
+    m_ftp->rawCommand("PWD");
+    m_ftp->list();
+
+    int c = 100;
+    while (!m_isDone && c-- > 0) {
+        qDebug() << "FtpClient::browse waitForDone" << m_isDone << c;
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper().sleep(100);
+    }
+
+    emit browseReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), getItemListJson());
+
+    m_ftp->close();
+    m_ftp->deleteLater();
+}
+
+void FtpClient::createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
+{
+    qDebug() << "FtpClient::createFolder" << uid << localFilePath << remoteFilePath;
+
+    m_ftp = connectToHost(uid);
+
+    m_ftp->mkdir(remoteFilePath);
+
+    int c = 100;
+    while (!m_isDone && c-- > 0) {
+        qDebug() << "FtpClient::createFolder waitForDone" << m_isDone << c;
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper().sleep(100);
+    }
+
+    emit createFolderReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(remoteFilePath) );
+
+    m_ftp->close();
+    m_ftp->deleteLater();
+}
+
+void FtpClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
+{
+    qDebug() << "FtpClient::deleteFile" << uid << remoteFilePath;
+
+    m_ftp = connectToHost(uid);
+
+    m_ftp->rmdir(remoteFilePath);
+
+    int c = 100;
+    while (!m_isDone && c-- > 0) {
+        qDebug() << "FtpClient::deleteFile waitForDone" << m_isDone << c;
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper().sleep(100);
+    }
+
+    emit deleteFileReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(remoteFilePath) );
+
+    m_ftp->close();
+    m_ftp->deleteLater();
 }
 
 QFtp * FtpClient::connectToHost(QString uid)
@@ -182,7 +269,18 @@ QFtp * FtpClient::connectToHost(QString uid)
     QString password = accessTokenPairMap[uid].secret;
     qDebug() << "FtpClient::connectToHost" << hostname << port << username << password;
 
+    m_isDone = false;
     QFtp *m_ftp = new QFtp(this);
+    connect(m_ftp, SIGNAL(commandStarted(int)), this, SLOT(commandStarted(int)));
+    connect(m_ftp, SIGNAL(commandFinished(int,bool)), this, SLOT(commandFinished(int,bool)));
+    connect(m_ftp, SIGNAL(rawCommandReply(int,QString)), this, SLOT(rawCommandReplyFinished(int,QString)));
+    connect(m_ftp, SIGNAL(listInfo(QUrlInfo)), this, SLOT(addToList(QUrlInfo)));
+    connect(m_ftp, SIGNAL(dataTransferProgress(qint64,qint64)), this, SLOT(updateDataTransferProgress(qint64,qint64)));
+    connect(m_ftp, SIGNAL(stateChanged(int)), this, SLOT(stateChangedFilter(int)));
+    connect(m_ftp, SIGNAL(done(bool)), this, SLOT(doneFilter(bool)));
+
+    m_ftp->abort();
+
     m_ftp->connectToHost(hostname, port);
     m_ftp->login(username, password);
 
@@ -214,7 +312,7 @@ QString FtpClient::getItemListJson()
         }
         dataJsonText.append(QString("{ \"name\": \"%1\", \"path\": \"%2\", \"lastModified\": \"%3\", \"size\": %4, \"isDir\": %5 }")
                             .arg(item.name())
-                            .arg(m_currentPath)
+                            .arg(m_currentPath + "/" + item.name())
                             .arg(item.lastModified().toUTC().toString(Qt::ISODate))
                             .arg(item.size())
                             .arg(item.isDir())
@@ -233,15 +331,15 @@ bool FtpClient::testConnection(QString hostname, quint16 port, QString username,
     qDebug() << "FtpClient::testConnection";
 
     // Reset m_isDone.
-    m_isDone = false;
+//    m_isDone = false;
 
     bool res = false;
-    QFtp *m_ftp = new QFtp(this);
+    m_ftp = new QFtp(this);
     m_ftp->connectToHost(hostname, port);
     m_ftp->login(username, password);
 
     int c = 100;
-    while (!m_isDone && c-- > 0) {
+    while (m_ftp->hasPendingCommands() && c-- > 0) {
         qDebug() << "FtpClient::testConnection waitForDone" << c;
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper().sleep(100);
