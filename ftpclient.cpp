@@ -14,14 +14,6 @@ const QString FtpClient::FtpRoot = "~";
 FtpClient::FtpClient(QObject *parent) :
     QObject(parent)
 {
-//    m_ftp = new QFtp(this);
-//    connect(m_ftp, SIGNAL(commandStarted(int)), this, SLOT(commandStarted(int)));
-//    connect(m_ftp, SIGNAL(commandFinished(int,bool)), this, SLOT(commandFinished(int,bool)));
-//    connect(m_ftp, SIGNAL(listInfo(QUrlInfo)), this, SLOT(addToList(QUrlInfo)));
-//    connect(m_ftp, SIGNAL(dataTransferProgress(qint64,qint64)), this, SLOT(updateDataTransferProgress(qint64,qint64)));
-//    connect(m_ftp, SIGNAL(stateChanged(int)), this, SLOT(stateChangedFilter(int)));
-//    connect(m_ftp, SIGNAL(done(bool)), this, SLOT(doneFilter(bool)));
-
     // Load accessTokenPair from file
     loadAccessPairMap();
 
@@ -162,16 +154,21 @@ void FtpClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 
     // Get item list.
     m_itemList->clear();
-    if (!remoteFilePath.isEmpty()) m_ftp->cd(remoteFilePath);
-    m_ftp->rawCommand("PWD");
-    m_ftp->list();
+    // TODO Support both file/dir. How to get property for file/dir?
+    m_ftp->cd(remoteFilePath);
 
-    int c = 100;
-    while (!m_isDone && c-- > 0) {
-        qDebug() << "FtpClient::metadata waitForDone" << m_isDone << c;
-        QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper().sleep(100);
+    waitForDone();
+
+    if (m_ftp->error() == QFtp::NoError) {
+        m_isDone = false;
+        m_ftp->rawCommand("PWD");
+        m_ftp->list();
+    } else {
+        m_isDone = false;
+        m_ftp->list(remoteFilePath);
     }
+
+    waitForDone();
 
     emit metadataReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), getItemListJson());
 
@@ -189,14 +186,9 @@ void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
     m_itemList->clear();
     if (!remoteFilePath.isEmpty()) m_ftp->cd(remoteFilePath);
     m_ftp->rawCommand("PWD");
-    m_ftp->list();
+    m_ftp->list(remoteFilePath);
 
-    int c = 100;
-    while (!m_isDone && c-- > 0) {
-        qDebug() << "FtpClient::browse waitForDone" << m_isDone << c;
-        QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper().sleep(100);
-    }
+    waitForDone();
 
     emit browseReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), getItemListJson());
 
@@ -212,12 +204,7 @@ void FtpClient::createFolder(QString nonce, QString uid, QString localFilePath, 
 
     m_ftp->mkdir(remoteFilePath);
 
-    int c = 100;
-    while (!m_isDone && c-- > 0) {
-        qDebug() << "FtpClient::createFolder waitForDone" << m_isDone << c;
-        QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper().sleep(100);
-    }
+    waitForDone();
 
     emit createFolderReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(remoteFilePath) );
 
@@ -233,12 +220,7 @@ void FtpClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
 
     m_ftp->rmdir(remoteFilePath);
 
-    int c = 100;
-    while (!m_isDone && c-- > 0) {
-        qDebug() << "FtpClient::deleteFile waitForDone" << m_isDone << c;
-        QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper().sleep(100);
-    }
+    waitForDone();
 
     emit deleteFileReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(remoteFilePath) );
 
@@ -301,6 +283,16 @@ void FtpClient::saveConnection(QString id, QString hostname, quint16 port, QStri
     saveAccessPairMap();
 }
 
+void FtpClient::waitForDone()
+{
+    int c = 100;
+    while (!m_isDone && c-- > 0) {
+        qDebug() << "FtpClient::waitForDone" << m_isDone << c;
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper().sleep(100);
+    }
+}
+
 QString FtpClient::getItemListJson()
 {
     QString dataJsonText;
@@ -320,10 +312,21 @@ QString FtpClient::getItemListJson()
     }
     dataJsonText.prepend("[ ").append(" ]");
 
+    // TODO Get item property.
     QString propertyJsonText;
     propertyJsonText.append(QString("{ \"path\": \"%1\" }").arg(m_currentPath));
 
     return QString("{ \"data\": %1, \"property\": %2 }").arg(dataJsonText).arg(propertyJsonText);
+}
+
+QString FtpClient::getParentRemotePath(QString remotePath)
+{
+    QString remoteParentPath = "";
+    if (remotePath != "") {
+        remoteParentPath = remotePath.mid(0, remotePath.lastIndexOf("/"));
+    }
+
+    return remoteParentPath;
 }
 
 bool FtpClient::testConnection(QString hostname, quint16 port, QString username, QString password)

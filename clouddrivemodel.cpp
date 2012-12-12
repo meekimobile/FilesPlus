@@ -441,6 +441,16 @@ QString CloudDriveModel::getParentLocalPath(QString localPath)
     return parentPath;
 }
 
+QString CloudDriveModel::getParentRemotePath(QString remotePath)
+{
+    QString remoteParentPath = "";
+    if (remotePath != "") {
+        remoteParentPath = remotePath.mid(0, remotePath.lastIndexOf("/"));
+    }
+
+    return remoteParentPath;
+}
+
 void CloudDriveModel::initScheduler()
 {
     connect(&m_schedulerTimer, SIGNAL(timeout()), this, SLOT(schedulerTimeoutFilter()) );

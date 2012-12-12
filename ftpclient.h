@@ -30,7 +30,9 @@ public:
     bool testConnection(QString hostname, quint16 port, QString username, QString password);
     void saveConnection(QString id, QString hostname, quint16 port, QString username, QString password);
 
+    void waitForDone();
     QString getItemListJson();
+    QString getParentRemotePath(QString remotePath);
 
     void fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath);

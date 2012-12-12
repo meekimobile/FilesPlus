@@ -119,6 +119,9 @@ public:
     Q_INVOKABLE void suspendNextJob();
     Q_INVOKABLE void resumeNextJob();
 
+    // Other.
+    Q_INVOKABLE QString getParentRemotePath(QString remotePath);
+
     // Scheduler.
     Q_INVOKABLE int updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp);
     Q_INVOKABLE QString getItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath);

@@ -74,7 +74,7 @@ CommonDialog {
         case CloudDriveModel.Dropbox:
             remoteParentPath = json.path;
             remoteParentPathName = json.path;
-            remoteParentParentPath = cloudDriveModel.getRemoteParentPath(remoteParentPath);
+            remoteParentParentPath = cloudDriveModel.getParentRemotePath(remoteParentPath);
             for (var i=0; i<json.contents.length; i++) {
                 var item = json.contents[i];
                 var modelItem = { "name": cloudDriveModel.getRemoteName(item.path), "path": item.path, "lastModified": (new Date(item.modified)), "size": item.bytes, "isDir": item.is_dir };
@@ -108,7 +108,7 @@ CommonDialog {
         case CloudDriveModel.Ftp:
             remoteParentPath = json.property.path;
             remoteParentPathName = json.property.path;
-            remoteParentParentPath = cloudDriveModel.getRemoteParentPath(remoteParentPath);
+            remoteParentParentPath = cloudDriveModel.getParentRemotePath(remoteParentPath);
             remoteParentParentPath = (remoteParentParentPath == "") ? "/" : remoteParentParentPath;
             for (var i=0; i<json.data.length; i++) {
                 var item = json.data[i];
