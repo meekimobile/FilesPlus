@@ -1672,6 +1672,11 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
                 addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, hash);
             }
             break;
+        case Ftp:
+            sc = engine.evaluate("(" + msg + ")");
+            hash = sc.property("lastModified").toString();
+            addItem(Ftp, job.uid, job.localFilePath, job.remoteFilePath, hash);
+            break;
         }
 
         job.isRunning = false;
@@ -1713,6 +1718,13 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
                 addItem(SkyDrive, job.uid, job.localFilePath, remoteFilePath, hash);
             }
             break;
+        case Ftp:
+            // Parse result and update remote file path to item.
+            sc = engine.evaluate("(" + msg + ")");
+            remoteFilePath = sc.property("path").toString();
+            hash = sc.property("lastModified").toString();
+            addItem(Ftp, job.uid, job.localFilePath, remoteFilePath, hash);
+            break;
         }
 
         job.isRunning = false;
@@ -1724,6 +1736,10 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
             removeItem(Dropbox, job.uid, job.localFilePath);
             break;
         case SkyDrive:
+            // TODO
+            removeItem(SkyDrive, job.uid, job.localFilePath);
+            break;
+        case Ftp:
             // TODO
             removeItem(SkyDrive, job.uid, job.localFilePath);
             break;
@@ -2507,9 +2523,19 @@ void CloudDriveModel::proceedNextJob() {
     runningJobCount++;
     mutex.unlock();
 
+    // Dispatch job.
+    dispatchJob(job);
+
+    emit proceedNextJobSignal();
+}
+
+void CloudDriveModel::dispatchJob(const CloudDriveJob job)
+{
     // TODO
     // If job.type==Dropbox, call DropboxClient.run() directly.
     // If job.type==Any, start thread.
+
+    // TODO Generalize cloud client.
 
     switch (job.operation) {
     case LoadCloudDriveItems:
@@ -2533,6 +2559,9 @@ void CloudDriveModel::proceedNextJob() {
         case SkyDrive:
             skdClient->fileGet(job.jobId, job.uid, job.remoteFilePath, job.localFilePath);
             break;
+        case Ftp:
+            ftpClient->fileGet(job.jobId, job.uid, job.remoteFilePath, job.localFilePath);
+            break;
         }
         break;
     case FilePut:
@@ -2543,6 +2572,9 @@ void CloudDriveModel::proceedNextJob() {
         case SkyDrive:
             skdClient->filePut(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
             break;
+        case Ftp:
+            ftpClient->filePut(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
+            break;
         }
         break;
     case Metadata:
@@ -2552,6 +2584,9 @@ void CloudDriveModel::proceedNextJob() {
             break;
         case SkyDrive:
             skdClient->metadata(job.jobId, job.uid, job.remoteFilePath);
+            break;
+        case Ftp:
+            ftpClient->metadata(job.jobId, job.uid, job.remoteFilePath);
             break;
         }
         break;
@@ -2676,8 +2711,6 @@ void CloudDriveModel::proceedNextJob() {
         }
         break;
     }
-
-    emit proceedNextJobSignal();
 }
 
 void CloudDriveModel::threadFinishedFilter()

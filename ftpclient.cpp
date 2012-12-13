@@ -61,7 +61,7 @@ int FtpClient::removeUid(QString uid)
 
 void FtpClient::commandStarted(int id)
 {
-    qDebug() << "FtpClient::commandStarted" << id;
+    qDebug() << "FtpClient::commandStarted" << id << "currentCommand" << m_ftp->currentCommand();
 }
 
 void FtpClient::commandFinished(int id, bool error)
@@ -77,6 +77,7 @@ void FtpClient::addToList(const QUrlInfo &i)
 
 void FtpClient::rawCommandReplyFinished(int replyCode, QString result)
 {
+    // Capture PWD result.
     qDebug() << "FtpClient::rawCommandReplyFinished" << replyCode << result;
     QRegExp rx(".*\"([^\"]+)\".*");
     if (rx.exactMatch(result)) {
@@ -87,9 +88,9 @@ void FtpClient::rawCommandReplyFinished(int replyCode, QString result)
     }
 }
 
-void FtpClient::updateDataTransferProgress(qint64 done, qint64 total)
+void FtpClient::dataTransferProgressFilter(qint64 done, qint64 total)
 {
-    qDebug() << "FtpClient::updateDataTransferProgress" << done << total;
+    qDebug() << "FtpClient::dataTransferProgressFilter" << done << total;
 }
 
 void FtpClient::stateChangedFilter(int state)
@@ -140,10 +141,82 @@ void FtpClient::saveAccessPairMap() {
 
 void FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath)
 {
+    qDebug() << "FtpClient::fileGet" << uid << remoteFilePath << localFilePath;
+
+    QString remoteParentPath = getParentRemotePath(remoteFilePath);
+
+    m_itemList->clear();
+
+    m_ftp = connectToHost(uid);
+    m_ftp->cd(remoteParentPath);
+
+    m_localFileHash[nonce] = new QFile(localFilePath);
+    QFile *localTargetFile = m_localFileHash[nonce];
+    if (localTargetFile->open(QIODevice::WriteOnly)) {
+        m_ftp->get(getRemoteFileName(remoteFilePath), localTargetFile);
+
+        waitForDone();
+
+        // TODO Get uploaded file property.
+        m_ftp->list(remoteFilePath);
+
+        waitForDone();
+    }
+
+    localTargetFile->close();
+    m_localFileHash.remove(nonce);
+
+    if (m_itemList->isEmpty()) {
+        // remoteFilePath is not found.
+        qDebug() << "FtpClient::fileGet" << uid << remoteFilePath << "is not found.";
+        emit fileGetReplySignal(nonce, -1, tr("Can't get %1").arg(remoteFilePath), "");
+    } else {
+        qDebug() << "FtpClient::fileGet" << uid << localFilePath << remoteFilePath << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_itemList->first().name();
+        emit fileGetReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), getPropertyJson(remoteParentPath, m_itemList->first()) );
+    }
+
+    m_ftp->close();
+    m_ftp->deleteLater();
 }
 
-void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath)
+void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
 {
+    qDebug() << "FtpClient::filePut" << uid << localFilePath << remoteFilePath;
+
+    QString remoteParentPath = getParentRemotePath(remoteFilePath);
+
+    m_itemList->clear();
+
+    m_ftp = connectToHost(uid);
+    m_ftp->cd(remoteParentPath);
+
+    m_localFileHash[nonce] = new QFile(localFilePath);
+    QFile *localSourceFile = m_localFileHash[nonce];
+    if (localSourceFile->open(QIODevice::ReadOnly)) {
+        m_ftp->put(localSourceFile, getRemoteFileName(remoteFilePath));
+
+        waitForDone();
+
+        // TODO Get uploaded file property.
+        m_ftp->list(remoteFilePath);
+
+        waitForDone();
+    }
+
+    localSourceFile->close();
+    m_localFileHash.remove(nonce);
+
+    if (m_itemList->isEmpty()) {
+        // remoteFilePath is not found.
+        qDebug() << "FtpClient::filePut" << uid << remoteFilePath << "is not found.";
+        emit filePutReplySignal(nonce, -1, tr("Can't put %1").arg(remoteFilePath), "");
+    } else {
+        qDebug() << "FtpClient::filePut" << uid << localFilePath << remoteFilePath << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_itemList->first().name();
+        emit filePutReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), getPropertyJson(remoteParentPath, m_itemList->first()) );
+    }
+
+    m_ftp->close();
+    m_ftp->deleteLater();
 }
 
 void FtpClient::metadata(QString nonce, QString uid, QString remoteFilePath)
@@ -154,23 +227,39 @@ void FtpClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 
     // Get item list.
     m_itemList->clear();
-    // TODO Support both file/dir. How to get property for file/dir?
     m_ftp->cd(remoteFilePath);
 
     waitForDone();
 
     if (m_ftp->error() == QFtp::NoError) {
+        // remoteFilePath is dir.
+        qDebug() << "FtpClient::metadata" << uid << remoteFilePath << " is dir.";
         m_isDone = false;
         m_ftp->rawCommand("PWD");
         m_ftp->list();
+
+        waitForDone();
+
+        emit metadataReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), getItemListJson());
     } else {
+        // remoteFilePath is file or not found.
+        qDebug() << "FtpClient::metadata" << uid << remoteFilePath << "is file or not found. error" << m_ftp->error() << m_ftp->errorString();
         m_isDone = false;
         m_ftp->list(remoteFilePath);
+
+        waitForDone();
+
+        if (m_itemList->isEmpty()) {
+            // remoteFilePath is not found.
+            qDebug() << "FtpClient::metadata" << uid << remoteFilePath << "is not found.";
+            emit metadataReplySignal(nonce, QNetworkReply::ContentNotFoundError, tr("%1 is not found.").arg(remoteFilePath), "");
+        } else {
+            // remoteFilePath is file.
+            QString remoteParentPath = getParentRemotePath(remoteFilePath);
+            qDebug() << "FtpClient::metadata" << uid << remoteFilePath << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_itemList->first().name();
+            emit metadataReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), QString("{ \"data\": [], \"property\": %1 }").arg(getPropertyJson(remoteParentPath, m_itemList->first())) );
+        }
     }
-
-    waitForDone();
-
-    emit metadataReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), getItemListJson());
 
     m_ftp->close();
     m_ftp->deleteLater();
@@ -257,7 +346,7 @@ QFtp * FtpClient::connectToHost(QString uid)
     connect(m_ftp, SIGNAL(commandFinished(int,bool)), this, SLOT(commandFinished(int,bool)));
     connect(m_ftp, SIGNAL(rawCommandReply(int,QString)), this, SLOT(rawCommandReplyFinished(int,QString)));
     connect(m_ftp, SIGNAL(listInfo(QUrlInfo)), this, SLOT(addToList(QUrlInfo)));
-    connect(m_ftp, SIGNAL(dataTransferProgress(qint64,qint64)), this, SLOT(updateDataTransferProgress(qint64,qint64)));
+    connect(m_ftp, SIGNAL(dataTransferProgress(qint64,qint64)), this, SLOT(dataTransferProgressFilter(qint64,qint64)));
     connect(m_ftp, SIGNAL(stateChanged(int)), this, SLOT(stateChangedFilter(int)));
     connect(m_ftp, SIGNAL(done(bool)), this, SLOT(doneFilter(bool)));
 
@@ -291,6 +380,25 @@ void FtpClient::waitForDone()
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper().sleep(100);
     }
+
+    // Reset m_isDone.
+    m_isDone = false;
+}
+
+QString FtpClient::getPropertyJson(const QString parentPath, const QUrlInfo item)
+{
+    QString jsonText;
+
+    // TODO handle absolute path in name.
+    QString path = (item.name().startsWith("/") ? "" : parentPath + "/") + item.name();
+    jsonText = QString("{ \"name\": \"%1\", \"path\": \"%2\", \"lastModified\": \"%3\", \"size\": %4, \"isDir\": %5 }")
+            .arg(item.name())
+            .arg(path)
+            .arg(item.lastModified().toUTC().toString(Qt::ISODate))
+            .arg(item.size())
+            .arg(item.isDir());
+
+    return jsonText;
 }
 
 QString FtpClient::getItemListJson()
@@ -302,19 +410,13 @@ QString FtpClient::getItemListJson()
         if (dataJsonText.length() > 0) {
             dataJsonText.append(", ");
         }
-        dataJsonText.append(QString("{ \"name\": \"%1\", \"path\": \"%2\", \"lastModified\": \"%3\", \"size\": %4, \"isDir\": %5 }")
-                            .arg(item.name())
-                            .arg(m_currentPath + "/" + item.name())
-                            .arg(item.lastModified().toUTC().toString(Qt::ISODate))
-                            .arg(item.size())
-                            .arg(item.isDir())
-                            );
+        dataJsonText.append(getPropertyJson(m_currentPath, item));
     }
     dataJsonText.prepend("[ ").append(" ]");
 
     // TODO Get item property.
     QString propertyJsonText;
-    propertyJsonText.append(QString("{ \"path\": \"%1\" }").arg(m_currentPath));
+    propertyJsonText.append(QString("{ \"path\": \"%1\", \"isDir\": true }").arg(m_currentPath));
 
     return QString("{ \"data\": %1, \"property\": %2 }").arg(dataJsonText).arg(propertyJsonText);
 }
@@ -327,6 +429,16 @@ QString FtpClient::getParentRemotePath(QString remotePath)
     }
 
     return remoteParentPath;
+}
+
+QString FtpClient::getRemoteFileName(QString remotePath)
+{
+    QString name = "";
+    if (remotePath != "") {
+        name = remotePath.mid(remotePath.lastIndexOf("/") + 1);
+    }
+
+    return name;
 }
 
 bool FtpClient::testConnection(QString hostname, quint16 port, QString username, QString password)

@@ -2833,11 +2833,11 @@ Page {
                         cloudDriveModel.suspendNextJob();
 
                         // Generate hash from updated_time.
-                        var remotePathHash = jsonObj.property.updated_time;
+                        var remotePathHash = jsonObj.property.lastModified;
     //                    console.debug("folderPage cloudDriveModel onMetadataReplySignal remotePathHash " + remotePathHash);
 
                         // Sync starts from itself.
-                        if (jsonObj.property.type == "folder") { // Sync folder.
+                        if (jsonObj.property.isDir) { // Sync folder.
                             // If there is no local folder, create it and connect.
                             if (!fsModel.isDir(jobJson.local_file_path)) {
                                 // TODO Add item to ListView.
@@ -2851,9 +2851,9 @@ Page {
                                     var item = jsonObj.data[i];
                                     var itemLocalPath = fsModel.getAbsolutePath(jobJson.local_file_path, item.name);
                                     var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
-                                    var itemRemotePath = item.id;
-                                    var itemRemoteHash = item.updated_time;
-                                    if (item.type == "folder") {
+                                    var itemRemotePath = item.path;
+                                    var itemRemoteHash = item.lastModified;
+                                    if (item.isDir) {
                                         // This flow will trigger recursive metadata calling.
                                         console.debug("cloudDriveModel onMetadataReplySignal dir itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
                                         cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
@@ -2876,7 +2876,7 @@ Page {
                             cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
 
                             // Sync based on local contents.
-                            cloudDriveModel.syncFromLocal_SkyDrive(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
+//                            cloudDriveModel.syncFromLocal_SkyDrive(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
                         } else { // Sync file.
                             console.debug("folderPage cloudDriveModel onMetadataReplySignal file jobJson " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + jobJson.type + " " + jobJson.uid + " remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
 
@@ -2885,9 +2885,7 @@ Page {
                                 // TODO Add item to ListView.
                                 cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.local_file_path, jobJson.modelIndex);
                             } else if (remotePathHash < localPathHash) {
-                                // Put file to remote parent path. Or root if parent_id is null.
-                                var remoteParentPath = (jsonObj.property.parent_id) ? jsonObj.property.parent_id : "me/skydrive";
-                                cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
+                                cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
                             } else {
                                 // Update lastModified on cloudDriveItem.
                                 cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
@@ -2904,8 +2902,6 @@ Page {
             } else if (err == 203) { // If metadata is not found, put it to cloud right away recursively.
                 console.debug("folderPage cloudDriveModel onMetadataReplySignal " + err + " " + errMsg + " " + msg);
 
-                // TODO Supports SkyDrive.
-
                 if (jobJson.type == CloudDriveModel.Dropbox) {
                     if (fsModel.isDir(jobJson.local_file_path)) {
                         // Remote folder will be created in syncFromLocal if it's required.
@@ -2915,6 +2911,21 @@ Page {
                         // Once it got reply, it should get hash already.
                         // Because its sub files/dirs are in prior queue.
                         // cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
+                    } else {
+                        cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
+                    }
+                }
+
+                // TODO Supports SkyDrive.
+                if (jobJson.type == CloudDriveModel.SkyDrive) {
+
+                }
+
+                // TODO Supports Ftp.
+                if (jobJson.type == CloudDriveModel.Ftp) {
+                    if (fsModel.isDir(jobJson.local_file_path)) {
+                        // Remote folder will be created in syncFromLocal if it's required.
+//                        cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
                     } else {
                         cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
                     }
@@ -3261,7 +3272,7 @@ Page {
                 } else if (selectedCloudType == CloudDriveModel.SkyDrive) {
                     cloudDrivePathDialog.remoteParentPath = "me/skydrive"; // Upload start browsing from root.
                 } else {
-                    cloudDrivePathDialog.remoteParentPath = "/"; // Upload start browsing from root.
+                    cloudDrivePathDialog.remoteParentPath = "";
                 }
                 cloudDrivePathDialog.refresh();
                 break;
@@ -3274,7 +3285,7 @@ Page {
                 } else if (selectedCloudType == CloudDriveModel.SkyDrive) {
                     cloudDrivePathDialog.remoteParentPath = "me/skydrive"; // Download start browsing from root.
                 } else {
-                    cloudDrivePathDialog.remoteParentPath = "/"; // Download start browsing from root.
+                    cloudDrivePathDialog.remoteParentPath = "";
                 }
                 cloudDrivePathDialog.refresh();
                 break;
@@ -3426,6 +3437,9 @@ Page {
                     case CloudDriveModel.SkyDrive:
                         targetLocalPath = fsModel.getAbsolutePath(fsModel.getDirPath(localPath), remotePathName);
                         break;
+                    case CloudDriveModel.Ftp:
+                        targetLocalPath = fsModel.getAbsolutePath(fsModel.getDirPath(localPath), cloudDriveModel.getRemoteName(remotePath));
+                        break;
                     }
                     console.debug("cloudDrivePathDialog proceedOperation FileGet targetLocalPath " + targetLocalPath);
                     cloudDriveModel.metadata(type, uid, targetLocalPath, remotePath, modelIndex);
@@ -3476,6 +3490,12 @@ Page {
                 } else {
                     // localPath is file or remotePath is empty.
                     if (type == CloudDriveModel.Dropbox) {
+                        // If localPath is file or remotePath is not specified.
+                        // Use remoteParentPath + "/" + folderName.
+                        remotePath = (remoteParentPath == "/" ? "" : remoteParentPath) + "/" + fsModel.getFileName(localPath);
+                        console.debug("cloudDrivePathDialog proceedOperation Metadata sync from " + localPath + " to " + remotePath);
+                        cloudDriveModel.metadata(type, uid, localPath, remotePath, selectedModelIndex);
+                    } else if (type == CloudDriveModel.Ftp) {
                         // If localPath is file or remotePath is not specified.
                         // Use remoteParentPath + "/" + folderName.
                         remotePath = (remoteParentPath == "/" ? "" : remoteParentPath) + "/" + fsModel.getFileName(localPath);

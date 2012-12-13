@@ -31,25 +31,25 @@ public:
     void saveConnection(QString id, QString hostname, quint16 port, QString username, QString password);
 
     void waitForDone();
+    QString getPropertyJson(const QString parentPath, const QUrlInfo item);
     QString getItemListJson();
     QString getParentRemotePath(QString remotePath);
+    QString getRemoteFileName(QString remotePath);
 
     void fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
-    void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath);
+    void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
     void createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
 //    void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
 //    void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
     void deleteFile(QString nonce, QString uid, QString remoteFilePath);
-//    void shareFile(QString nonce, QString uid, QString remoteFilePath);
+    //    void shareFile(QString nonce, QString uid, QString remoteFilePath);
 signals:
     void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void browseReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
-    void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
 
@@ -64,7 +64,7 @@ public slots:
     void commandFinished(int id, bool error);
     void addToList(const QUrlInfo &i);
     void rawCommandReplyFinished(int replyCode, QString result);
-    void updateDataTransferProgress(qint64 done, qint64 total);
+    void dataTransferProgressFilter(qint64 done, qint64 total);
     void stateChangedFilter(int state);
     void doneFilter(bool error);
 
@@ -76,7 +76,6 @@ private:
 
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;
-    QString localPath;
     QHash<QString, QFile*> m_localFileHash;
 
     void loadAccessPairMap();

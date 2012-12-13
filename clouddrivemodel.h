@@ -200,8 +200,8 @@ signals:
     // Scheduler.
     void schedulerTimeoutSignal();
 public slots:
-    // Job dispatcher
     void proceedNextJob();
+    void dispatchJob(const CloudDriveJob job);
 
     void threadFinishedFilter();
     void loadCloudDriveItemsFilter(QString nonce);
