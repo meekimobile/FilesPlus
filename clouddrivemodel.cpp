@@ -1027,6 +1027,8 @@ void CloudDriveModel::requestJobQueueStatus()
 
 void CloudDriveModel::suspendNextJob()
 {
+    QApplication::processEvents();
+
     m_isSuspended = true;
 }
 
@@ -1367,7 +1369,6 @@ void CloudDriveModel::browse(CloudDriveModel::ClientTypes type, QString uid, QSt
     CloudDriveJob job(createNonce(), Browse, type, uid, "", remoteFilePath, -1);
     job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
-//    m_jobQueue->enqueue(job.jobId);
     m_jobQueue->insert(0, job.jobId); // Browse get priority.
 
     emit proceedNextJobSignal();
@@ -1485,8 +1486,6 @@ void CloudDriveModel::syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, 
                 qDebug() << "CloudDriveModel::syncFromLocal_SkyDrive createFolder error" << createFolderReply->error() << createFolderReply->errorString() << createFolderReply->readAll();
                 return;
             }
-
-            // TODO Get created folder ID before proceed.
         } else {
             qDebug() << "CloudDriveModel::syncFromLocal_SkyDrive found parentCloudDriveItem" << parentCloudDriveItem;
         }
@@ -1755,19 +1754,33 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
 void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    QScriptEngine engine;
+    QScriptValue sc;
+    QString hash;
+    QString remoteFilePath;
 
     if (err == 0) {
         // TODO generalize to support other clouds.
         switch (job.type) {
         case Dropbox:
+            // Don't update hash to item yet. Hash will be updated by fileGet/filePut.
             // TODO
             break;
         case SkyDrive:
-            // TODO
+            // TODO Parse result and update remote file path to item.
+            sc = engine.evaluate("(" + msg + ")");
+            remoteFilePath = sc.property("property").property("id").toString();
+            hash = sc.property("property").property("updated_time").toString();
+            addItem(SkyDrive, job.uid, job.localFilePath, remoteFilePath, hash);
+            break;
+        case Ftp:
+            // TODO Parse result and update remote file path to item.
+            sc = engine.evaluate("(" + msg + ")");
+            remoteFilePath = sc.property("property").property("path").toString();
+            hash = sc.property("property").property("lastModified").toString();
+            addItem(Ftp, job.uid, job.localFilePath, remoteFilePath, hash);
             break;
         }
-
-        // Don't update hash to item yet. Hash will be updated by fileGet/filePut.
 
         job.isRunning = false;
         m_cloudDriveJobs->insert(nonce, job);

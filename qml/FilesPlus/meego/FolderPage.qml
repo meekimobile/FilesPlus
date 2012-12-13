@@ -2845,7 +2845,7 @@ Page {
                             }
 
                             // Sync based on remote contents.
-    //                        console.debug("cloudDriveModel onMetadataReplySignal folder jsonObj.rev " + jsonObj.rev + " jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
+                            console.debug("cloudDriveModel onMetadataReplySignal folder remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
                             if (remotePathHash != localPathHash) { // Sync all json(remote)'s contents.
                                 for(var i=0; i<jsonObj.data.length; i++) {
                                     var item = jsonObj.data[i];
@@ -2876,7 +2876,7 @@ Page {
                             cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
 
                             // Sync based on local contents.
-//                            cloudDriveModel.syncFromLocal_SkyDrive(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
+                            cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
                         } else { // Sync file.
                             console.debug("folderPage cloudDriveModel onMetadataReplySignal file jobJson " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + jobJson.type + " " + jobJson.uid + " remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
 
@@ -2925,7 +2925,7 @@ Page {
                 if (jobJson.type == CloudDriveModel.Ftp) {
                     if (fsModel.isDir(jobJson.local_file_path)) {
                         // Remote folder will be created in syncFromLocal if it's required.
-//                        cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
+                        cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
                     } else {
                         cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
                     }
@@ -3518,7 +3518,11 @@ Page {
                               + " selectedModelIndex " + selectedModelIndex
                               + " remoteParentPath " + remoteParentPath);
 
+                // TODO Close dialog before resumeJob.
+                close();
+                cloudDriveModel.suspendNextJob();
                 proceedOperation(selectedCloudType, selectedUid, localPath, selectedRemotePath, selectedRemotePathName, selectedIsDir, remoteParentPath, selectedModelIndex);
+                cloudDriveModel.resumeNextJob();
             }
         }
 
