@@ -79,7 +79,7 @@ CommonDialog {
                 var item = json.contents[i];
                 var modelItem = { "name": cloudDriveModel.getRemoteName(item.path), "path": item.path, "lastModified": (new Date(item.modified)), "size": item.bytes, "isDir": item.is_dir };
                 cloudDrivePathListModel.append(modelItem);
-                if (item.path == originalRemotePath) {
+                if (modelItem.path == originalRemotePath) {
                     selectedIndex = i;
                     selectedRemotePath = modelItem.path;
                     selectedRemotePathName = modelItem.name;
@@ -96,7 +96,7 @@ CommonDialog {
                 var item = json.data[i];
                 var modelItem = { "name": item.name, "path": item.id, "lastModified": Utility.parseJSONDate(item.updated_time), "size": item.size, "isDir": (item.type == "folder" || item.type == "album") };
                 cloudDrivePathListModel.append(modelItem);
-                if (item.id == originalRemotePath) {
+                if (modelItem.path == originalRemotePath) {
                     selectedIndex = i;
                     selectedRemotePath = modelItem.path;
                     selectedRemotePathName = modelItem.name;
@@ -114,7 +114,7 @@ CommonDialog {
                 var item = json.data[i];
                 var modelItem = { "name": item.name, "path": item.path, "lastModified": Utility.parseJSONDate(item.lastModified), "size": item.size, "isDir": item.isDir };
                 cloudDrivePathListModel.append(modelItem);
-                if (item.id == originalRemotePath) {
+                if (modelItem.path == originalRemotePath) {
                     selectedIndex = i;
                     selectedRemotePath = modelItem.path;
                     selectedRemotePathName = modelItem.name;
