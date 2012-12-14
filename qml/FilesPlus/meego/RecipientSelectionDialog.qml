@@ -4,7 +4,7 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: recipientSelectionDialog
-    style: SelectionDialogStyle { dim: 0.9; pressDelay: 100 }
+    style: SelectionDialogStyle { dim: 0.9; pressDelay: 100; itemHeight: 80 }
 
     property string shareFileCaller
     property string srcFilePath
@@ -20,6 +20,7 @@ SelectionDialog {
     titleText: appInfo.emptyStr+qsTr("Send %1 to").arg(fsModel.getFileName(srcFilePath))
     delegate: ListItem {
         id: recipientItem
+        height: 80
         Row {
             anchors.fill: parent
             anchors.margins: 0

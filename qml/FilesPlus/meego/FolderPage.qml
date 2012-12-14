@@ -1280,7 +1280,7 @@ Page {
                                             return ""
                                         }
                                     }
-                                    visible: (runningOperation != FolderSizeItemListModel.NoOperation)
+//                                    visible: (runningOperation != FolderSizeItemListModel.NoOperation)
                                 }
                                 ProgressBar {
                                     id: syncProgressBar
@@ -3661,8 +3661,11 @@ Page {
         }
         onAccepted: {
             console.debug("recipientSelectionDialog onAccepted shareFileCaller " + shareFileCaller + " email " + selectedEmail + " senderEmail " + senderEmail + " selectedNumber " + selectedNumber);
+            console.debug("recipientSelectionDialog onAccepted messageBody " + messageBody);
             if (shareFileCaller == "mailFileSlot") {
-                Qt.openUrlExternally("mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody);
+                // ISSUE Mail client doesn't get all message body if it contains URI with & in query string. Worksround by using message client.
+//                Qt.openUrlExternally("mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody);
+                msgClient.sendEmail(selectedEmail, messageSubject, messageBody);
             } else if (shareFileCaller == "smsFileSlot") {
                 // TODO Doesn't work on meego. Needs to use MessageClient.
 //                Qt.openUrlExternally("sms:" + selectedNumber + "?body=" + messageBody);

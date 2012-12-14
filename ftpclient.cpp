@@ -375,6 +375,13 @@ void FtpClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
     m_ftpHash->remove(m_ftp->getNonce());
 }
 
+void FtpClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
+{
+    qDebug() << "FtpClient::shareFile" << uid << remoteFilePath;
+
+    emit shareFileReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, "FTP doesn't support resource link sharing.", "");
+}
+
 bool FtpClient::deleteRecursive(QFtpWrapper *ftp, QString remoteFilePath)
 {
     qDebug() << "FtpClient::deleteRecursive" << remoteFilePath;

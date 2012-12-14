@@ -36,7 +36,7 @@ public:
 //    void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
 //    void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
     void deleteFile(QString nonce, QString uid, QString remoteFilePath);
-//    void shareFile(QString nonce, QString uid, QString remoteFilePath);
+    void shareFile(QString nonce, QString uid, QString remoteFilePath);
 signals:
     void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
