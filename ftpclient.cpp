@@ -65,60 +65,6 @@ int FtpClient::removeUid(QString uid)
     return n;
 }
 
-//void FtpClient::commandStarted(int id)
-//{
-//    qDebug() << "FtpClient::commandStarted" << id << "currentCommand" << m_ftp->currentCommand();
-//}
-
-//void FtpClient::commandFinished(int id, bool error)
-//{
-//    qDebug() << "FtpClient::commandFinished" << id << "error" << error;
-//}
-
-//void FtpClient::addToList(const QUrlInfo &i)
-//{
-//    qDebug() << "FtpClient::addToList" << i.name() << i.isDir() << i.isFile() << i.lastModified();
-//    m_itemList->append(i);
-//}
-
-//void FtpClient::rawCommandReplyFinished(int replyCode, QString result)
-//{
-//    // Capture PWD result.
-//    qDebug() << "FtpClient::rawCommandReplyFinished" << replyCode << result;
-//    QRegExp rx(".*\"([^\"]+)\".*");
-//    if (rx.exactMatch(result)) {
-//        qDebug() << "FtpClient::rawCommandReplyFinished rx.capturedTexts()" << rx.capturedTexts();
-//        if (rx.captureCount() > 0) {
-//            m_currentPath = rx.cap(1);
-//        }
-//    }
-//}
-
-//void FtpClient::uploadProgressFilter(qint64 done, qint64 total)
-//{
-//    qDebug() << "FtpClient::uploadProgressFilter" << done << total;
-
-//    emit uploadProgress(m_currentNonce, done, total);
-//}
-
-//void FtpClient::downloadProgressFilter(qint64 done, qint64 total)
-//{
-//    qDebug() << "FtpClient::downloadProgressFilter" << done << total;
-
-//    emit downloadProgress(m_currentNonce, done, total);
-//}
-
-//void FtpClient::stateChangedFilter(int state)
-//{
-//    qDebug() << "FtpClient::stateChangedFilter" << state;
-//}
-
-//void FtpClient::doneFilter(bool error)
-//{
-//    qDebug() << "FtpClient::doneFilter" << error;
-//    m_isDone = true;
-//}
-
 void FtpClient::loadAccessPairMap() {
     QFile file(KeyStoreFilePath);
     if (file.open(QIODevice::ReadOnly)) {
@@ -487,24 +433,11 @@ void FtpClient::saveConnection(QString id, QString hostname, quint16 port, QStri
     TokenPair tokenPair;
     tokenPair.token = QString("%1@%2:%3").arg(username).arg(hostname).arg(port);
     tokenPair.secret = password;
-    tokenPair.email = QString("%1@%2").arg(username).arg(hostname);
+    tokenPair.email = QString("%1@%2:%3").arg(username).arg(hostname).arg(port);
     accessTokenPairMap[id] = tokenPair;
 
     saveAccessPairMap();
 }
-
-//void FtpClient::waitForDone()
-//{
-//    int c = 100;
-//    while (!m_isDone && c-- > 0) {
-//        qDebug() << "FtpClient::waitForDone" << m_isDone << c;
-//        QApplication::processEvents(QEventLoop::AllEvents, 100);
-//        Sleeper().sleep(100);
-//    }
-
-//    // Reset m_isDone.
-//    m_isDone = false;
-//}
 
 QString FtpClient::getPropertyJson(const QString parentPath, const QUrlInfo item)
 {

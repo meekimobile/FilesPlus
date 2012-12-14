@@ -187,6 +187,12 @@ Page {
 
     CommonDialog {
         id: addAccountDialog
+
+        property alias connection: connectionName.text
+        property alias host: hostname.text
+        property alias user: username.text
+        property alias passwd: password.text
+
         z: 2
         titleText: appInfo.emptyStr+qsTr("New FTP account")
         titleIcon: "FilesPlusIcon.svg"
@@ -208,7 +214,7 @@ Page {
                 width: parent.width
                 placeholderText: "Input hostname"
                 validator: RegExpValidator {
-                    regExp: /[\w.-]+/
+                    regExp: /[\w.-:]+/
                 }
             }
             TextField {
@@ -231,7 +237,7 @@ Page {
 
                 Button {
                     id: testConnectionButton
-                    text: appInfo.emptyStr+qsTr("Test connection")
+                    text: appInfo.emptyStr+qsTr("Test connection");
                     anchors.centerIn: parent
                     onClicked: {
                         console.debug("cloudDriveAccountsPage testConnectionButton.onClicked");
@@ -241,7 +247,10 @@ Page {
 
                         text = appInfo.emptyStr+qsTr("Connecting");
 
-                        var res = cloudDriveModel.testConnection(hostname.text, 21, username.text, password.text);
+                        var tokens = hostname.text.split(":");
+                        var res = cloudDriveModel.testConnection(tokens[0],
+                                                                 (tokens.length > 1) ? parseInt(tokens[1]) : 21,
+                                                                 username.text, password.text);
                         console.debug("cloudDriveAccountsPage testConnectionButton.onClicked res " + res);
                         if (res) {
                             text = appInfo.emptyStr+qsTr("Connection success");
@@ -253,8 +262,20 @@ Page {
             }
         }
 
+        onClosed: {
+            addAccountDialog.connection = "";
+            addAccountDialog.host = "";
+            addAccountDialog.user = "";
+            addAccountDialog.passwd = "";
+            testConnectionButton.text = appInfo.emptyStr+qsTr("Test connection");
+        }
+
         onAccepted: {
-            cloudDriveModel.saveConnection(connectionName.text, hostname.text, 21, username.text, password.text);
+            var tokens = hostname.text.split(":");
+            cloudDriveModel.saveConnection(connectionName.text,
+                                           tokens[0],
+                                           (tokens.length > 1) ? parseInt(tokens[1]) : 21,
+                                           username.text, password.text);
         }
 
         onButtonClicked: {
@@ -344,12 +365,25 @@ Page {
             }
 
             onPressAndHold: {
-                var panelX = x + mouseX - accountListView.contentX;
-                var panelY = y + mouseY - accountListView.contentY + accountListView.y;
-                popupDeleteButton.x = panelX - (popupDeleteButton.width / 2);
-                popupDeleteButton.y = panelY - (popupDeleteButton.height);
-                popupDeleteButton.index = index;
-                popupDeleteButton.visible = true;
+//                var panelX = x + mouseX - accountListView.contentX;
+//                var panelY = y + mouseY - accountListView.contentY + accountListView.y;
+//                popupDeleteButton.x = panelX - (popupDeleteButton.width / 2);
+//                popupDeleteButton.y = panelY - (popupDeleteButton.height) - 60;
+//                popupDeleteButton.index = index;
+//                popupDeleteButton.visible = true;
+                removeAccountConfirmation.index = index;
+                removeAccountConfirmation.open();
+            }
+
+            onClicked: {
+                if (type == CloudDriveModel.Ftp) {
+                    var tokens = email.split("@");
+                    addAccountDialog.connection = uid;
+                    addAccountDialog.host = tokens[1];
+                    addAccountDialog.user = tokens[0];
+                    addAccountDialog.passwd = "";
+                    addAccountDialog.open();
+                }
             }
 
             Component.onCompleted: {

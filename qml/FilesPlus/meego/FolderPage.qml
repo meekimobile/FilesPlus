@@ -821,6 +821,12 @@ Page {
                         var newRemotePath = cloudDriveModel.getParentRemotePath(json[i].remote_path) + "/" + fsModel.getFileName(targetPath);
                         cloudDriveModel.moveFile(CloudDriveModel.Dropbox, json[i].uid, sourcePath, json[i].remote_path, targetPath, newRemotePath);
                         break;
+                    case CloudDriveModel.SkyDrive:
+                        // TODO
+                        break;
+                    case CloudDriveModel.Ftp:
+                        // TODO
+                        break;
                     }
                 }
             }
