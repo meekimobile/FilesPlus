@@ -767,8 +767,10 @@ Page {
                             cloudDriveModel.deleteFile(CloudDriveModel.Dropbox, json[i].uid, json[i].local_path, json[i].remote_path);
                             break;
                         case CloudDriveModel.SkyDrive:
-                            // TODO
-//                            cloudDriveModel.deleteFile(CloudDriveModel.SkyDrive, json[i].uid, json[i].local_path, json[i].remote_path);
+                            cloudDriveModel.deleteFile(CloudDriveModel.SkyDrive, json[i].uid, json[i].local_path, json[i].remote_path);
+                            break;
+                        case CloudDriveModel.Ftp:
+                            cloudDriveModel.deleteFile(CloudDriveModel.Ftp, json[i].uid, json[i].local_path, json[i].remote_path);
                             break;
                         }
                     }
@@ -2632,7 +2634,7 @@ Page {
             console.debug("folderPage cloudDriveModel onFilePutReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
             var jsonText = cloudDriveModel.getJobJson(nonce);
-//            console.debug("folderPage cloudDriveModel jsonText " + jsonText);
+            console.debug("folderPage cloudDriveModel jsonText " + jsonText);
 
             // Remove finished job.
             cloudDriveModel.removeJob(nonce);

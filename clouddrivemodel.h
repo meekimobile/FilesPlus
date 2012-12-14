@@ -288,8 +288,6 @@ private:
     void jobDone();
     QString getFileType(QString localPath);
     QString getParentLocalPath(QString localPath);
-//    CloudDriveModelThread::ClientTypes mapToThreadClientTypes(CloudDriveModel::ClientTypes type);
-//    CloudDriveModelThread::ClientTypes mapToThreadClientTypes(int type);
 
     bool m_dropboxFullAccess;
 

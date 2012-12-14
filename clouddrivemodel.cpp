@@ -937,25 +937,6 @@ QString CloudDriveModel::getDefaultRemoteFilePath(const QString &localFilePath)
     return "";
 }
 
-//CloudDriveModelThread::ClientTypes CloudDriveModel::mapToThreadClientTypes(CloudDriveModel::ClientTypes type) {
-//    switch (type) {
-//    case Dropbox:
-//        return CloudDriveModelThread::Dropbox;
-//    case GoogleDrive:
-//        return CloudDriveModelThread::GoogleDrive;
-//    }
-//}
-
-//CloudDriveModelThread::ClientTypes CloudDriveModel::mapToThreadClientTypes(int type)
-//{
-//    switch (type) {
-//    case Dropbox:
-//        return CloudDriveModelThread::Dropbox;
-//    case GoogleDrive:
-//        return CloudDriveModelThread::GoogleDrive;
-//    }
-//}
-
 bool CloudDriveModel::isAuthorized()
 {
     // TODO check if any cloud drive is authorized.
@@ -1349,6 +1330,7 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 
     // Add item with dirtyHash to avoid duplicate sync job.
+    // ISSUE it created cloud icon on selected item even use cancel sync.
     // TODO handle other clouds.
     switch (job.type) {
     case Dropbox:
