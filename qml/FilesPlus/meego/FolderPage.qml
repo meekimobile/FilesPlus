@@ -2634,7 +2634,7 @@ Page {
             console.debug("folderPage cloudDriveModel onFilePutReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
             var jsonText = cloudDriveModel.getJobJson(nonce);
-            console.debug("folderPage cloudDriveModel jsonText " + jsonText);
+//            console.debug("folderPage cloudDriveModel onFilePutReplySignal jsonText " + jsonText);
 
             // Remove finished job.
             cloudDriveModel.removeJob(nonce);
@@ -2857,10 +2857,10 @@ Page {
                                     var itemRemoteHash = item.lastModified;
                                     if (item.isDir) {
                                         // This flow will trigger recursive metadata calling.
-                                        console.debug("cloudDriveModel onMetadataReplySignal dir itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
+                                        console.debug("cloudDriveModel onMetadataReplySignal dir itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.lastModified);
                                         cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
                                     } else {
-                                        console.debug("cloudDriveModel onMetadataReplySignal file itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
+                                        console.debug("cloudDriveModel onMetadataReplySignal file itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.lastModified);
                                         if (itemRemoteHash > itemLocalHash) {
                                             cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemLocalPath, -1);
                                         } else if (itemRemoteHash < itemLocalHash) {
@@ -3417,6 +3417,22 @@ Page {
                             cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
                         }
                         break;
+                    case CloudDriveModel.Ftp:
+                        // Use remoteParentPath + "/" + local file/folder name.
+                        remotePath = (remoteParentPath == "/" ? "" : remoteParentPath) + "/" + fsModel.getFileName(localPath);
+                        console.debug("cloudDrivePathDialog proceedOperation FilePut adjusted remotePath " + remotePath);
+
+                        if (fsModel.isDir(localPath)) {
+                            cloudDriveModel.suspendNextJob();
+                            // Put from local.
+                            cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex, true);
+                            // Queue sync selected local path after all put to refresh hash.
+//                            cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
+                            cloudDriveModel.resumeNextJob();
+                        } else {
+                            cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                        }
+                        break;
                     }
                 } else {
                     console.debug("cloudDrivePathDialog proceedOperation FilePut ignored remoteParentPath " + remoteParentPath + " is empty.");
@@ -3497,6 +3513,8 @@ Page {
                         remotePath = (remoteParentPath == "/" ? "" : remoteParentPath) + "/" + fsModel.getFileName(localPath);
                         console.debug("cloudDrivePathDialog proceedOperation Metadata sync from " + localPath + " to " + remotePath);
                         cloudDriveModel.metadata(type, uid, localPath, remotePath, selectedModelIndex);
+                    } else if (type == CloudDriveModel.SkyDrive) {
+                        // TODO
                     } else if (type == CloudDriveModel.Ftp) {
                         // If localPath is file or remotePath is not specified.
                         // Use remoteParentPath + "/" + folderName.

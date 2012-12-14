@@ -1264,14 +1264,14 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
 
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
-    switch (job.type) {
-    case Dropbox:
-        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-        break;
-    case SkyDrive:
-        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-        break;
-    }
+//    switch (job.type) {
+//    case Dropbox:
+//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+//        break;
+//    case SkyDrive:
+//        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+//        break;
+//    }
 
     emit proceedNextJobSignal();
 }
@@ -1297,15 +1297,14 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
 
     // Add item with dirtyHash to avoid duplicate sync job.
     // TODO handle other clouds.
-    switch (job.type) {
-    case Dropbox:
-        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-        break;
-    case SkyDrive:
-        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-        break;
-    }
-
+//    switch (job.type) {
+//    case Dropbox:
+//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+//        break;
+//    case SkyDrive:
+//        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+//        break;
+//    }
 
     emit proceedNextJobSignal();
 }
@@ -1332,15 +1331,14 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
     // Add item with dirtyHash to avoid duplicate sync job.
     // ISSUE it created cloud icon on selected item even use cancel sync.
     // TODO handle other clouds.
-    switch (job.type) {
-    case Dropbox:
-        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-        break;
-    case SkyDrive:
-        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-        break;
-    }
-
+//    switch (job.type) {
+//    case Dropbox:
+//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+//        break;
+//    case SkyDrive:
+//        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+//        break;
+//    }
 
     emit proceedNextJobSignal();
 }
@@ -1460,9 +1458,10 @@ void CloudDriveModel::syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, 
                 QScriptEngine se;
                 QScriptValue sc = se.evaluate("(" + createFolderReplyResult + ")");
                 QString createdRemotePath = sc.property("id").toString();
+                QString createdRemoteHash = sc.property("updated_time").toString();
 
                 // Update parentCloudDriveItem.
-                addItem(type, uid, localPath, createdRemotePath, DirtyHash);
+                addItem(type, uid, localPath, createdRemotePath, createdRemoteHash);
                 parentCloudDriveItem = getItem(localPath, type, uid);
             } else {
                 qDebug() << "CloudDriveModel::syncFromLocal_SkyDrive createFolder error" << createFolderReply->error() << createFolderReply->errorString() << createFolderReply->readAll();
@@ -1746,21 +1745,20 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
         switch (job.type) {
         case Dropbox:
             // Don't update hash to item yet. Hash will be updated by fileGet/filePut.
-            // TODO
             break;
         case SkyDrive:
             // TODO Parse result and update remote file path to item.
-            sc = engine.evaluate("(" + msg + ")");
-            remoteFilePath = sc.property("property").property("id").toString();
-            hash = sc.property("property").property("updated_time").toString();
-            addItem(SkyDrive, job.uid, job.localFilePath, remoteFilePath, hash);
+//            sc = engine.evaluate("(" + msg + ")");
+//            remoteFilePath = sc.property("property").property("id").toString();
+//            hash = sc.property("property").property("updated_time").toString();
+//            addItem(SkyDrive, job.uid, job.localFilePath, remoteFilePath, hash);
             break;
         case Ftp:
             // TODO Parse result and update remote file path to item.
-            sc = engine.evaluate("(" + msg + ")");
-            remoteFilePath = sc.property("property").property("path").toString();
-            hash = sc.property("property").property("lastModified").toString();
-            addItem(Ftp, job.uid, job.localFilePath, remoteFilePath, hash);
+//            sc = engine.evaluate("(" + msg + ")");
+//            remoteFilePath = sc.property("property").property("path").toString();
+//            hash = sc.property("property").property("lastModified").toString();
+//            addItem(Ftp, job.uid, job.localFilePath, remoteFilePath, hash);
             break;
         }
 
@@ -1799,6 +1797,7 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
     QScriptEngine engine;
     QScriptValue sc;
     QString hash;
+    QString createdRemotePath;
 
     // TODO Create folder effects only remote side. Does it need?
     if (err == 0) {
@@ -1813,17 +1812,20 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
             }
             break;
         case SkyDrive:
-            // TODO
+            sc = engine.evaluate("(" + msg + ")");
+            hash = sc.property("updated_time").toString();
+            createdRemotePath = sc.property("id").toString();
             if (job.localFilePath != "") {
                 // Add cloud item if localPath is specified.
-                addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, DirtyHash);
+                addItem(SkyDrive, job.uid, job.localFilePath, createdRemotePath, hash);
             }
             break;
         case Ftp:
-            // TODO
+            sc = engine.evaluate("(" + msg + ")");
+            hash = sc.property("lastModified").toString();
             if (job.localFilePath != "") {
                 // Add cloud item if localPath is specified.
-                addItem(Ftp, job.uid, job.localFilePath, job.remoteFilePath, DirtyHash);
+                addItem(Ftp, job.uid, job.localFilePath, job.remoteFilePath, hash);
             }
             break;
         }

@@ -182,7 +182,7 @@ void FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QStr
         qDebug() << "FtpClient::fileGet" << uid << remoteFilePath << "is not found.";
         emit fileGetReplySignal(m_ftp->getNonce(), -1, tr("Can't get %1").arg(remoteFilePath), "");
     } else {
-        qDebug() << "FtpClient::fileGet" << uid << localFilePath << remoteFilePath << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_ftp->getItemList().first().name();
+        qDebug() << "FtpClient::fileGet" << uid << remoteFilePath << localFilePath << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_ftp->getItemList().first().name();
         emit fileGetReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), getPropertyJson(remoteParentPath, m_ftp->getItemList().first()) );
     }
 
@@ -345,7 +345,14 @@ void FtpClient::createFolder(QString nonce, QString uid, QString localFilePath, 
     if (m_ftp->error() == QFtp::UnknownError) {
         emit createFolderReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(remoteFilePath) );
     } else {
-        emit createFolderReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(remoteFilePath) );
+        // Get property.
+        QString propertyJson = property(nonce, uid, remoteFilePath);
+        if (propertyJson.isEmpty()) {
+            qDebug() << "FtpClient::createFolder" << uid << remoteFilePath << "is not found.";
+            emit createFolderReplySignal(nonce, QNetworkReply::ContentNotFoundError, tr("%1 is not found.").arg(remoteFilePath), "");
+        } else {
+            emit createFolderReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), propertyJson);
+        }
     }
 
     m_ftp->close();
