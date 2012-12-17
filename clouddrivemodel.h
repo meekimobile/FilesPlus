@@ -17,6 +17,7 @@
 #include "clouddriveitem.h"
 #include "clouddrivejob.h"
 #include "clouddrivemodelthread.h"
+#include "clouddriveclient.h"
 #include "dropboxclient.h"
 //#include "gcdclient.h"
 #include "skydriveclient.h"
@@ -142,8 +143,8 @@ public:
     Q_INVOKABLE bool updateDropboxPrefix(bool fullAccess);
 
     // FTP specific functions.
-    Q_INVOKABLE bool testConnection(QString hostname, quint16 port, QString username, QString password);
-    Q_INVOKABLE void saveConnection(QString id, QString hostname, quint16 port, QString username, QString password);
+    Q_INVOKABLE bool testConnection(CloudDriveModel::ClientTypes type, QString hostname, quint16 port, QString username, QString password);
+    Q_INVOKABLE void saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, quint16 port, QString username, QString password);
 
     // Service Proxy with Job Queuing.
     Q_INVOKABLE void requestToken(CloudDriveModel::ClientTypes type);

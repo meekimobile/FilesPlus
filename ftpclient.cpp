@@ -1,25 +1,16 @@
 #include "ftpclient.h"
+#include <QApplication>
 
-// Harmattan is a linux
-#if defined(Q_WS_HARMATTAN)
-const QString FtpClient::KeyStoreFilePath = "/home/user/.filesplus/FtpClient.dat";
-#else
-const QString FtpClient::KeyStoreFilePath = "C:/FtpClient.dat";
-#endif
-const QString FtpClient::consumerKey = "";
-const QString FtpClient::consumerSecret = "";
-const QString FtpClient::clientTypeName = "FtpClient";
 const QString FtpClient::FtpRoot = "~";
 
 FtpClient::FtpClient(QObject *parent) :
-    QObject(parent)
+    CloudDriveClient(parent)
 {
+    // Set object name for further reference.
+    setObjectName(this->metaObject()->className());
+
     // Load accessTokenPair from file
     loadAccessPairMap();
-
-//    m_itemList = new QList<QUrlInfo>();
-
-//    m_isDone = true;
 
     m_ftpHash = new QHash<QString, QFtpWrapper*>();
 }
@@ -29,75 +20,7 @@ FtpClient::~FtpClient()
     // Save accessTokenPair to file
     saveAccessPairMap();
 
-//    m_itemList = 0;
-
     m_ftpHash = 0;
-}
-
-bool FtpClient::isAuthorized()
-{
-    return (!accessTokenPairMap.isEmpty());
-}
-
-QStringList FtpClient::getStoredUidList()
-{
-    QStringList list;
-    foreach (QString s, accessTokenPairMap.keys()) {
-        TokenPair t = accessTokenPairMap[s];
-
-        QString jsonText = "{ ";
-        jsonText.append( QString("\"uid\": \"%1\", ").arg(s) );
-        jsonText.append( QString("\"email\": \"%1\", ").arg(t.email) );
-        jsonText.append( QString("\"type\": \"%1\"").arg(clientTypeName) );
-        jsonText.append(" }");
-
-        list.append(jsonText);
-    }
-    return list;
-}
-
-int FtpClient::removeUid(QString uid)
-{
-    qDebug() << "FtpClient::removeUid uid" << uid;
-    int n = accessTokenPairMap.remove(uid);
-    qDebug() << "FtpClient::removeUid accessTokenPairMap" << accessTokenPairMap;
-
-    return n;
-}
-
-void FtpClient::loadAccessPairMap() {
-    QFile file(KeyStoreFilePath);
-    if (file.open(QIODevice::ReadOnly)) {
-        QDataStream in(&file);    // read the data serialized from the file
-        in >> accessTokenPairMap;
-
-        qDebug() << QTime::currentTime() << "FtpClient::loadAccessPairMap " << accessTokenPairMap;
-    }
-}
-
-void FtpClient::saveAccessPairMap() {
-    // TODO workaround fix to remove tokenPair with key="".
-    accessTokenPairMap.remove("");
-
-    // TODO To prevent invalid code to save damage data for testing only.
-//    if (accessTokenPairMap.isEmpty()) return;
-
-    QFile file(KeyStoreFilePath);
-    QFileInfo info(file);
-    if (!info.absoluteDir().exists()) {
-        qDebug() << "FtpClient::saveAccessPairMap dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
-        bool res = QDir::home().mkpath(info.absolutePath());
-        if (!res) {
-            qDebug() << "FtpClient::saveAccessPairMap can't make dir" << info.absolutePath();
-        } else {
-            qDebug() << "FtpClient::saveAccessPairMap make dir" << info.absolutePath();
-        }
-    }    if (file.open(QIODevice::WriteOnly)) {
-        QDataStream out(&file);   // we will serialize the data into the file
-        out << accessTokenPairMap;
-
-        qDebug() << "FtpClient::saveAccessPairMap " << accessTokenPairMap;
-    }
 }
 
 void FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath)
@@ -306,6 +229,16 @@ void FtpClient::createFolder(QString nonce, QString uid, QString localFilePath, 
     m_ftpHash->remove(m_ftp->getNonce());
 }
 
+void FtpClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
+{
+    // TODO
+}
+
+void FtpClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
+{
+    // TODO
+}
+
 void FtpClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "FtpClient::deleteFile" << uid << remoteFilePath;
@@ -424,21 +357,6 @@ QFtpWrapper *FtpClient::connectToHost(QString nonce, QString uid)
     return m_ftp;
 }
 
-void FtpClient::saveConnection(QString id, QString hostname, quint16 port, QString username, QString password)
-{
-    /* Notes:
-     * Stores token as user@host --> Token(token=user@host, secret=password, email=user@host)
-     */
-    // TODO Encrypt password before store to file.
-    TokenPair tokenPair;
-    tokenPair.token = QString("%1@%2:%3").arg(username).arg(hostname).arg(port);
-    tokenPair.secret = password;
-    tokenPair.email = QString("%1@%2:%3").arg(username).arg(hostname).arg(port);
-    accessTokenPairMap[id] = tokenPair;
-
-    saveAccessPairMap();
-}
-
 QString FtpClient::getPropertyJson(const QString parentPath, const QUrlInfo item)
 {
     QString jsonText;
@@ -511,4 +429,19 @@ bool FtpClient::testConnection(QString hostname, quint16 port, QString username,
     m_ftp->deleteLater();
 
     return res;
+}
+
+void FtpClient::saveConnection(QString id, QString hostname, quint16 port, QString username, QString password)
+{
+    /* Notes:
+     * Stores token as user@host --> Token(token=user@host, secret=password, email=user@host)
+     */
+    // TODO Encrypt password before store to file.
+    TokenPair tokenPair;
+    tokenPair.token = QString("%1@%2:%3").arg(username).arg(hostname).arg(port);
+    tokenPair.secret = password;
+    tokenPair.email = QString("%1@%2:%3").arg(username).arg(hostname).arg(port);
+    accessTokenPairMap[id] = tokenPair;
+
+    saveAccessPairMap();
 }

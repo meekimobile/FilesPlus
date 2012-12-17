@@ -1,22 +1,16 @@
 #include "dropboxclient.h"
 #include <QtGlobal>
+#include <QtNetwork>
 #include <QCryptographicHash>
 #include <QCoreApplication>
 #include <QScriptEngine>
 
-// Harmattan is a linux
-#if defined(Q_WS_HARMATTAN)
-const QString DropboxClient::KeyStoreFilePath = "/home/user/.filesplus/DropboxClient.dat";
-#else
-const QString DropboxClient::KeyStoreFilePath = "C:/DropboxClient.dat";
-#endif
 const QString DropboxClient::DropboxConsumerKey = "7y9bttvg6gu57x0"; // Key from DropBox
 const QString DropboxClient::DropboxConsumerSecret = "xw5wq7hz5cnd5zo"; // Secret from Dropbox
 const QString DropboxClient::DropboxRoot = "dropbox"; // For full access
 const QString DropboxClient::SandboxConsumerKey = "u4f161p2wonac7p"; // Key from DropBox
 const QString DropboxClient::SandboxConsumerSecret = "itr3zb95dwequun"; // Secret from Dropbox
 const QString DropboxClient::SandboxRoot = "sandbox"; // For app folder access, root will be app folder.
-const QString DropboxClient::clientTypeName = "DropboxClient";
 
 //const QString DropboxClient::signatureMethod = "HMAC-SHA1"; // Failed since 1-Sep-12
 const QString DropboxClient::signatureMethod = "PLAINTEXT";
@@ -35,8 +29,11 @@ const QString DropboxClient::sharesURI = "https://api.dropbox.com/1/shares/%1%2"
 const QString DropboxClient::mediaURI = "https://api.dropbox.com/1/media/%1%2";
 
 DropboxClient::DropboxClient(QObject *parent, bool fullAccess) :
-    QObject(parent)
+    CloudDriveClient(parent)
 {
+    // Set object name for further reference.
+    setObjectName(this->metaObject()->className());
+
     isFullAccess = fullAccess;
     if (isFullAccess) {
         consumerKey = DropboxConsumerKey;
@@ -48,11 +45,11 @@ DropboxClient::DropboxClient(QObject *parent, bool fullAccess) :
         dropboxRoot = SandboxRoot;
     }
 
-    // Load accessTokenPair from file
-    loadAccessPairMap();
-
     m_paramMap["oauth_consumer_key"] = consumerKey;
     m_paramMap["oauth_signature_method"] = signatureMethod;
+
+    // Load accessTokenPair from file
+    loadAccessPairMap();
 }
 
 DropboxClient::~DropboxClient()
@@ -61,58 +58,23 @@ DropboxClient::~DropboxClient()
     saveAccessPairMap();
 }
 
-void DropboxClient::loadAccessPairMap() {
-    QFile file(KeyStoreFilePath);
-    if (file.open(QIODevice::ReadOnly)) {
-        QDataStream in(&file);    // read the data serialized from the file
-        in >> accessTokenPairMap;
-
-        qDebug() << QTime::currentTime() << "DropboxClient::loadAccessPairMap " << accessTokenPairMap;
-    }
-}
-
-void DropboxClient::saveAccessPairMap() {
-    // TODO workaround fix to remove tokenPair with key="".
-    accessTokenPairMap.remove("");
-
-    // TODO To prevent invalid code to save damage data for testing only.
-//    if (accessTokenPairMap.isEmpty()) return;
-
-    QFile file(KeyStoreFilePath);
-    QFileInfo info(file);
-    if (!info.absoluteDir().exists()) {
-        qDebug() << "DropboxClient::saveAccessPairMap dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
-        bool res = QDir::home().mkpath(info.absolutePath());
-        if (!res) {
-            qDebug() << "DropboxClient::saveAccessPairMap can't make dir" << info.absolutePath();
-        } else {
-            qDebug() << "DropboxClient::saveAccessPairMap make dir" << info.absolutePath();
-        }
-    }    if (file.open(QIODevice::WriteOnly)) {
-        QDataStream out(&file);   // we will serialize the data into the file
-        out << accessTokenPairMap;
-
-        qDebug() << "DropboxClient::saveAccessPairMap " << accessTokenPairMap;
-    }
-}
-
 QString DropboxClient::createTimestamp() {
     qint64 seconds = QDateTime::currentMSecsSinceEpoch() / 1000;
 
     return QString("%1").arg(seconds);
 }
 
-//QString DropboxClient::createNonce() {
-//    QString ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-//    QString nonce;
+QString DropboxClient::createNonce() {
+    QString ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    QString nonce;
 
-//    for(int i = 0; i <= 16; ++i)
-//    {
-//        nonce += ALPHANUMERIC.at( qrand() % ALPHANUMERIC.length() );
-//    }
+    for(int i = 0; i <= 16; ++i)
+    {
+        nonce += ALPHANUMERIC.at( qrand() % ALPHANUMERIC.length() );
+    }
 
-//    return nonce;
-//}
+    return nonce;
+}
 
 QByteArray DropboxClient::createBaseString(QString method, QString uri, QString queryString) {
     QByteArray baseString;
@@ -250,8 +212,6 @@ void DropboxClient::requestToken(QString nonce)
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QNetworkReply *reply = manager->post(req, postData);
-    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
-    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
 void DropboxClient::authorize(QString nonce)
@@ -266,10 +226,10 @@ void DropboxClient::authorize(QString nonce)
 //    queryString.append("&locale=en");
 
     // Send signal to redirect to URL.
-    emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, clientTypeName);
+    emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, this->metaObject()->className());
 }
 
-void DropboxClient::accessToken(QString nonce)
+void DropboxClient::accessToken(QString nonce, QString pin)
 {
     qDebug() << "----- DropboxClient::accessToken -----";
 
@@ -301,39 +261,6 @@ void DropboxClient::accessToken(QString nonce)
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QNetworkReply *reply = manager->post(req, postData);
-    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
-    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
-}
-
-bool DropboxClient::isAuthorized()
-{
-    return (!accessTokenPairMap.isEmpty());
-}
-
-QStringList DropboxClient::getStoredUidList()
-{
-    QStringList list;
-    foreach (QString s, accessTokenPairMap.keys()) {
-        TokenPair t = accessTokenPairMap[s];
-
-        QString jsonText = "{ ";
-        jsonText.append( QString("\"uid\": \"%1\", ").arg(s) );
-        jsonText.append( QString("\"email\": \"%1\", ").arg(t.email) );
-        jsonText.append( QString("\"type\": \"%1\"").arg(clientTypeName) );
-        jsonText.append(" }");
-
-        list.append(jsonText);
-    }
-    return list;
-}
-
-int DropboxClient::removeUid(QString uid)
-{
-    qDebug() << "DropboxClient::removeUid uid" << uid;
-    int n = accessTokenPairMap.remove(uid);
-    qDebug() << "DropboxClient::removeUid accessTokenPairMap" << accessTokenPairMap;
-
-    return n;
 }
 
 QString DropboxClient::encodeURI(const QString uri) {
@@ -389,7 +316,7 @@ void DropboxClient::accountInfo(QString nonce, QString uid)
 }
 
 void DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath) {
-    qDebug() << "----- DropboxClient::fileGet -----";
+    qDebug() << "----- DropboxClient::fileGet -----" << uid << remoteFilePath << localFilePath;
 
     QString uri = fileGetURI.arg(dropboxRoot, remoteFilePath);
     uri = encodeURI(uri);
@@ -904,13 +831,3 @@ void DropboxClient::shareFileReplyFinished(QNetworkReply *reply)
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
-
-
-
-
-
-
-
-
-
-

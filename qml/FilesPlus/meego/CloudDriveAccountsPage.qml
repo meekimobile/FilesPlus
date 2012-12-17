@@ -248,7 +248,8 @@ Page {
                         text = appInfo.emptyStr+qsTr("Connecting");
 
                         var tokens = hostname.text.split(":");
-                        var res = cloudDriveModel.testConnection(tokens[0],
+                        var res = cloudDriveModel.testConnection(CloudDriveModel.Ftp,
+                                                                 tokens[0],
                                                                  (tokens.length > 1) ? parseInt(tokens[1]) : 21,
                                                                  username.text, password.text);
                         console.debug("cloudDriveAccountsPage testConnectionButton.onClicked res " + res);
@@ -272,7 +273,8 @@ Page {
 
         onAccepted: {
             var tokens = hostname.text.split(":");
-            cloudDriveModel.saveConnection(connectionName.text,
+            cloudDriveModel.saveConnection(CloudDriveModel.Ftp,
+                                           connectionName.text,
                                            tokens[0],
                                            (tokens.length > 1) ? parseInt(tokens[1]) : 21,
                                            username.text, password.text);

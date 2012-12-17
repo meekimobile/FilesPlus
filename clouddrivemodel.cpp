@@ -2179,18 +2179,18 @@ bool CloudDriveModel::updateDropboxPrefix(bool fullAccess)
     return res;
 }
 
-bool CloudDriveModel::testConnection(QString hostname, quint16 port, QString username, QString password)
+bool CloudDriveModel::testConnection(CloudDriveModel::ClientTypes type, QString hostname, quint16 port, QString username, QString password)
 {
-    if (ftpClient != 0) {
+    if (type == Ftp && ftpClient != 0) {
         return ftpClient->testConnection(hostname, port, username, password);
     }
     return false;
 }
 
-void CloudDriveModel::saveConnection(QString id, QString hostname, quint16 port, QString username, QString password)
+void CloudDriveModel::saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, quint16 port, QString username, QString password)
 {
-    if (ftpClient != 0) {
-        ftpClient->saveConnection(id, hostname, port, username, password);
+    if (type == Ftp && ftpClient != 0) {
+        ftpClient->saveConnection(uid, hostname, port, username, password);
     }
 }
 
@@ -2533,6 +2533,18 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
     // If job.type==Any, start thread.
 
     // TODO Generalize cloud client.
+    CloudDriveClient *cloudClient;
+    switch (job.type) {
+    case Dropbox:
+        cloudClient = dbClient;
+        break;
+    case SkyDrive:
+        cloudClient = skdClient;
+        break;
+    case Ftp:
+        cloudClient = ftpClient;
+        break;
+    }
 
     switch (job.operation) {
     case LoadCloudDriveItems:
@@ -2549,163 +2561,49 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         initializeDB(job.jobId);
         break;
     case FileGet:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->fileGet(job.jobId, job.uid, job.remoteFilePath, job.localFilePath);
-            break;
-        case SkyDrive:
-            skdClient->fileGet(job.jobId, job.uid, job.remoteFilePath, job.localFilePath);
-            break;
-        case Ftp:
-            ftpClient->fileGet(job.jobId, job.uid, job.remoteFilePath, job.localFilePath);
-            break;
-        }
+        cloudClient->fileGet(job.jobId, job.uid, job.remoteFilePath, job.localFilePath);
         break;
     case FilePut:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->filePut(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
-            break;
-        case SkyDrive:
-            skdClient->filePut(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
-            break;
-        case Ftp:
-            ftpClient->filePut(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
-            break;
-        }
+        cloudClient->filePut(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
         break;
     case Metadata:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->metadata(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        case SkyDrive:
-            skdClient->metadata(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        case Ftp:
-            ftpClient->metadata(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        }
+        cloudClient->metadata(job.jobId, job.uid, job.remoteFilePath);
         break;
     case Browse:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->browse(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        case SkyDrive:
-            skdClient->browse(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        case Ftp:
-            ftpClient->browse(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        }
+        cloudClient->browse(job.jobId, job.uid, job.remoteFilePath);
         break;
     case RequestToken:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->requestToken(job.jobId);
-            break;
-        }
+        cloudClient->requestToken(job.jobId);
         break;
     case Authorize:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->authorize(job.jobId);
-            break;
-        case SkyDrive:
-            skdClient->authorize(job.jobId);
-            break;
-        }
+        cloudClient->authorize(job.jobId);
         break;
     case AccessToken:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->accessToken(job.jobId);
-            break;
-        case SkyDrive:
-            skdClient->accessToken(job.jobId, accessTokenPin);
-            break;
-        }
+        cloudClient->accessToken(job.jobId, accessTokenPin);
         break;
     case RefreshToken:
-        switch (job.type) {
-        case SkyDrive:
-            skdClient->refreshToken(job.jobId, job.uid);
-            break;
-        }
+        cloudClient->refreshToken(job.jobId, job.uid);
         break;
     case AccountInfo:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->accountInfo(job.jobId, job.uid);
-            break;
-        case SkyDrive:
-            skdClient->accountInfo(job.jobId, job.uid);
-            break;
-        }
+        cloudClient->accountInfo(job.jobId, job.uid);
         break;
     case Quota:
-        switch (job.type) {
-        case SkyDrive:
-            skdClient->quota(job.jobId, job.uid);
-            break;
-        }
+        cloudClient->quota(job.jobId, job.uid);
         break;
     case CreateFolder:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
-            break;
-        case SkyDrive:
-            skdClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
-            break;
-        case Ftp:
-            ftpClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
-            break;
-        }
+        cloudClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
         break;
     case MoveFile:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->moveFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
-            break;
-        case SkyDrive:
-            skdClient->moveFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
-            break;
-        }
+        cloudClient->moveFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
         break;
     case CopyFile:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->copyFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
-            break;
-        case SkyDrive:
-            skdClient->copyFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
-            break;
-        }
+        cloudClient->copyFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
         break;
     case DeleteFile:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->deleteFile(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        case SkyDrive:
-            skdClient->deleteFile(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        case Ftp:
-            ftpClient->deleteFile(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        }
+        cloudClient->deleteFile(job.jobId, job.uid, job.remoteFilePath);
         break;
     case ShareFile:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->shareFile(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        case SkyDrive:
-            skdClient->shareFile(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        }
+        cloudClient->shareFile(job.jobId, job.uid, job.remoteFilePath);
         break;
     }
 }
