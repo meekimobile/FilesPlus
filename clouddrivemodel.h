@@ -290,6 +290,7 @@ private:
     void jobDone();
     QString getFileType(QString localPath);
     QString getParentLocalPath(QString localPath);
+    ClientTypes getJobType(int jobType);
 
     bool m_dropboxFullAccess;
 

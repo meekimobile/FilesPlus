@@ -441,6 +441,18 @@ QString CloudDriveModel::getParentLocalPath(QString localPath)
     return parentPath;
 }
 
+CloudDriveModel::ClientTypes CloudDriveModel::getJobType(int jobType)
+{
+    switch (jobType) {
+    case Dropbox:
+        return Dropbox;
+    case SkyDrive:
+        return SkyDrive;
+    case Ftp:
+        return Ftp;
+    }
+}
+
 QString CloudDriveModel::getParentRemotePath(QString remotePath)
 {
     QString remoteParentPath = "";
@@ -1710,20 +1722,21 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
         job.isRunning = false;
         m_cloudDriveJobs->insert(nonce, job);
     } else if (err == -1) {
-        // Remove failed item.
-        switch (job.type) {
-        case Dropbox:
-            removeItem(Dropbox, job.uid, job.localFilePath);
-            break;
-        case SkyDrive:
-            // TODO
-            removeItem(SkyDrive, job.uid, job.localFilePath);
-            break;
-        case Ftp:
-            // TODO
-            removeItem(SkyDrive, job.uid, job.localFilePath);
-            break;
-        }
+        removeItem(getJobType(job.type), job.uid, job.localFilePath);
+//        // Remove failed item.
+//        switch (job.type) {
+//        case Dropbox:
+//            removeItem(Dropbox, job.uid, job.localFilePath);
+//            break;
+//        case SkyDrive:
+//            // TODO
+//            removeItem(SkyDrive, job.uid, job.localFilePath);
+//            break;
+//        case Ftp:
+//            // TODO
+//            removeItem(SkyDrive, job.uid, job.localFilePath);
+//            break;
+//        }
     }
 
     // Notify job done.
@@ -1833,26 +1846,29 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
         // Forbidden {"error": " at path 'The folder '???' already exists.'"}
         // Do nothing.
     } else {
-        switch (job.type) {
-        case Dropbox:
-            // Remove failed item if localPath is specified.
-            if (job.localFilePath != "") {
-                removeItem(Dropbox, job.uid, job.localFilePath);
-            }
-            break;
-        case SkyDrive:
-            // Remove failed item if localPath is specified.
-            if (job.localFilePath != "") {
-                removeItem(SkyDrive, job.uid, job.localFilePath);
-            }
-            break;
-        case Ftp:
-            // Remove failed item if localPath is specified.
-            if (job.localFilePath != "") {
-                removeItem(Ftp, job.uid, job.localFilePath);
-            }
-            break;
+        if (job.localFilePath != "") {
+            removeItem(getJobType(job.type), job.uid, job.localFilePath);
         }
+//        switch (job.type) {
+//        case Dropbox:
+//            // Remove failed item if localPath is specified.
+//            if (job.localFilePath != "") {
+//                removeItem(Dropbox, job.uid, job.localFilePath);
+//            }
+//            break;
+//        case SkyDrive:
+//            // Remove failed item if localPath is specified.
+//            if (job.localFilePath != "") {
+//                removeItem(SkyDrive, job.uid, job.localFilePath);
+//            }
+//            break;
+//        case Ftp:
+//            // Remove failed item if localPath is specified.
+//            if (job.localFilePath != "") {
+//                removeItem(Ftp, job.uid, job.localFilePath);
+//            }
+//            break;
+//        }
     }
 
     // Stop running.
@@ -1940,51 +1956,57 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
     if (err == 0) {
         // TODO handle other clouds.
         // Disconnect deleted local path.
-        switch (job.type) {
-        case Dropbox:
-            // TODO Remove local cloudDriveItems with it children.
-            if (job.localFilePath != "") {
-                removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
-            }
-            break;
-        case SkyDrive:
-            // TODO Remove local cloudDriveItems with it children.
-            if (job.localFilePath != "") {
-                removeItemWithChildren(SkyDrive, job.uid, job.localFilePath);
-            }
-            break;
-        case Ftp:
-            // TODO Remove local cloudDriveItems with it children.
-            if (job.localFilePath != "") {
-                removeItemWithChildren(Ftp, job.uid, job.localFilePath);
-            }
-            break;
+        if (job.localFilePath != "") {
+            removeItemWithChildren(getJobType(job.type), job.uid, job.localFilePath);
         }
+//        switch (job.type) {
+//        case Dropbox:
+//            // TODO Remove local cloudDriveItems with it children.
+//            if (job.localFilePath != "") {
+//                removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
+//            }
+//            break;
+//        case SkyDrive:
+//            // TODO Remove local cloudDriveItems with it children.
+//            if (job.localFilePath != "") {
+//                removeItemWithChildren(SkyDrive, job.uid, job.localFilePath);
+//            }
+//            break;
+//        case Ftp:
+//            // TODO Remove local cloudDriveItems with it children.
+//            if (job.localFilePath != "") {
+//                removeItemWithChildren(Ftp, job.uid, job.localFilePath);
+//            }
+//            break;
+//        }
     } else if (err == 203) {
         // Not Found {"error": "Path '???' not found"}
 
         // TODO handle other clouds.
         // Disconnect deleted local path.
-        switch (job.type) {
-        case Dropbox:
-            // TODO Remove local cloudDriveItems with it children.
-            if (job.localFilePath != "") {
-                removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
-            }
-            break;
-        case SkyDrive:
-            // TODO Remove local cloudDriveItems with it children.
-            if (job.localFilePath != "") {
-                removeItemWithChildren(SkyDrive, job.uid, job.localFilePath);
-            }
-            break;
-        case Ftp:
-            // TODO Remove local cloudDriveItems with it children.
-            if (job.localFilePath != "") {
-                removeItemWithChildren(Ftp, job.uid, job.localFilePath);
-            }
-            break;
+        if (job.localFilePath != "") {
+            removeItemWithChildren(getJobType(job.type), job.uid, job.localFilePath);
         }
+//        switch (job.type) {
+//        case Dropbox:
+//            // TODO Remove local cloudDriveItems with it children.
+//            if (job.localFilePath != "") {
+//                removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
+//            }
+//            break;
+//        case SkyDrive:
+//            // TODO Remove local cloudDriveItems with it children.
+//            if (job.localFilePath != "") {
+//                removeItemWithChildren(SkyDrive, job.uid, job.localFilePath);
+//            }
+//            break;
+//        case Ftp:
+//            // TODO Remove local cloudDriveItems with it children.
+//            if (job.localFilePath != "") {
+//                removeItemWithChildren(Ftp, job.uid, job.localFilePath);
+//            }
+//            break;
+//        }
     }
 
     // Stop running.
