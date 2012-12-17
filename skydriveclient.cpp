@@ -422,6 +422,11 @@ QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString rem
     return reply;
 }
 
+void SkyDriveClient::createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath)
+{
+    createFolder(nonce, uid, newRemoteFolderName, remoteParentPath, false);
+}
+
 QNetworkReply * SkyDriveClient::createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath, bool synchronous)
 {
     qDebug() << "----- SkyDriveClient::createFolder -----" << newRemoteFolderName << remoteParentPath;
@@ -531,6 +536,11 @@ void SkyDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+}
+
+void SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
+{
+    deleteFile(nonce, uid, remoteFilePath, false);
 }
 
 QNetworkReply * SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
