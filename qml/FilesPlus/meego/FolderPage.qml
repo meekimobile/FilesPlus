@@ -3644,9 +3644,6 @@ Page {
         ]
 
         function getFavListModel() {
-            // Update model.
-            favContactModel.update();
-
             // Construct model.
             var model = Qt.createQmlObject(
                         'import QtQuick 1.1; ListModel {}', folderPage);
@@ -3678,7 +3675,12 @@ Page {
         id: recipientSelectionDialog
         shareFileCaller: cloudDriveModel.shareFileCaller
         onOpening: {
-            recipientSelectionDialog.model = favContactModel.getFavListModel(shareFileCaller);
+            model.destroy();
+
+            model = favContactModel.getFavListModel();
+
+            // Update model for next opening.
+            favContactModel.update();
         }
         onAccepted: {
             console.debug("recipientSelectionDialog onAccepted shareFileCaller " + shareFileCaller + " email " + selectedEmail + " senderEmail " + senderEmail + " selectedNumber " + selectedNumber);

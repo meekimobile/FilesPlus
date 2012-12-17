@@ -21,35 +21,35 @@ SelectionDialog {
     delegate: ListItem {
         id: recipientItem
         height: 80
-        Row {
-            anchors.fill: parent
-            anchors.margins: 0
+        Column {
+            width: parent.width - favIcon.width
+            anchors.left: parent.left
+            anchors.leftMargin: 16
+            anchors.verticalCenter: parent.verticalCenter
             spacing: 2
-            Column {
-                width: parent.width - favIcon.width - parent.spacing
-                spacing: 2
-                Text {
-                    width: parent.width
-                    font.pointSize: 18
-                    elide: Text.ElideMiddle
-                    color: "white"
-                    text: displayLabel
-                }
-                Text {
-                    width: parent.width
-                    font.pointSize: 16
-                    elide: Text.ElideMiddle
-                    color: "grey"
-                    text: (shareFileCaller == "mailFileSlot" ? email : phoneNumber)
-                }
+            Text {
+                width: parent.width
+                font.pointSize: 18
+                elide: Text.ElideMiddle
+                color: "white"
+                text: displayLabel
             }
-            Image {
-                id: favIcon
-                source: "image://theme/icon-m-common-favorite-mark-inverse"
-                visible: favorite
-                anchors.verticalCenter: parent.verticalCenter
+            Text {
+                width: parent.width
+                font.pointSize: 16
+                elide: Text.ElideMiddle
+                color: "grey"
+                text: (shareFileCaller == "mailFileSlot" ? email : phoneNumber)
             }
         }
+        Image {
+            id: favIcon
+            source: "image://theme/icon-m-common-favorite-mark-inverse"
+            visible: favorite
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+        }
+
         onClicked: {
             console.debug("recipientSelectionDialog recipientItem onClicked " + index + " email " + email + " phoneNumber " + phoneNumber);
             recipientSelectionDialog.selectedIndex = index;
