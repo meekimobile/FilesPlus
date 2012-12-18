@@ -1553,7 +1553,7 @@ void CloudDriveModel::syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, 
     }
 }
 
-void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex)
+void CloudDriveModel:: createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex)
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), CreateFolder, type, uid, localPath, remotePath, modelIndex);
@@ -1575,6 +1575,25 @@ void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString ui
 //    }
 
     emit proceedNextJobSignal();
+}
+
+QString CloudDriveModel::createFolder_SkyDrive(CloudDriveModel::ClientTypes type, QString uid, QString newRemoteFolderName, QString remoteParentPath)
+{
+    // Request SkyDriveClient's createFolder synchronously.
+    QNetworkReply * createFolderReply = skdClient->createFolder(createNonce(), uid, newRemoteFolderName, remoteParentPath, true);
+    if (createFolderReply->error() == QNetworkReply::NoError) {
+        QString createFolderReplyResult(createFolderReply->readAll());
+        qDebug() << "CloudDriveModel::createFolder_SkyDrive createFolder success" << createFolderReplyResult;
+
+        QScriptEngine se;
+        QScriptValue sc = se.evaluate("(" + createFolderReplyResult + ")");
+        QString createdRemotePath = sc.property("id").toString();
+        QString createdRemoteHash = sc.property("updated_time").toString();
+
+        return createdRemotePath;
+    }
+
+    return "";
 }
 
 void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath)
@@ -2259,9 +2278,9 @@ CloudDriveItem CloudDriveModel::selectItemByPrimaryKeyFromDB(CloudDriveModel::Cl
     QList<CloudDriveItem> itemList = getItemListFromPS(m_selectByPrimaryKeyPS);
     if (itemList.count() > 0) {
         item = itemList.at(0);
-        qDebug() << "CloudDriveModel::selectItemByPrimaryKeyFromDB found. key" << itemCacheKey << "item" << item;
+//        qDebug() << "CloudDriveModel::selectItemByPrimaryKeyFromDB found. key" << itemCacheKey << "item" << item;
     } else {
-        qDebug() << "CloudDriveModel::selectItemByPrimaryKeyFromDB record not found. key" << itemCacheKey;
+//        qDebug() << "CloudDriveModel::selectItemByPrimaryKeyFromDB record not found. key" << itemCacheKey;
     }
 
     return item;

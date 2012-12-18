@@ -385,7 +385,7 @@ CommonDialog {
                     height: parent.height
                     fillMode: Image.PreserveAspectFit
                     z: 1
-                    visible: cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, path);
+                    visible: cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, path, true);
                     source: "cloud.svg"
                 }
             }

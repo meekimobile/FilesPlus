@@ -33,8 +33,8 @@ SkyDriveClient::SkyDriveClient(QObject *parent) :
     // Load accessTokenPair from file
     loadAccessPairMap();
 
-    m_propertyReplyHash = new QHash<QString, QString>;
-    m_filesReplyHash = new QHash<QString, QString>;
+    m_propertyReplyHash = new QHash<QString, QByteArray>;
+    m_filesReplyHash = new QHash<QString, QByteArray>;
 }
 
 SkyDriveClient::~SkyDriveClient()
@@ -445,7 +445,9 @@ QNetworkReply * SkyDriveClient::createFolder(QString nonce, QString uid, QString
     qDebug() << "SkyDriveClient::createFolder uri " << uri;
 
     QByteArray postData;
-    postData.append(QString("{ \"name\": \"%1\" }").arg(newRemoteFolderName));
+    postData.append("{ \"name\": \"");
+    postData.append(newRemoteFolderName.toUtf8());
+    postData.append("\" }");
     qDebug() << "SkyDriveClient::createFolder postData" << postData;
 
     // Send request.
@@ -771,7 +773,8 @@ void SkyDriveClient::filePutReplyFinished(QNetworkReply *reply) {
     localTargetFile->close();
     m_localFileHash.remove(nonce);
 
-    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    // REMARK Use QString::fromUtf8() to support unicode text.
+    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
 
     // TODO scheduled to delete later.
     reply->deleteLater();
@@ -811,7 +814,7 @@ void SkyDriveClient::propertyReplyFinished(QNetworkReply *reply)
     QString callback = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
 
     if (reply->error() == QNetworkReply::NoError) {
-        m_propertyReplyHash->insert(nonce, QString(reply->readAll()));
+        m_propertyReplyHash->insert(nonce, reply->readAll());
     } else {
 //        m_propertyReplyHash->insert(nonce, QString(reply->readAll()));
 
@@ -834,8 +837,8 @@ void SkyDriveClient::propertyReplyFinished(QNetworkReply *reply)
         QScriptValue sc;
         QScriptValue scProperty;
         QScriptValue scJsonStringify;
-        sc = engine.evaluate("(" + m_filesReplyHash->value(nonce) + ")");
-        scProperty = engine.evaluate("(" + m_propertyReplyHash->value(nonce) + ")");
+        sc = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
+        scProperty = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
         sc.setProperty("property", scProperty);
         scJsonStringify = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << sc);
 
@@ -864,19 +867,15 @@ void SkyDriveClient::filesReplyFinished(QNetworkReply *reply)
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString callback = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
 
-    if (reply->error() == QNetworkReply::NoError) {
-        m_filesReplyHash->insert(nonce, QString(reply->readAll()));
-    } else {
-        m_filesReplyHash->insert(nonce, QString(reply->readAll()));
-    }
+    m_filesReplyHash->insert(nonce, reply->readAll());
 
     if (m_propertyReplyHash->contains(nonce) && m_filesReplyHash->contains(nonce)) {
         QScriptEngine engine;
         QScriptValue sc;
         QScriptValue scProperty;
         QScriptValue scJsonStringify;
-        sc = engine.evaluate("(" + m_filesReplyHash->value(nonce) + ")");
-        scProperty = engine.evaluate("(" + m_propertyReplyHash->value(nonce) + ")");
+        sc = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
+        scProperty = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
         sc.setProperty("property", scProperty);
         scJsonStringify = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << sc);
 

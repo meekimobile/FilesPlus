@@ -76,8 +76,8 @@ private:
     QString localPath;
     QHash<QString, QFile*> m_localFileHash;
     QString refreshTokenUid;
-    QHash<QString, QString> *m_propertyReplyHash;
-    QHash<QString, QString> *m_filesReplyHash;
+    QHash<QString, QByteArray> *m_propertyReplyHash;
+    QHash<QString, QByteArray> *m_filesReplyHash;
 
     QString createTimestamp();
     QString createNormalizedQueryString(QMap<QString, QString> sortMap);
