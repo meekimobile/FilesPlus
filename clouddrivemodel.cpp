@@ -364,8 +364,24 @@ bool CloudDriveModel::isConnected(CloudDriveModel::ClientTypes type, QString uid
     return (item.localPath == localPath);
 }
 
-bool CloudDriveModel::isRemotePathConnected(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
+bool CloudDriveModel::isRemotePathConnected(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, bool showDebug)
 {
+    // Show connections.
+    if (showDebug) {
+        QSqlQuery qry(m_db);
+        qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
+        qry.bindValue(":type", type);
+        qry.bindValue(":uid", uid);
+        qry.bindValue(":remote_path", remotePath);
+        bool res = qry.exec();
+        if (res) {
+            while (qry.next()) {
+                QString localPath = qry.value(qry.record().indexOf("local_path")).toString();
+                qDebug() << "CloudDriveModel::isRemotePathConnected" << type << uid << remotePath << "localPath" << localPath;
+            }
+        }
+    }
+
     int c = countItemByTypeAndUidAndRemotePathFromDB(type, uid, remotePath);
 //    qDebug() << "CloudDriveModel::isRemotePathConnected" << type << uid << remotePath << c;
     return (c > 0);
@@ -639,6 +655,23 @@ void CloudDriveModel::removeItems(QString localPath)
 
     if (getItemList(localPath).isEmpty()) {
         qDebug() << "CloudDriveModel::removeItems items" << getItemList(localPath);
+    }
+}
+
+int CloudDriveModel::removeItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
+{
+    QSqlQuery qry(m_db);
+    qry.prepare("DELETE FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":remote_path", remotePath);
+    bool res = qry.exec();
+    if (res) {
+        qDebug() << "CloudDriveModel::removeItemByRemotePath" << type << uid << remotePath << "success numRowsAffected" << qry.numRowsAffected();
+        return qry.numRowsAffected();
+    } else {
+        qDebug() << "CloudDriveModel::removeItemByRemotePath" << type << uid << remotePath << "failed" << qry.lastError() << "lastQuery" << qry.lastQuery();
+        return -1;
     }
 }
 
@@ -1533,13 +1566,13 @@ void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString ui
     // Emit signal to show cloud_wait.
     emit jobEnqueuedSignal(job.jobId, localPath);
 
-    // Add item with dirtyHash to avoid duplicate sync job.
-    // TODO handle other clouds.
-    switch (job.type) {
-    case Dropbox:
-        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-        break;
-    }
+//    // Add item with dirtyHash to avoid duplicate sync job.
+//    // TODO handle other clouds.
+//    switch (job.type) {
+//    case Dropbox:
+//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+//        break;
+//    }
 
     emit proceedNextJobSignal();
 }
@@ -1556,17 +1589,16 @@ void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, Q
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 
-    // Add item with dirtyHash to avoid duplicate sync job.
-    // TODO handle other clouds.
-    switch (job.type) {
-    case Dropbox:
-        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-        break;
-    case SkyDrive:
-        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-        break;
-    }
-
+//    // Add item with dirtyHash to avoid duplicate sync job.
+//    // TODO handle other clouds.
+//    switch (job.type) {
+//    case Dropbox:
+//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+//        break;
+//    case SkyDrive:
+//        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+//        break;
+//    }
 
     emit proceedNextJobSignal();
 }
@@ -1583,17 +1615,16 @@ void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, Q
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 
-    // Add item with dirtyHash to avoid duplicate sync job.
-    // TODO handle other clouds.
-    switch (job.type) {
-    case Dropbox:
-        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-        break;
-    case SkyDrive:
-        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-        break;
-    }
-
+//    // Add item with dirtyHash to avoid duplicate sync job.
+//    // TODO handle other clouds.
+//    switch (job.type) {
+//    case Dropbox:
+//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+//        break;
+//    case SkyDrive:
+//        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+//        break;
+//    }
 
     emit proceedNextJobSignal();
 }
@@ -1610,17 +1641,16 @@ void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid,
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 
-    // Add item with dirtyHash to avoid duplicate sync job.
-    // TODO handle other clouds.
-    switch (job.type) {
-    case Dropbox:
-        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-        break;
-    case SkyDrive:
-        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-        break;
-    }
-
+//    // Add item with dirtyHash to avoid duplicate sync job.
+//    // TODO handle other clouds.
+//    switch (job.type) {
+//    case Dropbox:
+//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+//        break;
+//    case SkyDrive:
+//        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
+//        break;
+//    }
 
     emit proceedNextJobSignal();
 }
@@ -1673,6 +1703,8 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
 
         job.isRunning = false;
         m_cloudDriveJobs->insert(nonce, job);
+    } else {
+        removeItem(getJobType(job.type), job.uid, job.localFilePath);
     }
 
     // Notify job done.
@@ -1721,22 +1753,8 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
 
         job.isRunning = false;
         m_cloudDriveJobs->insert(nonce, job);
-    } else if (err == -1) {
+    } else {
         removeItem(getJobType(job.type), job.uid, job.localFilePath);
-//        // Remove failed item.
-//        switch (job.type) {
-//        case Dropbox:
-//            removeItem(Dropbox, job.uid, job.localFilePath);
-//            break;
-//        case SkyDrive:
-//            // TODO
-//            removeItem(SkyDrive, job.uid, job.localFilePath);
-//            break;
-//        case Ftp:
-//            // TODO
-//            removeItem(SkyDrive, job.uid, job.localFilePath);
-//            break;
-//        }
     }
 
     // Notify job done.
@@ -1815,40 +1833,42 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
     // TODO Create folder effects only remote side. Does it need?
     if (err == 0) {
         // TODO generalize to support other clouds.
-        switch (job.type) {
-        case Dropbox:
-            sc = engine.evaluate("(" + msg + ")");
-            hash = sc.property("rev").toString();
-            if (job.localFilePath != "") {
-                // Add cloud item if localPath is specified.
-                addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
-            }
-            break;
-        case SkyDrive:
-            sc = engine.evaluate("(" + msg + ")");
-            hash = sc.property("updated_time").toString();
-            createdRemotePath = sc.property("id").toString();
-            if (job.localFilePath != "") {
-                // Add cloud item if localPath is specified.
-                addItem(SkyDrive, job.uid, job.localFilePath, createdRemotePath, hash);
-            }
-            break;
-        case Ftp:
-            sc = engine.evaluate("(" + msg + ")");
-            hash = sc.property("lastModified").toString();
-            if (job.localFilePath != "") {
-                // Add cloud item if localPath is specified.
-                addItem(Ftp, job.uid, job.localFilePath, job.remoteFilePath, hash);
-            }
-            break;
-        }
+//        switch (job.type) {
+//        case Dropbox:
+//            sc = engine.evaluate("(" + msg + ")");
+//            hash = sc.property("rev").toString();
+//            if (job.localFilePath != "") {
+//                // Add cloud item if localPath is specified.
+//                addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
+//            }
+//            break;
+//        case SkyDrive:
+//            // REMARK For SkyDrive, job.localFilePath stores newRemoteFolderName.
+//            sc = engine.evaluate("(" + msg + ")");
+//            hash = sc.property("updated_time").toString();
+//            createdRemotePath = sc.property("id").toString();
+//            if (job.localFilePath != "") {
+//                // Add cloud item if localPath is specified.
+//                addItem(SkyDrive, job.uid, job.localFilePath, createdRemotePath, hash);
+//            }
+//            break;
+//        case Ftp:
+//            sc = engine.evaluate("(" + msg + ")");
+//            hash = sc.property("lastModified").toString();
+//            if (job.localFilePath != "") {
+//                // Add cloud item if localPath is specified.
+//                addItem(Ftp, job.uid, job.localFilePath, job.remoteFilePath, hash);
+//            }
+//            break;
+//        }
     } else if (err == 202) {
         // Forbidden {"error": " at path 'The folder '???' already exists.'"}
         // Do nothing.
     } else {
-        if (job.localFilePath != "") {
-            removeItem(getJobType(job.type), job.uid, job.localFilePath);
-        }
+//        if (job.localFilePath != "") {
+//            removeItem(getJobType(job.type), job.uid, job.localFilePath);
+//        }
+
 //        switch (job.type) {
 //        case Dropbox:
 //            // Remove failed item if localPath is specified.
@@ -1953,60 +1973,12 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
-    if (err == 0) {
-        // TODO handle other clouds.
-        // Disconnect deleted local path.
-        if (job.localFilePath != "") {
-            removeItemWithChildren(getJobType(job.type), job.uid, job.localFilePath);
-        }
-//        switch (job.type) {
-//        case Dropbox:
-//            // TODO Remove local cloudDriveItems with it children.
-//            if (job.localFilePath != "") {
-//                removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
-//            }
-//            break;
-//        case SkyDrive:
-//            // TODO Remove local cloudDriveItems with it children.
-//            if (job.localFilePath != "") {
-//                removeItemWithChildren(SkyDrive, job.uid, job.localFilePath);
-//            }
-//            break;
-//        case Ftp:
-//            // TODO Remove local cloudDriveItems with it children.
-//            if (job.localFilePath != "") {
-//                removeItemWithChildren(Ftp, job.uid, job.localFilePath);
-//            }
-//            break;
-//        }
-    } else if (err == 203) {
-        // Not Found {"error": "Path '???' not found"}
-
-        // TODO handle other clouds.
-        // Disconnect deleted local path.
-        if (job.localFilePath != "") {
-            removeItemWithChildren(getJobType(job.type), job.uid, job.localFilePath);
-        }
-//        switch (job.type) {
-//        case Dropbox:
-//            // TODO Remove local cloudDriveItems with it children.
-//            if (job.localFilePath != "") {
-//                removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
-//            }
-//            break;
-//        case SkyDrive:
-//            // TODO Remove local cloudDriveItems with it children.
-//            if (job.localFilePath != "") {
-//                removeItemWithChildren(SkyDrive, job.uid, job.localFilePath);
-//            }
-//            break;
-//        case Ftp:
-//            // TODO Remove local cloudDriveItems with it children.
-//            if (job.localFilePath != "") {
-//                removeItemWithChildren(Ftp, job.uid, job.localFilePath);
-//            }
-//            break;
-//        }
+    // Disconnect deleted local path.
+    if (job.localFilePath != "") {
+        removeItemWithChildren(getJobType(job.type), job.uid, job.localFilePath);
+    }
+    if (job.remoteFilePath != "") {
+        removeItemByRemotePath(getJobType(job.type), job.uid, job.remoteFilePath);
     }
 
     // Stop running.

@@ -87,7 +87,7 @@ public:
     // CloudDriveItem management.
     Q_INVOKABLE bool isConnected(QString localPath);
     Q_INVOKABLE bool isConnected(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
-    Q_INVOKABLE bool isRemotePathConnected(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
+    Q_INVOKABLE bool isRemotePathConnected(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, bool showDebug = false);
     Q_INVOKABLE bool isDirty(QString localPath, QDateTime lastModified);
     Q_INVOKABLE bool isSyncing(QString localPath);
     Q_INVOKABLE bool isParentConnected(QString localPath);
@@ -101,6 +101,7 @@ public:
     Q_INVOKABLE void removeItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE void removeItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE void removeItems(QString localPath);
+    Q_INVOKABLE int removeItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     Q_INVOKABLE void updateItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString hash);
     Q_INVOKABLE void updateItems(QString localPath, QString hash);
     Q_INVOKABLE void updateItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString newLocalPath, QString newRemotePath, QString newChildrenHash = "", QString newHash = "");
