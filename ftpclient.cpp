@@ -1,5 +1,7 @@
 #include "ftpclient.h"
 #include <QApplication>
+//#include <QtNetwork>
+//#include "qnetworkreplywrapper.h"
 
 const QString FtpClient::FtpRoot = "~";
 
@@ -59,6 +61,50 @@ void FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QStr
     m_ftp->deleteLater();
     m_ftpHash->remove(m_ftp->getNonce());
 }
+
+/*
+void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
+{
+    qDebug() << "----- FtpClient::filePut -----" << localFilePath << "to" << remoteFilePath;
+
+    QStringList tokens = accessTokenPairMap[uid].token.split("@");
+
+    QUrl uploadurl("ftp://" + tokens[1] + remoteFilePath);
+    uploadurl.setUserName(tokens[0]);
+    uploadurl.setPassword(accessTokenPairMap[uid].secret);
+    qDebug() << "FtpClient::filePut uploadurl" << uploadurl;
+
+    m_localFileHash[nonce] = new QFile(localFilePath);
+    QFile *localSourceFile = m_localFileHash[nonce];
+    if (localSourceFile->open(QIODevice::ReadOnly)) {
+        qint64 fileSize = localSourceFile->size();
+
+        // Send request.
+        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+//        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)));
+        QNetworkRequest req = QNetworkRequest(uploadurl);
+        req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+        req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize);
+        QNetworkReply *reply = manager->put(req, localSourceFile);
+        QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+        connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+        connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+        while (!reply->isFinished()) {
+            QApplication::processEvents(QEventLoop::AllEvents, 100);
+            Sleeper().sleep(100);
+        }
+
+        emit filePutReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+
+        // Scheduled to delete later.
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+    } else {
+        emit filePutReplySignal(nonce, -1, tr("Can't open %1").arg(localFilePath), "");
+    }
+}
+*/
 
 void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
 {
@@ -189,7 +235,6 @@ void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
 
     // Get item list.
-//    m_itemList->clear();
     if (!remoteFilePath.isEmpty()) m_ftp->cd(remoteFilePath);
     m_ftp->pwd();
     m_ftp->list(remoteFilePath);

@@ -78,6 +78,16 @@ void QFtpWrapper::commandFinishedFilter(int id, bool error)
 
 void QFtpWrapper::listInfoFilter(const QUrlInfo &i)
 {
+    // TODO File name is not UTF-8, workaround by re-encoding.
+//    QString modName = QString::fromUtf8(i.name().toAscii());
+//    qDebug() << "QFtpWrapper::listInfoFilter" << i.name() << modName;
+//    QUrlInfo mod(i);
+//    mod.setName(modName);
+
+//    m_itemList.append(mod);
+
+//    emit listInfo(m_nonce, mod);
+
     m_itemList.append(i);
 
     emit listInfo(m_nonce, i);
