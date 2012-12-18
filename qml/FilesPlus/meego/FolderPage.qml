@@ -3007,7 +3007,6 @@ Page {
 
             // TODO *** create SkyDrive folder freezes here *** TODO Does it need?
             // Update ProgressBar if localPath is specified.
-            /*
             if (json.local_file_path != "") {
                 fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
 
@@ -3021,7 +3020,6 @@ Page {
                     }
                 }
             }
-            */
 
             // Refresh cloudDrivePathDialog if it's opened.
             console.debug("folderPage cloudDriveModel onCreateFolderReplySignal cloudDrivePathDialog.status " + cloudDrivePathDialog.status + " DialogStatus.Open " + DialogStatus.Open);
