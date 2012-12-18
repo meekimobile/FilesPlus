@@ -2629,6 +2629,8 @@ Page {
                 } else {
                     fsModel.refreshItem(index);
                 }
+            } else if (err == 204) { // Refresh token
+                cloudDriveModel.refreshToken(json.type, json.uid);
             } else {
                 messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("File Get");
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
@@ -2665,6 +2667,8 @@ Page {
 
             if (err == 0) {
                 // Do nothing.
+            } else if (err == 204) { // Refresh token
+                cloudDriveModel.refreshToken(json.type, json.uid);
             } else {
                 messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("File Put");
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
@@ -2954,10 +2958,7 @@ Page {
                 // Resume next jobs.
                 cloudDriveModel.resumeNextJob();
             } else if (err == 204) { // Refresh token
-                // TODO Refactor to support all SkyDriveClient services.
-                if (jobJson.type == CloudDriveModel.SkyDrive) {
-                    cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
-                }
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
                 messageDialog.titleText = getCloudName(jobJson.type) + " Metadata";
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
@@ -2996,13 +2997,15 @@ Page {
                 // Do nothing.
             } else if (err == 202) { // Folder already exists.
                 // Do nothing.
+            } else if (err == 204) { // Refresh token
+                cloudDriveModel.refreshToken(json.type, json.uid);
             } else {
                 messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Create Folder");
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
                 messageDialog.open();
             }
 
-            // TODO *** app freeze here *** TODO Does it need?
+            // TODO *** create SkyDrive folder freezes here *** TODO Does it need?
             // Update ProgressBar if localPath is specified.
             /*
             if (json.local_file_path != "") {
@@ -3130,6 +3133,8 @@ Page {
                 // Cloud items have been managed by CloudDriveModel::moveFileReplyFilter.
                 // Sync after move.
                 cloudDriveModel.metadata(json.type, json.uid, json.new_local_file_path, json.new_remote_file_path, json.model_index);
+            } else if (err == 204) { // Refresh token
+                cloudDriveModel.refreshToken(json.type, json.uid);
             } else {
                 messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Move");
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
@@ -3154,6 +3159,8 @@ Page {
 
             if (err == 0) {
                 // do nothing.
+            } else if (err == 204) { // Refresh token
+                cloudDriveModel.refreshToken(json.type, json.uid);
             } else {
                 messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Delete");
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
@@ -3203,6 +3210,8 @@ Page {
                     recipientSelectionDialog.senderEmail = senderEmail;
                     recipientSelectionDialog.open();
                 }
+            } else if (err == 204) { // Refresh token
+                cloudDriveModel.refreshToken(json.type, json.uid);
             } else {
                 messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Share");
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
@@ -3228,11 +3237,7 @@ Page {
                 cloudDrivePathDialog.parseCloudDriveMetadataJson(msg);
                 cloudDrivePathDialog.open();
             } else if (err == 204) { // Refresh token
-                // TODO Refactor to support all SkyDriveClient services.
-                if (json.type == CloudDriveModel.SkyDrive) {
-                    cloudDrivePathDialog.close();
-                    cloudDriveModel.refreshToken(json.type, json.uid);
-                }
+                cloudDriveModel.refreshToken(json.type, json.uid);
             } else {
                 messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Browse");
                 messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
