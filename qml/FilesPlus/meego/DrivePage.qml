@@ -42,6 +42,19 @@ Page {
         }
 
         ToolIcon {
+            id: refreshButton
+            iconId: "toolbar-refresh"
+            onClicked: {
+                // TODO Parse all storages.
+                driveGridModel.clear();
+                parseLocalStorage(driveGridModel);
+                if (appInfo.getSettingBoolValue("drivepage.clouddrive.enabled", false)) {
+                    parseCloudStorage(driveGridModel);
+                }
+            }
+        }
+
+        ToolIcon {
             id: menuButton
             iconId: "toolbar-view-menu"
             onClicked: {
@@ -103,17 +116,18 @@ Page {
         }
     }
 
-    function parseCloudStorage(type, model) {
+    function parseCloudStorage(model) {
         // TODO Check if authorized before parsing.
-        if (!cloudDriveModel.isAuthorized(type)) return;
+        if (!cloudDriveModel.isAuthorized()) return;
 
         // Get uid list from DropboxClient.
-        var dbUidList = cloudDriveModel.getStoredUidList(type);
+        var dbUidList = cloudDriveModel.getStoredUidList();
 
         for (var i=0; i<dbUidList.length; i++)
         {
             var json = JSON.parse(dbUidList[i]);
-            console.debug("parseCloudStorage type " + type + " i " + i + " uid " + json.uid + " email " + json.email);
+            var cloudType = cloudDriveModel.getClientType(json.type);
+            console.debug("parseCloudStorage type " + json.type + " i " + i + " uid " + json.uid + " email " + json.email);
             model.append({
                              logicalDrive: json.email,
                              availableSpace: 0,
@@ -122,12 +136,19 @@ Page {
                              email: json.email,
                              uid: json.uid,
                              name: "",
-                             cloudDriveType: type,
-                             iconSource: cloudDriveModel.getCloudIcon(type)
+                             cloudDriveType: cloudType,
+                             iconSource: cloudDriveModel.getCloudIcon(cloudType)
             });
 
-            // Request accountInfo.
-            cloudDriveModel.accountInfo(type, json.uid);
+            // Request quota.
+            switch (cloudType) {
+            case CloudDriveModel.Dropbox:
+                cloudDriveModel.accountInfo(cloudType, json.uid);
+                break;
+            case CloudDriveModel.SkyDrive:
+                cloudDriveModel.quota(cloudType, json.uid);
+                break;
+            }
         }
     }
 
@@ -170,7 +191,7 @@ Page {
             driveGridModel.clear();
             parseLocalStorage(driveGridModel);
             if (appInfo.getSettingBoolValue("drivepage.clouddrive.enabled", false)) {
-                parseCloudStorage(CloudDriveModel.Dropbox, driveGridModel);
+                parseCloudStorage(driveGridModel);
             }
 
             // Stop startup logging.

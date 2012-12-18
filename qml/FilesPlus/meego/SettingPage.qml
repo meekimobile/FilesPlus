@@ -178,6 +178,12 @@ Page {
             type: "switch"
             group: "Developer"
         }
+        ListElement {
+            name: "drivepage.clouddrive.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
     }
 
     ListView {
