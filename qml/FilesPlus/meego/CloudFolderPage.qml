@@ -223,6 +223,7 @@ Page {
         }
     }
 
+    // TODO Get remote item source url into model item.
     function parseCloudDriveMetadataJson(jsonText) {
         // Reset list view.
         cloudFolderModel.clear();
@@ -243,7 +244,9 @@ Page {
             remoteParentParentPath = cloudDriveModel.getParentRemotePath(remoteParentPath);
             for (var i=0; i<json.contents.length; i++) {
                 var item = json.contents[i];
-                var modelItem = { "name": cloudDriveModel.getRemoteName(item.path), "path": item.path, "lastModified": (new Date(item.modified)), "size": item.bytes, "isDir": item.is_dir };
+                var modelItem = { "name": cloudDriveModel.getRemoteName(item.path), "path": item.path,
+                    "isChecked": false, "link": "",
+                    "lastModified": (new Date(item.modified)), "size": item.bytes, "isDir": item.is_dir};
                 cloudFolderModel.append(modelItem);
                 if (modelItem.path == originalRemotePath) {
                     selectedIndex = i;
@@ -260,7 +263,9 @@ Page {
             remoteParentParentPath = (json.property.parent_id ? json.property.parent_id : "");
             for (var i=0; i<json.data.length; i++) {
                 var item = json.data[i];
-                var modelItem = { "name": item.name, "path": item.id, "lastModified": Utility.parseJSONDate(item.updated_time), "size": item.size, "isDir": (item.type == "folder" || item.type == "album") };
+                var modelItem = { "name": item.name, "path": item.id,
+                    "isChecked": false, "source": (item.source ? item.source : ""),
+                    "lastModified": Utility.parseJSONDate(item.updated_time), "size": item.size, "isDir": (item.type == "folder" || item.type == "album") };
                 cloudFolderModel.append(modelItem);
                 if (modelItem.path == originalRemotePath) {
                     selectedIndex = i;
@@ -277,7 +282,9 @@ Page {
             remoteParentParentPath = cloudDriveModel.getParentRemotePath(remoteParentPath);
             for (var i=0; i<json.data.length; i++) {
                 var item = json.data[i];
-                var modelItem = { "name": item.name, "path": item.path, "lastModified": Utility.parseJSONDate(item.lastModified), "size": item.size, "isDir": item.isDir };
+                var modelItem = { "name": item.name, "path": item.path,
+                    "isChecked": false, "link": "",
+                    "lastModified": Utility.parseJSONDate(item.lastModified), "size": item.size, "isDir": item.isDir };
                 cloudFolderModel.append(modelItem);
                 if (modelItem.path == originalRemotePath) {
                     selectedIndex = i;
@@ -382,9 +389,8 @@ Page {
             id: backButton
             iconId: "toolbar-back"
             onClicked: {
-                if (state == "mark") {
-                    state = "list";
-//                    fsListView.unmarkAll();
+                if (cloudFolderPage.state == "mark") {
+                    cloudFolderPage.state = "list";
                 } else {
                     // Specify local path to focus after cd to parent directory..
 //                    fsListView.focusLocalPath = fsModel.currentDir;
@@ -396,6 +402,7 @@ Page {
         ToolIcon {
             id: refreshButton
             iconId: "toolbar-refresh"
+            visible: (cloudFolderPage.state == "list")
             onClicked: {
                 refreshSlot("refreshButton onClicked");
             }
@@ -405,13 +412,13 @@ Page {
             id: menuButton
             iconId: "toolbar-view-menu"
             onClicked: {
-                if (state == "mark") {
-                    if (!fsListView.isAnyItemChecked()) {
+                if (cloudFolderPage.state == "mark") {
+                    if (!cloudFolderView.isAnyItemChecked()) {
                         markAllMenu.open();
                     } else {
                         markMenu.open();
                     }
-                } else if (state == "list") {
+                } else if (cloudFolderPage.state == "list") {
                     mainMenu.open();
                 }
             }
@@ -433,8 +440,44 @@ Page {
         }
     }
 
+    // TODO Menu, PopupToolRing.
     MainMenu {
         id: mainMenu
+        disabledMenus: ["syncConnectedItems","syncCurrentFolder"]
+
+        onPaste: {
+        }
+        onOpenMarkMenu: {
+            cloudFolderPage.state = "mark";
+        }
+        onClearClipboard: {
+            clipboard.clear();
+        }
+        onNewFolder: {
+            newFolderDialog.open();
+        }
+        onSetNameFilter: {
+        }
+        onOpenSortByMenu: {
+        }
+        onOpenAbout: {
+            pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
+        }
+        onQuit: {
+        }
+
+        function isMenuItemVisible(menuItem) {
+            // Validate each menu logic if it's specified, otherwise it's visible.
+            if (menuItem.name == "paste") {
+                return clipboard.count > 0;
+            } else if (menuItem.name == "clearClipboard") {
+                return clipboard.count > 0;
+            } else if (menuItem.name == "markMenu") {
+                return cloudFolderPage.state != "mark";
+            } else {
+                return true;
+            }
+        }
     }
 
     MarkMenu {
@@ -481,6 +524,11 @@ Page {
             currentIndex = -1;
         }
 
+        function isAnyItemChecked() {
+            // TODO
+            return false;
+        }
+
         Rectangle {
             id: busyPanel
             color: "black"
@@ -506,6 +554,7 @@ Page {
         }
     }
 
+    // TODO Shows mark, copy, cut icons.
     Component {
         id: cloudItemDelegate
 
@@ -619,7 +668,7 @@ Page {
         }
     }
 
-    CommonDialog {
+    ConfirmDialog {
         id: newFolderDialog
         titleText: appInfo.emptyStr+qsTr("New folder")
         titleIcon: "FilesPlusIcon.svg"
@@ -637,14 +686,12 @@ Page {
             }
         }
 
-        onStatusChanged: {
-            if (status == DialogStatus.Open) {
-                folderName.text = "";
-            }
+        onOpened: {
+            folderName.text = "";
         }
 
-        onButtonClicked: {
-            if (index === 0 && folderName.text !== "") {
+        onConfirm: {
+            if (folderName.text !== "") {
                 isBusy = true;
                 createRemoteFolder(folderName.text.trim());
             }

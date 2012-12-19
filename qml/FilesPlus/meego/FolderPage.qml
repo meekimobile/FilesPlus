@@ -167,12 +167,59 @@ Page {
     MainMenu {
         id: mainMenu
 
-        onQuit: {
-			quitSlot();
-        }
         onPaste: {
             fileActionDialog.targetPath = fsModel.currentDir;
             fileActionDialog.open();
+        }
+        onOpenMarkMenu: {
+            fsListView.state = "mark";
+        }
+        onClearClipboard: {
+            clipboard.clear();
+        }
+        onNewFolder: {
+            newFolderDialog.open();
+        }
+        onSyncConnectedItems: {
+            syncConnectedItemsSlot();
+        }
+        onSyncCurrentFolder: {
+            syncFileSlot(fsModel.currentDir, -1);
+        }
+        onSetNameFilter: {
+            nameFilterPanel.open();
+        }
+        onOpenSortByMenu: {
+            sortByMenu.open();
+        }
+        onOpenSettings: {
+            pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
+            pageStack.find(function (page) {
+                if (page.name == "folderPage") {
+                    page.requestJobQueueStatusSlot();
+                }
+            });
+        }
+        onOpenAbout: {
+            pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
+        }
+        onQuit: {
+            quitSlot();
+        }
+
+        function isMenuItemVisible(menuItem) {
+            // Validate each menu logic if it's specified, otherwise it's visible.
+            if (menuItem.name == "paste") {
+                return clipboard.count > 0;
+            } else if (menuItem.name == "clearClipboard") {
+                return clipboard.count > 0;
+            } else if (menuItem.name == "markMenu") {
+                return fsListView.state != "mark";
+            } else if (menuItem.name == "syncCurrentFolder") {
+                return !fsModel.isRoot() && cloudDriveModel.canSync(fsModel.currentDir);
+            } else {
+                return true;
+            }
         }
     }
 
@@ -202,10 +249,50 @@ Page {
 
     MarkMenu {
         id: markMenu
+
+        onMarkAll: {
+            if (isMarkAll) {
+                fsListView.markAll();
+            } else {
+                fsListView.unmarkAll();
+            }
+            isMarkAll = !isMarkAll;
+        }
+        onCopyMarkedItems: {
+            fsListView.copyMarkedItems();
+            fsListView.state = "";
+        }
+        onCutMarkedItems: {
+            fsListView.cutMarkedItems();
+            fsListView.state = "";
+        }
+        onDeleteMarkedItems: {
+            fsListView.deleteMarkedItems();
+            fsListView.state = "";
+        }
+        onSyncMarkedItems: {
+            fsListView.syncMarkedItems();
+            fsListView.state = "";
+        }
+        onStatusChanged: {
+            if (status == DialogStatus.Opening) {
+                isMarkAll = !fsListView.areAllItemChecked();
+            }
+        }
     }
 
     MarkAllMenu {
         id: markAllMenu
+
+        onMarkAll: {
+            fsListView.markAll();
+        }
+        onMarkAllFiles: {
+            fsListView.markAllFiles();
+        }
+        onMarkAllFolders: {
+            fsListView.markAllFolders();
+        }
     }
 
     ConfirmDialog {

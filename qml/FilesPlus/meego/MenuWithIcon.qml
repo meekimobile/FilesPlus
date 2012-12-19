@@ -28,11 +28,11 @@ Menu {
 //        console.debug("MenuWithIcon toggleMenuItems menuLayout.children.length " + menuLayout.children.length);
         for (var i=0; i<menuLayout.children.length; i++) {
             var menuItem = menuLayout.children[i];
-            if (!isEnabled(menuItem.text) || isDisabled(menuItem.text)) {
-//                console.debug("MenuWithIcon toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.text + " is hidden.");
+            if (!isEnabled(menuItem.name) || isDisabled(menuItem.name)) {
+//                console.debug("MenuWithIcon toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.name + " is hidden.");
                 menuItem.visible = false;
             } else {
-//                console.debug("MenuWithIcon toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.text + " is shown.");
+//                console.debug("MenuWithIcon toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.name + " is shown.");
                 menuItem.visible = isMenuItemVisible(menuItem);
             }
         }

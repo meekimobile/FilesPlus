@@ -7,25 +7,29 @@ Menu {
 
     property variant disabledMenus: []
 
+    signal markAll()
+    signal markAllFiles()
+    signal markAllFolders()
+
     content: MenuLayout {
         id: markAllMenuLayout
 
         MenuItem {
             text: appInfo.emptyStr+qsTr("Mark all")
             onClicked: {
-                fsListView.markAll();
+                markAll();
             }
         }
         MenuItem {
             text: appInfo.emptyStr+qsTr("Mark all files")
             onClicked: {
-                fsListView.markAllFiles();
+                markAllFiles();
             }
         }
         MenuItem {
             text: appInfo.emptyStr+qsTr("Mark all folders")
             onClicked: {
-                fsListView.markAllFolders();
+                markAllFolders();
             }
         }
     }

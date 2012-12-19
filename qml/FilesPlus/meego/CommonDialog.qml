@@ -101,6 +101,7 @@ Dialog {
         }
     }
     
+    // REMARK Avoid override to prevent click outside as reject.
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
             opening();

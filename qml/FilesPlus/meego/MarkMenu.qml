@@ -6,23 +6,22 @@ Menu {
     z: 2
 
     property variant disabledMenus: []
+    property bool isMarkAll: true
+
+    signal markAll()
+    signal copyMarkedItems()
+    signal cutMarkedItems()
+    signal deleteMarkedItems()
+    signal syncMarkedItems()
 
     content: MenuLayout {
         id: menuLayout
 
         MenuItem {
-            id: markAll
-
-            property bool isMarkAll: true
-
+            id: toggleMarkAll
             text: (isMarkAll) ? appInfo.emptyStr+qsTr("Mark all") : appInfo.emptyStr+qsTr("Unmark all")
             onClicked: {
-                if (isMarkAll) {
-                    fsListView.markAll();
-                } else {
-                    fsListView.unmarkAll();
-                }
-                isMarkAll = !isMarkAll;
+                markAll();
             }
         }
 
@@ -30,8 +29,7 @@ Menu {
             id: copyMarked
             text: appInfo.emptyStr+qsTr("Copy marked items")
             onClicked: {
-                fsListView.copyMarkedItems();
-                fsListView.state = "";
+                copyMarkedItems();
             }
         }
 
@@ -39,8 +37,7 @@ Menu {
             id: cutMarked
             text: appInfo.emptyStr+qsTr("Cut marked items")
             onClicked: {
-                fsListView.cutMarkedItems();
-                fsListView.state = "";
+                cutMarkedItems();
             }
         }
 
@@ -48,8 +45,7 @@ Menu {
             id: deleteMarked
             text: appInfo.emptyStr+qsTr("Delete marked items")
             onClicked: {
-                fsListView.deleteMarkedItems();
-                fsListView.state = "";
+                deleteMarkedItems();
             }
         }
 
@@ -57,15 +53,8 @@ Menu {
             id: syncMarked
             text: appInfo.emptyStr+qsTr("Sync marked items")
             onClicked: {
-                fsListView.syncMarkedItems();
-                fsListView.state = "";
+                syncMarkedItems();
             }
-        }
-    }
-
-    onStatusChanged: {
-        if (status == DialogStatus.Opening) {
-            markAll.isMarkAll = !fsListView.areAllItemChecked();
         }
     }
 }

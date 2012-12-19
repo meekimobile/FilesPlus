@@ -7,6 +7,16 @@ MenuWithIcon {
     z: 2
 
     signal paste()
+    signal openMarkMenu()
+    signal clearClipboard()
+    signal newFolder()
+    signal syncConnectedItems()
+    signal syncCurrentFolder()
+    signal setNameFilter()
+    signal openSortByMenu()
+    signal openSettings()
+    signal openMoreApps()
+    signal openAbout()
 
     content: MenuLayout {
         id: menuLayout
@@ -16,6 +26,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: pasteMenuItem
+            name: "paste"
             text: appInfo.emptyStr+qsTr("Paste")
             onClicked: {
                 paste();
@@ -24,92 +35,95 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: markMenuItem
+            name: "markMenu"
             text: appInfo.emptyStr+qsTr("Mark multiple items")
             onClicked: {
-                fsListView.state = "mark";
+                openMarkMenu();
             }
         }
 
         MenuItemWithIcon {
             id: clearClipboardMenuItem
+            name: "clearClipboard"
             text: appInfo.emptyStr+qsTr("Clear clipboard")
             onClicked: {
-                clipboard.clear();
+                clearClipboard();
             }
         }
 
         MenuItemWithIcon {
             id: newFolderMenuItem
+            name: "newFolder"
             text: appInfo.emptyStr+qsTr("New folder / file")
             onClicked: {
-                newFolderDialog.open();
+                newFolder();
             }
         }
 
         MenuItemWithIcon {
             id: syncItemsMenuItem
+            name: "syncConnectedItems"
             text: appInfo.emptyStr+qsTr("Sync connected items")
             onClicked: {
-                syncConnectedItemsSlot();
+                syncConnectedItems();
             }
         }
 
         MenuItemWithIcon {
             id: syncFolderMenuItem
+            name: "syncCurrentFolder"
             text: appInfo.emptyStr+qsTr("Sync current folder")
             onClicked: {
-                console.debug("mainMenu syncFolderMenuItem fsModel.currentDir " + fsModel.currentDir);
-                syncFileSlot(fsModel.currentDir, -1);
+                syncCurrentFolder();
             }
         }
 
         MenuItemWithIcon {
             id: filterMenuItem
+            name: "setNameFilter"
             text: appInfo.emptyStr+qsTr("Set name filter")
-
             onClicked: {
-                nameFilterPanel.open();
+                setNameFilter();
             }
         }
 
         MenuItemWithIcon {
             id: sortByMenuItem
+            name: "sortByMenu"
             text: appInfo.emptyStr+qsTr("Sort by")
             platformSubItemIndicator: true
             onClicked: {
-                sortByMenu.open();
+                openSortByMenu();
             }
         }
 
         MenuItemWithIcon {
+            name: "settings"
             text: appInfo.emptyStr+qsTr("Settings")
             platformSubItemIndicator: true
             onClicked: {
-//                settingMenu.open();
-                pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
-                pageStack.find(function (page) {
-                    if (page.name == "folderPage") {
-                        page.requestJobQueueStatusSlot();
-                    }
-                });
+                openSettings();
             }
         }
 
         MenuItemWithIcon {
+            name: "about"
             text: appInfo.emptyStr+qsTr("About")
             onClicked: {
-                pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
+                openAbout();
             }
         }
                 
 //        MenuItemWithIcon {
+//            name: "moreApps"
 //            text: appInfo.emptyStr+qsTr("More Apps")
 //            onClicked: {
-//                Qt.openUrlExternally("http://www.meeki.mobi/");
+//                openMoreApps();
 //            }
 //        }
         
         MenuItemWithIcon {
+            name: "exit"
             text: appInfo.emptyStr+qsTr("Exit")
             onClicked: {
                 quit();
@@ -120,16 +134,6 @@ MenuWithIcon {
     // Override this function with menuItem logic.
     function isMenuItemVisible(menuItem) {
         // Validate each menu logic if it's specified, otherwise it's visible.
-        if (menuItem == pasteMenuItem) {
-            return clipboard.count > 0;
-        } else if (menuItem == clearClipboardMenuItem) {
-            return clipboard.count > 0;
-        } else if (menuItem == markMenuItem) {
-            return fsListView.state != "mark";
-        } else if (menuItem == syncFolderMenuItem) {
-            return !fsModel.isRoot() && cloudDriveModel.canSync(fsModel.currentDir);
-        } else {
-            return true;
-        }
+        return false;
     }
 }
