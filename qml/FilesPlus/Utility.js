@@ -242,3 +242,7 @@ function getIndexInArray(array, propertyName, propertyValue) {
 
     return -1;
 }
+
+function ifUndefined(o, defaultValue) {
+    return (!o) ? defaultValue : o;
+}

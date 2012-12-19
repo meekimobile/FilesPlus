@@ -143,5 +143,6 @@
         <file alias="qml/FilesPlus/NameFilterPanel.qml">qml/FilesPlus/meego/NameFilterPanel.qml</file>
         <file>qml/FilesPlus/skydrive_icon.png</file>
         <file>qml/FilesPlus/ftp_icon.png</file>
+        <file alias="qml/FilesPlus/CloudFolderPage.qml">qml/FilesPlus/meego/CloudFolderPage.qml</file>
     </qresource>
 </RCC>

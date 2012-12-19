@@ -9,7 +9,6 @@ Page {
     id: drivePage
 
     property string name: "drivePage"
-    property variant cloudDriveModel
 
     tools: toolBarLayout
 
@@ -165,14 +164,28 @@ Page {
 //            console.debug("driveSelection onDriveSelected " + driveName + " index " + index);
             if (index > -1) {
                 var driveType = driveGridModel.get(index).driveType;
-                if (driveType == 7) {
-                    // TODO
+                if (driveType == 7) { // Cloud drive is selected.
                     var cloudUid = driveGridModel.get(index).uid;
+                    var cloudDriveType = driveGridModel.get(index).cloudDriveType;
                     console.debug("driveSelection onDriveSelected " + driveName + " index " + index + " cloudUid " + cloudUid);
-                } else {
-                    var p = pageStack.find(function(page) { return (page.name == "folderPage"); });
-                    if (p) p.currentDir = driveName;
-                    pageStack.pop(drivePage, true);
+                    pageStack.push(Qt.resolvedUrl("CloudFolderPage.qml"), {
+                                       remotePath: "",
+                                       remoteParentPath: "",
+                                       caller: "driveGrid onDriveSelected",
+                                       operation: CloudDriveModel.Browse,
+                                       localPath: "",
+                                       selectedCloudType: cloudDriveType,
+                                       selectedUid: cloudUid,
+                                       selectedModelIndex: -1
+                                   });
+                } else { // Local drive is selected.
+//                    var p = pageStack.find(function(page) { return (page.name == "folderPage"); });
+//                    if (p) p.currentDir = driveName;
+//                    pageStack.pop(drivePage, true);
+                    pageStack.push(Qt.resolvedUrl("FolderPage.qml"), {
+                                       currentDir: driveName
+                                   });
+
                 }
             }
         }
@@ -201,6 +214,7 @@ Page {
 
     Component.onCompleted: {
         console.debug(Utility.nowText() + " drivePage onCompleted");
-        window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("DrivePage"), 0.2);
+//        window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("DrivePage"), 0.2);
+        window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("DrivePage"), 1.0);
     }
 }

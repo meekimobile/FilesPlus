@@ -109,7 +109,6 @@ CommonDialog {
             remoteParentPath = json.property.path;
             remoteParentPathName = json.property.path;
             remoteParentParentPath = cloudDriveModel.getParentRemotePath(remoteParentPath);
-            remoteParentParentPath = (remoteParentParentPath == "") ? "/" : remoteParentParentPath;
             for (var i=0; i<json.data.length; i++) {
                 var item = json.data[i];
                 var modelItem = { "name": item.name, "path": item.path, "lastModified": Utility.parseJSONDate(item.lastModified), "size": item.size, "isDir": item.isDir };
@@ -409,18 +408,7 @@ CommonDialog {
             onClicked: { // Switch type
                 if (index == selectedIndex && isDir) {
                     // Second click on current item. Folder only.
-                    // Use path with /. to guide onRefreshRequested to get parent path as itself.
-                    switch (selectedCloudType) {
-                    case CloudDriveModel.Dropbox:
-                        changeRemotePath(path + "/.");
-                        break;
-                    case CloudDriveModel.SkyDrive:
-                        changeRemotePath(path);
-                        break;
-                    case CloudDriveModel.Ftp:
-                        changeRemotePath(path);
-                        break;
-                    }
+                    changeRemotePath(path);
                 } else {
                     // Always set selectedIndex to support changeRemotePath.
                     selectedIndex = index;

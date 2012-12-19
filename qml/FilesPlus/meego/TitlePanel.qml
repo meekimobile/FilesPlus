@@ -4,6 +4,7 @@ import "Utility.js" as Utility
 Rectangle {
     property alias text: headerText.text
     property alias horizontalAlignment: headerText.horizontalAlignment
+    property int textLeftMargin: 10
 
     id: titlePanel
     anchors.top: parent.top
@@ -31,7 +32,7 @@ Rectangle {
         width: parent.width - 20
         height: parent.height
         anchors.left: parent.left
-        anchors.leftMargin: 10
+        anchors.leftMargin: textLeftMargin
         verticalAlignment: Text.AlignVCenter
         color: (theme.inverted) ? "white" : "black"
         font.pointSize: 18

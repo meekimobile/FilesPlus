@@ -4,12 +4,10 @@ import Charts 1.0
 import FolderSizeItemListModel 1.0
 import GCPClient 1.0
 import CloudDriveModel 1.0
-import AppInfo 1.0
 import QtMobility.contacts 1.1
 import QtMobility.connectivity 1.2
 import BluetoothClient 1.0
 import MessageClient 1.0
-import ClipboardModel 1.0
 import "Utility.js" as Utility
 
 Page {
@@ -50,10 +48,6 @@ Page {
     Component.onCompleted: {
         console.debug(Utility.nowText() + " folderPage onCompleted");
         window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("FolderPage"), 0.1);
-
-        // Proceeds queued jobs during constructions.
-        fsModel.proceedNextJob();
-        cloudDriveModel.resumeNextJob();
     }
 
     onStatusChanged: {
@@ -261,7 +255,8 @@ Page {
         if (fsModel.isRoot()) {
             // Flip back to list view, then push drivePage.
             flipable1.flipped = false;
-            showDrivePageSlot();
+//            showDrivePageSlot();
+            pageStack.pop(folderPage);
         } else {
             if (state == "chart") {
                 fsModel.changeDir("..", FolderSizeItemListModel.SortBySize);
@@ -454,6 +449,12 @@ Page {
         cloudDriveModel.resumeNextJob();
     }
 
+    function syncClipboardItems() {
+        uidDialog.localPath = "";
+        uidDialog.operation = CloudDriveModel.Metadata;
+        uidDialog.open();
+    }
+
     function unsyncFileSlot(srcFilePath, selectedIndex) {
         console.debug("folderPage unsyncFileSlot srcFilePath=" + srcFilePath);
 
@@ -608,6 +609,128 @@ Page {
         dropboxFullAccessConfirmation.open();
     }
 
+    function parseCloudDriveMetadataJson(jsonText) {
+        cloudDrivePathDialog.parseCloudDriveMetadataJson(jsonText);
+        cloudDrivePathDialog.open();
+    }
+
+    function updateCloudDrivePathDialogSlot(remotePath) {
+        console.debug("folderPage updateCloudDrivePathDialogSlot cloudDrivePathDialog.status " + cloudDrivePathDialog.status + " DialogStatus.Open " + DialogStatus.Open);
+        if (cloudDrivePathDialog.status == DialogStatus.Open) {
+            if (remotePath) {
+                cloudDrivePathDialog.selectedRemotePath = remotePath;
+            }
+            cloudDrivePathDialog.refresh();
+        }
+    }
+
+    function closeCloudDrivePathDialogSlot() {
+        cloudDrivePathDialog.isBusy = false;
+        cloudDrivePathDialog.close();
+    }
+
+    function updateFolderSizeItemSlot(localPath, isRunning) {
+        if (localPath == "") return;
+
+        // Update ProgressBar on listItem.
+        fsModel.setProperty(localPath, FolderSizeItemListModel.IsRunningRole, isRunning);
+
+        // Show indicator on parent up to root.
+        // Skip i=0 as it's notified above already.
+        var pathList = fsModel.getPathToRoot(localPath);
+        for(var i=1; i<pathList.length; i++) {
+            modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+            if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+            }
+        }
+    }
+
+    function updateFolderSizeItemProgressBarSlot(locaPath, isRunning, cloudDriveOperation, runningValue, runningMaxValue) {
+        if (localPath == "") return;
+
+        // Update ProgressBar on listItem.
+        var runningOperation = fsModel.mapToFolderSizeListModelOperation(cloudDriveOperation);
+        var modelIndex = fsModel.getIndexOnCurrentDir(locaPath);
+        if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
+            fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+            fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, runningOperation);
+            fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, runningValue);
+            fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, runningMaxValue);
+        }
+
+        // Show indicator on parent up to root.
+        // Skip i=0 as it's notified above already.
+        var pathList = fsModel.getPathToRoot(locaPath);
+        for(var i=1; i<pathList.length; i++) {
+            modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+            if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
+            }
+        }
+    }
+
+    function refreshItemAfterFileGetSlot(localPath) {
+        // Remove cache on target folders and its parents.
+        fsModel.removeCache(localPath);
+
+        // TODO Does it need to refresh to add gotten file to listview ?
+        var index = fsModel.getIndexOnCurrentDir(localPath);
+        if (index == FolderSizeItemListModel.IndexNotOnCurrentDir) {
+            // do nothing.
+        } else if (index == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
+            refreshSlot();
+        } else {
+            fsModel.refreshItem(index);
+        }
+    }
+
+    function updateJobQueueCount(runningJobCount, jobQueueCount) {
+        // Update (runningJobCount + jobQueueCount) on cloudButton.
+        cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
+    }
+
+    function showRecipientSelectionDialogSlot(cloudDriveType, uid, localPath, url) {
+        // Open recipientSelectionDialog for sending share link.
+        var senderEmail = cloudDriveModel.getUidEmail(cloudDriveType, uid);
+        if (senderEmail != "") {
+            recipientSelectionDialog.srcFilePath = json.local_file_path;
+            recipientSelectionDialog.messageSubject = appInfo.emptyStr+qsTr("Share file on %1").arg(cloudDriveModel.getCloudName(cloudDriveType));
+            recipientSelectionDialog.messageBody = appInfo.emptyStr+qsTr("Please download file with below link.") + "\n" + url;
+            recipientSelectionDialog.senderEmail = senderEmail;
+            recipientSelectionDialog.open();
+        }
+    }
+
+    function refreshItemSlot(localPath) {
+        fsModel.refreshItem(localPath);
+    }
+
+    function updateMigrationProgressSlot(type, uid, localFilePath, remoteFilePath, count, total) {
+        if (migrateProgressDialog.status != DialogStatus.Open) {
+            migrateProgressDialog.indeterminate = false;
+            migrateProgressDialog.min = 0;
+            migrateProgressDialog.open();
+        }
+        migrateProgressDialog.source = localFilePath;
+        migrateProgressDialog.value = count;
+        migrateProgressDialog.max = total;
+    }
+
+    function showMessageDialogSlot(titleText, message, autoCloseInterval) {
+        if (autoCloseInterval) {
+            messageDialog.autoClose = true;
+            messageDialog.autoCloseInterval = autoCloseInterval;
+        } else {
+            messageDialog.autoClose = false;
+            messageDialog.autoCloseInterval = -1;
+        }
+        messageDialog.titleText = appInfo.emptyStr+titleText;
+        messageDialog.message = appInfo.emptyStr+message;
+        messageDialog.open();
+    }
+
     FolderSizeItemListModel {
         id: fsModel
 
@@ -621,6 +744,19 @@ Page {
                 return qsTr("Move");
             case FolderSizeItemListModel.DeleteFile:
                 return qsTr("Delete");
+            }
+        }
+
+        function mapToFolderSizeListModelOperation(cloudDriveModelOperation) {
+            switch (cloudDriveModelOperation) {
+            case CloudDriveModel.Metadata:
+                return FolderSizeItemListModel.SyncOperation;
+            case CloudDriveModel.FileGet:
+                return FolderSizeItemListModel.DownloadOperation;
+            case CloudDriveModel.FilePut:
+                return FolderSizeItemListModel.UploadOperation;
+            default:
+                return FolderSizeItemListModel.SyncOperation;
             }
         }
 
@@ -850,6 +986,9 @@ Page {
         Component.onCompleted: {
             console.debug(Utility.nowText() + " folderPage fsModel onCompleted");
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("FolderModel"), 0.1);
+
+            // Proceeds queued jobs during constructions.
+            fsModel.proceedNextJob();
         }
     }
 
@@ -1087,8 +1226,8 @@ Page {
                 model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
             }
 
-            // Invoke CloudDriveModel syncClipboard
-            cloudDriveModel.syncClipboardItems();
+            // Invoke syncClipboard.
+            syncClipboardItems();
         }
 
         onMovementStarted: {
@@ -1380,45 +1519,6 @@ Page {
 
     MessageDialog {
         id: messageDialog
-    }
-
-    ClipboardModel {
-        id: clipboard
-
-        function getActionIcon(localPath) {
-            var jsonText = clipboard.getItemJsonText(localPath);
-            if (jsonText != "") {
-                var json = Utility.createJsonObj(jsonText);
-                if (json) {
-                    if (json.action == "copy") {
-                        return (!window.platformInverted) ? "copy.svg" : "copy_inverted.svg";
-                    } else if (json.action == "cut") {
-                        return (!window.platformInverted) ? "trim.svg" : "trim_inverted.svg";
-                    }
-                }
-            }
-            return "";
-        }
-
-        function get(index) {
-            var jsonText = clipboard.getItemJsonText(index);
-            if (jsonText != "") {
-                var json = Utility.createJsonObj(jsonText);
-                return json;
-            }
-
-            return null;
-        }
-
-        function addItem(json) {
-            console.debug(Utility.nowText() + "clipboard additem json " + json);
-            clipboard.addClipboardItem(json.sourcePath, Utility.createJsonText(json) );
-        }
-
-        function addItemWithSuppressCountChanged(json) {
-            console.debug(Utility.nowText() + "clipboard addItemWithSuppressCountChanged json " + json);
-            clipboard.addClipboardItem(json.sourcePath, Utility.createJsonText(json), true);
-        }
     }
 
     Rectangle {
@@ -2324,946 +2424,6 @@ Page {
         Component.onCompleted: {
             console.debug(Utility.nowText() + " folderPage gcpClient onCompleted");
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("GCPClient"), 0.1);
-        }
-    }
-
-    CloudDriveModel {
-        id: cloudDriveModel
-        dropboxFullAccess: appInfo.emptySetting+appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", false)
-
-        property string shareFileCaller: uidDialog.caller
-
-        function syncClipboardItems() {
-            uidDialog.localPath = "";
-            uidDialog.operation = CloudDriveModel.Metadata;
-            uidDialog.open();
-        }
-
-        function mapToFolderSizeListModelOperation(cloudDriveModelOperation) {
-            switch (cloudDriveModelOperation) {
-            case CloudDriveModel.Metadata:
-                return FolderSizeItemListModel.SyncOperation;
-            case CloudDriveModel.FileGet:
-                return FolderSizeItemListModel.DownloadOperation;
-            case CloudDriveModel.FilePut:
-                return FolderSizeItemListModel.UploadOperation;
-            default:
-                return FolderSizeItemListModel.SyncOperation;
-            }
-        }
-
-        function getUidListModel(localPath) {
-            console.debug("getUidListModel localPath " + localPath);
-
-            // TODO Get uid list from GDClient.
-
-            // Get uid list.
-            var uidList = cloudDriveModel.getStoredUidList();
-
-            // Construct model.
-            var model = Qt.createQmlObject(
-                        'import QtQuick 1.1; ListModel {}', folderPage);
-
-            for (var i=0; i<uidList.length; i++)
-            {
-                var json = JSON.parse(uidList[i]);
-                var localHash = cloudDriveModel.getItemHash(localPath, getClientType(json.type), json.uid);
-                console.debug("getUidListModel i " + i + " type " + json.type + " uid " + json.uid + " email " + json.email + " localHash " + localHash);
-                model.append({
-                                 type: getClientType(json.type),
-                                 uid: json.uid,
-                                 email: json.email,
-                                 hash: localHash,
-                                 name: "",
-                                 shared: 0,
-                                 normal: 0,
-                                 quota: 0
-                             });
-            }
-
-            return model;
-        }
-
-        function getUidEmail(type, uid) {
-            // Get uid list from DropboxClient.
-            var dbUidList = cloudDriveModel.getStoredUidList(type);
-
-            for (var i=0; i<dbUidList.length; i++)
-            {
-                var json = JSON.parse(dbUidList[i]);
-                if (uid == json.uid) return json.email;
-            }
-
-            return "";
-        }
-
-        function getCloudIcon(type) {
-            switch (type) {
-            case CloudDriveModel.Dropbox:
-                return "dropbox_icon.png";
-            case CloudDriveModel.GoogleDrive:
-                return "drive_icon.png";
-            case CloudDriveModel.SkyDrive:
-                return "skydrive_icon.png";
-            case CloudDriveModel.Ftp:
-                return "ftp_icon.png";
-            }
-        }
-
-        function getCloudName(type) {
-            switch (type) {
-            case CloudDriveModel.Dropbox:
-                return "Dropbox";
-            case CloudDriveModel.GoogleDrive:
-                return "GoogleDrive";
-            case CloudDriveModel.SkyDrive:
-                return "SkyDrive";
-            case CloudDriveModel.Ftp:
-                return "FTP";
-            }
-        }
-
-        function getClientType(typeText) {
-            if (typeText.toLowerCase() == "dropboxclient") {
-                return CloudDriveModel.Dropbox;
-            } else if (typeText.toLowerCase() == "skydriveclient") {
-                return CloudDriveModel.SkyDrive;
-            } else if (typeText.toLowerCase() == "ftpclient") {
-                return CloudDriveModel.Ftp;
-            }
-
-            return -1;
-        }
-
-        function getRemoteName(remotePath) {
-            var name = "";
-            if (remotePath != "") {
-                name = remotePath.substr(remotePath.lastIndexOf("/") + 1);
-            }
-
-            return name;
-        }
-
-        onRequestTokenReplySignal: {
-            console.debug("folderPage cloudDriveModel onRequestTokenReplySignal " + err + " " + errMsg + " " + msg);
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
-
-            if (err == 0) {
-                // TODO how to check if app has been authorized by user.
-                cloudDriveModel.authorize(CloudDriveModel.Dropbox);
-            } else {
-                messageDialog.titleText = appInfo.emptyStr+qsTr("CloudDrive Request Token");
-                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.open();
-            }
-        }
-
-        onAuthorizeRedirectSignal: {
-            console.debug("folderPage cloudDriveModel onAuthorizeRedirectSignal " + url + " redirectFrom " + redirectFrom);
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
-
-            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: redirectFrom }, true);
-        }
-
-        onAccessTokenReplySignal: {
-            console.debug("folderPage cloudDriveModel onAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
-
-            if (err == 0) {
-                // TODO find better way to proceed after got accessToken.
-                if (popupToolPanel.selectedFilePath) {
-                    uidDialog.proceedPendingOperation();
-//                    syncFileSlot(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
-                } else {
-                    // TODO Get account info and show in dialog.
-                    messageDialog.titleText = appInfo.emptyStr+qsTr("CloudDrive Access Token");
-                    messageDialog.message = appInfo.emptyStr+qsTr("CloudDrive user is authorized.\nPlease proceed your sync action.");
-                    messageDialog.open();
-
-                    // Refresh account page.
-                    var p = pageStack.find(function (page) { return page.name == "cloudDriveAccountsPage"; });
-                    if (p) p.refreshCloudDriveAccountsSlot();
-                }
-            } else {
-                messageDialog.titleText = appInfo.emptyStr+qsTr("CloudDrive Access Token");
-                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.open();
-            }
-        }
-
-        onAccountInfoReplySignal: {
-            console.debug("folderPage cloudDriveModel onAccountInfoReplySignal " + err + " " + errMsg + " " + msg);
-
-            var jsonText = cloudDriveModel.getJobJson(nonce);
-            var cloudDriveJobJson = JSON.parse(jsonText);
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
-
-            if (err == 0) {
-                var jsonObj = Utility.createJsonObj(msg);
-
-                // Send info to cloudDriveAccountsPage.
-                var p;
-                p = pageStack.find(function (page) { return (page.name == "cloudDriveAccountsPage"); });
-                if (p) {
-                    switch (cloudDriveJobJson.type) {
-                    case CloudDriveModel.Dropbox:
-                        p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email, jsonObj.quota_info.shared, jsonObj.quota_info.normal, jsonObj.quota_info.quota);
-                        break;
-                    case CloudDriveModel.SkyDrive:
-                        p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email, 0, 0, 0);
-                        break;
-                    }
-
-                }
-
-                // Send info to drivePage.
-                p = pageStack.find(function (page) { return (page.name == "drivePage"); });
-                if (p) {
-                    switch (cloudDriveJobJson.type) {
-                    case CloudDriveModel.Dropbox:
-                        p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email, jsonObj.quota_info.shared, jsonObj.quota_info.normal, jsonObj.quota_info.quota);
-                        break;
-                    case CloudDriveModel.SkyDrive:
-                        p.updateAccountInfoSlot(cloudDriveJobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email, 0, 0, 0);
-                        break;
-                    }
-                }
-            } else if (err == 204) {
-                // TODO Refactor to support all SkyDriveClient services.
-                cloudDriveModel.refreshToken(cloudDriveJobJson.type, cloudDriveJobJson.uid);
-            } else {
-                messageDialog.titleText = appInfo.emptyStr+qsTr("CloudDrive Account Info");
-                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.open();
-            }
-        }
-
-        onQuotaReplySignal: {
-            console.debug("folderPage cloudDriveModel onQuotaReplySignal " + err + " " + errMsg + " " + msg);
-
-            var jsonText = cloudDriveModel.getJobJson(nonce);
-            var cloudDriveJobJson = JSON.parse(jsonText);
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
-
-            if (err == 0) {
-                var jsonObj = Utility.createJsonObj(msg);
-
-                // Send info to cloudDriveAccountsPage.
-                var p;
-                p = pageStack.find(function (page) { return (page.name == "cloudDriveAccountsPage"); });
-                if (p) {
-                    switch (cloudDriveJobJson.type) {
-                    case CloudDriveModel.SkyDrive:
-                        p.updateAccountInfoSlot(cloudDriveJobJson.type, cloudDriveJobJson.uid, "", cloudDriveModel.getUidEmail(cloudDriveJobJson.type, cloudDriveJobJson.uid), 0, jsonObj.quota-jsonObj.available, jsonObj.quota);
-                        break;
-                    }
-
-                }
-
-                // Send info to drivePage.
-                p = pageStack.find(function (page) { return (page.name == "drivePage"); });
-                if (p) {
-                    switch (cloudDriveJobJson.type) {
-                    case CloudDriveModel.SkyDrive:
-                        p.updateAccountInfoSlot(cloudDriveJobJson.type, cloudDriveJobJson.uid, "", cloudDriveModel.getUidEmail(cloudDriveJobJson.type, cloudDriveJobJson.uid), 0, jsonObj.quota-jsonObj.available, jsonObj.quota);
-                        break;
-                    }
-                }
-            } else if (err == 204) {
-                // TODO Refactor to support all SkyDriveClient services.
-                cloudDriveModel.refreshToken(cloudDriveJobJson.type, cloudDriveJobJson.uid);
-            } else {
-                messageDialog.titleText = appInfo.emptyStr+qsTr("CloudDrive Quota");
-                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.open();
-            }
-        }
-
-        onFileGetReplySignal: {
-            console.debug("folderPage cloudDriveModel onFileGetReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
-
-            var jsonText = cloudDriveModel.getJobJson(nonce);
-//            console.debug("folderPage cloudDriveModel jsonText " + jsonText);
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
-
-            var json = JSON.parse(jsonText);
-            var modelIndex = json.model_index;
-            var isRunning = json.is_running;
-
-            // Update ProgressBar on listItem.
-            // TODO also show running on its parents.
-            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
-
-            // Show indicator on parent up to root.
-            // Skip i=0 as it's notified above already.
-            var pathList = fsModel.getPathToRoot(json.local_file_path);
-            for(var i=1; i<pathList.length; i++) {
-                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                }
-            }
-
-            if (err == 0) {
-                // Remove cache on target folders and its parents.
-                fsModel.removeCache(json.local_file_path);
-
-                // TODO Does it need to refresh to add gotten file to listview ?
-                var index = fsModel.getIndexOnCurrentDir(json.local_file_path);
-                if (index == FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                    // do nothing.
-                } else if (index == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
-                    refreshSlot();
-                } else {
-                    fsModel.refreshItem(index);
-                }
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(json.type, json.uid);
-            } else {
-                messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("File Get");
-                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.open();
-            }
-        }
-
-        onFilePutReplySignal: {
-            console.debug("folderPage cloudDriveModel onFilePutReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
-
-            var jsonText = cloudDriveModel.getJobJson(nonce);
-//            console.debug("folderPage cloudDriveModel onFilePutReplySignal jsonText " + jsonText);
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
-
-            var json = JSON.parse(jsonText);
-            var modelIndex = json.model_index;
-            var isRunning = json.is_running;
-
-            // Update ProgressBar on listItem.
-            // TODO also show running on its parents.
-            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
-
-            // Show indicator on parent up to root.
-            // Skip i=0 as it's notified above already.
-            var pathList = fsModel.getPathToRoot(json.local_file_path);
-            for(var i=1; i<pathList.length; i++) {
-                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                }
-            }
-
-            if (err == 0) {
-                // Do nothing.
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(json.type, json.uid);
-            } else {
-                messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("File Put");
-                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.open();
-            }
-        }
-
-        onMetadataReplySignal: {
-            // Get job json.
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
-            console.debug("folderPage cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " " + err + " " + errMsg + " " + msg);
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
-
-            if (err == 0) {
-                // Found metadata.
-                var jsonObj = Utility.createJsonObj(msg);
-                var itemJson = Utility.createJsonObj(cloudDriveModel.getItemJson(jobJson.local_file_path, jobJson.type, jobJson.uid));
-                var localPathHash = cloudDriveModel.getItemHash(jobJson.local_file_path, jobJson.type, jobJson.uid);
-//                console.debug("folderPage cloudDriveModel onMetadataReplySignal jobJson " + jobJson.local_file_path + " " + jobJson.type + " " + jobJson.uid + " " + localPathHash);
-
-                if (jobJson.type == CloudDriveModel.Dropbox) {
-                    // If remotePath was deleted, remove link from localPath.
-                    if (jsonObj.is_deleted) {
-                        // If dir, should remove all sub items.
-                        cloudDriveModel.removeItemWithChildren(jobJson.type, jobJson.uid, jobJson.local_file_path);
-
-                        // Update ProgressBar on listItem.
-                        fsModel.setProperty(jobJson.local_file_path, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
-
-                        // Notify removed link.
-                        messageDialog.titleText = getCloudName(jobJson.type) + " Metadata";
-                        messageDialog.message = appInfo.emptyStr+qsTr("%1 was removed remotely.\nLink will be removed.").arg(jobJson.local_file_path);
-                        messageDialog.autoClose = true;
-                        messageDialog.open();
-                    } else {
-                        // Suspend next job.
-                        cloudDriveModel.suspendNextJob();
-
-                        // Sync starts from itself.
-                        if (jsonObj.is_dir) { // Sync folder.
-                            // If there is no local folder, create it and connect.
-                            if (!fsModel.isDir(jobJson.local_file_path)) {
-                                // TODO Add item to ListView.
-                                fsModel.createDirPath(jobJson.local_file_path);
-                            }
-
-                            // Sync based on remote contents.
-    //                        console.debug("cloudDriveModel onMetadataReplySignal folder jsonObj.rev " + jsonObj.rev + " jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
-                            if (jsonObj.hash != localPathHash) { // Sync all json(remote)'s contents.
-                                for(var i=0; i<jsonObj.contents.length; i++) {
-                                    var item = jsonObj.contents[i];
-                                    var itemLocalPath = fsModel.getAbsolutePath(jobJson.local_file_path, cloudDriveModel.getRemoteName(item.path));
-                                    var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
-                                    var itemRemotePath = item.path;
-                                    var itemRemoteHash = item.rev;
-                                    if (item.is_dir) {
-                                        // This flow will trigger recursive metadata calling.
-//                                        console.debug("cloudDriveModel onMetadataReplySignal dir itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
-                                        cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, item.path, -1);
-                                    } else {
-//                                        console.debug("cloudDriveModel onMetadataReplySignal file itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
-                                        if (itemRemoteHash > itemLocalHash) {
-                                            cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemLocalPath, -1);
-                                        } else if (itemRemoteHash < itemLocalHash) {
-                                            cloudDriveModel.filePut(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
-                                        } else {
-                                            cloudDriveModel.addItem(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, itemRemoteHash);
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Add or Update timestamp from local to cloudDriveItem.
-                            cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jsonObj.hash);
-
-                            // Sync based on local contents.
-                            cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
-                        } else { // Sync file.
-    //                        console.debug("cloudDriveModel onMetadataReplySignal file jsonObj.rev " + jsonObj.rev + " localPathHash " + localPathHash);
-
-                            // If (rev is newer or there is no local file), get from remote.
-                            if (jsonObj.rev > localPathHash || !fsModel.isFile(jobJson.local_file_path)) {
-                                // TODO Add item to ListView.
-                                cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.local_file_path, jobJson.modelIndex);
-                            } else if (jsonObj.rev < localPathHash) {
-                                cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
-                            } else {
-                                // Update lastModified on cloudDriveItem.
-                                cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jsonObj.rev);
-                            }
-                        }
-
-                        // Resume next jobs.
-                        cloudDriveModel.resumeNextJob();
-                    }
-                }
-
-                // TODO Supports SkyDrive.
-                if (jobJson.type == CloudDriveModel.SkyDrive) {
-                    console.debug("folderPage cloudDriveModel onMetadataReplySignal SkyDrive jobJson " + jobJson.type + " " + jobJson.uid + " " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + localPathHash);
-
-                    if (jsonObj.property) {
-                        // Suspend next job.
-                        cloudDriveModel.suspendNextJob();
-
-                        // Generate hash from updated_time.
-                        var remotePathHash = jsonObj.property.updated_time;
-    //                    console.debug("folderPage cloudDriveModel onMetadataReplySignal remotePathHash " + remotePathHash);
-
-                        // Sync starts from itself.
-                        if (jsonObj.property.type == "folder" || jsonObj.property.type == "album") { // Sync folder.
-                            // If there is no local folder, create it and connect.
-                            if (!fsModel.isDir(jobJson.local_file_path)) {
-                                // TODO Add item to ListView.
-                                fsModel.createDirPath(jobJson.local_file_path);
-                            }
-
-                            // Sync based on remote contents.
-    //                        console.debug("cloudDriveModel onMetadataReplySignal folder jsonObj.rev " + jsonObj.rev + " jsonObj.hash " + jsonObj.hash + " localPathHash " + localPathHash);
-                            if (remotePathHash != localPathHash) { // Sync all json(remote)'s contents.
-                                for(var i=0; i<jsonObj.data.length; i++) {
-                                    var item = jsonObj.data[i];
-                                    var itemLocalPath = fsModel.getAbsolutePath(jobJson.local_file_path, item.name);
-                                    var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
-                                    var itemRemotePath = item.id;
-                                    var itemRemoteHash = item.updated_time;
-                                    if (item.type == "folder" || item.type == "album") {
-                                        // This flow will trigger recursive metadata calling.
-                                        console.debug("cloudDriveModel onMetadataReplySignal dir itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
-                                        cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
-                                    } else {
-                                        console.debug("cloudDriveModel onMetadataReplySignal file itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
-                                        if (itemRemoteHash > itemLocalHash) {
-                                            cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemLocalPath, -1);
-                                        } else if (itemRemoteHash < itemLocalHash) {
-                                            // Put file to remote parent path. Or root if parent_id is null.
-                                            itemRemotePath = (item.parent_id) ? item.parent_id : "me/skydrive";
-                                            cloudDriveModel.filePut(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
-                                        } else {
-                                            cloudDriveModel.addItem(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, itemRemoteHash);
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Add or Update timestamp from local to cloudDriveItem.
-                            cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
-
-                            // Sync based on local contents.
-                            cloudDriveModel.syncFromLocal_SkyDrive(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
-                        } else { // Sync file.
-                            console.debug("folderPage cloudDriveModel onMetadataReplySignal file jobJson " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + jobJson.type + " " + jobJson.uid + " remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
-
-                            // If (rev is newer or there is no local file), get from remote.
-                            if (remotePathHash > localPathHash || !fsModel.isFile(jobJson.local_file_path)) {
-                                // TODO Add item to ListView.
-                                cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.local_file_path, jobJson.modelIndex);
-                            } else if (remotePathHash < localPathHash) {
-                                // Put file to remote parent path. Or root if parent_id is null.
-                                var remoteParentPath = (jsonObj.property.parent_id) ? jsonObj.property.parent_id : "me/skydrive";
-                                cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
-                            } else {
-                                // Update lastModified on cloudDriveItem.
-                                cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
-                            }
-                        }
-
-                        // Resume next jobs.
-                        cloudDriveModel.resumeNextJob();
-                    } else {
-                        console.debug("folderPage cloudDriveModel onMetadataReplySignal property is not found.");
-                    }
-                }
-
-                // TODO Supports FTP.
-                if (jobJson.type == CloudDriveModel.Ftp) {
-                    console.debug("folderPage cloudDriveModel onMetadataReplySignal Ftp jobJson " + jobJson.type + " " + jobJson.uid + " " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + localPathHash);
-
-                    if (jsonObj.property) {
-                        // Suspend next job.
-                        cloudDriveModel.suspendNextJob();
-
-                        // Generate hash from updated_time.
-                        var remotePathHash = jsonObj.property.lastModified;
-    //                    console.debug("folderPage cloudDriveModel onMetadataReplySignal remotePathHash " + remotePathHash);
-
-                        // Sync starts from itself.
-                        if (jsonObj.property.isDir) { // Sync folder.
-                            // If there is no local folder, create it and connect.
-                            if (!fsModel.isDir(jobJson.local_file_path)) {
-                                // TODO Add item to ListView.
-                                fsModel.createDirPath(jobJson.local_file_path);
-                            }
-
-                            // Sync based on remote contents.
-                            console.debug("cloudDriveModel onMetadataReplySignal folder remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
-                            if (remotePathHash != localPathHash) { // Sync all json(remote)'s contents.
-                                for(var i=0; i<jsonObj.data.length; i++) {
-                                    var item = jsonObj.data[i];
-                                    var itemLocalPath = fsModel.getAbsolutePath(jobJson.local_file_path, item.name);
-                                    var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
-                                    var itemRemotePath = item.path;
-                                    var itemRemoteHash = item.lastModified;
-                                    if (item.isDir) {
-                                        // This flow will trigger recursive metadata calling.
-                                        console.debug("cloudDriveModel onMetadataReplySignal dir itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.lastModified);
-                                        cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
-                                    } else {
-                                        console.debug("cloudDriveModel onMetadataReplySignal file itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.lastModified);
-                                        if (itemRemoteHash > itemLocalHash) {
-                                            cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemLocalPath, -1);
-                                        } else if (itemRemoteHash < itemLocalHash) {
-                                            // Put file to remote parent path. Or root if parent_id is null.
-                                            itemRemotePath = (item.parent_id) ? item.parent_id : "me/skydrive";
-                                            cloudDriveModel.filePut(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
-                                        } else {
-                                            cloudDriveModel.addItem(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, itemRemoteHash);
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Add or Update timestamp from local to cloudDriveItem.
-                            cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
-
-                            // Sync based on local contents.
-                            cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
-                        } else { // Sync file.
-                            console.debug("folderPage cloudDriveModel onMetadataReplySignal file jobJson " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + jobJson.type + " " + jobJson.uid + " remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
-
-                            // If (rev is newer or there is no local file), get from remote.
-                            if (remotePathHash > localPathHash || !fsModel.isFile(jobJson.local_file_path)) {
-                                // TODO Add item to ListView.
-                                cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.local_file_path, jobJson.modelIndex);
-                            } else if (remotePathHash < localPathHash) {
-                                cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
-                            } else {
-                                // Update lastModified on cloudDriveItem.
-                                cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
-                            }
-                        }
-
-                        // Resume next jobs.
-                        cloudDriveModel.resumeNextJob();
-                    } else {
-                        console.debug("folderPage cloudDriveModel onMetadataReplySignal property is not found.");
-                    }
-                }
-
-            } else if (err == 203) { // If metadata is not found, put it to cloud right away recursively.
-                console.debug("folderPage cloudDriveModel onMetadataReplySignal " + err + " " + errMsg + " " + msg);
-
-                // Suspend next job.
-                cloudDriveModel.suspendNextJob();
-
-                if (jobJson.type == CloudDriveModel.Dropbox) {
-                    if (fsModel.isDir(jobJson.local_file_path)) {
-                        // Remote folder will be created in syncFromLocal if it's required.
-                        cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
-
-                        // Request metadata for current dir.
-                        // Once it got reply, it should get hash already.
-                        // Because its sub files/dirs are in prior queue.
-                        // cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
-                    } else {
-                        cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
-                    }
-                }
-
-                // TODO Supports SkyDrive.
-                if (jobJson.type == CloudDriveModel.SkyDrive) {
-
-                }
-
-                // TODO Supports Ftp.
-                if (jobJson.type == CloudDriveModel.Ftp) {
-                    if (fsModel.isDir(jobJson.local_file_path)) {
-                        // Remote folder will be created in syncFromLocal if it's required.
-                        cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
-                    } else {
-                        cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
-                    }
-                }
-
-                // Resume next jobs.
-                cloudDriveModel.resumeNextJob();
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
-            } else {
-                messageDialog.titleText = getCloudName(jobJson.type) + " Metadata";
-                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.open();
-
-                // Reset running.
-                jobJson.is_running = false;
-            }
-
-            // Show indicator on path up to root.
-            var pathList = fsModel.getPathToRoot(jobJson.local_file_path);
-            for(var i=0; i<pathList.length; i++) {
-                var modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
-                }
-            }
-
-            // Workaround: Refresh item once got reply. To fix unexpected showing cloud_wait icon.
-            fsModel.refreshItem(jobJson.local_file_path);
-        }
-
-        onCreateFolderReplySignal: {
-            console.debug("folderPage cloudDriveModel onCreateFolderReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
-
-            var jsonText = cloudDriveModel.getJobJson(nonce);
-//            console.debug("folderPage cloudDriveModel jsonText " + jsonText);
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
-            var json = JSON.parse(jsonText);
-            var modelIndex = json.model_index;
-            var isRunning = json.is_running;
-
-            if (err == 0) {
-                // Do nothing.
-            } else if (err == 202) { // Folder already exists.
-                // Do nothing.
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(json.type, json.uid);
-            } else {
-                messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Create Folder");
-                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.open();
-            }
-
-            // TODO *** create SkyDrive folder freezes here *** TODO Does it need?
-            // Update ProgressBar if localPath is specified.
-            if (json.local_file_path != "") {
-                fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
-
-                // Show indicator on parent up to root.
-                // Skip i=0 as it's notified above already.
-                var pathList = fsModel.getPathToRoot(json.local_file_path);
-                for(var i=1; i<pathList.length; i++) {
-                    modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                    if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                        fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                    }
-                }
-            }
-
-            // Refresh cloudDrivePathDialog if it's opened.
-            console.debug("folderPage cloudDriveModel onCreateFolderReplySignal cloudDrivePathDialog.status " + cloudDrivePathDialog.status + " DialogStatus.Open " + DialogStatus.Open);
-            if (cloudDrivePathDialog.status == DialogStatus.Open) {
-                cloudDrivePathDialog.selectedRemotePath = json.new_remote_file_path;
-                cloudDrivePathDialog.refresh();
-            }
-        }
-
-        onDownloadProgress: {
-//            console.debug("folderPage cloudDriveModel onDownloadProgress " + nonce + " " + bytesReceived + " / " + bytesTotal);
-
-            var jsonText = cloudDriveModel.getJobJson(nonce);
-//            console.debug("folderPage cloudDriveModel jsonText " + jsonText);
-
-            var json = JSON.parse(jsonText);
-            var isRunning = json.is_running
-
-            // Update ProgressBar on listItem.
-            var modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
-            if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, mapToFolderSizeListModelOperation(json.operation) );
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesReceived);
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
-            }
-
-            // Show indicator on parent up to root.
-            // Skip i=0 as it's notified above already.
-            var pathList = fsModel.getPathToRoot(json.local_file_path);
-            for(var i=1; i<pathList.length; i++) {
-                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
-                }
-            }
-        }
-
-        onUploadProgress: {
-//            console.debug("folderPage cloudDriveModel onUploadProgress " + nonce + " " + bytesSent + " / " + bytesTotal);
-
-            var jsonText = cloudDriveModel.getJobJson(nonce);
-//            console.debug("folderPage cloudDriveModel jsonText " + jsonText);
-
-            var json = JSON.parse(jsonText);
-            var isRunning = json.is_running
-
-            // Update ProgressBar on listItem.
-            var modelIndex = fsModel.getIndexOnCurrentDir(json.local_file_path);
-            if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, mapToFolderSizeListModelOperation(json.operation) );
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, bytesSent);
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, bytesTotal);
-            }
-
-            // Show indicator on parent up to root.
-            // Skip i=0 as it's notified above already.
-            var pathList = fsModel.getPathToRoot(json.local_file_path);
-            for(var i=1; i<pathList.length; i++) {
-                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
-                }
-            }
-        }
-
-        onLocalChangedSignal: {
-            // TODO Disable becuase it can damage stored hash.
-            // Reset CloudDriveItem hash upto root.
-//            var paths = fsModel.getPathToRoot(localPath);
-//            for (var i=0; i<paths.length; i++) {
-//                console.debug("folderPage cloudDriveModel onLocalChangedSignal updateItems paths[" + i + "] " + paths[i]);
-//                cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
-//            }
-        }
-
-        onJobQueueStatusSignal: {
-            // Send info to cloudDriveAccountsPage.
-            if (pageStack) {
-                var p = pageStack.find(function (page) { return (page.name == "settingPage"); });
-                if (p) {
-                    p.updateJobQueueCount(runningJobCount, jobQueueCount);
-                    p.updateCloudDriveItemCount(itemCount);
-                }
-            }
-
-            // Update (runningJobCount + jobQueueCount) on cloudButton.
-            cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
-        }
-
-        onRefreshRequestSignal: {
-            refreshSlot("cloudDriveModel onRefreshRequestSignal");
-        }
-
-        onMoveFileReplySignal: {
-            console.debug("folderPage cloudDriveModel onMoveFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
-
-            var json = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
-
-            console.debug("folderPage cloudDriveModel onMoveFileReplySignal json " + cloudDriveModel.getJobJson(nonce));
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
-
-            if (err == 0) {
-                // Cloud items have been managed by CloudDriveModel::moveFileReplyFilter.
-                // Sync after move.
-                cloudDriveModel.metadata(json.type, json.uid, json.new_local_file_path, json.new_remote_file_path, json.model_index);
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(json.type, json.uid);
-            } else {
-                messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Move");
-                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.open();
-            }
-
-            // Update ProgressBar on listItem.
-            // TODO also show running on its parents.
-            fsModel.setProperty(json.new_local_file_path, FolderSizeItemListModel.IsRunningRole, false);
-            fsModel.refreshItem(json.new_local_file_path);
-        }
-
-        onDeleteFileReplySignal: {
-            console.debug("folderPage cloudDriveModel onDeleteFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
-
-            var json = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
-            var modelIndex = json.model_index;
-            var isRunning = json.is_running;
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
-
-            if (err == 0) {
-                // do nothing.
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(json.type, json.uid);
-            } else {
-                messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Delete");
-                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.open();
-            }
-
-            // Update ProgressBar if localPath is specified.
-            if (json.local_file_path != "") {
-                fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
-
-                // Show indicator on parent up to root.
-                // Skip i=0 as it's notified above already.
-                var pathList = fsModel.getPathToRoot(json.local_file_path);
-                for(var i=1; i<pathList.length; i++) {
-                    modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-                    if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                        fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                    }
-                }
-            }
-
-            // Refresh cloudDrivePathDialog if it's opened.
-            console.debug("folderPage cloudDriveModel onDeleteFileReplySignal cloudDrivePathDialog.status " + cloudDrivePathDialog.status + " DialogStatus.Open " + DialogStatus.Open);
-            if (cloudDrivePathDialog.status == DialogStatus.Open) {
-                cloudDrivePathDialog.refresh();
-            }
-        }
-
-        onShareFileReplySignal: {
-            console.debug("folderPage cloudDriveModel onShareFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg + " " + url + " " + expires);
-
-            var json = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
-
-            var isRunning = json.is_running;
-
-            if (err == 0) {
-                // TODO Select delivery service. (email, sms)
-                // Open recipientSelectionDialog for sending share link.
-                var senderEmail = getUidEmail(json.type, json.uid);
-                if (senderEmail != "") {
-                    recipientSelectionDialog.srcFilePath = json.local_file_path;
-                    recipientSelectionDialog.messageSubject = appInfo.emptyStr+qsTr("Share file on %1").arg(cloudDriveModel.getCloudName(json.type));
-                    recipientSelectionDialog.messageBody = appInfo.emptyStr+qsTr("Please download file with below link.") + "\n" + url;
-                    recipientSelectionDialog.senderEmail = senderEmail;
-                    recipientSelectionDialog.open();
-                }
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(json.type, json.uid);
-            } else {
-                messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Share");
-                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.open();
-            }
-
-            // Update ProgressBar on listItem.
-            // TODO also show running on its parents.
-            fsModel.setProperty(json.local_file_path, FolderSizeItemListModel.IsRunningRole, isRunning);
-        }
-
-        onJobEnqueuedSignal: {
-            console.debug("folderPage cloudDriveModel onJobEnqueuedSignal " + nonce + " " + localPath);
-            fsModel.refreshItem(localPath);
-        }
-
-        onBrowseReplySignal: {
-            console.debug("folderPage cloudDriveModel onBrowseReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
-
-            var json = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
-
-            if (err == 0) {
-                cloudDrivePathDialog.parseCloudDriveMetadataJson(msg);
-                cloudDrivePathDialog.open();
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(json.type, json.uid);
-            } else {
-                messageDialog.titleText = getCloudName(json.type) + " " + appInfo.emptyStr+qsTr("Browse");
-                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + err + " " + errMsg + " " + msg;
-                messageDialog.open();
-
-                // Reset cloudDrivePathDialog.isBusy.
-                cloudDrivePathDialog.isBusy = false;
-                cloudDrivePathDialog.close();
-            }
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
-        }
-
-        onMigrateProgressSignal: {
-            if (migrateProgressDialog.status != DialogStatus.Open) {
-                migrateProgressDialog.indeterminate = false;
-                migrateProgressDialog.min = 0;
-                migrateProgressDialog.open();
-            }
-            migrateProgressDialog.source = localFilePath;
-            migrateProgressDialog.value = count;
-            migrateProgressDialog.max = total;
-        }
-
-        Component.onCompleted: {
-            console.debug(Utility.nowText() + " folderPage cloudDriveModel onCompleted");
-            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("CloudDriveModel"), 0.1);
         }
     }
 
