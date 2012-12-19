@@ -19,10 +19,10 @@ Page {
     }
 
     function updateAccountInfoSlot(type, uid, name, email, shared, normal, quota) {
-        console.debug("drivePage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
+//        console.debug("drivePage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
         for (var i=0; i<driveGrid.model.count; i++) {
             var item = driveGrid.model.get(i);
-            console.debug("drivePage updateAccountInfoSlot item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
+//            console.debug("drivePage updateAccountInfoSlot item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
             if (item.uid == uid && item.driveType == 7 && item.cloudDriveType == type) {
                 console.debug("drivePage updateAccountInfoSlot found item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
                 driveGrid.model.set(i, { name: name, email: email, availableSpace: (quota - shared - normal), totalSpace: quota });

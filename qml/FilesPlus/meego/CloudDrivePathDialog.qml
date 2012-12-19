@@ -276,7 +276,7 @@ CommonDialog {
         ListView {
             id: cloudDrivePathListView
             width: parent.width
-            height: (window.inPortrait ? 350 : (newFolderNameInput.activeFocus ? 70 : 210) )
+            height: (window.inPortrait ? 560 : 240) // 7 items for portrait, 3 items for landscape.
             model: ListModel {
                 id: cloudDrivePathListModel
             }
@@ -337,7 +337,7 @@ CommonDialog {
 
         ListItem {
             id: cloudDrivePathItem
-            height: 70
+            height: 80
             Row {
                 anchors.fill: parent
                 spacing: 5
