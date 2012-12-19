@@ -50,6 +50,7 @@ public:
     enum Operations {
         LoadCloudDriveItems,
         InitializeDB,
+        InitializeCloudClients,
         FileGet,
         FilePut,
         Metadata,
@@ -91,6 +92,7 @@ public:
     Q_INVOKABLE bool isDirty(QString localPath, QDateTime lastModified);
     Q_INVOKABLE bool isSyncing(QString localPath);
     Q_INVOKABLE bool isParentConnected(QString localPath);
+    Q_INVOKABLE bool isRemoteRoot(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     Q_INVOKABLE bool canSync(QString localPath);
     Q_INVOKABLE QString getFirstJobJson(QString localPath);
     Q_INVOKABLE QString getJobJson(QString jobId);
@@ -123,6 +125,12 @@ public:
 
     // Other.
     Q_INVOKABLE QString getParentRemotePath(QString remotePath);
+    Q_INVOKABLE QString getParentLocalPath(const QString absFilePath);
+    Q_INVOKABLE bool isDir(const QString absFilePath);
+    Q_INVOKABLE bool isFile(const QString absFilePath);
+    Q_INVOKABLE QString getAbsolutePath(const QString dirPath, const QString fileName);
+    Q_INVOKABLE bool createDirPath(const QString absPath);
+    Q_INVOKABLE QString getFileName(const QString absFilePath);
 
     // Scheduler.
     Q_INVOKABLE int updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp);
@@ -286,13 +294,14 @@ private:
     QMutex mutex;
 
     void saveCloudDriveItems();
+
+    void initializeCloudClients(QString nonce);
     void initializeDropboxClient();
     void initializeSkyDriveClient();
     void initializeFtpClient();
     QString createNonce();
     void jobDone();
     QString getFileType(QString localPath);
-    QString getParentLocalPath(QString localPath);
     ClientTypes getJobType(int jobType);
 
     bool m_dropboxFullAccess;

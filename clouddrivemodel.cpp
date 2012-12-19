@@ -67,6 +67,9 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     m_isSyncingCache = new QHash<QString, bool>();
 
     // Initialize cloud storage clients.
+//    CloudDriveJob initializeCloudClientsJob(createNonce(), InitializeCloudClients, -1, "", "", "", -1);
+//    m_cloudDriveJobs->insert(initializeCloudClientsJob.jobId, initializeCloudClientsJob);
+//    m_jobQueue->enqueue(initializeCloudClientsJob.jobId);
     initializeDropboxClient();
     initializeSkyDriveClient();
     initializeFtpClient();
@@ -126,6 +129,13 @@ void CloudDriveModel::saveCloudDriveItems() {
     }
 
     qDebug() << "CloudDriveModel::saveCloudDriveItems" << m_cloudDriveItems->size();
+}
+
+void CloudDriveModel::initializeCloudClients(QString nonce)
+{
+    initializeDropboxClient();
+    initializeSkyDriveClient();
+    initializeFtpClient();
 }
 
 void CloudDriveModel::initializeDropboxClient() {
@@ -447,14 +457,18 @@ bool CloudDriveModel::isParentConnected(QString localPath)
     return false;
 }
 
-QString CloudDriveModel::getParentLocalPath(QString localPath)
+bool CloudDriveModel::isRemoteRoot(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
 {
-    QString parentPath = "";
-    if (localPath != "") {
-        parentPath = localPath.mid(0, localPath.lastIndexOf("/"));
+    switch (type) {
+    case Dropbox:
+        return (remotePath == "");
+    case SkyDrive:
+        return (remotePath == "");
+    case Ftp:
+        return (remotePath == "");
+    default:
+        return false;
     }
-
-    return parentPath;
 }
 
 CloudDriveModel::ClientTypes CloudDriveModel::getJobType(int jobType)
@@ -472,11 +486,57 @@ CloudDriveModel::ClientTypes CloudDriveModel::getJobType(int jobType)
 QString CloudDriveModel::getParentRemotePath(QString remotePath)
 {
     QString remoteParentPath = "";
-    if (remotePath != "") {
+    if (remotePath != "" && remotePath != "/") {
         remoteParentPath = remotePath.mid(0, remotePath.lastIndexOf("/"));
+        remoteParentPath = (remoteParentPath == "") ? "/" : remoteParentPath;
     }
 
     return remoteParentPath;
+}
+
+QString CloudDriveModel::getParentLocalPath(const QString absFilePath)
+{
+    QFileInfo fileInfo(absFilePath);
+
+    return fileInfo.absolutePath();
+}
+
+bool CloudDriveModel::isDir(const QString absFilePath)
+{
+    QFileInfo fileInfo(absFilePath);
+
+    return fileInfo.isDir();
+}
+
+bool CloudDriveModel::isFile(const QString absFilePath)
+{
+    QFileInfo fileInfo(absFilePath);
+
+    return fileInfo.isFile();
+}
+
+QString CloudDriveModel::getAbsolutePath(const QString dirPath, const QString fileName)
+{
+    QDir dir(dirPath);
+
+    return dir.absoluteFilePath(fileName);
+}
+
+bool CloudDriveModel::createDirPath(const QString absPath)
+{
+    if (absPath.trimmed().isEmpty()) return false;
+
+    QDir dir(getParentLocalPath(absPath));
+    bool res = dir.mkdir(getFileName(absPath));
+
+    return res;
+}
+
+QString CloudDriveModel::getFileName(const QString absFilePath)
+{
+    QFileInfo fileInfo(absFilePath);
+
+    return fileInfo.fileName();
 }
 
 void CloudDriveModel::initScheduler()
@@ -2573,6 +2633,9 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         // Execute initialize locally.
         initializeDB(job.jobId);
         break;
+    case InitializeCloudClients:
+        // Execute initialize locally.
+        initializeCloudClients(job.jobId);
     case FileGet:
         cloudClient->fileGet(job.jobId, job.uid, job.remoteFilePath, job.localFilePath);
         break;
