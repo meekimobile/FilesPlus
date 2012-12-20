@@ -112,6 +112,7 @@ PageStackWindow {
 
         property string selectedFilePath
         property string selectedURL
+        property alias printerModel: gcpPrinterModel
 
         ListModel {
             id: gcpPrinterModel
@@ -153,7 +154,7 @@ PageStackWindow {
         }
 
         function printFileSlot(srcFilePath, selectedIndex) {
-            console.debug("folderPage printFileSlot srcFilePath=" + srcFilePath);
+            console.debug("gcpClient printFileSlot srcFilePath=" + srcFilePath);
 
             // Set source file to GCPClient.
             gcpClient.selectedFilePath = srcFilePath;
@@ -181,9 +182,7 @@ PageStackWindow {
                 var printerListModel = gcpClient.getPrinterListModel();
                 console.debug("folderPage printFileSlot printerListModel.count=" + printerListModel.count);
                 if (printerListModel.count > 0) {
-                    printerSelectionDialog.srcFilePath = srcFilePath;
-                    printerSelectionDialog.model = printerListModel;
-                    printerSelectionDialog.open();
+                    showPrinterSelectionDialog(srcFilePath, "");
                 } else {
                     // TODO Open progress dialog.
                     downloadProgressDialog.titleText = appInfo.emptyStr+qsTr("Search for printers");
@@ -195,7 +194,7 @@ PageStackWindow {
         }
 
         function printURLSlot(url) {
-            console.debug("folderPage printURLSlot url=" + url);
+            console.debug("gcpClient printURLSlot url=" + url);
 
             // Set source URL to GCPClient.
             gcpClient.selectedURL = url;
@@ -213,10 +212,7 @@ PageStackWindow {
                 var printerListModel = gcpClient.getPrinterListModel();
                 console.debug("folderPage printFileSlot printerListModel.count=" + printerListModel.count);
                 if (printerListModel.count > 0) {
-                    printerSelectionDialog.srcFilePath = "";
-                    printerSelectionDialog.srcURL = url;
-                    printerSelectionDialog.model = printerListModel;
-                    printerSelectionDialog.open();
+                    showPrinterSelectionDialog("", url);
                 } else {
                     // TODO Open progress dialog.
                     downloadProgressDialog.titleText = appInfo.emptyStr+qsTr("Search for printers");
@@ -573,6 +569,7 @@ PageStackWindow {
             if (err == 0) {
                 var jsonObj = Utility.createJsonObj(msg);
 
+                // TODO Verify if slot exists.
                 // Send info to currentPage.
                 pageStack.currentPage.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
                                                             0,
@@ -1178,6 +1175,84 @@ PageStackWindow {
             // Proceeds queued jobs during constructions.
             cloudDriveModel.resumeNextJob();
         }
+    }
+
+    MessageDialog {
+        id: messageDialog
+    }
+
+    function showMessageDialogSlot(titleText, message, autoCloseInterval) {
+        if (autoCloseInterval) {
+            messageDialog.autoClose = true;
+            messageDialog.autoCloseInterval = autoCloseInterval;
+        } else {
+            messageDialog.autoClose = false;
+            messageDialog.autoCloseInterval = -1;
+        }
+        messageDialog.titleText = appInfo.emptyStr+titleText;
+        messageDialog.message = appInfo.emptyStr+message;
+        messageDialog.open();
+    }
+
+    UploadProgressDialog {
+        id: uploadProgressDialog
+    }
+
+    DownloadProgressDialog {
+        id: downloadProgressDialog
+    }
+
+    PrinterSelectionDialog {
+        id: printerSelectionDialog
+        model: gcpClient.printerModel
+        onAccepted: {
+            // Print on selected printer index.
+            var pid = gcpClient.getPrinterId(printerSelectionDialog.selectedIndex);
+            var printerType = gcpClient.getPrinterType(printerSelectionDialog.selectedIndex);
+            console.debug("printerSelectionDialog onAccepted pid=" + pid + "printerType=" + printerType + " srcFilePath=" + srcFilePath + " srcURL=" + srcURL);
+            if (pid != "") {
+                // TODO Add options for PrintQualities and Colors.
+                // Issue: Fix HP ePrint to print in color by setting capabilities.
+                var capabilities = "";
+                if (printerType.toUpperCase() == "HP") {
+                    capabilities = "\
+{\"capabilities\":[ \
+{\"name\":\"ns1:PrintQualities\",\"type\":\"Feature\",\"options\":[{\"name\":\"Normal\"}]}, \
+{\"name\":\"ns1:Colors\",\"type\":\"Feature\",\"options\":[{\"name\":\"Color\"}]} \
+]}";
+                }
+                console.debug("printerSelectionDialog onAccepted capabilities=" + capabilities);
+
+                if (srcFilePath != "") {
+                    // Open uploadProgressBar for printing.
+                    uploadProgressDialog.srcFilePath = srcFilePath;
+                    uploadProgressDialog.titleText = appInfo.emptyStr+qsTr("Printing");
+                    uploadProgressDialog.autoClose = false;
+                    uploadProgressDialog.open();
+
+                    gcpClient.submit(pid, srcFilePath, capabilities);
+                } else if (srcURL != "") {
+                    // Open uploadProgressBar for printing.
+                    uploadProgressDialog.srcFilePath = srcURL;
+                    uploadProgressDialog.titleText = appInfo.emptyStr+qsTr("Printing");
+                    uploadProgressDialog.autoClose = false;
+                    uploadProgressDialog.open();
+
+                    gcpClient.submit(pid, srcURL, capabilities, srcURL, "url", "");
+                }
+            }
+        }
+        onRejected: {
+//            // Reset popupToolPanel.
+//            popupToolPanel.selectedFilePath = "";
+//            popupToolPanel.selectedFileIndex = -1;
+        }
+    }
+
+    function showPrinterSelectionDialog(srcFilePath, srcUrl) {
+        printerSelectionDialog.srcFilePath = srcFilePath;
+        printerSelectionDialog.srcURL = srcUrl;
+        printerSelectionDialog.open();
     }
 
     Text {

@@ -646,19 +646,6 @@ Page {
         migrateProgressDialog.max = total;
     }
 
-    function showMessageDialogSlot(titleText, message, autoCloseInterval) {
-        if (autoCloseInterval) {
-            messageDialog.autoClose = true;
-            messageDialog.autoCloseInterval = autoCloseInterval;
-        } else {
-            messageDialog.autoClose = false;
-            messageDialog.autoCloseInterval = -1;
-        }
-        messageDialog.titleText = appInfo.emptyStr+titleText;
-        messageDialog.message = appInfo.emptyStr+message;
-        messageDialog.open();
-    }
-
     FolderSizeItemListModel {
         id: fsModel
 
@@ -1297,10 +1284,6 @@ Page {
         }
     }
 
-    MessageDialog {
-        id: messageDialog
-    }
-
     Rectangle {
         id: popupToolPanelBG
         color: "black"
@@ -1386,7 +1369,7 @@ Page {
         }
 
         onPrintFile: {
-            printFileSlot(srcFilePath, srcItemIndex);
+            gcpClient.printFileSlot(srcFilePath, srcItemIndex);
         }
 
         onSyncFile: {
@@ -1964,60 +1947,6 @@ Page {
         onReject: {
             appInfo.setSettingValue("cloudItems.migration.confirmation", "false");
         }
-    }
-
-    PrinterSelectionDialog {
-        id: printerSelectionDialog
-        onAccepted: {
-            // Print on selected printer index.
-            var pid = gcpClient.getPrinterId(printerSelectionDialog.selectedIndex);
-            var printerType = gcpClient.getPrinterType(printerSelectionDialog.selectedIndex);
-            console.debug("printerSelectionDialog onAccepted pid=" + pid + "printerType=" + printerType + " srcFilePath=" + srcFilePath + " srcURL=" + srcURL);
-            if (pid != "") {
-                // TODO Add options for PrintQualities and Colors.
-                // Issue: Fix HP ePrint to print in color by setting capabilities.
-                var capabilities = "";
-                if (printerType.toUpperCase() == "HP") {
-                    capabilities = "\
-{\"capabilities\":[ \
-{\"name\":\"ns1:PrintQualities\",\"type\":\"Feature\",\"options\":[{\"name\":\"Normal\"}]}, \
-{\"name\":\"ns1:Colors\",\"type\":\"Feature\",\"options\":[{\"name\":\"Color\"}]} \
-]}";
-                }
-                console.debug("printerSelectionDialog onAccepted capabilities=" + capabilities);
-
-                if (srcFilePath != "") {
-                    // Open uploadProgressBar for printing.
-                    uploadProgressDialog.srcFilePath = srcFilePath;
-                    uploadProgressDialog.titleText = appInfo.emptyStr+qsTr("Printing");
-                    uploadProgressDialog.autoClose = false;
-                    uploadProgressDialog.open();
-
-                    gcpClient.submit(pid, srcFilePath, capabilities);
-                } else if (srcURL != "") {
-                    // Open uploadProgressBar for printing.
-                    uploadProgressDialog.srcFilePath = srcURL;
-                    uploadProgressDialog.titleText = appInfo.emptyStr+qsTr("Printing");
-                    uploadProgressDialog.autoClose = false;
-                    uploadProgressDialog.open();
-
-                    gcpClient.submit(pid, srcURL, capabilities, srcURL, "url", "");
-                }
-            }
-        }
-        onRejected: {
-//            // Reset popupToolPanel.
-//            popupToolPanel.selectedFilePath = "";
-//            popupToolPanel.selectedFileIndex = -1;
-        }
-    }
-
-    UploadProgressDialog {
-        id: uploadProgressDialog
-    }
-
-    DownloadProgressDialog {
-        id: downloadProgressDialog
     }
 
     ProgressDialog {
