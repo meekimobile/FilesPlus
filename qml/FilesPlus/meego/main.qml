@@ -2,7 +2,9 @@ import QtQuick 1.1
 import com.nokia.meego 1.0
 import AppInfo 1.0
 import ClipboardModel 1.0
+import GCPClient 1.0
 import CloudDriveModel 1.0
+import FolderSizeItemListModel 1.0
 import "Utility.js" as Utility
 
 PageStackWindow {
@@ -95,13 +97,271 @@ PageStackWindow {
         }
 
         function addItem(json) {
-            console.debug(Utility.nowText() + "clipboard additem json " + json);
+            console.debug(Utility.nowText() + " clipboard additem json " + json);
             clipboard.addClipboardItem(json.sourcePath, Utility.createJsonText(json) );
         }
 
         function addItemWithSuppressCountChanged(json) {
-            console.debug(Utility.nowText() + "clipboard addItemWithSuppressCountChanged json " + json);
+            console.debug(Utility.nowText() + " clipboard addItemWithSuppressCountChanged json " + json);
             clipboard.addClipboardItem(json.sourcePath, Utility.createJsonText(json), true);
+        }
+    }
+
+    GCPClient {
+        id: gcpClient
+
+        property string selectedFilePath
+        property string selectedURL
+
+        ListModel {
+            id: gcpPrinterModel
+        }
+
+        function setGCPClientAuthCode(code) {
+            var res = gcpClient.parseAuthorizationCode(code);
+            if (res) {
+                gcpClient.accessToken();
+            }
+        }
+
+        function getPrinterListModel() {
+            var printerList = gcpClient.getStoredPrinterList();
+            console.debug("gcpClient.getPrinterListModel() " + printerList);
+
+            gcpPrinterModel.clear();
+            for (var i=0; i<printerList.length; i++)
+            {
+                gcpPrinterModel.append({
+                                 name: printerList[i]
+                             });
+            }
+
+            console.debug("gcpClient.getPrinterListModel() gcpPrinterModel.count " + gcpPrinterModel.count);
+            return gcpPrinterModel;
+        }
+
+        function resumePrinting() {
+            if (gcpClient.selectedFilePath.trim() != "") {
+                printFileSlot(gcpClient.selectedFilePath);
+                return true;
+            } else if (gcpClient.selectedURL.trim() != "") {
+                printURLSlot(gcpClient.selectedURL);
+                return true;
+            }
+
+            return false;
+        }
+
+        function printFileSlot(srcFilePath, selectedIndex) {
+            console.debug("folderPage printFileSlot srcFilePath=" + srcFilePath);
+
+            // Set source file to GCPClient.
+            gcpClient.selectedFilePath = srcFilePath;
+            if (srcFilePath == "") return;
+
+            if (gcpClient.getContentType(srcFilePath) == "") {
+                console.debug("folderPage printFileSlot File type is not supported. (" + srcFilePath + ")");
+
+                messageDialog.titleText = appInfo.emptyStr+qsTr("Print Error");
+                messageDialog.message = appInfo.emptyStr+qsTr("Can't print %1 \
+    \nFile type is not supported. Only JPEG, PNG, Text and PDF are supported.").arg(srcFilePath);
+                messageDialog.open();
+                return;
+            }
+
+            if (!gcpClient.isAuthorized()) {
+                messageDialog.message = appInfo.emptyStr+qsTr("FilesPlus prints via Google CloudPrint service.\
+    \nPlease enable printer on your desktop with Chrome or with CloudPrint-ready printer.\
+    \nYou will be redirected to authorization page.");
+                messageDialog.titleText = appInfo.emptyStr+qsTr("Print with CloudPrint");
+                messageDialog.open();
+
+                gcpClient.authorize();
+            } else {
+                var printerListModel = gcpClient.getPrinterListModel();
+                console.debug("folderPage printFileSlot printerListModel.count=" + printerListModel.count);
+                if (printerListModel.count > 0) {
+                    printerSelectionDialog.srcFilePath = srcFilePath;
+                    printerSelectionDialog.model = printerListModel;
+                    printerSelectionDialog.open();
+                } else {
+                    // TODO Open progress dialog.
+                    downloadProgressDialog.titleText = appInfo.emptyStr+qsTr("Search for printers");
+                    downloadProgressDialog.indeterminate = true;
+                    downloadProgressDialog.open();
+                    gcpClient.search("");
+                }
+            }
+        }
+
+        function printURLSlot(url) {
+            console.debug("folderPage printURLSlot url=" + url);
+
+            // Set source URL to GCPClient.
+            gcpClient.selectedURL = url;
+            if (url == "") return;
+
+            if (!gcpClient.isAuthorized()) {
+                messageDialog.message = appInfo.emptyStr+qsTr("FilesPlus prints via Google CloudPrint service.\
+    \nPlease enable printer on your desktop with Chrome or with CloudPrint-ready printer.\
+    \nYou will be redirected to authorization page.");
+                messageDialog.titleText = appInfo.emptyStr+qsTr("Print with CloudPrint");
+                messageDialog.open();
+
+                gcpClient.authorize();
+            } else {
+                var printerListModel = gcpClient.getPrinterListModel();
+                console.debug("folderPage printFileSlot printerListModel.count=" + printerListModel.count);
+                if (printerListModel.count > 0) {
+                    printerSelectionDialog.srcFilePath = "";
+                    printerSelectionDialog.srcURL = url;
+                    printerSelectionDialog.model = printerListModel;
+                    printerSelectionDialog.open();
+                } else {
+                    // TODO Open progress dialog.
+                    downloadProgressDialog.titleText = appInfo.emptyStr+qsTr("Search for printers");
+                    downloadProgressDialog.indeterminate = true;
+                    downloadProgressDialog.open();
+                    gcpClient.search("");
+                }
+            }
+        }
+
+        function resetCloudPrintSlot() {
+//            popupToolPanel.selectedFilePath = "";
+//            popupToolPanel.selectedFileIndex = -1;
+            gcpClient.authorize();
+        }
+
+        onAuthorizeRedirectSignal: {
+            console.debug("folderPage gcpClient onAuthorizeRedirectSignal " + url);
+            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: "GCPClient" }, true);
+        }
+
+        onAccessTokenReplySignal: {
+            console.debug("folderPage gcpClient onAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
+
+            if (err == 0) {
+                // Resume printing
+                resumePrinting();
+            } else {
+                gcpClient.refreshAccessToken();
+            }
+        }
+
+        onRefreshAccessTokenReplySignal: {
+            console.debug("folderPage gcpClient onRefreshAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
+
+            if (err == 0) {
+                // Resume printing if selectedFilePath exists.
+                if (resumePrinting()) {
+                    // Do nothing if printing is resumed.
+                } else {
+                    messageDialog.titleText = appInfo.emptyStr+qsTr("Reset CloudPrint");
+                    messageDialog.message = appInfo.emptyStr+qsTr("Resetting is done.");
+                    messageDialog.open();
+
+                    gcpClient.jobs("");
+                }
+            } else {
+                // TODO Notify failed refreshAccessToken.
+            }
+        }
+
+        onAccountInfoReplySignal: {
+            console.debug("folderPage gcpClient onAccountInfoReplySignal " + err + " " + errMsg + " " + msg);
+
+            var jsonObj = Utility.createJsonObj(msg);
+            console.debug("jsonObj.email " + jsonObj.email);
+        }
+
+        onSearchReplySignal: {
+            console.debug("folderPage gcpClient onSearchReplySignal " + err + " " + errMsg + " " + msg);
+
+            if (err == 0) {
+                // Once search done, open printerSelectionDialog
+                // TODO any case that error=0 but no printers returned.
+                resumePrinting();
+            } else {
+                gcpClient.refreshAccessToken();
+            }
+        }
+
+        onSubmitReplySignal: {
+//            console.debug("folderPage gcpClient onSubmitReplySignal " + err + " " + errMsg + " " + msg);
+
+            // Notify submit result.
+            var jsonObj = Utility.createJsonObj(msg);
+            var message = "";
+            if (err != 0) {
+                message = qsTr("Error") + " " + err + " " + errMsg + "\n";
+            }
+            message += jsonObj.message;
+
+            // Show reply message on progressDialog and also turn indeterminate off.
+            if (uploadProgressDialog.status != DialogStatus.Open) {
+                uploadProgressDialog.titleText = appInfo.emptyStr+qsTr("Printing");
+                uploadProgressDialog.srcFilePath = selectedFilePath;
+                uploadProgressDialog.autoClose = false;
+                uploadProgressDialog.open();
+            }
+            uploadProgressDialog.indeterminate = false;
+            uploadProgressDialog.message = appInfo.emptyStr+message;
+
+            // Reset selected item.
+            gcpClient.selectedFilePath = "";
+            gcpClient.selectedURL = "";
+        }
+
+        onDownloadProgress: {
+//            console.debug("sandBox gcpClient onDownloadProgress " + bytesReceived + " / " + bytesTotal);
+
+            // Shows in progress bar.
+//            if (downloadProgressDialog.status != DialogStatus.Open) {
+//                downloadProgressDialog.titleText = qsTr("Searching for printers"
+//                downloadProgressDialog.indeterminate = false;
+//                downloadProgressDialog.open();
+//            }
+            downloadProgressDialog.min = 0;
+            downloadProgressDialog.max = bytesTotal;
+            downloadProgressDialog.value = bytesReceived;
+        }
+
+        onUploadProgress: {
+//            console.debug("sandBox gcpClient onUploadProgress " + bytesSent + " / " + bytesTotal);
+
+            // Shows in progress bar.
+//            if (uploadProgressDialog.status != DialogStatus.Open) {
+//                uploadProgressDialog.indeterminate = false;
+//                uploadProgressDialog.open();
+//            }
+            uploadProgressDialog.min = 0;
+            uploadProgressDialog.max = bytesTotal;
+            uploadProgressDialog.value = bytesSent;
+        }
+
+        onJobsReplySignal: {
+            console.debug("printJobsPage gcpClient onJobsReplySignal " + err + " " + errMsg + " " + msg);
+
+            if (err == 0) {
+                var p = pageStack.find(function (page) { return page.name == "printJobsPage"; });
+                if (p) {
+                    p.addJobsFromJson(msg);
+                }
+            } else if (err == 202) { // You have to be signed in to your Google Account.
+                gcpClient.refreshAccessToken();
+            }
+        }
+
+        onDeletejobReplySignal: {
+            console.debug("printJobsPage gcpClient onDeletejobReplySignal " + err + " " + errMsg + " " + msg);
+
+            gcpClient.jobs("");
+        }
+
+        Component.onCompleted: {
+            console.debug(Utility.nowText() + " folderPage gcpClient onCompleted");
+            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("GCPClient"), 0.1);
         }
     }
 
@@ -180,11 +440,11 @@ PageStackWindow {
         }
 
         function getClientType(typeText) {
-            if (typeText.toLowerCase() == "dropboxclient") {
+            if (["dropboxclient","dropbox"].indexOf(typeText.toLowerCase()) != -1) {
                 return CloudDriveModel.Dropbox;
-            } else if (typeText.toLowerCase() == "skydriveclient") {
+            } else if (["skydriveclient","skydrive"].indexOf(typeText.toLowerCase()) != -1) {
                 return CloudDriveModel.SkyDrive;
-            } else if (typeText.toLowerCase() == "ftpclient") {
+            } else if (["ftpclient","ftp"].indexOf(typeText.toLowerCase()) != -1) {
                 return CloudDriveModel.Ftp;
             }
 
@@ -199,6 +459,25 @@ PageStackWindow {
 
             return name;
         }
+
+        function accessTokenSlot(clientTypeName, pin) {
+            console.debug("folderPage accessTokenSlot clientTypeName " + clientTypeName + " pin " + pin);
+            var clientType = getClientType(clientTypeName);
+            if (pin == "" || pin == "PinNotFound") {
+                messageDialog.titleText =  appInfo.emptyStr+getCloudName(clientType)+" "+qsTr("Access Token");
+                messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + qsTr("PIN code is not found.");
+                messageDialog.open();
+            } else {
+                cloudDriveModel.accessToken(clientType, pin);
+            }
+        }
+
+//        function setGCDClientAuthCode(code) {
+//            var res = cloudDriveModel.parseAuthorizationCode(CloudDriveModel.GoogleDrive, code);
+//            if (res) {
+//                cloudDriveModel.accessToken(CloudDriveModel.GoogleDrive);
+//            }
+//        }
 
         onRequestTokenReplySignal: {
             console.debug("window cloudDriveModel onRequestTokenReplySignal " + err + " " + errMsg + " " + msg);

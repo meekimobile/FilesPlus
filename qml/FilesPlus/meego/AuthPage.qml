@@ -27,16 +27,11 @@ Page {
             iconSource: (theme.inverted) ? "ok.svg" : "ok_inverted.svg"
 
             onClicked: {
-                var p = pageStack.find(function(page) {
-                    return (page.name == "folderPage");
-                });
                 // TODO Remove dependency to make authPage reusable for other REST API.
-                if (p) {
-                    if (authPage.redirectFrom == "DropboxClient") {
-                        p.dropboxAccessTokenSlot();
-                    } else if (authPage.redirectFrom == "SkyDriveClient") {
-                        p.skyDriveAccessTokenSlot(authPage.parseSkyDriveCode(webView.url));
-                    }
+                if (authPage.redirectFrom == "DropboxClient") {
+                    cloudDriveModel.accessTokenSlot(authPage.redirectFrom, "dummay");
+                } else if (authPage.redirectFrom == "SkyDriveClient") {
+                    cloudDriveModel.accessTokenSlot(authPage.redirectFrom, authPage.parseSkyDriveCode(webView.url));
                 }
 
                 pageStack.pop();
@@ -120,11 +115,7 @@ Page {
                     // GCPClient handler.
                     console.debug("GCPClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom + " title = " + title);
                     if (title.match("^Success")) {
-                        var p = pageStack.find(function(page) {
-                            return (page.name == "folderPage");
-                        });
-                        // TODO Remove dependency to make authPage reusable for other REST API.
-                        if (p) p.setGCPClientAuthCode(title);
+                        gcpClient.setGCPClientAuthCode(title);
                         pageStack.pop();
                     }
 
@@ -135,11 +126,7 @@ Page {
                     // GCDClient handler.
                     console.debug("GCDClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom + " title = " + title);
                     if (title.match("^Success")) {
-                        var p = pageStack.find(function(page) {
-                            return (page.name == "folderPage");
-                        });
-                        // TODO Remove dependency to make authPage reusable for other REST API.
-                        if (p) p.setGCDClientAuthCode(title);
+                        cloudDriveModel.setGCDClientAuthCode(title);
                         pageStack.pop();
                     }
 
@@ -158,20 +145,12 @@ Page {
                         console.debug("found uid! at " + uidIndex);
     //                    console.debug("DropboxClient html " + html);
 
-                        var p = pageStack.find(function(page) {
-                            return (page.name == "folderPage");
-                        });
-                        // TODO Remove dependency to make authPage reusable for other REST API.
-                        if (p) p.dropboxAccessTokenSlot();
+                        cloudDriveModel.accessTokenSlot(authPage.redirectFrom, "dummay");
                         pageStack.pop();
                     } else if (title.match(appInfo.emptyStr+qsTr("^API Request Authorized"))) {
     //                    console.debug("DropboxClient title " + title);
 
-                        var p = pageStack.find(function(page) {
-                            return (page.name == "folderPage");
-                        });
-                        // TODO Remove dependency to make authPage reusable for other REST API.
-                        if (p) p.dropboxAccessTokenSlot();
+                        cloudDriveModel.accessTokenSlot(authPage.redirectFrom, "dummay");
                         pageStack.pop();
                     } else {
     //                    console.debug("DropboxClient title " + title);

@@ -15,13 +15,7 @@ MenuWithIcon {
             text: appInfo.emptyStr+qsTr("Settings")
             platformSubItemIndicator: true
             onClicked: {
-//                settingMenu.open();
                 pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
-                pageStack.find(function (page) {
-                    if (page.name == "folderPage") {
-                        page.requestJobQueueStatusSlot();
-                    }
-                });
             }
         }
 

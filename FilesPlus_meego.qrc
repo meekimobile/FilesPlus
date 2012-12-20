@@ -144,5 +144,6 @@
         <file>qml/FilesPlus/skydrive_icon.png</file>
         <file>qml/FilesPlus/ftp_icon.png</file>
         <file alias="qml/FilesPlus/CloudFolderPage.qml">qml/FilesPlus/meego/CloudFolderPage.qml</file>
+        <file alias="qml/FilesPlus/CloudListItem.qml">qml/FilesPlus/meego/CloudListItem.qml</file>
     </qresource>
 </RCC>

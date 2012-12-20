@@ -152,20 +152,17 @@ Page {
             }
         }
         onAccepted: {
-            var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-            if (p) {
-                var type = model.get(selectedIndex).type;
-                switch (type) {
-                case CloudDriveModel.Dropbox:
-                    p.registerDropboxUserSlot();
-                    break;
-                case CloudDriveModel.SkyDrive:
-                    p.registerSkyDriveAccountSlot();
-                    break;
-                case CloudDriveModel.Ftp:
-                    addAccountDialog.open();
-                    break;
-                }
+            var type = model.get(selectedIndex).type;
+            switch (type) {
+            case CloudDriveModel.Dropbox:
+                cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
+                break;
+            case CloudDriveModel.SkyDrive:
+                cloudDriveModel.authorize(CloudDriveModel.SkyDrive);
+                break;
+            case CloudDriveModel.Ftp:
+                addAccountDialog.open();
+                break;
             }
         }
     }
@@ -367,12 +364,6 @@ Page {
             }
 
             onPressAndHold: {
-//                var panelX = x + mouseX - accountListView.contentX;
-//                var panelY = y + mouseY - accountListView.contentY + accountListView.y;
-//                popupDeleteButton.x = panelX - (popupDeleteButton.width / 2);
-//                popupDeleteButton.y = panelY - (popupDeleteButton.height) - 60;
-//                popupDeleteButton.index = index;
-//                popupDeleteButton.visible = true;
                 removeAccountConfirmation.index = index;
                 removeAccountConfirmation.open();
             }

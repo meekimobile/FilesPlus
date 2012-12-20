@@ -194,11 +194,6 @@ Page {
         }
         onOpenSettings: {
             pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
-            pageStack.find(function (page) {
-                if (page.name == "folderPage") {
-                    page.requestJobQueueStatusSlot();
-                }
-            });
         }
         onOpenAbout: {
             pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
@@ -364,10 +359,6 @@ Page {
         }
     }
 
-    function showDrivePageSlot() {
-        pageStack.push(Qt.resolvedUrl("DrivePage.qml"), { cloudDriveModel: cloudDriveModel }, true);
-    }
-
     function flipSlot() {
         nameFilterPanel.close();
 
@@ -393,95 +384,6 @@ Page {
             messageDialog.open();
         } else {
             Qt.quit();
-        }
-    }
-
-    function printFileSlot(srcFilePath, selectedIndex) {
-        console.debug("folderPage printFileSlot srcFilePath=" + srcFilePath);
-
-        // Set source file to GCPClient.
-        gcpClient.selectedFilePath = srcFilePath;
-        if (srcFilePath == "") return;
-
-        if (gcpClient.getContentType(srcFilePath) == "") {
-            console.debug("folderPage printFileSlot File type is not supported. (" + srcFilePath + ")");
-
-            messageDialog.titleText = appInfo.emptyStr+qsTr("Print Error");
-            messageDialog.message = appInfo.emptyStr+qsTr("Can't print %1 \
-\nFile type is not supported. Only JPEG, PNG, Text and PDF are supported.").arg(srcFilePath);
-            messageDialog.open();
-            return;
-        }
-
-        if (!gcpClient.isAuthorized()) {
-            messageDialog.message = appInfo.emptyStr+qsTr("FilesPlus prints via Google CloudPrint service.\
-\nPlease enable printer on your desktop with Chrome or with CloudPrint-ready printer.\
-\nYou will be redirected to authorization page.");
-            messageDialog.titleText = appInfo.emptyStr+qsTr("Print with CloudPrint");
-            messageDialog.open();
-
-            gcpClient.authorize();
-        } else {
-            var printerListModel = gcpClient.getPrinterListModel();
-            console.debug("folderPage printFileSlot printerListModel.count=" + printerListModel.count);
-            if (printerListModel.count > 0) {
-                printerSelectionDialog.srcFilePath = srcFilePath;
-                printerSelectionDialog.model = printerListModel;
-                printerSelectionDialog.open();
-            } else {
-                // TODO Open progress dialog.
-                downloadProgressDialog.titleText = appInfo.emptyStr+qsTr("Search for printers");
-                downloadProgressDialog.indeterminate = true;
-                downloadProgressDialog.open();
-                gcpClient.search("");
-            }
-        }
-    }
-
-    function printURLSlot(url) {
-        console.debug("folderPage printURLSlot url=" + url);
-
-        // Set source URL to GCPClient.
-        gcpClient.selectedURL = url;
-        if (url == "") return;
-
-        if (!gcpClient.isAuthorized()) {
-            messageDialog.message = appInfo.emptyStr+qsTr("FilesPlus prints via Google CloudPrint service.\
-\nPlease enable printer on your desktop with Chrome or with CloudPrint-ready printer.\
-\nYou will be redirected to authorization page.");
-            messageDialog.titleText = appInfo.emptyStr+qsTr("Print with CloudPrint");
-            messageDialog.open();
-
-            gcpClient.authorize();
-        } else {
-            var printerListModel = gcpClient.getPrinterListModel();
-            console.debug("folderPage printFileSlot printerListModel.count=" + printerListModel.count);
-            if (printerListModel.count > 0) {
-                printerSelectionDialog.srcFilePath = "";
-                printerSelectionDialog.srcURL = url;
-                printerSelectionDialog.model = printerListModel;
-                printerSelectionDialog.open();
-            } else {
-                // TODO Open progress dialog.
-                downloadProgressDialog.titleText = appInfo.emptyStr+qsTr("Search for printers");
-                downloadProgressDialog.indeterminate = true;
-                downloadProgressDialog.open();
-                gcpClient.search("");
-            }
-        }
-    }
-
-    function setGCPClientAuthCode(code) {
-        var res = gcpClient.parseAuthorizationCode(code);
-        if (res) {
-            gcpClient.accessToken();
-        }
-    }
-
-    function setGCDClientAuthCode(code) {
-        var res = cloudDriveModel.parseAuthorizationCode(CloudDriveModel.GoogleDrive, code);
-        if (res) {
-            cloudDriveModel.accessToken(CloudDriveModel.GoogleDrive);
         }
     }
 
@@ -625,71 +527,10 @@ Page {
         }
     }
 
-    function dropboxAccessTokenSlot() {
-        cloudDriveModel.accessToken(CloudDriveModel.Dropbox);
-    }
-
-    function skyDriveAccessTokenSlot(pin) {
-        console.debug("folderPage skyDriveAccessTokenSlot pin " + pin);
-        if (pin == "" || pin == "PinNotFound") {
-            messageDialog.titleText =  appInfo.emptyStr+"SkyDrive "+qsTr("Access Token");
-            messageDialog.message = appInfo.emptyStr+qsTr("Error") + " " + qsTr("PIN code is not found.");
-            messageDialog.open();
-        } else {
-            cloudDriveModel.accessToken(CloudDriveModel.SkyDrive, pin);
-        }
-    }
-
-    function resetCloudPrintSlot() {
-        popupToolPanel.selectedFilePath = "";
-        popupToolPanel.selectedFileIndex = -1;
-        gcpClient.authorize();
-    }
-
-    function registerDropboxUserSlot() {
-        cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
-    }
-
-    function registerSkyDriveAccountSlot() {
-        cloudDriveModel.authorize(CloudDriveModel.SkyDrive);
-    }
-
-    function showCloudDriveAccountsSlot() {
-        pageStack.push(Qt.resolvedUrl("CloudDriveAccountsPage.qml"),
-                       { cloudDriveModel: cloudDriveModel },
-                       false);
-    }
-
-    function showCloudPrintJobsSlot() {
-        pageStack.push(Qt.resolvedUrl("PrintJobsPage.qml"));
-    }
-
-    function showWebViewPageSlot() {
-        pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
-    }
-
-    function showCloudDriveJobsSlot() {
-        pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"), { }, false);
-    }
-
-    function cancelAllCloudDriveJobsSlot() {
-        cancelQueuedCloudDriveJobsConfirmation.open();
-    }
-
     function cancelAllFolderSizeJobsSlot() {
-//        cancelQueuedFolderSizeJobsConfirmation.open();
-
         fsModel.cancelQueuedJobs();
         // Abort thread with rollbackFlag=false.
         fsModel.abortThread(false);
-    }
-
-    function syncAllConnectedItemsSlot() {
-        cloudDriveModel.syncItems();
-    }
-
-    function requestJobQueueStatusSlot() {
-        cloudDriveModel.requestJobQueueStatus();
     }
 
     function showDropboxFullAccessConfirmationSlot() {
@@ -831,6 +672,23 @@ Page {
                 return qsTr("Move");
             case FolderSizeItemListModel.DeleteFile:
                 return qsTr("Delete");
+            }
+        }
+
+        function getRunningOperationIconSource(runningOperation) {
+            switch (runningOperation) {
+            case FolderSizeItemListModel.ReadOperation:
+                return "next.svg"
+            case FolderSizeItemListModel.WriteOperation:
+                return "back.svg"
+            case FolderSizeItemListModel.SyncOperation:
+                return (theme.inverted) ? "refresh.svg" : "refresh_inverted.svg"
+            case FolderSizeItemListModel.UploadOperation:
+                return (theme.inverted) ? "upload.svg" : "upload_inverted.svg"
+            case FolderSizeItemListModel.DownloadOperation:
+                return (theme.inverted) ? "download.svg" : "download_inverted.svg"
+            default:
+                return ""
             }
         }
 
@@ -1170,7 +1028,7 @@ Page {
         focus: true
         pressDelay: 100
         model: fsModel
-        delegate: listDelegate
+        delegate: listItemDelegate
         states: [
             State {
                 name: "mark"
@@ -1363,185 +1221,20 @@ Page {
     }
 
     Component {
-        id: listDelegate
+        id: listItemDelegate
 
-        ListItem {
+        CloudListItem {
             id: listItem
-            width: fsListView.width
-            height: 80
-
-            property string fileName: name
-            property string filePath: absolutePath
-
-            function getIconSource() {
-                var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-                var viewableTextFileTypes = ["TXT", "HTML"];
-
-                if (isDir) {
-                    return "folder_list.svg";
-                } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                    var showThumbnail = appInfo.getSettingBoolValue("thumbnail.enabled", false);
-//                    console.debug("folderPage listDelegate getIconSource showThumbnail " + showThumbnail);
-                    if (showThumbnail) {
-                        return "image://local/" + absolutePath;
-                    } else {
-                        return "photos_list.svg";
-                    }
+            listViewState: fsListView.state
+            runningIconSource: fsModel.getRunningOperationIconSource(runningOperation)
+            syncIconVisible: cloudDriveModel.isConnected(absolutePath) || cloudDriveModel.isSyncing(absolutePath);
+            syncIconSource: {
+                if (cloudDriveModel.isSyncing(absolutePath)) {
+                    return "cloud_wait.svg";
+                } else if (cloudDriveModel.isDirty(absolutePath, lastModified)) {
+                    return "cloud_dirty.svg";
                 } else {
-                    return "notes_list.svg";
-                }
-            }
-
-            Row {
-                id: listDelegateRow
-                anchors.fill: parent
-                anchors.margins: 4
-
-                Rectangle {
-                    id: iconRect
-                    width: 60
-                    height: parent.height
-                    color: "transparent"
-
-                    Image {
-                        id: cutCopyIcon
-                        z: 1
-                        width: 32
-                        height: 32
-                        visible: (source != "")
-                        source: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath) : ""
-                    }
-                    Image {
-                        id: markIcon
-                        z: 1
-                        width: 32
-                        height: 32
-                        anchors.left: parent.left
-                        anchors.bottom: parent.bottom
-                        visible: (fsListView.state == "mark" && isChecked)
-                        source: (theme.inverted) ? "ok.svg" : "ok_inverted.svg"
-                    }
-                    Image {
-                        id: icon1
-                        asynchronous: true
-                        sourceSize.width: (fileType.toUpperCase() == "SVG") ? undefined : 48
-                        sourceSize.height: (fileType.toUpperCase() == "SVG") ? undefined : 48
-                        width: 48
-                        height: 48
-                        fillMode: Image.PreserveAspectFit
-                        anchors.centerIn: parent
-                        source: appInfo.emptySetting+listItem.getIconSource()
-                    }
-                }
-                Column {
-                    width: parent.width - iconRect.width
-                    height: parent.height
-
-                    Row {
-                        width: parent.width
-                        height: parent.height / 2
-                        Text {
-                            text: name
-                            width: parent.width - sizeText.width
-                            height: parent.height
-                            font.pointSize: 18
-                            elide: Text.ElideMiddle
-                            verticalAlignment: Text.AlignVCenter
-                            color: (theme.inverted) ? "white" : "black"
-                        }
-                        Text {
-                            id: sizeText
-                            text: Utility.formatFileSize(size, 1)
-                            width: 85
-                            height: parent.height
-                            font.pointSize: 16
-                            horizontalAlignment: Text.AlignRight
-                            verticalAlignment: Text.AlignVCenter
-                            color: (theme.inverted) ? "white" : "black"
-                        }
-                    }
-                    Row {
-                        width: parent.width
-                        height: parent.height / 2
-                        spacing: 2
-                        Rectangle {
-                            width: parent.width - syncIcon.width - parent.spacing
-                            height: parent.height
-                            color: "transparent"
-                            Text {
-                                id: listItemSubTitle
-                                text: {
-                                    var sub = ""
-                                    if (subDirCount > 0) sub += appInfo.emptyStr+qsTr("%n dir(s)", "", subDirCount);
-                                    if (subFileCount > 0) sub += ((sub == "") ? "" : " ") + appInfo.emptyStr+qsTr("%n file(s)", "", subFileCount);
-                                    sub += ((sub == "") ? "" : ", ") + appInfo.emptyStr+qsTr("last modified") + " " + Qt.formatDateTime(lastModified, "d MMM yyyy h:mm:ss ap");
-
-                                    return sub;
-                                }
-                                width: parent.width
-                                height: parent.height
-                                font.pointSize: 16
-                                elide: Text.ElideRight
-                                verticalAlignment: Text.AlignVCenter
-                                visible: !isRunning
-                                color: "grey"
-                            }
-                            Row {
-                                width: parent.width
-                                height: parent.height
-                                visible: isRunning
-                                anchors.verticalCenter: parent.verticalCenter
-                                Image {
-                                    id: runningIcon
-                                    width: 24
-                                    height: 24
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    source: {
-                                        switch (runningOperation) {
-                                        case FolderSizeItemListModel.ReadOperation:
-                                            return "next.svg"
-                                        case FolderSizeItemListModel.WriteOperation:
-                                            return "back.svg"
-                                        case FolderSizeItemListModel.SyncOperation:
-                                            return (theme.inverted) ? "refresh.svg" : "refresh_inverted.svg"
-                                        case FolderSizeItemListModel.UploadOperation:
-                                            return (theme.inverted) ? "upload.svg" : "upload_inverted.svg"
-                                        case FolderSizeItemListModel.DownloadOperation:
-                                            return (theme.inverted) ? "download.svg" : "download_inverted.svg"
-                                        default:
-                                            return ""
-                                        }
-                                    }
-//                                    visible: (runningOperation != FolderSizeItemListModel.NoOperation)
-                                }
-                                ProgressBar {
-                                    id: syncProgressBar
-                                    width: parent.width - runningIcon.width
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    indeterminate: isRunning && (isDir || (runningValue == runningMaxValue))
-                                    value: runningValue
-                                    maximumValue: runningMaxValue
-                                }
-                            }
-                        }
-                        Image {
-                            id: syncIcon
-                            width: (visible) ? 30 : 0
-                            height: parent.height
-                            fillMode: Image.PreserveAspectFit
-                            z: 1
-                            visible: cloudDriveModel.isConnected(absolutePath) || cloudDriveModel.isSyncing(absolutePath);
-                            source: {
-                                if (cloudDriveModel.isSyncing(absolutePath)) {
-                                    return "cloud_wait.svg";
-                                } else if (cloudDriveModel.isDirty(absolutePath, lastModified)) {
-                                    return "cloud_dirty.svg";
-                                } else {
-                                    return "cloud.svg";
-                                }
-                            }
-                        }
-                    }
+                    return "cloud.svg";
                 }
             }
 
@@ -1628,8 +1321,37 @@ Page {
         id: popupToolPanel
         ringRadius: 80
         buttonRadius: 35
-        clipboardCount: clipboard.count
         timeout: appInfo.emptySetting+appInfo.getSettingValue("popup.timer.interval", 2) * 1000
+
+        function isButtonVisibleCallback(buttonName) {
+            if (buttonName === "sync") {
+                return !fsModel.isRoot(selectedFilePath) && cloudDriveModel.canSync(selectedFilePath);
+            } else if (buttonName === "upload") {
+                return !fsModel.isRoot(selectedFilePath) && cloudDriveModel.canSync(selectedFilePath) && !cloudDriveModel.isParentConnected(selectedFilePath);
+            } else if (buttonName === "download") {
+                return !fsModel.isRoot(selectedFilePath) && cloudDriveModel.canSync(selectedFilePath) && !cloudDriveModel.isParentConnected(selectedFilePath);
+            } else if (buttonName === "disconnect") {
+                return cloudDriveModel.isConnected(selectedFilePath);
+            } else if (buttonName === "unsync") {
+                return cloudDriveModel.isConnected(selectedFilePath);
+            } else if (buttonName === "cloudSettings") {
+                return cloudDriveModel.isConnected(selectedFilePath);
+            } else if (buttonName === "cloudScheduler") {
+                return isDir && cloudDriveModel.isConnected(selectedFilePath);
+            } else if (buttonName === "paste") {
+                return (clipboard.count > 0);
+            } else if (buttonName == "mail") {
+                return cloudDriveModel.isConnected(selectedFilePath);
+            } else if (buttonName == "sms") {
+                return cloudDriveModel.isConnected(selectedFilePath);
+            } else if (buttonName == "bluetooth") {
+                return fsModel.isFile(selectedFilePath);
+            } else if (buttonName == "editFile") {
+                return fsModel.isFile(selectedFilePath);
+            }
+
+            return true;
+        }
 
         onOpened: {
 //            console.debug("popupToolRing onOpened");
@@ -1960,7 +1682,7 @@ Page {
         }
     }
 
-    CommonDialog {
+    ConfirmDialog {
         id: newFolderDialog
         titleText: appInfo.emptyStr+qsTr("New folder / file")
         titleIcon: "FilesPlusIcon.svg"
@@ -1999,22 +1721,18 @@ Page {
             }
         }
 
-        onStatusChanged: {
-            if (status == DialogStatus.Open) {
-                newFolderButton.checked = true;
-                newFileButton.checked = false;
-                folderName.text = "";
-            }
-
-            if (status == DialogStatus.Closed) {
-                folderName.text = "";
-            }
+        onOpened: {
+            newFolderButton.checked = true;
+            newFileButton.checked = false;
+            folderName.text = "";
         }
 
-        onButtonClicked: {
-            folderName.closeSoftwareInputPanel();
+        onClosed: {
+            folderName.text = "";
+        }
 
-            if (index === 0 && folderName.text !== "") {
+        onConfirm: {
+            if (folderName.text !== "") {
                 var res = false;
                 if (newFolderButton.checked) {
                     res = fsModel.createDir(folderName.text);
@@ -2027,7 +1745,7 @@ Page {
         }
     }
 
-    CommonDialog {
+    ConfirmDialog {
         id: renameDialog
 
         property string sourcePath
@@ -2056,31 +1774,24 @@ Page {
             }
         }
 
-        onStatusChanged: {
-            if (status == DialogStatus.Open) {
-                newName.text = fsModel.getFileName(renameDialog.sourcePath);
-                newName.forceActiveFocus();
-            }
-
-            if (status == DialogStatus.Closed) {
-                newName.text = "";
-            }
+        onOpened: {
+            newName.text = fsModel.getFileName(renameDialog.sourcePath);
+            newName.forceActiveFocus();
         }
 
-        onButtonClicked: {
-            newName.closeSoftwareInputPanel();
+        onClosed: {
+            newName.text = "";
+        }
 
-            if (index === 0) {
-                if (newName.text != "" && newName.text != fsModel.getFileName(renameDialog.sourcePath)) {
-                    var res = fsModel.renameFile(fsModel.getFileName(renameDialog.sourcePath), newName.text);
-                    refreshSlot();
-                }
+        onConfirm: {
+            if (newName.text != "" && newName.text != fsModel.getFileName(renameDialog.sourcePath)) {
+                var res = fsModel.renameFile(fsModel.getFileName(renameDialog.sourcePath), newName.text);
+                refreshSlot();
             }
-
         }
     }
 
-    CommonDialog {
+    ConfirmDialog {
         id: fileOverwriteDialog
         titleText: appInfo.emptyStr+qsTr("File overwrite")
         titleIcon: "FilesPlusIcon.svg"
@@ -2126,43 +1837,29 @@ Page {
         property string sourcePath
         property string targetPath
 
-        onStatusChanged: {
-            if (status == DialogStatus.Open) {
-                fileName.forceActiveFocus();
-                fileName.text = fsModel.getNewFileName(sourcePath, targetPath);
-            }
-
-            if (status == DialogStatus.Closed) {
-                fileName.text = "";
-                overwriteFile.checked = false;
-            }
+        onOpened: {
+            fileName.forceActiveFocus();
+            fileName.text = fsModel.getNewFileName(sourcePath, targetPath);
         }
 
-        onButtonClicked: {
+        onClosed: {
+            fileName.text = "";
+            overwriteFile.checked = false;
+        }
+
+        onConfirm: {
             // If paste to current folder, targetPath is ended with / already.
             // If paste to selected folder, targetPath is not ended with /.
-            if (index === 0) {
-                var res = false;
-                if (isCopy) {
-                    res = fsModel.copy(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
-                } else {
-                    res = fsModel.move(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
-                }
+            var res = false;
+            if (isCopy) {
+                res = fsModel.copy(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
             } else {
-                copyProgressDialog.close();
+                res = fsModel.move(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
             }
         }
-    }
 
-    ConfirmDialog {
-        id: cancelQueuedCloudDriveJobsConfirmation
-        titleText: appInfo.emptyStr+qsTr("Cancel sync jobs")
-        onOpening: {
-            contentText = appInfo.emptyStr+qsTr("Cancel %n job(s) ?", "", cloudDriveModel.getQueuedJobCount());
-        }
-        onConfirm: {
-            cloudDriveModel.cancelQueuedJobs();
-            requestJobQueueStatusSlot();
+        onReject: {
+            copyProgressDialog.close();
         }
     }
 
@@ -2363,155 +2060,6 @@ Page {
         formatValue: false
         autoClose: true
         titleText: appInfo.emptyStr+qsTr("Cloud data conversion")
-    }
-
-    GCPClient {
-        id: gcpClient
-
-        property string selectedFilePath
-        property string selectedURL
-
-        function getPrinterListModel() {
-            var printerList = gcpClient.getStoredPrinterList();
-            console.debug("gcpClient.getPrinterListModel() " + printerList);
-            // Construct model.
-            var model = Qt.createQmlObject(
-                        'import QtQuick 1.1; ListModel {}', folderPage);
-
-            for (var i=0; i<printerList.length; i++)
-            {
-                model.append({
-                                 name: printerList[i]
-                             });
-            }
-
-            console.debug("gcpClient.getPrinterListModel() model.count " + model.count);
-            return model;
-        }
-
-        function resumePrinting() {
-            if (gcpClient.selectedFilePath.trim() != "") {
-                printFileSlot(gcpClient.selectedFilePath);
-                return true;
-            } else if (gcpClient.selectedURL.trim() != "") {
-                printURLSlot(gcpClient.selectedURL);
-                return true;
-            }
-
-            return false;
-        }
-
-        onAuthorizeRedirectSignal: {
-            console.debug("folderPage gcpClient onAuthorizeRedirectSignal " + url);
-            pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: "GCPClient" }, true);
-        }
-
-        onAccessTokenReplySignal: {
-            console.debug("folderPage gcpClient onAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
-
-            if (err == 0) {
-                // Resume printing
-                resumePrinting();
-            } else {
-                gcpClient.refreshAccessToken();
-            }
-        }
-
-        onRefreshAccessTokenReplySignal: {
-            console.debug("folderPage gcpClient onRefreshAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
-
-            if (err == 0) {
-                // Resume printing if selectedFilePath exists.
-                if (resumePrinting()) {
-                    // Do nothing if printing is resumed.
-                } else {
-                    messageDialog.titleText = appInfo.emptyStr+qsTr("Reset CloudPrint");
-                    messageDialog.message = appInfo.emptyStr+qsTr("Resetting is done.");
-                    messageDialog.open();
-                }
-            } else {
-                // TODO Notify failed refreshAccessToken.
-            }
-        }
-
-        onAccountInfoReplySignal: {
-            console.debug("folderPage gcpClient onAccountInfoReplySignal " + err + " " + errMsg + " " + msg);
-
-            var jsonObj = Utility.createJsonObj(msg);
-            console.debug("jsonObj.email " + jsonObj.email);
-        }
-
-        onSearchReplySignal: {
-            console.debug("folderPage gcpClient onSearchReplySignal " + err + " " + errMsg + " " + msg);
-
-            if (err == 0) {
-                // Once search done, open printerSelectionDialog
-                // TODO any case that error=0 but no printers returned.
-                resumePrinting();
-            } else {
-                gcpClient.refreshAccessToken();
-            }
-        }
-
-        onSubmitReplySignal: {
-//            console.debug("folderPage gcpClient onSubmitReplySignal " + err + " " + errMsg + " " + msg);
-
-            // Notify submit result.
-            var jsonObj = Utility.createJsonObj(msg);
-            var message = "";
-            if (err != 0) {
-                message = qsTr("Error") + " " + err + " " + errMsg + "\n";
-            }
-            message += jsonObj.message;
-
-            // Show reply message on progressDialog and also turn indeterminate off.
-            if (uploadProgressDialog.status != DialogStatus.Open) {
-                uploadProgressDialog.titleText = appInfo.emptyStr+qsTr("Printing");
-                uploadProgressDialog.srcFilePath = popupToolPanel.selectedFilePath;
-                uploadProgressDialog.autoClose = false;
-                uploadProgressDialog.open();
-            }
-            uploadProgressDialog.indeterminate = false;
-            uploadProgressDialog.message = appInfo.emptyStr+message;
-
-            // Reset popupToolPanel selectedFile.
-            gcpClient.selectedFilePath = "";
-            gcpClient.selectedURL = "";
-            popupToolPanel.selectedFilePath = "";
-            popupToolPanel.selectedFileIndex = -1;
-        }
-
-        onDownloadProgress: {
-//            console.debug("sandBox gcpClient onDownloadProgress " + bytesReceived + " / " + bytesTotal);
-
-            // Shows in progress bar.
-//            if (downloadProgressDialog.status != DialogStatus.Open) {
-//                downloadProgressDialog.titleText = qsTr("Searching for printers"
-//                downloadProgressDialog.indeterminate = false;
-//                downloadProgressDialog.open();
-//            }
-            downloadProgressDialog.min = 0;
-            downloadProgressDialog.max = bytesTotal;
-            downloadProgressDialog.value = bytesReceived;
-        }
-
-        onUploadProgress: {
-//            console.debug("sandBox gcpClient onUploadProgress " + bytesSent + " / " + bytesTotal);
-
-            // Shows in progress bar.
-//            if (uploadProgressDialog.status != DialogStatus.Open) {
-//                uploadProgressDialog.indeterminate = false;
-//                uploadProgressDialog.open();
-//            }
-            uploadProgressDialog.min = 0;
-            uploadProgressDialog.max = bytesTotal;
-            uploadProgressDialog.value = bytesSent;
-        }
-
-        Component.onCompleted: {
-            console.debug(Utility.nowText() + " folderPage gcpClient onCompleted");
-            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("GCPClient"), 0.1);
-        }
     }
 
     CloudDriveUsersDialog {

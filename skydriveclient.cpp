@@ -482,62 +482,62 @@ void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath
 {
     qDebug() << "----- SkyDriveClient::moveFile -----";
 
-    QString uri = moveFileURI;
-    qDebug() << "SkyDriveClient::moveFile uri " << uri;
+//    QString uri = moveFileURI;
+//    qDebug() << "SkyDriveClient::moveFile uri " << uri;
 
-    // Construct normalized query string.
-    QMap<QString, QString> sortMap;
-    sortMap["from_path"] = remoteFilePath;
-    sortMap["to_path"] = newRemoteFilePath;
-    QString queryString = createNormalizedQueryString(sortMap);
-    qDebug() << "queryString " << queryString;
+//    // Construct normalized query string.
+//    QMap<QString, QString> sortMap;
+//    sortMap["from_path"] = remoteFilePath;
+//    sortMap["to_path"] = newRemoteFilePath;
+//    QString queryString = createNormalizedQueryString(sortMap);
+//    qDebug() << "queryString " << queryString;
 
-    QByteArray postData;
-    postData.append(queryString);
-    qDebug() << "postData" << postData;
+//    QByteArray postData;
+//    postData.append(queryString);
+//    qDebug() << "postData" << postData;
 
-    // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)) );
-    QNetworkRequest req = QNetworkRequest(QUrl(uri));
-    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    QNetworkReply *reply = manager->post(req, postData);
-    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
-    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+//    // Send request.
+//    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+//    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)) );
+//    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+//    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+//    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+//    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+//    QNetworkReply *reply = manager->post(req, postData);
+//    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+//    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+//    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
 void SkyDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
 {
     qDebug() << "----- SkyDriveClient::copyFile -----";
 
-    QString uri = copyFileURI;
-    qDebug() << "SkyDriveClient::copyFile uri " << uri;
+//    QString uri = copyFileURI;
+//    qDebug() << "SkyDriveClient::copyFile uri " << uri;
 
-    // Construct normalized query string.
-    QMap<QString, QString> sortMap;
-    sortMap["from_path"] = remoteFilePath;
-    sortMap["to_path"] = newRemoteFilePath;
-    QString queryString = createNormalizedQueryString(sortMap);
-    qDebug() << "queryString " << queryString;
+//    // Construct normalized query string.
+//    QMap<QString, QString> sortMap;
+//    sortMap["from_path"] = remoteFilePath;
+//    sortMap["to_path"] = newRemoteFilePath;
+//    QString queryString = createNormalizedQueryString(sortMap);
+//    qDebug() << "queryString " << queryString;
 
-    QByteArray postData;
-    postData.append(queryString);
-    qDebug() << "postData" << postData;
+//    QByteArray postData;
+//    postData.append(queryString);
+//    qDebug() << "postData" << postData;
 
-    // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(copyFileReplyFinished(QNetworkReply*)) );
-    QNetworkRequest req = QNetworkRequest(QUrl(uri));
-    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    QNetworkReply *reply = manager->post(req, postData);
-    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
-    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+//    // Send request.
+//    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+//    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(copyFileReplyFinished(QNetworkReply*)) );
+//    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+//    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+//    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+//    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+//    QNetworkReply *reply = manager->post(req, postData);
+//    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+//    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+//    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
 void SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
