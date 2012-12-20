@@ -558,6 +558,7 @@ Page {
     }
 
     function updateFolderSizeItemSlot(localPath, isRunning) {
+//        console.debug("folderPage updateFolderSizeItemSlot localPath " + localPath);
         if (localPath == "") return;
 
         // Update ProgressBar on listItem.
@@ -574,7 +575,7 @@ Page {
         }
     }
 
-    function updateFolderSizeItemProgressBarSlot(locaPath, isRunning, cloudDriveOperation, runningValue, runningMaxValue) {
+    function updateFolderSizeItemProgressBarSlot(localPath, isRunning, cloudDriveOperation, runningValue, runningMaxValue) {
         if (localPath == "") return;
 
         // Update ProgressBar on listItem.

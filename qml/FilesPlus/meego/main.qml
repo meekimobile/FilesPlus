@@ -475,6 +475,87 @@ PageStackWindow {
 //            }
 //        }
 
+        function parseCloudDriveMetadataJson(selectedCloudType, originalRemotePath, jsonText,  model) {
+            // Parse jsonText and return collected information.
+            var json = Utility.createJsonObj(jsonText);
+
+            var selectedIndex = -1;
+            var selectedRemotePath = "";
+            var selectedRemotePathName = "";
+            var selectedIsDir = false;
+            var selectedIsValid = true;
+            var remoteParentPath = "";
+            var remoteParentPathName = "";
+            var remoteParentParentPath = "";
+
+            switch (selectedCloudType) {
+            case CloudDriveModel.Dropbox:
+                remoteParentPath = json.path;
+                remoteParentPathName = json.path;
+                remoteParentParentPath = cloudDriveModel.getParentRemotePath(remoteParentPath);
+                for (var i=0; i<json.contents.length; i++) {
+                    var item = json.contents[i];
+                    var modelItem = { "name": cloudDriveModel.getRemoteName(item.path), "absolutePath": item.path,
+                        "isChecked": false, "source": "", "thumbnail": "", "fileType": cloudDriveModel.getFileType(item.path), "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
+                        "subDirCount": 0, "subFileCount": 0, "isDirty": false,
+                        "lastModified": (new Date(item.modified)), "size": item.bytes, "isDir": item.is_dir};
+                    model.append(modelItem);
+                    if (modelItem.path == originalRemotePath) {
+                        selectedIndex = i;
+                        selectedRemotePath = modelItem.path;
+                        selectedRemotePathName = modelItem.name;
+                        selectedIsDir = modelItem.isDir;
+                    }
+                }
+                break;
+            case CloudDriveModel.SkyDrive:
+                remoteParentPath = json.property.id;
+                remoteParentPathName = json.property.name;
+                remoteParentParentPath = (json.property.parent_id ? json.property.parent_id : "");
+                for (var i=0; i<json.data.length; i++) {
+                    var item = json.data[i];
+                    var modelItem = { "name": item.name, "absolutePath": item.id,
+                        "isChecked": false, "source": (item.source ? item.source : ""), "thumbnail": (item.picture ? item.picture : ""), "fileType": cloudDriveModel.getFileType(item.name), "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
+                        "subDirCount": 0, "subFileCount": 0, "isDirty": false,
+                        "lastModified": Utility.parseJSONDate(item.updated_time), "size": item.size, "isDir": (item.type == "folder" || item.type == "album") };
+                    model.append(modelItem);
+                    if (modelItem.path == originalRemotePath) {
+                        selectedIndex = i;
+                        selectedRemotePath = modelItem.path;
+                        selectedRemotePathName = modelItem.name;
+                        selectedIsDir = modelItem.isDir;
+                    }
+                }
+                break;
+            case CloudDriveModel.Ftp:
+                remoteParentPath = json.property.path;
+                remoteParentPathName = json.property.path;
+                remoteParentParentPath = cloudDriveModel.getParentRemotePath(remoteParentPath);
+                for (var i=0; i<json.data.length; i++) {
+                    var item = json.data[i];
+                    var modelItem = { "name": item.name, "absolutePath": item.path,
+                        "isChecked": false, "source": "", "thumbnail": "", "fileType": cloudDriveModel.getFileType(item.name), "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
+                        "subDirCount": 0, "subFileCount": 0, "isDirty": false,
+                        "lastModified": Utility.parseJSONDate(item.lastModified), "size": item.size, "isDir": item.isDir };
+                    model.append(modelItem);
+                    if (modelItem.path == originalRemotePath) {
+                        selectedIndex = i;
+                        selectedRemotePath = modelItem.path;
+                        selectedRemotePathName = modelItem.name;
+                        selectedIsDir = modelItem.isDir;
+                    }
+                }
+                break;
+            }
+
+            var responseJson = { "selectedIndex": selectedIndex,
+                "selectedRemotePath": selectedRemotePath, "selectedRemotePathName": selectedRemotePathName, "selectedIsDir": selectedIsDir,
+                "remoteParentPath": remoteParentPath, "remoteParentPathName": remoteParentPathName, "remoteParentParentPath": remoteParentParentPath
+            };
+
+            return responseJson;
+        }
+
         onRequestTokenReplySignal: {
             console.debug("window cloudDriveModel onRequestTokenReplySignal " + err + " " + errMsg + " " + msg);
 
@@ -486,7 +567,7 @@ PageStackWindow {
             if (err == 0) {
                 cloudDriveModel.authorize(jobJson.type);
             } else {
-                pageStack.currentPage.showMessageDialogSlot(
+                showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Request Token"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
@@ -514,7 +595,7 @@ PageStackWindow {
 //                    syncFileSlot(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
                 } else {
                     // TODO Get account info and show in dialog.
-                    pageStack.currentPage.showMessageDialogSlot(
+                    showMessageDialogSlot(
                                 getCloudName(jobJson.type) + " " + qsTr("Access Token"),
                                 qsTr("CloudDrive user is authorized.\nPlease proceed your sync action."));
 
@@ -523,7 +604,7 @@ PageStackWindow {
                     if (p) p.refreshCloudDriveAccountsSlot();
                 }
             } else {
-                pageStack.currentPage.showMessageDialogSlot(
+                showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Access Token"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
@@ -552,7 +633,7 @@ PageStackWindow {
                 // TODO Refactor to support all SkyDriveClient services.
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
-                pageStack.currentPage.showMessageDialogSlot(
+                showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Account Info"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
@@ -579,7 +660,7 @@ PageStackWindow {
                 // TODO Refactor to support all SkyDriveClient services.
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
-                pageStack.currentPage.showMessageDialogSlot(
+                showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Account Quota"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
@@ -612,7 +693,7 @@ PageStackWindow {
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
-                pageStack.currentPage.showMessageDialogSlot(
+                showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("File Get"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
@@ -640,7 +721,7 @@ PageStackWindow {
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
-                pageStack.currentPage.showMessageDialogSlot(
+                showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("File Put"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
@@ -672,7 +753,7 @@ PageStackWindow {
 //                        fsModel.setProperty(jobJson.local_file_path, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
 
                         // Notify removed link.
-                        pageStack.currentPage.showMessageDialogSlot(
+                        showMessageDialogSlot(
                                     getCloudName(jobJson.type) + " " + qsTr("Metadata"),
                                     qsTr("%1 was removed remotely.\nLink will be removed.").arg(jobJson.local_file_path),
                                     2000);
@@ -931,7 +1012,7 @@ PageStackWindow {
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
-                pageStack.currentPage.showMessageDialogSlot(
+                showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Metadata"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
 
@@ -966,7 +1047,7 @@ PageStackWindow {
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
-                pageStack.currentPage.showMessageDialogSlot(
+                showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
@@ -975,7 +1056,11 @@ PageStackWindow {
             if (p) {
                 // TODO *** create SkyDrive folder freezes here *** TODO Does it need?
                 // Update ProgressBar if localPath is specified.
-                p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
+                if (jobJson.type == CloudDriveModel.SkyDrive) {
+                    // Do nothing for SkyDrive because jobJson.local_file_path is new folder name.
+                } else {
+                    p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
+                }
                 // Refresh cloudDrivePathDialog if it's opened.
                 p.updateCloudDrivePathDialogSlot(jobJson.new_remote_file_path);
             }
@@ -1062,7 +1147,7 @@ PageStackWindow {
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
-                pageStack.currentPage.showMessageDialogSlot(
+                showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Move"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
@@ -1087,7 +1172,7 @@ PageStackWindow {
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
-                pageStack.currentPage.showMessageDialogSlot(
+                showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Delete"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
@@ -1116,7 +1201,7 @@ PageStackWindow {
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
-                pageStack.currentPage.showMessageDialogSlot(
+                showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Share"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
@@ -1149,7 +1234,7 @@ PageStackWindow {
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
-                pageStack.currentPage.showMessageDialogSlot(
+                showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Browse"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
 
