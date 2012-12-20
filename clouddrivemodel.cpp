@@ -539,13 +539,6 @@ QString CloudDriveModel::getFileName(const QString absFilePath)
     return fileInfo.fileName();
 }
 
-void CloudDriveModel::initScheduler()
-{
-    connect(&m_schedulerTimer, SIGNAL(timeout()), this, SLOT(schedulerTimeoutFilter()) );
-    m_schedulerTimer.setInterval(60000);
-    m_schedulerTimer.start();
-}
-
 QString CloudDriveModel::getFileType(QString localPath)
 {
     int i = localPath.lastIndexOf(".");
@@ -558,6 +551,13 @@ QString CloudDriveModel::getFileType(QString localPath)
 
 //    qDebug() << "CloudDriveModel::getFileType" << localPath << "fileType" << fileType;
     return fileType;
+}
+
+void CloudDriveModel::initScheduler()
+{
+    connect(&m_schedulerTimer, SIGNAL(timeout()), this, SLOT(schedulerTimeoutFilter()) );
+    m_schedulerTimer.setInterval(60000);
+    m_schedulerTimer.start();
 }
 
 bool CloudDriveModel::canSync(QString localPath)

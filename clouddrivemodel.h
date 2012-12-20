@@ -131,6 +131,7 @@ public:
     Q_INVOKABLE QString getAbsolutePath(const QString dirPath, const QString fileName);
     Q_INVOKABLE bool createDirPath(const QString absPath);
     Q_INVOKABLE QString getFileName(const QString absFilePath);
+    Q_INVOKABLE QString getFileType(QString localPath);
 
     // Scheduler.
     Q_INVOKABLE int updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp);
@@ -301,7 +302,6 @@ private:
     void initializeFtpClient();
     QString createNonce();
     void jobDone();
-    QString getFileType(QString localPath);
     ClientTypes getJobType(int jobType);
 
     bool m_dropboxFullAccess;
