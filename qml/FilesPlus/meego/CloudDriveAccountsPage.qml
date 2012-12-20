@@ -7,7 +7,6 @@ Page {
     id: cloudDriveAccountsPage
 
     property string name: "cloudDriveAccountsPage"
-    property variant cloudDriveModel
 
     function updateAccountInfoSlot(type, uid, name, email, shared, normal, quota) {
 //        console.debug("cloudDriveAccountsPage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
@@ -22,22 +21,22 @@ Page {
 
     function refreshAccountsInfoSlot() {
         // Refresh UID list.
-        accountListView.model = cloudDriveAccountsPage.cloudDriveModel.getUidListModel();
+        accountListView.model = cloudDriveModel.getUidListModel();
 
         // Refresh quota.
         for (var i=0; i<accountListView.model.count; i++) {
             accountListView.model.set(i, { quota: 0 });
-            cloudDriveAccountsPage.cloudDriveModel.accountInfo(accountListView.model.get(i).type, accountListView.model.get(i).uid);
+            cloudDriveModel.accountInfo(accountListView.model.get(i).type, accountListView.model.get(i).uid);
         }
     }
 
     function refreshCloudDriveAccountsSlot() {
-        accountListView.model = cloudDriveAccountsPage.cloudDriveModel.getUidListModel();
+        accountListView.model = cloudDriveModel.getUidListModel();
     }
 
     onStatusChanged: {
         if (status == PageStatus.Active) {
-            accountListView.model = cloudDriveAccountsPage.cloudDriveModel.getUidListModel();
+            refreshCloudDriveAccountsSlot();
         }
     }
 
@@ -383,13 +382,13 @@ Page {
 //                console.debug("uid " + uid + " type " + type);
                 switch (type) {
                 case CloudDriveModel.Dropbox:
-                    cloudDriveAccountsPage.cloudDriveModel.accountInfo(type, uid);
+                    cloudDriveModel.accountInfo(type, uid);
                     break;
                 case CloudDriveModel.SkyDrive:
                     if (email == "") {
-                        cloudDriveAccountsPage.cloudDriveModel.accountInfo(type, uid);
+                        cloudDriveModel.accountInfo(type, uid);
                     }
-                    cloudDriveAccountsPage.cloudDriveModel.quota(type, uid);
+                    cloudDriveModel.quota(type, uid);
                     break;
                 }
             }
