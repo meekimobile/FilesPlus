@@ -50,80 +50,21 @@ Page {
     }
 
     function parseCloudDriveMetadataJson(jsonText) {
-        // Reset list view.
-        cloudFolderModel.clear();
-        cloudFolderView.currentIndex = -1;
-        selectedIndex = -1;
-        selectedRemotePath = "";
-        selectedRemotePathName = "";
-        selectedIsDir = false;
-        selectedIsValid = true;
         originalRemotePath = (originalRemotePath == "") ? remotePath : originalRemotePath;
 
-        var json = Utility.createJsonObj(jsonText);
+        cloudFolderModel.clear();
+        var responseJson = cloudDriveModel.parseCloudDriveMetadataJson(selectedCloudType, originalRemotePath, jsonText,  cloudFolderModel);
 
-        switch (selectedCloudType) {
-        case CloudDriveModel.Dropbox:
-            remoteParentPath = json.path;
-            remoteParentPathName = json.path;
-            remoteParentParentPath = cloudDriveModel.getParentRemotePath(remoteParentPath);
-            for (var i=0; i<json.contents.length; i++) {
-                var item = json.contents[i];
-                var modelItem = { "name": cloudDriveModel.getRemoteName(item.path), "absolutePath": item.path,
-                    "isChecked": false, "source": "", "thumbnail": "", "fileType": cloudDriveModel.getFileType(item.path), "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
-                    "subDirCount": 0, "subFileCount": 0, "isDirty": false,
-                    "lastModified": (new Date(item.modified)), "size": item.bytes, "isDir": item.is_dir};
-                cloudFolderModel.append(modelItem);
-                if (modelItem.path == originalRemotePath) {
-                    selectedIndex = i;
-                    selectedRemotePath = modelItem.path;
-                    selectedRemotePathName = modelItem.name;
-                    selectedIsDir = modelItem.isDir;
-                    cloudFolderView.currentIndex = i;
-                }
-            }
-            break;
-        case CloudDriveModel.SkyDrive:
-            remoteParentPath = json.property.id;
-            remoteParentPathName = json.property.name;
-            remoteParentParentPath = (json.property.parent_id ? json.property.parent_id : "");
-            for (var i=0; i<json.data.length; i++) {
-                var item = json.data[i];
-                var modelItem = { "name": item.name, "absolutePath": item.id,
-                    "isChecked": false, "source": (item.source ? item.source : ""), "thumbnail": (item.picture ? item.picture : ""), "fileType": cloudDriveModel.getFileType(item.name), "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
-                    "subDirCount": 0, "subFileCount": 0, "isDirty": false,
-                    "lastModified": Utility.parseJSONDate(item.updated_time), "size": item.size, "isDir": (item.type == "folder" || item.type == "album") };
-                cloudFolderModel.append(modelItem);
-                if (modelItem.path == originalRemotePath) {
-                    selectedIndex = i;
-                    selectedRemotePath = modelItem.path;
-                    selectedRemotePathName = modelItem.name;
-                    selectedIsDir = modelItem.isDir;
-                    cloudFolderView.currentIndex = i;
-                }
-            }
-            break;
-        case CloudDriveModel.Ftp:
-            remoteParentPath = json.property.path;
-            remoteParentPathName = json.property.path;
-            remoteParentParentPath = cloudDriveModel.getParentRemotePath(remoteParentPath);
-            for (var i=0; i<json.data.length; i++) {
-                var item = json.data[i];
-                var modelItem = { "name": item.name, "absolutePath": item.path,
-                    "isChecked": false, "source": "", "thumbnail": "", "fileType": cloudDriveModel.getFileType(item.name), "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
-                    "subDirCount": 0, "subFileCount": 0, "isDirty": false,
-                    "lastModified": Utility.parseJSONDate(item.lastModified), "size": item.size, "isDir": item.isDir };
-                cloudFolderModel.append(modelItem);
-                if (modelItem.path == originalRemotePath) {
-                    selectedIndex = i;
-                    selectedRemotePath = modelItem.path;
-                    selectedRemotePathName = modelItem.name;
-                    selectedIsDir = modelItem.isDir;
-                    cloudFolderView.currentIndex = i;
-                }
-            }
-            break;
-        }
+        selectedIsValid = true;
+        selectedIndex = responseJson.selectedIndex;
+        selectedRemotePath = responseJson.selectedRemotePath;
+        selectedRemotePathName = responseJson.selectedRemotePathName;
+        selectedIsDir = responseJson.selectedIsDir;
+        remoteParentPath = responseJson.remoteParentPath;
+        remoteParentPathName = responseJson.remoteParentPathName;
+        remoteParentParentPath = responseJson.remoteParentParentPath;
+
+        cloudFolderView.currentIndex = responseJson.selectedIndex;
 
         // Reset busy.
         isBusy = false;
