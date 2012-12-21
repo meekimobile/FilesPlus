@@ -755,7 +755,7 @@ void SkyDriveClient::fileGetReplyFinished(QNetworkReply *reply) {
 
         emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), "Request property");
     } else {
-        emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+        emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
     }
 
     // TODO scheduled to delete later.
@@ -903,7 +903,7 @@ void SkyDriveClient::createFolderReplyFinished(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
 
     // TODO scheduled to delete later.
     reply->deleteLater();
@@ -916,7 +916,7 @@ void SkyDriveClient::moveFileReplyFinished(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
 
     // TODO scheduled to delete later.
     reply->deleteLater();
@@ -929,7 +929,7 @@ void SkyDriveClient::copyFileReplyFinished(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
 
     // TODO scheduled to delete later.
     reply->deleteLater();
@@ -942,7 +942,7 @@ void SkyDriveClient::deleteFileReplyFinished(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
 
     // TODO scheduled to delete later.
     reply->deleteLater();
@@ -955,7 +955,7 @@ void SkyDriveClient::shareFileReplyFinished(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
 
     // TODO scheduled to delete later.
     reply->deleteLater();
