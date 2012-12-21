@@ -62,6 +62,7 @@ CommonDialog {
 
         cloudDrivePathListModel.clear();
         var responseJson = cloudDriveModel.parseCloudDriveMetadataJson(selectedCloudType, originalRemotePath, jsonText,  cloudDrivePathListModel);
+        console.debug("cloudDrivePathDialog parseCloudDriveMetadataJson responseJson " + JSON.stringify(responseJson));
 
         selectedIsValid = true;
         selectedIndex = responseJson.selectedIndex;

@@ -433,7 +433,7 @@ void DropboxClient::browse(QString nonce, QString uid, QString remoteFilePath)
 
 void DropboxClient::createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
 {
-    qDebug() << "----- DropboxClient::createFolder -----";
+    qDebug() << "----- DropboxClient::createFolder -----" << uid << localFilePath << remoteFilePath;
 
     QString uri = createFolderURI;
     qDebug() << "DropboxClient::createFolder uri " << uri;
