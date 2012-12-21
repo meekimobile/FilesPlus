@@ -1076,6 +1076,8 @@ PageStackWindow {
                     p.refreshItemSlot("cloudDriveModel onCreateFolderReplySignal SkyDrive");
                 } else {
                     p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
+                    // Workaround: Refresh item once got reply. To fix unexpected showing cloud_wait icon.
+                    p.refreshItemSlot("cloudDriveModel onCreateFolderReplySignal", jobJson.local_file_path);
                 }
                 // Refresh cloudDrivePathDialog if it's opened.
                 p.updateCloudDrivePathDialogSlot(jobJson.new_remote_file_path);
@@ -1231,8 +1233,14 @@ PageStackWindow {
 
         onJobEnqueuedSignal: {
             console.debug("window cloudDriveModel onJobEnqueuedSignal " + nonce + " " + localPath);
+
+            // Get job json.
+            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+
             var p = pageStack.find(function (page) { return (page.name == "folderPage"); });
             if (p) {
+                p.updateFolderSizeItemSlot(localPath, jobJson.is_running);
+                // Workaround: Refresh item once got reply. To fix unexpected showing cloud_wait icon.
                 p.refreshItemSlot("cloudDriveModel onJobEnqueuedSignal", localPath);
             }
         }

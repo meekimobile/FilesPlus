@@ -561,8 +561,7 @@ Page {
 //        console.debug("folderPage updateFolderSizeItemSlot localPath " + localPath);
         if (localPath == "") return;
 
-        // Show indicator on parent up to root.
-        // Skip i=0 as it's notified above already.
+        // Show indicator on localPath up to root.
         var pathList = fsModel.getPathToRoot(localPath);
         for(var i=0; i<pathList.length; i++) {
             var modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
