@@ -1023,11 +1023,11 @@ PageStackWindow {
             // Update ProgressBar on listItem and its parent.
             var p = pageStack.find(function (page) { return (page.name == "folderPage"); });
             if (p) {
+//                console.debug("window cloudDriveModel onMetadataReplySignal updateFolderSizeItemSlot " + getCloudName(jobJson.type) + " " + jobJson.local_file_path + " " + jobJson.is_running);
                 p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
+                // Workaround: Refresh item once got reply. To fix unexpected showing cloud_wait icon.
+                p.refreshItemSlot("window cloudDriveModel onMetadataReplySignal", jobJson.local_file_path);
             }
-
-            // Workaround: Refresh item once got reply. To fix unexpected showing cloud_wait icon.
-//            fsModel.refreshItem(jobJson.local_file_path);
         }
 
         onCreateFolderReplySignal: {
@@ -1038,14 +1038,24 @@ PageStackWindow {
 
             // Remove finished job.
             cloudDriveModel.removeJob(nonce);
+
             var jobJson = JSON.parse(jsonText);
+            var msgJson = JSON.parse(msg);
 
             if (err == 0) {
                 // Do nothing.
-            } else if (err == 202) { // Folder already exists.
-                // Do nothing.
+            } else if (err == 202 && jobJson.type == CloudDriveModel.Dropbox) {
+                // Dropbox Folder already exists. proceed sync.
+                cloudDriveModel.metadata(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.model_index);
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
+            } else if (err == 299 && jobJson.type == CloudDriveModel.SkyDrive && msgJson.error && msgJson.error.code == "resource_already_exists") {
+                // SkyDrive Folder already exists. Do nothing
+                showMessageDialogSlot(
+                            getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
+                            qsTr("Error") + " " + err + " " + errMsg + " " + msg +
+                            "\n\n" +
+                            qsTr("Please proceed with sync."));
             } else {
                 showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
@@ -1058,6 +1068,7 @@ PageStackWindow {
                 // Update ProgressBar if localPath is specified.
                 if (jobJson.type == CloudDriveModel.SkyDrive) {
                     // Do nothing for SkyDrive because jobJson.local_file_path is new folder name.
+                    p.refreshItemSlot("cloudDriveModel onCreateFolderReplySignal SkyDrive");
                 } else {
                     p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
                 }
@@ -1217,7 +1228,7 @@ PageStackWindow {
             console.debug("window cloudDriveModel onJobEnqueuedSignal " + nonce + " " + localPath);
             var p = pageStack.find(function (page) { return (page.name == "folderPage"); });
             if (p) {
-                p.refreshItemSlot(localPath);
+                p.refreshItemSlot("cloudDriveModel onJobEnqueuedSignal", localPath);
             }
         }
 

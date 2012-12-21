@@ -561,14 +561,12 @@ Page {
 //        console.debug("folderPage updateFolderSizeItemSlot localPath " + localPath);
         if (localPath == "") return;
 
-        // Update ProgressBar on listItem.
-//        fsModel.setProperty(localPath, FolderSizeItemListModel.IsRunningRole, isRunning);
-
         // Show indicator on parent up to root.
         // Skip i=0 as it's notified above already.
         var pathList = fsModel.getPathToRoot(localPath);
         for(var i=0; i<pathList.length; i++) {
             var modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+//            console.debug("folderPage updateFolderSizeItemSlot " + pathList[i] + " " + modelIndex + " " + isRunning);
             if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
             }
@@ -633,8 +631,12 @@ Page {
         }
     }
 
-    function refreshItemSlot(localPath) {
-        fsModel.refreshItem(localPath);
+    function refreshItemSlot(caller, localPath) {
+        if (localPath) {
+            fsModel.refreshItem(localPath);
+        } else {
+            fsModel.refreshItems();
+        }
     }
 
     function updateMigrationProgressSlot(type, uid, localFilePath, remoteFilePath, count, total) {
