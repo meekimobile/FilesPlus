@@ -609,13 +609,17 @@ QString FolderSizeItemListModel::getDirPath(const QString absFilePath)
 QStringList FolderSizeItemListModel::getPathToRoot(const QString absFilePath)
 {
 //    qDebug() << "FolderSizeItemListModel::getPathToRoot" << absFilePath;
+    QStringList paths;
+
+    // Return empty list if absFilePath is not absolute path.
+    if (!QDir::isAbsolutePath(absFilePath)) {
+        return paths;
+    }
 
     // Try get from cache. It will not 0 if exists.
 //    qDebug() << "FolderSizeItemListModel::getPathToRoot absFilePath" << absFilePath << "cache" << m_pathToRootCache->contains(absFilePath);
     if (!m_pathToRootCache->contains(absFilePath)) {
-        QStringList paths;
         QDir dir(absFilePath);
-
         while (!dir.isRoot()) {
             paths << dir.absolutePath();
 //            qDebug() << "FolderSizeItemListModel::getPathToRoot append" << dir.absolutePath();
