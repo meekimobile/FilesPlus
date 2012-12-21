@@ -23,6 +23,8 @@ public:
     qint64 bytes;
     qint64 bytesTotal;
 
+    QString nextJobId;
+
     QString toJsonText();
 };
 

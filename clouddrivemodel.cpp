@@ -1324,12 +1324,13 @@ void CloudDriveModel::accessToken(CloudDriveModel::ClientTypes type, QString pin
     emit proceedNextJobSignal();
 }
 
-void CloudDriveModel::refreshToken(CloudDriveModel::ClientTypes type, QString uid)
+void CloudDriveModel::refreshToken(CloudDriveModel::ClientTypes type, QString uid, QString nextNonce)
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), RefreshToken, type, uid, "", "", -1);
+    job.nextJobId = nextNonce;
     m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
+    m_jobQueue->insert(0, job.jobId);
 
     emit proceedNextJobSignal();
 }
@@ -2712,9 +2713,6 @@ void CloudDriveModel::accessTokenReplyFilter(QString nonce, int err, QString err
     job.isRunning = false;
     m_cloudDriveJobs->insert(nonce, job);
 
-    // Notify job done.
-    jobDone();
-
     // Get accountInfo.
     if (err == QNetworkReply::NoError) {
         QHash<QString, QString> m_paramMap;
@@ -2738,6 +2736,15 @@ void CloudDriveModel::accessTokenReplyFilter(QString nonce, int err, QString err
     }
 
     emit accessTokenReplySignal(nonce, err, errMsg, msg);
+
+    // Insert job.nextJobId to first in queue.
+    if (job.nextJobId != "") {
+        qDebug() << "CloudDriveModel::accessTokenReplyFilter insert job.nextJobId" << job.nextJobId;
+        m_jobQueue->insert(0, job.nextJobId);
+    }
+
+    // Notify job done.
+    jobDone();
 }
 
 void CloudDriveModel::accountInfoReplyFilter(QString nonce, int err, QString errMsg, QString msg)

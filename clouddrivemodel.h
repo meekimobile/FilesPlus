@@ -161,7 +161,7 @@ public:
     Q_INVOKABLE void authorize(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE bool parseAuthorizationCode(CloudDriveModel::ClientTypes type, QString text);
     Q_INVOKABLE void accessToken(CloudDriveModel::ClientTypes type, QString pin = "");
-    Q_INVOKABLE void refreshToken(CloudDriveModel::ClientTypes type, QString uid);
+    Q_INVOKABLE void refreshToken(CloudDriveModel::ClientTypes type, QString uid, QString nextNonce = "");
     Q_INVOKABLE void accountInfo(CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE void quota(CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE void fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString localFilePath, int modelIndex);

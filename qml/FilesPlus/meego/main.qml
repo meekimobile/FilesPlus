@@ -585,15 +585,17 @@ PageStackWindow {
         onAccessTokenReplySignal: {
             console.debug("window cloudDriveModel onAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
 
+            var jobJson = JSON.parse(cloudDriveModel.getJobJson(nonce));
+
             // Remove finished job.
             cloudDriveModel.removeJob(nonce);
 
             if (err == 0) {
                 // TODO find better way to proceed after got accessToken.
-                if (popupToolPanel.selectedFilePath) {
+//                if (popupToolPanel.selectedFilePath) {
 //                    uidDialog.proceedPendingOperation();
 //                    syncFileSlot(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
-                } else {
+//                } else {
                     // TODO Get account info and show in dialog.
                     showMessageDialogSlot(
                                 getCloudName(jobJson.type) + " " + qsTr("Access Token"),
@@ -602,7 +604,7 @@ PageStackWindow {
                     // Refresh account page.
                     var p = pageStack.find(function (page) { return page.name == "cloudDriveAccountsPage"; });
                     if (p) p.refreshCloudDriveAccountsSlot();
-                }
+//                }
             } else {
                 showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Access Token"),
@@ -644,8 +646,7 @@ PageStackWindow {
 
             var jobJson = JSON.parse(cloudDriveModel.getJobJson(nonce));
 
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
+            // TODO Don't remove job here to support requeue by refreshToken()
 
             if (err == 0) {
                 var jsonObj = Utility.createJsonObj(msg);
@@ -658,12 +659,16 @@ PageStackWindow {
                                                             jsonObj.quota);
             } else if (err == 204) {
                 // TODO Refactor to support all SkyDriveClient services.
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                return;
             } else {
                 showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Account Quota"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
         }
 
         onFileGetReplySignal: {
