@@ -311,6 +311,7 @@ Page {
         highlightMoveSpeed: 4000
         pressDelay: 100
         clip: true
+        state: ""
         states: [
             State {
                 name: "mark"
@@ -596,7 +597,7 @@ Page {
 
         CloudListItem {
             id: listItem
-            listViewState: cloudFolderView.state
+            listViewState: (cloudFolderView.state ? cloudFolderView.state : "")
             syncIconVisible: cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, absolutePath)
             syncIconSource: "cloud.svg"
 
@@ -947,16 +948,15 @@ Page {
         titleText: appInfo.emptyStr+qsTr("New folder")
         titleIcon: "FilesPlusIcon.svg"
         buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
-        content: Column {
-            width: parent.width - 10
+        content: Item {
+            width: parent.width
             height: 80
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 5
 
             TextField {
                 id: folderName
                 width: parent.width
                 placeholderText: appInfo.emptyStr+qsTr("Please input folder name.")
+                anchors.centerIn: parent
             }
         }
 

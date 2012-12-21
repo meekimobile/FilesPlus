@@ -286,7 +286,7 @@ CommonDialog {
 
         CloudListItem {
             id: listItem
-            listViewState: cloudDrivePathListView.state
+            listViewState: (cloudDrivePathListView.state ? cloudDrivePathListView.state : "")
             syncIconVisible: cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, absolutePath)
             syncIconSource: "cloud.svg"
 
@@ -352,17 +352,15 @@ CommonDialog {
     ConfirmDialog {
         id: newFolderDialog
         titleText: appInfo.emptyStr+qsTr("New folder")
-        content: Column {
-            width: parent.width - 10
+        content: Item {
+            width: parent.width
             height: 80
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 5
 
             TextField {
                 id: folderName
                 width: parent.width
                 placeholderText: appInfo.emptyStr+qsTr("Please input folder name.")
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.centerIn: parent
             }
         }
 

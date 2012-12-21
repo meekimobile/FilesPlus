@@ -4,12 +4,10 @@ import "Utility.js" as Utility
 
 ListItem {
     id: listItem
-    width: parent.width
-    height: 80
     
     property string fileName: name
     property string filePath: absolutePath
-    property string listViewState
+    property string listViewState: ""
     property alias listItemIconSource: listItemIcon.source
     property alias actionIconSource: cutCopyIcon.source
     property alias runningIconSource: runningIcon.source

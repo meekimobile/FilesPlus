@@ -562,13 +562,13 @@ Page {
         if (localPath == "") return;
 
         // Update ProgressBar on listItem.
-        fsModel.setProperty(localPath, FolderSizeItemListModel.IsRunningRole, isRunning);
+//        fsModel.setProperty(localPath, FolderSizeItemListModel.IsRunningRole, isRunning);
 
         // Show indicator on parent up to root.
         // Skip i=0 as it's notified above already.
         var pathList = fsModel.getPathToRoot(localPath);
-        for(var i=1; i<pathList.length; i++) {
-            modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+        for(var i=0; i<pathList.length; i++) {
+            var modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
             if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
             }
@@ -580,7 +580,7 @@ Page {
 
         // Update ProgressBar on listItem.
         var runningOperation = fsModel.mapToFolderSizeListModelOperation(cloudDriveOperation);
-        var modelIndex = fsModel.getIndexOnCurrentDir(locaPath);
+        var modelIndex = fsModel.getIndexOnCurrentDir(localPath);
         if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
             fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
             fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, runningOperation);
@@ -590,12 +590,13 @@ Page {
 
         // Show indicator on parent up to root.
         // Skip i=0 as it's notified above already.
-        var pathList = fsModel.getPathToRoot(locaPath);
+        var pathList = fsModel.getPathToRoot(localPath);
         for(var i=1; i<pathList.length; i++) {
             modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
             if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
+//                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, runningOperation);
             }
         }
     }
@@ -1017,6 +1018,7 @@ Page {
         pressDelay: 100
         model: fsModel
         delegate: listItemDelegate
+        state: ""
         states: [
             State {
                 name: "mark"
@@ -1213,7 +1215,7 @@ Page {
 
         CloudListItem {
             id: listItem
-            listViewState: fsListView.state
+            listViewState: (fsListView.state ? fsListView.state : "")
             runningIconSource: fsModel.getRunningOperationIconSource(runningOperation)
             syncIconVisible: cloudDriveModel.isConnected(absolutePath) || cloudDriveModel.isSyncing(absolutePath);
             syncIconSource: {
@@ -1675,7 +1677,7 @@ Page {
             width: parent.width - 10
             height: 120
             anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 5
+            spacing: 10
 
             Row {
                 width: parent.width
