@@ -11,9 +11,6 @@ PageStackWindow {
     id: window
     showStatusBar: true
     showToolBar: true
-//    initialPage: DrivePage {
-//        id: drivePage
-//    }
 
     state: "ready"
     states: [
@@ -767,6 +764,11 @@ PageStackWindow {
         dropboxFullAccess: appInfo.emptySetting+appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", false)
 
         property string shareFileCaller
+        property alias jobsModel: cloudDriveJobsModel
+
+        ListModel {
+            id: cloudDriveJobsModel
+        }
 
         function getUidListModel(localPath) {
             console.debug("window cloudDriveModel getUidListModel localPath " + localPath);
@@ -998,9 +1000,9 @@ PageStackWindow {
 //                    syncFileSlot(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
 //                } else {
                     // TODO Get account info and show in dialog.
-                    showMessageDialogSlot(
-                                getCloudName(jobJson.type) + " " + qsTr("Access Token"),
-                                qsTr("CloudDrive user is authorized.\nPlease proceed your sync action."));
+                    showMessageDialogSlot(getCloudName(jobJson.type) + " " + qsTr("Access Token"),
+                                          qsTr("CloudDrive user is authorized.\nPlease proceed your sync action."),
+                                          2000);
 
                     // Refresh account page.
                     var p = pageStack.find(function (page) { return page.name == "cloudDriveAccountsPage"; });
@@ -1278,7 +1280,7 @@ PageStackWindow {
                             cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
 
                             // Sync based on local contents.
-                            cloudDriveModel.syncFromLocal_SkyDrive(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
+                            cloudDriveModel.syncFromLocal_SkyDrive(jobJson.type, jobJson.uid, jobJson.local_file_path, jsonObj.property.parent_id, jobJson.modelIndex);
                         } else { // Sync file.
                             console.debug("window cloudDriveModel onMetadataReplySignal file jobJson " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + jobJson.type + " " + jobJson.uid + " remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
 
@@ -1637,6 +1639,7 @@ PageStackWindow {
 
             // Get job json.
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            cloudDriveJobsModel.append(jobJson);
 
             var p = pageStack.find(function (page) { return (page.name == "folderPage"); });
             if (p) {

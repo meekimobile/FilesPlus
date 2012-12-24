@@ -1543,8 +1543,6 @@ void CloudDriveModel::syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, 
 
     QApplication::processEvents();
 
-    QScriptEngine se;
-    QScriptValue sc;
     QFileInfo info(localPath);
     if (info.isDir()) {
         // Sync based on local contents.
@@ -1564,15 +1562,25 @@ void CloudDriveModel::syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, 
 
             QNetworkReply * createFolderReply = skdClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath, true);
             if (createFolderReply->error() == QNetworkReply::NoError) {
-                // Update parentCloudDriveItem by invoke createFolderReplyFinished.
-                skdClient->createFolderReplyFinished(createFolderReply);
+                QString msg = QString::fromUtf8(createFolderReply->readAll());
+                QScriptEngine engine;
+                QScriptValue sc = engine.evaluate("(" + msg + ")");
+                QString hash = sc.property("updated_time").toString();
+                QString createdRemotePath = sc.property("id").toString();
+                addItem(type, uid, localPath, createdRemotePath, hash);
+
+                // Update parentCloudDriveItem.
                 parentCloudDriveItem = getItem(localPath, type, uid);
                 qDebug() << "CloudDriveModel::syncFromLocal_SkyDrive createFolder success parentCloudDriveItem" << parentCloudDriveItem;
+
+                // Invoke to emit signal to QML for refreshing items.
+                createFolderReplyFilter(job.jobId, createFolderReply->error(), createFolderReply->errorString(), msg);
             } else {
                 // Insert dummy job and invoke slot to emit signal to front-end.
                 // TODO Suppress signal if newRemoteFolder is not requested path.
                 qDebug() << "CloudDriveModel::syncFromLocal_SkyDrive createFolder" << job.localFilePath << "failed";
-                skdClient->createFolderReplyFinished(createFolderReply);
+                // Invoke to emit signal to QML for refreshing items.
+                createFolderReplyFilter(job.jobId, createFolderReply->error(), createFolderReply->errorString(), QString::fromUtf8(createFolderReply->readAll()));
                 return;
             }
         } else {
@@ -1597,7 +1605,6 @@ void CloudDriveModel::syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, 
 
                 if (item.isDir()) {
                     // Drilldown local dir recursively.
-                    // TODO Get new remote folder path.
                     syncFromLocal_SkyDrive(type, uid, localFilePath, parentCloudDriveItem.remotePath, -1, forcePut, false);
                 } else {
                     // Put file to remote parent path.
@@ -1926,14 +1933,14 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
             }
             break;
         case SkyDrive:
-            // REMARK For SkyDrive, job.localFilePath stores newRemoteFolderName.
-            sc = engine.evaluate("(" + msg + ")");
-            hash = sc.property("updated_time").toString();
-            createdRemotePath = sc.property("id").toString();
-            if (job.localFilePath != "") {
-                // Add cloud item if localPath is specified.
-                addItem(SkyDrive, job.uid, job.localFilePath, createdRemotePath, hash);
-            }
+            // REMARK For SkyDrive, job.localFilePath stores newRemoteFolderName. It've never have correct localFilePath. So ignore addItem.
+//            sc = engine.evaluate("(" + msg + ")");
+//            hash = sc.property("updated_time").toString();
+//            createdRemotePath = sc.property("id").toString();
+//            if (job.localFilePath != "") {
+//                // TODO SkyDrive expected to have newRemoteFolderName in job.localFilePath
+//                addItem(SkyDrive, job.uid, job.localFilePath, createdRemotePath, hash);
+//            }
             break;
         case Ftp:
             sc = engine.evaluate("(" + msg + ")");
