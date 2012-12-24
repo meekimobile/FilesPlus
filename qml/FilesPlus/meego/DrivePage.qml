@@ -179,12 +179,8 @@ Page {
                                        selectedModelIndex: -1
                                    });
                 } else { // Local drive is selected.
-//                    var p = pageStack.find(function(page) { return (page.name == "folderPage"); });
-//                    if (p) p.currentDir = driveName;
-//                    pageStack.pop(drivePage, true);
-                    pageStack.push(Qt.resolvedUrl("FolderPage.qml"), {
-                                       currentDir: driveName
-                                   });
+                    fsModel.currentDir = driveName;
+                    pageStack.push(Qt.resolvedUrl("FolderPage.qml"));
 
                 }
             }

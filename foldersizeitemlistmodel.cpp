@@ -245,6 +245,12 @@ void FolderSizeItemListModel::setProperty(const QString localPath, FolderSizeIte
     }
 }
 
+void FolderSizeItemListModel::setProperty(const int index, QVariant valueJson)
+{
+    qDebug() << "FolderSizeItemListModel::setProperty" << index << valueJson << "(not implemented)";
+    // TODO Use roleNames.key(roleName) to get role. But it's needed to map and set as in existing setProperty method.
+}
+
 QString FolderSizeItemListModel::formatFileSize(double size)
 {
     const uint KB = 1024;

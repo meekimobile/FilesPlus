@@ -14,7 +14,6 @@ Page {
     id: folderPage
 
     property string name: "folderPage"
-    property alias currentDir: fsModel.currentDir
 
     states: [
         State {
@@ -287,27 +286,6 @@ Page {
         }
         onMarkAllFolders: {
             fsListView.markAllFolders();
-        }
-    }
-
-    ConfirmDialog {
-        id: requestResetCacheConfirmation
-        titleText: appInfo.emptyStr+qsTr("First time loading");
-        contentText: appInfo.emptyStr+qsTr("Thank you for download FilesPlus.\
-\nThis is first time running, FilesPlus needs to load information from your drive.\
-\n\nIt will take time depends on numbers of sub folders/files under current folder.\
-\n\nPlease click OK to continue.");
-        onConfirm: {
-            fsModel.refreshDir("folderPage requestResetCacheConfirmation", true);
-        }
-    }
-
-    ConfirmDialog {
-        id: resetCacheConfirmation
-        titleText: appInfo.emptyStr+qsTr("Reset folder cache")
-        contentText: appInfo.emptyStr+qsTr("Resetting folder cache will take time depends on numbers of sub folders/files under current folder.\n\nPlease click OK to continue.")
-        onConfirm: {
-            fsModel.refreshDir("folderPage resetCacheConfirmation", true);
         }
     }
 
@@ -650,282 +628,43 @@ Page {
         migrateProgressDialog.max = total;
     }
 
-    FolderSizeItemListModel {
-        id: fsModel
-
-        // Test only. ISSUE: Setting currentDir to path that requires long caching time ("/home/user") will freeze UI at splash screen.
-
-        function getActionName(fileAction) {
-            switch (fileAction) {
-            case FolderSizeItemListModel.CopyFile:
-                return qsTr("Copy");
-            case FolderSizeItemListModel.MoveFile:
-                return qsTr("Move");
-            case FolderSizeItemListModel.DeleteFile:
-                return qsTr("Delete");
-            }
-        }
-
-        function getRunningOperationIconSource(runningOperation) {
-            switch (runningOperation) {
-            case FolderSizeItemListModel.ReadOperation:
-                return "next.svg"
-            case FolderSizeItemListModel.WriteOperation:
-                return "back.svg"
-            case FolderSizeItemListModel.SyncOperation:
-                return (theme.inverted) ? "refresh.svg" : "refresh_inverted.svg"
-            case FolderSizeItemListModel.UploadOperation:
-                return (theme.inverted) ? "upload.svg" : "upload_inverted.svg"
-            case FolderSizeItemListModel.DownloadOperation:
-                return (theme.inverted) ? "download.svg" : "download_inverted.svg"
-            default:
-                return ""
-            }
-        }
-
-        function mapToFolderSizeListModelOperation(cloudDriveModelOperation) {
-            switch (cloudDriveModelOperation) {
-            case CloudDriveModel.Metadata:
-                return FolderSizeItemListModel.SyncOperation;
-            case CloudDriveModel.FileGet:
-                return FolderSizeItemListModel.DownloadOperation;
-            case CloudDriveModel.FilePut:
-                return FolderSizeItemListModel.UploadOperation;
-            default:
-                return FolderSizeItemListModel.SyncOperation;
-            }
-        }
-
-        onCurrentDirChanged: {
-            console.debug("QML FolderSizeItemListModel::currentDirChanged");
-            currentPath.text = fsModel.currentDir;
-        }
-
-        onRefreshBegin: {
-            console.debug("QML FolderSizeItemListModel::refreshBegin");
+    function refreshBeginSlot() {
+        console.debug("folderPage refreshBeginSlot");
 //            window.state = "busy";
 
-            fsListView.lastCenterIndex = fsListView.indexAt(0, fsListView.contentY + (fsListView.height / 2));
+        fsListView.lastCenterIndex = fsListView.indexAt(0, fsListView.contentY + (fsListView.height / 2));
 //            console.debug("QML FolderSizeItemListModel::refreshBegin fsListView.lastCenterIndex " + fsListView.lastCenterIndex);
-        }
+    }
 
-        onDataChanged: {
-            // Suppress as it's too noisy from CloudDriveModel activities.
-//            console.debug("QML FolderSizeItemListModel::dataChanged");
-        }
-
-        onRefreshCompleted: {
-            console.debug("QML FolderSizeItemListModel::refreshCompleted");
+    function refreshCompletedSlot() {
+        console.debug("folderPage refreshCompletedSlot");
 //            window.state = "ready";
 
-            // Reset ListView currentIndex.
-            fsListView.currentIndex = -1;
+        // Reset ListView currentIndex.
+        fsListView.currentIndex = -1;
 
-            // Auto-sync after refresh. Only dirty items will be sync'd.
-            // TODO Suppress in PieView.
-            if (appInfo.getSettingBoolValue("sync.after.refresh", false)) {
-                syncConnectedItemsSlot(true);
-            }
+        // Auto-sync after refresh. Only dirty items will be sync'd.
+        // TODO Suppress in PieView.
+        if (appInfo.getSettingBoolValue("sync.after.refresh", false)) {
+            syncConnectedItemsSlot(true);
         }
+    }
 
-        onRequestResetCache: {
-            console.debug("QML FolderSizeItemListModel::onRequestResetCache");
-            requestResetCacheConfirmation.open();
-        }
+    function fetchDirSizeStartedSlot() {
+        refreshButtonTimer.restart();
+    }
 
-        onCopyStarted: {
-            console.debug("folderPage fsModel onCopyStarted " + fileAction + " from " + sourcePath + " to " + targetPath + " " + err + " " + msg);
-            // TODO Reopen copyProgressDialog if it's not opened.
-            var sourceFileName = fsModel.getFileName(sourcePath);
-            var targetFileName = fsModel.getFileName(targetPath);
-            var targetDirPath = fsModel.getDirPath(targetPath);
-            copyProgressDialog.source = appInfo.emptyStr+getActionName(fileAction) + " " + sourceFileName;
-            copyProgressDialog.target = appInfo.emptyStr+qsTr("to") + " " + ((sourceFileName == targetFileName) ? targetDirPath : targetFileName);
-            copyProgressDialog.lastValue = 0;
-            copyProgressDialog.newValue = 0;
-            copyProgressDialog.indeterminate = false;
-            if (copyProgressDialog.status != DialogStatus.Open) {
-                copyProgressDialog.formatValue = true;
-                copyProgressDialog.open();
-            }
-        }
+    function fetchDirSizeFinishedSlot() {
+        refreshButtonTimer.stop();
+        refreshButton.rotation = 0;
 
-        onCopyProgress: {
-//            console.debug("folderPage fsModel onCopyProgress " + fileAction + " from " + sourcePath + " to " + targetPath + " " + bytes + " / " + bytesTotal);
-            copyProgressDialog.newValue = bytes+0;
-        }
+        // Refresh itemList to show changes on ListView.
+        fsModel.refreshItems();
+    }
 
-        onCopyFinished: {
-            console.debug("folderPage fsModel onCopyFinished " + fileAction + " from " + sourcePath + " to " + targetPath + " " + err + " " + msg + " " + bytes + " " + totalBytes + " " + count);
-            copyProgressDialog.count += count;
-
-            // Show message if error.
-            if (err < 0) {
-                messageDialog.titleText = getActionName(fileAction) + " " + appInfo.emptyStr+qsTr("error");
-                messageDialog.message = msg;
-                messageDialog.autoClose = true;
-                messageDialog.open();
-
-                copyProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " " + appInfo.emptyStr+qsTr("failed") + ".\n";
-
-                // Clear sourcePath from clipboard.
-                clipboard.clear();
-
-                // TODO Connect to cloud if copied/moved file/folder is in connected folder.
-
-                // TODO stop queued jobs
-            } else {
-                // Reset popupToolPanel
-                popupToolPanel.srcFilePath = "";
-                popupToolPanel.pastePath = "";
-
-                // Remove finished sourcePath from clipboard.
-                clipboard.clear();
-            }
-        }
-
-        onDeleteStarted: {
-            console.debug("folderPage fsModel onDeleteStarted " + fileAction + " sourcePath " + sourcePath);
-            if (fileAction == FolderSizeItemListModel.DeleteFile) {
-                deleteProgressDialog.source = sourcePath;
-                if (deleteProgressDialog.status != DialogStatus.Open) {
-                    deleteProgressDialog.indeterminate = false;
-                    deleteProgressDialog.titleText = appInfo.emptyStr+qsTr("Deleting");
-                    deleteProgressDialog.open();
-                }
-            }
-        }
-
-        onDeleteProgress: {
-            console.debug("folderPage fsModel onDeleteProgress " + fileAction + " sourceSubPath " + sourceSubPath + " err " + err + " msg " + msg);
-            // Update progress only.
-            // TODO Save state to property only. Use timer to update state on UI.
-            if (fileAction == FolderSizeItemListModel.DeleteFile) {
-                if (err >= 0) {
-                    deleteProgressDialog.value += 1;
-                    deleteProgressDialog.message = msg;
-                } else {
-                    deleteProgressDialog.message = msg;
-                }
-            }
-        }
-
-        onDeleteFinished: {
-            console.debug("folderPage fsModel onDeleteFinished " + fileAction + " sourcePath " + sourcePath);
-
-            // Show message if error.
-            if (err < 0) {
-                messageDialog.titleText = getActionName(fileAction) + " " + appInfo.emptyStr+qsTr("error");
-                messageDialog.message = msg;
-                messageDialog.autoClose = true;
-                messageDialog.open();
-
-                deleteProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " " + appInfo.emptyStr+qsTr("failed") + ".\n";
-            } else {
-                // Reset popupToolPanel
-                popupToolPanel.selectedFilePath = "";
-
-                // Remove finished sourcePath from clipboard.
-                clipboard.clear();
-            }
-
-            // Delete file from clouds.
-            if (err == 0) {
-                if (cloudDriveModel.isConnected(sourcePath)) {
-                    var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
-                    for (var i=0; i<json.length; i++) {
-                        switch (json[i].type) {
-                        case CloudDriveModel.Dropbox:
-                            cloudDriveModel.deleteFile(CloudDriveModel.Dropbox, json[i].uid, json[i].local_path, json[i].remote_path);
-                            break;
-                        case CloudDriveModel.SkyDrive:
-                            cloudDriveModel.deleteFile(CloudDriveModel.SkyDrive, json[i].uid, json[i].local_path, json[i].remote_path);
-                            break;
-                        case CloudDriveModel.Ftp:
-                            cloudDriveModel.deleteFile(CloudDriveModel.Ftp, json[i].uid, json[i].local_path, json[i].remote_path);
-                            break;
-                        }
-                    }
-                }
-
-                // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
-                var paths = fsModel.getPathToRoot(sourcePath);
-                for (var i=1; i<paths.length; i++) {
-//                    console.debug("folderPage fsModel onDeleteFinished updateItems paths[" + i + "] " + paths[i]);
-                    cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
-                }
-            }
-        }
-
-        onCreateFinished: {
-            console.debug("folderPage fsModel onCreateFinished " + targetPath);
-
-            // If created item is not found, refresh.
-            var targetIndex = fsModel.getIndexOnCurrentDir(targetPath);
-            console.debug("folderPage fsModel onCreateFinished targetIndex " + targetIndex + " FolderSizeItemListModel.IndexOnCurrentDirButNotFound " + FolderSizeItemListModel.IndexOnCurrentDirButNotFound);
-            if (targetIndex === FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
-                fsModel.clearIndexOnCurrentDir();
-                refreshSlot();
-            }
-
-            // Reset cloudDriveModel hash on parent.
-            // Reset hash upto root.
-            var paths = fsModel.getPathToRoot(targetPath);
-            for (var i=0; i<paths.length; i++) {
-                console.debug("folderPage fsModel onCreateFinished updateItems paths[" + i + "] " + paths[i]);
-                cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
-            }
-
-            // TODO request cloudDriveModel.createFolder
-        }
-
-        onRenameFinished: {
-            console.debug("folderPage fsModel onRenameFinished sourcePath " + sourcePath + " targetPath " + targetPath + " err " + err + " msg " + msg);
-
-            // Rename file on clouds.
-            if (err == 0 && cloudDriveModel.isConnected(sourcePath)) {
-//                console.debug("folderPage fsModel onRenameFinished itemList " + cloudDriveModel.getItemListJson(sourcePath));
-                var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
-                for (var i=0; i<json.length; i++) {
-                    switch (json[i].type) {
-                    case CloudDriveModel.Dropbox:
-                        console.debug("folderPage fsModel onRenameFinished item " + json[i].type + " " + json[i].uid + " " + json[i].local_path + " " + json[i].remote_path);
-                        var newRemotePath = cloudDriveModel.getParentRemotePath(json[i].remote_path) + "/" + fsModel.getFileName(targetPath);
-                        cloudDriveModel.moveFile(CloudDriveModel.Dropbox, json[i].uid, sourcePath, json[i].remote_path, targetPath, newRemotePath);
-                        break;
-                    case CloudDriveModel.SkyDrive:
-                        // TODO
-                        break;
-                    case CloudDriveModel.Ftp:
-                        // TODO
-                        break;
-                    }
-                }
-            }
-        }
-
-        onFetchDirSizeStarted: {
-            refreshButtonTimer.restart();
-        }
-
-        onFetchDirSizeUpdated: {
-        }
-
-        onFetchDirSizeFinished: {
-            refreshButtonTimer.stop();
-            refreshButton.rotation = 0;
-
-            // Refresh itemList to show changes on ListView.
-            fsModel.refreshItems();
-        }
-
-        Component.onCompleted: {
-            console.debug(Utility.nowText() + " folderPage fsModel onCompleted");
-            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("FolderModel"), 0.1);
-
-            // Proceeds queued jobs during constructions.
-            fsModel.proceedNextJob();
-        }
+    function resetPopupToolPanelSlot() {
+        popupToolPanel.srcFilePath = "";
+        popupToolPanel.pastePath = "";
     }
 
     Flipable {
@@ -1175,6 +914,10 @@ Page {
             }
         }
 
+        onMovementEnded: {
+            fsListView.lastCenterIndex = fsListView.indexAt(0, fsListView.contentY + (fsListView.height / 2));
+        }
+
         onCountChanged: {
 //            console.debug("fsListView onCountChanged " + count + " model.count " + model.count);
             if (count == model.count) {
@@ -1278,6 +1021,7 @@ Page {
 
     TitlePanel {
         id: currentPath
+        text: fsModel.currentDir
     }
 
     NameFilterPanel {
@@ -1464,13 +1208,6 @@ Page {
             return text;
         }
 
-        function getActionName(action) {
-            if (action == "copy") return qsTr("Copy");
-            else if (action == "cut") return qsTr("Move");
-            else if (action == "delete") return qsTr("Delete");
-            else return qsTr("Invalid action");
-        }
-
         function getText() {
             // Exmaple of clipboard entry { "action": "cut", "sourcePath": sourcePath }
             var text = "";
@@ -1504,88 +1241,16 @@ Page {
             return text;
         }
 
-        function openCopyProgressDialog() {
-            // Estimate total.
-            var totalBytes = 0;
-            var totalFiles = 0;
-            var totalFolders = 0;
-            for (var i=0; i<clipboard.count; i++) {
-                var action = clipboard.get(i).action;
-                var sourcePath = clipboard.get(i).sourcePath;
-//                console.debug("fileActionDialog openCopyProgressDialog estimate total action " + action + " sourcePath " + sourcePath);
-                if (action == "copy" || action == "cut") {
-                    var jsonText = fsModel.getItemJson(sourcePath);
-//                    console.debug("fileActionDialog openCopyProgressDialog estimate total jsonText " + jsonText);
-                    var itemJson = Utility.createJsonObj(jsonText);
-                    console.debug("fileActionDialog openCopyProgressDialog estimate total itemJson " + itemJson + " itemJson.size " + itemJson.size + " itemJson.sub_dir_count " + itemJson.sub_dir_count + " itemJson.sub_file_count " + itemJson.sub_file_count);
-                    totalBytes += itemJson.size;
-                    totalFiles += itemJson.sub_file_count + ((itemJson.is_dir) ? 0 : 1);  // +1 for file.
-                    totalFolders += itemJson.sub_dir_count + ((itemJson.is_dir) ? 1 : 0);  // +1 for folder.
-                }
-            }
-            console.debug("fileActionDialog openCopyProgressDialog estimate totalBytes " + totalBytes + " totalFiles " + totalFiles + " totalFolders " + totalFolders);
-            if (totalBytes > 0 || totalFiles + totalFolders > 0) {
-                // Open ProgressDialog.
-                copyProgressDialog.min = 0;
-                copyProgressDialog.max = totalBytes;
-                copyProgressDialog.value = 0;
-                copyProgressDialog.newValue = 0;
-                copyProgressDialog.lastValue = 0;
-                copyProgressDialog.accuDeltaValue = 0;
-                copyProgressDialog.minCount = 0;
-                copyProgressDialog.maxCount = totalFiles + totalFolders;
-                copyProgressDialog.count = 0;
-                copyProgressDialog.indeterminate = true;
-                copyProgressDialog.autoClose = true;
-                copyProgressDialog.formatValue = true;
-                copyProgressDialog.titleText = fileActionDialog.titleText;
-                copyProgressDialog.message = "";
-                copyProgressDialog.open();
-            }
-        }
-
-        function openDeleteProgressDialog() {
-            // Estimate total.
-            var totalFiles = 0;
-            var totalFolders = 0;
-            for (var i=0; i<clipboard.count; i++) {
-                var action = clipboard.get(i).action;
-                var sourcePath = clipboard.get(i).sourcePath;
-//                console.debug("fileActionDialog openDeleteProgressDialog estimate total action " + action + " sourcePath " + sourcePath);
-                if (action == "delete") {
-                    var jsonText = fsModel.getItemJson(sourcePath);
-//                    console.debug("fileActionDialog openDeleteProgressDialog estimate total jsonText " + jsonText);
-                    var itemJson = Utility.createJsonObj(jsonText);
-//                    console.debug("fileActionDialog openDeleteProgressDialog estimate total itemJson " + itemJson + " itemJson.sub_file_count " + itemJson.sub_file_count);
-                    totalFiles += itemJson.sub_file_count + ((itemJson.is_dir) ? 0 : 1);  // +1 for file.
-                    totalFolders += itemJson.sub_dir_count + ((itemJson.is_dir) ? 1 : 0);  // +1 for folder.
-                }
-            }
-            console.debug("fileActionDialog openDeleteProgressDialog estimate totalFiles " + totalFiles + " totalFolders " + totalFolders);
-            if (totalFiles + totalFolders > 0) {
-                deleteProgressDialog.minCount = 0;
-                deleteProgressDialog.maxCount = 0;
-                deleteProgressDialog.count = 0;
-                deleteProgressDialog.min = 0;
-                deleteProgressDialog.max = totalFiles + totalFolders;
-                deleteProgressDialog.value = 0;
-                deleteProgressDialog.newValue = 0;
-                deleteProgressDialog.lastValue = 0;
-                deleteProgressDialog.accuDeltaValue = 0;
-                deleteProgressDialog.autoClose = true;
-                deleteProgressDialog.titleText = appInfo.emptyStr+qsTr("Deleting");
-                deleteProgressDialog.message = "";
-                deleteProgressDialog.open();
-            }
+        function getActionName(actionText) {
+            if (actionText == "copy") return qsTr("Copy");
+            else if (actionText == "cut") return qsTr("Move");
+            else if (actionText == "delete") return qsTr("Delete");
+            else return qsTr("Invalid action");
         }
 
         onConfirm: {
 
             if (clipboard.count == 1) {
-                // Open progress dialogs if it's related.
-                openCopyProgressDialog();
-                openDeleteProgressDialog();
-
                 // Copy/Move/Delete first file from clipboard.
                 // Check if there is existing file on target folder. Then show overwrite dialog.
                 if (clipboard.get(0).action != "delete" && !fsModel.canCopy(clipboard.get(0).sourcePath, targetPath)) {
@@ -1595,6 +1260,10 @@ Page {
                     fileOverwriteDialog.open();
                     return;
                 }
+
+                // Open progress dialogs if it's related.
+                fsModel.openCopyProgressDialog(titleText);
+                fsModel.openDeleteProgressDialog();
 
                 fsModel.suspendNextJob();
 
@@ -1612,13 +1281,10 @@ Page {
                     // Reset both source and target.
                     clipboard.clear();
                     targetPath = "";
-                    popupToolPanel.srcFilePath = "";
-                    popupToolPanel.pastePath = "";
+                    resetPopupToolPanelSlot();
                 } else {
-                    // Close copyProgressDialog as it failed.
+                    // Close progressDialog as it failed.
                     copyProgressDialog.close();
-
-                    // Close copyProgressDialog as it failed.
                     deleteProgressDialog.close();
 
                     messageDialog.titleText = getActionName(clipboard.get(0).action);
@@ -1632,8 +1298,8 @@ Page {
                 }
             } else {
                 // Open progress dialogs if it's related.
-                openCopyProgressDialog();
-                openDeleteProgressDialog();
+                fsModel.openCopyProgressDialog(titleText);
+                fsModel.openDeleteProgressDialog();
 
                 // TODO openOverwriteDialog.
                 // It always replace existing names.
@@ -1836,6 +1502,9 @@ Page {
         }
 
         onConfirm: {
+            // Open progress dialogs if it's related.
+            fsModel.openCopyProgressDialog(fileActionDialog.getTitleText());
+
             // If paste to current folder, targetPath is ended with / already.
             // If paste to selected folder, targetPath is not ended with /.
             var res = false;
@@ -1952,48 +1621,6 @@ Page {
         onReject: {
             appInfo.setSettingValue("cloudItems.migration.confirmation", "false");
         }
-    }
-
-    ProgressDialog {
-        id: copyProgressDialog
-        autoClose: false
-        onOk: {
-            // Refresh view after copied/moved.
-            refreshSlot();
-        }
-        onCancel: {
-            cancelAllFolderSizeJobsSlot();
-            // Refresh view after copied/moved.
-            refreshSlot();
-        }
-        onOpened: {
-            fsModel.resumeNextJob();
-        }
-    }
-
-    ProgressDialog {
-        id: deleteProgressDialog
-        autoClose: false
-        titleText: appInfo.emptyStr+qsTr("Deleting")
-        onOk: {
-            // Refresh view after copied/moved.
-            refreshSlot();
-        }
-        onCancel: {
-            cancelAllFolderSizeJobsSlot();
-            // Refresh view after copied/moved.
-            refreshSlot();
-        }
-        onOpened: {
-            fsModel.resumeNextJob();
-        }
-    }
-
-    ProgressDialog {
-        id: migrateProgressDialog
-        formatValue: false
-        autoClose: true
-        titleText: appInfo.emptyStr+qsTr("Cloud data conversion")
     }
 
     CloudDriveUsersDialog {

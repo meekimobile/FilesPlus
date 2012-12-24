@@ -574,7 +574,7 @@ bool FolderSizeModelThread::copyFile(int method, const QString sourcePath, const
 {
     emit copyStarted(method, sourcePath, targetPath, "", 0);
 
-    qDebug() << "FolderSizeModelThread::copyFile method" << method << "sourceFile" << sourcePath << "targetFile" << targetPath;
+//    qDebug() << "FolderSizeModelThread::copyFile method" << method << "sourceFile" << sourcePath << "targetFile" << targetPath;
 
     bool isSourceRoot = (sourcePath == m_sourcePath);
 
