@@ -276,6 +276,9 @@ void FolderSizeItemListModel::cancelQueuedJobs()
 {
     m_jobQueue.clear();
 
+    // Abort current job thread.
+    m.terminate();
+
     qDebug() << "FolderSizeItemListModel::cancelQueuedJobs done";
 }
 
@@ -874,13 +877,13 @@ void FolderSizeItemListModel::copyFinishedFilter(int fileAction, QString sourceP
             }
         }
 
-        // Remove cache of path up to root.
+        // Remove cache of SOURCE path up to root.
         if (isSourceRoot) {
             removeCache(sourcePath);
         }
     }
 
-    // Remove cache of path up to root.
+    // Remove cache of TARGET path up to root.
     if (isSourceRoot) {
         removeCache(targetPath);
     }
