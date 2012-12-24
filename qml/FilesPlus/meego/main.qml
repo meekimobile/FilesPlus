@@ -850,6 +850,41 @@ PageStackWindow {
             return -1;
         }
 
+        function getOperationName(operation) {
+            switch (operation) {
+            case CloudDriveModel.FileGet:
+                return qsTr("Download");
+            case CloudDriveModel.FilePut:
+                return qsTr("Upload");
+            case CloudDriveModel.Metadata:
+                return qsTr("Sync");
+            case CloudDriveModel.CreateFolder:
+                return qsTr("Create folder");
+            case CloudDriveModel.RequestToken:
+                return qsTr("Request token");
+            case CloudDriveModel.Authorize:
+                return qsTr("Authorize");
+            case CloudDriveModel.AccessToken:
+                return qsTr("Access token");
+            case CloudDriveModel.RefreshToken:
+                return qsTr("Refresh token");
+            case CloudDriveModel.AccountInfo:
+                return qsTr("Account Info.");
+            case CloudDriveModel.Quota:
+                return qsTr("Quota");
+            case CloudDriveModel.DeleteFile:
+                return qsTr("Delete");
+            case CloudDriveModel.MoveFile:
+                return qsTr("Move");
+            case CloudDriveModel.CopyFile:
+                return qsTr("Copy");
+            case CloudDriveModel.ShareFile:
+                return qsTr("Share link");
+            case CloudDriveModel.Browse:
+                return qsTr("Browse");
+            }
+        }
+
         function getRemoteName(remotePath) {
             var name = "";
             if (remotePath != "") {
@@ -1085,13 +1120,6 @@ PageStackWindow {
 
             var jobJson = JSON.parse(jsonText);
 
-
-            // Update ProgressBar on listItem and its parents.
-            var p = pageStack.find(function (page) { return (page.name == "folderPage"); });
-            if (p) {
-                p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
-            }
-
             if (err == 0) {
                 // Remove cache on target folders and its parents.
                 var p = pageStack.find(function (page) { return (page.name == "folderPage"); });
@@ -1104,6 +1132,18 @@ PageStackWindow {
                 showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("File Get"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+            }
+
+            // Update ProgressBar on listItem and its parents.
+            var p = pageStack.find(function (page) { return (page.name == "folderPage"); });
+            if (p) {
+                p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
+            }
+
+            // Update ProgressBar on cloudDriveJobsPage.
+            var p = pageStack.find(function (page) { return (page.name == "cloudDriveJobsPage"); });
+            if (p) {
+                p.updateCloudDriveJobSlot(jobJson.job_id, jobJson.is_running);
             }
         }
 
@@ -1118,12 +1158,6 @@ PageStackWindow {
 
             var jobJson = JSON.parse(jsonText);
 
-            // Update ProgressBar on listItem and its parent.
-            var p = pageStack.find(function (page) { return (page.name == "folderPage"); });
-            if (p) {
-                p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
-            }
-
             if (err == 0) {
                 // Do nothing.
             } else if (err == 204) { // Refresh token
@@ -1132,6 +1166,18 @@ PageStackWindow {
                 showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("File Put"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+            }
+
+            // Update ProgressBar on listItem and its parent.
+            var p = pageStack.find(function (page) { return (page.name == "folderPage"); });
+            if (p) {
+                p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
+            }
+
+            // Update ProgressBar on cloudDriveJobsPage.
+            var p = pageStack.find(function (page) { return (page.name == "cloudDriveJobsPage"); });
+            if (p) {
+                p.updateCloudDriveJobSlot(jobJson.job_id, jobJson.is_running);
             }
         }
 
@@ -1436,6 +1482,12 @@ PageStackWindow {
                 // Workaround: Refresh item once got reply. To fix unexpected showing cloud_wait icon.
                 p.refreshItemSlot("window cloudDriveModel onMetadataReplySignal", jobJson.local_file_path);
             }
+
+            // Update ProgressBar on cloudDriveJobsPage.
+            var p = pageStack.find(function (page) { return (page.name == "cloudDriveJobsPage"); });
+            if (p) {
+                p.updateCloudDriveJobSlot(jobJson.job_id, jobJson.is_running);
+            }
         }
 
         onCreateFolderReplySignal: {
@@ -1484,6 +1536,12 @@ PageStackWindow {
                 }
                 // Refresh cloudDrivePathDialog if it's opened.
                 p.updateCloudDrivePathDialogSlot(jobJson.new_remote_file_path);
+            }
+
+            // Update ProgressBar on cloudDriveJobsPage.
+            var p = pageStack.find(function (page) { return (page.name == "cloudDriveJobsPage"); });
+            if (p) {
+                p.updateCloudDriveJobSlot(jobJson.job_id, jobJson.is_running);
             }
         }
 
@@ -1604,6 +1662,12 @@ PageStackWindow {
                 p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
                 // Refresh cloudDrivePathDialog if it's opened.
                 p.updateCloudDrivePathDialogSlot();
+            }
+
+            // Update ProgressBar on cloudDriveJobsPage.
+            var p = pageStack.find(function (page) { return (page.name == "cloudDriveJobsPage"); });
+            if (p) {
+                p.updateCloudDriveJobSlot(jobJson.job_id, jobJson.is_running);
             }
         }
 

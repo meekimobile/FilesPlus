@@ -1,12 +1,29 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
+import CloudDriveModel 1.0
 import "Utility.js" as Utility
 
 Page {
     id: cloudDriveJobsPage
 
     property string name: "cloudDriveJobsPage"
-    property alias jobModel: jobListView.model
+
+    function updateCloudDriveJobSlot(jobId, isRunning) {
+        for (var i=0; i<jobListView.model.count; i++) {
+            if (jobListView.model.get(i).job_id == jobId) {
+                console.debug("cloudDriveJobsPage updateCloudDriveJobSlot " + jobId + " " + isRunning);
+                jobListView.model.set(i, { is_running: isRunning });
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    onStatusChanged: {
+        if (status == PageStatus.Active) {
+        }
+    }
 
     tools: toolBarLayout
 
@@ -20,49 +37,20 @@ Page {
                 pageStack.pop();
             }
         }
-
         ToolIcon {
             id: refreshButton
             iconId: "toolbar-refresh"
             onClicked: {
             }
         }
-
         ToolIcon {
-            id: menuButton
-            iconId: "toolbar-menu"
+            id: deleteAllButton
+            iconSource: (theme.inverted) ? "delete.svg" : "delete_inverted.svg"
             onClicked: {
+                cloudDriveModel.jobsModel.clear();
             }
         }
     }
-
-//    function addJobsFromJson(msg) {
-//        jobModel.clear();
-
-//        var jsonObj = Utility.createJsonObj(msg);
-//        console.debug("jsonObj.jobs " + jsonObj.jobs + " " + jsonObj.jobs.length);
-//        for (var i=0; i<jsonObj.jobs.length; i++)
-//        {
-//            var job = jsonObj.jobs[i];
-//            jobModel.append({
-//                                id: job.id,
-//                                printerid: job.printerid,
-//                                printerName: job.printerName,
-//                                title: job.title,
-//                                contentType: job.contentType,
-//                                fileUrl: job.fileUrl,
-//                                ticketUrl: job.ticketUrl,
-//                                createTime: job.createTime,
-//                                updateTime: job.updateTime,
-//                                status: job.status,
-//                                errorCode: job.errorCode,
-//                                message: job.message,
-//                                tags: job.tags
-//                            });
-//        }
-
-//        jobListView.model = jobModel;
-//    }
 
 //    function deleteAllDoneJobs() {
 //        for (var i=0; i<jobModel.count; i++) {
@@ -77,10 +65,6 @@ Page {
     TitlePanel {
         id: titlePanel
         text: appInfo.emptyStr+qsTr("Cloud Drive Jobs")
-    }
-
-    ListModel {
-        id: jobModel
     }
 
     Button {
@@ -118,71 +102,79 @@ Page {
         width: parent.width
         height: parent.height - titlePanel.height
         anchors.top: titlePanel.bottom
+        model: cloudDriveModel.jobsModel
         delegate: jobDelegate
+        clip: true
+
+        onMovementStarted: {
+            if (currentItem) {
+                currentItem.pressed = false;
+            }
+        }
     }
 
     Component {
         id: jobDelegate
 
-        Rectangle {
+        ListItem {
             id: listItem
-            height: 60
-
-            property int mouseX
-            property int mouseY
+            height: 80
 
             Row {
-                anchors.fill: parent.paddingItem
+                anchors.fill: parent
+                anchors.margins: 10
                 spacing: 5
 
-                Column {
-                    width: parent.width - statusText.width - parent.spacing
-                    ListItemText {
-                        mode: listItem.mode
-                        role: "Title"
-                        text: jobId + " " + operation + " " + type + " " + uid
-                        width: parent.width
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    ListItemText {
-                        mode: listItem.mode
-                        role: "SubTitle"
-                        text: localFilePath
-                        width: parent.width
-                        verticalAlignment: Text.AlignVCenter
-                    }
+                Image {
+                    id: cloudIcon
+                    source: cloudDriveModel.getCloudIcon(type)
+                    width: 48
+                    height: 48
+                    fillMode: Image.PreserveAspectFit
+                    anchors.verticalCenter: parent.verticalCenter
                 }
-                ListItemText {
-                    id: statusText
-                    mode: listItem.mode
-                    role: "Subtitle"
-                    text: appInfo.emptyStr+(isRunning)?qsTr("Running"):qsTr("Queued")
-                    width: 120
-                    horizontalAlignment: Text.AlignRight
-                    verticalAlignment: Text.AlignVCenter
+                Column {
+                    width: parent.width - cloudIcon.width
+                    Text {
+                        id: title
+                        text: local_file_path
+                        width: parent.width
+                        verticalAlignment: Text.AlignVCenter
+                        font.pointSize: 18
+                        elide: Text.ElideMiddle
+                        color: (theme.inverted) ? "white" : "black"
+                    }
+                    Row {
+                        width: parent.width
+                        Image {
+                            id: runningIcon
+                            width: 24
+                            height: 24
+                            source: fsModel.getRunningOperationIconSource(fsModel.mapToFolderSizeListModelOperation(operation))
+                        }
+                        Text {
+                            text: cloudDriveModel.getOperationName(operation)
+                            width: parent.width - runningIcon.width - syncProgressBar.width
+                            verticalAlignment: Text.AlignVCenter
+                            font.pointSize: 16
+                            elide: Text.ElideRight
+                            color: "grey"
+                        }
+                        ProgressBar {
+                            id: syncProgressBar
+                            width: parent.width / 2
+                            anchors.verticalCenter: parent.verticalCenter
+                            indeterminate: is_running
+                            visible: is_running
+                        }
+                    }
                 }
             }
 
             onPressAndHold: {
-                var panelX = x + mouseX - jobListView.contentX;
-                var panelY = y + mouseY - jobListView.contentY + jobListView.y;
-                popupDeleteButton.x = panelX - (popupDeleteButton.width / 2);
-                popupDeleteButton.y = panelY - (popupDeleteButton.height);
-                popupDeleteButton.jobId = id;
-                popupDeleteButton.visible = true;
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onPressed: {
-                    parent.mouseX = mouseX;
-                    parent.mouseY = mouseY;
-                    mouse.accepted = false;
-                }
+//                removeAccountConfirmation.index = index;
+//                removeAccountConfirmation.open();
             }
         }
-    }
-
-    Component.onCompleted: {
     }
 }
