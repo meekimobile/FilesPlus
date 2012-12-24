@@ -61,7 +61,7 @@ Page {
         id: driveMenu
 
         onQuit: {
-            quitSlot();
+            window.quitSlot();
         }
     }
 
@@ -71,10 +71,6 @@ Page {
 
     SystemInfoHelper {
         id: systemInfoHelper
-    }
-
-    MessageDialog {
-        id: messageDialog
     }
 
     function parseLocalStorage(model) {
