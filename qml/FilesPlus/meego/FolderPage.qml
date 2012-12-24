@@ -198,7 +198,7 @@ Page {
             pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
         }
         onQuit: {
-            quitSlot();
+            window.quitSlot();
         }
 
         function isMenuItemVisible(menuItem) {
@@ -221,7 +221,7 @@ Page {
         id: chartMenu
 
         onQuit: {
-            quitSlot();
+            window.quitSlot();
         }
     }
 
@@ -352,16 +352,6 @@ Page {
     function activateSlot() {
         if (pieChartView && folderPage.state == "chart") {
             pieChartView.refreshItems(true);
-        }
-    }
-
-    function quitSlot() {
-        if (fsModel.isRunning()) {
-            messageDialog.titleText = appInfo.emptyStr+qsTr("Notify");
-            messageDialog.message = appInfo.emptyStr+qsTr("Reset Cache is running. Please wait until it's done.");
-            messageDialog.open();
-        } else {
-            Qt.quit();
         }
     }
 
@@ -1621,6 +1611,13 @@ Page {
         onReject: {
             appInfo.setSettingValue("cloudItems.migration.confirmation", "false");
         }
+    }
+
+    ProgressDialog {
+        id: migrateProgressDialog
+        formatValue: false
+        autoClose: true
+        titleText: appInfo.emptyStr+qsTr("Cloud data conversion")
     }
 
     CloudDriveUsersDialog {

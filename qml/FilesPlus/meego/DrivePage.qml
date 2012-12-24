@@ -12,11 +12,6 @@ Page {
 
     tools: toolBarLayout
 
-    function quitSlot() {
-        var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-        if (p) p.quitSlot();
-    }
-
     function updateAccountInfoSlot(type, uid, name, email, shared, normal, quota) {
 //        console.debug("drivePage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
         for (var i=0; i<driveGrid.model.count; i++) {
@@ -36,7 +31,7 @@ Page {
             id: backButton
             iconId: "toolbar-back"
             onClicked: {
-                quitSlot();
+                window.quitSlot();
             }
         }
 
@@ -210,7 +205,6 @@ Page {
 
     Component.onCompleted: {
         console.debug(Utility.nowText() + " drivePage onCompleted");
-//        window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("DrivePage"), 0.2);
-        window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("DrivePage"), 1.0);
+        window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("DrivePage"), 0.2);
     }
 }

@@ -11,9 +11,9 @@ PageStackWindow {
     id: window
     showStatusBar: true
     showToolBar: true
-    initialPage: DrivePage {
-        id: drivePage
-    }
+//    initialPage: DrivePage {
+//        id: drivePage
+//    }
 
     state: "ready"
     states: [
@@ -56,6 +56,16 @@ PageStackWindow {
     function findPage(pageName) {
         var p = pageStack.find(function (page) { return (page.name == pageName); });
         return p;
+    }
+
+    function quitSlot() {
+        if (fsModel.isRunning()) {
+            messageDialog.titleText = appInfo.emptyStr+qsTr("Notify");
+            messageDialog.message = appInfo.emptyStr+qsTr("Reset Cache is running. Please wait until it's done.");
+            messageDialog.open();
+        } else {
+            Qt.quit();
+        }
     }
 
     AppInfo {
@@ -470,13 +480,6 @@ PageStackWindow {
         onOpened: {
             fsModel.resumeNextJob();
         }
-    }
-
-    ProgressDialog {
-        id: migrateProgressDialog
-        formatValue: false
-        autoClose: true
-        titleText: appInfo.emptyStr+qsTr("Cloud data conversion")
     }
 
     ClipboardModel {
@@ -1851,7 +1854,7 @@ PageStackWindow {
 
     Splash {
         id: splashScreen
-        interval: 1000
+        interval: 3000
 
         onLoaded: {
             // Set theme.inverted = true -> black theme.
@@ -1869,17 +1872,14 @@ PageStackWindow {
         running: false
         onTriggered: {
             // TODO PageStack pushs page in blocking mode. Push returns once page is completed.
-            // Load folderPage then push drivePage to increase performance.
-//            console.debug(Utility.nowText() + " window pushPagesTimer push folderPage");
-//            var folderPage = pageStack.push(Qt.resolvedUrl("FolderPage.qml"));
-//            console.debug(Utility.nowText() + " window pushPagesTimer push drivePage");
-//            folderPage.showDrivePageSlot(); // Push drivePage from folderPage to pass reference to cloudDriveModel.
+            console.debug(Utility.nowText() + " window pushPagesTimer push drivePage");
+            pageStack.push(Qt.resolvedUrl("DrivePage.qml"));
         }
     }
 
     Component.onCompleted: {
         console.debug(Utility.nowText() + " window onCompleted");
-        window.updateLoadingProgressSlot(qsTr("Loading"), 0.1);
+        window.updateLoadingProgressSlot(qsTr("Loading"), 0.5);
 
         // Set to portrait to show splash screen. Then it will set back to default once it's destroyed.
         screen.allowedOrientations = Screen.Portrait;
