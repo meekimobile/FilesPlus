@@ -568,6 +568,7 @@ Page {
 //            console.debug("folderPage updateFolderSizeItemSlot " + pathList[i] + " " + modelIndex + " " + isRunning);
             if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
             }
         }
     }
@@ -592,7 +593,6 @@ Page {
             modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
             if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
-//                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, runningOperation);
             }
         }
