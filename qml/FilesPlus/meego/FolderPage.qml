@@ -558,7 +558,7 @@ Page {
     }
 
     function updateFolderSizeItemSlot(localPath, isRunning) {
-//        console.debug("folderPage updateFolderSizeItemSlot localPath " + localPath);
+//        console.debug("folderPage updateFolderSizeItemSlot localPath " + localPath + " isRunning " + isRunning);
         if (localPath == "") return;
 
         // Show indicator on localPath up to root.
@@ -631,6 +631,7 @@ Page {
     }
 
     function refreshItemSlot(caller, localPath) {
+//        console.debug("folderPage refreshItemSlot caller " + caller + " " + localPath);
         if (localPath) {
             fsModel.refreshItem(localPath);
         } else {

@@ -1782,12 +1782,13 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
             addItem(Ftp, job.uid, job.localFilePath, job.remoteFilePath, hash);
             break;
         }
-
-        job.isRunning = false;
-        m_cloudDriveJobs->insert(nonce, job);
     } else {
         removeItem(getJobType(job.type), job.uid, job.localFilePath);
     }
+
+    // Update job running flag.
+    job.isRunning = false;
+    m_cloudDriveJobs->insert(nonce, job);
 
     // Notify job done.
     jobDone();
@@ -1832,12 +1833,13 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
             addItem(Ftp, job.uid, job.localFilePath, remoteFilePath, hash);
             break;
         }
-
-        job.isRunning = false;
-        m_cloudDriveJobs->insert(nonce, job);
     } else {
         removeItem(getJobType(job.type), job.uid, job.localFilePath);
     }
+
+    // Update job running flag.
+    job.isRunning = false;
+    m_cloudDriveJobs->insert(nonce, job);
 
     // Notify job done.
     jobDone();
@@ -1874,13 +1876,14 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
 //            addItem(Ftp, job.uid, job.localFilePath, remoteFilePath, hash);
             break;
         }
-
-        job.isRunning = false;
-        m_cloudDriveJobs->insert(nonce, job);
     } else if (err == 202) {
         // Issue: handle 202 Nonce already in used.
         // Solution: let QML handle retry.
     }
+
+    // Update job running flag.
+    job.isRunning = false;
+    m_cloudDriveJobs->insert(nonce, job);
 
     // Notify job done.
     jobDone();
@@ -1892,11 +1895,9 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
-    if (err == 0) {
-        // TODO generalize to support other clouds.
-        job.isRunning = false;
-        m_cloudDriveJobs->insert(nonce, job);
-    }
+    // Update job running flag.
+    job.isRunning = false;
+    m_cloudDriveJobs->insert(nonce, job);
 
     // Notify job done.
     jobDone();
@@ -2066,13 +2067,14 @@ void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMs
             url = sc.property("link").toString();
             break;
         }
-
-        job.isRunning = false;
-        m_cloudDriveJobs->insert(nonce, job);
     } else if (err == 202) {
         // Issue: handle 202 Nonce already in used.
         // Solution: let QML handle retry.
     }
+
+    // Stop running.
+    job.isRunning = false;
+    m_cloudDriveJobs->insert(nonce, job);
 
     // Notify job done.
     jobDone();
