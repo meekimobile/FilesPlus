@@ -253,29 +253,19 @@ PageStackWindow {
 
             // Show message if error.
             if (err < 0) {
-                messageDialog.titleText = getActionName(fileAction) + " " + appInfo.emptyStr+qsTr("error");
-                messageDialog.message = msg;
-                messageDialog.autoClose = true;
-                messageDialog.open();
+                showMessageDialogSlot(getActionName(fileAction) + " " + qsTr("error"),
+                                      msg,
+                                      5000);
 
-                copyProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " " + appInfo.emptyStr+qsTr("failed") + ".\n";
-
-                // Clear sourcePath from clipboard.
-                clipboard.clear();
-
-                // TODO Connect to cloud if copied/moved file/folder is in connected folder.
-
-                // TODO stop queued jobs
-            } else {
-                // Reset popupToolPanel
-                var p = findPage("folderPage");
-                if (p) {
-                    p.resetPopupToolPanelSlot();
+                if (copyProgressDialog.status == DialogStatus.Open) {
+                    copyProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " " + qsTr("failed") + ".\n";
                 }
 
-                // Remove finished sourcePath from clipboard.
-                clipboard.clear();
+                // TODO stop queued jobs
+                fsModel.cancelQueuedJobs();
             }
+
+            // TODO Connect to cloud if copied/moved file/folder is in connected folder.
         }
 
         onDeleteStarted: {
@@ -309,21 +299,16 @@ PageStackWindow {
 
             // Show message if error.
             if (err < 0) {
-                messageDialog.titleText = getActionName(fileAction) + " " + appInfo.emptyStr+qsTr("error");
-                messageDialog.message = msg;
-                messageDialog.autoClose = true;
-                messageDialog.open();
+                showMessageDialogSlot(getActionName(fileAction) + " " + qsTr("error"),
+                                      msg,
+                                      5000);
 
-                deleteProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " " + appInfo.emptyStr+qsTr("failed") + ".\n";
-            } else {
-                // Reset popupToolPanel
-                var p = findPage("folderPage");
-                if (p) {
-                    p.resetPopupToolPanelSlot();
+                if (deleteProgressDialog.status == DialogStatus.Open) {
+                    deleteProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " " + qsTr("failed") + ".\n";
                 }
 
-                // Remove finished sourcePath from clipboard.
-                clipboard.clear();
+                // TODO stop queued jobs
+                fsModel.cancelQueuedJobs();
             }
 
             // Delete file from clouds.
@@ -453,7 +438,9 @@ PageStackWindow {
             fsModel.refreshDir("copyProgressDialog onOk");
         }
         onCancel: {
-            cancelAllFolderSizeJobsSlot();
+            fsModel.cancelQueuedJobs();
+            // Abort thread with rollbackFlag=false.
+            fsModel.abortThread(false);
             // Refresh view after copied/moved.
             fsModel.refreshDir("copyProgressDialog onCancel");
         }
@@ -1710,7 +1697,7 @@ PageStackWindow {
             messageDialog.autoCloseInterval = autoCloseInterval;
         } else {
             messageDialog.autoClose = false;
-            messageDialog.autoCloseInterval = -1;
+            messageDialog.autoCloseInterval = 0;
         }
         messageDialog.titleText = appInfo.emptyStr+titleText;
         messageDialog.message = appInfo.emptyStr+message;

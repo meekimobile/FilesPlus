@@ -364,16 +364,11 @@ Page {
         if (!cloudDriveModel.canSync(srcFilePath)) return;
 
         if (!cloudDriveModel.isAuthorized()) {
-            // TODO implement for other cloud drive.
-            // TODO Go to account page.
-            messageDialog.message = appInfo.emptyStr+qsTr("FilesPlus syncs your files via Dropbox service.\
-\nYou will be redirected to authorization page.");
-            messageDialog.titleText = appInfo.emptyStr+qsTr("Sync with Dropbox");
-            messageDialog.autoClose = true;
-            messageDialog.open();
+            window.showMessageDialogSlot(qsTr("Sync with Cloud"),
+                                         qsTr("FilesPlus syncs your files via cloud storage service.\nYou will be redirected to cloud account page."),
+                                         2000);
 
-            // TODO Supports multiple cloud storage providers.
-            cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
+            pageStack.push(Qt.resolvedUrl("CloudDriveAccountsPage.qml"));
         } else {
             // [/] impl. in DropboxClient to store item(DropboxClient, uid, filePath, jsonObj(msg).rev) [Done on FilePutRely]
             // [/] On next metadata fetching. If rev is changed, sync to newer rev either put or get.
@@ -1239,7 +1234,6 @@ Page {
         }
 
         onConfirm: {
-
             if (clipboard.count == 1) {
                 // Copy/Move/Delete first file from clipboard.
                 // Check if there is existing file on target folder. Then show overwrite dialog.
@@ -1250,10 +1244,6 @@ Page {
                     fileOverwriteDialog.open();
                     return;
                 }
-
-                // Open progress dialogs if it's related.
-                fsModel.openCopyProgressDialog(titleText);
-                fsModel.openDeleteProgressDialog();
 
                 fsModel.suspendNextJob();
 
@@ -1266,31 +1256,7 @@ Page {
                 } else if (clipboard.get(0).action == "delete") {
                     res = fsModel.deleteFile(clipboard.get(0).sourcePath);
                 }
-
-                if (res) {
-                    // Reset both source and target.
-                    clipboard.clear();
-                    targetPath = "";
-                    resetPopupToolPanelSlot();
-                } else {
-                    // Close progressDialog as it failed.
-                    copyProgressDialog.close();
-                    deleteProgressDialog.close();
-
-                    messageDialog.titleText = getActionName(clipboard.get(0).action);
-                    messageDialog.message = appInfo.emptyStr+qsTr("Can't %1 %2 to %3.").arg(getActionName(clipboard.get(0).action).toLowerCase())
-                        .arg(clipboard.get(0).sourcePath).arg(targetPath);
-                    messageDialog.open();
-
-                    // Reset target only.
-                    targetPath = "";
-                    popupToolPanel.pastePath = "";
-                }
             } else {
-                // Open progress dialogs if it's related.
-                fsModel.openCopyProgressDialog(titleText);
-                fsModel.openDeleteProgressDialog();
-
                 // TODO openOverwriteDialog.
                 // It always replace existing names.
 
@@ -1298,6 +1264,7 @@ Page {
 
                 // TODO Copy/Move/Delete all files from clipboard.
                 // Action is {copy, cut, delete}
+                var res = true;
                 for (var i=0; i<clipboard.count; i++) {
                     var action = clipboard.get(i).action;
                     var sourcePath = clipboard.get(i).sourcePath;
@@ -1305,19 +1272,41 @@ Page {
 
                     console.debug("folderPage fileActionDialog onButtonClicked clipboard action " + action + " sourcePath " + sourcePath);
                     if (action == "copy") {
-                        fsModel.copy(sourcePath, actualTargetPath);
+                        res = res && fsModel.copy(sourcePath, actualTargetPath);
                     } else if (action == "cut") {
-                        fsModel.move(sourcePath, actualTargetPath);
+                        res = res && fsModel.move(sourcePath, actualTargetPath);
                     } else if (action == "delete") {
-                        fsModel.deleteFile(sourcePath);
+                        res = res && fsModel.deleteFile(sourcePath);
                     } else {
                         console.debug("folderPage fileActionDialog onButtonClicked invalid action " + action);
+                    }
+
+                    if (!res) {
+                        break;
                     }
                 }
             }
 
-            // Clear clipboard as they should have been processed.
-            clipboard.clear();
+            if (res) {
+                // Open progress dialogs if it's related.
+                fsModel.openCopyProgressDialog(titleText);
+                fsModel.openDeleteProgressDialog();
+
+                // Reset both source and target.
+                targetPath = "";
+                resetPopupToolPanelSlot();
+
+                // Clear clipboard as they should have been processed.
+                clipboard.clear();
+            } else {
+                // Reset target only.
+                targetPath = "";
+                popupToolPanel.pastePath = "";
+
+                // Cancel queued jobs.
+                fsModel.cancelQueuedJobs();
+                fsModel.resumeNextJob();
+            }
         }
 
         onClosed: {
@@ -1492,9 +1481,6 @@ Page {
         }
 
         onConfirm: {
-            // Open progress dialogs if it's related.
-            fsModel.openCopyProgressDialog(fileActionDialog.getTitleText());
-
             // If paste to current folder, targetPath is ended with / already.
             // If paste to selected folder, targetPath is not ended with /.
             var res = false;
@@ -1502,6 +1488,26 @@ Page {
                 res = fsModel.copy(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
             } else {
                 res = fsModel.move(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
+            }
+
+            if (res) {
+                // Open progress dialogs if it's related.
+                fsModel.openCopyProgressDialog(fileActionDialog.getTitleText());
+
+                // Reset both source and target.
+                targetPath = "";
+                resetPopupToolPanelSlot();
+
+                // Clear clipboard as they should have been processed.
+                clipboard.clear();
+            } else {
+                // Reset target only.
+                targetPath = "";
+                popupToolPanel.pastePath = "";
+
+                // Cancel queued jobs.
+                fsModel.cancelQueuedJobs();
+                fsModel.resumeNextJob();
             }
         }
 
@@ -1576,10 +1582,8 @@ Page {
             // Update DB.
             cloudDriveModel.updateDropboxPrefix(appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", false));
 
-            messageDialog.titleText = "Dropbox " + appInfo.emptyStr+qsTr("notify");
-            messageDialog.message = appInfo.emptyStr+qsTr("You have changed Dropbox access method.\
-\nPlease re-authorize your accounts before proceed your actions.");
-            messageDialog.open();
+            window.showMessageDialogSlot("Dropbox " + appInfo.emptyStr+qsTr("notify"),
+                                         qsTr("You have changed Dropbox access method.\nPlease re-authorize your accounts before proceed your actions."));
         }
         onReject: {
             // Update setting.
