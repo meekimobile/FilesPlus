@@ -511,8 +511,8 @@ Page {
                     popupToolPanel.selectedFileIndex = index;
                     popupToolPanel.isDir = isDir;
                     popupToolPanel.pastePath = (isDir) ? absolutePath : remoteParentPath;
-                    var panelX = x + mouseX - cloudFolderView.contentX;
-                    var panelY = y + mouseY - cloudFolderView.contentY;
+                    var panelX = x + mouseX - cloudFolderView.contentX + cloudFolderView.x;
+                    var panelY = y + mouseY - cloudFolderView.contentY + cloudFolderView.y;
                     popupToolPanel.open(panelX, panelY);
                 }
             }
