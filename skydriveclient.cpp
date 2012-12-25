@@ -478,66 +478,66 @@ QNetworkReply * SkyDriveClient::createFolder(QString nonce, QString uid, QString
     return reply;
 }
 
-void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
+void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath)
 {
-    qDebug() << "----- SkyDriveClient::moveFile -----";
+    qDebug() << "----- SkyDriveClient::moveFile -----" << uid << remoteFilePath << targetRemoteParentPath;
 
-//    QString uri = moveFileURI;
-//    qDebug() << "SkyDriveClient::moveFile uri " << uri;
+    QString uri = moveFileURI.arg(remoteFilePath);
+    qDebug() << "SkyDriveClient::moveFile uri " << uri;
 
-//    // Construct normalized query string.
-//    QMap<QString, QString> sortMap;
-//    sortMap["from_path"] = remoteFilePath;
-//    sortMap["to_path"] = newRemoteFilePath;
-//    QString queryString = createNormalizedQueryString(sortMap);
-//    qDebug() << "queryString " << queryString;
+    QByteArray postData;
+    postData.append("{ \"destination\": \"");
+    postData.append(targetRemoteParentPath.toUtf8());
+    postData.append("\" }");
+    qDebug() << "SkyDriveClient::moveFile postData" << postData;
 
-//    QByteArray postData;
-//    postData.append(queryString);
-//    qDebug() << "postData" << postData;
+    // Insert buffer to hash.
+    m_bufferHash.insert(nonce, new QBuffer());
+    m_bufferHash[nonce]->open(QIODevice::WriteOnly);
+    m_bufferHash[nonce]->write(postData);
+    m_bufferHash[nonce]->close();
 
-//    // Send request.
-//    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-//    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)) );
-//    QNetworkRequest req = QNetworkRequest(QUrl(uri));
-//    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-//    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-//    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-//    QNetworkReply *reply = manager->post(req, postData);
-//    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-//    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
-//    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+    if (m_bufferHash[nonce]->open(QIODevice::ReadOnly)) {
+        // Send request.
+        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)) );
+        QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+        req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+        req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+        req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        QNetworkReply *reply = manager->sendCustomRequest(req, "MOVE", m_bufferHash[nonce]);
+    }
 }
 
-void SkyDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
+void SkyDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath)
 {
-    qDebug() << "----- SkyDriveClient::copyFile -----";
+    qDebug() << "----- SkyDriveClient::copyFile -----" << uid << remoteFilePath << targetRemoteParentPath;
 
-//    QString uri = copyFileURI;
-//    qDebug() << "SkyDriveClient::copyFile uri " << uri;
+    QString uri = copyFileURI.arg(remoteFilePath);
+    qDebug() << "SkyDriveClient::copyFile uri " << uri;
 
-//    // Construct normalized query string.
-//    QMap<QString, QString> sortMap;
-//    sortMap["from_path"] = remoteFilePath;
-//    sortMap["to_path"] = newRemoteFilePath;
-//    QString queryString = createNormalizedQueryString(sortMap);
-//    qDebug() << "queryString " << queryString;
+    QByteArray postData;
+    postData.append("{ \"destination\": \"");
+    postData.append(targetRemoteParentPath.toUtf8());
+    postData.append("\" }");
+    qDebug() << "SkyDriveClient::copyFile postData" << postData;
 
-//    QByteArray postData;
-//    postData.append(queryString);
-//    qDebug() << "postData" << postData;
+    // Insert buffer to hash.
+    m_bufferHash.insert(nonce, new QBuffer());
+    m_bufferHash[nonce]->open(QIODevice::WriteOnly);
+    m_bufferHash[nonce]->write(postData);
+    m_bufferHash[nonce]->close();
 
-//    // Send request.
-//    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-//    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(copyFileReplyFinished(QNetworkReply*)) );
-//    QNetworkRequest req = QNetworkRequest(QUrl(uri));
-//    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-//    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-//    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-//    QNetworkReply *reply = manager->post(req, postData);
-//    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-//    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
-//    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+    if (m_bufferHash[nonce]->open(QIODevice::ReadOnly)) {
+        // Send request.
+        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(copyFileReplyFinished(QNetworkReply*)) );
+        QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+        req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+        req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+        req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        QNetworkReply *reply = manager->sendCustomRequest(req, "COPY", m_bufferHash[nonce]);
+    }
 }
 
 void SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
@@ -918,6 +918,10 @@ void SkyDriveClient::moveFileReplyFinished(QNetworkReply *reply)
 
     emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
 
+    // Remove request buffer.
+    m_bufferHash[nonce]->close();
+    m_bufferHash.remove(nonce);
+
     // TODO scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
@@ -930,6 +934,10 @@ void SkyDriveClient::copyFileReplyFinished(QNetworkReply *reply)
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
     emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+
+    // Remove request buffer.
+    m_bufferHash[nonce]->close();
+    m_bufferHash.remove(nonce);
 
     // TODO scheduled to delete later.
     reply->deleteLater();

@@ -748,7 +748,7 @@ Page {
 
                 var res = false;
                 var sourcePath = clipboard.get(0).sourcePath;
-                var actualTargetPath = cloudDriveModel.getRemotePath(clipboard.get(0).type, targetPath, clipboard.get(0).sourcePathName);
+                var actualTargetPath = cloudDriveModel.getRemotePath(cloudDriveModel.getClientType(clipboard.get(0).type), targetPath, clipboard.get(0).sourcePathName);
                 if (clipboard.get(0).action == "copy") {
                     isBusy = true;
                     cloudDriveModel.copyFile(cloudDriveModel.getClientType(clipboard.get(0).type), clipboard.get(0).uid, "", sourcePath, "", actualTargetPath);
@@ -774,7 +774,7 @@ Page {
                 for (var i=0; i<clipboard.count; i++) {
                     var action = clipboard.get(i).action;
                     var sourcePath = clipboard.get(i).sourcePath;
-                    var actualTargetPath = cloudDriveModel.getRemotePath(clipboard.get(i).type, targetPath, clipboard.get(i).sourcePathName);
+                    var actualTargetPath = cloudDriveModel.getRemotePath(cloudDriveModel.getClientType(clipboard.get(i).type), targetPath, clipboard.get(i).sourcePathName);
 
                     console.debug("folderPage fileActionDialog onButtonClicked clipboard action " + action + " sourcePath " + sourcePath);
                     if (action == "copy") {

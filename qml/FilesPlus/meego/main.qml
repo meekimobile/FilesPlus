@@ -1659,7 +1659,7 @@ PageStackWindow {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
                 showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Move"),
+                            getCloudName(jobJson.type) + " " + qsTr("Copy"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
 
                 // Reset cloudFolderPage.

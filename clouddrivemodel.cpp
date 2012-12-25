@@ -2097,15 +2097,17 @@ void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg
     QString hash;
 
     if (err == 0) {
-        // TODO generalize to support other clouds.
-        switch (job.type) {
-        case Dropbox:
-            sc = engine.evaluate("(" + msg + ")");
-            hash = sc.property("rev").toString();
-            break;
-        case SkyDrive:
-            // TODO
-            break;
+        if (job.localFilePath != "" && job.newLocalFilePath != "") {
+            // TODO generalize to support other clouds.
+            switch (job.type) {
+            case Dropbox:
+                sc = engine.evaluate("(" + msg + ")");
+                hash = sc.property("rev").toString();
+                break;
+            case SkyDrive:
+                // TODO
+                break;
+            }
         }
     }
 
