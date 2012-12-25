@@ -1257,7 +1257,6 @@ Page {
                     res = fsModel.deleteFile(clipboard.get(0).sourcePath);
                 }
             } else {
-                // TODO openOverwriteDialog.
                 // It always replace existing names.
 
                 fsModel.suspendNextJob();
@@ -1307,6 +1306,9 @@ Page {
                 fsModel.cancelQueuedJobs();
                 fsModel.resumeNextJob();
             }
+
+            // Clear clipboard as they should have been processed.
+            clipboard.clear();
         }
 
         onClosed: {
