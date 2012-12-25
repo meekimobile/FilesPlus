@@ -22,6 +22,7 @@ const QString SkyDriveClient::createFolderURI = "https://apis.live.net/v5.0/%1";
 const QString SkyDriveClient::moveFileURI = "https://apis.live.net/v5.0/%1"; // MOVE to destination folder ID in content.
 const QString SkyDriveClient::copyFileURI = "https://apis.live.net/v5.0/%1"; // COPY to destination folder ID in content.
 const QString SkyDriveClient::deleteFileURI = "https://apis.live.net/v5.0/%1"; // DELETE
+const QString SkyDriveClient::renameFileURI = "https://apis.live.net/v5.0/%1"; // PUT with json with name = new folder name.
 const QString SkyDriveClient::sharesURI = "https://apis.live.net/v5.0/%1/shared_read_link";
 
 SkyDriveClient::SkyDriveClient(QObject *parent) :
@@ -482,6 +483,16 @@ void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath
 {
     qDebug() << "----- SkyDriveClient::moveFile -----" << uid << remoteFilePath << targetRemoteParentPath;
 
+    QRegExp rx("(file\.|folder\.)(" + uid + ")(.*)");
+    if (rx.exactMatch(targetRemoteParentPath)) {
+        // Match as remote ID.
+        qDebug() << "SkyDriveClient::moveFile rx" << rx.captureCount() << rx.capturedTexts();
+    } else {
+        // Doesn't match. It's a name. Proceed renaming.
+        renameFile(nonce, uid, remoteFilePath, targetRemoteParentPath);
+        return;
+    }
+
     QString uri = moveFileURI.arg(remoteFilePath);
     qDebug() << "SkyDriveClient::moveFile uri " << uri;
 
@@ -578,6 +589,29 @@ QNetworkReply * SkyDriveClient::deleteFile(QString nonce, QString uid, QString r
     reply->manager()->deleteLater();
 
     return reply;
+}
+
+void SkyDriveClient::renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName)
+{
+    qDebug() << "----- SkyDriveClient::renameFile -----" << remoteFilePath << newName;
+
+    QString uri = renameFileURI.arg(remoteFilePath);
+    qDebug() << "SkyDriveClient::renameFile uri " << uri;
+
+    QByteArray postData;
+    postData.append("{ \"name\": \"");
+    postData.append(newName.toUtf8());
+    postData.append("\" }");
+    qDebug() << "SkyDriveClient::renameFile postData" << postData;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)) );
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QNetworkReply *reply = manager->put(req, postData);
 }
 
 void SkyDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
@@ -816,8 +850,6 @@ void SkyDriveClient::propertyReplyFinished(QNetworkReply *reply)
     if (reply->error() == QNetworkReply::NoError) {
         m_propertyReplyHash->insert(nonce, reply->readAll());
     } else {
-//        m_propertyReplyHash->insert(nonce, QString(reply->readAll()));
-
         // Remove once used.
         m_propertyReplyHash->remove(nonce);
         m_filesReplyHash->remove(nonce);
@@ -919,8 +951,10 @@ void SkyDriveClient::moveFileReplyFinished(QNetworkReply *reply)
     emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
 
     // Remove request buffer.
-    m_bufferHash[nonce]->close();
-    m_bufferHash.remove(nonce);
+    if (m_bufferHash.contains(nonce)) {
+        m_bufferHash[nonce]->close();
+        m_bufferHash.remove(nonce);
+    }
 
     // TODO scheduled to delete later.
     reply->deleteLater();

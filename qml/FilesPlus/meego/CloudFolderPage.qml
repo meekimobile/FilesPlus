@@ -29,18 +29,6 @@ Page {
     property bool isBusy
 
     function goUpSlot() {
-//        nameFilterPanel.close();
-//        fsModel.nameFilters = [];
-
-//        if (fsModel.isRoot()) {
-//            showDrivePageSlot();
-//        } else {
-//            if (state == "chart") {
-//                fsModel.changeDir("..", FolderSizeItemListModel.SortBySize);
-//            } else {
-//                fsModel.changeDir("..");
-//            }
-//        }
         console.debug("cloudFolderPage goUpSlot selectedCloudType " + selectedCloudType + " selectedUid " + selectedUid + " remoteParentPath " + remoteParentPath + " remoteParentParentPath " + remoteParentParentPath);
         if (cloudDriveModel.isRemoteRoot(selectedCloudType, selectedUid, remoteParentParentPath)) {
             pageStack.pop(cloudFolderPage);
@@ -640,6 +628,7 @@ Page {
 
         onRenameFile: {
             renameDialog.sourcePath = srcFilePath;
+            renameDialog.sourcePathName = selectedFileName;
             renameDialog.open();
         }
 
@@ -893,9 +882,15 @@ Page {
         }
 
         onConfirm: {
-            if (newName.text != "" && newName.text != cloudDriveModel.getFileName(renameDialog.sourcePath)) {
+            if (newName.text != "" && newName.text != sourcePathName) {
                 isBusy = true;
-                var res = cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", sourcePath, "", cloudDriveModel.getParentRemotePath(sourcePath) + "/" + newName.text);
+                switch (selectedCloudType) {
+                case CloudDriveModel.SkyDrive:
+                    cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", sourcePath, "", newName.text);
+                    break;
+                default:
+                    cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", sourcePath, "", cloudDriveModel.getParentRemotePath(sourcePath) + "/" + newName.text);
+                }
             }
         }
     }

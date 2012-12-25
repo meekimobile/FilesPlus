@@ -28,6 +28,7 @@ public:
     static const QString moveFileURI;
     static const QString copyFileURI;
     static const QString deleteFileURI;
+    static const QString renameFileURI;
     static const QString sharesURI;
 
     explicit SkyDriveClient(QObject *parent = 0);
@@ -52,6 +53,7 @@ public:
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
     QNetworkReply * createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath, bool synchronous = false);
     QNetworkReply * deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
+    void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
 signals:
 
 public slots:

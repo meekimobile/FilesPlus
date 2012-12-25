@@ -16,6 +16,8 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->newRemoteFilePath = "";
     this->isRunning = false;
     this->modelIndex = modelIndex;
+    this->bytes = 0;
+    this->bytesTotal = 0;
 }
 
 CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, int modelIndex)
@@ -30,6 +32,8 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->newRemoteFilePath = newRemoteFilePath;
     this->isRunning = false;
     this->modelIndex = modelIndex;
+    this->bytes = 0;
+    this->bytesTotal = 0;
 }
 
 QString CloudDriveJob::toJsonText()
