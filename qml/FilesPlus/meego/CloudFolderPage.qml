@@ -105,7 +105,7 @@ Page {
         }
     }
 
-    function createRemoteFolder() {
+    function createRemoteFolder(newRemoteFolderName) {
         // Create remote folder.
         if (selectedCloudType == CloudDriveModel.Dropbox) {
             cloudDriveModel.createFolder(selectedCloudType, selectedUid, "", remoteParentPath + "/" + newRemoteFolderName, -1);
@@ -136,7 +136,7 @@ Page {
         }
     }
 
-    function deleteRemotePath() {
+    function deleteRemotePath(remotePath) {
         // Delete remote file/folder.
         cloudDriveModel.deleteFile(selectedCloudType, selectedUid, "", remotePath);
     }
@@ -199,8 +199,7 @@ Page {
         }
     }
 
-    // TODO Menu.
-    MainMenu {
+    CloudFolderMenu {
         id: mainMenu
         disabledMenus: ["syncConnectedItems","syncCurrentFolder","setNameFilter","sortByMenu"]
 
@@ -373,7 +372,7 @@ Page {
                                   + " absolutePath " + model.get(i).absolutePath
                                   + " isChecked " + model.get(i).isChecked);
 
-                    clipboard.addItemWithSuppressCountChanged({ "action": "cut", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": model.get(i).absolutePath });
+                    clipboard.addItemWithSuppressCountChanged({ "action": "cut", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": model.get(i).absolutePath, "sourcePathName": model.get(i).name });
                 }
 
                 // Reset isChecked.
@@ -391,7 +390,7 @@ Page {
                                   + " absolutePath " + model.get(i).absolutePath
                                   + " isChecked " + model.get(i).isChecked);
 
-                    clipboard.addItemWithSuppressCountChanged({ "action": "copy", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": model.get(i).absolutePath });
+                    clipboard.addItemWithSuppressCountChanged({ "action": "copy", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": model.get(i).absolutePath, "sourcePathName": model.get(i).name });
                 }
 
                 // Reset isChecked.
@@ -412,7 +411,7 @@ Page {
                                   + " absolutePath " + model.get(i).absolutePath
                                   + " isChecked " + model.get(i).isChecked);
 
-                    clipboard.addItem({ "action": "delete", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": model.get(i).absolutePath });
+                    clipboard.addItem({ "action": "delete", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": model.get(i).absolutePath, "sourcePathName": model.get(i).name });
                 }
 
                 // Reset isChecked.
@@ -433,7 +432,7 @@ Page {
                                   + " absolutePath " + model.get(i).absolutePath
                                   + " isChecked " + model.get(i).isChecked);
 
-                    clipboard.addItem({ "action": "sync", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": model.get(i).absolutePath });
+                    clipboard.addItem({ "action": "sync", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": model.get(i).absolutePath, "sourcePathName": model.get(i).name });
                 }
 
                 // Reset isChecked.
@@ -476,122 +475,6 @@ Page {
         }
     }
 
-    // TODO Shows mark, copy, cut icons.
-/*
-    Component {
-        id: cloudItemDelegate
-
-        ListItem {
-            id: cloudListItem
-            height: 80
-            Row {
-                anchors.fill: parent
-                spacing: 5
-
-                Rectangle {
-                    id: iconRect
-                    width: 60
-                    height: parent.height
-                    color: "transparent"
-
-                    Image {
-                        id: icon
-                        asynchronous: true
-                        width: 48
-                        height: 48
-                        fillMode: Image.PreserveAspectFit
-                        source: cloudListItem.getIconSource(path, isDir)
-                        anchors.centerIn: parent
-                    }
-                }
-
-                Column {
-                    width: parent.width - iconRect.width - (2*parent.spacing) - connectionIcon.width - parent.spacing
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 2
-                    Text {
-                        width: parent.width
-                        text: name
-                        font.pointSize: 18
-                        color: "white"
-                        elide: Text.ElideMiddle
-                    }
-                    Text {
-                        width: parent.width
-                        text: Qt.formatDateTime(lastModified, "d MMM yyyy h:mm:ss ap")
-                        font.pointSize: 16
-                        color: "lightgray"
-                        elide: Text.ElideMiddle
-                    }
-                }
-
-                Image {
-                    id: connectionIcon
-                    width: (visible) ? 30 : 0
-                    height: parent.height
-                    fillMode: Image.PreserveAspectFit
-                    z: 1
-                    visible: cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, path, true);
-                    source: "cloud.svg"
-                }
-            }
-
-            function getIconSource(path, isDir) {
-                var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-                var viewableTextFileTypes = ["TXT", "HTML"];
-                if (isDir) {
-                    return "folder_list.svg";
-                } else {
-                    var dotPos = path.lastIndexOf(".");
-                    var fileType = (dotPos > -1) ? path.substr(1+dotPos) : "";
-                    if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                        return "photos_list.svg";
-                    } else {
-                        return "notes_list.svg";
-                    }
-                }
-            }
-
-            onPressAndHold: {
-                var res = cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, path);
-                console.debug("cloudListItem path " + path + " isRemotePathConnected " + res);
-                if (!res) {
-                    deleteCloudItemConfirmation.remotePath = path;
-                    deleteCloudItemConfirmation.remotePathName = name;
-                    deleteCloudItemConfirmation.open();
-                }
-            }
-
-            onClicked: { // Switch type
-                if (isDir) {
-                    changeRemotePath(path);
-                } else {
-                    // Always set selectedIndex to support changeRemotePath.
-                    selectedIndex = index;
-
-                    // FileGet and FilePut can select any items because it's not related to operations.
-                    // Other operations must select only the same item type that selected from local path.
-                    if (cloudDriveModel.isDir(localPath) == isDir || operation == CloudDriveModel.FileGet || operation == CloudDriveModel.FilePut) {
-                        selectedRemotePath = path;
-                        selectedRemotePathName = name;
-                        selectedIsDir = isDir;
-                        selectedIsValid = true;
-                        console.debug("cloudDrivePathDialog selectedIndex " + selectedIndex + " selectedRemotePath " + selectedRemotePath + " selectedRemotePathName " + selectedRemotePathName + " selectedIsDir " + selectedIsDir);
-                    } else {
-                        selectedRemotePath = "";
-                        selectedRemotePathName = "";
-                        selectedIsDir = isDir;
-                        selectedIsValid = false;
-                        cloudFolderView.currentIndex = -1;
-                        console.debug("cloudDrivePathDialog invalid selectedIndex " + selectedIndex + " selectedRemotePath " + selectedRemotePath + " selectedRemotePathName " + selectedRemotePath + " selectedIsDir " + selectedIsDir);
-                        // TODO Disable OK button.
-                    }
-                }
-            }
-        }
-    }
-*/
-
     Component {
         id: cloudItemDelegate
 
@@ -624,6 +507,7 @@ Page {
                 if (cloudFolderView.state != "mark") {
                     cloudFolderView.currentIndex = index;
                     popupToolPanel.selectedFilePath = absolutePath;
+                    popupToolPanel.selectedFileName = name;
                     popupToolPanel.selectedFileIndex = index;
                     popupToolPanel.isDir = isDir;
                     popupToolPanel.pastePath = (isDir) ? absolutePath : remoteParentPath;
@@ -643,22 +527,6 @@ Page {
                         // If file is running, disable preview.
                         if (isRunning) return;
 
-                        // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
-//                        var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-//                        var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
-//                        if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-//                            fsModel.nameFilters = ["*.jpg", "*.png", "*.svg"];
-//                            fsModel.refreshDir("cloudFolderPage listItem onClicked", false);
-//                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), {
-//                                               fileName: name,
-//                                               model: cloudFolderModel
-//                                           });
-//                        } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-//                            pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
-//                                           { filePath: absolutePath, fileName: cloudDriveModel.getFileName(absolutePath) });
-//                        } else {
-//                            Qt.openUrlExternally(fsModel.getUrl(absolutePath));
-//                        }
                         if (source && source != "") {
                             Qt.openUrlExternally(source);
                         }
@@ -689,12 +557,13 @@ Page {
         ringRadius: 80
         buttonRadius: 35
         timeout: appInfo.emptySetting+appInfo.getSettingValue("popup.timer.interval", 2) * 1000
+        disabledButtons: ["print","editFile","cloud","share"]
 
         function isButtonVisibleCallback(buttonName) {
             if (buttonName === "sync") {
                 return cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, selectedFilePath);
-            } else if (buttonName === "delete") {
-                return !cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, selectedFilePath);
+//            } else if (buttonName === "delete") {
+//                return !cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, selectedFilePath);
             } else if (buttonName === "disconnect") {
                 return cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, selectedFilePath);
             } else if (buttonName === "unsync") {
@@ -721,11 +590,11 @@ Page {
         }
 
         onCutClicked: {
-            clipboard.addItem({ "action": "cut", "sourcePath": sourcePath });
+            clipboard.addItem({ "action": "cut", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": sourcePath, "sourcePathName": selectedFileName });
         }
 
         onCopyClicked: {
-            clipboard.addItem({ "action": "copy", "sourcePath": sourcePath });
+            clipboard.addItem({ "action": "copy", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": sourcePath, "sourcePathName": selectedFileName });
         }
 
         onPasteClicked: {
@@ -735,16 +604,12 @@ Page {
 
         onDeleteFile: {
             // Delete always clear clipboard.
-//            clipboard.clear();
-//            clipboard.addItem({ "action": "delete", "sourcePath": sourcePath });
-//            fileActionDialog.open();
-            deleteCloudItemConfirmation.remotePath = sourcePath;
-            deleteCloudItemConfirmation.remotePathName = selectedFileName;
-            deleteCloudItemConfirmation.open();
-        }
-
-        onPrintFile: {
-            printFileSlot(srcFilePath, srcItemIndex);
+            clipboard.clear();
+            clipboard.addItem({ "action": "delete", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": sourcePath, "sourcePathName": selectedFileName });
+            fileActionDialog.open();
+//            deleteCloudItemConfirmation.remotePath = selectedFilePath;
+//            deleteCloudItemConfirmation.remotePathName = selectedFileName;
+//            deleteCloudItemConfirmation.open();
         }
 
         onSyncFile: {
@@ -757,10 +622,6 @@ Page {
 
         onDisconnectFile: {
             disconnectFileSlot(srcFilePath, srcItemIndex);
-        }
-
-        onBrowseRemoteFile: {
-            browseRemoteFileSlot(srcFilePath, srcItemIndex);
         }
 
         onScheduleSyncFile: {
@@ -800,17 +661,13 @@ Page {
         onBluetoothFile: {
             bluetoothFileSlot(srcFilePath, srcItemIndex);
         }
-
-        onEditFile: {
-            pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
-                           { filePath: srcFilePath, fileName: fsModel.getFileName(srcFilePath) });
-        }
     }
 
     ConfirmDialog {
         id: fileActionDialog
 
         property string targetPath
+        property string targetPathName
 
         titleText: appInfo.emptyStr+fileActionDialog.getTitleText()
         contentText: appInfo.emptyStr+fileActionDialog.getText() + "\n"
@@ -839,7 +696,7 @@ Page {
             var text = "";
             if (clipboard.count == 1) {
                 text = getActionName(clipboard.get(0).action)
-                        + " " + clipboard.get(0).sourcePath
+                        + " " + clipboard.get(0).sourcePathName
                         + ((clipboard.get(0).action == "delete")?"":("\n" + qsTr("to") + " " + targetPath))
                         + " ?";
             } else {
@@ -868,69 +725,73 @@ Page {
         }
 
         onConfirm: {
-
             if (clipboard.count == 1) {
                 // Copy/Move/Delete first file from clipboard.
                 // Check if there is existing file on target folder. Then show overwrite dialog.
                 if (clipboard.get(0).action != "delete" && !fsModel.canCopy(clipboard.get(0).sourcePath, targetPath)) {
                     fileOverwriteDialog.sourcePath = clipboard.get(0).sourcePath;
+                    fileOverwriteDialog.sourcePathName = clipboard.get(0).sourcePathName;
                     fileOverwriteDialog.targetPath = targetPath;
                     fileOverwriteDialog.isCopy = (clipboard.get(0).action == "copy");
                     fileOverwriteDialog.open();
                     return;
                 }
 
-                cloudDr.suspendNextJob();
+                cloudDriveModel.suspendNextJob();
 
                 var res = false;
                 var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(clipboard.get(0).sourcePath));
                 if (clipboard.get(0).action == "copy") {
-                    res = fsModel.copy(clipboard.get(0).sourcePath, actualTargetPath);
+//                    res = fsModel.copy(clipboard.get(0).sourcePath, actualTargetPath);
                 } else if (clipboard.get(0).action == "cut") {
-                    res = fsModel.move(clipboard.get(0).sourcePath, actualTargetPath);
+//                    res = fsModel.move(clipboard.get(0).sourcePath, actualTargetPath);
                 } else if (clipboard.get(0).action == "delete") {
-                    res = fsModel.deleteFile(clipboard.get(0).sourcePath);
+                    isBusy = true;
+                    cloudDriveModel.deleteFile(cloudDriveModel.getClientType(clipboard.get(0).type), clipboard.get(0).uid, "", clipboard.get(0).sourcePath);
+                    res = true;
                 }
 
-                if (res) {
-                    // Reset both source and target.
-                    clipboard.clear();
-                    targetPath = "";
-                    popupToolPanel.srcFilePath = "";
-                    popupToolPanel.pastePath = "";
-                } else {
-                    messageDialog.titleText = getActionName(clipboard.get(0).action);
-                    messageDialog.message = appInfo.emptyStr+qsTr("Can't %1 %2 to %3.").arg(getActionName(clipboard.get(0).action).toLowerCase())
-                        .arg(clipboard.get(0).sourcePath).arg(targetPath);
-                    messageDialog.open();
-
-                    // Reset target only.
-                    targetPath = "";
-                    popupToolPanel.pastePath = "";
-                }
             } else {
                 // It always replace existing names.
 
-                fsModel.suspendNextJob();
+                cloudDriveModel.suspendNextJob();
 
                 // TODO Copy/Move/Delete all files from clipboard.
                 // Action is {copy, cut, delete}
+                var res = true;
                 for (var i=0; i<clipboard.count; i++) {
                     var action = clipboard.get(i).action;
                     var sourcePath = clipboard.get(i).sourcePath;
-                    var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(sourcePath));
+//                    var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(sourcePath));
 
                     console.debug("folderPage fileActionDialog onButtonClicked clipboard action " + action + " sourcePath " + sourcePath);
                     if (action == "copy") {
-                        fsModel.copy(sourcePath, actualTargetPath);
+//                        res = res && fsModel.copy(sourcePath, actualTargetPath);
                     } else if (action == "cut") {
-                        fsModel.move(sourcePath, actualTargetPath);
+//                        res = res && fsModel.move(sourcePath, actualTargetPath);
                     } else if (action == "delete") {
-                        fsModel.deleteFile(sourcePath);
+                        isBusy = true;
+                        cloudDriveModel.deleteFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", clipboard.get(i).sourcePath);
+                        res = true;
                     } else {
                         console.debug("folderPage fileActionDialog onButtonClicked invalid action " + action);
                     }
+
+                    if (!res) {
+                        break;
+                    }
                 }
+            }
+
+            if (res) {
+                // Reset both source and target.
+                targetPath = "";
+                popupToolPanel.srcFilePath = "";
+                popupToolPanel.pastePath = "";
+            } else {
+                // Reset target only.
+                targetPath = "";
+                popupToolPanel.pastePath = "";
             }
 
             // Clear clipboard as they should have been processed.
@@ -940,6 +801,9 @@ Page {
         onClosed: {
             // Always clear clipboard's delete actions.
             clipboard.clearDeleteActions();
+
+            // Resume queued jobs.
+            cloudDriveModel.resumeNextJob();
         }
     }
 
@@ -989,7 +853,7 @@ Page {
 
             Text {
                 width: parent.width
-                text: appInfo.emptyStr+qsTr("Rename %1 to").arg(sourcePathName);
+                text: appInfo.emptyStr+qsTr("Rename %1 to").arg(renameDialog.sourcePathName);
                 color: "white"
                 font.pointSize: 16
                 elide: Text.ElideMiddle
@@ -1014,8 +878,7 @@ Page {
         onConfirm: {
             if (newName.text != "" && newName.text != cloudDriveModel.getFileName(renameDialog.sourcePath)) {
                 isBusy = true;
-                var res = cloudDriveModel.moveFile(selectedCloudType, selectedUid, sourcePath, cloudDriveModel.getParentRemotePath(sourcePath) + "/" + newName.text);
-//                refreshSlot("renameDialog onConfirm");
+                var res = cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", sourcePath, "", cloudDriveModel.getParentRemotePath(sourcePath) + "/" + newName.text);
             }
         }
     }
@@ -1064,11 +927,13 @@ Page {
 
         property bool isCopy
         property string sourcePath
+        property string sourcePathName
         property string targetPath
 
         onOpened: {
             fileName.forceActiveFocus();
-            fileName.text = fsModel.getNewFileName(sourcePath, targetPath);
+            // TODO Find new name from model.
+            fileName.text = sourcePathName;
         }
 
         onClosed: {
@@ -1081,9 +946,9 @@ Page {
             // If paste to selected folder, targetPath is not ended with /.
             var res = false;
             if (isCopy) {
-                res = fsModel.copy(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
+//                res = fsModel.copy(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
             } else {
-                res = fsModel.move(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
+//                res = fsModel.move(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
             }
         }
 
