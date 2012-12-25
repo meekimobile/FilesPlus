@@ -163,6 +163,9 @@ Page {
             id: menuButton
             iconId: "toolbar-view-menu"
             onClicked: {
+                // Hide popupToolPanel.
+                popupToolPanel.visible = false;
+
                 if (cloudFolderView.state == "mark") {
                     if (!cloudFolderView.isAnyItemChecked()) {
                         markAllMenu.open();
