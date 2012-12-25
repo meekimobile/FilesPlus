@@ -116,6 +116,11 @@ Page {
         }
     }
 
+    function deleteRemotePath(remotePath) {
+        // Delete remote file/folder.
+        cloudDriveModel.deleteFile(selectedCloudType, selectedUid, "", remotePath);
+    }
+
     function refreshSlot(caller) {
         console.debug("cloudFolderPage refreshSlot caller " + caller + " " + selectedCloudType + " " + remotePath + " " + remoteParentPath);
 
@@ -136,9 +141,8 @@ Page {
         }
     }
 
-    function deleteRemotePath(remotePath) {
-        // Delete remote file/folder.
-        cloudDriveModel.deleteFile(selectedCloudType, selectedUid, "", remotePath);
+    function resetBusySlot(caller) {
+        isBusy = false;
     }
 
     tools: ToolBarLayout {
@@ -730,26 +734,32 @@ Page {
             if (clipboard.count == 1) {
                 // Copy/Move/Delete first file from clipboard.
                 // Check if there is existing file on target folder. Then show overwrite dialog.
-                if (clipboard.get(0).action != "delete" && !fsModel.canCopy(clipboard.get(0).sourcePath, targetPath)) {
-                    fileOverwriteDialog.sourcePath = clipboard.get(0).sourcePath;
-                    fileOverwriteDialog.sourcePathName = clipboard.get(0).sourcePathName;
-                    fileOverwriteDialog.targetPath = targetPath;
-                    fileOverwriteDialog.isCopy = (clipboard.get(0).action == "copy");
-                    fileOverwriteDialog.open();
-                    return;
-                }
+                // TODO How to check if folder/file exists.
+//                if (clipboard.get(0).action != "delete" && !fsModel.canCopy(clipboard.get(0).sourcePath, targetPath)) {
+//                    fileOverwriteDialog.sourcePath = clipboard.get(0).sourcePath;
+//                    fileOverwriteDialog.sourcePathName = clipboard.get(0).sourcePathName;
+//                    fileOverwriteDialog.targetPath = targetPath;
+//                    fileOverwriteDialog.isCopy = (clipboard.get(0).action == "copy");
+//                    fileOverwriteDialog.open();
+//                    return;
+//                }
 
                 cloudDriveModel.suspendNextJob();
 
                 var res = false;
-                var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(clipboard.get(0).sourcePath));
+                var sourcePath = clipboard.get(0).sourcePath;
+                var actualTargetPath = cloudDriveModel.getRemotePath(clipboard.get(0).type, targetPath, clipboard.get(0).sourcePathName);
                 if (clipboard.get(0).action == "copy") {
-//                    res = fsModel.copy(clipboard.get(0).sourcePath, actualTargetPath);
+                    isBusy = true;
+                    cloudDriveModel.copyFile(cloudDriveModel.getClientType(clipboard.get(0).type), clipboard.get(0).uid, "", sourcePath, "", actualTargetPath);
+                    res = true;
                 } else if (clipboard.get(0).action == "cut") {
-//                    res = fsModel.move(clipboard.get(0).sourcePath, actualTargetPath);
+                    isBusy = true;
+                    cloudDriveModel.moveFile(cloudDriveModel.getClientType(clipboard.get(0).type), clipboard.get(0).uid, "", sourcePath, "", actualTargetPath);
+                    res = true;
                 } else if (clipboard.get(0).action == "delete") {
                     isBusy = true;
-                    cloudDriveModel.deleteFile(cloudDriveModel.getClientType(clipboard.get(0).type), clipboard.get(0).uid, "", clipboard.get(0).sourcePath);
+                    cloudDriveModel.deleteFile(cloudDriveModel.getClientType(clipboard.get(0).type), clipboard.get(0).uid, "", sourcePath);
                     res = true;
                 }
 
@@ -764,16 +774,20 @@ Page {
                 for (var i=0; i<clipboard.count; i++) {
                     var action = clipboard.get(i).action;
                     var sourcePath = clipboard.get(i).sourcePath;
-//                    var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(sourcePath));
+                    var actualTargetPath = cloudDriveModel.getRemotePath(clipboard.get(i).type, targetPath, clipboard.get(i).sourcePathName);
 
                     console.debug("folderPage fileActionDialog onButtonClicked clipboard action " + action + " sourcePath " + sourcePath);
                     if (action == "copy") {
-//                        res = res && fsModel.copy(sourcePath, actualTargetPath);
+                        isBusy = true;
+                        cloudDriveModel.copyFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath, "", actualTargetPath);
+                        res = true;
                     } else if (action == "cut") {
-//                        res = res && fsModel.move(sourcePath, actualTargetPath);
+                        isBusy = true;
+                        cloudDriveModel.moveFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath, "", actualTargetPath);
+                        res = true;
                     } else if (action == "delete") {
                         isBusy = true;
-                        cloudDriveModel.deleteFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", clipboard.get(i).sourcePath);
+                        cloudDriveModel.deleteFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath);
                         res = true;
                     } else {
                         console.debug("folderPage fileActionDialog onButtonClicked invalid action " + action);
@@ -785,6 +799,7 @@ Page {
                 }
             }
 
+            // Reset targetPath and popupToolPanel's paths.
             if (res) {
                 // Reset both source and target.
                 targetPath = "";
@@ -947,10 +962,13 @@ Page {
             // If paste to current folder, targetPath is ended with / already.
             // If paste to selected folder, targetPath is not ended with /.
             var res = false;
+            var actualTargetPath = cloudDriveModel.getRemotePath(selectedCloudType, targetPath, fileName.text);
             if (isCopy) {
-//                res = fsModel.copy(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
+                isBusy = true;
+                cloudDriveModel.copyFile(selectedCloudType, selectedUid, "", sourcePath, "", actualTargetPath);
             } else {
-//                res = fsModel.move(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
+                isBusy = true;
+                cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", sourcePath, "", actualTargetPath);
             }
         }
 

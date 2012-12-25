@@ -894,6 +894,16 @@ PageStackWindow {
             return name;
         }
 
+        function getRemotePath(type, remoteParentPath, remotePathName) {
+            switch (type) {
+            case CloudDriveModel.SkyDrive:
+                return remoteParentPath;
+            default:
+                return remoteParentPath + "/" + remotePathName;
+            }
+
+        }
+
         function accessTokenSlot(clientTypeName, pin) {
             console.debug("folderPage accessTokenSlot clientTypeName " + clientTypeName + " pin " + pin);
             var clientType = getClientType(clientTypeName);
@@ -1520,10 +1530,22 @@ PageStackWindow {
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg +
                             "\n\n" +
                             qsTr("Please proceed with sync."));
+
+                // Reset cloudFolderPage.
+                var p = findPage("cloudFolderPage");
+                if (p) {
+                    p.resetBusySlot("cloudDriveModel onCreateFolderReplySignal");
+                }
             } else {
                 showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+
+                // Reset cloudFolderPage.
+                var p = findPage("cloudFolderPage");
+                if (p) {
+                    p.resetBusySlot("cloudDriveModel onCreateFolderReplySignal");
+                }
             }
 
             var p = findPage("folderPage");
@@ -1613,6 +1635,47 @@ PageStackWindow {
             }
         }
 
+        onCopyFileReplySignal: {
+            console.debug("window cloudDriveModel onCopyFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
+
+            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+
+            console.debug("window cloudDriveModel onCopyFileReplySignal json " + cloudDriveModel.getJobJson(nonce));
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+
+            if (err == 0) {
+                // Cloud items have been managed by CloudDriveModel::copyFileReplyFilter.
+                // Sync after copy.
+                cloudDriveModel.metadata(jobJson.type, jobJson.uid, jobJson.new_local_file_path, jobJson.new_remote_file_path, jobJson.model_index);
+
+                // Refresh cloudFolderPage.
+                var p = findPage("cloudFolderPage");
+                if (p) {
+                    p.refreshSlot("cloudDriveModel onCopyFileReplySignal");
+                }
+            } else if (err == 204) { // Refresh token
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
+            } else {
+                showMessageDialogSlot(
+                            getCloudName(jobJson.type) + " " + qsTr("Move"),
+                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+
+                // Reset cloudFolderPage.
+                var p = findPage("cloudFolderPage");
+                if (p) {
+                    p.resetBusySlot("cloudDriveModel onCopyFileReplySignal");
+                }
+            }
+
+            // Update ProgressBar on NEW listItem and its parent.
+            var p = findPage("folderPage");
+            if (p) {
+                p.updateFolderSizeItemSlot(jobJson.new_local_file_path, jobJson.is_running);
+            }
+        }
+
         onMoveFileReplySignal: {
             console.debug("window cloudDriveModel onMoveFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
@@ -1639,6 +1702,12 @@ PageStackWindow {
                 showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Move"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+
+                // Reset cloudFolderPage.
+                var p = findPage("cloudFolderPage");
+                if (p) {
+                    p.resetBusySlot("cloudDriveModel onMoveFileReplySignal");
+                }
             }
 
             // Update ProgressBar on NEW listItem and its parent.
@@ -1668,6 +1737,12 @@ PageStackWindow {
                 showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Delete"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+
+                // Reset cloudFolderPage.
+                var p = findPage("cloudFolderPage");
+                if (p) {
+                    p.resetBusySlot("cloudDriveModel onDeleteFileReplySignal");
+                }
             }
 
             var p = findPage("folderPage");
