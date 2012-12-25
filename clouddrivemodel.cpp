@@ -1357,6 +1357,16 @@ void CloudDriveModel::quota(CloudDriveModel::ClientTypes type, QString uid)
 
 void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString localFilePath, int modelIndex)
 {
+    if (localFilePath == "") {
+        qDebug() << "CloudDriveModel::fileGet localFilePath" << localFilePath << " is empty, can't sync.";
+        return;
+    }
+
+    if (remoteFilePath == "") {
+        qDebug() << "CloudDriveModel::fileGet remoteFilePath" << remoteFilePath << " is empty, can't sync.";
+        return;
+    }
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), FileGet, type, uid, localFilePath, remoteFilePath, modelIndex);
     job.isRunning = true;
@@ -1384,7 +1394,17 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
 
 void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex)
 {
-    // TODO Restrict file types.
+    if (localFilePath == "") {
+        qDebug() << "CloudDriveModel::filePut localFilePath" << localFilePath << " is empty, can't sync.";
+        return;
+    }
+
+    if (remoteFilePath == "") {
+        qDebug() << "CloudDriveModel::filePut remoteFilePath" << remoteFilePath << " is empty, can't sync.";
+        return;
+    }
+
+    // Restrict file types.
     if (!canSync(localFilePath)) {
         qDebug() << "CloudDriveModel::filePut localFilePath" << localFilePath << " is restricted, can't upload.";
         return;
@@ -1417,6 +1437,16 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
 
 void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex)
 {
+    if (localFilePath == "") {
+        qDebug() << "CloudDriveModel::metadata localFilePath" << localFilePath << " is empty, can't sync.";
+        return;
+    }
+
+    if (remoteFilePath == "") {
+        qDebug() << "CloudDriveModel::metadata remoteFilePath" << remoteFilePath << " is empty, can't sync.";
+        return;
+    }
+
     // TODO Restrict file types.
     if (!canSync(localFilePath)) {
         qDebug() << "CloudDriveModel::metadata localFilePath" << localFilePath << " is restricted, can't sync.";
@@ -1471,7 +1501,15 @@ void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString u
     // This method is invoked from dir only as file which is not found will be put right away.
     qDebug() << "----- CloudDriveModel::syncFromLocal -----" << type << uid << localPath << remotePath << modelIndex << "forcePut" << forcePut;
 
-    if (localPath == "" || remotePath == "") return;
+    if (localPath == "") {
+        qDebug() << "CloudDriveModel::syncFromLocal localPath" << localPath << "is empty. Operation is aborted.";
+        return;
+    }
+
+    if (remotePath == "") {
+        qDebug() << "CloudDriveModel::syncFromLocal remotePath" << remotePath << "is empty. Operation is aborted.";
+        return;
+    }
 
     QFileInfo info(localPath);
     if (info.isDir()) {
@@ -1539,7 +1577,15 @@ void CloudDriveModel::syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, 
     // This method is invoked from dir only as file which is not found will be put right away.
     qDebug() << "----- CloudDriveModel::syncFromLocal_SkyDrive -----" << type << uid << localPath << remoteParentPath << modelIndex << "forcePut" << forcePut;
 
-    if (localPath == "") return;
+    if (localPath == "") {
+        qDebug() << "CloudDriveModel::syncFromLocal_SkyDrive localPath" << localPath << "is empty. Operation is aborted.";
+        return;
+    }
+
+    if (remoteParentPath == "") {
+        qDebug() << "CloudDriveModel::syncFromLocal_SkyDrive remoteParentPath" << remoteParentPath << "is empty. Operation is aborted.";
+        return;
+    }
 
     QApplication::processEvents();
 
@@ -1625,6 +1671,11 @@ void CloudDriveModel::syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, 
 
 void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex)
 {
+    if (remotePath == "") {
+        qDebug() << "CloudDriveModel::createFolder remotePath" << remotePath << "is empty. Operation is aborted.";
+        return;
+    }
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), CreateFolder, type, uid, localPath, remotePath, modelIndex);
     job.isRunning = true;
@@ -1649,6 +1700,16 @@ void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString ui
 
 QString CloudDriveModel::createFolder_SkyDrive(CloudDriveModel::ClientTypes type, QString uid, QString newRemoteFolderName, QString remoteParentPath)
 {
+    if (newRemoteFolderName == "") {
+        qDebug() << "CloudDriveModel::createFolder_SkyDrive newRemoteFolderName" << newRemoteFolderName << "is empty. Operation is aborted.";
+        return "";
+    }
+
+    if (remoteParentPath == "") {
+        qDebug() << "CloudDriveModel::createFolder_SkyDrive remoteParentPath" << remoteParentPath << "is empty. Operation is aborted.";
+        return "";
+    }
+
     // Request SkyDriveClient's createFolder synchronously.
     QNetworkReply * createFolderReply = skdClient->createFolder(createNonce(), uid, newRemoteFolderName, remoteParentPath, true);
     if (createFolderReply->error() == QNetworkReply::NoError) {
@@ -1668,6 +1729,16 @@ QString CloudDriveModel::createFolder_SkyDrive(CloudDriveModel::ClientTypes type
 
 void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath)
 {
+    if (remoteFilePath == "") {
+        qDebug() << "CloudDriveModel::moveFile remoteFilePath" << remoteFilePath << "is empty. Operation is aborted.";
+        return;
+    }
+
+    if (newRemoteFilePath == "") {
+        qDebug() << "CloudDriveModel::moveFile newRemoteFilePath" << newRemoteFilePath << "is empty. Operation is aborted.";
+        return;
+    }
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), MoveFile, type, uid, localFilePath, remoteFilePath, newLocalFilePath, newRemoteFilePath, -1);
     job.isRunning = true;
@@ -1694,6 +1765,16 @@ void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, Q
 
 void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath)
 {
+    if (remoteFilePath == "") {
+        qDebug() << "CloudDriveModel::copyFile remoteFilePath" << remoteFilePath << "is empty. Operation is aborted.";
+        return;
+    }
+
+    if (newRemoteFilePath == "") {
+        qDebug() << "CloudDriveModel::copyFile newRemoteFilePath" << newRemoteFilePath << "is empty. Operation is aborted.";
+        return;
+    }
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), CopyFile, type, uid, localFilePath, remoteFilePath, newLocalFilePath, newRemoteFilePath, -1);
     job.isRunning = true;
@@ -1720,6 +1801,11 @@ void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, Q
 
 void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath)
 {
+    if (remoteFilePath == "") {
+        qDebug() << "CloudDriveModel::deleteFile remoteFilePath" << remoteFilePath << "is empty. Operation is aborted.";
+        return;
+    }
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), DeleteFile, type, uid, localFilePath, remoteFilePath, -1);
     job.isRunning = true;
@@ -1973,21 +2059,23 @@ void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg
     bool isDir;
 
     if (err == 0) {
-        // TODO generalize to support other clouds.
-        switch (job.type) {
-        case Dropbox:
-            sc = engine.evaluate("(" + msg + ")");
-            hash = sc.property("hash").toString();
-            rev = sc.property("rev").toString();
-            isDir = sc.property("is_dir").toBool();
-            updateItemWithChildren(Dropbox, job.uid,
-                                   job.localFilePath, job.remoteFilePath,
-                                   job.newLocalFilePath, job.newRemoteFilePath, rev, (isDir ? hash : rev) );
-            removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
-            break;
-        case SkyDrive:
-            // TODO
-            break;
+        if (job.localFilePath != "" && job.newLocalFilePath != "") {
+            // TODO generalize to support other clouds.
+            switch (job.type) {
+            case Dropbox:
+                sc = engine.evaluate("(" + msg + ")");
+                hash = sc.property("hash").toString();
+                rev = sc.property("rev").toString();
+                isDir = sc.property("is_dir").toBool();
+                updateItemWithChildren(Dropbox, job.uid,
+                                       job.localFilePath, job.remoteFilePath,
+                                       job.newLocalFilePath, job.newRemoteFilePath, rev, (isDir ? hash : rev) );
+                removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
+                break;
+            case SkyDrive:
+                // TODO
+                break;
+            }
         }
     }
 
