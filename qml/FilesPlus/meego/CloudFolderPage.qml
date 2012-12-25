@@ -205,6 +205,7 @@ Page {
 
         onPaste: {
             fileActionDialog.targetPath = remoteParentPath;
+            fileActionDialog.targetPathName = remoteParentPathName;
             fileActionDialog.open();
         }
         onOpenMarkMenu: {
@@ -599,6 +600,7 @@ Page {
 
         onPasteClicked: {
             fileActionDialog.targetPath = targetPath;
+            fileActionDialog.targetPathName = selectedFileName;
             fileActionDialog.open();
         }
 
@@ -692,12 +694,12 @@ Page {
         }
 
         function getText() {
-            // Exmaple of clipboard entry { "action": "cut", "type": "Dropbox", "uid": "asdfdg", "sourcePath": sourcePath }
+            // Exmaple of clipboard entry { "action": "cut", "type": "Dropbox", "uid": "asdfdg", "sourcePath": sourcePath, "sourcePathName": sourcePathName }
             var text = "";
             if (clipboard.count == 1) {
                 text = getActionName(clipboard.get(0).action)
                         + " " + clipboard.get(0).sourcePathName
-                        + ((clipboard.get(0).action == "delete")?"":("\n" + qsTr("to") + " " + targetPath))
+                        + ((clipboard.get(0).action == "delete")?"":("\n" + qsTr("to") + " " + targetPathName))
                         + " ?";
             } else {
                 var cutCount = 0;
@@ -717,7 +719,7 @@ Page {
                 if (deleteCount>0) text = text + (qsTr("Delete %n item(s)\n", "", deleteCount));
                 if (copyCount>0) text = text + (qsTr("Copy %n item(s)\n", "", copyCount));
                 if (cutCount>0) text = text + (qsTr("Move %n item(s)\n", "", cutCount));
-                if (copyCount>0 || cutCount>0) text = text + qsTr("to") + " " + targetPath;
+                if (copyCount>0 || cutCount>0) text = text + qsTr("to") + " " + targetPathName;
                 text = text + " ?";
             }
 
