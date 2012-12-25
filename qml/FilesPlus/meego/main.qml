@@ -1518,7 +1518,7 @@ PageStackWindow {
                 if (p) {
                     p.refreshSlot("cloudDriveModel onCreateFolderReplySignal");
                 }
-            } else if (err == 202 && jobJson.type == CloudDriveModel.Dropbox) {
+            } else if (err == 202 && jobJson.type == CloudDriveModel.Dropbox && jobJson.local_file_path != "") {
                 // Dropbox Folder already exists. proceed sync.
                 cloudDriveModel.metadata(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.model_index);
             } else if (err == 204) { // Refresh token
