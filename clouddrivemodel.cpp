@@ -617,6 +617,9 @@ void CloudDriveModel::removeJob(QString nonce)
     QString localPath = m_cloudDriveJobs->value(nonce).localFilePath;
     m_isSyncingCache->remove(localPath);
     int removeCount = m_cloudDriveJobs->remove(nonce);
+    if (removeCount > 0) {
+        emit jobRemovedSignal(nonce);
+    }
     mutex.unlock();
 
     qDebug() << "CloudDriveModel::removeJob nonce" << nonce << "removeCount" << removeCount << "m_cloudDriveJobs->count()" << m_cloudDriveJobs->count();

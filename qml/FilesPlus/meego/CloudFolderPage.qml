@@ -160,6 +160,16 @@ Page {
         cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
     }
 
+    function updateItemSlot(jobJson) {
+        if (!jobJson) return;
+        if (jobJson.remote_file_path == "") return;
+
+        var i = cloudFolderModel.findIndexByRemotePath(jobJson.remote_file_path);
+        if (i >= 0) {
+            cloudFolderModel.set(i, { isRunning: jobJson.is_running });
+        }
+    }
+
     tools: ToolBarLayout {
         id: toolBarLayout
 
@@ -335,6 +345,16 @@ Page {
 
     ListModel {
         id: cloudFolderModel
+
+        function findIndexByRemotePath(remotePath) {
+            for (var i=0; i<cloudFolderModel.count; i++) {
+                if (cloudFolderModel.get(i).absolutePath == remotePath) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
     }
 
     ListView {
@@ -534,7 +554,7 @@ Page {
             id: listItem
             listViewState: (cloudFolderView.state ? cloudFolderView.state : "")
             syncIconVisible: cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, absolutePath)
-            syncIconSource: "cloud.svg"
+            syncIconSource: (isRunning) ? "cloud_wait.svg" : "cloud.svg"
 
             // Override to support cloud items.
             function getIconSource() {
@@ -656,9 +676,6 @@ Page {
             clipboard.clear();
             clipboard.addItem({ "action": "delete", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": sourcePath, "sourcePathName": selectedFileName });
             fileActionDialog.open();
-//            deleteCloudItemConfirmation.remotePath = selectedFilePath;
-//            deleteCloudItemConfirmation.remotePathName = selectedFileName;
-//            deleteCloudItemConfirmation.open();
         }
 
         onSyncFile: {
@@ -992,20 +1009,6 @@ Page {
 
         onReject: {
             copyProgressDialog.close();
-        }
-    }
-
-    ConfirmDialog {
-        id: deleteCloudItemConfirmation
-
-        property string remotePath
-        property string remotePathName
-
-        titleText: appInfo.emptyStr+qsTr("Delete")
-        contentText: appInfo.emptyStr+qsTr("Delete %1 ?").arg(deleteCloudItemConfirmation.remotePathName);
-        onConfirm: {
-            isBusy = true;
-            deleteRemotePath(deleteCloudItemConfirmation.remotePath);
         }
     }
 

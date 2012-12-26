@@ -520,44 +520,67 @@ Page {
         cloudDrivePathDialog.close();
     }
 
-    function updateFolderSizeItemSlot(localPath, isRunning) {
-//        console.debug("folderPage updateFolderSizeItemSlot localPath " + localPath + " isRunning " + isRunning);
-        if (localPath == "") return;
+    function updateItemSlot(jobJson) {
+        if (!jobJson) return;
+        if (jobJson.local_file_path == "") return;
 
         // Show indicator on localPath up to root.
-        var pathList = fsModel.getPathToRoot(localPath);
+        var pathList = fsModel.getPathToRoot(jobJson.local_file_path);
         for(var i=0; i<pathList.length; i++) {
             var modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-//            console.debug("folderPage updateFolderSizeItemSlot " + pathList[i] + " " + modelIndex + " " + isRunning);
+//            console.debug("folderPage updateItemSlot " + pathList[i] + " " + modelIndex + " " + jobJson.is_running);
             if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
+            }
+        }
+
+        // Show indicator on newLocalPath up to root.
+        if (jobJson.new_local_file_path != "") {
+            pathList = fsModel.getPathToRoot(jobJson.new_local_file_path);
+            for(i=0; i<pathList.length; i++) {
+                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+//                console.debug("folderPage updateItemSlot " + pathList[i] + " " + modelIndex + " " + jobJson.is_running);
+                if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
+                }
             }
         }
     }
 
-    function updateFolderSizeItemProgressBarSlot(localPath, isRunning, cloudDriveOperation, runningValue, runningMaxValue) {
-        if (localPath == "") return;
+    function updateItemProgressBarSlot(jobJson) {
+        if (!jobJson) return;
+        if (jobJson.local_file_path == "") return;
 
         // Update ProgressBar on listItem.
-        var runningOperation = fsModel.mapToFolderSizeListModelOperation(cloudDriveOperation);
-        var modelIndex = fsModel.getIndexOnCurrentDir(localPath);
+        var runningOperation = fsModel.mapToFolderSizeListModelOperation(jobJson.operation);
+        var modelIndex = fsModel.getIndexOnCurrentDir(jobJson.local_file_path);
         if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-            fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+            fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
             fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, runningOperation);
-            fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, runningValue);
-            fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, runningMaxValue);
+            fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, jobJson.bytes);
+            fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, jobJson.bytes_total);
         }
 
         // Show indicator on parent up to root.
         // Skip i=0 as it's notified above already.
-        var pathList = fsModel.getPathToRoot(localPath);
+        var pathList = fsModel.getPathToRoot(jobJson.local_file_path);
         for(var i=1; i<pathList.length; i++) {
             modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
             if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, isRunning);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, runningOperation);
             }
+        }
+    }
+
+    function refreshItemSlot(caller, localPath) {
+//        console.debug("folderPage refreshItemSlot caller " + caller + " " + localPath);
+        if (localPath) {
+            fsModel.refreshItem(localPath);
+        } else {
+            fsModel.refreshItems();
         }
     }
 
@@ -590,15 +613,6 @@ Page {
             recipientSelectionDialog.messageBody = appInfo.emptyStr+qsTr("Please download file with below link.") + "\n" + url;
             recipientSelectionDialog.senderEmail = senderEmail;
             recipientSelectionDialog.open();
-        }
-    }
-
-    function refreshItemSlot(caller, localPath) {
-//        console.debug("folderPage refreshItemSlot caller " + caller + " " + localPath);
-        if (localPath) {
-            fsModel.refreshItem(localPath);
-        } else {
-            fsModel.refreshItems();
         }
     }
 

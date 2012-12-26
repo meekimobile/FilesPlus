@@ -8,16 +8,27 @@ Page {
 
     property string name: "cloudDriveJobsPage"
 
-    function updateCloudDriveJobSlot(jobId, isRunning) {
-        for (var i=0; i<jobListView.model.count; i++) {
-            if (jobListView.model.get(i).job_id == jobId) {
-                console.debug("cloudDriveJobsPage updateCloudDriveJobSlot " + jobId + " " + isRunning);
-                jobListView.model.set(i, { is_running: isRunning });
-                return i;
-            }
-        }
+    function updateJobQueueCount(runningJobCount, jobQueueCount) {
+        // Update (runningJobCount + jobQueueCount) on cloudButton.
+        cloudJobsCountIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
+    }
 
-        return -1;
+    function updateItemSlot(jobJson) {
+        if (!jobJson) return;
+
+        var i = jobListView.model.findIndexByJobId(jobJson.job_id);
+        if (i >= 0) {
+            jobListView.model.set(i, { is_running: jobJson.is_running });
+        }
+    }
+
+    function updateItemProgressBarSlot(jobJson) {
+        if (!jobJson) return;
+
+        var i = jobListView.model.findIndexByJobId(jobJson.job_id);
+        if (i >= 0) {
+            jobListView.model.set(i, { is_running: jobJson.is_running, bytes: jobJson.bytes, bytes_total: jobJson.bytes_total });
+        }
     }
 
     onStatusChanged: {
@@ -52,19 +63,17 @@ Page {
         }
     }
 
-//    function deleteAllDoneJobs() {
-//        for (var i=0; i<jobModel.count; i++) {
-//            var jobId = jobModel.get(i).id;
-//            var status = jobModel.get(i).status;
-//            if (status == "DONE") {
-//                gcpClient.deletejob(jobId);
-//            }
-//        }
-//    }
-
     TitlePanel {
         id: titlePanel
         text: appInfo.emptyStr+qsTr("Cloud Drive Jobs")
+
+        TextIndicator {
+            id: cloudJobsCountIndicator
+            color: "#00AAFF"
+            anchors.right: parent.right
+            anchors.rightMargin: 10
+            anchors.verticalCenter: parent.verticalCenter
+        }
     }
 
     Button {
@@ -164,8 +173,11 @@ Page {
                             id: syncProgressBar
                             width: parent.width / 2
                             anchors.verticalCenter: parent.verticalCenter
-                            indeterminate: is_running
+//                            indeterminate: is_running
                             visible: is_running
+                            value: bytes
+                            minimumValue: 0
+                            maximumValue: bytes_total
                         }
                     }
                 }

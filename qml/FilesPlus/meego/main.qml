@@ -768,6 +768,28 @@ PageStackWindow {
 
         ListModel {
             id: cloudDriveJobsModel
+
+            function findIndexByJobId(jobId) {
+                for (var i=0; i<cloudDriveJobsModel.count; i++) {
+                    if (cloudDriveJobsModel.get(i).job_id == jobId) {
+//                        console.debug("cloudDriveJobsModel findIndexByJobId " + i + " " + cloudDriveJobsModel.get(i).job_id);
+                        return i;
+                    }
+                }
+
+                return -1;
+            }
+
+            function removeJob(jobId) {
+                for (var i=0; i<cloudDriveJobsModel.count; i++) {
+                    if (cloudDriveJobsModel.get(i).job_id == jobId) {
+                        cloudDriveJobsModel.remove(i);
+                        return i;
+                    }
+                }
+
+                return -1;
+            }
         }
 
         function getUidListModel(localPath) {
@@ -915,13 +937,6 @@ PageStackWindow {
                 cloudDriveModel.accessToken(clientType, pin);
             }
         }
-
-//        function setGCDClientAuthCode(code) {
-//            var res = cloudDriveModel.parseAuthorizationCode(CloudDriveModel.GoogleDrive, code);
-//            if (res) {
-//                cloudDriveModel.accessToken(CloudDriveModel.GoogleDrive);
-//            }
-//        }
 
         function parseCloudDriveMetadataJson(selectedCloudType, originalRemotePath, jsonText,  model) {
             // Parse jsonText and return collected information.
@@ -1101,10 +1116,12 @@ PageStackWindow {
 
                 // TODO Verify if slot exists.
                 // Send info to currentPage.
-                pageStack.currentPage.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
-                                                            0,
-                                                            jsonObj.quota-jsonObj.available,
-                                                            jsonObj.quota);
+                if (pageStack.currentPage.updateAccountInfoSlot) {
+                    pageStack.currentPage.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
+                                                                0,
+                                                                jsonObj.quota-jsonObj.available,
+                                                                jsonObj.quota);
+                }
             } else if (err == 204) {
                 // TODO Refactor to support all SkyDriveClient services.
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
@@ -1145,16 +1162,9 @@ PageStackWindow {
             }
 
             // Update ProgressBar on listItem and its parents.
-            var p = findPage("folderPage");
-            if (p) {
-                p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
-            }
-
-            // Update ProgressBar on cloudDriveJobsPage.
-            var p = findPage("cloudDriveJobsPage");
-            if (p) {
-                p.updateCloudDriveJobSlot(jobJson.job_id, jobJson.is_running);
-            }
+            pageStack.find(function (page) {
+                if (page.updateItemSlot) page.updateItemSlot(jobJson);
+            });
         }
 
         onFilePutReplySignal: {
@@ -1179,16 +1189,9 @@ PageStackWindow {
             }
 
             // Update ProgressBar on listItem and its parent.
-            var p = findPage("folderPage");
-            if (p) {
-                p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
-            }
-
-            // Update ProgressBar on cloudDriveJobsPage.
-            var p = findPage("cloudDriveJobsPage");
-            if (p) {
-                p.updateCloudDriveJobSlot(jobJson.job_id, jobJson.is_running);
-            }
+            pageStack.find(function (page) {
+                if (page.updateItemSlot) page.updateItemSlot(jobJson);
+            });
         }
 
         onMetadataReplySignal: {
@@ -1485,19 +1488,9 @@ PageStackWindow {
             }
 
             // Update ProgressBar on listItem and its parent.
-            var p = findPage("folderPage");
-            if (p) {
-//                console.debug("window cloudDriveModel onMetadataReplySignal updateFolderSizeItemSlot " + getCloudName(jobJson.type) + " " + jobJson.local_file_path + " " + jobJson.is_running);
-                p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
-                // Workaround: Refresh item once got reply. To fix unexpected showing cloud_wait icon.
-                p.refreshItemSlot("window cloudDriveModel onMetadataReplySignal", jobJson.local_file_path);
-            }
-
-            // Update ProgressBar on cloudDriveJobsPage.
-            var p = findPage("cloudDriveJobsPage");
-            if (p) {
-                p.updateCloudDriveJobSlot(jobJson.job_id, jobJson.is_running);
-            }
+            pageStack.find(function (page) {
+                if (page.updateItemSlot) page.updateItemSlot(jobJson);
+            });
         }
 
         onCreateFolderReplySignal: {
@@ -1529,7 +1522,8 @@ PageStackWindow {
                             getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg +
                             "\n\n" +
-                            qsTr("Please proceed with sync."));
+                            qsTr("Please proceed with sync."),
+                            2000);
 
                 // Reset cloudFolderPage.
                 var p = findPage("cloudFolderPage");
@@ -1539,7 +1533,8 @@ PageStackWindow {
             } else {
                 showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                            qsTr("Error") + " " + err + " " + errMsg + " " + msg,
+                            2000);
 
                 // Reset cloudFolderPage.
                 var p = findPage("cloudFolderPage");
@@ -1548,26 +1543,20 @@ PageStackWindow {
                 }
             }
 
-            var p = findPage("folderPage");
-            if (p) {
-                // TODO *** create SkyDrive folder freezes here *** TODO Does it need?
-                // Update ProgressBar if localPath is specified.
-                if (jobJson.type == CloudDriveModel.SkyDrive) {
-                    // Do nothing for SkyDrive because jobJson.local_file_path is new folder name.
-                    p.refreshItemSlot("cloudDriveModel onCreateFolderReplySignal SkyDrive");
-                } else {
-                    p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
-                    // Workaround: Refresh item once got reply. To fix unexpected showing cloud_wait icon.
-                    p.refreshItemSlot("cloudDriveModel onCreateFolderReplySignal", jobJson.local_file_path);
-                }
-                // Refresh cloudDrivePathDialog if it's opened.
-                p.updateCloudDrivePathDialogSlot(jobJson.new_remote_file_path);
+            // TODO *** create SkyDrive folder freezes here *** TODO Does it need?
+            // Update ProgressBar if localPath is specified.
+            if (jobJson.type == CloudDriveModel.SkyDrive && pageStack.currentPage.name == "folderPage") {
+                // Do nothing for SkyDrive because jobJson.local_file_path is new folder name.
+                pageStack.currentPage.refreshItemSlot("cloudDriveModel onCreateFolderReplySignal SkyDrive");
+            } else {
+                pageStack.find(function (page) {
+                    if (page.updateItemSlot) page.updateItemSlot(jobJson);
+                });
             }
 
-            // Update ProgressBar on cloudDriveJobsPage.
-            var p = findPage("cloudDriveJobsPage");
-            if (p) {
-                p.updateCloudDriveJobSlot(jobJson.job_id, jobJson.is_running);
+            if (pageStack.currentPage.name == "folderPage") {
+                // Refresh cloudDrivePathDialog if it's opened.
+                pageStack.currentPage.updateCloudDrivePathDialogSlot(jobJson.new_remote_file_path);
             }
         }
 
@@ -1580,10 +1569,9 @@ PageStackWindow {
             var jobJson = JSON.parse(jsonText);
 
             // Update ProgressBar on listItem and its parent.
-            var p = findPage("folderPage");
-            if (p) {
-                p.updateFolderSizeItemProgressBarSlot(jobJson.local_file_path, jobJson.is_running, jobJson.operation, bytesReceived, bytesTotal);
-            }
+            pageStack.find(function (page) {
+                if (page.updateItemProgressBarSlot) page.updateItemProgressBarSlot(jobJson);
+            });
         }
 
         onUploadProgress: {
@@ -1595,10 +1583,9 @@ PageStackWindow {
             var jobJson = JSON.parse(jsonText);
 
             // Update ProgressBar on listItem and its parent.
-            var p = findPage("folderPage");
-            if (p) {
-                p.updateFolderSizeItemProgressBarSlot(jobJson.local_file_path, jobJson.is_running, jobJson.operation, bytesSent, bytesTotal);
-            }
+            pageStack.find(function (page) {
+                if (page.updateItemProgressBarSlot) page.updateItemProgressBarSlot(jobJson);
+            });
         }
 
         onLocalChangedSignal: {
@@ -1613,20 +1600,20 @@ PageStackWindow {
 
         onJobQueueStatusSignal: {
             if (pageStack) {
-                var p = findPage("settingPage");
-                if (p) {
-                    p.updateCloudDriveItemCount(itemCount);
+                if (pageStack.currentPage.name == "settingPage") {
+                    pageStack.currentPage.updateCloudDriveItemCount(itemCount);
                 }
 
                 // Update job queue count on current page.
-                pageStack.currentPage.updateJobQueueCount(runningJobCount, jobQueueCount);
+                pageStack.find(function (page) {
+                    if (page.updateJobQueueCount) page.updateJobQueueCount(runningJobCount, jobQueueCount);
+                });
             }
         }
 
         onRefreshRequestSignal: {
-            var p = findPage("folderPage");
-            if (p) {
-                p.refreshSlot("cloudDriveModel onRefreshRequestSignal");
+            if (pageStack.currentPage.name == "folderPage") {
+                pageStack.currentPage.refreshSlot("cloudDriveModel onRefreshRequestSignal");
             }
         }
 
@@ -1665,10 +1652,9 @@ PageStackWindow {
             }
 
             // Update ProgressBar on NEW listItem and its parent.
-            var p = findPage("folderPage");
-            if (p) {
-                p.updateFolderSizeItemSlot(jobJson.new_local_file_path, jobJson.is_running);
-            }
+            pageStack.find(function (page) {
+                if (page.updateItemSlot) page.updateItemSlot(jobJson);
+            });
         }
 
         onMoveFileReplySignal: {
@@ -1706,10 +1692,9 @@ PageStackWindow {
             }
 
             // Update ProgressBar on NEW listItem and its parent.
-            var p = findPage("folderPage");
-            if (p) {
-                p.updateFolderSizeItemSlot(jobJson.new_local_file_path, jobJson.is_running);
-            }
+            pageStack.find(function (page) {
+                if (page.updateItemSlot) page.updateItemSlot(jobJson);
+            });
         }
 
         onDeleteFileReplySignal: {
@@ -1740,18 +1725,15 @@ PageStackWindow {
                 }
             }
 
+            // Update ProgressBar on listItem and its parent.
+            pageStack.find(function (page) {
+                if (page.updateItemSlot) page.updateItemSlot(jobJson);
+            });
+
             var p = findPage("folderPage");
             if (p) {
-                // Update ProgressBar on listItem and its parent.
-                p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
                 // Refresh cloudDrivePathDialog if it's opened.
                 p.updateCloudDrivePathDialogSlot();
-            }
-
-            // Update ProgressBar on cloudDriveJobsPage.
-            var p = findPage("cloudDriveJobsPage");
-            if (p) {
-                p.updateCloudDriveJobSlot(jobJson.job_id, jobJson.is_running);
             }
         }
 
@@ -1766,7 +1748,10 @@ PageStackWindow {
             if (err == 0) {
                 // TODO Select delivery service. (email, sms)
                 // Open recipientSelectionDialog for sending share link.
-                showRecipientSelectionDialogSlot(jobJson.type, jobJson.uid, jobJson.local_file_path, url);
+                var p = findPage("folderPage");
+                if (p) {
+                    p.showRecipientSelectionDialogSlot(jobJson.type, jobJson.uid, jobJson.local_file_path, url);
+                }
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
@@ -1775,11 +1760,10 @@ PageStackWindow {
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
-            var p = findPage("folderPage");
-            if (p) {
-                // Update ProgressBar on listItem and its parent.
-                p.updateFolderSizeItemSlot(jobJson.local_file_path, jobJson.is_running);
-            }
+            // Update ProgressBar on listItem and its parent.
+            pageStack.find(function (page) {
+                if (page.updateItemSlot) page.updateItemSlot(jobJson);
+            });
         }
 
         onJobEnqueuedSignal: {
@@ -1789,12 +1773,13 @@ PageStackWindow {
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
             cloudDriveJobsModel.append(jobJson);
 
-            var p = findPage("folderPage");
-            if (p) {
-                p.updateFolderSizeItemSlot(localPath, jobJson.is_running);
-                // Workaround: Refresh item once got reply. To fix unexpected showing cloud_wait icon.
-                p.refreshItemSlot("cloudDriveModel onJobEnqueuedSignal", localPath);
-            }
+            pageStack.find(function (page) {
+                if (page.updateItemSlot) page.updateItemSlot(jobJson);
+            });
+        }
+
+        onJobRemovedSignal: {
+            cloudDriveJobsModel.removeJob(nonce);
         }
 
         onBrowseReplySignal: {

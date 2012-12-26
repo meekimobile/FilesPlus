@@ -189,6 +189,7 @@ signals:
     void jobQueueStatusSignal(int runningJobCount, int jobQueueCount, int itemCount);
     void localChangedSignal(QString localPath);
     void jobEnqueuedSignal(QString nonce, QString localPath);
+    void jobRemovedSignal(QString nonce);
     void refreshRequestSignal();
 
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
