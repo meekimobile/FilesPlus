@@ -19,23 +19,14 @@ Page {
         State {
             name: "chart"
             when: flipable1.flipped
-            PropertyChanges {
-                target: mainMenu
-                disabledMenus: [appInfo.emptyStr+qsTr("Paste"), appInfo.emptyStr+qsTr("Mark multiple items"), appInfo.emptyStr+qsTr("Clear clipboard"), appInfo.emptyStr+qsTr("New folder / file"), appInfo.emptyStr+qsTr("Sync current folder"), appInfo.emptyStr+qsTr("Sync connected items"), appInfo.emptyStr+qsTr("Set name filter"), appInfo.emptyStr+qsTr("Sort by")]
-            }
         },
         State {
             name: "list"
             when: !flipable1.flipped
-            PropertyChanges {
-                target: mainMenu
-                disabledMenus: []
-            }
         }
     ]
 
-    onStateChanged: {
-        console.debug("folderPage onStateChanged state=" + folderPage.state);
+    function toggleSortFlag() {
         if (state == "chart") {
             fsModel.setSortFlag(FolderSizeItemListModel.SortBySize, false);
         } else {
@@ -707,15 +698,31 @@ Page {
             angle: 0    // the default angle
         }
 
-        states: State {
-            name: "back"
-            PropertyChanges { target: rotation; angle: 180 }
-            when: flipable1.flipped
-        }
+        states: [
+            State {
+                name: "front"
+                PropertyChanges { target: rotation; angle: 0 }
+                when: !flipable1.flipped
+            },
+            State {
+                name: "back"
+                PropertyChanges { target: rotation; angle: 180 }
+                when: flipable1.flipped
+            }
+        ]
 
-        transitions: Transition {
-            NumberAnimation { target: rotation; property: "angle"; duration: 500 }
-        }
+        transitions: [
+            Transition {
+                to: "front"
+                NumberAnimation { target: rotation; property: "angle"; duration: 500 }
+                ScriptAction { script: toggleSortFlag() }
+            },
+            Transition {
+                to: "back"
+                ScriptAction { script: toggleSortFlag() }
+                NumberAnimation { target: rotation; property: "angle"; duration: 500 }
+            }
+        ]
     }
 
     PieChart {

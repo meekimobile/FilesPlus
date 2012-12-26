@@ -31,6 +31,7 @@ public:
     static const QString deleteFileURI;
     static const QString sharesURI;
     static const QString mediaURI;
+    static const QString thumbnailURI;
 
     explicit DropboxClient(QObject *parent = 0, bool fullAccess = false);
     ~DropboxClient();

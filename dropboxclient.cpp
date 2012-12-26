@@ -27,6 +27,7 @@ const QString DropboxClient::copyFileURI = "https://api.dropbox.com/1/fileops/co
 const QString DropboxClient::deleteFileURI = "https://api.dropbox.com/1/fileops/delete";
 const QString DropboxClient::sharesURI = "https://api.dropbox.com/1/shares/%1%2";
 const QString DropboxClient::mediaURI = "https://api.dropbox.com/1/media/%1%2";
+const QString DropboxClient::thumbnailURI = "https://api-content.dropbox.com/1/thumbnails/%1%2"; // GET with format and size.
 
 DropboxClient::DropboxClient(QObject *parent, bool fullAccess) :
     CloudDriveClient(parent)
