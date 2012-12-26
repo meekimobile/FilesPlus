@@ -1241,7 +1241,7 @@ Page {
                 var downloadCount = 0;
                 for (var i=0; i<clipboard.count; i++) {
 //                    console.debug("fileActionDialog getText clipboard i " + i + " action " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
-                    if (clipboard.get(i).action == "copy" && clipboard.get(i).type) {
+                    if (["copy","cut"].indexOf(clipboard.get(i).action) > -1 && clipboard.get(i).type) {
                         downloadCount++;
                     } else if (clipboard.get(i).action == "copy") {
                         copyCount++;
@@ -1265,7 +1265,7 @@ Page {
 
         function getActionName(actionText, type) {
             if (type) {
-                if (actionText == "copy") return qsTr("Download");
+                if (["copy","cut"].indexOf(actionText) > -1) return qsTr("Download");
                 else return qsTr("Invalid action");
             } else {
                 if (actionText == "copy") return qsTr("Copy");
@@ -1301,7 +1301,7 @@ Page {
                 var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(sourcePath));
 
                 // console.debug("folderPage fileActionDialog onConfirm clipboard action " + action + " sourcePath " + sourcePath);
-                if (action == "copy" && clipboard.get(i).type) {
+                if (["copy","cut"].indexOf(action) > -1 && clipboard.get(i).type) {
                     actualTargetPath = fsModel.getAbsolutePath(targetPath, clipboard.get(i).sourcePathName);
                     console.debug("folderPage fileActionDialog onConfirm Download type " + clipboard.get(i).type + " uid " + clipboard.get(i).uid + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
                     cloudDriveModel.metadata(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, actualTargetPath, sourcePath, -1);

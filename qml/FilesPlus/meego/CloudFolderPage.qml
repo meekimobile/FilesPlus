@@ -738,7 +738,7 @@ Page {
                 var uploadCount = 0;
                 for (var i=0; i<clipboard.count; i++) {
 //                    console.debug("fileActionDialog getText clipboard i " + i + " action " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
-                    if (clipboard.get(i).action == "copy" && !clipboard.get(i).type) {
+                    if (["copy","cut"].indexOf(clipboard.get(i).action) > -1 && !clipboard.get(i).type) {
                         uploadCount++;
                     } else if (clipboard.get(i).action == "copy") {
                         copyCount++;
@@ -767,7 +767,7 @@ Page {
                 else if (actionText == "delete") return qsTr("Delete");
                 else return qsTr("Invalid action");
             } else {
-                if (actionText == "copy") return qsTr("Upload");
+                if (["copy","cut"].indexOf(actionText) > -1) return qsTr("Upload");
                 else return qsTr("Invalid action");
             }
         }
@@ -799,7 +799,7 @@ Page {
                 var actualTargetPath = cloudDriveModel.getRemotePath(selectedCloudType, targetPath, cloudDriveModel.getFileName(sourcePath));
 
                 console.debug("folderPage fileActionDialog onConfirm clipboard action " + action + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
-                if (action == "copy" && !clipboard.get(i).type) {
+                if (["copy","cut"].indexOf(action) > -1 && !clipboard.get(i).type) {
                     isBusy = true;
                     if (cloudDriveModel.isDir(sourcePath)) {
                         switch (selectedCloudType) {
