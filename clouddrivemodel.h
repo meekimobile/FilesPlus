@@ -132,6 +132,7 @@ public:
     Q_INVOKABLE bool createDirPath(const QString absPath);
     Q_INVOKABLE QString getFileName(const QString absFilePath);
     Q_INVOKABLE QString getFileType(QString localPath);
+    Q_INVOKABLE ClientTypes getClientType(int typeInt);
 
     // Scheduler.
     Q_INVOKABLE int updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp);
@@ -144,6 +145,7 @@ public:
     Q_INVOKABLE void syncItems(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE void syncItem(const QString localFilePath);
     Q_INVOKABLE void syncItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
+    Q_INVOKABLE bool syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
 
     // Migrate DAT to DB.
     Q_INVOKABLE int getCloudDriveItemsCount();

@@ -553,6 +553,20 @@ QString CloudDriveModel::getFileType(QString localPath)
     return fileType;
 }
 
+CloudDriveModel::ClientTypes CloudDriveModel::getClientType(int typeInt)
+{
+    switch (typeInt) {
+    case Dropbox:
+        return Dropbox;
+    case SkyDrive:
+        return SkyDrive;
+    case GoogleDrive:
+        return GoogleDrive;
+    case Ftp:
+        return Ftp;
+    }
+}
+
 void CloudDriveModel::initScheduler()
 {
     connect(&m_schedulerTimer, SIGNAL(timeout()), this, SLOT(schedulerTimeoutFilter()) );
@@ -1173,6 +1187,7 @@ void CloudDriveModel::syncItems()
     syncItems(Dropbox);
 //    syncItems(GoogleDrive);
     syncItems(SkyDrive);
+    syncItems(Ftp);
 
     // Resume proceedNextJob().
     resumeNextJob();
@@ -1222,15 +1237,7 @@ void CloudDriveModel::syncItem(const QString localFilePath)
     // Queue localFilePath's items for metadata requesting.
     foreach (CloudDriveItem item, getItemList(localFilePath)) {
         qDebug() << "CloudDriveModel::syncItem item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
-
-        switch (item.type) {
-        case Dropbox:
-            metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
-            break;
-        case SkyDrive:
-            metadata(SkyDrive, item.uid, item.localPath, item.remotePath, -1);
-            break;
-        }
+        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
     }
 }
 
@@ -1238,15 +1245,25 @@ void CloudDriveModel::syncItem(CloudDriveModel::ClientTypes type, QString uid, Q
 {
     CloudDriveItem item = getItem(localPath, type, uid);
     if (item.localPath == localPath) {
-        switch (item.type) {
-        case Dropbox:
-            metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
-            break;
-        case SkyDrive:
-            metadata(SkyDrive, item.uid, item.localPath, item.remotePath, -1);
-            break;
-        }
+        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
     }
+}
+
+bool CloudDriveModel::syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
+{
+    QSqlQuery qry(m_db);
+    qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":remote_path", remotePath);
+
+    bool res = false;
+    foreach (CloudDriveItem item, getItemListFromPS(qry)) {
+        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+        res = true;
+    }
+
+    return res;
 }
 
 int CloudDriveModel::getCloudDriveItemsCount()

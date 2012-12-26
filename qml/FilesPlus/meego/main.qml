@@ -1612,19 +1612,14 @@ PageStackWindow {
         }
 
         onJobQueueStatusSignal: {
-            // Send info to cloudDriveAccountsPage.
             if (pageStack) {
                 var p = findPage("settingPage");
                 if (p) {
-                    p.updateJobQueueCount(runningJobCount, jobQueueCount);
                     p.updateCloudDriveItemCount(itemCount);
                 }
 
-                p = findPage("folderPage");
-                if (p) {
-                    // Update (runningJobCount + jobQueueCount) on cloudButton.
-                    p.updateJobQueueCount(runningJobCount, jobQueueCount);
-                }
+                // Update job queue count on current page.
+                pageStack.currentPage.updateJobQueueCount(runningJobCount, jobQueueCount);
             }
         }
 

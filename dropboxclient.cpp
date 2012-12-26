@@ -350,7 +350,7 @@ QString DropboxClient::getDefaultLocalFilePath(const QString &remoteFilePath)
 }
 
 void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath) {
-    qDebug() << "----- DropboxClient::filePut -----";
+    qDebug() << "----- DropboxClient::filePut -----" << uid << localFilePath << remoteFilePath;
 
     QString uri = filePutURI.arg(dropboxRoot, remoteFilePath);
     uri = encodeURI(uri);

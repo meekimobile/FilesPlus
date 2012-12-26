@@ -77,22 +77,6 @@ Page {
         return selectedRemotePath;
     }
 
-    function selectProceedOperation(index) {
-        if (index === 0 && selectedIsValid) { // OK button is clicked.
-            console.debug("cloudDrivePathDialog selectProceedOperation index " + index
-                          + " selectedCloudType " + selectedCloudType + " selectedUid " + selectedUid
-                          + " localPath " + localPath
-                          + " selectedRemotePath " + selectedRemotePath
-                          + " selectedRemotePathName " + selectedRemotePathName
-                          + " selectedModelIndex " + selectedModelIndex
-                          + " remoteParentPath " + remoteParentPath);
-
-            cloudDriveModel.suspendNextJob();
-            proceedOperation(selectedCloudType, selectedUid, localPath, selectedRemotePath, selectedRemotePathName, selectedIsDir, remoteParentPath, selectedModelIndex);
-            cloudDriveModel.resumeNextJob();
-        }
-    }
-
     function createRemoteFolder(newRemoteFolderName) {
         // Create remote folder.
         if (selectedCloudType == CloudDriveModel.Dropbox) {
@@ -133,6 +117,49 @@ Page {
         isBusy = false;
     }
 
+    function syncConnectedItemsSlot() {
+        // Suspend for queuing.
+        cloudDriveModel.suspendNextJob();
+
+        for (var i=0; i<cloudFolderModel.count; i++) {
+            var remotePath = cloudFolderModel.get(i).absolutePath;
+            var isConnected = cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, remotePath);
+            console.debug("folderPage synconnectedItemsSlot remotePath " + remotePath + " isConnected " + isConnected);
+            if (isConnected) {
+                cloudDriveModel.syncItemByRemotePath(selectedCloudType, selectedUid, remotePath);
+            }
+        }
+
+        // Resume proceed queued jobs.
+        cloudDriveModel.resumeNextJob();
+    }
+
+    function syncClipboardItems() {
+        // Suspend for queuing.
+        cloudDriveModel.suspendNextJob();
+
+        for (var i=0; i<clipboard.count; i++) {
+            if (clipboard.get(i).action == "sync") {
+                console.debug("cloudFolderPage syncClipboardItems clipboard item i " + i + " " + clipboard.get(i).action + " type " + clipboard.get(i).type + " sourcePath " + clipboard.get(i).sourcePath);
+                var res = cloudDriveModel.syncItemByRemotePath(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, clipboard.get(i).sourcePath);
+                if (!res) {
+                    console.debug("cloudFolderPage syncClipboardItems skipped clipboard item i " + i + " " + clipboard.get(i).action + " type " + clipboard.get(i).type + " sourcePath " + clipboard.get(i).sourcePath);
+                }
+            }
+        }
+
+        // Clear clipboard.
+        clipboard.clear();
+
+        // Resume proceed queued jobs.
+        cloudDriveModel.resumeNextJob();
+    }
+
+    function updateJobQueueCount(runningJobCount, jobQueueCount) {
+        // Update (runningJobCount + jobQueueCount) on cloudButton.
+        cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
+    }
+
     tools: ToolBarLayout {
         id: toolBarLayout
 
@@ -156,6 +183,24 @@ Page {
             visible: (cloudFolderView.state != "mark")
             onClicked: {
                 refreshSlot("refreshButton onClicked");
+            }
+        }
+
+        ToolIcon {
+            id: cloudButton
+            iconSource: (theme.inverted ? "cloud.svg" : "cloud_inverted.svg")
+            visible: (cloudFolderView.state != "mark")
+            onClicked: {
+                syncConnectedItemsSlot();
+            }
+
+            TextIndicator {
+                id: cloudButtonIndicator
+                color: "#00AAFF"
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 10
             }
         }
 
@@ -435,7 +480,7 @@ Page {
 
             for (var i=0; i<model.count; i++) {
                 if (model.get(i).isChecked) {
-                    console.debug(Utility.nowText() + "cloudFolderView syncMarkedItems item"
+                    console.debug(Utility.nowText() + " cloudFolderView syncMarkedItems item"
                                   + " absolutePath " + model.get(i).absolutePath
                                   + " isChecked " + model.get(i).isChecked);
 
@@ -569,14 +614,6 @@ Page {
         function isButtonVisibleCallback(buttonName) {
             if (buttonName === "sync") {
                 return cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, selectedFilePath);
-//            } else if (buttonName === "delete") {
-//                return !cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, selectedFilePath);
-            } else if (buttonName === "disconnect") {
-                return cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, selectedFilePath);
-            } else if (buttonName === "unsync") {
-                return cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, selectedFilePath);
-            } else if (buttonName === "cloudScheduler") {
-                return isDir && cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, selectedFilePath);
             } else if (buttonName === "copy") {
                 return (selectedCloudType != CloudDriveModel.Ftp);
             } else if (buttonName === "cut") {
@@ -625,19 +662,7 @@ Page {
         }
 
         onSyncFile: {
-            syncFileSlot(srcFilePath, srcItemIndex);
-        }
-
-        onUnsyncFile: {
-            unsyncFileSlot(srcFilePath, srcItemIndex);
-        }
-
-        onDisconnectFile: {
-            disconnectFileSlot(srcFilePath, srcItemIndex);
-        }
-
-        onScheduleSyncFile: {
-            scheduleSyncFileSlot(srcFilePath, srcItemIndex)
+            cloudDriveModel.syncItemByRemotePath(selectedCloudType, selectedUid, srcFilePath);
         }
 
         onNewFolder: {
@@ -653,26 +678,6 @@ Page {
         onMarkClicked: {
             cloudFolderView.state = "mark";
             cloudFolderModel.setProperty(srcItemIndex, "isChecked", true);
-        }
-
-        onUploadFile: {
-            uploadFileSlot(srcFilePath, srcItemIndex);
-        }
-
-        onDownloadFile: {
-            downloadFileSlot(srcFilePath, srcItemIndex);
-        }
-
-        onMailFile: {
-            mailFileSlot(srcFilePath, srcItemIndex);
-        }
-
-        onSmsFile: {
-            smsFileSlot(srcFilePath, srcItemIndex);
-        }
-
-        onBluetoothFile: {
-            bluetoothFileSlot(srcFilePath, srcItemIndex);
         }
     }
 
