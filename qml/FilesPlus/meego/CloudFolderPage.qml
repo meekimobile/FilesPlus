@@ -224,14 +224,14 @@ Page {
         function isMenuItemVisible(menuItem) {
             // Validate each menu logic if it's specified, otherwise it's visible.
             if (menuItem.name == "paste") {
-                return clipboard.count > 0;
+                return (clipboard.count > 0 && selectedCloudType != CloudDriveModel.Ftp);
             } else if (menuItem.name == "clearClipboard") {
                 return clipboard.count > 0;
             } else if (menuItem.name == "markMenu") {
                 return cloudFolderView.state != "mark";
-            } else {
-                return true;
             }
+
+            return true;
         }
     }
 
@@ -266,6 +266,17 @@ Page {
             if (status == DialogStatus.Opening) {
                 isMarkAll = !cloudFolderView.areAllItemChecked();
             }
+        }
+
+        function isMenuItemVisible(menuItem) {
+            // Validate each menu logic if it's specified, otherwise it's visible.
+            if (menuItem.name == "copyMarked") {
+                return (selectedCloudType != CloudDriveModel.Ftp);
+            } else if (menuItem.name == "cutMarked") {
+                return (selectedCloudType != CloudDriveModel.Ftp);
+            }
+
+            return true;
         }
     }
 
@@ -566,8 +577,12 @@ Page {
                 return cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, selectedFilePath);
             } else if (buttonName === "cloudScheduler") {
                 return isDir && cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, selectedFilePath);
+            } else if (buttonName === "copy") {
+                return (selectedCloudType != CloudDriveModel.Ftp);
+            } else if (buttonName === "cut") {
+                return (selectedCloudType != CloudDriveModel.Ftp);
             } else if (buttonName === "paste") {
-                return (clipboard.count > 0);
+                return (clipboard.count > 0 && selectedCloudType != CloudDriveModel.Ftp);
             }
 
             return true;

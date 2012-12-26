@@ -1,11 +1,10 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
 
-Menu {
+MenuWithIcon {
     id: markMenu
     z: 2
 
-    property variant disabledMenus: []
     property bool isMarkAll: true
 
     signal markAll()
@@ -17,44 +16,58 @@ Menu {
     content: MenuLayout {
         id: menuLayout
 
-        MenuItem {
+        // TODO Alias for fixing incorrect children.
+        default property alias children: menuLayout.menuChildren
+
+        MenuItemWithIcon {
             id: toggleMarkAll
+            name: "toggleMarkAll"
             text: (isMarkAll) ? appInfo.emptyStr+qsTr("Mark all") : appInfo.emptyStr+qsTr("Unmark all")
             onClicked: {
                 markAll();
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: copyMarked
+            name: "copyMarked"
             text: appInfo.emptyStr+qsTr("Copy marked items")
             onClicked: {
                 copyMarkedItems();
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: cutMarked
+            name: "cutMarked"
             text: appInfo.emptyStr+qsTr("Cut marked items")
             onClicked: {
                 cutMarkedItems();
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: deleteMarked
+            name: "deleteMarked"
             text: appInfo.emptyStr+qsTr("Delete marked items")
             onClicked: {
                 deleteMarkedItems();
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: syncMarked
+            name: "syncMarked"
             text: appInfo.emptyStr+qsTr("Sync marked items")
             onClicked: {
                 syncMarkedItems();
             }
         }
+    }
+
+    // Override this function with menuItem logic.
+    function isMenuItemVisible(menuItem) {
+        // Validate each menu logic if it's specified, otherwise it's visible.
+        return false;
     }
 }
