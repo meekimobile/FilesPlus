@@ -13,6 +13,7 @@ MenuWithIcon {
     signal syncConnectedItems()
     signal syncCurrentFolder()
     signal setNameFilter()
+    signal drives()
     signal openSortByMenu()
     signal openSettings()
     signal openMoreApps()
@@ -84,6 +85,15 @@ MenuWithIcon {
             text: appInfo.emptyStr+qsTr("Set name filter")
             onClicked: {
                 setNameFilter();
+            }
+        }
+
+        MenuItemWithIcon {
+            id: driveMenuItem
+            name: "driveMenuItem"
+            text: appInfo.emptyStr+qsTr("Drives")
+            onClicked: {
+                drives();
             }
         }
 

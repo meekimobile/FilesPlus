@@ -5,6 +5,11 @@ MenuWithIcon {
     id: chartMenu
     z: 2
 
+    signal drives()
+    signal openSettings()
+    signal openMoreApps()
+    signal openAbout()
+
     content: MenuLayout {
         id: menuLayout
 
@@ -12,28 +17,41 @@ MenuWithIcon {
         default property alias children: menuLayout.menuChildren
 
         MenuItemWithIcon {
-            text: appInfo.emptyStr+qsTr("Settings")
-            platformSubItemIndicator: true
+            id: driveMenuItem
+            name: "driveMenuItem"
+            text: appInfo.emptyStr+qsTr("Drives")
             onClicked: {
-                pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
+                drives();
             }
         }
 
         MenuItemWithIcon {
+            name: "settings"
+            text: appInfo.emptyStr+qsTr("Settings")
+            platformSubItemIndicator: true
+            onClicked: {
+                openSettings();
+            }
+        }
+
+        MenuItemWithIcon {
+            name: "about"
             text: appInfo.emptyStr+qsTr("About")
             onClicked: {
-                pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
+                openAbout();
             }
         }
 
 //        MenuItemWithIcon {
+//            name: "moreApps"
 //            text: appInfo.emptyStr+qsTr("More Apps")
 //            onClicked: {
-//                Qt.openUrlExternally("http://www.meeki.mobi/");
+//                openMoreApps();
 //            }
 //        }
 
         MenuItemWithIcon {
+            name: "exit"
             text: appInfo.emptyStr+qsTr("Exit")
             onClicked: {
                 quit();

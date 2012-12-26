@@ -267,6 +267,9 @@ Page {
         onNewFolder: {
             newFolderDialog.open();
         }
+        onDrives: {
+            pageStack.pop(cloudFolderPage);
+        }
         onOpenSettings: {
             pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
         }

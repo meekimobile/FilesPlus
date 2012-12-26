@@ -188,6 +188,11 @@ Page {
         onSetNameFilter: {
             nameFilterPanel.open();
         }
+        onDrives: {
+            // Flip back to list view, then pop folderPage.
+            flipable1.flipped = false;
+            pageStack.pop(folderPage);
+        }
         onOpenSortByMenu: {
             sortByMenu.open();
         }
@@ -220,6 +225,17 @@ Page {
     ChartMenu {
         id: chartMenu
 
+        onDrives: {
+            // Flip back to list view, then pop folderPage.
+            flipable1.flipped = false;
+            pageStack.pop(folderPage);
+        }
+        onOpenSettings: {
+            pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
+        }
+        onOpenAbout: {
+            pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
+        }
         onQuit: {
             window.quitSlot();
         }
@@ -313,9 +329,8 @@ Page {
         fsModel.nameFilters = [];
 
         if (fsModel.isRoot()) {
-            // Flip back to list view, then push drivePage.
+            // Flip back to list view, then pop folderPage.
             flipable1.flipped = false;
-//            showDrivePageSlot();
             pageStack.pop(folderPage);
         } else {
             if (state == "chart") {
