@@ -321,7 +321,7 @@ CommonDialog {
                     // FileGet and FilePut can select any items because it's not related to operations.
                     // Other operations must select only the same item type that selected from local path.
                     if (fsModel.isDir(localPath) == isDir || operation == CloudDriveModel.FileGet || operation == CloudDriveModel.FilePut) {
-                        selectedRemotePath = path;
+                        selectedRemotePath = absolutePath;
                         selectedRemotePathName = name;
                         selectedIsDir = isDir;
                         selectedIsValid = true;
