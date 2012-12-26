@@ -148,6 +148,9 @@ Page {
             id: menuButton
             iconId: "toolbar-view-menu"
             onClicked: {
+                // Hide popupToolPanel.
+                popupToolPanel.visible = false;
+
                 if (fsListView.state == "mark") {
                     if (!fsListView.isAnyItemChecked()) {
                         markAllMenu.open();
@@ -1213,7 +1216,7 @@ Page {
         function getTitleText() {
             var text = "";
             if (clipboard.count == 1) {
-                text = getActionName(clipboard.get(0).action);
+                text = getActionName(clipboard.get(0).action, clipboard.get(0).type);
             } else {
                 // TODO if all copy, show "Multiple copy".
                 text = qsTr("Multiple actions");
@@ -1224,19 +1227,23 @@ Page {
 
         function getText() {
             // Exmaple of clipboard entry { "action": "cut", "sourcePath": sourcePath }
+            // Exmaple of clipboard entry { "action": "cut", "type": "Dropbox", "uid": "asdfdg", "sourcePath": sourcePath, "sourcePathName": sourcePathName }
             var text = "";
             if (clipboard.count == 1) {
-                text = getActionName(clipboard.get(0).action)
-                        + " " + clipboard.get(0).sourcePath
+                text = getActionName(clipboard.get(0).action, clipboard.get(0).type)
+                        + " " + (clipboard.get(0).sourcePathName ? clipboard.get(0).sourcePathName : clipboard.get(0).sourcePath)
                         + ((clipboard.get(0).action == "delete")?"":("\n" + qsTr("to") + " " + targetPath))
                         + " ?";
             } else {
                 var cutCount = 0;
                 var copyCount = 0;
                 var deleteCount = 0;
+                var downloadCount = 0;
                 for (var i=0; i<clipboard.count; i++) {
 //                    console.debug("fileActionDialog getText clipboard i " + i + " action " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
-                    if (clipboard.get(i).action == "copy") {
+                    if (clipboard.get(i).action == "copy" && clipboard.get(i).type) {
+                        downloadCount++;
+                    } else if (clipboard.get(i).action == "copy") {
                         copyCount++;
                     } else if (clipboard.get(i).action == "cut") {
                         cutCount++;
@@ -1245,21 +1252,27 @@ Page {
                     }
                 }
 
+                if (downloadCount>0) text = text + (qsTr("Download %n item(s)\n", "", downloadCount));
                 if (deleteCount>0) text = text + (qsTr("Delete %n item(s)\n", "", deleteCount));
                 if (copyCount>0) text = text + (qsTr("Copy %n item(s)\n", "", copyCount));
                 if (cutCount>0) text = text + (qsTr("Move %n item(s)\n", "", cutCount));
-                if (copyCount>0 || cutCount>0) text = text + qsTr("to") + " " + targetPath;
+                if (copyCount>0 || cutCount>0 || downloadCount>0) text = text + qsTr("to") + " " + targetPath;
                 text = text + " ?";
             }
 
             return text;
         }
 
-        function getActionName(actionText) {
-            if (actionText == "copy") return qsTr("Copy");
-            else if (actionText == "cut") return qsTr("Move");
-            else if (actionText == "delete") return qsTr("Delete");
-            else return qsTr("Invalid action");
+        function getActionName(actionText, type) {
+            if (type) {
+                if (actionText == "copy") return qsTr("Download");
+                else return qsTr("Invalid action");
+            } else {
+                if (actionText == "copy") return qsTr("Copy");
+                else if (actionText == "cut") return qsTr("Move");
+                else if (actionText == "delete") return qsTr("Delete");
+                else return qsTr("Invalid action");
+            }
         }
 
         onConfirm: {
@@ -1273,45 +1286,37 @@ Page {
                     fileOverwriteDialog.open();
                     return;
                 }
+            }
 
-                fsModel.suspendNextJob();
+            // It always replace existing names.
+            fsModel.suspendNextJob();
+            cloudDriveModel.suspendNextJob();
 
-                var res = false;
-                var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(clipboard.get(0).sourcePath));
-                if (clipboard.get(0).action == "copy") {
-                    res = fsModel.copy(clipboard.get(0).sourcePath, actualTargetPath);
-                } else if (clipboard.get(0).action == "cut") {
-                    res = fsModel.move(clipboard.get(0).sourcePath, actualTargetPath);
-                } else if (clipboard.get(0).action == "delete") {
-                    res = fsModel.deleteFile(clipboard.get(0).sourcePath);
+            // TODO Copy/Move/Delete all files from clipboard.
+            // Action is {copy, cut, delete}
+            var res = true;
+            for (var i=0; i<clipboard.count; i++) {
+                var action = clipboard.get(i).action;
+                var sourcePath = clipboard.get(i).sourcePath;
+                var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(sourcePath));
+
+                // console.debug("folderPage fileActionDialog onConfirm clipboard action " + action + " sourcePath " + sourcePath);
+                if (action == "copy" && clipboard.get(i).type) {
+                    actualTargetPath = fsModel.getAbsolutePath(targetPath, clipboard.get(i).sourcePathName);
+                    console.debug("folderPage fileActionDialog onConfirm Download type " + clipboard.get(i).type + " uid " + clipboard.get(i).uid + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
+                    cloudDriveModel.metadata(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, actualTargetPath, sourcePath, -1);
+                } else if (action == "copy") {
+                    res = res && fsModel.copy(sourcePath, actualTargetPath);
+                } else if (action == "cut") {
+                    res = res && fsModel.move(sourcePath, actualTargetPath);
+                } else if (action == "delete") {
+                    res = res && fsModel.deleteFile(sourcePath);
+                } else {
+                    console.debug("folderPage fileActionDialog onConfirm invalid action " + action);
                 }
-            } else {
-                // It always replace existing names.
 
-                fsModel.suspendNextJob();
-
-                // TODO Copy/Move/Delete all files from clipboard.
-                // Action is {copy, cut, delete}
-                var res = true;
-                for (var i=0; i<clipboard.count; i++) {
-                    var action = clipboard.get(i).action;
-                    var sourcePath = clipboard.get(i).sourcePath;
-                    var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(sourcePath));
-
-                    console.debug("folderPage fileActionDialog onButtonClicked clipboard action " + action + " sourcePath " + sourcePath);
-                    if (action == "copy") {
-                        res = res && fsModel.copy(sourcePath, actualTargetPath);
-                    } else if (action == "cut") {
-                        res = res && fsModel.move(sourcePath, actualTargetPath);
-                    } else if (action == "delete") {
-                        res = res && fsModel.deleteFile(sourcePath);
-                    } else {
-                        console.debug("folderPage fileActionDialog onButtonClicked invalid action " + action);
-                    }
-
-                    if (!res) {
-                        break;
-                    }
+                if (!res) {
+                    break;
                 }
             }
 
@@ -1335,14 +1340,15 @@ Page {
                 fsModel.cancelQueuedJobs();
                 fsModel.resumeNextJob();
             }
-
-            // Clear clipboard as they should have been processed.
-            clipboard.clear();
         }
 
         onClosed: {
             // Always clear clipboard's delete actions.
             clipboard.clearDeleteActions();
+
+            // Resume queued jobs.
+            fsModel.resumeNextJob();
+            cloudDriveModel.resumeNextJob();
         }
     }
 

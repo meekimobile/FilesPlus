@@ -135,7 +135,7 @@ PageStackWindow {
                 var action = clipboard.get(i).action;
                 var sourcePath = clipboard.get(i).sourcePath;
 //                console.debug("fileActionDialog openCopyProgressDialog estimate total action " + action + " sourcePath " + sourcePath);
-                if (action == "copy" || action == "cut") {
+                if ((action == "copy" || action == "cut") && !clipboard.get(i).type)  {
                     var jsonText = fsModel.getItemJson(sourcePath);
 //                    console.debug("fileActionDialog openCopyProgressDialog estimate total jsonText " + jsonText);
                     var itemJson = Utility.createJsonObj(jsonText);
@@ -174,7 +174,7 @@ PageStackWindow {
                 var action = clipboard.get(i).action;
                 var sourcePath = clipboard.get(i).sourcePath;
 //                console.debug("fileActionDialog openDeleteProgressDialog estimate total action " + action + " sourcePath " + sourcePath);
-                if (action == "delete") {
+                if (action == "delete" && !clipboard.get(i).type) {
                     var jsonText = fsModel.getItemJson(sourcePath);
 //                    console.debug("fileActionDialog openDeleteProgressDialog estimate total jsonText " + jsonText);
                     var itemJson = Utility.createJsonObj(jsonText);
@@ -1246,6 +1246,11 @@ PageStackWindow {
                             if (!cloudDriveModel.isDir(jobJson.local_file_path)) {
                                 // TODO Add item to ListView.
                                 cloudDriveModel.createDirPath(jobJson.local_file_path);
+                                // Remove cache on target folders and its parents.
+                                var p = findPage("folderPage");
+                                if (p) {
+                                    p.refreshItemAfterFileGetSlot(jobJson.local_file_path);
+                                }
                             }
 
                             // Sync based on remote contents.
@@ -1317,6 +1322,11 @@ PageStackWindow {
                             if (!cloudDriveModel.isDir(jobJson.local_file_path)) {
                                 // TODO Add item to ListView.
                                 cloudDriveModel.createDirPath(jobJson.local_file_path);
+                                // Remove cache on target folders and its parents.
+                                var p = findPage("folderPage");
+                                if (p) {
+                                    p.refreshItemAfterFileGetSlot(jobJson.local_file_path);
+                                }
                             }
 
                             // Sync based on remote contents.
@@ -1394,6 +1404,11 @@ PageStackWindow {
                             if (!cloudDriveModel.isDir(jobJson.local_file_path)) {
                                 // TODO Add item to ListView.
                                 cloudDriveModel.createDirPath(jobJson.local_file_path);
+                                // Remove cache on target folders and its parents.
+                                var p = findPage("folderPage");
+                                if (p) {
+                                    p.refreshItemAfterFileGetSlot(jobJson.local_file_path);
+                                }
                             }
 
                             // Sync based on remote contents.

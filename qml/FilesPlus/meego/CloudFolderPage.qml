@@ -713,7 +713,7 @@ Page {
         function getTitleText() {
             var text = "";
             if (clipboard.count == 1) {
-                text = getActionName(clipboard.get(0).action);
+                text = getActionName(clipboard.get(0).action, clipboard.get(0).type);
             } else {
                 // TODO if all copy, show "Multiple copy".
                 text = qsTr("Multiple actions");
@@ -722,28 +722,25 @@ Page {
             return text;
         }
 
-        function getActionName(action) {
-            if (action == "copy") return qsTr("Copy");
-            else if (action == "cut") return qsTr("Move");
-            else if (action == "delete") return qsTr("Delete");
-            else return qsTr("Invalid action");
-        }
-
         function getText() {
+            // Exmaple of clipboard entry { "action": "cut", "sourcePath": sourcePath }
             // Exmaple of clipboard entry { "action": "cut", "type": "Dropbox", "uid": "asdfdg", "sourcePath": sourcePath, "sourcePathName": sourcePathName }
             var text = "";
             if (clipboard.count == 1) {
-                text = getActionName(clipboard.get(0).action)
-                        + " " + clipboard.get(0).sourcePathName
+                text = getActionName(clipboard.get(0).action, clipboard.get(0).type)
+                        + " " + (clipboard.get(0).sourcePathName ? clipboard.get(0).sourcePathName : clipboard.get(0).sourcePath)
                         + ((clipboard.get(0).action == "delete")?"":("\n" + qsTr("to") + " " + targetPathName))
                         + " ?";
             } else {
                 var cutCount = 0;
                 var copyCount = 0;
                 var deleteCount = 0;
+                var uploadCount = 0;
                 for (var i=0; i<clipboard.count; i++) {
 //                    console.debug("fileActionDialog getText clipboard i " + i + " action " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
-                    if (clipboard.get(i).action == "copy") {
+                    if (clipboard.get(i).action == "copy" && !clipboard.get(i).type) {
+                        uploadCount++;
+                    } else if (clipboard.get(i).action == "copy") {
                         copyCount++;
                     } else if (clipboard.get(i).action == "cut") {
                         cutCount++;
@@ -752,6 +749,7 @@ Page {
                     }
                 }
 
+                if (uploadCount>0) text = text + (qsTr("Upload %n item(s)\n", "", uploadCount));
                 if (deleteCount>0) text = text + (qsTr("Delete %n item(s)\n", "", deleteCount));
                 if (copyCount>0) text = text + (qsTr("Copy %n item(s)\n", "", copyCount));
                 if (cutCount>0) text = text + (qsTr("Move %n item(s)\n", "", cutCount));
@@ -760,6 +758,18 @@ Page {
             }
 
             return text;
+        }
+
+        function getActionName(actionText, type) {
+            if (type) {
+                if (actionText == "copy") return qsTr("Copy");
+                else if (actionText == "cut") return qsTr("Move");
+                else if (actionText == "delete") return qsTr("Delete");
+                else return qsTr("Invalid action");
+            } else {
+                if (actionText == "copy") return qsTr("Upload");
+                else return qsTr("Invalid action");
+            }
         }
 
         onConfirm: {
@@ -775,59 +785,52 @@ Page {
 //                    fileOverwriteDialog.open();
 //                    return;
 //                }
+            }
 
-                cloudDriveModel.suspendNextJob();
+            // It always replace existing names.
+            cloudDriveModel.suspendNextJob();
 
-                var res = false;
-                var sourcePath = clipboard.get(0).sourcePath;
-                var actualTargetPath = cloudDriveModel.getRemotePath(cloudDriveModel.getClientType(clipboard.get(0).type), targetPath, clipboard.get(0).sourcePathName);
-                if (clipboard.get(0).action == "copy") {
+            // TODO Copy/Move/Delete all files from clipboard.
+            // Action is {copy, cut, delete}
+            var res = true;
+            for (var i=0; i<clipboard.count; i++) {
+                var action = clipboard.get(i).action;
+                var sourcePath = clipboard.get(i).sourcePath;
+                var actualTargetPath = cloudDriveModel.getRemotePath(selectedCloudType, targetPath, cloudDriveModel.getFileName(sourcePath));
+
+                console.debug("folderPage fileActionDialog onConfirm clipboard action " + action + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
+                if (action == "copy" && !clipboard.get(i).type) {
                     isBusy = true;
-                    cloudDriveModel.copyFile(cloudDriveModel.getClientType(clipboard.get(0).type), clipboard.get(0).uid, "", sourcePath, "", actualTargetPath);
+                    if (cloudDriveModel.isDir(sourcePath)) {
+                        switch (selectedCloudType) {
+                        case CloudDriveModel.SkyDrive:
+                            cloudDriveModel.syncFromLocal_SkyDrive(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1, true);
+                            break;
+                        default:
+                            cloudDriveModel.syncFromLocal(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1, true);
+                        }
+                    } else {
+                        cloudDriveModel.filePut(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1);
+                    }
                     res = true;
-                } else if (clipboard.get(0).action == "cut") {
+                } else if (action == "copy") {
                     isBusy = true;
-                    cloudDriveModel.moveFile(cloudDriveModel.getClientType(clipboard.get(0).type), clipboard.get(0).uid, "", sourcePath, "", actualTargetPath);
+                    cloudDriveModel.copyFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath, "", actualTargetPath);
                     res = true;
-                } else if (clipboard.get(0).action == "delete") {
+                } else if (action == "cut") {
                     isBusy = true;
-                    cloudDriveModel.deleteFile(cloudDriveModel.getClientType(clipboard.get(0).type), clipboard.get(0).uid, "", sourcePath);
+                    cloudDriveModel.moveFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath, "", actualTargetPath);
                     res = true;
+                } else if (action == "delete") {
+                    isBusy = true;
+                    cloudDriveModel.deleteFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath);
+                    res = true;
+                } else {
+                    console.debug("folderPage fileActionDialog onButtonClicked invalid action " + action);
                 }
 
-            } else {
-                // It always replace existing names.
-
-                cloudDriveModel.suspendNextJob();
-
-                // TODO Copy/Move/Delete all files from clipboard.
-                // Action is {copy, cut, delete}
-                var res = true;
-                for (var i=0; i<clipboard.count; i++) {
-                    var action = clipboard.get(i).action;
-                    var sourcePath = clipboard.get(i).sourcePath;
-                    var actualTargetPath = cloudDriveModel.getRemotePath(cloudDriveModel.getClientType(clipboard.get(i).type), targetPath, clipboard.get(i).sourcePathName);
-
-                    console.debug("folderPage fileActionDialog onButtonClicked clipboard action " + action + " sourcePath " + sourcePath);
-                    if (action == "copy") {
-                        isBusy = true;
-                        cloudDriveModel.copyFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath, "", actualTargetPath);
-                        res = true;
-                    } else if (action == "cut") {
-                        isBusy = true;
-                        cloudDriveModel.moveFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath, "", actualTargetPath);
-                        res = true;
-                    } else if (action == "delete") {
-                        isBusy = true;
-                        cloudDriveModel.deleteFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath);
-                        res = true;
-                    } else {
-                        console.debug("folderPage fileActionDialog onButtonClicked invalid action " + action);
-                    }
-
-                    if (!res) {
-                        break;
-                    }
+                if (!res) {
+                    break;
                 }
             }
 
@@ -837,14 +840,14 @@ Page {
                 targetPath = "";
                 popupToolPanel.srcFilePath = "";
                 popupToolPanel.pastePath = "";
+
+                // Clear clipboard as they should have been processed.
+                clipboard.clear();
             } else {
                 // Reset target only.
                 targetPath = "";
                 popupToolPanel.pastePath = "";
             }
-
-            // Clear clipboard as they should have been processed.
-            clipboard.clear();
         }
 
         onClosed: {
