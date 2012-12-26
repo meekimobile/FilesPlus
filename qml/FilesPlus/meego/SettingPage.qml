@@ -58,22 +58,6 @@ Page {
         }
     }
 
-    ConfirmDialog {
-        id: cancelQueuedCloudDriveJobsConfirmation
-        titleText: appInfo.emptyStr+qsTr("Cancel sync jobs")
-        onOpening: {
-            contentText = appInfo.emptyStr+qsTr("Cancel %n job(s) ?", "", cloudDriveModel.getQueuedJobCount());
-        }
-        onConfirm: {
-            cloudDriveModel.cancelQueuedJobs();
-            cloudDriveModel.requestJobQueueStatus();
-        }
-    }
-
-    MessageDialog {
-        id: messageDialog
-    }
-
     ListModel {
         id: settingModel
         ListElement {

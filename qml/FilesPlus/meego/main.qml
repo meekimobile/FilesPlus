@@ -427,6 +427,18 @@ PageStackWindow {
         }
     }
 
+    ConfirmDialog {
+        id: cancelQueuedCloudDriveJobsConfirmation
+        titleText: appInfo.emptyStr+qsTr("Cancel Cloud Drive Jobs")
+        onOpening: {
+            contentText = appInfo.emptyStr+qsTr("Cancel %n job(s) ?", "", cloudDriveModel.getQueuedJobCount());
+        }
+        onConfirm: {
+            cloudDriveModel.cancelQueuedJobs();
+            cloudDriveModel.requestJobQueueStatus();
+        }
+    }
+
     ProgressDialog {
         id: copyProgressDialog
         autoClose: false

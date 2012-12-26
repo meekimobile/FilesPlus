@@ -31,11 +31,6 @@ Page {
         }
     }
 
-    onStatusChanged: {
-        if (status == PageStatus.Active) {
-        }
-    }
-
     tools: toolBarLayout
 
     ToolBarLayout {
@@ -58,7 +53,7 @@ Page {
             id: deleteAllButton
             iconSource: (theme.inverted) ? "delete.svg" : "delete_inverted.svg"
             onClicked: {
-                cloudDriveModel.jobsModel.clear();
+                cancelQueuedCloudDriveJobsConfirmation.open();
             }
         }
     }
