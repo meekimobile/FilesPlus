@@ -1008,7 +1008,7 @@ PageStackWindow {
             case CloudDriveModel.GoogleDrive:
                 remoteParentPath = json.property.id;
                 remoteParentPathName = json.property.title;
-                remoteParentParentPath = ((json.parents && json.parents.count > 0) ? json.parents[0].id : "");
+                remoteParentParentPath = ((json.property.parents && json.property.parents.length > 0) ? json.property.parents[0].id : "");
                 for (var i=0; i<json.items.length; i++) {
                     var item = json.items[i];
                     var modelItem = { "name": item.title, "absolutePath": item.id,
@@ -1604,9 +1604,10 @@ PageStackWindow {
             // TODO *** create SkyDrive folder freezes here *** TODO Does it need?
             // Update ProgressBar if localPath is specified.
             if (jobJson.type == CloudDriveModel.SkyDrive && pageStack.currentPage.name == "folderPage") {
-                // Do nothing for SkyDrive because jobJson.local_file_path is new folder name.
+                // Refresh all items because jobJson.local_file_path is new folder name.
                 pageStack.currentPage.refreshItemSlot("cloudDriveModel onCreateFolderReplySignal SkyDrive");
             } else {
+                // Refresh only created folder and its parents.
                 pageStack.find(function (page) {
                     if (page.updateItemSlot) page.updateItemSlot(jobJson);
                 });

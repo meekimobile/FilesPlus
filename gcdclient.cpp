@@ -21,7 +21,7 @@ const QString GCDClient::fileGetURI = "";
 const QString GCDClient::filePutURI = "";
 const QString GCDClient::filesURI = "https://www.googleapis.com/drive/v2/files";
 const QString GCDClient::propertyURI = "https://www.googleapis.com/drive/v2/files/%1";
-const QString GCDClient::createFolderURI = "";
+const QString GCDClient::createFolderURI = "https://www.googleapis.com/drive/v2/files"; // POST with json.
 const QString GCDClient::moveFileURI = "";
 const QString GCDClient::copyFileURI = "";
 const QString GCDClient::deleteFileURI = "";
@@ -299,18 +299,14 @@ void GCDClient::quota(QString nonce, QString uid)
 
 void GCDClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "----- GCDClient::metadata -----";
+    qDebug() << "----- GCDClient::metadata -----" << uid << remoteFilePath;
+    if (remoteFilePath.isEmpty()) {
+        emit browseReplySignal(nonce, -1, "remoteFilePath is empty.", "");
+        return;
+    }
 
-//    QString uri = accountInfoURI;
-
-//    // Send request.
-//    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-//    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
-//    QNetworkRequest req = QNetworkRequest(QUrl(uri));
-//    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-//    QNetworkReply *reply = manager->get(req);
-//    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
-    //    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
+    property(nonce, uid, remoteFilePath, false, "metadata");
+    files(nonce, uid, remoteFilePath, false, "metadata");
 }
 
 void GCDClient::browse(QString nonce, QString uid, QString remoteFilePath)
@@ -327,6 +323,66 @@ void GCDClient::browse(QString nonce, QString uid, QString remoteFilePath)
 
 void GCDClient::createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath)
 {
+    createFolder(nonce, uid, newRemoteFolderName, remoteParentPath, false);
+}
+
+QNetworkReply * GCDClient::createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath, bool synchronous)
+{
+    qDebug() << "----- GCDClient::createFolder -----" << newRemoteFolderName << remoteParentPath;
+
+    if (remoteParentPath.isEmpty()) {
+        emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
+        return 0;
+    }
+
+    if (newRemoteFolderName.isEmpty()) {
+        emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
+        return 0;
+    }
+
+    QString uri = createFolderURI;
+    qDebug() << "GCDClient::createFolder uri " << uri;
+/*
+    {
+      "title": "pets",
+      "parents": [{"id":"0ADK06pfg"}]
+      "mimeType": "application/vnd.google-apps.folder"
+    }
+*/
+    QByteArray postData;
+    postData.append("{");
+    postData.append(" \"title\": \"" + newRemoteFolderName.toUtf8() + "\", ");
+    postData.append(" \"parents\": [{\"id\":\"" + remoteParentPath.toUtf8() + "\"}], ");
+    postData.append(" \"mimeType\": \"application/vnd.google-apps.folder\" ");
+    postData.append("}");
+    qDebug() << "GCDClient::createFolder postData" << postData;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(createFolderReplyFinished(QNetworkReply*)));
+    }
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QNetworkReply *reply = manager->post(req, postData);
+
+    // TODO Return if asynchronous.
+    if (!synchronous) {
+        return reply;
+    }
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper().sleep(100);
+    }
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return reply;
 }
 
 void GCDClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath)
@@ -537,10 +593,10 @@ void GCDClient::accessTokenReplyFinished(QNetworkReply *reply)
         m_paramMap["id_token"] = sc.property("id_token").toString();
         qDebug() << "GCDClient::accessTokenReplyFinished m_paramMap " << m_paramMap;
 
-        if (refreshTokenUid != "" && sc.property("access_token").toString() != "" && sc.property("refresh_token").toString() != "") {
-            // Updates for refreshToken.
+        if (refreshTokenUid != "" && sc.property("access_token").toString() != "") {
+            // NOTE first accessTokenReply will contain both accessToken and refreshToken. But for refresh's accessTokenReply will contain only accessToken.
+            // Update accessToken but retains refreshToken.
             accessTokenPairMap[refreshTokenUid].token = sc.property("access_token").toString();
-            accessTokenPairMap[refreshTokenUid].secret = sc.property("refresh_token").toString();
             qDebug() << "GCDClient::accessTokenReplyFinished accessTokenPairMap" << accessTokenPairMap;
 
             // Reset refreshTokenUid.
@@ -692,14 +748,7 @@ void GCDClient::metadataReplyFinished(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    QString replyBody = QString(reply->readAll());
-
-    // TODO Collect printers into caches for further submitting.
-    if (reply->error() == QNetworkReply::NoError) {
-        emit metadataReplySignal(nonce, reply->error(), reply->errorString(), replyBody );
-    } else {
-        emit metadataReplySignal(nonce, reply->error(), reply->errorString(), replyBody );
-    }
+    emit metadataReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll() );
 
     // Scheduled to delete later.
     reply->deleteLater();
@@ -712,13 +761,7 @@ void GCDClient::browseReplyFinished(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    QString replyBody = QString(reply->readAll());
-
-    if (reply->error() == QNetworkReply::NoError) {
-        emit browseReplySignal(nonce, reply->error(), reply->errorString(), replyBody );
-    } else {
-        emit browseReplySignal(nonce, reply->error(), reply->errorString(), replyBody );
-    }
+    emit browseReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll() );
 
     // Scheduled to delete later.
     reply->deleteLater();
@@ -816,20 +859,75 @@ void GCDClient::filesReplyFinished(QNetworkReply *reply)
 
 void GCDClient::createFolderReplyFinished(QNetworkReply *reply)
 {
+    qDebug() << "GCDClient::createFolderReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCDClient::moveFileReplyFinished(QNetworkReply *reply)
 {
+    qDebug() << "GCDClient::moveFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+
+    // Remove request buffer.
+//    if (m_bufferHash.contains(nonce)) {
+//        m_bufferHash[nonce]->close();
+//        m_bufferHash.remove(nonce);
+//    }
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCDClient::copyFileReplyFinished(QNetworkReply *reply)
 {
+    qDebug() << "GCDClient::copyFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+
+    // Remove request buffer.
+//    m_bufferHash[nonce]->close();
+//    m_bufferHash.remove(nonce);
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCDClient::deleteFileReplyFinished(QNetworkReply *reply)
 {
+    qDebug() << "GCDClient::deleteFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void GCDClient::shareFileReplyFinished(QNetworkReply *reply)
 {
+    qDebug() << "GCDClient::shareFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }

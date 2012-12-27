@@ -78,13 +78,31 @@ Page {
     }
 
     function createRemoteFolder(newRemoteFolderName) {
+        isBusy = true;
+
         // Create remote folder.
         if (selectedCloudType == CloudDriveModel.Dropbox) {
             cloudDriveModel.createFolder(selectedCloudType, selectedUid, "", remoteParentPath + "/" + newRemoteFolderName, -1);
         } else if (selectedCloudType == CloudDriveModel.SkyDrive) {
             cloudDriveModel.createFolder(selectedCloudType, selectedUid, newRemoteFolderName, remoteParentPath, -1);
+        } else if (selectedCloudType == CloudDriveModel.GoogleDrive) {
+            cloudDriveModel.createFolder(selectedCloudType, selectedUid, newRemoteFolderName, remoteParentPath, -1);
         } else if (selectedCloudType == CloudDriveModel.Ftp) {
             cloudDriveModel.createFolder(selectedCloudType, selectedUid, "", remoteParentPath + "/" + newRemoteFolderName, -1);
+        }
+    }
+
+    function renameRemotePath(remotePath, newName) {
+        isBusy = true;
+        switch (selectedCloudType) {
+        case CloudDriveModel.SkyDrive:
+            cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", remotePath, "", newName);
+            break;
+        case CloudDriveModel.GoogleDrive:
+            cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", remotePath, "", newName);
+            break;
+        default:
+            cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", remotePath, "", cloudDriveModel.getParentRemotePath(remotePath) + "/" + newName);
         }
     }
 
@@ -885,7 +903,6 @@ Page {
 
         onConfirm: {
             if (folderName.text !== "") {
-                isBusy = true;
                 createRemoteFolder(folderName.text.trim());
             }
         }
@@ -932,14 +949,7 @@ Page {
 
         onConfirm: {
             if (newName.text != "" && newName.text != sourcePathName) {
-                isBusy = true;
-                switch (selectedCloudType) {
-                case CloudDriveModel.SkyDrive:
-                    cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", sourcePath, "", newName.text);
-                    break;
-                default:
-                    cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", sourcePath, "", cloudDriveModel.getParentRemotePath(sourcePath) + "/" + newName.text);
-                }
+                renameRemotePath(sourcePath, newName.text);
             }
         }
     }
