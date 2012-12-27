@@ -132,6 +132,9 @@ Page {
             remoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getParentRemotePath(remotePath) : remoteParentPath;
             cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
         }
+
+        // Force resume.
+        cloudDriveModel.resumeNextJob();
     }
 
     function resetBusySlot(caller) {
