@@ -131,11 +131,15 @@ Page {
             });
 
             // Request quota.
+            // TODO Refactor to call quota only to all clients.
             switch (cloudType) {
             case CloudDriveModel.Dropbox:
                 cloudDriveModel.accountInfo(cloudType, json.uid);
                 break;
             case CloudDriveModel.SkyDrive:
+                cloudDriveModel.quota(cloudType, json.uid);
+                break;
+            case CloudDriveModel.GoogleDrive:
                 cloudDriveModel.quota(cloudType, json.uid);
                 break;
             }

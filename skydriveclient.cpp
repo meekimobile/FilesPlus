@@ -148,7 +148,6 @@ void SkyDriveClient::accountInfo(QString nonce, QString uid)
 {
     qDebug() << "----- SkyDriveClient::accountInfo ----- uid" << uid;
 
-    QString uri = accountInfoURI;
     QString accessToken;
     if (uid == "") {
         // After accessToken, then uses temp access token..
@@ -156,6 +155,8 @@ void SkyDriveClient::accountInfo(QString nonce, QString uid)
     } else {
         accessToken = accessTokenPairMap[uid].token;
     }
+
+    QString uri = accountInfoURI;
     qDebug() << "SkyDriveClient::accountInfo uri " << uri;
 
     // Send request.

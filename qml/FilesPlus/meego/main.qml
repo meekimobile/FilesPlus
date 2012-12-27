@@ -877,6 +877,8 @@ PageStackWindow {
                 return CloudDriveModel.Dropbox;
             } else if (["skydriveclient","skydrive"].indexOf(typeText.toLowerCase()) != -1) {
                 return CloudDriveModel.SkyDrive;
+            } else if (["gcdclient","googledriveclient","googledrive"].indexOf(typeText.toLowerCase()) != -1) {
+                return CloudDriveModel.GoogleDrive;
             } else if (["ftpclient","ftp"].indexOf(typeText.toLowerCase()) != -1) {
                 return CloudDriveModel.Ftp;
             }
@@ -963,6 +965,7 @@ PageStackWindow {
             var remoteParentPathName = "";
             var remoteParentParentPath = "";
 
+            // TODO Generalize
             switch (selectedCloudType) {
             case CloudDriveModel.Dropbox:
                 remoteParentPath = json.path;
@@ -1126,13 +1129,22 @@ PageStackWindow {
             if (err == 0) {
                 var jsonObj = Utility.createJsonObj(msg);
 
-                // TODO Verify if slot exists.
                 // Send info to currentPage.
                 if (pageStack.currentPage.updateAccountInfoSlot) {
-                    pageStack.currentPage.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
-                                                                0,
-                                                                jsonObj.quota-jsonObj.available,
-                                                                jsonObj.quota);
+                    switch (jobJson.type) {
+                    case CloudDriveModel.SkyDrive:
+                        pageStack.currentPage.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
+                                                                    0,
+                                                                    jsonObj.quota-jsonObj.available,
+                                                                    jsonObj.quota);
+                        break;
+                    case CloudDriveModel.GoogleDrive:
+                        pageStack.currentPage.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
+                                                                    0,
+                                                                    jsonObj.quotaBytesUsed,
+                                                                    jsonObj.quotaBytesTotal);
+                        break;
+                    }
                 }
             } else if (err == 204) {
                 // TODO Refactor to support all SkyDriveClient services.

@@ -72,6 +72,7 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
 //    m_jobQueue->enqueue(initializeCloudClientsJob.jobId);
     initializeDropboxClient();
     initializeSkyDriveClient();
+    initializeGoogleDriveClient();
     initializeFtpClient();
 }
 
@@ -135,6 +136,7 @@ void CloudDriveModel::initializeCloudClients(QString nonce)
 {
     initializeDropboxClient();
     initializeSkyDriveClient();
+    initializeGoogleDriveClient();
     initializeFtpClient();
 }
 
@@ -189,17 +191,31 @@ void CloudDriveModel::initializeSkyDriveClient()
     connect(skdClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
 }
 
-//void CloudDriveModel::initializeGCDClient() {
-//    gcdClient = new GCDClient(this);
-////    connect(gcdClient, SIGNAL(uploadProgress(qint64,qint64)), SIGNAL(uploadProgress(qint64,qint64)) );
-////    connect(gcdClient, SIGNAL(downloadProgress(qint64,qint64)), SIGNAL(downloadProgress(qint64,qint64)) );
-//    connect(gcdClient, SIGNAL(authorizeRedirectSignal(QString,QString)), SIGNAL(authorizeRedirectSignal(QString,QString)) );
-//    connect(gcdClient, SIGNAL(accessTokenReplySignal(int,QString,QString)), SIGNAL(accessTokenReplySignal(int,QString,QString)) );
-//    connect(gcdClient, SIGNAL(accountInfoReplySignal(int,QString,QString)), SIGNAL(accountInfoReplySignal(int,QString,QString)) );
-//    connect(gcdClient, SIGNAL(fileGetReplySignal(int,QString,QString)), SIGNAL(fileGetReplySignal(int,QString,QString)) );
-//    connect(gcdClient, SIGNAL(filePutReplySignal(int,QString,QString)), SIGNAL(filePutReplySignal(int,QString,QString)) );
-//    connect(gcdClient, SIGNAL(metadataReplySignal(int,QString,QString)), SIGNAL(metadataReplySignal(int,QString,QString)) );
-//}
+void CloudDriveModel::initializeGoogleDriveClient()
+{
+    qDebug() << "CloudDriveModel::initializeGoogleDriveClient";
+
+    if (gcdClient != 0) {
+        gcdClient->deleteLater();
+    }
+
+    gcdClient = new GCDClient(this);
+    connect(gcdClient, SIGNAL(uploadProgress(QString,qint64,qint64)), SLOT(uploadProgressFilter(QString,qint64,qint64)) );
+    connect(gcdClient, SIGNAL(downloadProgress(QString,qint64,qint64)), SLOT(downloadProgressFilter(QString,qint64,qint64)) );
+    connect(gcdClient, SIGNAL(authorizeRedirectSignal(QString,QString,QString)), SLOT(authorizeRedirectFilter(QString,QString,QString)) );
+    connect(gcdClient, SIGNAL(accessTokenReplySignal(QString,int,QString,QString)), SLOT(accessTokenReplyFilter(QString,int,QString,QString)) );
+    connect(gcdClient, SIGNAL(accountInfoReplySignal(QString,int,QString,QString)), SLOT(accountInfoReplyFilter(QString,int,QString,QString)) );
+    connect(gcdClient, SIGNAL(quotaReplySignal(QString,int,QString,QString)), SLOT(quotaReplyFilter(QString,int,QString,QString)) );
+    connect(gcdClient, SIGNAL(fileGetReplySignal(QString,int,QString,QString)), SLOT(fileGetReplyFilter(QString,int,QString,QString)) );
+    connect(gcdClient, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SLOT(filePutReplyFilter(QString,int,QString,QString)) );
+    connect(gcdClient, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
+    connect(gcdClient, SIGNAL(browseReplySignal(QString,int,QString,QString)), SLOT(browseReplyFilter(QString,int,QString,QString)) );
+    connect(gcdClient, SIGNAL(createFolderReplySignal(QString,int,QString,QString)), SLOT(createFolderReplyFilter(QString,int,QString,QString)) );
+    connect(gcdClient, SIGNAL(moveFileReplySignal(QString,int,QString,QString)), SLOT(moveFileReplyFilter(QString,int,QString,QString)) );
+    connect(gcdClient, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
+    connect(gcdClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
+    connect(gcdClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
+}
 
 void CloudDriveModel::initializeFtpClient()
 {
@@ -1062,7 +1078,7 @@ QString CloudDriveModel::getDefaultRemoteFilePath(const QString &localFilePath)
 bool CloudDriveModel::isAuthorized()
 {
     // TODO check if any cloud drive is authorized.
-    return dbClient->isAuthorized() || skdClient->isAuthorized() || ftpClient->isAuthorized();
+    return dbClient->isAuthorized() || skdClient->isAuthorized() || gcdClient->isAuthorized() || ftpClient->isAuthorized();
 }
 
 bool CloudDriveModel::isAuthorized(CloudDriveModel::ClientTypes type)
@@ -1070,8 +1086,8 @@ bool CloudDriveModel::isAuthorized(CloudDriveModel::ClientTypes type)
     switch (type) {
     case Dropbox:
         return dbClient->isAuthorized();
-//    case GoogleDrive:
-//        return gcdClient->isAuthorized();
+    case GoogleDrive:
+        return gcdClient->isAuthorized();
     case SkyDrive:
         return skdClient->isAuthorized();
     case Ftp:
@@ -1086,7 +1102,7 @@ QStringList CloudDriveModel::getStoredUidList()
     QStringList uidList;
 
     uidList.append(dbClient->getStoredUidList());
-//    uidList.append(gcdClient->getStoredUidList());
+    uidList.append(gcdClient->getStoredUidList());
     uidList.append(skdClient->getStoredUidList());
     uidList.append(ftpClient->getStoredUidList());
 
@@ -1098,8 +1114,8 @@ QStringList CloudDriveModel::getStoredUidList(CloudDriveModel::ClientTypes type)
     switch (type) {
     case Dropbox:
         return dbClient->getStoredUidList();
-//    case GoogleDrive:
-//        return gcdClient->getStoredUidList();
+    case GoogleDrive:
+        return gcdClient->getStoredUidList();
     case SkyDrive:
         return skdClient->getStoredUidList();
     case Ftp:
@@ -1116,6 +1132,8 @@ int CloudDriveModel::removeUid(CloudDriveModel::ClientTypes type, QString uid)
         return dbClient->removeUid(uid);
     case SkyDrive:
         return skdClient->removeUid(uid);
+    case GoogleDrive:
+        return gcdClient->removeUid(uid);
     case Ftp:
         return ftpClient->removeUid(uid);
     }
@@ -2701,7 +2719,7 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
     // If job.type==Any, start thread.
 
     // TODO Generalize cloud client.
-    CloudDriveClient *cloudClient;
+    CloudDriveClient *cloudClient = 0;
     switch (job.type) {
     case Dropbox:
         cloudClient = dbClient;
@@ -2709,10 +2727,17 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
     case SkyDrive:
         cloudClient = skdClient;
         break;
+    case GoogleDrive:
+        cloudClient = gcdClient;
+        break;
     case Ftp:
         cloudClient = ftpClient;
         break;
+    default:
+        qDebug() << "CloudDriveModel::dispatchJob job.type" << job.type << "is not implemented yet.";
     }
+
+    qDebug() << "CloudDriveModel::dispatchJob" << job.jobId << job.operation << job.type << (cloudClient == 0 ? "no client" : cloudClient->objectName());
 
     switch (job.operation) {
     case LoadCloudDriveItems:
@@ -2850,6 +2875,10 @@ void CloudDriveModel::accessTokenReplyFilter(QString nonce, int err, QString err
         case SkyDrive:
             // SkyDrive's accessTokenReply doesn't provide uid yet. Continue to get account.
             accountInfo(SkyDrive, job.uid);
+            break;
+        case GoogleDrive:
+            // GoogleDrive's accessTokenReply doesn't provide uid yet. Continue to get account.
+            accountInfo(GoogleDrive, job.uid);
             break;
         }
     }

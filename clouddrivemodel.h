@@ -19,7 +19,7 @@
 #include "clouddrivemodelthread.h"
 #include "clouddriveclient.h"
 #include "dropboxclient.h"
-//#include "gcdclient.h"
+#include "gcdclient.h"
 #include "skydriveclient.h"
 #include "ftpclient.h"
 
@@ -289,7 +289,7 @@ private:
     QHash<QString, bool> *m_isSyncingCache;
 
     DropboxClient *dbClient;
-//    GCDClient *gcdClient;
+    GCDClient *gcdClient;
     SkyDriveClient *skdClient;
     FtpClient *ftpClient;
     QString accessTokenPin;
@@ -302,6 +302,7 @@ private:
     void initializeCloudClients(QString nonce);
     void initializeDropboxClient();
     void initializeSkyDriveClient();
+    void initializeGoogleDriveClient();
     void initializeFtpClient();
     QString createNonce();
     void jobDone();

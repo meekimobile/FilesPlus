@@ -28,12 +28,7 @@ Page {
 
             onClicked: {
                 // TODO Remove dependency to make authPage reusable for other REST API.
-                if (authPage.redirectFrom == "DropboxClient") {
-                    cloudDriveModel.accessTokenSlot(authPage.redirectFrom, "dummay");
-                } else if (authPage.redirectFrom == "SkyDriveClient") {
-                    cloudDriveModel.accessTokenSlot(authPage.redirectFrom, authPage.parseSkyDriveCode(webView.url));
-                }
-
+                cloudDriveModel.accessTokenSlot(authPage.redirectFrom, pinInputPanel.pin);
                 pageStack.pop();
             }
         }
@@ -41,13 +36,29 @@ Page {
 
     function parseSkyDriveCode(url) {
         console.debug("authPage parseSkyDriveCode url " + url + " typeof " + (typeof url));
-        var urlStr = url + "";
-        var caps = urlStr.match("\\?code=([^&]*)");
+        var text = url + "";
+        var caps = text.match("\\?code=([^&]*)");
         if (caps) {
             console.debug("authPage parseSkyDriveCode caps " + caps + " caps.length " + caps.length);
             var code = caps[1];
             if (code && code != "") {
                 console.debug("authPage parseSkyDriveCode code " + code);
+                return code;
+            }
+        }
+
+        return "PinNotFound";
+    }
+
+    function parseGoogleDriveCode(title) {
+        console.debug("authPage parseGoogleDriveCode title " + title + " typeof " + (typeof title));
+        var text = title + "";
+        var caps = text.match("\\&code=([^&]*)");
+        if (caps) {
+            console.debug("authPage parseGoogleDriveCode caps " + caps + " caps.length " + caps.length);
+            var code = caps[1];
+            if (code && code != "") {
+                console.debug("authPage parseGoogleDriveCode code " + code);
                 return code;
             }
         }
@@ -109,12 +120,15 @@ Page {
                 // Workaround for transparent background ( https://bugreports.qt-project.org/browse/QTWEBKIT-352 )
                 webView.evaluateJavaScript("if (!document.body.style.backgroundColor) document.body.style.backgroundColor='white';");
 
+                // Reset related objects.
                 webViewBusy.visible = false;
+                pinInputPanel.pin = "";
 
                 if (authPage.redirectFrom == "GCPClient") {
                     // GCPClient handler.
                     console.debug("GCPClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom + " title = " + title);
                     if (title.match("^Success")) {
+                        // TODO Generalize as signal.
                         gcpClient.setGCPClientAuthCode(title);
                         pageStack.pop();
                     }
@@ -124,14 +138,13 @@ Page {
                     }
                 } else if (authPage.redirectFrom == "GCDClient") {
                     // GCDClient handler.
+                    // Example title = Success state=oHlJZRooj1356574041444&code=4/yrQ-e8oo-KgtNousizC9yue_oIJ3
                     console.debug("GCDClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom + " title = " + title);
-                    if (title.match("^Success")) {
-                        cloudDriveModel.setGCDClientAuthCode(title);
-                        pageStack.pop();
-                    }
 
-                    if (title.match("^Denied")) {
-                        pageStack.pop();
+                    if (title.match("^Success")) {
+                        var pin = parseGoogleDriveCode(title);
+                        pinInputPanel.pin = pin;
+                        okButton.visible = pinInputPanel.visible;
                     }
                 } else if (authPage.redirectFrom == "DropboxClient") {
                     okButton.visible = true;
@@ -145,12 +158,12 @@ Page {
                         console.debug("found uid! at " + uidIndex);
     //                    console.debug("DropboxClient html " + html);
 
-                        cloudDriveModel.accessTokenSlot(authPage.redirectFrom, "dummay");
+                        cloudDriveModel.accessTokenSlot(authPage.redirectFrom, pinInputPanel.pin);
                         pageStack.pop();
                     } else if (title.match(appInfo.emptyStr+qsTr("^API Request Authorized"))) {
     //                    console.debug("DropboxClient title " + title);
 
-                        cloudDriveModel.accessTokenSlot(authPage.redirectFrom, "dummay");
+                        cloudDriveModel.accessTokenSlot(authPage.redirectFrom, pinInputPanel.pin);
                         pageStack.pop();
                     } else {
     //                    console.debug("DropboxClient title " + title);
@@ -199,12 +212,13 @@ Page {
                 text: appInfo.emptyStr+qsTr("Please confirm PIN.")
             }
 
-            TextField {
+            TextArea {
                 id: pinInput
                 focus: pinInputPanel.visible
                 width: parent.width
                 font.pointSize: 16
                 readOnly: true
+                wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
             }
         }
     }

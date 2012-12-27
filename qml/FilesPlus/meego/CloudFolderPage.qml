@@ -107,6 +107,9 @@ Page {
         } else if (selectedCloudType == CloudDriveModel.SkyDrive) {
             remoteParentPath = (remoteParentPath == "") ? "me/skydrive" : remoteParentPath;
             cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
+        } else if (selectedCloudType == CloudDriveModel.GoogleDrive) {
+            remoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getParentRemotePath(remotePath) : remoteParentPath;
+            cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
         } else if (selectedCloudType == CloudDriveModel.Ftp) {
             remoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getParentRemotePath(remotePath) : remoteParentPath;
             cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);

@@ -117,6 +117,10 @@ Page {
                 type: CloudDriveModel.SkyDrive
             }
             ListElement {
+                name: "GoogleDrive"
+                type: CloudDriveModel.GoogleDrive
+            }
+            ListElement {
                 name: "FTP"
                 type: CloudDriveModel.Ftp
             }
@@ -158,6 +162,9 @@ Page {
                 break;
             case CloudDriveModel.SkyDrive:
                 cloudDriveModel.authorize(CloudDriveModel.SkyDrive);
+                break;
+            case CloudDriveModel.GoogleDrive:
+                cloudDriveModel.authorize(CloudDriveModel.GoogleDrive);
                 break;
             case CloudDriveModel.Ftp:
                 addAccountDialog.open();
