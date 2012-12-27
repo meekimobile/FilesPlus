@@ -8,6 +8,8 @@
 const QString GCDClient::consumerKey = "196573379494.apps.googleusercontent.com";
 const QString GCDClient::consumerSecret = "il59cyz3dwBW6tsHBkZYGSWj";
 
+const QString GCDClient::GCDRootFolderId = "root";
+
 const QString GCDClient::authorizationScope = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/drive";
 
 const QString GCDClient::authorizeURI = "https://accounts.google.com/o/oauth2/auth";
@@ -17,7 +19,8 @@ const QString GCDClient::quotaURI = "https://www.googleapis.com/drive/v2/about";
 
 const QString GCDClient::fileGetURI = "";
 const QString GCDClient::filePutURI = "";
-const QString GCDClient::metadataURI = "https://www.googleapis.com/drive/v2/files";
+const QString GCDClient::filesURI = "https://www.googleapis.com/drive/v2/files";
+const QString GCDClient::propertyURI = "https://www.googleapis.com/drive/v2/files/%1";
 const QString GCDClient::createFolderURI = "";
 const QString GCDClient::moveFileURI = "";
 const QString GCDClient::copyFileURI = "";
@@ -39,19 +42,17 @@ GCDClient::GCDClient(QObject *parent) :
     // Load accessTokenPair from file
     loadAccessPairMap();
 
-    // Populate contentTypeHash.
-    m_contentTypeHash["jpg"] = "image/jpeg";
-    m_contentTypeHash["png"] = "image/png";
-    m_contentTypeHash["pdf"] = "application/pdf";
-    m_contentTypeHash["txt"] = "text/plain";
-    m_contentTypeHash["patch"] = "text/plain";
-    m_contentTypeHash["log"] = "text/plain";
+    m_propertyReplyHash = new QHash<QString, QByteArray>;
+    m_filesReplyHash = new QHash<QString, QByteArray>;
 }
 
 GCDClient::~GCDClient()
 {
     // Save accessTokenPair to file
     saveAccessPairMap();
+
+    m_propertyReplyHash = 0;
+    m_filesReplyHash = 0;
 }
 
 QString GCDClient::createTimestamp() {
@@ -177,24 +178,6 @@ QByteArray GCDClient::encodeMultiPart(QString boundary, QMap<QString, QString> p
     return postData;
 }
 
-QString GCDClient::getContentType(QString fileName) {
-    // Parse fileName with RegExp
-    QRegExp rx("(.+)(\\.)(\\w{3,5})$");
-    rx.indexIn(fileName);
-    qDebug() << "GCDClient::getContentType fileName=" << fileName << " rx.captureCount()=" << rx.captureCount();
-    for(int i=0; i<=rx.captureCount(); i++) {
-        qDebug() << "GCDClient::getContentType i=" << i << " rx.cap=" << rx.cap(i);
-    }
-    QString fileExt = rx.cap(3).toLower();
-
-    QString contentType = m_contentTypeHash[fileExt];
-    if (contentType == "") {
-        contentType = "application/octet-stream";
-    }
-
-    return contentType;
-}
-
 void GCDClient::authorize(QString nonce)
 {
     qDebug() << "----- GCDClient::authorize -----";
@@ -211,25 +194,6 @@ void GCDClient::authorize(QString nonce)
 
     // Send signal to redirect to URL.
     emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, "GCDClient");
-}
-
-bool GCDClient::parseAuthorizationCode(QString text)
-{
-    qDebug() << "----- GCDClient::parseAuthorizationCode -----";
-
-    QStringList texts = text.split(' ');
-    if (texts.length() == 2 && texts.at(0) == "Success") {
-        foreach (QString s, texts[1].split('&')) {
-            QStringList c = s.split('=');
-            m_paramMap[c.at(0)] = c.at(1);
-        }
-
-        qDebug() << "GCDClient::parseAuthorizationCode " << m_paramMap;
-
-        return true;
-    } else {
-        return false;
-    }
 }
 
 void GCDClient::accessToken(QString nonce, QString pin)
@@ -262,6 +226,12 @@ void GCDClient::accessToken(QString nonce, QString pin)
 void GCDClient::refreshToken(QString nonce, QString uid)
 {
     qDebug() << "----- GCDClient::refreshToken -----";
+
+    if (accessTokenPairMap[uid].secret == "") {
+        qDebug() << "GCDClient::refreshToken refreshToken is empty. Operation is aborted.";
+//        emit accessTokenReplySignal(nonce, -1, "Refresh token is missing", "Refresh token is missing. Please register account.");
+        return;
+    }
 
     refreshTokenUid = uid;
 
@@ -346,18 +316,13 @@ void GCDClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 void GCDClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- GCDClient::browse -----" << uid << remoteFilePath;
+    if (remoteFilePath.isEmpty()) {
+        emit browseReplySignal(nonce, -1, "remoteFilePath is empty.", "");
+        return;
+    }
 
-    QString uri = metadataURI + "?key=" + consumerKey;
-
-    qDebug() << "GCDClient::browse access_oken" << accessTokenPairMap[uid].token;
-
-    // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(browseReplyFinished(QNetworkReply*)));
-    QNetworkRequest req = QNetworkRequest(QUrl(uri));
-    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    QNetworkReply *reply = manager->get(req);
+    property(nonce, uid, remoteFilePath, false, "browse");
+    files(nonce, uid, remoteFilePath, false, "browse");
 }
 
 void GCDClient::createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath)
@@ -378,6 +343,88 @@ void GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
 
 void GCDClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
+}
+
+QNetworkReply * GCDClient::files(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
+{
+    qDebug() << "----- GCDClient::files -----" << remoteFilePath;
+
+    QApplication::processEvents();
+
+    // Construct normalized query string.
+    QMap<QString, QString> sortMap;
+    sortMap["key"] = consumerKey;
+    sortMap["q"] = QUrl::toPercentEncoding(QString("'%1' in parents and trashed = false").arg((remoteFilePath == "") ? GCDRootFolderId : remoteFilePath));
+    QString queryString = createQueryString(sortMap);
+    qDebug() << "queryString " << queryString;
+
+    QString uri = filesURI + "?" + queryString;
+    qDebug() << "GCDClient::files uri " << uri;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filesReplyFinished(QNetworkReply*)) );
+    }
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(callback));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    QNetworkReply *reply = manager->get(req);
+
+    // TODO Return if asynchronous.
+    if (!synchronous) {
+        return reply;
+    }
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper().sleep(100);
+    }
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return reply;
+}
+
+QNetworkReply * GCDClient::property(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
+{
+    qDebug() << "----- GCDClient::property -----" << remoteFilePath;
+
+    QApplication::processEvents();
+
+    QString uri = propertyURI.arg((remoteFilePath == "") ? GCDRootFolderId : remoteFilePath);
+    uri = encodeURI(uri);
+    qDebug() << "GCDClient::property uri " << uri;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(propertyReplyFinished(QNetworkReply*)) );
+    }
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(callback));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    QNetworkReply *reply = manager->get(req);
+
+    // TODO Return if asynchronous.
+    if (!synchronous) {
+        return reply;
+    }
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper().sleep(100);
+    }
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return reply;
 }
 
 void GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath)
@@ -490,7 +537,7 @@ void GCDClient::accessTokenReplyFinished(QNetworkReply *reply)
         m_paramMap["id_token"] = sc.property("id_token").toString();
         qDebug() << "GCDClient::accessTokenReplyFinished m_paramMap " << m_paramMap;
 
-        if (refreshTokenUid != "") {
+        if (refreshTokenUid != "" && sc.property("access_token").toString() != "" && sc.property("refresh_token").toString() != "") {
             // Updates for refreshToken.
             accessTokenPairMap[refreshTokenUid].token = sc.property("access_token").toString();
             accessTokenPairMap[refreshTokenUid].secret = sc.property("refresh_token").toString();
@@ -674,6 +721,95 @@ void GCDClient::browseReplyFinished(QNetworkReply *reply)
     }
 
     // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void GCDClient::propertyReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "GCDClient::propertyReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString callback = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+
+    if (reply->error() == QNetworkReply::NoError) {
+        m_propertyReplyHash->insert(nonce, reply->readAll());
+    } else {
+        // Remove once used.
+        m_propertyReplyHash->remove(nonce);
+        m_filesReplyHash->remove(nonce);
+
+        // Property is mandatory. Emit error if error occurs.
+        if (callback == "browse") {
+            emit browseReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+        } else if (callback == "metadata") {
+            emit metadataReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+        } else {
+            qDebug() << "GCDClient::propertyReplyFinished invalid callback" << callback;
+        }
+    }
+
+    if (m_propertyReplyHash->contains(nonce) && m_filesReplyHash->contains(nonce)) {
+        QScriptEngine engine;
+        QScriptValue sc;
+        QScriptValue scProperty;
+        QScriptValue scJsonStringify;
+        sc = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
+        scProperty = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
+        sc.setProperty("property", scProperty);
+        scJsonStringify = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << sc);
+
+        // Remove once used.
+        m_propertyReplyHash->remove(nonce);
+        m_filesReplyHash->remove(nonce);
+
+        if (callback == "browse") {
+            emit browseReplySignal(nonce, QNetworkReply::NoError, "", scJsonStringify.toString());
+        } else if (callback == "metadata") {
+            emit metadataReplySignal(nonce, QNetworkReply::NoError, "", scJsonStringify.toString());
+        } else {
+            qDebug() << "GCDClient::propertyReplyFinished invalid callback" << callback;
+        }
+    }
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void GCDClient::filesReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "GCDClient::filesReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString callback = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+
+    m_filesReplyHash->insert(nonce, reply->readAll());
+
+    if (m_propertyReplyHash->contains(nonce) && m_filesReplyHash->contains(nonce)) {
+        QScriptEngine engine;
+        QScriptValue sc;
+        QScriptValue scProperty;
+        QScriptValue scJsonStringify;
+        sc = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
+        scProperty = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
+        sc.setProperty("property", scProperty);
+        scJsonStringify = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << sc);
+
+        // Remove once used.
+        m_propertyReplyHash->remove(nonce);
+        m_filesReplyHash->remove(nonce);
+
+        if (callback == "browse") {
+            emit browseReplySignal(nonce, QNetworkReply::NoError, "", scJsonStringify.toString());
+        } else if (callback == "metadata") {
+            emit metadataReplySignal(nonce, QNetworkReply::NoError, "", scJsonStringify.toString());
+        } else {
+            qDebug() << "GCDClient::filesReplyFinished invalid callback" << callback;
+        }
+    }
+
+    // TODO scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }

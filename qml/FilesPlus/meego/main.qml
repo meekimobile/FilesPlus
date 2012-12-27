@@ -978,9 +978,9 @@ PageStackWindow {
                         "subDirCount": 0, "subFileCount": 0, "isDirty": false,
                         "lastModified": (new Date(item.modified)), "size": item.bytes, "isDir": item.is_dir};
                     model.append(modelItem);
-                    if (modelItem.path == originalRemotePath) {
+                    if (modelItem.absolutePath == originalRemotePath) {
                         selectedIndex = i;
-                        selectedRemotePath = modelItem.path;
+                        selectedRemotePath = modelItem.absolutePath;
                         selectedRemotePathName = modelItem.name;
                         selectedIsDir = modelItem.isDir;
                     }
@@ -997,9 +997,28 @@ PageStackWindow {
                         "subDirCount": 0, "subFileCount": 0, "isDirty": false,
                         "lastModified": Utility.parseJSONDate(item.updated_time), "size": item.size, "isDir": (item.type == "folder" || item.type == "album") };
                     model.append(modelItem);
-                    if (modelItem.path == originalRemotePath) {
+                    if (modelItem.absolutePath == originalRemotePath) {
                         selectedIndex = i;
-                        selectedRemotePath = modelItem.path;
+                        selectedRemotePath = modelItem.absolutePath;
+                        selectedRemotePathName = modelItem.name;
+                        selectedIsDir = modelItem.isDir;
+                    }
+                }
+                break;
+            case CloudDriveModel.GoogleDrive:
+                remoteParentPath = json.property.id;
+                remoteParentPathName = json.property.title;
+                remoteParentParentPath = ((json.parents && json.parents.count > 0) ? json.parents[0].id : "");
+                for (var i=0; i<json.items.length; i++) {
+                    var item = json.items[i];
+                    var modelItem = { "name": item.title, "absolutePath": item.id,
+                        "isChecked": false, "source": (item.webContentLink ? item.webContentLink : ""), "thumbnail": (item.thumbnailLink ? item.thumbnailLink : ""), "fileType": (item.fileExtension ? item.fileExtension : ""), "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
+                        "subDirCount": 0, "subFileCount": 0, "isDirty": false,
+                        "lastModified": Utility.parseJSONDate(item.modifiedDate), "size": (item.fileSize ? item.fileSize : 0), "isDir": (item.mimeType == "application/vnd.google-apps.folder") };
+                    model.append(modelItem);
+                    if (modelItem.absolutePath == originalRemotePath) {
+                        selectedIndex = i;
+                        selectedRemotePath = modelItem.absolutePath;
                         selectedRemotePathName = modelItem.name;
                         selectedIsDir = modelItem.isDir;
                     }
@@ -1016,9 +1035,9 @@ PageStackWindow {
                         "subDirCount": 0, "subFileCount": 0, "isDirty": false,
                         "lastModified": Utility.parseJSONDate(item.lastModified), "size": item.size, "isDir": item.isDir };
                     model.append(modelItem);
-                    if (modelItem.path == originalRemotePath) {
+                    if (modelItem.absolutePath == originalRemotePath) {
                         selectedIndex = i;
-                        selectedRemotePath = modelItem.path;
+                        selectedRemotePath = modelItem.absolutePath;
                         selectedRemotePathName = modelItem.name;
                         selectedIsDir = modelItem.isDir;
                     }

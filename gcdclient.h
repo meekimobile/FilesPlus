@@ -14,6 +14,8 @@ public:
     static const QString consumerKey;
     static const QString consumerSecret;
 
+    static const QString GCDRootFolderId;
+
     static const QString authorizationScope;
 
     static const QString authorizeURI;
@@ -23,7 +25,8 @@ public:
 
     static const QString fileGetURI;
     static const QString filePutURI;
-    static const QString metadataURI;
+    static const QString filesURI;
+    static const QString propertyURI;
     static const QString createFolderURI;
     static const QString moveFileURI;
     static const QString copyFileURI;
@@ -54,8 +57,8 @@ public:
     void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     void shareFile(QString nonce, QString uid, QString remoteFilePath);
 
-    bool parseAuthorizationCode(QString text);
-    QString getContentType(QString fileName);
+    QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
+    QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
 signals:
 
 public slots:
@@ -68,6 +71,9 @@ public slots:
     void metadataReplyFinished(QNetworkReply *reply);
     void browseReplyFinished(QNetworkReply *reply);
 
+    void propertyReplyFinished(QNetworkReply *reply);
+    void filesReplyFinished(QNetworkReply *reply);
+
     void createFolderReplyFinished(QNetworkReply *reply);
     void moveFileReplyFinished(QNetworkReply *reply);
     void copyFileReplyFinished(QNetworkReply *reply);
@@ -75,9 +81,11 @@ public slots:
     void shareFileReplyFinished(QNetworkReply *reply);
 private:
     QString localPath;
+    QHash<QString, QString> m_contentTypeHash;
     QHash<QString, QFile*> m_localFileHash;
     QString refreshTokenUid;
-    QHash<QString, QString> m_contentTypeHash;
+    QHash<QString, QByteArray> *m_propertyReplyHash;
+    QHash<QString, QByteArray> *m_filesReplyHash;
 
     QString createTimestamp();
     QString createNormalizedQueryString(QMap<QString, QString> sortMap);

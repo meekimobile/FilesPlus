@@ -148,6 +148,8 @@ function compareTime(jsonDateStringA, jsonDateStringB) {
 function parseJSONDate(jsonDateString) {
 //    console.debug("Utility.parseJSONDate jsonDateString " + jsonDateString);
 
+    if (!jsonDateString) return jsonDateString;
+
     var re = /(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(\.\d+)?(Z|([+-])(\d\d):(\d\d)|([+-])(\d\d\d\d))/;
     var d = jsonDateString.match(re);
 //    console.debug("Utility.parseJSONDate d " + d + " d.length " + d.length);

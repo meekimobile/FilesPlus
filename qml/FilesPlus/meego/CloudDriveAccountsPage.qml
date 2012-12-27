@@ -397,6 +397,9 @@ Page {
                     }
                     cloudDriveModel.quota(type, uid);
                     break;
+                case CloudDriveModel.GoogleDrive:
+                    cloudDriveModel.quota(type, uid);
+                    break;
                 }
             }
         }

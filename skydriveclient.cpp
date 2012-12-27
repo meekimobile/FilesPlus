@@ -302,7 +302,7 @@ void SkyDriveClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- SkyDriveClient::browse -----" << remoteFilePath;
     if (remoteFilePath.isEmpty()) {
-        emit metadataReplySignal(nonce, -1, "remoteFilePath is empty.", "");
+        emit browseReplySignal(nonce, -1, "remoteFilePath is empty.", "");
         return;
     }
 
@@ -391,7 +391,6 @@ QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString rem
 
     QApplication::processEvents();
 
-    // TODO root dropbox(Full access) or sandbox(App folder access)
     QString uri = propertyURI.arg(remoteFilePath);
     uri = encodeURI(uri);
     qDebug() << "SkyDriveClient::property uri " << uri;

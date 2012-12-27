@@ -306,7 +306,6 @@ private:
     void initializeFtpClient();
     QString createNonce();
     void jobDone();
-    ClientTypes getJobType(int jobType);
 
     bool m_dropboxFullAccess;
 

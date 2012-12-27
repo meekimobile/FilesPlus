@@ -480,22 +480,12 @@ bool CloudDriveModel::isRemoteRoot(CloudDriveModel::ClientTypes type, QString ui
         return (remotePath == "");
     case SkyDrive:
         return (remotePath == "");
+    case GoogleDrive:
+        return (remotePath == "");
     case Ftp:
         return (remotePath == "");
     default:
         return false;
-    }
-}
-
-CloudDriveModel::ClientTypes CloudDriveModel::getJobType(int jobType)
-{
-    switch (jobType) {
-    case Dropbox:
-        return Dropbox;
-    case SkyDrive:
-        return SkyDrive;
-    case Ftp:
-        return Ftp;
     }
 }
 
@@ -1914,7 +1904,7 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
             break;
         }
     } else {
-        removeItem(getJobType(job.type), job.uid, job.localFilePath);
+        removeItem(getClientType(job.type), job.uid, job.localFilePath);
     }
 
     // Update job running flag.
@@ -1965,7 +1955,7 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
             break;
         }
     } else {
-        removeItem(getJobType(job.type), job.uid, job.localFilePath);
+        removeItem(getClientType(job.type), job.uid, job.localFilePath);
     }
 
     // Update job running flag.
@@ -2165,10 +2155,10 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
 
     // Disconnect deleted local path.
     if (job.localFilePath != "") {
-        removeItemWithChildren(getJobType(job.type), job.uid, job.localFilePath);
+        removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
     }
     if (job.remoteFilePath != "") {
-        removeItemByRemotePath(getJobType(job.type), job.uid, job.remoteFilePath);
+        removeItemByRemotePath(getClientType(job.type), job.uid, job.remoteFilePath);
     }
 
     // Stop running.
