@@ -59,7 +59,8 @@ public:
 
     QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
-    QNetworkReply *createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath, bool synchronous);
+    QNetworkReply * createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath, bool synchronous);
+    QNetworkReply * deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous);
 signals:
 
 public slots:

@@ -24,7 +24,7 @@ const QString GCDClient::propertyURI = "https://www.googleapis.com/drive/v2/file
 const QString GCDClient::createFolderURI = "https://www.googleapis.com/drive/v2/files"; // POST with json.
 const QString GCDClient::moveFileURI = "";
 const QString GCDClient::copyFileURI = "";
-const QString GCDClient::deleteFileURI = "";
+const QString GCDClient::deleteFileURI = "https://www.googleapis.com/drive/v2/files/%1/trash"; // POST
 const QString GCDClient::renameFileURI = "";
 const QString GCDClient::sharesURI = "";
 
@@ -395,6 +395,44 @@ void GCDClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QSt
 
 void GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
 {
+    deleteFile(nonce, uid, remoteFilePath, false);
+}
+
+QNetworkReply * GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
+{
+    qDebug() << "----- GCDClient::deleteFile -----";
+
+    QString uri = deleteFileURI.arg(remoteFilePath);
+    qDebug() << "GCDClient::deleteFile uri " << uri;
+
+    QByteArray postData;
+    qDebug() << "GCDClient::deleteFile postData" << postData;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deleteFileReplyFinished(QNetworkReply*)) );
+    }
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    QNetworkReply *reply = manager->post(req, postData);
+
+    // TODO Return if asynchronous.
+    if (!synchronous) {
+        return reply;
+    }
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper().sleep(100);
+    }
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return reply;
 }
 
 void GCDClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
