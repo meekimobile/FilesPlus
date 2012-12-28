@@ -2847,39 +2847,42 @@ void CloudDriveModel::accessTokenReplyFilter(QString nonce, int err, QString err
     job.isRunning = false;
     m_cloudDriveJobs->insert(nonce, job);
 
-    // Get accountInfo.
     if (err == QNetworkReply::NoError) {
-        QHash<QString, QString> m_paramMap;
+        // Check if job.nextJobId is specified. (From quota request)
+        if (job.nextJobId != "") {
+            // Insert job.nextJobId to first in queue.
+            qDebug() << "CloudDriveModel::accessTokenReplyFilter insert job.nextJobId" << job.nextJobId;
+            m_jobQueue->insert(0, job.nextJobId);
+        } else {
+            QHash<QString, QString> m_paramMap;
 
-        switch (job.type) {
-        case Dropbox:
-            // Dropbox provides uid but no email yet. Get email from accountInfo.
-            foreach (QString s, msg.split('&')) {
-                QStringList c = s.split('=');
-                m_paramMap[c.at(0)] = c.at(1);
+            // Proceed to accountInfo for authorization's accessToken.
+            switch (job.type) {
+            case Dropbox:
+                // Dropbox provides uid but no email yet. Get email from accountInfo.
+                foreach (QString s, msg.split('&')) {
+                    QStringList c = s.split('=');
+                    m_paramMap[c.at(0)] = c.at(1);
+                }
+//                qDebug() << "CloudDriveModel::accessTokenReplyFilter Dropbox uid" << m_paramMap["uid"];
+
+                accountInfo(Dropbox, m_paramMap["uid"]);
+                break;
+            case SkyDrive:
+                // SkyDrive's accessTokenReply doesn't provide uid yet. Continue to get account.
+//                qDebug() << "CloudDriveModel::accessTokenReplyFilter SkyDrive uid" << job.uid;
+                accountInfo(SkyDrive, job.uid);
+                break;
+            case GoogleDrive:
+                // GoogleDrive's accessTokenReply doesn't provide uid yet. Continue to get account.
+//                qDebug() << "CloudDriveModel::accessTokenReplyFilter GoogleDrive uid" << job.uid;
+                accountInfo(GoogleDrive, job.uid);
+                break;
             }
-            qDebug() << "CloudDriveModel::accessTokenReplyFilter Dropbox uid" << m_paramMap["uid"];
-
-            accountInfo(Dropbox, m_paramMap["uid"]);
-            break;
-        case SkyDrive:
-            // SkyDrive's accessTokenReply doesn't provide uid yet. Continue to get account.
-            accountInfo(SkyDrive, job.uid);
-            break;
-        case GoogleDrive:
-            // GoogleDrive's accessTokenReply doesn't provide uid yet. Continue to get account.
-            accountInfo(GoogleDrive, job.uid);
-            break;
         }
     }
 
     emit accessTokenReplySignal(nonce, err, errMsg, msg);
-
-    // Insert job.nextJobId to first in queue.
-    if (job.nextJobId != "") {
-        qDebug() << "CloudDriveModel::accessTokenReplyFilter insert job.nextJobId" << job.nextJobId;
-        m_jobQueue->insert(0, job.nextJobId);
-    }
 
     // Notify job done.
     jobDone();

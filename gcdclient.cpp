@@ -229,7 +229,7 @@ void GCDClient::refreshToken(QString nonce, QString uid)
 
     if (accessTokenPairMap[uid].secret == "") {
         qDebug() << "GCDClient::refreshToken refreshToken is empty. Operation is aborted.";
-//        emit accessTokenReplySignal(nonce, -1, "Refresh token is missing", "Refresh token is missing. Please register account.");
+        emit accessTokenReplySignal(nonce, -1, "Refresh token is missing", "Refresh token is missing. Please authorize GoogleDrive account again.");
         return;
     }
 
@@ -640,6 +640,8 @@ void GCDClient::accessTokenReplyFinished(QNetworkReply *reply)
             // Reset refreshTokenUid.
             refreshTokenUid = "";
         }
+
+        // NOTE uid and email will be requested to accountInfo by CloudDriveModel.accessTokenReplyFilter().
     }
 
     emit accessTokenReplySignal(nonce, reply->error(), reply->errorString(), replyBody );
@@ -678,8 +680,11 @@ void GCDClient::accountInfoReplyFinished(QNetworkReply *reply)
         QString uid = sc.property("id").toString();
         QString name = sc.property("name").toString();
         QString email = sc.property("email").toString();
+        qDebug() << "GCDClient::accountInfoReplyFinished m_paramMap" << m_paramMap;
 
         if (accessTokenPairMap.contains(uid)) {
+            qDebug() << "GCDClient::accountInfoReplyFinished found existing accessToken for uid" << uid << accessTokenPairMap[uid];
+
             accessTokenPairMap[uid].email = email;
 
             if (m_paramMap.contains("access_token")) {
@@ -691,6 +696,8 @@ void GCDClient::accountInfoReplyFinished(QNetworkReply *reply)
                 m_paramMap.remove("refresh_token");
             }
         } else {
+            qDebug() << "GCDClient::accountInfoReplyFinished not found existing accessToken for uid" << uid;
+
             TokenPair accessTokenPair;
             accessTokenPair.token = m_paramMap["access_token"];
             accessTokenPair.secret = m_paramMap["refresh_token"];
