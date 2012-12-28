@@ -96,10 +96,10 @@ Page {
         isBusy = true;
         switch (selectedCloudType) {
         case CloudDriveModel.SkyDrive:
-            cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", remotePath, "", newName);
+            cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", remotePath, "", "", newName);
             break;
         case CloudDriveModel.GoogleDrive:
-            cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", remotePath, "", newName);
+            cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", remotePath, "", "", newName);
             break;
         default:
             cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", remotePath, "", cloudDriveModel.getParentRemotePath(remotePath) + "/" + newName);

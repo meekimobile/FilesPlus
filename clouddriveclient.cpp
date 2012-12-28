@@ -137,11 +137,11 @@ void CloudDriveClient::createFolder(QString nonce, QString uid, QString localFil
 {
 }
 
-void CloudDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
+void CloudDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
 }
 
-void CloudDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
+void CloudDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
 }
 

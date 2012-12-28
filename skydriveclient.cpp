@@ -479,17 +479,18 @@ QNetworkReply * SkyDriveClient::createFolder(QString nonce, QString uid, QString
     return reply;
 }
 
-void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath)
+void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
 {
-    qDebug() << "----- SkyDriveClient::moveFile -----" << uid << remoteFilePath << targetRemoteParentPath;
+    qDebug() << "----- SkyDriveClient::moveFile -----" << uid << remoteFilePath << targetRemoteParentPath << newRemoteFileName;
 
-    QRegExp rx("(file\.|folder\.)(" + uid + ")(.*)");
-    if (rx.exactMatch(targetRemoteParentPath)) {
-        // Match as remote ID.
-        qDebug() << "SkyDriveClient::moveFile rx" << rx.captureCount() << rx.capturedTexts();
-    } else {
-        // Doesn't match. It's a name. Proceed renaming.
-        renameFile(nonce, uid, remoteFilePath, targetRemoteParentPath);
+//    QRegExp rx("(file\.|folder\.)(" + uid + ")(.*)");
+//    if (rx.exactMatch(targetRemoteParentPath)) {
+//        // Match as remote ID.
+//    }
+
+    if (newRemoteFileName != "") {
+        // Proceed renaming.
+        renameFile(nonce, uid, remoteFilePath, newRemoteFileName);
         return;
     }
 
@@ -520,7 +521,7 @@ void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath
     }
 }
 
-void SkyDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath)
+void SkyDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
 {
     qDebug() << "----- SkyDriveClient::copyFile -----" << uid << remoteFilePath << targetRemoteParentPath;
 

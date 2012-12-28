@@ -274,12 +274,12 @@ void FtpClient::createFolder(QString nonce, QString uid, QString localFilePath, 
     m_ftpHash->remove(m_ftp->getNonce());
 }
 
-void FtpClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
+void FtpClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
     emit moveFileReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, tr("FTP doesn't support move command."), "");
 }
 
-void FtpClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
+void FtpClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
     emit moveFileReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, tr("FTP doesn't support copy command."), "");
 }

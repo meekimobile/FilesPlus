@@ -25,7 +25,7 @@ const QString GCDClient::createFolderURI = "https://www.googleapis.com/drive/v2/
 const QString GCDClient::moveFileURI = "";
 const QString GCDClient::copyFileURI = "";
 const QString GCDClient::deleteFileURI = "https://www.googleapis.com/drive/v2/files/%1/trash"; // POST
-const QString GCDClient::renameFileURI = "";
+const QString GCDClient::renameFileURI = "https://www.googleapis.com/drive/v2/files/%1"; // PATCH with partial json body.
 const QString GCDClient::sharesURI = "";
 
 const QString GCDClient::insertURI = "https://www.googleapis.com/drive/v2/files";
@@ -385,11 +385,75 @@ QNetworkReply * GCDClient::createFolder(QString nonce, QString uid, QString newR
     return reply;
 }
 
-void GCDClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath)
+void GCDClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
 {
+    qDebug() << "----- GCDClient::moveFile -----" << uid << remoteFilePath << targetRemoteParentPath << newRemoteFileName;
+
+    if (newRemoteFileName != "") {
+        // Proceed renaming.
+        renameFile(nonce, uid, remoteFilePath, newRemoteFileName);
+        return;
+    }
+
+    QString uri = moveFileURI.arg(remoteFilePath);
+    qDebug() << "GCDClient::moveFile uri " << uri;
+
+    QByteArray postData;
+    postData.append("{ \"destination\": \"");
+    postData.append(targetRemoteParentPath.toUtf8());
+    postData.append("\" }");
+    qDebug() << "GCDClient::moveFile postData" << postData;
+
+    // Insert buffer to hash.
+    m_bufferHash.insert(nonce, new QBuffer());
+    m_bufferHash[nonce]->open(QIODevice::WriteOnly);
+    m_bufferHash[nonce]->write(postData);
+    m_bufferHash[nonce]->close();
+
+    if (m_bufferHash[nonce]->open(QIODevice::ReadOnly)) {
+        // Send request.
+        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)) );
+        QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+        req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+        req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+        req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        QNetworkReply *reply = manager->sendCustomRequest(req, "MOVE", m_bufferHash[nonce]);
+    }
 }
 
-void GCDClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath)
+void GCDClient::renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName)
+{
+    qDebug() << "----- GCDClient::renameFile -----" << remoteFilePath << newName;
+
+    QString uri = renameFileURI.arg(remoteFilePath);
+    qDebug() << "GCDClient::renameFile uri " << uri;
+
+    QByteArray postData;
+    postData.append("{ \"title\": \"");
+    postData.append(newName.toUtf8());
+    postData.append("\" }");
+    qDebug() << "GCDClient::renameFile postData" << postData;
+
+    // Insert buffer to hash.
+    m_bufferHash.insert(nonce, new QBuffer());
+    m_bufferHash[nonce]->open(QIODevice::WriteOnly);
+    m_bufferHash[nonce]->write(postData);
+    m_bufferHash[nonce]->close();
+
+    if (m_bufferHash[nonce]->open(QIODevice::ReadOnly)) {
+        // Send request.
+        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)) );
+        QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+        req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+        req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+        req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        QNetworkReply *reply = manager->sendCustomRequest(req, "PATCH", m_bufferHash[nonce]);
+    }
+}
+
+void GCDClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
 {
 }
 
@@ -924,10 +988,10 @@ void GCDClient::moveFileReplyFinished(QNetworkReply *reply)
     emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
 
     // Remove request buffer.
-//    if (m_bufferHash.contains(nonce)) {
-//        m_bufferHash[nonce]->close();
-//        m_bufferHash.remove(nonce);
-//    }
+    if (m_bufferHash.contains(nonce)) {
+        m_bufferHash[nonce]->close();
+        m_bufferHash.remove(nonce);
+    }
 
     // TODO scheduled to delete later.
     reply->deleteLater();

@@ -463,7 +463,7 @@ void DropboxClient::createFolder(QString nonce, QString uid, QString localFilePa
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-void DropboxClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
+void DropboxClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
     qDebug() << "----- DropboxClient::moveFile -----";
 
@@ -495,7 +495,7 @@ void DropboxClient::moveFile(QString nonce, QString uid, QString remoteFilePath,
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-void DropboxClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath)
+void DropboxClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
     qDebug() << "----- DropboxClient::copyFile -----";
 

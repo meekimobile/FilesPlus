@@ -1755,20 +1755,21 @@ QString CloudDriveModel::createFolder_SkyDrive(CloudDriveModel::ClientTypes type
     return "";
 }
 
-void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath)
+void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
     if (remoteFilePath == "") {
         qDebug() << "CloudDriveModel::moveFile remoteFilePath" << remoteFilePath << "is empty. Operation is aborted.";
         return;
     }
 
-    if (newRemoteFilePath == "") {
-        qDebug() << "CloudDriveModel::moveFile newRemoteFilePath" << newRemoteFilePath << "is empty. Operation is aborted.";
+    if (newRemoteFilePath == "" && newRemoteFileName == "") {
+        qDebug() << "CloudDriveModel::moveFile newRemoteFilePath" << newRemoteFilePath << "or newRemoteFileName" << newRemoteFileName << "is empty. Operation is aborted.";
         return;
     }
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), MoveFile, type, uid, localFilePath, remoteFilePath, newLocalFilePath, newRemoteFilePath, -1);
+    job.newRemoteFileName = newRemoteFileName;
     job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
@@ -1791,7 +1792,7 @@ void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, Q
     emit proceedNextJobSignal();
 }
 
-void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath)
+void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
     if (remoteFilePath == "") {
         qDebug() << "CloudDriveModel::copyFile remoteFilePath" << remoteFilePath << "is empty. Operation is aborted.";
@@ -1805,6 +1806,7 @@ void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, Q
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), CopyFile, type, uid, localFilePath, remoteFilePath, newLocalFilePath, newRemoteFilePath, -1);
+    job.newRemoteFileName = newRemoteFileName;
     job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
@@ -2780,10 +2782,10 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         cloudClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
         break;
     case MoveFile:
-        cloudClient->moveFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
+        cloudClient->moveFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath, job.newRemoteFileName);
         break;
     case CopyFile:
-        cloudClient->copyFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
+        cloudClient->copyFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath, job.newRemoteFileName);
         break;
     case DeleteFile:
         cloudClient->deleteFile(job.jobId, job.uid, job.remoteFilePath);

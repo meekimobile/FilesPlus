@@ -23,8 +23,8 @@ public:
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
     void createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
-    void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
-    void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
+    void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
+    void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
     void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     void shareFile(QString nonce, QString uid, QString remoteFilePath);
 signals:

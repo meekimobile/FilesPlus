@@ -52,8 +52,8 @@ public:
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
     void createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath);
-    void moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath);
-    void copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath);
+    void moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName);
+    void copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName);
     void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     void shareFile(QString nonce, QString uid, QString remoteFilePath);
 
@@ -61,6 +61,7 @@ public:
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
     QNetworkReply * createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath, bool synchronous);
     QNetworkReply * deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous);
+    void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
 signals:
 
 public slots:
@@ -83,8 +84,8 @@ public slots:
     void shareFileReplyFinished(QNetworkReply *reply);
 private:
     QString localPath;
-    QHash<QString, QString> m_contentTypeHash;
     QHash<QString, QFile*> m_localFileHash;
+    QHash<QString, QBuffer*> m_bufferHash;
     QString refreshTokenUid;
     QHash<QString, QByteArray> *m_propertyReplyHash;
     QHash<QString, QByteArray> *m_filesReplyHash;

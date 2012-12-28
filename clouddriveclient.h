@@ -32,8 +32,8 @@ public:
     virtual void metadata(QString nonce, QString uid, QString remoteFilePath);
     virtual void browse(QString nonce, QString uid, QString remoteFilePath);
     virtual void createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
-    virtual void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
-    virtual void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath);
+    virtual void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
+    virtual void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
     virtual void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     virtual void shareFile(QString nonce, QString uid, QString remoteFilePath);
 signals:
