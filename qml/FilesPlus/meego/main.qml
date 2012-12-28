@@ -1223,13 +1223,23 @@ PageStackWindow {
             var jobJson = JSON.parse(jsonText);
 
             if (err == 0) {
-                // Do nothing.
+                // Refresh cloudFolderPage.
+                var p = findPage("cloudFolderPage");
+                if (p) {
+                    p.refreshSlot("cloudDriveModel onFilePutReplySignal");
+                }
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
                 showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("File Put"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+
+                // Reset cloudFolderPage.
+                var p = findPage("cloudFolderPage");
+                if (p) {
+                    p.resetBusySlot("cloudDriveModel onFilePutReplySignal");
+                }
             }
 
             // Update ProgressBar on listItem and its parent.
@@ -1863,6 +1873,12 @@ PageStackWindow {
                 var p = findPage("folderPage");
                 if (p) {
                     p.closeCloudDrivePathDialogSlot();
+                }
+
+                // Reset cloudFolderPage.
+                var p = findPage("cloudFolderPage");
+                if (p) {
+                    p.resetBusySlot("cloudDriveModel onBrowseReplySignal");
                 }
             }
         }

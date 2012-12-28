@@ -84,6 +84,7 @@ public slots:
     void shareFileReplyFinished(QNetworkReply *reply);
 private:
     QString localPath;
+    QHash<QString, QString> m_contentTypeHash;
     QHash<QString, QFile*> m_localFileHash;
     QHash<QString, QBuffer*> m_bufferHash;
     QString refreshTokenUid;
@@ -98,6 +99,7 @@ private:
     QHash<QString, QString> createHashFromScriptValue(QString parentName, QScriptValue sc);
     QHash<QString, QString> createHashFromJson(QString jsonText);
     QByteArray encodeMultiPart(QString boundary, QMap<QString, QString> paramMap, QString fileParameter, QString fileName, QByteArray fileData, QString contentType);
+    QString getContentType(QString fileName);
 };
 
 #endif // GCDClient_H

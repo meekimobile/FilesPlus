@@ -1948,6 +1948,12 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
                 addItem(SkyDrive, job.uid, job.localFilePath, remoteFilePath, hash);
             }
             break;
+        case GoogleDrive:
+            sc = engine.evaluate("(" + msg + ")");
+            remoteFilePath = sc.property("id").toString();
+            hash = sc.property("modifiedDate").toString();
+            addItem(GoogleDrive, job.uid, job.localFilePath, job.remoteFilePath, hash);
+            break;
         case Ftp:
             // Parse result and update remote file path to item.
             sc = engine.evaluate("(" + msg + ")");
