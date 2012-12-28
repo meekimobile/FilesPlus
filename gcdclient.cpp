@@ -603,7 +603,7 @@ QNetworkReply * GCDClient::files(QString nonce, QString uid, QString remoteFileP
 
 QNetworkReply * GCDClient::property(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
 {
-    qDebug() << "----- GCDClient::property -----" << remoteFilePath;
+    qDebug() << "----- GCDClient::property -----" << remoteFilePath << callback;
 
     QApplication::processEvents();
 
@@ -647,13 +647,18 @@ void GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QStr
     // TODO It should be downloadUrl because it will not be albe to create connection in CloudDriveModel.fileGetReplyFilter.
     if (!remoteFilePath.startsWith("http")) {
         // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
-        QNetworkReply *reply = property(nonce, uid, remoteFilePath, true);
-        if (reply->error() == QNetworkReply::NoError) {
+        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "fileGet");
+        if (propertyReply->error() == QNetworkReply::NoError) {
+            // For further using in fileGetReplyFinished.
+            m_propertyReplyHash->insert(nonce, propertyReply->readAll());
+
             QScriptEngine engine;
-            QScriptValue sc = engine.evaluate("(" + reply->readAll() + ")");
+            QScriptValue sc = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
             uri = sc.property("downloadUrl").toString();
+            propertyReply->deleteLater();
         } else {
-            emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+            emit fileGetReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));
+            propertyReply->deleteLater();
             return;
         }
     }

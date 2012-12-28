@@ -187,7 +187,19 @@ void SkyDriveClient::quota(QString nonce, QString uid)
 void SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath) {
     qDebug() << "----- SkyDriveClient::fileGet -----" << remoteFilePath << "to" << localFilePath;
 
-    QString uri = fileGetURI.arg(remoteFilePath); // + "?access_token=" + accessTokenPairMap[uid].token;
+    // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
+    QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "fileGet");
+    if (propertyReply->error() == QNetworkReply::NoError) {
+        // For further using in fileGetReplyFinished.
+        m_propertyReplyHash->insert(nonce, propertyReply->readAll());
+        propertyReply->deleteLater();
+    } else {
+        emit fileGetReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));
+        propertyReply->deleteLater();
+        return;
+    }
+
+    QString uri = fileGetURI.arg(remoteFilePath);
     uri = encodeURI(uri);
     qDebug() << "SkyDriveClient::fileGet uri " << uri;
 
@@ -224,6 +236,7 @@ void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, 
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)));
         QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
         req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+        req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
         req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
         req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize);
         QNetworkReply *reply = manager->put(req, localSourceFile);
@@ -387,7 +400,7 @@ QNetworkReply * SkyDriveClient::files(QString nonce, QString uid, QString remote
 
 QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
 {
-    qDebug() << "----- SkyDriveClient::property -----" << remoteFilePath;
+    qDebug() << "----- SkyDriveClient::property -----" << remoteFilePath << callback;
 
     QApplication::processEvents();
 
@@ -786,12 +799,15 @@ void SkyDriveClient::fileGetReplyFinished(QNetworkReply *reply) {
 
         // Close target file.
         localTargetFile->close();
-        m_localFileHash.remove(nonce);
 
-        emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), "Request property");
+        emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(m_propertyReplyHash->value(nonce)));
     } else {
         emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
     }
+
+    // Remove once used.
+    m_localFileHash.remove(nonce);
+    m_propertyReplyHash->remove(nonce);
 
     // TODO scheduled to delete later.
     reply->deleteLater();
@@ -802,14 +818,30 @@ void SkyDriveClient::filePutReplyFinished(QNetworkReply *reply) {
     qDebug() << "SkyDriveClient::filePutReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
 
     // Close source file.
     QFile *localTargetFile = m_localFileHash[nonce];
     localTargetFile->close();
     m_localFileHash.remove(nonce);
 
-    // REMARK Use QString::fromUtf8() to support unicode text.
-    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue sc = engine.evaluate("(" + QString::fromUtf8(reply->readAll()) + ")");
+        QString remoteFilePath = sc.property("id").toString();
+        // Get property synchronously.
+        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "filePutReplyFinished");
+        if (propertyReply->error() == QNetworkReply::NoError) {
+            sc = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
+        }
+        propertyReply->deleteLater();
+
+        QScriptValue scJsonStringify = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << sc);
+        emit filePutReplySignal(nonce, reply->error(), reply->errorString(), scJsonStringify.toString());
+    } else {
+        // REMARK Use QString::fromUtf8() to support unicode text.
+        emit filePutReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+    }
 
     // TODO scheduled to delete later.
     reply->deleteLater();

@@ -1881,7 +1881,6 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
     QScriptEngine engine;
     QScriptValue sc;
     QString hash;
-    QNetworkReply *propertyReply;
 
     if (err == 0) {
         // TODO handle other clouds.
@@ -1892,12 +1891,9 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
             addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
             break;
         case SkyDrive:
-            propertyReply = skdClient->property(nonce, job.uid, job.remoteFilePath, true);
-            if (propertyReply->error() == QNetworkReply::NoError) {
-                sc = engine.evaluate("(" + propertyReply->readAll() + ")");
-                hash = sc.property("updated_time").toString();
-                addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, hash);
-            }
+            sc = engine.evaluate("(" + msg + ")");
+            hash = sc.property("updated_time").toString();
+            addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, hash);
             break;
         case GoogleDrive:
             sc = engine.evaluate("(" + msg + ")");
@@ -1945,19 +1941,14 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
             // Parse result and update remote file path to item.
             sc = engine.evaluate("(" + msg + ")");
             remoteFilePath = sc.property("id").toString();
-            // Get property synchronously by omitting callback parameter.
-            propertyReply = skdClient->property(nonce, job.uid, remoteFilePath, true);
-            if (propertyReply->error() == QNetworkReply::NoError) {
-                sc = engine.evaluate("(" + propertyReply->readAll() + ")");
-                hash = sc.property("updated_time").toString();
-                addItem(SkyDrive, job.uid, job.localFilePath, remoteFilePath, hash);
-            }
+            hash = sc.property("updated_time").toString();
+            addItem(SkyDrive, job.uid, job.localFilePath, remoteFilePath, hash);
             break;
         case GoogleDrive:
             sc = engine.evaluate("(" + msg + ")");
             remoteFilePath = sc.property("id").toString();
             hash = sc.property("modifiedDate").toString();
-            addItem(GoogleDrive, job.uid, job.localFilePath, job.remoteFilePath, hash);
+            addItem(GoogleDrive, job.uid, job.localFilePath, remoteFilePath, hash);
             break;
         case Ftp:
             // Parse result and update remote file path to item.
