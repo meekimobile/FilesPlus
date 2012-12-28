@@ -1402,7 +1402,7 @@ PageStackWindow {
                             cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
 
                             // Sync based on local contents.
-                            cloudDriveModel.syncFromLocal_SkyDrive(jobJson.type, jobJson.uid, jobJson.local_file_path, jsonObj.property.parent_id, jobJson.modelIndex);
+                            cloudDriveModel.syncFromLocal_Block(jobJson.type, jobJson.uid, jobJson.local_file_path, jsonObj.property.parent_id, jobJson.modelIndex);
                         } else { // Sync file.
                             console.debug("window cloudDriveModel onMetadataReplySignal file jobJson " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + jobJson.type + " " + jobJson.uid + " remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
 
@@ -1485,8 +1485,8 @@ PageStackWindow {
                             cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
 
                             // Sync based on local contents.
-//                            var remoteParentPath = (item.property.parents && item.property.parents.length > 0) ? item.property.parents[0].id : "root";
-//                            cloudDriveModel.syncFromLocal_SkyDrive(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
+                            var remoteParentPath = (jsonObj.property.parents && jsonObj.property.parents.length > 0) ? jsonObj.property.parents[0].id : "root";
+                            cloudDriveModel.syncFromLocal_Block(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
                         } else { // Sync file.
                             console.debug("window cloudDriveModel onMetadataReplySignal file jobJson " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + jobJson.type + " " + jobJson.uid + " remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
 
@@ -1611,10 +1611,6 @@ PageStackWindow {
                     } else {
                         cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
                     }
-                }
-
-                if (jobJson.type == CloudDriveModel.SkyDrive) {
-
                 }
 
                 if (jobJson.type == CloudDriveModel.Ftp) {

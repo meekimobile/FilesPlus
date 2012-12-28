@@ -152,3 +152,7 @@ void CloudDriveClient::deleteFile(QString nonce, QString uid, QString remoteFile
 void CloudDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
 }
+
+QNetworkReply *CloudDriveClient::createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath, bool synchronous)
+{
+}

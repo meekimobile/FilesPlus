@@ -36,6 +36,8 @@ public:
     virtual void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
     virtual void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     virtual void shareFile(QString nonce, QString uid, QString remoteFilePath);
+
+    virtual QNetworkReply * createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath, bool synchronous);
 signals:
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);

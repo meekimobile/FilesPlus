@@ -172,10 +172,10 @@ public:
     Q_INVOKABLE void browse(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
 
     Q_INVOKABLE void syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex, bool forcePut = false);
-    Q_INVOKABLE void syncFromLocal_SkyDrive(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, bool isRootLocalPath = true);
+    Q_INVOKABLE void syncFromLocal_Block(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, bool isRootLocalPath = true);
 
     Q_INVOKABLE void createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex);
-    Q_INVOKABLE QString createFolder_SkyDrive(CloudDriveModel::ClientTypes type, QString uid, QString newRemoteFolderName, QString remoteParentPath);
+    Q_INVOKABLE QString createFolder_Block(CloudDriveModel::ClientTypes type, QString uid, QString newRemoteFolderName, QString remoteParentPath);
 
     Q_INVOKABLE void moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, QString newRemoteFileName = "");
     Q_INVOKABLE void copyFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, QString newRemoteFileName = "");

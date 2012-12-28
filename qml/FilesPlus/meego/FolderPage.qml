@@ -1832,7 +1832,7 @@ Page {
                     case CloudDriveModel.SkyDrive:
                         if (fsModel.isDir(localPath)) {
                             cloudDriveModel.suspendNextJob();
-                            cloudDriveModel.syncFromLocal_SkyDrive(type, uid, localPath, remoteParentPath, modelIndex, true);
+                            cloudDriveModel.syncFromLocal_Block(type, uid, localPath, remoteParentPath, modelIndex, true);
                             cloudDriveModel.resumeNextJob();
                         } else {
                             cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
@@ -1841,7 +1841,7 @@ Page {
                     case CloudDriveModel.GoogleDrive:
                         if (fsModel.isDir(localPath)) {
 //                            cloudDriveModel.suspendNextJob();
-//                            cloudDriveModel.syncFromLocal_SkyDrive(type, uid, localPath, remoteParentPath, modelIndex, true);
+//                            cloudDriveModel.syncFromLocal_Block(type, uid, localPath, remoteParentPath, modelIndex, true);
 //                            cloudDriveModel.resumeNextJob();
                         } else {
                             cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
@@ -1944,7 +1944,7 @@ Page {
                         }
                         // Create remote folder and get its remote path (id).
                         if (remotePath == "") {
-                            remotePath = cloudDriveModel.createFolder_SkyDrive(type, uid, newRemoteFolderName, remoteParentPath);
+                            remotePath = cloudDriveModel.createFolder_Block(type, uid, newRemoteFolderName, remoteParentPath);
                         }
                         // Start sync with remotePath.
                         if (remotePath != "") {
