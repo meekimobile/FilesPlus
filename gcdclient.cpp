@@ -19,11 +19,11 @@ const QString GCDClient::quotaURI = "https://www.googleapis.com/drive/v2/about";
 
 const QString GCDClient::fileGetURI = "";
 const QString GCDClient::filePutURI = "";
-const QString GCDClient::filesURI = "https://www.googleapis.com/drive/v2/files";
-const QString GCDClient::propertyURI = "https://www.googleapis.com/drive/v2/files/%1";
+const QString GCDClient::filesURI = "https://www.googleapis.com/drive/v2/files"; // GET with q
+const QString GCDClient::propertyURI = "https://www.googleapis.com/drive/v2/files/%1"; // GET
 const QString GCDClient::createFolderURI = "https://www.googleapis.com/drive/v2/files"; // POST with json.
 const QString GCDClient::moveFileURI = "https://www.googleapis.com/drive/v2/files/%1"; // PATCH with partial json body.
-const QString GCDClient::copyFileURI = "";
+const QString GCDClient::copyFileURI = "https://www.googleapis.com/drive/v2/files/%1/copy"; // POST with partial json body.
 const QString GCDClient::deleteFileURI = "https://www.googleapis.com/drive/v2/files/%1/trash"; // POST
 const QString GCDClient::renameFileURI = "https://www.googleapis.com/drive/v2/files/%1"; // PATCH with partial json body.
 const QString GCDClient::sharesURI = "";
@@ -453,6 +453,36 @@ void GCDClient::renameFile(QString nonce, QString uid, QString remoteFilePath, Q
 
 void GCDClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
 {
+    qDebug() << "----- GCDClient::copyFile -----" << uid << remoteFilePath << targetRemoteParentPath;
+
+    QString uri = copyFileURI.arg(remoteFilePath);
+    qDebug() << "GCDClient::copyFile uri " << uri;
+
+    QByteArray postData;
+    postData.append("{");
+    if (newRemoteFileName != "") {
+        postData.append(" \"title\": \"" + newRemoteFileName.toUtf8() + "\", ");
+    }
+    postData.append(" \"parents\": [{ \"id\": \"" + targetRemoteParentPath.toUtf8() + "\" }] ");
+    postData.append("}");
+    qDebug() << "GCDClient::copyFile postData" << postData;
+
+    // Insert buffer to hash.
+    m_bufferHash.insert(nonce, new QBuffer());
+    m_bufferHash[nonce]->open(QIODevice::WriteOnly);
+    m_bufferHash[nonce]->write(postData);
+    m_bufferHash[nonce]->close();
+
+    if (m_bufferHash[nonce]->open(QIODevice::ReadOnly)) {
+        // Send request.
+        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(copyFileReplyFinished(QNetworkReply*)) );
+        QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+        req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+        req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+        req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        QNetworkReply *reply = manager->sendCustomRequest(req, "POST", m_bufferHash[nonce]);
+    }
 }
 
 void GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
@@ -1005,8 +1035,8 @@ void GCDClient::copyFileReplyFinished(QNetworkReply *reply)
     emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
 
     // Remove request buffer.
-//    m_bufferHash[nonce]->close();
-//    m_bufferHash.remove(nonce);
+    m_bufferHash[nonce]->close();
+    m_bufferHash.remove(nonce);
 
     // TODO scheduled to delete later.
     reply->deleteLater();
