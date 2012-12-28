@@ -934,10 +934,11 @@ PageStackWindow {
             switch (type) {
             case CloudDriveModel.SkyDrive:
                 return remoteParentPath;
+            case CloudDriveModel.GoogleDrive:
+                return remoteParentPath;
             default:
                 return remoteParentPath + "/" + remotePathName;
             }
-
         }
 
         function accessTokenSlot(clientTypeName, pin) {

@@ -22,7 +22,7 @@ const QString GCDClient::filePutURI = "";
 const QString GCDClient::filesURI = "https://www.googleapis.com/drive/v2/files";
 const QString GCDClient::propertyURI = "https://www.googleapis.com/drive/v2/files/%1";
 const QString GCDClient::createFolderURI = "https://www.googleapis.com/drive/v2/files"; // POST with json.
-const QString GCDClient::moveFileURI = "";
+const QString GCDClient::moveFileURI = "https://www.googleapis.com/drive/v2/files/%1"; // PATCH with partial json body.
 const QString GCDClient::copyFileURI = "";
 const QString GCDClient::deleteFileURI = "https://www.googleapis.com/drive/v2/files/%1/trash"; // POST
 const QString GCDClient::renameFileURI = "https://www.googleapis.com/drive/v2/files/%1"; // PATCH with partial json body.
@@ -399,9 +399,7 @@ void GCDClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QSt
     qDebug() << "GCDClient::moveFile uri " << uri;
 
     QByteArray postData;
-    postData.append("{ \"destination\": \"");
-    postData.append(targetRemoteParentPath.toUtf8());
-    postData.append("\" }");
+    postData.append("{ \"parents\": [{ \"id\": \"" + targetRemoteParentPath.toUtf8() + "\" }] }");
     qDebug() << "GCDClient::moveFile postData" << postData;
 
     // Insert buffer to hash.
@@ -418,7 +416,7 @@ void GCDClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QSt
         req.setAttribute(QNetworkRequest::User, QVariant(nonce));
         req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
         req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-        QNetworkReply *reply = manager->sendCustomRequest(req, "MOVE", m_bufferHash[nonce]);
+        QNetworkReply *reply = manager->sendCustomRequest(req, "PATCH", m_bufferHash[nonce]);
     }
 }
 
