@@ -17,7 +17,7 @@ const QString GCDClient::accessTokenURI = "https://accounts.google.com/o/oauth2/
 const QString GCDClient::accountInfoURI = "https://www.googleapis.com/oauth2/v2/userinfo";
 const QString GCDClient::quotaURI = "https://www.googleapis.com/drive/v2/about";
 
-const QString GCDClient::fileGetURI = "";
+const QString GCDClient::fileGetURI = "%1"; // Use downloadUrl from property.
 const QString GCDClient::filePutURI = "https://www.googleapis.com/upload/drive/v2/files"; // POST with ?uploadType=multipart
 const QString GCDClient::filesURI = "https://www.googleapis.com/drive/v2/files"; // GET with q
 const QString GCDClient::propertyURI = "https://www.googleapis.com/drive/v2/files/%1"; // GET
@@ -327,7 +327,7 @@ void GCDClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- GCDClient::metadata -----" << uid << remoteFilePath;
     if (remoteFilePath.isEmpty()) {
-        emit browseReplySignal(nonce, -1, "remoteFilePath is empty.", "");
+        emit metadataReplySignal(nonce, -1, "remoteFilePath is empty.", "");
         return;
     }
 
@@ -641,18 +641,37 @@ QNetworkReply * GCDClient::property(QString nonce, QString uid, QString remoteFi
 
 void GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath)
 {
-    qDebug() << "----- GCDClient::fileGet -----";
+    qDebug() << "----- GCDClient::fileGet -----" << remoteFilePath << "to" << localFilePath;
 
-//    QString uri = accountInfoURI;
+    QString uri = remoteFilePath;
+    // TODO It should be downloadUrl because it will not be albe to create connection in CloudDriveModel.fileGetReplyFilter.
+    if (!remoteFilePath.startsWith("http")) {
+        // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
+        QNetworkReply *reply = property(nonce, uid, remoteFilePath, true);
+        if (reply->error() == QNetworkReply::NoError) {
+            QScriptEngine engine;
+            QScriptValue sc = engine.evaluate("(" + reply->readAll() + ")");
+            uri = sc.property("downloadUrl").toString();
+        } else {
+            emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+            return;
+        }
+    }
+    qDebug() << "GCDClient::fileGet uri " << uri;
 
-//    // Send request.
-//    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-//    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
-//    QNetworkRequest req = QNetworkRequest(QUrl(uri));
-//    req.setRawHeader("Authorization", QByteArray().append("Bearer ").append(m_paramMap["access_token"]));
-//    QNetworkReply *reply = manager->get(req);
-//    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
-//    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
+    // Create localTargetFile for file getting.
+    m_localFileHash[nonce] = new QFile(localFilePath);
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetReplyFinished(QNetworkReply*)));
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    QNetworkReply *reply = manager->get(req);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
 void GCDClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath)
@@ -878,16 +897,46 @@ void GCDClient::fileGetReplyFinished(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    QString replyBody = QString(reply->readAll());
-
-    // TODO Collect printers into caches for further submitting.
     if (reply->error() == QNetworkReply::NoError) {
-        emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), "" );
+        qDebug() << "GCDClient::fileGetReplyFinished reply bytesAvailable" << reply->bytesAvailable();
+
+        // Stream replyBody to a file on localPath.
+        qint64 totalBytes = 0;
+        char buf[1024];
+        QFile *localTargetFile = m_localFileHash[nonce];
+        if (localTargetFile->open(QIODevice::WriteOnly)) {
+            // Issue: Writing to file with QDataStream << QByteArray will automatically prepend with 4-bytes prefix(size).
+            // Solution: Use QIODevice to write directly.
+
+            // Read first buffer.
+            qint64 c = reply->read(buf, sizeof(buf));
+            while (c > 0) {
+                localTargetFile->write(buf, c);
+                totalBytes += c;
+
+                // Tell event loop to process event before it will process time consuming task.
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+
+                // Read next buffer.
+                c = reply->read(buf, sizeof(buf));
+            }
+        }
+
+        qDebug() << "GCDClient::fileGetReplyFinished reply totalBytes=" << totalBytes;
+
+        // Close target file.
+        localTargetFile->close();
+
+        emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(m_propertyReplyHash->value(nonce)));
     } else {
-        emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), replyBody );
+        emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
     }
 
-    // Scheduled to delete later.
+    // Remove once used.
+    m_localFileHash.remove(nonce);
+    m_propertyReplyHash->remove(nonce);
+
+    // TODO scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }

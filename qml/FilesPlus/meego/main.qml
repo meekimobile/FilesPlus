@@ -1346,7 +1346,6 @@ PageStackWindow {
                     }
                 }
 
-                // TODO Supports SkyDrive.
                 if (jobJson.type == CloudDriveModel.SkyDrive) {
                     console.debug("window cloudDriveModel onMetadataReplySignal SkyDrive jobJson " + jobJson.type + " " + jobJson.uid + " " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + localPathHash);
 
@@ -1428,7 +1427,93 @@ PageStackWindow {
                     }
                 }
 
-                // TODO Supports FTP.
+                if (jobJson.type == CloudDriveModel.GoogleDrive) {
+                    console.debug("window cloudDriveModel onMetadataReplySignal GoogleDrive jobJson " + jobJson.type + " " + jobJson.uid + " " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + localPathHash);
+
+                    if (jsonObj.property) {
+                        // Suspend next job.
+                        cloudDriveModel.suspendNextJob();
+
+                        // Generate hash from updated_time.
+                        var remotePathHash = jsonObj.property.modifiedDate;
+    //                    console.debug("window cloudDriveModel onMetadataReplySignal remotePathHash " + remotePathHash);
+
+                        // Sync starts from itself.
+                        if (jsonObj.property.mimeType == "application/vnd.google-apps.folder") { // Sync folder.
+                            // If there is no local folder, create it and connect.
+                            if (!cloudDriveModel.isDir(jobJson.local_file_path)) {
+                                // TODO Add item to ListView.
+                                cloudDriveModel.createDirPath(jobJson.local_file_path);
+                                // Remove cache on target folders and its parents.
+                                var p = findPage("folderPage");
+                                if (p) {
+                                    p.refreshItemAfterFileGetSlot(jobJson.local_file_path);
+                                }
+                            }
+
+                            // Sync based on remote contents.
+                            if (remotePathHash != localPathHash) { // Sync all json(remote)'s contents.
+                                for(var i=0; i<jsonObj.items.length; i++) {
+                                    var item = jsonObj.items[i];
+                                    var itemLocalPath = cloudDriveModel.getAbsolutePath(jobJson.local_file_path, item.title);
+                                    var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
+                                    var itemRemotePath = item.id;
+                                    var itemRemoteHash = item.modifiedDate;
+                                    if (item.mimeType == "application/vnd.google-apps.folder") {
+                                        // This flow will trigger recursive metadata calling.
+                                        console.debug("cloudDriveModel onMetadataReplySignal dir itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
+                                        cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
+                                    } else {
+                                        console.debug("cloudDriveModel onMetadataReplySignal file itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
+                                        if (itemRemoteHash > itemLocalHash) {
+                                            // TODO Uses downloadUrl if it exists.
+                                            // TODO It should be downloadUrl because it will not be albe to create connection in CloudDriveModel.fileGetReplyFilter.
+//                                            itemRemotePath = (item.downloadUrl) ? item.downloadUrl : itemRemotePath;
+                                            cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemLocalPath, -1);
+                                        } else if (itemRemoteHash < itemLocalHash) {
+                                            // Put file to remote parent path. Or root if parent_id is null.
+                                            itemRemotePath = (item.parents && item.parents.length > 0) ? item.parents[0].id : "root";
+                                            cloudDriveModel.filePut(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
+                                        } else {
+                                            cloudDriveModel.addItem(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, itemRemoteHash);
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Add or Update timestamp from local to cloudDriveItem.
+                            cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
+
+                            // Sync based on local contents.
+//                            var remoteParentPath = (item.property.parents && item.property.parents.length > 0) ? item.property.parents[0].id : "root";
+//                            cloudDriveModel.syncFromLocal_SkyDrive(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
+                        } else { // Sync file.
+                            console.debug("window cloudDriveModel onMetadataReplySignal file jobJson " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + jobJson.type + " " + jobJson.uid + " remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
+
+                            // If (rev is newer or there is no local file), get from remote.
+                            if (remotePathHash > localPathHash || !cloudDriveModel.isFile(jobJson.local_file_path)) {
+                                // TODO Add item to ListView.
+                                // TODO Uses downloadUrl if it exists.
+                                // TODO It should be downloadUrl because it will not be albe to create connection in CloudDriveModel.fileGetReplyFilter.
+//                                var remoteParentPath = (jsonObj.property.downloadUrl) ? jsonObj.property.downloadUrl : jobJson.remote_file_path;
+                                cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.local_file_path, jobJson.modelIndex);
+                            } else if (remotePathHash < localPathHash) {
+                                // Put file to remote parent path. Or root if parent_id is null.
+                                var remoteParentPath = (jsonObj.property.parents && jsonObj.property.parents.length > 0) ? jsonObj.property.parents[0].id : "root";
+                                cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
+                            } else {
+                                // Update lastModified on cloudDriveItem.
+                                cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
+                            }
+                        }
+
+                        // Resume next jobs.
+                        cloudDriveModel.resumeNextJob();
+                    } else {
+                        console.debug("window cloudDriveModel onMetadataReplySignal property is not found.");
+                    }
+                }
+
                 if (jobJson.type == CloudDriveModel.Ftp) {
                     console.debug("window cloudDriveModel onMetadataReplySignal Ftp jobJson " + jobJson.type + " " + jobJson.uid + " " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + localPathHash);
 
@@ -1528,12 +1613,10 @@ PageStackWindow {
                     }
                 }
 
-                // TODO Supports SkyDrive.
                 if (jobJson.type == CloudDriveModel.SkyDrive) {
 
                 }
 
-                // TODO Supports Ftp.
                 if (jobJson.type == CloudDriveModel.Ftp) {
                     if (cloudDriveModel.isDir(jobJson.local_file_path)) {
                         // Remote folder will be created in syncFromLocal if it's required.

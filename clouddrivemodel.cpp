@@ -1899,6 +1899,11 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
                 addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, hash);
             }
             break;
+        case GoogleDrive:
+            sc = engine.evaluate("(" + msg + ")");
+            hash = sc.property("modifiedDate").toString();
+            addItem(GoogleDrive, job.uid, job.localFilePath, job.remoteFilePath, hash);
+            break;
         case Ftp:
             sc = engine.evaluate("(" + msg + ")");
             hash = sc.property("lastModified").toString();

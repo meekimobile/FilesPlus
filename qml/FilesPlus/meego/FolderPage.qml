@@ -1838,6 +1838,15 @@ Page {
                             cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
                         }
                         break;
+                    case CloudDriveModel.GoogleDrive:
+                        if (fsModel.isDir(localPath)) {
+//                            cloudDriveModel.suspendNextJob();
+//                            cloudDriveModel.syncFromLocal_SkyDrive(type, uid, localPath, remoteParentPath, modelIndex, true);
+//                            cloudDriveModel.resumeNextJob();
+                        } else {
+                            cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
+                        }
+                        break;
                     case CloudDriveModel.Ftp:
                         // Use remoteParentPath + "/" + local file/folder name.
                         remotePath = (remoteParentPath == "/" ? "" : remoteParentPath) + "/" + fsModel.getFileName(localPath);
@@ -1994,6 +2003,9 @@ Page {
                 cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
             } else if (selectedCloudType == CloudDriveModel.SkyDrive) {
                 remoteParentPath = (remoteParentPath == "") ? "me/skydrive" : remoteParentPath;
+                cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
+            } else if (selectedCloudType == CloudDriveModel.GoogleDrive) {
+                remoteParentPath = (remoteParentPath == "") ? "root" : remoteParentPath;
                 cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
             } else if (selectedCloudType == CloudDriveModel.Ftp) {
                 remoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getParentRemotePath(remotePath) : remoteParentPath;
