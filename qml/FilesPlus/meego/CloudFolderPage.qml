@@ -512,9 +512,6 @@ Page {
         }
 
         function deleteMarkedItems() {
-            // Always clear clipboard before delete marked items.
-            clipboard.clear();
-
             for (var i=0; i<model.count; i++) {
                 if (model.get(i).isChecked) {
                     console.debug(Utility.nowText() + "cloudFolderView deleteMarkedItems item"
@@ -533,9 +530,6 @@ Page {
         }
 
         function syncMarkedItems() {
-            // Always clear clipboard before sync marked items.
-            clipboard.clear();
-
             for (var i=0; i<model.count; i++) {
                 if (model.get(i).isChecked) {
                     console.debug(Utility.nowText() + " cloudFolderView syncMarkedItems item"
@@ -1047,6 +1041,9 @@ Page {
                 isBusy = true;
                 cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", sourcePath, "", actualTargetPath);
             }
+
+            // Clear clipboard once confirm action.
+            clipboard.clear();
         }
 
         onReject: {
