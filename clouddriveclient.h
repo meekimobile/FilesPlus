@@ -18,6 +18,9 @@ public:
     QStringList getStoredUidList();
     int removeUid(QString uid);
 
+    virtual bool isRemoteAbsolutePath();
+    virtual QString getRemoteRoot();
+
     virtual bool testConnection(QString hostname, quint16 port, QString username, QString password);
     virtual void saveConnection(QString id, QString hostname, quint16 port, QString username, QString password);
 
@@ -31,13 +34,13 @@ public:
     virtual void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
     virtual void metadata(QString nonce, QString uid, QString remoteFilePath);
     virtual void browse(QString nonce, QString uid, QString remoteFilePath);
-    virtual void createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
+    virtual void createFolder(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFolderName);
     virtual void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
     virtual void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
     virtual void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     virtual void shareFile(QString nonce, QString uid, QString remoteFilePath);
 
-    virtual QNetworkReply * createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath, bool synchronous);
+    virtual QNetworkReply * createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
 signals:
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);

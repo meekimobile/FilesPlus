@@ -347,14 +347,14 @@ void GCDClient::browse(QString nonce, QString uid, QString remoteFilePath)
     files(nonce, uid, remoteFilePath, false, "browse");
 }
 
-void GCDClient::createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath)
+void GCDClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
 {
-    createFolder(nonce, uid, newRemoteFolderName, remoteParentPath, false);
+    createFolder(nonce, uid, remoteParentPath, newRemoteFolderName, false);
 }
 
-QNetworkReply * GCDClient::createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath, bool synchronous)
+QNetworkReply * GCDClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
-    qDebug() << "----- GCDClient::createFolder -----" << newRemoteFolderName << remoteParentPath;
+    qDebug() << "----- GCDClient::createFolder -----" << remoteParentPath << newRemoteFolderName;
 
     if (remoteParentPath.isEmpty()) {
         emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
@@ -475,6 +475,11 @@ void GCDClient::renameFile(QString nonce, QString uid, QString remoteFilePath, Q
         req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
         QNetworkReply *reply = manager->sendCustomRequest(req, "PATCH", m_bufferHash[nonce]);
     }
+}
+
+QString GCDClient::getRemoteRoot()
+{
+    return GCDRootFolderId;
 }
 
 void GCDClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)

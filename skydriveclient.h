@@ -43,7 +43,7 @@ public:
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
-    void createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath);
+    void createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName);
     void moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName);
     void copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName);
     void deleteFile(QString nonce, QString uid, QString remoteFilePath);
@@ -51,9 +51,11 @@ public:
 
     QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
-    QNetworkReply * createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath, bool synchronous = false);
+    QNetworkReply * createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous = false);
     QNetworkReply * deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
     void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
+
+    QString getRemoteRoot();
 signals:
 
 public slots:

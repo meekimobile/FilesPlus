@@ -47,6 +47,16 @@ int CloudDriveClient::removeUid(QString uid)
     return n;
 }
 
+bool CloudDriveClient::isRemoteAbsolutePath()
+{
+    return false;
+}
+
+QString CloudDriveClient::getRemoteRoot()
+{
+    return "";
+}
+
 void CloudDriveClient::loadAccessPairMap() {
     qDebug() << QTime::currentTime() << objectName() << "::loadAccessPairMap";
 
@@ -133,7 +143,7 @@ void CloudDriveClient::browse(QString nonce, QString uid, QString remoteFilePath
 {
 }
 
-void CloudDriveClient::createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
+void CloudDriveClient::createFolder(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFolderName)
 {
 }
 
@@ -153,6 +163,6 @@ void CloudDriveClient::shareFile(QString nonce, QString uid, QString remoteFileP
 {
 }
 
-QNetworkReply *CloudDriveClient::createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath, bool synchronous)
+QNetworkReply *CloudDriveClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
 }

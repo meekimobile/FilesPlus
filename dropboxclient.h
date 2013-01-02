@@ -39,6 +39,8 @@ public:
     QString getDefaultLocalFilePath(const QString &remoteFilePath);
     QString getDefaultRemoteFilePath(const QString &localFilePath);
 
+    bool isRemoteAbsolutePath();
+
     void requestToken(QString nonce);
     void authorize(QString nonce);
     void accessToken(QString nonce, QString pin = "");
@@ -47,7 +49,7 @@ public:
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
-    void createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
+    void createFolder(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFolderName);
     void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
     void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
     void deleteFile(QString nonce, QString uid, QString remoteFilePath);

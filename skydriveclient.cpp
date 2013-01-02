@@ -436,12 +436,12 @@ QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString rem
     return reply;
 }
 
-void SkyDriveClient::createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath)
+void SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
 {
-    createFolder(nonce, uid, newRemoteFolderName, remoteParentPath, false);
+    createFolder(nonce, uid, remoteParentPath, newRemoteFolderName, false);
 }
 
-QNetworkReply * SkyDriveClient::createFolder(QString nonce, QString uid, QString newRemoteFolderName, QString remoteParentPath, bool synchronous)
+QNetworkReply * SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
     qDebug() << "----- SkyDriveClient::createFolder -----" << newRemoteFolderName << remoteParentPath;
 
@@ -626,6 +626,11 @@ void SkyDriveClient::renameFile(QString nonce, QString uid, QString remoteFilePa
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QNetworkReply *reply = manager->put(req, postData);
+}
+
+QString SkyDriveClient::getRemoteRoot()
+{
+    return SkyDriveRoot;
 }
 
 void SkyDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)

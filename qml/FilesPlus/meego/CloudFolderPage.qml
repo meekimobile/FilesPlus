@@ -79,31 +79,12 @@ Page {
 
     function createRemoteFolder(newRemoteFolderName) {
         isBusy = true;
-
-        // Create remote folder.
-        if (selectedCloudType == CloudDriveModel.Dropbox) {
-            cloudDriveModel.createFolder(selectedCloudType, selectedUid, "", remoteParentPath + "/" + newRemoteFolderName, -1);
-        } else if (selectedCloudType == CloudDriveModel.SkyDrive) {
-            cloudDriveModel.createFolder(selectedCloudType, selectedUid, newRemoteFolderName, remoteParentPath, -1);
-        } else if (selectedCloudType == CloudDriveModel.GoogleDrive) {
-            cloudDriveModel.createFolder(selectedCloudType, selectedUid, newRemoteFolderName, remoteParentPath, -1);
-        } else if (selectedCloudType == CloudDriveModel.Ftp) {
-            cloudDriveModel.createFolder(selectedCloudType, selectedUid, "", remoteParentPath + "/" + newRemoteFolderName, -1);
-        }
+        cloudDriveModel.createFolder(selectedCloudType, selectedUid, "", remoteParentPath, newRemoteFolderName);
     }
 
     function renameRemotePath(remotePath, newName) {
         isBusy = true;
-        switch (selectedCloudType) {
-        case CloudDriveModel.SkyDrive:
-            cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", remotePath, "", "", newName);
-            break;
-        case CloudDriveModel.GoogleDrive:
-            cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", remotePath, "", "", newName);
-            break;
-        default:
-            cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", remotePath, "", cloudDriveModel.getParentRemotePath(remotePath) + "/" + newName);
-        }
+        cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", remotePath, "", "", newName);
     }
 
     function deleteRemotePath(remotePath) {
@@ -118,20 +99,8 @@ Page {
         isBusy = true;
 
         // Browse remote parent path.
-        // Issue: selectedCloudType which is linked from uidDialog doesn't work with switch.
-        if (selectedCloudType == CloudDriveModel.Dropbox) {
-            remoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getParentRemotePath(remotePath) : remoteParentPath;
-            cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
-        } else if (selectedCloudType == CloudDriveModel.SkyDrive) {
-            remoteParentPath = (remoteParentPath == "") ? "me/skydrive" : remoteParentPath;
-            cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
-        } else if (selectedCloudType == CloudDriveModel.GoogleDrive) {
-            remoteParentPath = (remoteParentPath == "") ? "root" : remoteParentPath;
-            cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
-        } else if (selectedCloudType == CloudDriveModel.Ftp) {
-            remoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getParentRemotePath(remotePath) : remoteParentPath;
-            cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
-        }
+        remoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getParentRemotePath(selectedCloudType, remotePath) : remoteParentPath;
+        cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
 
         // Force resume.
         cloudDriveModel.resumeNextJob();
@@ -826,12 +795,11 @@ Page {
                 if (["copy","cut"].indexOf(action) > -1 && !clipboard.get(i).type) {
                     isBusy = true;
                     if (cloudDriveModel.isDir(sourcePath)) {
-                        switch (selectedCloudType) {
-                        case CloudDriveModel.SkyDrive:
-                            cloudDriveModel.syncFromLocal_SkyDrive(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1, true);
-                            break;
-                        default:
+                        // TODO Check if cloud client's remotePath is absolute path.
+                        if (cloudDriveModel.isRemoteAbsolutePath(selectedCloudType)) {
                             cloudDriveModel.syncFromLocal(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1, true);
+                        } else {
+                            cloudDriveModel.syncFromLocal_Block(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1, true);
                         }
                     } else {
                         cloudDriveModel.filePut(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1);

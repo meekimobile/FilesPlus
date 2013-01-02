@@ -247,23 +247,25 @@ void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
     m_ftpHash->remove(m_ftp->getNonce());
 }
 
-void FtpClient::createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
+void FtpClient::createFolder(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFolderName)
 {
-    qDebug() << "FtpClient::createFolder" << uid << localFilePath << remoteFilePath;
+    qDebug() << "FtpClient::createFolder" << uid << remoteFilePath << newRemoteFolderName;
+
+    QString newRemoteFolderPath = remoteFilePath + "/" + newRemoteFolderName;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
 
-    m_ftp->mkdir(remoteFilePath);
+    m_ftp->mkdir(newRemoteFolderPath);
     m_ftp->waitForDone();
 
     if (m_ftp->error() == QFtp::UnknownError) {
-        emit createFolderReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(remoteFilePath) );
+        emit createFolderReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(newRemoteFolderPath) );
     } else {
         // Get property.
-        QString propertyJson = property(nonce, uid, remoteFilePath);
+        QString propertyJson = property(nonce, uid, newRemoteFolderPath);
         if (propertyJson.isEmpty()) {
-            qDebug() << "FtpClient::createFolder" << uid << remoteFilePath << "is not found.";
-            emit createFolderReplySignal(nonce, QNetworkReply::ContentNotFoundError, tr("%1 is not found.").arg(remoteFilePath), "");
+            qDebug() << "FtpClient::createFolder" << uid << newRemoteFolderPath << "is not found.";
+            emit createFolderReplySignal(nonce, QNetworkReply::ContentNotFoundError, tr("%1 is not found.").arg(newRemoteFolderPath), "");
         } else {
             emit createFolderReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), propertyJson);
         }
@@ -489,4 +491,9 @@ void FtpClient::saveConnection(QString id, QString hostname, quint16 port, QStri
     accessTokenPairMap[id] = tokenPair;
 
     saveAccessPairMap();
+}
+
+bool FtpClient::isRemoteAbsolutePath()
+{
+    return true;
 }

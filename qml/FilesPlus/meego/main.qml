@@ -313,17 +313,7 @@ PageStackWindow {
                 if (cloudDriveModel.isConnected(sourcePath)) {
                     var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
                     for (var i=0; i<json.length; i++) {
-                        switch (json[i].type) {
-                        case CloudDriveModel.Dropbox:
-                            cloudDriveModel.deleteFile(CloudDriveModel.Dropbox, json[i].uid, json[i].local_path, json[i].remote_path);
-                            break;
-                        case CloudDriveModel.SkyDrive:
-                            cloudDriveModel.deleteFile(CloudDriveModel.SkyDrive, json[i].uid, json[i].local_path, json[i].remote_path);
-                            break;
-                        case CloudDriveModel.Ftp:
-                            cloudDriveModel.deleteFile(CloudDriveModel.Ftp, json[i].uid, json[i].local_path, json[i].remote_path);
-                            break;
-                        }
+                        cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path);
                     }
                 }
 
@@ -366,19 +356,8 @@ PageStackWindow {
 //                console.debug("fsModel onRenameFinished itemList " + cloudDriveModel.getItemListJson(sourcePath));
                 var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
                 for (var i=0; i<json.length; i++) {
-                    switch (json[i].type) {
-                    case CloudDriveModel.Dropbox:
-                        console.debug("fsModel onRenameFinished item " + json[i].type + " " + json[i].uid + " " + json[i].local_path + " " + json[i].remote_path);
-                        var newRemotePath = cloudDriveModel.getParentRemotePath(json[i].remote_path) + "/" + fsModel.getFileName(targetPath);
-                        cloudDriveModel.moveFile(CloudDriveModel.Dropbox, json[i].uid, sourcePath, json[i].remote_path, targetPath, newRemotePath);
-                        break;
-                    case CloudDriveModel.SkyDrive:
-                        // TODO
-                        break;
-                    case CloudDriveModel.Ftp:
-                        // TODO
-                        break;
-                    }
+                    console.debug("fsModel onRenameFinished item " + json[i].type + " " + json[i].uid + " " + json[i].local_path + " " + json[i].remote_path);
+                    cloudDriveModel.moveFile(json[i].type, json[i].uid, sourcePath, json[i].remote_path, targetPath, json[i].remote_path, fsModel.getFileName(targetPath));
                 }
             }
         }
@@ -971,7 +950,7 @@ PageStackWindow {
             case CloudDriveModel.Dropbox:
                 remoteParentPath = json.path;
                 remoteParentPathName = json.path;
-                remoteParentParentPath = cloudDriveModel.getParentRemotePath(remoteParentPath);
+                remoteParentParentPath = cloudDriveModel.getParentRemotePath(selectedCloudType, remoteParentPath);
                 for (var i=0; i<json.contents.length; i++) {
                     var item = json.contents[i];
                     var modelItem = { "name": cloudDriveModel.getRemoteName(item.path), "absolutePath": item.path,
@@ -1028,7 +1007,7 @@ PageStackWindow {
             case CloudDriveModel.Ftp:
                 remoteParentPath = json.property.path;
                 remoteParentPathName = json.property.path;
-                remoteParentParentPath = cloudDriveModel.getParentRemotePath(remoteParentPath);
+                remoteParentParentPath = cloudDriveModel.getParentRemotePath(selectedCloudType, remoteParentPath);
                 for (var i=0; i<json.data.length; i++) {
                     var item = json.data[i];
                     var modelItem = { "name": item.name, "absolutePath": item.path,
@@ -1125,10 +1104,12 @@ PageStackWindow {
                 var sharedValue = (jsonObj.quota_info && jsonObj.quota_info.shared) ? jsonObj.quota_info.shared : 0;
                 var normalValue = (jsonObj.quota_info && jsonObj.quota_info.normal) ? jsonObj.quota_info.normal : 0;
                 var quotaValue = (jsonObj.quota_info && jsonObj.quota_info.quota) ? jsonObj.quota_info.quota : 0;
-                pageStack.currentPage.updateAccountInfoSlot(jobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email,
-                                                            sharedValue,
-                                                            normalValue,
-                                                            quotaValue);
+                if (pageStack.currentPage.updateAccountInfoSlot) {
+                    pageStack.currentPage.updateAccountInfoSlot(jobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email,
+                                                                sharedValue,
+                                                                normalValue,
+                                                                quotaValue);
+                }
             } else if (err == 204) {
                 // TODO Refactor to support all SkyDriveClient services.
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);

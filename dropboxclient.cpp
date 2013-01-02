@@ -391,6 +391,11 @@ QString DropboxClient::getDefaultRemoteFilePath(const QString &localFilePath)
     return "";
 }
 
+bool DropboxClient::isRemoteAbsolutePath()
+{
+    return true;
+}
+
 void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
     qDebug() << "----- DropboxClient::metadata -----";
 
@@ -432,9 +437,9 @@ void DropboxClient::browse(QString nonce, QString uid, QString remoteFilePath)
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-void DropboxClient::createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
+void DropboxClient::createFolder(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFolderName)
 {
-    qDebug() << "----- DropboxClient::createFolder -----" << uid << localFilePath << remoteFilePath;
+    qDebug() << "----- DropboxClient::createFolder -----" << uid << remoteFilePath << newRemoteFolderName;
 
     QString uri = createFolderURI;
     qDebug() << "DropboxClient::createFolder uri " << uri;
@@ -442,7 +447,7 @@ void DropboxClient::createFolder(QString nonce, QString uid, QString localFilePa
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
     sortMap["root"] = dropboxRoot;
-    sortMap["path"] = remoteFilePath;
+    sortMap["path"] = remoteFilePath + "/" + newRemoteFolderName;
     QString queryString = createNormalizedQueryString(sortMap);
     qDebug() << "queryString " << queryString;
 

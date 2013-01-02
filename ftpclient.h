@@ -18,11 +18,13 @@ public:
     bool testConnection(QString hostname, quint16 port, QString username, QString password);
     void saveConnection(QString id, QString hostname, quint16 port, QString username, QString password);
 
+    bool isRemoteAbsolutePath();
+
     void fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
-    void createFolder(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
+    void createFolder(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFolderName);
     void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
     void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
     void deleteFile(QString nonce, QString uid, QString remoteFilePath);

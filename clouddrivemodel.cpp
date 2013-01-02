@@ -489,15 +489,34 @@ bool CloudDriveModel::isRemoteRoot(CloudDriveModel::ClientTypes type, QString ui
     }
 }
 
-QString CloudDriveModel::getParentRemotePath(QString remotePath)
+QString CloudDriveModel::getRemoteRoot(CloudDriveModel::ClientTypes type)
 {
-    QString remoteParentPath = "";
-    if (remotePath != "" && remotePath != "/") {
-        remoteParentPath = remotePath.mid(0, remotePath.lastIndexOf("/"));
-        remoteParentPath = (remoteParentPath == "") ? "/" : remoteParentPath;
+    switch (type) {
+    case Dropbox:
+        return dbClient->getRemoteRoot();
+    case SkyDrive:
+        return skdClient->getRemoteRoot();
+    case GoogleDrive:
+        return gcdClient->getRemoteRoot();
+    case Ftp:
+        return ftpClient->getRemoteRoot();
+    default:
+        return "";
     }
+}
 
-    return remoteParentPath;
+QString CloudDriveModel::getParentRemotePath(CloudDriveModel::ClientTypes type, QString remotePath)
+{
+    if (isRemoteAbsolutePath(type)) {
+        QString remoteParentPath = "";
+        if (remotePath != "" && remotePath != "/") {
+            remoteParentPath = remotePath.mid(0, remotePath.lastIndexOf("/"));
+            remoteParentPath = (remoteParentPath == "") ? "/" : remoteParentPath;
+        }
+        return remoteParentPath;
+    } else {
+        return getRemoteRoot(type);
+    }
 }
 
 QString CloudDriveModel::getParentLocalPath(const QString absFilePath)
@@ -570,6 +589,22 @@ CloudDriveModel::ClientTypes CloudDriveModel::getClientType(int typeInt)
         return GoogleDrive;
     case Ftp:
         return Ftp;
+    }
+}
+
+bool CloudDriveModel::isRemoteAbsolutePath(CloudDriveModel::ClientTypes type)
+{
+    switch (type) {
+    case Dropbox:
+        return dbClient->isRemoteAbsolutePath();
+    case SkyDrive:
+        return skdClient->isRemoteAbsolutePath();
+    case GoogleDrive:
+        return gcdClient->isRemoteAbsolutePath();
+    case Ftp:
+        return ftpClient->isRemoteAbsolutePath();
+    default:
+        return false;
     }
 }
 
@@ -1547,7 +1582,7 @@ void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString u
         CloudDriveItem cloudItem = getItem(localPath, type, uid);
         if (cloudItem.localPath == "" || cloudItem.hash == CloudDriveModel::DirtyHash) {
             qDebug() << "CloudDriveModel::syncFromLocal not found cloudItem. Invoke creatFolder.";
-            createFolder(type, uid, localPath, remotePath, modelIndex);
+            createFolder(type, uid, localPath, remotePath, "");
         } else {
             qDebug() << "CloudDriveModel::syncFromLocal found cloudItem" << cloudItem;
         }
@@ -1730,15 +1765,21 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
     }
 }
 
-void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex)
+void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, QString newRemoteFolderName)
 {
-    if (remotePath == "") {
-        qDebug() << "CloudDriveModel::createFolder remotePath" << remotePath << "is empty. Operation is aborted.";
+    if (newRemoteFolderName == "") {
+        qDebug() << "CloudDriveModel::createFolder newRemoteFolderName" << newRemoteFolderName << "is empty. Operation is aborted.";
+        return;
+    }
+
+    if (remoteParentPath == "") {
+        qDebug() << "CloudDriveModel::createFolder remoteParentPath" << remoteParentPath << "is empty. Operation is aborted.";
         return;
     }
 
     // Enqueue job.
-    CloudDriveJob job(createNonce(), CreateFolder, type, uid, localPath, remotePath, modelIndex);
+    CloudDriveJob job(createNonce(), CreateFolder, type, uid, localPath, remoteParentPath, -1);
+    job.newRemoteFileName = newRemoteFolderName;
     job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
@@ -1759,7 +1800,7 @@ void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString ui
     emit proceedNextJobSignal();
 }
 
-QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, QString uid, QString newRemoteFolderName, QString remoteParentPath)
+QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, QString uid, QString remoteParentPath, QString newRemoteFolderName)
 {
     if (newRemoteFolderName == "") {
         qDebug() << "CloudDriveModel::createFolder_Block newRemoteFolderName" << newRemoteFolderName << "is empty. Operation is aborted.";
@@ -1792,7 +1833,7 @@ QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, Q
 
     // Request SkyDriveClient's createFolder synchronously.
 
-    QNetworkReply * createFolderReply = cloudClient->createFolder(createNonce(), uid, newRemoteFolderName, remoteParentPath, true);
+    QNetworkReply * createFolderReply = cloudClient->createFolder(createNonce(), uid, remoteParentPath, newRemoteFolderName, true);
     if (createFolderReply->error() == QNetworkReply::NoError) {
         QString createFolderReplyResult(createFolderReply->readAll());
         qDebug() << "CloudDriveModel::createFolder_Block createFolder success" << createFolderReplyResult;
@@ -2841,7 +2882,7 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         cloudClient->quota(job.jobId, job.uid);
         break;
     case CreateFolder:
-        cloudClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
+        cloudClient->createFolder(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFileName);
         break;
     case MoveFile:
         cloudClient->moveFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath, job.newRemoteFileName);
