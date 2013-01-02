@@ -126,6 +126,9 @@ public:
     // Other.
     Q_INVOKABLE QString getRemoteRoot(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE QString getParentRemotePath(CloudDriveModel::ClientTypes type, QString remotePath);
+    Q_INVOKABLE bool isRemoteAbsolutePath(CloudDriveModel::ClientTypes type);
+    Q_INVOKABLE QString getRemoteName(CloudDriveModel::ClientTypes type, QString remotePath);
+    Q_INVOKABLE QString getRemotePath(CloudDriveModel::ClientTypes type, QString remoteParentPath, QString remotePathName);
     Q_INVOKABLE QString getParentLocalPath(const QString absFilePath);
     Q_INVOKABLE bool isDir(const QString absFilePath);
     Q_INVOKABLE bool isFile(const QString absFilePath);
@@ -134,7 +137,6 @@ public:
     Q_INVOKABLE QString getFileName(const QString absFilePath);
     Q_INVOKABLE QString getFileType(QString localPath);
     Q_INVOKABLE ClientTypes getClientType(int typeInt);
-    Q_INVOKABLE bool isRemoteAbsolutePath(CloudDriveModel::ClientTypes type);
 
     // Scheduler.
     Q_INVOKABLE int updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp);

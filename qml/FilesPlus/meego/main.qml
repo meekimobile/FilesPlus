@@ -865,6 +865,7 @@ PageStackWindow {
             return -1;
         }
 
+
         function getOperationName(operation) {
             switch (operation) {
             case CloudDriveModel.FileGet:
@@ -897,26 +898,6 @@ PageStackWindow {
                 return qsTr("Share link");
             case CloudDriveModel.Browse:
                 return qsTr("Browse");
-            }
-        }
-
-        function getRemoteName(remotePath) {
-            var name = "";
-            if (remotePath != "") {
-                name = remotePath.substr(remotePath.lastIndexOf("/") + 1);
-            }
-
-            return name;
-        }
-
-        function getRemotePath(type, remoteParentPath, remotePathName) {
-            switch (type) {
-            case CloudDriveModel.SkyDrive:
-                return remoteParentPath;
-            case CloudDriveModel.GoogleDrive:
-                return remoteParentPath;
-            default:
-                return remoteParentPath + "/" + remotePathName;
             }
         }
 
@@ -953,7 +934,7 @@ PageStackWindow {
                 remoteParentParentPath = cloudDriveModel.getParentRemotePath(selectedCloudType, remoteParentPath);
                 for (var i=0; i<json.contents.length; i++) {
                     var item = json.contents[i];
-                    var modelItem = { "name": cloudDriveModel.getRemoteName(item.path), "absolutePath": item.path,
+                    var modelItem = { "name": cloudDriveModel.getRemoteName(selectedCloudType, item.path), "absolutePath": item.path,
                         "isChecked": false, "source": "", "thumbnail": "", "fileType": cloudDriveModel.getFileType(item.path), "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
                         "subDirCount": 0, "subFileCount": 0, "isDirty": false,
                         "lastModified": (new Date(item.modified)), "size": item.bytes, "isDir": item.is_dir};
@@ -1281,7 +1262,7 @@ PageStackWindow {
                             if (jsonObj.hash != localPathHash) { // Sync all json(remote)'s contents.
                                 for(var i=0; i<jsonObj.contents.length; i++) {
                                     var item = jsonObj.contents[i];
-                                    var itemLocalPath = cloudDriveModel.getAbsolutePath(jobJson.local_file_path, cloudDriveModel.getRemoteName(item.path));
+                                    var itemLocalPath = cloudDriveModel.getAbsolutePath(jobJson.local_file_path, cloudDriveModel.getRemoteName(jobJson.type, item.path));
                                     var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
                                     var itemRemotePath = item.path;
                                     var itemRemoteHash = item.rev;
@@ -1370,7 +1351,7 @@ PageStackWindow {
                                             cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemLocalPath, -1);
                                         } else if (itemRemoteHash < itemLocalHash) {
                                             // Put file to remote parent path. Or root if parent_id is null.
-                                            itemRemotePath = (item.parent_id) ? item.parent_id : "me/skydrive";
+                                            itemRemotePath = (item.parent_id) ? item.parent_id : cloudDriveModel.getRemoteRoot(jobJson.type);
                                             cloudDriveModel.filePut(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
                                         } else {
                                             cloudDriveModel.addItem(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, itemRemoteHash);
@@ -1393,7 +1374,7 @@ PageStackWindow {
                                 cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.local_file_path, jobJson.modelIndex);
                             } else if (remotePathHash < localPathHash) {
                                 // Put file to remote parent path. Or root if parent_id is null.
-                                var remoteParentPath = (jsonObj.property.parent_id) ? jsonObj.property.parent_id : "me/skydrive";
+                                var remoteParentPath = (jsonObj.property.parent_id) ? jsonObj.property.parent_id : cloudDriveModel.getRemoteRoot(jobJson.type);
                                 cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
                             } else {
                                 // Update lastModified on cloudDriveItem.
@@ -1453,7 +1434,7 @@ PageStackWindow {
                                             cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemLocalPath, -1);
                                         } else if (itemRemoteHash < itemLocalHash) {
                                             // Put file to remote parent path. Or root if parent_id is null.
-                                            itemRemotePath = (item.parents && item.parents.length > 0) ? item.parents[0].id : "root";
+                                            itemRemotePath = (item.parents && item.parents.length > 0) ? item.parents[0].id : cloudDriveModel.getRemoteRoot(jobJson.type);
                                             cloudDriveModel.filePut(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
                                         } else {
                                             cloudDriveModel.addItem(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, itemRemoteHash);
@@ -1466,7 +1447,7 @@ PageStackWindow {
                             cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
 
                             // Sync based on local contents.
-                            var remoteParentPath = (jsonObj.property.parents && jsonObj.property.parents.length > 0) ? jsonObj.property.parents[0].id : "root";
+                            var remoteParentPath = (jsonObj.property.parents && jsonObj.property.parents.length > 0) ? jsonObj.property.parents[0].id : cloudDriveModel.getRemoteRoot(jobJson.type);
                             cloudDriveModel.syncFromLocal_Block(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
                         } else { // Sync file.
                             console.debug("window cloudDriveModel onMetadataReplySignal file jobJson " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + jobJson.type + " " + jobJson.uid + " remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
@@ -1480,7 +1461,7 @@ PageStackWindow {
                                 cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.local_file_path, jobJson.modelIndex);
                             } else if (remotePathHash < localPathHash) {
                                 // Put file to remote parent path. Or root if parent_id is null.
-                                var remoteParentPath = (jsonObj.property.parents && jsonObj.property.parents.length > 0) ? jsonObj.property.parents[0].id : "root";
+                                var remoteParentPath = (jsonObj.property.parents && jsonObj.property.parents.length > 0) ? jsonObj.property.parents[0].id : cloudDriveModel.getRemoteRoot(jobJson.type);
                                 cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
                             } else {
                                 // Update lastModified on cloudDriveItem.
@@ -1538,7 +1519,7 @@ PageStackWindow {
                                             cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemLocalPath, -1);
                                         } else if (itemRemoteHash < itemLocalHash) {
                                             // Put file to remote parent path. Or root if parent_id is null.
-                                            itemRemotePath = (item.parent_id) ? item.parent_id : "me/skydrive";
+                                            itemRemotePath = (item.parent_id) ? item.parent_id : cloudDriveModel.getRemoteRoot(jobJson.type);
                                             cloudDriveModel.filePut(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
                                         } else {
                                             cloudDriveModel.addItem(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, itemRemoteHash);
@@ -1580,7 +1561,7 @@ PageStackWindow {
                 // Suspend next job.
                 cloudDriveModel.suspendNextJob();
 
-                if (jobJson.type == CloudDriveModel.Dropbox) {
+                if (cloudDriveModel.isRemoteAbsolutePath(jobJson.type)) {
                     if (cloudDriveModel.isDir(jobJson.local_file_path)) {
                         // Remote folder will be created in syncFromLocal if it's required.
                         cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
@@ -1589,15 +1570,6 @@ PageStackWindow {
                         // Once it got reply, it should get hash already.
                         // Because its sub files/dirs are in prior queue.
                         // cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
-                    } else {
-                        cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
-                    }
-                }
-
-                if (jobJson.type == CloudDriveModel.Ftp) {
-                    if (cloudDriveModel.isDir(jobJson.local_file_path)) {
-                        // Remote folder will be created in syncFromLocal if it's required.
-                        cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
                     } else {
                         cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
                     }

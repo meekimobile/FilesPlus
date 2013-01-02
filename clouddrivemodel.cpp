@@ -519,6 +519,22 @@ QString CloudDriveModel::getParentRemotePath(CloudDriveModel::ClientTypes type, 
     }
 }
 
+QString CloudDriveModel::getRemoteName(CloudDriveModel::ClientTypes type, QString remotePath) {
+    if (isRemoteAbsolutePath(type) && remotePath != "") {
+        return remotePath.mid(remotePath.lastIndexOf("/") + 1);
+    } else {
+        return remotePath;
+    }
+}
+
+QString CloudDriveModel::getRemotePath(CloudDriveModel::ClientTypes type, QString remoteParentPath, QString remotePathName) {
+    if (isRemoteAbsolutePath(type)) {
+        return remoteParentPath + "/" + remotePathName;
+    } else {
+        return remoteParentPath;
+    }
+}
+
 QString CloudDriveModel::getParentLocalPath(const QString absFilePath)
 {
     QFileInfo fileInfo(absFilePath);
@@ -1582,7 +1598,7 @@ void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString u
         CloudDriveItem cloudItem = getItem(localPath, type, uid);
         if (cloudItem.localPath == "" || cloudItem.hash == CloudDriveModel::DirtyHash) {
             qDebug() << "CloudDriveModel::syncFromLocal not found cloudItem. Invoke creatFolder.";
-            createFolder(type, uid, localPath, remotePath, "");
+            createFolder(type, uid, localPath, getParentRemotePath(type, remotePath), info.fileName());
         } else {
             qDebug() << "CloudDriveModel::syncFromLocal found cloudItem" << cloudItem;
         }
@@ -1685,10 +1701,11 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
 
             // Request SkyDriveClient's createFolder synchronously.
             // Insert dummy job to support QML CloudDriveModel.onCreateFolderReplySignal.
-            CloudDriveJob job(createNonce(), CreateFolder, type, uid, info.fileName(), remoteParentPath, modelIndex);
+            CloudDriveJob job(createNonce(), CreateFolder, type, uid, localPath, remoteParentPath, modelIndex);
+            job.newRemoteFileName = info.fileName();
             m_cloudDriveJobs->insert(job.jobId, job);
 
-            QNetworkReply * createFolderReply = cloudClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath, true);
+            QNetworkReply * createFolderReply = cloudClient->createFolder(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFileName, true);
             if (createFolderReply->error() == QNetworkReply::NoError) {
                 QString msg = QString::fromUtf8(createFolderReply->readAll());
                 QScriptEngine engine;

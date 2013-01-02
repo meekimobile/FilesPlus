@@ -117,7 +117,7 @@ Page {
         {
             var json = JSON.parse(dbUidList[i]);
             var cloudType = cloudDriveModel.getClientType(json.type);
-            console.debug("parseCloudStorage type " + json.type + " i " + i + " uid " + json.uid + " email " + json.email);
+            console.debug("parseCloudStorage type " + json.type + " " + cloudType + " i " + i + " uid " + json.uid + " email " + json.email);
             model.append({
                              logicalDrive: json.email,
                              availableSpace: 0,
