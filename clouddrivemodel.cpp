@@ -2313,6 +2313,16 @@ void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMs
             sc = engine.evaluate("(" + msg + ")");
             url = sc.property("link").toString();
             break;
+        case GoogleDrive:
+            sc = engine.evaluate("(" + msg + ")");
+            if (sc.property("webContentLink").isValid()) {
+                // For file.
+                url = sc.property("webContentLink").toString();
+            } else if (sc.property("webViewLink").isValid()) {
+                // For folder.
+                url = sc.property("webViewLink").toString();
+            }
+            break;
         }
     } else if (err == 202) {
         // Issue: handle 202 Nonce already in used.

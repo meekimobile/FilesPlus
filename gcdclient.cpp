@@ -26,7 +26,7 @@ const QString GCDClient::moveFileURI = "https://www.googleapis.com/drive/v2/file
 const QString GCDClient::copyFileURI = "https://www.googleapis.com/drive/v2/files/%1/copy"; // POST with partial json body.
 const QString GCDClient::deleteFileURI = "https://www.googleapis.com/drive/v2/files/%1/trash"; // POST
 const QString GCDClient::renameFileURI = "https://www.googleapis.com/drive/v2/files/%1"; // PATCH with partial json body.
-const QString GCDClient::sharesURI = "";
+const QString GCDClient::sharesURI = "https://www.googleapis.com/drive/v2/files/%1/permissions"; // POST to insert permission.
 
 const QString GCDClient::insertURI = "https://www.googleapis.com/drive/v2/files";
 const QString GCDClient::uploadURI = "https://www.googleapis.com/upload/drive/v2/files";
@@ -560,6 +560,43 @@ QNetworkReply * GCDClient::deleteFile(QString nonce, QString uid, QString remote
 
 void GCDClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
+    qDebug() << "----- GCDClient::shareFile -----" << uid << remoteFilePath;
+    if (remoteFilePath.isEmpty()) {
+        emit shareFileReplySignal(nonce, -1, "remoteFilePath is empty.", "");
+        return;
+    }
+
+    QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "shareFile");
+    if (propertyReply->error() == QNetworkReply::NoError) {
+        // For further using in shareFileReplyFinished.
+        m_propertyReplyHash->insert(nonce, propertyReply->readAll());
+        propertyReply->deleteLater();
+    } else {
+        emit shareFileReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));
+        propertyReply->deleteLater();
+        return;
+    }
+
+    QString uri = sharesURI.arg(remoteFilePath);
+    qDebug() << "GCDClient::shareFile uri " << uri;
+
+    QByteArray postData;
+    postData.append("{");
+    postData.append(" \"role\": \"reader\", ");
+    postData.append(" \"type\": \"anyone\", ");
+    postData.append(" \"value\": \"me\", ");
+    postData.append(" \"withLink\": true ");
+    postData.append("}");
+    qDebug() << "GCDClient::copyFile postData" << postData;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)) );
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QNetworkReply *reply = manager->post(req, postData);
 }
 
 QNetworkReply * GCDClient::files(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
@@ -1159,7 +1196,10 @@ void GCDClient::shareFileReplyFinished(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+    if (reply->error() == QNetworkReply::NoError) {
+        emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(m_propertyReplyHash->value(nonce)));
+        m_propertyReplyHash->remove(nonce);
+    }
 
     // TODO scheduled to delete later.
     reply->deleteLater();
