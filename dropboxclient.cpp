@@ -465,7 +465,12 @@ void DropboxClient::createFolder(QString nonce, QString uid, QString localFilePa
 
 void DropboxClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
-    qDebug() << "----- DropboxClient::moveFile -----";
+    qDebug() << "----- DropboxClient::moveFile -----" << uid << remoteFilePath << newRemoteFilePath << newRemoteFileName;
+
+    if (newRemoteFileName != "") {
+        newRemoteFilePath = getParentRemotePath(remoteFilePath) + "/" + newRemoteFileName;
+        qDebug() << "DropboxClient::moveFile remoteFilePath" << remoteFilePath << "newRemoteFilePath" << newRemoteFilePath;
+    }
 
     QString uri = moveFileURI;
     qDebug() << "DropboxClient::moveFile uri " << uri;
@@ -829,4 +834,15 @@ void DropboxClient::shareFileReplyFinished(QNetworkReply *reply)
     // TODO scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+}
+
+QString DropboxClient::getParentRemotePath(QString remotePath)
+{
+    QString remoteParentPath = "";
+    if (remotePath != "" && remotePath != "/") {
+        remoteParentPath = remotePath.mid(0, remotePath.lastIndexOf("/"));
+        remoteParentPath = (remoteParentPath == "") ? "/" : remoteParentPath;
+    }
+
+    return remoteParentPath;
 }

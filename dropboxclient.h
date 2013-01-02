@@ -88,6 +88,7 @@ private:
     QByteArray createOAuthHeaderString(QMap<QString, QString> sortMap);
     QByteArray createOAuthHeaderForUid(QString nonce, QString uid, QString method, QString uri, QMap<QString, QString> addParamMap = QMap<QString, QString>());
     QString encodeURI(const QString uri);
+    QString getParentRemotePath(QString remotePath);
 };
 
 #endif // DropboxClient_H
