@@ -351,6 +351,48 @@ Page {
 
             return -1;
         }
+
+        function findIndexByRemotePathName(remotePathName) {
+            for (var i=0; i<cloudFolderModel.count; i++) {
+                if (cloudFolderModel.get(i).name == remotePathName) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        function getNewFileName(remotePathName) {
+//            console.debug("cloudFolderModel getNewFileName " + remotePathName);
+
+            var foundIndex = findIndexByRemotePathName(remotePathName);
+            if (foundIndex > -1) {
+                var newRemotePathName = "";
+                var tokens = remotePathName.split(".", 2);
+//                console.debug("cloudFolderModel getNewFileName tokens [" + tokens + "]");
+
+                if (tokens[0].lastIndexOf(qsTr("_Copy")) > -1) {
+                    var nameTokens = tokens[0].split(qsTr("_Copy"), 2);
+//                    console.debug("cloudFolderModel getNewFileName nameTokens [" + nameTokens + "]");
+
+                    if (nameTokens.length > 1 && !isNaN(parseInt(nameTokens[1]))) {
+                        newRemotePathName += nameTokens[0] + qsTr("_Copy") + (parseInt(nameTokens[1]) + 1);
+                    } else {
+                        newRemotePathName += nameTokens[0] + qsTr("_Copy") + "2";
+                    }
+                } else {
+                    newRemotePathName += tokens[0] + qsTr("_Copy");
+                }
+
+                if (tokens.length > 1) {
+                    newRemotePathName += "." + tokens[1];
+                }
+
+                return getNewFileName(newRemotePathName);
+            } else {
+                return remotePathName;
+            }
+        }
     }
 
     ListView {
@@ -766,18 +808,29 @@ Page {
         }
 
         onConfirm: {
-            if (clipboard.count == 1) {
+            if (clipboard.count == 1 && clipboard.get(0).action != "delete") {
                 // Copy/Move/Delete first file from clipboard.
                 // Check if there is existing file on target folder. Then show overwrite dialog.
                 // TODO How to check if folder/file exists.
-//                if (clipboard.get(0).action != "delete" && !fsModel.canCopy(clipboard.get(0).sourcePath, targetPath)) {
-//                    fileOverwriteDialog.sourcePath = clipboard.get(0).sourcePath;
-//                    fileOverwriteDialog.sourcePathName = clipboard.get(0).sourcePathName;
-//                    fileOverwriteDialog.targetPath = targetPath;
-//                    fileOverwriteDialog.isCopy = (clipboard.get(0).action == "copy");
-//                    fileOverwriteDialog.open();
-//                    return;
-//                }
+                var foundIndex = -1;
+                var sourcePathName = cloudDriveModel.getFileName(clipboard.get(0).sourcePath);
+                if (targetPath == remoteParentPath) {
+                    for (var i=0; i<cloudFolderModel.count; i++) {
+                        var item = cloudFolderModel.get(i);
+                        if (item.name == sourcePathName) {
+                            foundIndex = i;
+                        }
+                    }
+                }
+
+                if (foundIndex > -1) {
+                    fileOverwriteDialog.sourcePath = clipboard.get(0).sourcePath;
+                    fileOverwriteDialog.sourcePathName = sourcePathName;
+                    fileOverwriteDialog.targetPath = targetPath;
+                    fileOverwriteDialog.isCopy = (clipboard.get(0).action == "copy");
+                    fileOverwriteDialog.open();
+                    return;
+                }
             }
 
             // It always replace existing names.
@@ -959,9 +1012,9 @@ Page {
 
                 onClicked: {
                     if (checked) {
-                        fileName.text = fsModel.getFileName(fileOverwriteDialog.sourcePath);
+                        fileName.text = fileOverwriteDialog.sourcePathName;
                     } else {
-                        fileName.text = fsModel.getNewFileName(fileOverwriteDialog.sourcePath, fileOverwriteDialog.targetPath);
+                        fileName.text = cloudFolderModel.getNewFileName(fileOverwriteDialog.sourcePathName);
                     }
                 }
             }
@@ -974,8 +1027,7 @@ Page {
 
         onOpened: {
             fileName.forceActiveFocus();
-            // TODO Find new name from model.
-            fileName.text = sourcePathName;
+            fileName.text = cloudFolderModel.getNewFileName(fileOverwriteDialog.sourcePathName);
         }
 
         onClosed: {

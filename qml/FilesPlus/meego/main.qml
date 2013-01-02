@@ -865,7 +865,6 @@ PageStackWindow {
             return -1;
         }
 
-
         function getOperationName(operation) {
             switch (operation) {
             case CloudDriveModel.FileGet:
