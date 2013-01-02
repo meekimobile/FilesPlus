@@ -617,7 +617,7 @@ Page {
         // Open recipientSelectionDialog for sending share link.
         var senderEmail = cloudDriveModel.getUidEmail(cloudDriveType, uid);
         if (senderEmail != "") {
-            recipientSelectionDialog.srcFilePath = json.local_file_path;
+            recipientSelectionDialog.srcFilePath = localPath;
             recipientSelectionDialog.messageSubject = appInfo.emptyStr+qsTr("Share file on %1").arg(cloudDriveModel.getCloudName(cloudDriveType));
             recipientSelectionDialog.messageBody = appInfo.emptyStr+qsTr("Please download file with below link.") + "\n" + url;
             recipientSelectionDialog.senderEmail = senderEmail;
@@ -1699,6 +1699,7 @@ Page {
                 cloudDrivePathDialog.refresh();
                 break;
             case CloudDriveModel.ShareFile:
+                recipientSelectionDialog.refresh();
                 cloudDriveModel.shareFile(type, uid, localPath, remotePath);
                 break;
             case CloudDriveModel.DeleteFile:
@@ -1960,71 +1961,16 @@ Page {
         }
     }
 
-    ContactModel {
-        id: favContactModel
-        filter: DetailFilter {
-            detail: ContactDetail.Favorite
-            field: Favorite.Favorite
-            matchFlags: Filter.MatchFixedString // Meego only
-            value: "true"
-        }
-        sortOrders: [
-            SortOrder {
-                detail: ContactDetail.Favorite
-                field: Favorite.Favorite
-                direction: Qt.AscendingOrder // Meego ascending true > false
-            },
-            SortOrder {
-                detail: ContactDetail.Name
-                field: Name.FirstName
-                direction: Qt.AscendingOrder
-            },
-            SortOrder {
-                detail: ContactDetail.Name
-                field: Name.LastName
-                direction: Qt.AscendingOrder
-            }
-        ]
-
-        function getFavListModel() {
-            // Construct model.
-            var model = Qt.createQmlObject(
-                        'import QtQuick 1.1; ListModel {}', folderPage);
-
-            console.debug("getFavListModel favContactModel.contacts.length " + favContactModel.contacts.length + " error " + favContactModel.error);
-            for (var i=0; i<favContactModel.contacts.length; i++)
-            {
-                var contact = favContactModel.contacts[i];
-                var favorite = (contact.favorite) ? contact.favorite.favorite : false;
-//                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + favorite);
-                model.append({
-                                 displayLabel: contact.displayLabel,
-                                 email: contact.email.emailAddress,
-                                 phoneNumber: contact.phoneNumber.number,
-                                 favorite: favorite
-                             });
-            }
-
-            return model;
-        }
-
-        Component.onCompleted: {
-            console.debug(Utility.nowText() + " folderPage favContactModel onCompleted");
-            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("ContactModel"), 0.1);
-        }
-    }
-
     RecipientSelectionDialog {
         id: recipientSelectionDialog
-        shareFileCaller: cloudDriveModel.shareFileCaller
-        onOpening: {
-            model.destroy();
+        shareFileCaller: uidDialog.caller
 
-            model = favContactModel.getFavListModel();
-
+        function refresh() {
+            favContactModel.getFavListModel(model);
             // Update model for next opening.
             favContactModel.update();
         }
+
         onAccepted: {
             console.debug("recipientSelectionDialog onAccepted shareFileCaller " + shareFileCaller + " email " + selectedEmail + " senderEmail " + senderEmail + " selectedNumber " + selectedNumber);
             console.debug("recipientSelectionDialog onAccepted messageBody " + messageBody);

@@ -1,4 +1,5 @@
 import QtQuick 1.1
+import QtMobility.contacts 1.1
 import com.nokia.meego 1.0
 import AppInfo 1.0
 import ClipboardModel 1.0
@@ -496,6 +497,65 @@ PageStackWindow {
         }
     }
 
+    ContactModel {
+        id: favContactModel
+        filter: DetailFilter {
+            detail: ContactDetail.Favorite
+            field: Favorite.Favorite
+            matchFlags: Filter.MatchFixedString // Meego only
+            value: "true"
+        }
+        sortOrders: [
+            SortOrder {
+                detail: ContactDetail.Favorite
+                field: Favorite.Favorite
+                direction: Qt.AscendingOrder // Meego ascending true > false
+            },
+            SortOrder {
+                detail: ContactDetail.Name
+                field: Name.FirstName
+                direction: Qt.AscendingOrder
+            },
+            SortOrder {
+                detail: ContactDetail.Name
+                field: Name.LastName
+                direction: Qt.AscendingOrder
+            }
+        ]
+
+        function getFavListModel(model) {
+            model.clear();
+
+            console.debug("getFavListModel favContactModel.contacts.length " + favContactModel.contacts.length + " error " + favContactModel.error);
+            for (var i=0; i<favContactModel.contacts.length; i++)
+            {
+                var contact = favContactModel.contacts[i];
+                var favorite = (contact.favorite) ? contact.favorite.favorite : false;
+//                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + favorite);
+                model.append({
+                                 displayLabel: contact.displayLabel,
+                                 email: contact.email.emailAddress,
+                                 phoneNumber: contact.phoneNumber.number,
+                                 favorite: favorite
+                             });
+            }
+
+            model.append({
+                             displayLabel: qsTr("Blank recipient"),
+                             email: "",
+                             phoneNumber: "",
+                             favorite: false
+                         });
+
+            return model;
+        }
+
+        Component.onCompleted: {
+            console.debug(Utility.nowText() + " folderPage favContactModel onCompleted");
+            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("ContactModel"), 0.1);
+        }
+    }
+
     GCPClient {
         id: gcpClient
 
@@ -754,7 +814,6 @@ PageStackWindow {
         id: cloudDriveModel
         dropboxFullAccess: appInfo.emptySetting+appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", false)
 
-        property string shareFileCaller
         property alias jobsModel: cloudDriveJobsModel
 
         ListModel {
