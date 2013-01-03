@@ -6,7 +6,7 @@
 
 const QString SkyDriveClient::consumerKey = "00000000480E4F62";
 const QString SkyDriveClient::consumerSecret = "iulfMFYbOZqdgcSHOMeoR0mehcl0yFeO";
-const QString SkyDriveClient::SkyDriveRoot = "me/skydrive";
+const QString SkyDriveClient::RemoteRoot = "me/skydrive";
 
 const QString SkyDriveClient::authorizeURI = "https://login.live.com/oauth20_authorize.srf"; // &display=touch
 const QString SkyDriveClient::accessTokenURI = "https://login.live.com/oauth20_token.srf";
@@ -630,7 +630,7 @@ void SkyDriveClient::renameFile(QString nonce, QString uid, QString remoteFilePa
 
 QString SkyDriveClient::getRemoteRoot()
 {
-    return SkyDriveRoot;
+    return RemoteRoot;
 }
 
 void SkyDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)

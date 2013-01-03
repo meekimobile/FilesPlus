@@ -8,7 +8,7 @@
 const QString GCDClient::consumerKey = "196573379494.apps.googleusercontent.com";
 const QString GCDClient::consumerSecret = "il59cyz3dwBW6tsHBkZYGSWj";
 
-const QString GCDClient::GCDRootFolderId = "root";
+const QString GCDClient::RemoteRoot = "root";
 
 const QString GCDClient::authorizationScope = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/drive";
 
@@ -27,11 +27,6 @@ const QString GCDClient::copyFileURI = "https://www.googleapis.com/drive/v2/file
 const QString GCDClient::deleteFileURI = "https://www.googleapis.com/drive/v2/files/%1/trash"; // POST
 const QString GCDClient::renameFileURI = "https://www.googleapis.com/drive/v2/files/%1"; // PATCH with partial json body.
 const QString GCDClient::sharesURI = "https://www.googleapis.com/drive/v2/files/%1/permissions"; // POST to insert permission.
-
-const QString GCDClient::insertURI = "https://www.googleapis.com/drive/v2/files";
-const QString GCDClient::uploadURI = "https://www.googleapis.com/upload/drive/v2/files";
-const QString GCDClient::patchMetadataURI = "https://www.googleapis.com/drive/v2/files/%1";
-const QString GCDClient::updateMetadataURI = "https://www.googleapis.com/drive/v2/files/%1";
 
 GCDClient::GCDClient(QObject *parent) :
     CloudDriveClient(parent)
@@ -479,7 +474,7 @@ void GCDClient::renameFile(QString nonce, QString uid, QString remoteFilePath, Q
 
 QString GCDClient::getRemoteRoot()
 {
-    return GCDRootFolderId;
+    return RemoteRoot;
 }
 
 void GCDClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
@@ -608,7 +603,7 @@ QNetworkReply * GCDClient::files(QString nonce, QString uid, QString remoteFileP
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
     sortMap["key"] = consumerKey;
-    sortMap["q"] = QUrl::toPercentEncoding(QString("'%1' in parents and trashed = false").arg((remoteFilePath == "") ? GCDRootFolderId : remoteFilePath));
+    sortMap["q"] = QUrl::toPercentEncoding(QString("'%1' in parents and trashed = false").arg((remoteFilePath == "") ? RemoteRoot : remoteFilePath));
     QString queryString = createQueryString(sortMap);
     qDebug() << "queryString " << queryString;
 
@@ -649,7 +644,7 @@ QNetworkReply * GCDClient::property(QString nonce, QString uid, QString remoteFi
 
     QApplication::processEvents();
 
-    QString uri = propertyURI.arg((remoteFilePath == "") ? GCDRootFolderId : remoteFilePath);
+    QString uri = propertyURI.arg((remoteFilePath == "") ? RemoteRoot : remoteFilePath);
     uri = encodeURI(uri);
     qDebug() << "GCDClient::property uri " << uri;
 

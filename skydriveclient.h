@@ -12,7 +12,8 @@ class SkyDriveClient : public CloudDriveClient
 public:
     static const QString consumerKey;
     static const QString consumerSecret;
-    static const QString SkyDriveRoot;
+
+    static const QString RemoteRoot;
 
     static const QString authorizeURI;
     static const QString accessTokenURI;

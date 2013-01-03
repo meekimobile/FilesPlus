@@ -14,7 +14,7 @@ public:
     static const QString consumerKey;
     static const QString consumerSecret;
 
-    static const QString GCDRootFolderId;
+    static const QString RemoteRoot;
 
     static const QString authorizationScope;
 
@@ -33,11 +33,6 @@ public:
     static const QString deleteFileURI;
     static const QString renameFileURI;
     static const QString sharesURI;
-
-    static const QString insertURI;
-    static const QString uploadURI;
-    static const QString patchMetadataURI;
-    static const QString updateMetadataURI;
 
     explicit GCDClient(QObject *parent = 0);
     ~GCDClient();
