@@ -870,7 +870,7 @@ PageStackWindow {
                                  name: "",
                                  shared: 0,
                                  normal: 0,
-                                 quota: 0
+                                 quota: -1
                              });
             }
 

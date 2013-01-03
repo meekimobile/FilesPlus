@@ -497,3 +497,9 @@ bool FtpClient::isRemoteAbsolutePath()
 {
     return true;
 }
+
+void FtpClient::quota(QString nonce, QString uid)
+{
+    // Signal with empty message to get default quota value.
+    emit quotaReplySignal(nonce, 0, "", "{ }");
+}
