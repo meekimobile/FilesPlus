@@ -1781,7 +1781,7 @@ Page {
                 console.debug("cloudDrivePathDialog proceedOperation FilePut localPath " + localPath + " to remotePath " + remotePath + " isDir " + isDir
                               + " remoteParentPath " + remoteParentPath
                               + " fsModel.getDirPath(localPath) " + fsModel.getDirPath(localPath)
-                              + " cloudDriveModel.getRemoteName(remotePath) " + cloudDriveModel.getRemoteName(remotePath));
+                              + " cloudDriveModel.getRemoteName(type, remotePath) " + cloudDriveModel.getRemoteName(type, remotePath));
 
                 // Upload selected local path into remote parent path.
                 if (remoteParentPath != "") {
@@ -1816,7 +1816,7 @@ Page {
                 console.debug("cloudDrivePathDialog proceedOperation FileGet localPath " + localPath + " from remotePath " + remotePath + " remotePathName " + remotePathName + " isDir " + isDir
                               + " remoteParentPath " + remoteParentPath
                               + " fsModel.getDirPath(localPath) " + fsModel.getDirPath(localPath)
-                              + " cloudDriveModel.getRemoteName(remotePath) " + cloudDriveModel.getRemoteName(remotePath));
+                              + " cloudDriveModel.getRemoteName(type, remotePath) " + cloudDriveModel.getRemoteName(type, remotePath));
 
                 // Download selected remote folder/file to parent folder of selected local path.
                 if (remotePath != "") {

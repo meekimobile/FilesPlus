@@ -1202,7 +1202,8 @@ PageStackWindow {
             } else {
                 showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Account Quota"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                            qsTr("Error") + " " + err + " " + errMsg + " " + msg,
+                            2000);
             }
 
             // Remove finished job.
