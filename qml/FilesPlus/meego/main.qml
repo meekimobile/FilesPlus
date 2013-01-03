@@ -524,8 +524,9 @@ PageStackWindow {
             }
         ]
 
-        function getFavListModel(model) {
-            model.clear();
+        function getFavListModel() {
+            // Construct model.
+            var model = Qt.createQmlObject('import QtQuick 1.1; ListModel {}', favContactModel);
 
             console.debug("getFavListModel favContactModel.contacts.length " + favContactModel.contacts.length + " error " + favContactModel.error);
             for (var i=0; i<favContactModel.contacts.length; i++) {
@@ -541,7 +542,7 @@ PageStackWindow {
             }
 
             model.append({
-                             displayLabel: qsTr("Blank recipient"),
+                             displayLabel: qsTr("Other recipient"),
                              email: "",
                              phoneNumber: "",
                              favorite: false
@@ -902,19 +903,6 @@ PageStackWindow {
             }
         }
 
-//        function getCloudName(type) {
-//            switch (type) {
-//            case CloudDriveModel.Dropbox:
-//                return "Dropbox";
-//            case CloudDriveModel.GoogleDrive:
-//                return "GoogleDrive";
-//            case CloudDriveModel.SkyDrive:
-//                return "SkyDrive";
-//            case CloudDriveModel.Ftp:
-//                return "FTP";
-//            }
-//        }
-
         function getClientType(typeText) {
             if (["dropboxclient","dropbox"].indexOf(typeText.toLowerCase()) != -1) {
                 return CloudDriveModel.Dropbox;
@@ -928,41 +916,6 @@ PageStackWindow {
 
             return -1;
         }
-
-//        function getOperationName(operation) {
-//            switch (operation) {
-//            case CloudDriveModel.FileGet:
-//                return qsTr("Download");
-//            case CloudDriveModel.FilePut:
-//                return qsTr("Upload");
-//            case CloudDriveModel.Metadata:
-//                return qsTr("Sync");
-//            case CloudDriveModel.CreateFolder:
-//                return qsTr("Create folder");
-//            case CloudDriveModel.RequestToken:
-//                return qsTr("Request token");
-//            case CloudDriveModel.Authorize:
-//                return qsTr("Authorize");
-//            case CloudDriveModel.AccessToken:
-//                return qsTr("Access token");
-//            case CloudDriveModel.RefreshToken:
-//                return qsTr("Refresh token");
-//            case CloudDriveModel.AccountInfo:
-//                return qsTr("Account Info.");
-//            case CloudDriveModel.Quota:
-//                return qsTr("Quota");
-//            case CloudDriveModel.DeleteFile:
-//                return qsTr("Delete");
-//            case CloudDriveModel.MoveFile:
-//                return qsTr("Move");
-//            case CloudDriveModel.CopyFile:
-//                return qsTr("Copy");
-//            case CloudDriveModel.ShareFile:
-//                return qsTr("Share link");
-//            case CloudDriveModel.Browse:
-//                return qsTr("Browse");
-//            }
-//        }
 
         function accessTokenSlot(clientTypeName, pin) {
             console.debug("folderPage accessTokenSlot clientTypeName " + clientTypeName + " pin " + pin);
@@ -2080,7 +2033,8 @@ PageStackWindow {
         shareFileCaller: cloudDriveModel.shareFileCaller
 
         function refresh() {
-            favContactModel.getFavListModel(model);
+            model.destroy();
+            model = favContactModel.getFavListModel();
             // Update model for next opening.
             favContactModel.update();
         }

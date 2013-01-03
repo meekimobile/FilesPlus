@@ -1711,6 +1711,7 @@ Page {
         }
 
         onOpening: {
+            uidDialog.model.destroy();
             uidDialog.model = cloudDriveModel.getUidListModel(localPath);
         }
 
