@@ -188,7 +188,7 @@ Page {
             driveGrid.currentIndex = -1;
 
             // Parse all storages.
-            refreshSlot("drivePage onStatusChanged");
+//            refreshSlot("drivePage onStatusChanged");
 
             // Stop startup logging.
             appInfo.stopLogging();
@@ -198,5 +198,8 @@ Page {
     Component.onCompleted: {
         console.debug(Utility.nowText() + " drivePage onCompleted");
         window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("DrivePage"), 0.2);
+
+        // Parse all storages.
+        refreshSlot("drivePage onCompleted");
     }
 }
