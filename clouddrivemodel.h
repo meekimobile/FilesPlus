@@ -137,6 +137,8 @@ public:
     Q_INVOKABLE QString getFileName(const QString absFilePath);
     Q_INVOKABLE QString getFileType(QString localPath);
     Q_INVOKABLE ClientTypes getClientType(int typeInt);
+    Q_INVOKABLE QString getCloudName(int type);
+    Q_INVOKABLE QString getOperationName(int operation);
 
     // Scheduler.
     Q_INVOKABLE int updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp);

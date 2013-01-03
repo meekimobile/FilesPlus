@@ -39,12 +39,8 @@ Page {
             id: refreshButton
             iconId: "toolbar-refresh"
             onClicked: {
-                // TODO Parse all storages.
-                driveGridModel.clear();
-                parseLocalStorage(driveGridModel);
-                if (appInfo.getSettingBoolValue("drivepage.clouddrive.enabled", false)) {
-                    parseCloudStorage(driveGridModel);
-                }
+                // Parse all storages.
+                refreshSlot("drivePage refreshButton onClicked");
             }
         }
 
@@ -131,18 +127,18 @@ Page {
             });
 
             // Request quota.
-            // TODO Refactor to call quota only to all clients.
-            switch (cloudType) {
-            case CloudDriveModel.Dropbox:
-                cloudDriveModel.accountInfo(cloudType, json.uid);
-                break;
-            case CloudDriveModel.SkyDrive:
-                cloudDriveModel.quota(cloudType, json.uid);
-                break;
-            case CloudDriveModel.GoogleDrive:
-                cloudDriveModel.quota(cloudType, json.uid);
-                break;
-            }
+            cloudDriveModel.quota(cloudType, json.uid);
+        }
+    }
+
+    function refreshSlot(caller) {
+        console.debug("drivePage refreshSlot caller " + caller);
+
+        // TODO Parse all storages.
+        driveGridModel.clear();
+        parseLocalStorage(driveGridModel);
+        if (appInfo.getSettingBoolValue("drivepage.clouddrive.enabled", false)) {
+            parseCloudStorage(driveGridModel);
         }
     }
 
@@ -191,12 +187,8 @@ Page {
         if (status == PageStatus.Active) {
             driveGrid.currentIndex = -1;
 
-            // TODO Parse all storages.
-            driveGridModel.clear();
-            parseLocalStorage(driveGridModel);
-            if (appInfo.getSettingBoolValue("drivepage.clouddrive.enabled", false)) {
-                parseCloudStorage(driveGridModel);
-            }
+            // Parse all storages.
+            refreshSlot("drivePage onStatusChanged");
 
             // Stop startup logging.
             appInfo.stopLogging();

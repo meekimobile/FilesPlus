@@ -314,6 +314,21 @@ void DropboxClient::accountInfo(QString nonce, QString uid)
     QNetworkReply *reply = manager->get(req);
 }
 
+void DropboxClient::quota(QString nonce, QString uid)
+{
+    qDebug() << "----- DropboxClient::quota ----- uid" << uid;
+
+    QString uri = accountInfoURI;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(quotaReplyFinished(QNetworkReply*)));
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
+    QNetworkReply *reply = manager->get(req);
+}
+
 void DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath) {
     qDebug() << "----- DropboxClient::fileGet -----" << uid << remoteFilePath << localFilePath;
 
@@ -680,6 +695,19 @@ void DropboxClient::accountInfoReplyFinished(QNetworkReply *reply)
     }
 
     emit accountInfoReplySignal(nonce, reply->error(), reply->errorString(), replyBody );
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void DropboxClient::quotaReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "DropboxClient::quotaReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    emit quotaReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll() );
 
     // TODO scheduled to delete later.
     reply->deleteLater();

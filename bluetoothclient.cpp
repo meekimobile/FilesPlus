@@ -13,6 +13,9 @@ BluetoothClient::BluetoothClient(QDeclarativeItem *parent) :
 {
     loadBtServiceHash();
 
+    // Populates uuiudFilterList.
+    m_uuidFilterList.append(QBluetoothUuid(QBluetoothUuid::ObexObjectPush));
+
     connect(m_localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)), this, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)) );
     connect(m_serviceDiscoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)), this, SLOT(serviceDiscoveredFilter(QBluetoothServiceInfo)) );
     connect(m_serviceDiscoveryAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)), this, SLOT(errorFilter(QBluetoothServiceDiscoveryAgent::Error)) );
@@ -107,12 +110,12 @@ void BluetoothClient::startDiscovery(bool full, bool clear)
     if (m_discoveryRetry <= 0) return;
 
     qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "BluetoothClient::startDiscovery retry remain" << m_discoveryRetry << "full" << full << "clear" << clear
-             << "discoveredServices" << m_serviceDiscoveryAgent->discoveredServices().count() << "uuidFilter" << QBluetoothUuid(QBluetoothUuid::ObexObjectPush).toString();
+             << "discoveredServices" << m_serviceDiscoveryAgent->discoveredServices().count() << "m_uuidFilterList" << m_uuidFilterList;
 
     if (clear) {
         m_serviceDiscoveryAgent->clear();
     }
-    m_serviceDiscoveryAgent->setUuidFilter(QBluetoothUuid(QBluetoothUuid::ObexObjectPush));
+    m_serviceDiscoveryAgent->setUuidFilter(m_uuidFilterList);
     m_serviceDiscoveryAgent->start( (full ? QBluetoothServiceDiscoveryAgent::FullDiscovery : QBluetoothServiceDiscoveryAgent::MinimalDiscovery) );
 
     emit discoveryChanged();

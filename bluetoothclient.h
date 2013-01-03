@@ -88,6 +88,7 @@ private:
     QString m_deviceAddressStr;
     qint64 m_lastBytesSent;
     QBluetoothTransferReply *m_reply;
+    QList<QBluetoothUuid> m_uuidFilterList;
 
     void loadBtServiceHash();
     void saveBtServiceHash();

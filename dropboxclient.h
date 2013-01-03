@@ -45,6 +45,7 @@ public:
     void authorize(QString nonce);
     void accessToken(QString nonce, QString pin = "");
     void accountInfo(QString nonce, QString uid);
+    void quota(QString nonce, QString uid);
     void fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
@@ -60,6 +61,7 @@ public slots:
     void requestTokenReplyFinished(QNetworkReply *reply);
     void accessTokenReplyFinished(QNetworkReply *reply);
     void accountInfoReplyFinished(QNetworkReply *reply);
+    void quotaReplyFinished(QNetworkReply *reply);
     void fileGetReplyFinished(QNetworkReply *reply);
     void filePutReplyFinished(QNetworkReply *reply);
     void metadataReplyFinished(QNetworkReply *reply);

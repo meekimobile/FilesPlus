@@ -154,6 +154,7 @@ void CloudDriveModel::initializeDropboxClient() {
     connect(dbClient, SIGNAL(authorizeRedirectSignal(QString,QString,QString)), SLOT(authorizeRedirectFilter(QString,QString,QString)) );
     connect(dbClient, SIGNAL(accessTokenReplySignal(QString,int,QString,QString)), SLOT(accessTokenReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(accountInfoReplySignal(QString,int,QString,QString)), SLOT(accountInfoReplyFilter(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(quotaReplySignal(QString,int,QString,QString)), SLOT(quotaReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(fileGetReplySignal(QString,int,QString,QString)), SLOT(fileGetReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SLOT(filePutReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
@@ -224,14 +225,18 @@ void CloudDriveModel::initializeFtpClient()
     ftpClient = new FtpClient(this);
     connect(ftpClient, SIGNAL(uploadProgress(QString,qint64,qint64)), SLOT(uploadProgressFilter(QString,qint64,qint64)) );
     connect(ftpClient, SIGNAL(downloadProgress(QString,qint64,qint64)), SLOT(downloadProgressFilter(QString,qint64,qint64)) );
+    connect(ftpClient, SIGNAL(authorizeRedirectSignal(QString,QString,QString)), SLOT(authorizeRedirectFilter(QString,QString,QString)) );
+    connect(ftpClient, SIGNAL(accessTokenReplySignal(QString,int,QString,QString)), SLOT(accessTokenReplyFilter(QString,int,QString,QString)) );
+    connect(ftpClient, SIGNAL(accountInfoReplySignal(QString,int,QString,QString)), SLOT(accountInfoReplyFilter(QString,int,QString,QString)) );
+    connect(ftpClient, SIGNAL(quotaReplySignal(QString,int,QString,QString)), SLOT(quotaReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(fileGetReplySignal(QString,int,QString,QString)), SLOT(fileGetReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SLOT(filePutReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(browseReplySignal(QString,int,QString,QString)), SLOT(browseReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(createFolderReplySignal(QString,int,QString,QString)), SLOT(createFolderReplyFilter(QString,int,QString,QString)) );
-    connect(ftpClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(moveFileReplySignal(QString,int,QString,QString)), SLOT(moveFileReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
+    connect(ftpClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
 }
 
@@ -605,6 +610,68 @@ CloudDriveModel::ClientTypes CloudDriveModel::getClientType(int typeInt)
         return GoogleDrive;
     case Ftp:
         return Ftp;
+    }
+}
+
+QString CloudDriveModel::getCloudName(int type) {
+    switch (type) {
+    case Dropbox:
+        return "Dropbox";
+    case GoogleDrive:
+        return "GoogleDrive";
+    case SkyDrive:
+        return "SkyDrive";
+    case Ftp:
+        return "FTP";
+    default:
+        return "Invalid type";
+    }
+}
+
+QString CloudDriveModel::getOperationName(int operation) {
+    switch (operation) {
+    case FileGet:
+        return tr("Download");
+    case FilePut:
+        return tr("Upload");
+    case Metadata:
+        return tr("Sync");
+    case CreateFolder:
+        return tr("Create folder");
+    case RequestToken:
+        return tr("Request token");
+    case Authorize:
+        return tr("Authorize");
+    case AccessToken:
+        return tr("Access token");
+    case RefreshToken:
+        return tr("Refresh token");
+    case AccountInfo:
+        return tr("Account Info.");
+    case Quota:
+        return tr("Quota");
+    case DeleteFile:
+        return tr("Delete");
+    case MoveFile:
+        return tr("Move");
+    case CopyFile:
+        return tr("Copy");
+    case ShareFile:
+        return tr("Share link");
+    case Browse:
+        return tr("Browse");
+    case LoadCloudDriveItems:
+        return tr("LoadCloudDriveItems");
+    case InitializeDB:
+        return tr("InitializeDB");
+    case InitializeCloudClients:
+        return tr("InitializeCloudClients");
+    case Disconnect:
+        return tr("Disconnect");
+    case ScheduleSync:
+        return tr("ScheduleSync");
+    default:
+        return tr("Invalid operation");
     }
 }
 
@@ -2341,7 +2408,7 @@ void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMs
 
 void CloudDriveModel::schedulerTimeoutFilter()
 {
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter" << QDateTime::currentDateTime().toString("d/M/yyyy hh:mm:ss.zzz");
+//    qDebug() << "CloudDriveModel::schedulerTimeoutFilter" << QDateTime::currentDateTime().toString("d/M/yyyy hh:mm:ss.zzz");
 
     QString cronValue = QDateTime::currentDateTime().toString("m h d M ddd");
 
@@ -2821,8 +2888,8 @@ void CloudDriveModel::proceedNextJob() {
     }
 
     QString nonce = m_jobQueue->dequeue();
-    qDebug() << "CloudDriveModel::proceedNextJob jobId " << nonce;
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "operation" << getOperationName(job.operation);
 
     mutex.lock();
     runningJobCount++;

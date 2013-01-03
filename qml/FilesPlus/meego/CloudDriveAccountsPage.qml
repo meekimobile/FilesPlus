@@ -19,17 +19,6 @@ Page {
         }
     }
 
-    function refreshAccountsInfoSlot() {
-        // Refresh UID list.
-        accountListView.model = cloudDriveModel.getUidListModel();
-
-        // Refresh quota.
-        for (var i=0; i<accountListView.model.count; i++) {
-            accountListView.model.set(i, { quota: 0 });
-            cloudDriveModel.accountInfo(accountListView.model.get(i).type, accountListView.model.get(i).uid);
-        }
-    }
-
     function refreshCloudDriveAccountsSlot() {
         accountListView.model = cloudDriveModel.getUidListModel();
     }
@@ -56,7 +45,7 @@ Page {
             id: refreshButton
             iconId: "toolbar-refresh"
             onClicked: {
-                refreshAccountsInfoSlot();
+                refreshCloudDriveAccountsSlot();
             }
         }
         ToolIcon {
@@ -386,21 +375,10 @@ Page {
             }
 
             Component.onCompleted: {
-//                console.debug("uid " + uid + " type " + type);
-                switch (type) {
-                case CloudDriveModel.Dropbox:
-                    cloudDriveModel.accountInfo(type, uid);
-                    break;
-                case CloudDriveModel.SkyDrive:
                     if (email == "") {
                         cloudDriveModel.accountInfo(type, uid);
                     }
                     cloudDriveModel.quota(type, uid);
-                    break;
-                case CloudDriveModel.GoogleDrive:
-                    cloudDriveModel.quota(type, uid);
-                    break;
-                }
             }
         }
     }
