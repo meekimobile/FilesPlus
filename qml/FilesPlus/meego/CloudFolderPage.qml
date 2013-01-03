@@ -414,8 +414,10 @@ Page {
         width: parent.width
         height: parent.height - currentPath.height
         anchors.top: currentPath.bottom
-        model: cloudFolderModel
-        delegate: cloudItemDelegate
+        highlightRangeMode: ListView.NoHighlightRange
+        highlightFollowsCurrentItem: false
+        highlightMoveDuration: 1
+        highlightMoveSpeed: 4000
         highlight: Rectangle {
             width: cloudFolderView.width
             gradient: Gradient {
@@ -430,10 +432,11 @@ Page {
                 }
             }
         }
-        highlightFollowsCurrentItem: false
-        highlightMoveSpeed: 4000
-        pressDelay: 100
         clip: true
+        focus: true
+        pressDelay: 100
+        model: cloudFolderModel
+        delegate: cloudItemDelegate
         state: ""
         states: [
             State {

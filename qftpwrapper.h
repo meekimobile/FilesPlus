@@ -21,6 +21,9 @@ public:
     QList<QUrlInfo> getItemList();
     void resetIsDone();
     void waitForDone();
+
+    // Parameter storage.
+    QString m_remoteFilePath;
 signals:
     void uploadProgress(QString nonce, qint64 done, qint64 total);
     void downloadProgress(QString nonce, qint64 done, qint64 total);
@@ -31,6 +34,7 @@ signals:
     void commandStarted(QString nonce, int id);
     void commandFinished(QString nonce, int id, bool error);
     void done(QString nonce, bool error);
+    void deleteRecursiveFinished(QString nonce, int error, QString errorString);
 
 public slots:
     void commandStartedFilter(int id);
@@ -41,6 +45,8 @@ public slots:
     void stateChangedFilter(int state);
     void doneFilter(bool error);
 
+    // Extended methods.
+    bool deleteRecursive(QString remoteFilePath = "");
 private:
     bool m_isDone;
     QString m_nonce;

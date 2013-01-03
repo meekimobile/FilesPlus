@@ -33,19 +33,20 @@ public:
 signals:
 
 public slots:
-
+    void deleteFileReplyFinished(QString nonce, int error, QString errorString);
 private:
     QHash<QString, QFtpWrapper*> *m_ftpHash;
     QHash<QString, QFile*> m_localFileHash;
 
     QFtpWrapper *connectToHost(QString nonce, QString uid);
     QString property(QString nonce, QString uid, QString remoteFilePath);
-    bool deleteRecursive(QFtpWrapper *ftp, QString remoteFilePath);
 
     QString getPropertyJson(const QString parentPath, const QUrlInfo item);
     QString getItemListJson(const QString parentPath, const QList<QUrlInfo> itemList);
     QString getParentRemotePath(QString remotePath);
     QString getRemoteFileName(QString remotePath);
+
+    QThread t;
 };
 
 #endif // FTPCLIENT_H

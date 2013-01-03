@@ -63,6 +63,74 @@ void QFtpWrapper::waitForDone()
     m_isDone = false;
 }
 
+bool QFtpWrapper::deleteRecursive(QString remoteFilePath)
+{
+    if (remoteFilePath == "") {
+        remoteFilePath = m_remoteFilePath;
+    }
+
+    qDebug() << "QFtpWrapper::deleteRecursive" << remoteFilePath;
+
+    // Check if it's folder by cd.
+    cd(remoteFilePath);
+    waitForDone();
+    if (error() == QFtp::NoError) {
+        // It's folder. Drill it down.
+        list();
+        waitForDone();
+        // ISSUE list() get clear before start listing. When pop to parent level, the list is empty.
+        QList<QUrlInfo> itemList = getItemList();
+        for (int i = 0; i < itemList.count(); i++) {
+            qDebug() << "QFtpWrapper::deleteRecursive item" << remoteFilePath + "/" + itemList.at(i).name() << "isDir" << itemList.at(i).isDir();
+            if (itemList.at(i).isDir()) {
+                // Drill down into folder.
+                bool res = deleteRecursive(remoteFilePath + "/" + itemList.at(i).name());
+                if (!res) {
+                    emit deleteRecursiveFinished(m_nonce, error(), errorString());
+                    return false;
+                }
+            } else {
+                // Delete a file.
+                remove(itemList.at(i).name());
+                waitForDone();
+                if (error() != QFtp::NoError) {
+                    qDebug() << "QFtpWrapper::deleteRecursive can't delete file" << remoteFilePath + "/" + itemList.at(i).name() << error() << errorString();
+                    emit deleteRecursiveFinished(m_nonce, error(), errorString());
+                    return false;
+                } else {
+                    qDebug() << "QFtpWrapper::deleteRecursive delete file" << remoteFilePath + "/" + itemList.at(i).name();
+                }
+            }
+        }
+
+        // Delete parent folder.
+        cd("..");
+        rmdir(remoteFilePath);
+        waitForDone();
+        if (error() != QFtp::NoError) {
+            qDebug() << "QFtpWrapper::deleteRecursive can't delete folder" << remoteFilePath << error() << errorString();
+            emit deleteRecursiveFinished(m_nonce, error(), errorString());
+            return false;
+        } else {
+            qDebug() << "QFtpWrapper::deleteRecursive delete folder" << remoteFilePath;
+        }
+    } else {
+        // It's a file. Delete it.
+        remove(remoteFilePath);
+        waitForDone();
+        if (error() != QFtp::NoError) {
+            qDebug() << "QFtpWrapper::deleteRecursive can't delete file" << remoteFilePath << error() << errorString();
+            emit deleteRecursiveFinished(m_nonce, error(), errorString());
+            return false;
+        } else {
+            qDebug() << "QFtpWrapper::deleteRecursive delete file" << remoteFilePath;
+        }
+    }
+
+    emit deleteRecursiveFinished(m_nonce, error(), errorString());
+    return true;
+}
+
 void QFtpWrapper::commandStartedFilter(int id)
 {
     m_isDone = false;
