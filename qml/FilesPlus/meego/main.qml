@@ -6,6 +6,7 @@ import ClipboardModel 1.0
 import GCPClient 1.0
 import CloudDriveModel 1.0
 import FolderSizeItemListModel 1.0
+import MessageClient 1.0
 import "Utility.js" as Utility
 
 PageStackWindow {
@@ -527,8 +528,7 @@ PageStackWindow {
             model.clear();
 
             console.debug("getFavListModel favContactModel.contacts.length " + favContactModel.contacts.length + " error " + favContactModel.error);
-            for (var i=0; i<favContactModel.contacts.length; i++)
-            {
+            for (var i=0; i<favContactModel.contacts.length; i++) {
                 var contact = favContactModel.contacts[i];
                 var favorite = (contact.favorite) ? contact.favorite.favorite : false;
 //                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + favorite);
@@ -554,6 +554,10 @@ PageStackWindow {
             console.debug(Utility.nowText() + " folderPage favContactModel onCompleted");
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("ContactModel"), 0.1);
         }
+    }
+
+    MessageClient {
+        id: msgClient
     }
 
     GCPClient {
@@ -815,6 +819,7 @@ PageStackWindow {
         dropboxFullAccess: appInfo.emptySetting+appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", false)
 
         property alias jobsModel: cloudDriveJobsModel
+        property string shareFileCaller
 
         ListModel {
             id: cloudDriveJobsModel
@@ -1906,12 +1911,10 @@ PageStackWindow {
             cloudDriveModel.removeJob(nonce);
 
             if (err == 0) {
-                // TODO Select delivery service. (email, sms)
                 // Open recipientSelectionDialog for sending share link.
-                var p = findPage("folderPage");
-                if (p) {
-                    p.showRecipientSelectionDialogSlot(jobJson.type, jobJson.uid, jobJson.local_file_path, url);
-                }
+                showRecipientSelectionDialogSlot(jobJson.type, jobJson.uid, jobJson.local_file_path,
+                                                 (jobJson.local_file_path.indexOf("/") >= 0) ? cloudDriveModel.getFileName(jobJson.local_file_path) : jobJson.local_file_path,
+                                                 url);
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
@@ -2065,6 +2068,44 @@ PageStackWindow {
         printerSelectionDialog.srcFilePath = srcFilePath;
         printerSelectionDialog.srcURL = srcUrl;
         printerSelectionDialog.open();
+    }
+
+    RecipientSelectionDialog {
+        id: recipientSelectionDialog
+        shareFileCaller: cloudDriveModel.shareFileCaller
+
+        function refresh() {
+            favContactModel.getFavListModel(model);
+            // Update model for next opening.
+            favContactModel.update();
+        }
+
+        onAccepted: {
+            console.debug("recipientSelectionDialog onAccepted shareFileCaller " + shareFileCaller + " email " + selectedEmail + " senderEmail " + senderEmail + " selectedNumber " + selectedNumber);
+            console.debug("recipientSelectionDialog onAccepted messageBody " + messageBody);
+            if (shareFileCaller == "mailFileSlot") {
+                // ISSUE Mail client doesn't get all message body if it contains URI with & in query string. Worksround by using message client.
+//                Qt.openUrlExternally("mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody);
+                msgClient.sendEmail(selectedEmail, messageSubject, messageBody);
+            } else if (shareFileCaller == "smsFileSlot") {
+                // TODO Doesn't work on meego. Needs to use MessageClient.
+//                Qt.openUrlExternally("sms:" + selectedNumber + "?body=" + messageBody);
+                msgClient.sendSMS(selectedNumber, messageBody);
+            }
+        }
+    }
+
+    function showRecipientSelectionDialogSlot(cloudDriveType, uid, localPath, fileName, url) {
+        // Open recipientSelectionDialog for sending share link.
+        var senderEmail = cloudDriveModel.getUidEmail(cloudDriveType, uid);
+        if (senderEmail != "") {
+            recipientSelectionDialog.srcFilePath = localPath;
+            recipientSelectionDialog.srcFileName = fileName;
+            recipientSelectionDialog.messageSubject = appInfo.emptyStr+qsTr("Share file on %1").arg(cloudDriveModel.getCloudName(cloudDriveType));
+            recipientSelectionDialog.messageBody = appInfo.emptyStr+qsTr("Please download file with below link.") + "\n" + url;
+            recipientSelectionDialog.senderEmail = senderEmail;
+            recipientSelectionDialog.open();
+        }
     }
 
     Text {

@@ -4,10 +4,7 @@ import Charts 1.0
 import FolderSizeItemListModel 1.0
 import GCPClient 1.0
 import CloudDriveModel 1.0
-import QtMobility.contacts 1.1
-import QtMobility.connectivity 1.2
 import BluetoothClient 1.0
-import MessageClient 1.0
 import "Utility.js" as Utility
 
 Page {
@@ -611,18 +608,6 @@ Page {
     function updateJobQueueCount(runningJobCount, jobQueueCount) {
         // Update (runningJobCount + jobQueueCount) on cloudButton.
         cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
-    }
-
-    function showRecipientSelectionDialogSlot(cloudDriveType, uid, localPath, url) {
-        // Open recipientSelectionDialog for sending share link.
-        var senderEmail = cloudDriveModel.getUidEmail(cloudDriveType, uid);
-        if (senderEmail != "") {
-            recipientSelectionDialog.srcFilePath = localPath;
-            recipientSelectionDialog.messageSubject = appInfo.emptyStr+qsTr("Share file on %1").arg(cloudDriveModel.getCloudName(cloudDriveType));
-            recipientSelectionDialog.messageBody = appInfo.emptyStr+qsTr("Please download file with below link.") + "\n" + url;
-            recipientSelectionDialog.senderEmail = senderEmail;
-            recipientSelectionDialog.open();
-        }
     }
 
     function updateMigrationProgressSlot(type, uid, localFilePath, remoteFilePath, count, total) {
@@ -1699,7 +1684,9 @@ Page {
                 cloudDrivePathDialog.refresh();
                 break;
             case CloudDriveModel.ShareFile:
+                // TODO Find way to refresh it before shareReplyFinished.
                 recipientSelectionDialog.refresh();
+                cloudDriveModel.shareFileCaller = uidDialog.caller;
                 cloudDriveModel.shareFile(type, uid, localPath, remotePath);
                 break;
             case CloudDriveModel.DeleteFile:
@@ -1961,37 +1948,6 @@ Page {
         }
     }
 
-    RecipientSelectionDialog {
-        id: recipientSelectionDialog
-        shareFileCaller: uidDialog.caller
-
-        function refresh() {
-            favContactModel.getFavListModel(model);
-            // Update model for next opening.
-            favContactModel.update();
-        }
-
-        onAccepted: {
-            console.debug("recipientSelectionDialog onAccepted shareFileCaller " + shareFileCaller + " email " + selectedEmail + " senderEmail " + senderEmail + " selectedNumber " + selectedNumber);
-            console.debug("recipientSelectionDialog onAccepted messageBody " + messageBody);
-            if (shareFileCaller == "mailFileSlot") {
-                // ISSUE Mail client doesn't get all message body if it contains URI with & in query string. Worksround by using message client.
-//                Qt.openUrlExternally("mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody);
-                msgClient.sendEmail(selectedEmail, messageSubject, messageBody);
-            } else if (shareFileCaller == "smsFileSlot") {
-                // TODO Doesn't work on meego. Needs to use MessageClient.
-//                Qt.openUrlExternally("sms:" + selectedNumber + "?body=" + messageBody);
-                msgClient.sendSMS(selectedNumber, messageBody);
-            }
-        }
-        onRejected: {
-//            // Reset popupToolPanel.
-//            popupToolPanel.selectedFilePath = "";
-//            popupToolPanel.selectedFileIndex = -1;
-//            srcFilePath = "";
-        }
-    }
-
     BluetoothSelectionDialog {
         id: btSelectionDialog
         model: ListModel {
@@ -2112,9 +2068,5 @@ Page {
             // Workaround for meego to initialize SelectionDialog height.
             btClient.requestDiscoveredDevices();
         }
-    }
-
-    MessageClient {
-        id: msgClient
     }
 }

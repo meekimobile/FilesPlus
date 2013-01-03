@@ -8,6 +8,7 @@ SelectionDialog {
 
     property string shareFileCaller
     property string srcFilePath
+    property string srcFileName
     property string selectedEmail
     property string senderEmail
     property string messageSubject
@@ -17,7 +18,7 @@ SelectionDialog {
     signal opening()
     signal opened()
 
-    titleText: appInfo.emptyStr+qsTr("Send %1 to").arg(fsModel.getFileName(srcFilePath))
+    titleText: appInfo.emptyStr+qsTr("Send %1 to").arg(srcFileName)
     delegate: ListItem {
         id: recipientItem
         height: 80
