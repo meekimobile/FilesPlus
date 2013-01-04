@@ -857,7 +857,7 @@ Page {
 //                    console.debug("fileActionDialog getText clipboard i " + i + " action " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
                     if (["copy","cut"].indexOf(clipboard.get(i).action) > -1 && !clipboard.get(i).type) {
                         uploadCount++;
-                    } else if (["copy","cut"].indexOf(clipboard.get(i).action) > -1 && cloudDriveModel.getClientType(clipboard.get(i).type) != selectedCloudType) {
+                    } else if (["copy","cut"].indexOf(clipboard.get(i).action) > -1 && cloudDriveModel.getClientType(clipboard.get(i).type) != selectedCloudType && clipboard.get(i).uid != selectedUid) {
                         migrateCount++;
                     } else if (clipboard.get(i).action == "copy") {
                         copyCount++;
@@ -880,10 +880,10 @@ Page {
             return text;
         }
 
-        function getActionName(actionText, type) {
-            console.debug("cloudFolderPage fileActionDialog " + selectedCloudType + " " + cloudDriveModel.getCloudName(selectedCloudType) + " getActionName actionText " + actionText + " type " + type);
+        function getActionName(actionText, type, uid) {
+            console.debug("cloudFolderPage fileActionDialog " + selectedCloudType + " " + cloudDriveModel.getCloudName(selectedCloudType) + " getActionName actionText " + actionText + " type " + type + " uid " + uid);
             if (type) {
-                if (cloudDriveModel.getClientType(type) == selectedCloudType) {
+                if (cloudDriveModel.getClientType(type) == selectedCloudType && uid == selectedUid) {
                     if (actionText == "copy") return qsTr("Copy");
                     else if (actionText == "cut") return qsTr("Move");
                     else if (actionText == "delete") return qsTr("Delete");
@@ -925,7 +925,7 @@ Page {
                         cloudDriveModel.filePut(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1);
                     }
                     res = true;
-                } else if (["copy","cut"].indexOf(action) > -1 && cloudDriveModel.getClientType(clipboard.get(i).type) != selectedCloudType) {
+                } else if (["copy","cut"].indexOf(action) > -1 && cloudDriveModel.getClientType(clipboard.get(i).type) != selectedCloudType && clipboard.get(i).uid != selectedUid) {
                     // TODO
                     console.debug("folderPage fileActionDialog onConfirm migrate is not implemented. clipboard type " + clipboard.get(i).type + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
                     res = false;
