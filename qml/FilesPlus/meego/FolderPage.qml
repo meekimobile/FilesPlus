@@ -99,6 +99,10 @@ Page {
                     resetCacheSlot();
                 }
                 onClicked: {
+                    // Force resume.
+                    fsModel.resumeNextJob();
+                    cloudDriveModel.resumeNextJob();
+
                     refreshSlot("refreshButton");
                 }
             }

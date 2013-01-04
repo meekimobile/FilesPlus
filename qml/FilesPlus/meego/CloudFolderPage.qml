@@ -101,9 +101,6 @@ Page {
         // Browse remote parent path.
         remoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getParentRemotePath(selectedCloudType, remotePath) : remoteParentPath;
         cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
-
-        // Force resume.
-        cloudDriveModel.resumeNextJob();
     }
 
     function mailFileSlot(remotePath, remotePathName) {
@@ -199,6 +196,9 @@ Page {
             iconId: "toolbar-refresh"
             visible: (cloudFolderView.state != "mark")
             onClicked: {
+                // Force resume.
+                cloudDriveModel.resumeNextJob();
+
                 refreshSlot("refreshButton onClicked");
             }
         }

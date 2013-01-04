@@ -39,6 +39,9 @@ Page {
             id: refreshButton
             iconId: "toolbar-refresh"
             onClicked: {
+                // Force resume.
+                cloudDriveModel.resumeNextJob();
+
                 // Parse all storages.
                 refreshSlot("drivePage refreshButton onClicked");
             }
