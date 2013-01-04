@@ -44,12 +44,6 @@ Page {
             }
         }
         ToolIcon {
-            id: refreshButton
-            iconId: "toolbar-refresh"
-            onClicked: {
-            }
-        }
-        ToolIcon {
             id: deleteAllButton
             iconSource: (theme.inverted) ? "delete.svg" : "delete_inverted.svg"
             onClicked: {
@@ -168,7 +162,6 @@ Page {
                             id: syncProgressBar
                             width: parent.width / 2
                             anchors.verticalCenter: parent.verticalCenter
-//                            indeterminate: is_running
                             visible: is_running
                             value: bytes
                             minimumValue: 0
@@ -176,11 +169,6 @@ Page {
                         }
                     }
                 }
-            }
-
-            onPressAndHold: {
-//                removeAccountConfirmation.index = index;
-//                removeAccountConfirmation.open();
             }
         }
     }

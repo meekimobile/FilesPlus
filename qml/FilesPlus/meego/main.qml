@@ -1583,6 +1583,7 @@ PageStackWindow {
                 cloudDriveModel.suspendNextJob();
 
                 if (cloudDriveModel.isRemoteAbsolutePath(jobJson.type)) {
+                    console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " put " + jobJson.local_file_path + " to " + jobJson.remote_file_path);
                     if (cloudDriveModel.isDir(jobJson.local_file_path)) {
                         // Remote folder will be created in syncFromLocal if it's required.
                         cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
