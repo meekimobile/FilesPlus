@@ -534,7 +534,7 @@ QString CloudDriveModel::getRemoteName(CloudDriveModel::ClientTypes type, QStrin
 
 QString CloudDriveModel::getRemotePath(CloudDriveModel::ClientTypes type, QString remoteParentPath, QString remotePathName) {
     if (isRemoteAbsolutePath(type)) {
-        return remoteParentPath + "/" + remotePathName;
+        return (remoteParentPath == "/" ? "" : remoteParentPath) + "/" + remotePathName;
     } else {
         return remoteParentPath;
     }
