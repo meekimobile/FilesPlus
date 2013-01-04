@@ -19,6 +19,8 @@ public:
     QString newLocalFilePath;
     QString newRemoteFilePath;
     QString newRemoteFileName;
+    int targetType;
+    QString targetUid;
     bool isRunning;
     int modelIndex;
     qint64 bytes;

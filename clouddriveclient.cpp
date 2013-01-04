@@ -137,9 +137,21 @@ void CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePat
     emit fileGetReplySignal(nonce, -1, objectName() + " " + tr("File Get"), tr("Service is not implemented."));
 }
 
+QNetworkReply *CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
+{
+    emit fileGetReplySignal(nonce, -1, objectName() + " " + tr("File Get"), tr("Service is not implemented."));
+    return 0;
+}
+
 void CloudDriveClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
 {
     emit filePutReplySignal(nonce, -1, objectName() + " " + tr("File Put"), tr("Service is not implemented."));
+}
+
+QNetworkReply *CloudDriveClient::filePut(QString nonce, QString uid, QIODevice *source,  QString remoteParentPath, QString remoteFileName)
+{
+    emit filePutReplySignal(nonce, -1, objectName() + " " + tr("File Put"), tr("Service is not implemented."));
+    return 0;
 }
 
 void CloudDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath)
@@ -179,4 +191,6 @@ void CloudDriveClient::shareFile(QString nonce, QString uid, QString remoteFileP
 
 QNetworkReply *CloudDriveClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
+    emit createFolderReplySignal(nonce, -1, objectName() + " " + tr("Create Folder"), tr("Service is not implemented."));
+    return 0;
 }

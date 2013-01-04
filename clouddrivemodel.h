@@ -67,7 +67,9 @@ public:
         ShareFile,
         Browse,
         Disconnect,
-        ScheduleSync
+        ScheduleSync,
+        MigrateFile,
+        MigrateFilePut
     };
 
     explicit CloudDriveModel(QDeclarativeItem *parent = 0);
@@ -187,6 +189,10 @@ public:
     Q_INVOKABLE void copyFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, QString newRemoteFileName = "");
     Q_INVOKABLE void deleteFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath);
     Q_INVOKABLE void shareFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath);
+
+    Q_INVOKABLE void migrateFile(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
+    Q_INVOKABLE void migrateFilePut(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
+    void migrateFile_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void initializeDBStarted(QString nonce);
@@ -215,6 +221,8 @@ signals:
     void copyFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void deleteFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg, QString url, QString expires);
+    void migrateFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
 
     void migrateStartedSignal(qint64 total);
     void migrateProgressSignal(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, qint64 count, qint64 total);
@@ -244,6 +252,7 @@ public slots:
     void copyFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void deleteFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void migrateFilePutFilter(QString nonce, int err, QString errMsg, QString msg);
 
     // Scheduler
     void schedulerTimeoutFilter();
@@ -304,6 +313,8 @@ private:
     QMutex mutex;
 
     void saveCloudDriveItems();
+
+    CloudDriveClient * getCloudClient(const int type);
 
     void initializeCloudClients(QString nonce);
     void initializeDropboxClient();

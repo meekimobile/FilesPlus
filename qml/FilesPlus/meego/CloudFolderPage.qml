@@ -828,7 +828,7 @@ Page {
         function getTitleText() {
             var text = "";
             if (clipboard.count == 1) {
-                text = getActionName(clipboard.get(0).action, clipboard.get(0).type);
+                text = getActionName(clipboard.get(0).action, clipboard.get(0).type, clipboard.get(0).uid);
             } else {
                 // TODO if all copy, show "Multiple copy".
                 text = qsTr("Multiple actions");
@@ -842,8 +842,8 @@ Page {
             // Exmaple of clipboard entry { "action": "cut", "type": "Dropbox", "uid": "asdfdg", "sourcePath": sourcePath, "sourcePathName": sourcePathName }
             var text = "";
             if (clipboard.count == 1) {
-                text = getActionName(clipboard.get(0).action, clipboard.get(0).type)
-                        + ((cloudDriveModel.getClientType(clipboard.get(0).type) != selectedCloudType) ? (" (" + clipboard.get(0).type + ")") : "")
+                text = getActionName(clipboard.get(0).action, clipboard.get(0).type, clipboard.get(0).uid)
+                        + ((cloudDriveModel.getClientType(clipboard.get(0).type) != selectedCloudType || clipboard.get(0).uid != selectedUid) ? (" (" + clipboard.get(0).type + " " + clipboard.get(0).uid + ")") : "")
                         + " " + (clipboard.get(0).sourcePathName ? clipboard.get(0).sourcePathName : clipboard.get(0).sourcePath)
                         + ((clipboard.get(0).action == "delete")?"":("\n" + qsTr("to") + " " + targetPathName))
                         + " ?";
@@ -857,7 +857,7 @@ Page {
 //                    console.debug("fileActionDialog getText clipboard i " + i + " action " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
                     if (["copy","cut"].indexOf(clipboard.get(i).action) > -1 && !clipboard.get(i).type) {
                         uploadCount++;
-                    } else if (["copy","cut"].indexOf(clipboard.get(i).action) > -1 && cloudDriveModel.getClientType(clipboard.get(i).type) != selectedCloudType && clipboard.get(i).uid != selectedUid) {
+                    } else if (["copy","cut"].indexOf(clipboard.get(i).action) > -1 && (cloudDriveModel.getClientType(clipboard.get(i).type) != selectedCloudType || clipboard.get(i).uid != selectedUid) ) {
                         migrateCount++;
                     } else if (clipboard.get(i).action == "copy") {
                         copyCount++;
@@ -911,7 +911,7 @@ Page {
                 var sourcePathName = (isOverwrite && i == 0) ? fileName.text : (clipboard.get(i).sourcePathName ? clipboard.get(i).sourcePathName : cloudDriveModel.getFileName(sourcePath));
                 var actualTargetPath = cloudDriveModel.getRemotePath(selectedCloudType, targetPath, sourcePathName);
 
-                console.debug("folderPage fileActionDialog onConfirm clipboard action " + action + " sourcePathName " + sourcePathName + " sourcePath " + sourcePath + " targetPath " + targetPath + " actualTargetPath " + actualTargetPath);
+                console.debug("folderPage fileActionDialog onConfirm clipboard type " + clipboard.get(i).type + " uid " + clipboard.get(i).uid + " action " + action + " sourcePathName " + sourcePathName + " sourcePath " + sourcePath + " targetPath " + targetPath + " actualTargetPath " + actualTargetPath);
                 if (["copy","cut"].indexOf(action) > -1 && !clipboard.get(i).type) {
                     isBusy = true;
                     if (cloudDriveModel.isDir(sourcePath)) {
@@ -925,10 +925,10 @@ Page {
                         cloudDriveModel.filePut(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1);
                     }
                     res = true;
-                } else if (["copy","cut"].indexOf(action) > -1 && cloudDriveModel.getClientType(clipboard.get(i).type) != selectedCloudType && clipboard.get(i).uid != selectedUid) {
-                    // TODO
-                    console.debug("folderPage fileActionDialog onConfirm migrate is not implemented. clipboard type " + clipboard.get(i).type + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
-                    res = false;
+                } else if (["copy","cut"].indexOf(action) > -1 && (cloudDriveModel.getClientType(clipboard.get(i).type) != selectedCloudType || clipboard.get(i).uid != selectedUid) ) {
+                    console.debug("folderPage fileActionDialog onConfirm migrate is not implemented. clipboard type " + clipboard.get(i).type + " uid " + clipboard.get(i).uid + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
+                    cloudDriveModel.migrateFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, sourcePath, selectedCloudType, selectedUid, targetPath, sourcePathName);
+                    res = true;
                 } else if (action == "copy") {
                     isBusy = true;
                     // TODO Support sourcePathName as newRemotePathName.

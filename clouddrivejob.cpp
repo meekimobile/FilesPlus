@@ -52,6 +52,8 @@ QString CloudDriveJob::toJsonText()
     jsonText.append(QString("\"new_local_file_path\": \"%1\", ").arg(newLocalFilePath));
     jsonText.append(QString("\"new_remote_file_path\": \"%1\", ").arg(newRemoteFilePath));
     jsonText.append(QString("\"new_remote_file_name\": \"%1\", ").arg(newRemoteFileName));
+    jsonText.append(QString("\"target_uid\": \"%1\", ").arg(targetUid));
+    jsonText.append(QString("\"target_type\": %1, ").arg(targetType));
     jsonText.append(QString("\"model_index\": %1, ").arg(modelIndex));
     jsonText.append(QString("\"bytes\": %1, ").arg(bytes));
     jsonText.append(QString("\"bytes_total\": %1, ").arg(bytesTotal));

@@ -670,6 +670,10 @@ QString CloudDriveModel::getOperationName(int operation) {
         return tr("Disconnect");
     case ScheduleSync:
         return tr("ScheduleSync");
+    case MigrateFile:
+        return tr("Migrate");
+    case MigrateFilePut:
+        return tr("Migrate file");
     default:
         return tr("Invalid operation");
     }
@@ -1926,6 +1930,9 @@ QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, Q
         QScriptValue sc = se.evaluate("(" + createFolderReplyResult + ")");
         QString createdRemotePath = "";
         switch (type) {
+        case Dropbox:
+            createdRemotePath = sc.property("path").toString();
+            break;
         case SkyDrive:
             createdRemotePath = sc.property("id").toString();
             break;
@@ -1938,6 +1945,35 @@ QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, Q
     }
 
     return "";
+}
+
+void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
+{
+    QNetworkReply *sourceReply = getCloudClient(type)->fileGet(nonce, uid, remoteFilePath);
+    while (!sourceReply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    if (sourceReply->error() == QNetworkReply::NoError) {
+        QNetworkReply *targetReply = getCloudClient(targetType)->filePut(nonce, targetUid, sourceReply, targetRemoteParentPath, targetRemoteFileName);
+        while (!targetReply->isFinished()) {
+            QApplication::processEvents(QEventLoop::AllEvents, 100);
+            Sleeper::msleep(100);
+        }
+
+        migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(), targetReply->readAll());
+
+        // Scheduled to delete later.
+        targetReply->deleteLater();
+        targetReply->manager()->deleteLater();
+    } else {
+        migrateFilePutFilter(nonce, sourceReply->error(), sourceReply->errorString(), sourceReply->readAll());
+    }
+
+    // Scheduled to delete later.
+    sourceReply->deleteLater();
+    sourceReply->manager()->deleteLater();
 }
 
 void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, QString newRemoteFileName)
@@ -2056,6 +2092,42 @@ void CloudDriveModel::shareFile(CloudDriveModel::ClientTypes type, QString uid, 
     // Emit signal to show cloud_wait.
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
+
+    emit proceedNextJobSignal();
+}
+
+void CloudDriveModel::migrateFile(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), MigrateFile, type, uid, "", remoteFilePath, -1);
+    job.targetType = targetType;
+    job.targetUid = targetUid;
+    job.newRemoteFilePath = targetRemoteParentPath;
+    job.newRemoteFileName = targetRemoteFileName;
+    job.isRunning = true;
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show cloud_wait.
+    emit jobEnqueuedSignal(job.jobId, "");
+
+    emit proceedNextJobSignal();
+}
+
+void CloudDriveModel::migrateFilePut(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), MigrateFilePut, type, uid, "", remoteFilePath, -1);
+    job.targetType = targetType;
+    job.targetUid = targetUid;
+    job.newRemoteFilePath = targetRemoteParentPath;
+    job.newRemoteFileName = targetRemoteFileName;
+    job.isRunning = true;
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show cloud_wait.
+    emit jobEnqueuedSignal(job.jobId, "");
 
     emit proceedNextJobSignal();
 }
@@ -2212,7 +2284,12 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
     // Notify job done.
     jobDone();
 
-    emit browseReplySignal(nonce, err, errMsg, msg);
+    // Route signal to caller.
+    if (job.operation == MigrateFile) {
+        emit migrateFileReplySignal(nonce, err, errMsg, msg);
+    } else {
+        emit browseReplySignal(nonce, err, errMsg, msg);
+    }
 }
 
 void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -2404,6 +2481,20 @@ void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMs
     jobDone();
 
     emit shareFileReplySignal(nonce, err, errMsg, msg, url, expires);
+}
+
+void CloudDriveModel::migrateFilePutFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    // Update job running flag.
+    job.isRunning = false;
+    m_cloudDriveJobs->insert(nonce, job);
+
+    // Notify job done.
+    jobDone();
+
+    emit migrateFilePutReplySignal(nonce, err, errMsg, msg);
 }
 
 void CloudDriveModel::schedulerTimeoutFilter()
@@ -2901,6 +2992,24 @@ void CloudDriveModel::proceedNextJob() {
     emit proceedNextJobSignal();
 }
 
+CloudDriveClient * CloudDriveModel::getCloudClient(const int type)
+{
+    switch (type) {
+    case Dropbox:
+        return dbClient;
+    case SkyDrive:
+        return skdClient;
+    case GoogleDrive:
+        return gcdClient;
+    case Ftp:
+        return ftpClient;
+    default:
+        qDebug() << "CloudDriveModel::dispatchJob type" << type << "is not implemented yet.";
+    }
+
+    return 0;
+}
+
 void CloudDriveModel::dispatchJob(const CloudDriveJob job)
 {
     // TODO
@@ -2908,23 +3017,7 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
     // If job.type==Any, start thread.
 
     // TODO Generalize cloud client.
-    CloudDriveClient *cloudClient = 0;
-    switch (job.type) {
-    case Dropbox:
-        cloudClient = dbClient;
-        break;
-    case SkyDrive:
-        cloudClient = skdClient;
-        break;
-    case GoogleDrive:
-        cloudClient = gcdClient;
-        break;
-    case Ftp:
-        cloudClient = ftpClient;
-        break;
-    default:
-        qDebug() << "CloudDriveModel::dispatchJob job.type" << job.type << "is not implemented yet.";
-    }
+    CloudDriveClient *cloudClient = getCloudClient(job.type);
 
     qDebug() << "CloudDriveModel::dispatchJob" << job.jobId << job.operation << job.type << (cloudClient == 0 ? "no client" : cloudClient->objectName());
 
@@ -2989,6 +3082,13 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         break;
     case ShareFile:
         cloudClient->shareFile(job.jobId, job.uid, job.remoteFilePath);
+        break;
+    case MigrateFile:
+        cloudClient->browse(job.jobId, job.uid, job.remoteFilePath);
+        break;
+    case MigrateFilePut:
+        // Invoke in thread.
+        migrateFile_Block(job.jobId, getClientType(job.type), job.uid, job.remoteFilePath, getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
         break;
     }
 }

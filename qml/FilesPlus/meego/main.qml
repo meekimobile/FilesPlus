@@ -1888,6 +1888,91 @@ PageStackWindow {
             });
         }
 
+        onMigrateFileReplySignal: {
+            console.debug("window cloudDriveModel onMigrateFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
+
+            var jobJson = JSON.parse(cloudDriveModel.getJobJson(nonce));
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+
+            if (err == 0) {
+                var jsonObj = Utility.createJsonObj(msg);
+
+                if (jobJson.type == CloudDriveModel.Dropbox) {
+                    // If remotePath was deleted, remove link from localPath.
+                    if (jsonObj.is_deleted) {
+                        // Do nothing.
+                    } else {
+                        // Suspend next job.
+                        cloudDriveModel.suspendNextJob();
+
+                        // Migration starts from itself.
+                        if (jsonObj.is_dir) { // Migrate folder.
+                            // Create target folder.
+                            var createdRemoteFolderPath = cloudDriveModel.createFolder_Block(jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
+
+                                for(var i=0; i<jsonObj.contents.length; i++) {
+                                    var item = jsonObj.contents[i];
+                                    var itemRemotePath = item.path;
+                                    var itemRemotePathName = cloudDriveModel.getRemoteName(jobJson.type, itemRemotePath);
+                                    var itemIsDir = item.is_dir;
+                                    console.debug("window cloudDriveModel onMigrateFileReplySignal itemRemotePath " + itemRemotePath + " itemRemotePathName " + itemRemotePathName + " itemIsDir " + itemIsDir);
+
+                                    if (itemIsDir) {
+                                        // This flow will trigger recursive migrateFile calling.
+                                        cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
+                                    } else {
+                                        // Migrate file.
+                                        cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
+                                    }
+                                }
+                        } else { // Migrate file.
+                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
+                        }
+
+                        // Resume next jobs.
+                        cloudDriveModel.resumeNextJob();
+                    }
+                }
+            } else if (err == 204) { // Refresh token
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
+            } else {
+                showMessageDialogSlot(
+                            getCloudName(jobJson.type) + " " + qsTr("Migrate"),
+                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+            }
+
+            // Update ProgressBar on listItem and its parent.
+            pageStack.find(function (page) {
+                if (page.updateItemSlot) page.updateItemSlot(jobJson);
+            });
+        }
+
+        onMigrateFilePutReplySignal: {
+            console.debug("window cloudDriveModel onMigrateFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
+
+            var jobJson = JSON.parse(cloudDriveModel.getJobJson(nonce));
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+
+            if (err == 0) {
+                // TODO
+            } else if (err == 204) { // Refresh token
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
+            } else {
+                showMessageDialogSlot(
+                            getCloudName(jobJson.type) + " " + qsTr("Migrate"),
+                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+            }
+
+            // Update ProgressBar on listItem and its parent.
+            pageStack.find(function (page) {
+                if (page.updateItemSlot) page.updateItemSlot(jobJson);
+            });
+        }
+
         onJobEnqueuedSignal: {
             // Get job json.
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));

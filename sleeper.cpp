@@ -1,7 +1,7 @@
 #include "sleeper.h"
 
 Sleeper::Sleeper(QObject *parent) :
-    QObject(parent)
+    QThread(parent)
 {
 }
 
