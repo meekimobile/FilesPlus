@@ -601,6 +601,8 @@ QString CloudDriveModel::getFileType(QString localPath)
 
 CloudDriveModel::ClientTypes CloudDriveModel::getClientType(int typeInt)
 {
+    qDebug() << "CloudDriveModel::getClientType" << typeInt;
+
     switch (typeInt) {
     case Dropbox:
         return Dropbox;
@@ -624,7 +626,7 @@ QString CloudDriveModel::getCloudName(int type) {
     case Ftp:
         return "FTP";
     default:
-        return "Invalid type";
+        return QString("Invalid type(%1)").arg(type);
     }
 }
 
@@ -1949,7 +1951,13 @@ QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, Q
 
 void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
 {
+    qDebug() << "CloudDriveModel::migrateFile_Block" << nonce << type << uid << remoteFilePath << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
+
     QNetworkReply *sourceReply = getCloudClient(type)->fileGet(nonce, uid, remoteFilePath);
+    if (sourceReply == 0) {
+        migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
+        return;
+    }
     while (!sourceReply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
@@ -1957,6 +1965,14 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
 
     if (sourceReply->error() == QNetworkReply::NoError) {
         QNetworkReply *targetReply = getCloudClient(targetType)->filePut(nonce, targetUid, sourceReply, targetRemoteParentPath, targetRemoteFileName);
+        if (targetReply == 0) {
+            migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
+
+            // Scheduled to delete later.
+            sourceReply->deleteLater();
+            sourceReply->manager()->deleteLater();
+            return;
+        }
         while (!targetReply->isFinished()) {
             QApplication::processEvents(QEventLoop::AllEvents, 100);
             Sleeper::msleep(100);
@@ -2116,6 +2132,8 @@ void CloudDriveModel::migrateFile(CloudDriveModel::ClientTypes type, QString uid
 
 void CloudDriveModel::migrateFilePut(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
 {
+    qDebug() << "CloudDriveModel::migrateFilePut" << type << uid << remoteFilePath << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), MigrateFilePut, type, uid, "", remoteFilePath, -1);
     job.targetType = targetType;

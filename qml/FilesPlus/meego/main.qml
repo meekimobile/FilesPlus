@@ -1899,42 +1899,74 @@ PageStackWindow {
             if (err == 0) {
                 var jsonObj = Utility.createJsonObj(msg);
 
+                // Suspend next job.
+                cloudDriveModel.suspendNextJob();
+
                 if (jobJson.type == CloudDriveModel.Dropbox) {
                     // If remotePath was deleted, remove link from localPath.
                     if (jsonObj.is_deleted) {
                         // Do nothing.
                     } else {
-                        // Suspend next job.
-                        cloudDriveModel.suspendNextJob();
-
                         // Migration starts from itself.
                         if (jsonObj.is_dir) { // Migrate folder.
                             // Create target folder.
                             var createdRemoteFolderPath = cloudDriveModel.createFolder_Block(jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
 
-                                for(var i=0; i<jsonObj.contents.length; i++) {
-                                    var item = jsonObj.contents[i];
-                                    var itemRemotePath = item.path;
-                                    var itemRemotePathName = cloudDriveModel.getRemoteName(jobJson.type, itemRemotePath);
-                                    var itemIsDir = item.is_dir;
-                                    console.debug("window cloudDriveModel onMigrateFileReplySignal itemRemotePath " + itemRemotePath + " itemRemotePathName " + itemRemotePathName + " itemIsDir " + itemIsDir);
+                            for(var i=0; i<jsonObj.contents.length; i++) {
+                                var item = jsonObj.contents[i];
+                                var itemRemotePath = item.path;
+                                var itemRemotePathName = cloudDriveModel.getRemoteName(jobJson.type, itemRemotePath);
+                                var itemIsDir = item.is_dir;
+                                console.debug("window cloudDriveModel onMigrateFileReplySignal itemRemotePath " + itemRemotePath + " itemRemotePathName " + itemRemotePathName + " itemIsDir " + itemIsDir);
 
-                                    if (itemIsDir) {
-                                        // This flow will trigger recursive migrateFile calling.
-                                        cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
-                                    } else {
-                                        // Migrate file.
-                                        cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
-                                    }
+                                if (itemIsDir) {
+                                    // This flow will trigger recursive migrateFile calling.
+                                    cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
+                                } else {
+                                    // Migrate file.
+                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
                                 }
+                            }
                         } else { // Migrate file.
                             cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
                         }
-
-                        // Resume next jobs.
-                        cloudDriveModel.resumeNextJob();
                     }
                 }
+
+                if (jobJson.type == CloudDriveModel.SkyDrive) {
+
+                }
+
+                if (jobJson.type == CloudDriveModel.GoogleDrive) {
+                    if (jsonObj.property) {
+                        // Migration starts from itself.
+                        if (jsonObj.property.mimeType == "application/vnd.google-apps.folder") { // Migrate folder.
+                            // Create target folder.
+                            var createdRemoteFolderPath = cloudDriveModel.createFolder_Block(jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
+
+                            for(var i=0; i<jsonObj.items.length; i++) {
+                                var item = jsonObj.items[i];
+                                var itemRemotePath = item.id;
+                                var itemRemotePathName = item.title;
+                                var itemIsDir = (item.mimeType == "application/vnd.google-apps.folder");
+                                console.debug("window cloudDriveModel onMigrateFileReplySignal itemRemotePath " + itemRemotePath + " itemRemotePathName " + itemRemotePathName + " itemIsDir " + itemIsDir);
+
+                                if (itemIsDir) {
+                                    // This flow will trigger recursive migrateFile calling.
+                                    cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
+                                } else {
+                                    // Migrate file.
+                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, item.downloadUrl, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
+                                }
+                            }
+                        } else { // Migrate file.
+                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jsonObj.property.downloadUrl, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
+                        }
+                    }
+                }
+
+                // Resume next jobs.
+                cloudDriveModel.resumeNextJob();
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
@@ -1950,7 +1982,7 @@ PageStackWindow {
         }
 
         onMigrateFilePutReplySignal: {
-            console.debug("window cloudDriveModel onMigrateFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
+            console.debug("window cloudDriveModel onMigrateFilePutReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
             var jobJson = JSON.parse(cloudDriveModel.getJobJson(nonce));
 

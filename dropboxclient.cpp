@@ -420,7 +420,7 @@ void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, Q
 
 QNetworkReply *DropboxClient::filePut(QString nonce, QString uid, QIODevice *source, QString remoteParentPath, QString remoteFileName)
 {
-    qDebug() << "----- DropboxClient::filePut -----" << uid << remoteParentPath << remoteFileName << "source->bytesAvailable()" << source->bytesAvailable() ;
+    qDebug() << "----- DropboxClient::filePut -----" << uid << remoteParentPath << remoteFileName << "source->bytesAvailable()" << source->bytesAvailable();
 
     QString uri = filePutURI.arg(dropboxRoot, remoteParentPath + "/" + remoteFileName);
     uri = encodeURI(uri);
