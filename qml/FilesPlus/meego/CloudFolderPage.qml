@@ -758,11 +758,72 @@ Page {
     ConfirmDialog {
         id: fileActionDialog
 
+        property string sourcePath
+        property string sourcePathName
         property string targetPath
         property string targetPathName
+        property bool isOverwrite: false
 
         titleText: appInfo.emptyStr+fileActionDialog.getTitleText()
-        contentText: appInfo.emptyStr+fileActionDialog.getText() + "\n"
+        content: Column {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width - 10
+            spacing: 5
+
+            Text {
+                text: appInfo.emptyStr+fileActionDialog.getText()
+                color: "white"
+                width: parent.width
+                font.pointSize: 16
+                verticalAlignment: Text.AlignVCenter
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            }
+
+            Rectangle {
+                color: "grey"
+                width: parent.width
+                height: 1
+                visible: fileActionDialog.isOverwrite
+            }
+
+            Text {
+                text: appInfo.emptyStr+qsTr("Item exists, please input new name.")
+                color: "white"
+                width: parent.width
+                font.pointSize: 16
+                verticalAlignment: Text.AlignVCenter
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                visible: fileActionDialog.isOverwrite
+            }
+
+            TextField {
+                id: fileName
+                width: parent.width
+                visible: fileActionDialog.isOverwrite
+            }
+
+            CheckBox {
+                id: overwriteFile
+                width: parent.width
+                text: "<span style='color:white;font:16pt'>" + appInfo.emptyStr+qsTr("Overwrite existing item?") + "</span>"
+                checked: false
+                visible: fileActionDialog.isOverwrite
+
+                onClicked: {
+                    if (checked) {
+                        fileName.text = fileActionDialog.sourcePathName;
+                    } else {
+                        fileName.text = cloudFolderModel.getNewFileName(fileActionDialog.sourcePathName);
+                    }
+                }
+            }
+
+            Rectangle {
+                color: "transparent"
+                width: parent.width
+                height: 10
+            }
+        }
 
         function getTitleText() {
             var text = "";
@@ -807,11 +868,11 @@ Page {
                     }
                 }
 
-                if (uploadCount>0) text = text + (qsTr("Upload %n item(s)\n", "", uploadCount));
-                if (migrateCount>0) text = text + (qsTr("Migrate %n item(s)\n", "", migrateCount));
-                if (deleteCount>0) text = text + (qsTr("Delete %n item(s)\n", "", deleteCount));
-                if (copyCount>0) text = text + (qsTr("Copy %n item(s)\n", "", copyCount));
-                if (cutCount>0) text = text + (qsTr("Move %n item(s)\n", "", cutCount));
+                if (uploadCount>0) text = text + qsTr("Upload %n item(s)\n", "", uploadCount);
+                if (migrateCount>0) text = text + qsTr("Migrate %n item(s)\n", "", migrateCount);
+                if (deleteCount>0) text = text + qsTr("Delete %n item(s)\n", "", deleteCount);
+                if (copyCount>0) text = text + qsTr("Copy %n item(s)\n", "", copyCount);
+                if (cutCount>0) text = text + qsTr("Move %n item(s)\n", "", cutCount);
                 if (copyCount>0 || cutCount>0) text = text + qsTr("to") + " " + targetPathName;
                 text = text + " ?";
             }
@@ -838,30 +899,6 @@ Page {
         }
 
         onConfirm: {
-            if (clipboard.count == 1 && clipboard.get(0).action != "delete") {
-                // Copy/Move/Delete first file from clipboard.
-                // Check if there is existing file on target folder. Then show overwrite dialog.
-                // TODO How to check if folder/file exists.
-                var foundIndex = -1;
-                var sourcePathName = (clipboard.get(0).sourcePathName) ? clipboard.get(0).sourcePathName : cloudDriveModel.getFileName(clipboard.get(0).sourcePath);
-                if (targetPath == remoteParentPath) {
-                    for (var i=0; i<cloudFolderModel.count; i++) {
-                        var item = cloudFolderModel.get(i);
-                        if (item.name == sourcePathName) {
-                            foundIndex = i;
-                        }
-                    }
-                }
-
-                if (foundIndex > -1) {
-                    fileOverwriteDialog.sourcePath = clipboard.get(0).sourcePath;
-                    fileOverwriteDialog.sourcePathName = sourcePathName;
-                    fileOverwriteDialog.targetPath = targetPath;
-                    fileOverwriteDialog.open();
-                    return;
-                }
-            }
-
             // It always replace existing names.
             cloudDriveModel.suspendNextJob();
 
@@ -871,7 +908,7 @@ Page {
             for (var i=0; i<clipboard.count; i++) {
                 var action = clipboard.get(i).action;
                 var sourcePath = clipboard.get(i).sourcePath;
-                var sourcePathName = (clipboard.get(i).sourcePathName) ? clipboard.get(i).sourcePathName : cloudDriveModel.getFileName(sourcePath);
+                var sourcePathName = (isOverwrite && i == 0) ? fileName.text : (clipboard.get(i).sourcePathName ? clipboard.get(i).sourcePathName : cloudDriveModel.getFileName(sourcePath));
                 var actualTargetPath = cloudDriveModel.getRemotePath(selectedCloudType, targetPath, sourcePathName);
 
                 console.debug("folderPage fileActionDialog onConfirm clipboard action " + action + " sourcePathName " + sourcePathName + " sourcePath " + sourcePath + " targetPath " + targetPath + " actualTargetPath " + actualTargetPath);
@@ -894,10 +931,12 @@ Page {
                     res = false;
                 } else if (action == "copy") {
                     isBusy = true;
-                    cloudDriveModel.copyFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath, "", actualTargetPath);
+                    // TODO Support sourcePathName as newRemotePathName.
+                    cloudDriveModel.copyFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath, "", actualTargetPath, sourcePathName);
                     res = true;
                 } else if (action == "cut") {
                     isBusy = true;
+                    // TODO Support sourcePathName as newRemotePathName.
                     cloudDriveModel.moveFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath, "", actualTargetPath);
                     res = true;
                 } else if (action == "delete") {
@@ -930,7 +969,39 @@ Page {
             }
         }
 
+        onOpening: {
+            if (clipboard.count == 1 && clipboard.get(0).action != "delete") {
+                // Copy/Move/Delete first file from clipboard.
+                // Check if there is existing file on target folder. Then show overwrite dialog.
+                // TODO How to check if folder/file exists.
+                var foundIndex = -1;
+                var sourcePathName = (clipboard.get(0).sourcePathName) ? clipboard.get(0).sourcePathName : cloudDriveModel.getFileName(clipboard.get(0).sourcePath);
+                if (targetPath == remoteParentPath) {
+                    for (var i=0; i<cloudFolderModel.count; i++) {
+                        var item = cloudFolderModel.get(i);
+                        if (item.name == sourcePathName) {
+                            foundIndex = i;
+                        }
+                    }
+                }
+
+                if (foundIndex > -1) {
+                    fileActionDialog.isOverwrite = true;
+                    fileActionDialog.sourcePath = clipboard.get(0).sourcePath;
+                    fileActionDialog.sourcePathName = sourcePathName;
+                    fileName.forceActiveFocus();
+                    fileName.text = cloudFolderModel.getNewFileName(fileActionDialog.sourcePathName);
+                }
+            }
+        }
+
         onClosed: {
+            fileActionDialog.isOverwrite = false;
+            fileActionDialog.sourcePath = "";
+            fileActionDialog.sourcePathName = "";
+            fileName.text = "";
+            overwriteFile.checked = false;
+
             // Always clear clipboard's delete actions.
             clipboard.clearDeleteActions();
 
@@ -1010,109 +1081,6 @@ Page {
             if (newName.text != "" && newName.text != sourcePathName) {
                 renameRemotePath(sourcePath, newName.text);
             }
-        }
-    }
-
-    ConfirmDialog {
-        id: fileOverwriteDialog
-        titleText: appInfo.emptyStr+qsTr("File overwrite")
-        titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
-        content: Column {
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: parent.width - 10
-            height: 160
-            spacing: 3
-
-            Text {
-                text: appInfo.emptyStr+qsTr("Please input new file name.")
-                color: "white"
-                width: parent.width
-                height: 48
-                font.pointSize: 16
-                verticalAlignment: Text.AlignVCenter
-                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-            }
-
-            TextField {
-                id: fileName
-                width: parent.width
-            }
-
-            CheckBox {
-                id: overwriteFile
-                width: parent.width
-                text: "<font color='white'>" + appInfo.emptyStr+qsTr("Overwrite existing file") + "</font>"
-                checked: false
-
-                onClicked: {
-                    if (checked) {
-                        fileName.text = fileOverwriteDialog.sourcePathName;
-                    } else {
-                        fileName.text = cloudFolderModel.getNewFileName(fileOverwriteDialog.sourcePathName);
-                    }
-                }
-            }
-        }
-
-        property string sourcePath
-        property string sourcePathName
-        property string targetPath
-
-        onOpened: {
-            fileName.forceActiveFocus();
-            fileName.text = cloudFolderModel.getNewFileName(fileOverwriteDialog.sourcePathName);
-        }
-
-        onClosed: {
-            fileName.text = "";
-            overwriteFile.checked = false;
-        }
-
-        onConfirm: {
-            // If paste to current folder, targetPath is ended with / already.
-            // If paste to selected folder, targetPath is not ended with /.
-            var action = clipboard.get(0).action;
-            var type = clipboard.get(0).type;
-            var res = false;
-            var actualTargetPath = cloudDriveModel.getRemotePath(selectedCloudType, targetPath, fileName.text);
-
-            console.debug("folderPage fileOverwriteDialog onConfirm clipboard action " + action + " sourcePathName " + sourcePathName + " sourcePath " + sourcePath + " targetPath " + targetPath + " actualTargetPath " + actualTargetPath);
-            if (["copy","cut"].indexOf(action) > -1 && !type) {
-                isBusy = true;
-                if (cloudDriveModel.isDir(sourcePath)) {
-                    // TODO Check if cloud client's remotePath is absolute path.
-                    if (cloudDriveModel.isRemoteAbsolutePath(selectedCloudType)) {
-                        cloudDriveModel.syncFromLocal(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1, true);
-                    } else {
-                        cloudDriveModel.syncFromLocal_Block(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1, true);
-                    }
-                } else {
-                    cloudDriveModel.filePut(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1);
-                }
-                res = true;
-            } else if (["copy","cut"].indexOf(action) > -1 && cloudDriveModel.getClientType(type) != selectedCloudType) {
-                // TODO
-                console.debug("folderPage fileOverwriteDialog onConfirm migrate is not implemented. clipboard type " + type + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
-                res = false;
-            } else if (action == "copy") {
-                isBusy = true;
-                cloudDriveModel.copyFile(selectedCloudType, selectedUid, "", sourcePath, "", actualTargetPath);
-                res = true;
-            } else if (action == "cut") {
-                isBusy = true;
-                cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", sourcePath, "", actualTargetPath);
-                res = true;
-            }
-
-            // Clear clipboard once confirm action.
-            if (res) {
-                clipboard.clear();
-            }
-        }
-
-        onReject: {
-            copyProgressDialog.close();
         }
     }
 

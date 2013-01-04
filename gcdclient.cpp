@@ -410,7 +410,7 @@ void GCDClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QSt
 {
     qDebug() << "----- GCDClient::moveFile -----" << uid << remoteFilePath << targetRemoteParentPath << newRemoteFileName;
 
-    if (newRemoteFileName != "") {
+    if (newRemoteFileName != "" && targetRemoteParentPath == "") {
         // Proceed renaming.
         renameFile(nonce, uid, remoteFilePath, newRemoteFileName);
         return;

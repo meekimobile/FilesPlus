@@ -522,7 +522,7 @@ void DropboxClient::moveFile(QString nonce, QString uid, QString remoteFilePath,
 
 void DropboxClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
-    qDebug() << "----- DropboxClient::copyFile -----";
+    qDebug() << "----- DropboxClient::copyFile -----" << uid << remoteFilePath << newRemoteFilePath << newRemoteFileName;
 
     QString uri = copyFileURI;
     qDebug() << "DropboxClient::copyFile uri " << uri;

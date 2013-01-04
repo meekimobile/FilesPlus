@@ -501,7 +501,7 @@ void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath
 //        // Match as remote ID.
 //    }
 
-    if (newRemoteFileName != "") {
+    if (newRemoteFileName != "" && targetRemoteParentPath == "") {
         // Proceed renaming.
         renameFile(nonce, uid, remoteFilePath, newRemoteFileName);
         return;
@@ -536,7 +536,7 @@ void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath
 
 void SkyDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
 {
-    qDebug() << "----- SkyDriveClient::copyFile -----" << uid << remoteFilePath << targetRemoteParentPath;
+    qDebug() << "----- SkyDriveClient::copyFile -----" << uid << remoteFilePath << targetRemoteParentPath << newRemoteFileName;
 
     QString uri = copyFileURI.arg(remoteFilePath);
     qDebug() << "SkyDriveClient::copyFile uri " << uri;
