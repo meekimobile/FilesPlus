@@ -782,6 +782,7 @@ Page {
             var text = "";
             if (clipboard.count == 1) {
                 text = getActionName(clipboard.get(0).action, clipboard.get(0).type)
+                        + ((cloudDriveModel.getClientType(clipboard.get(0).type) != selectedCloudType) ? (" (" + clipboard.get(0).type + ")") : "")
                         + " " + (clipboard.get(0).sourcePathName ? clipboard.get(0).sourcePathName : clipboard.get(0).sourcePath)
                         + ((clipboard.get(0).action == "delete")?"":("\n" + qsTr("to") + " " + targetPathName))
                         + " ?";
@@ -790,10 +791,13 @@ Page {
                 var copyCount = 0;
                 var deleteCount = 0;
                 var uploadCount = 0;
+                var migrateCount = 0;
                 for (var i=0; i<clipboard.count; i++) {
 //                    console.debug("fileActionDialog getText clipboard i " + i + " action " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
                     if (["copy","cut"].indexOf(clipboard.get(i).action) > -1 && !clipboard.get(i).type) {
                         uploadCount++;
+                    } else if (["copy","cut"].indexOf(clipboard.get(i).action) > -1 && cloudDriveModel.getClientType(clipboard.get(i).type) != selectedCloudType) {
+                        migrateCount++;
                     } else if (clipboard.get(i).action == "copy") {
                         copyCount++;
                     } else if (clipboard.get(i).action == "cut") {
@@ -804,6 +808,7 @@ Page {
                 }
 
                 if (uploadCount>0) text = text + (qsTr("Upload %n item(s)\n", "", uploadCount));
+                if (migrateCount>0) text = text + (qsTr("Migrate %n item(s)\n", "", migrateCount));
                 if (deleteCount>0) text = text + (qsTr("Delete %n item(s)\n", "", deleteCount));
                 if (copyCount>0) text = text + (qsTr("Copy %n item(s)\n", "", copyCount));
                 if (cutCount>0) text = text + (qsTr("Move %n item(s)\n", "", cutCount));
@@ -815,11 +820,17 @@ Page {
         }
 
         function getActionName(actionText, type) {
+            console.debug("cloudFolderPage fileActionDialog " + selectedCloudType + " " + cloudDriveModel.getCloudName(selectedCloudType) + " getActionName actionText " + actionText + " type " + type);
             if (type) {
-                if (actionText == "copy") return qsTr("Copy");
-                else if (actionText == "cut") return qsTr("Move");
-                else if (actionText == "delete") return qsTr("Delete");
-                else return qsTr("Invalid action");
+                if (cloudDriveModel.getClientType(type) == selectedCloudType) {
+                    if (actionText == "copy") return qsTr("Copy");
+                    else if (actionText == "cut") return qsTr("Move");
+                    else if (actionText == "delete") return qsTr("Delete");
+                    else return qsTr("Invalid action");
+                } else {
+                    if (["copy","cut"].indexOf(actionText) > -1) return qsTr("Migrate");
+                    else return qsTr("Invalid action");
+                }
             } else {
                 if (["copy","cut"].indexOf(actionText) > -1) return qsTr("Upload");
                 else return qsTr("Invalid action");
@@ -832,7 +843,7 @@ Page {
                 // Check if there is existing file on target folder. Then show overwrite dialog.
                 // TODO How to check if folder/file exists.
                 var foundIndex = -1;
-                var sourcePathName = cloudDriveModel.getFileName(clipboard.get(0).sourcePath);
+                var sourcePathName = (clipboard.get(0).sourcePathName) ? clipboard.get(0).sourcePathName : cloudDriveModel.getFileName(clipboard.get(0).sourcePath);
                 if (targetPath == remoteParentPath) {
                     for (var i=0; i<cloudFolderModel.count; i++) {
                         var item = cloudFolderModel.get(i);
@@ -846,7 +857,6 @@ Page {
                     fileOverwriteDialog.sourcePath = clipboard.get(0).sourcePath;
                     fileOverwriteDialog.sourcePathName = sourcePathName;
                     fileOverwriteDialog.targetPath = targetPath;
-                    fileOverwriteDialog.isCopy = (clipboard.get(0).action == "copy");
                     fileOverwriteDialog.open();
                     return;
                 }
@@ -861,9 +871,10 @@ Page {
             for (var i=0; i<clipboard.count; i++) {
                 var action = clipboard.get(i).action;
                 var sourcePath = clipboard.get(i).sourcePath;
-                var actualTargetPath = cloudDriveModel.getRemotePath(selectedCloudType, targetPath, cloudDriveModel.getFileName(sourcePath));
+                var sourcePathName = (clipboard.get(i).sourcePathName) ? clipboard.get(i).sourcePathName : cloudDriveModel.getFileName(sourcePath);
+                var actualTargetPath = cloudDriveModel.getRemotePath(selectedCloudType, targetPath, sourcePathName);
 
-                console.debug("folderPage fileActionDialog onConfirm clipboard action " + action + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
+                console.debug("folderPage fileActionDialog onConfirm clipboard action " + action + " sourcePathName " + sourcePathName + " sourcePath " + sourcePath + " targetPath " + targetPath + " actualTargetPath " + actualTargetPath);
                 if (["copy","cut"].indexOf(action) > -1 && !clipboard.get(i).type) {
                     isBusy = true;
                     if (cloudDriveModel.isDir(sourcePath)) {
@@ -877,6 +888,10 @@ Page {
                         cloudDriveModel.filePut(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1);
                     }
                     res = true;
+                } else if (["copy","cut"].indexOf(action) > -1 && cloudDriveModel.getClientType(clipboard.get(i).type) != selectedCloudType) {
+                    // TODO
+                    console.debug("folderPage fileActionDialog onConfirm migrate is not implemented. clipboard type " + clipboard.get(i).type + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
+                    res = false;
                 } else if (action == "copy") {
                     isBusy = true;
                     cloudDriveModel.copyFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath, "", actualTargetPath);
@@ -891,6 +906,7 @@ Page {
                     res = true;
                 } else {
                     console.debug("folderPage fileActionDialog onButtonClicked invalid action " + action);
+                    res = false;
                 }
 
                 if (!res) {
@@ -1039,7 +1055,6 @@ Page {
             }
         }
 
-        property bool isCopy
         property string sourcePath
         property string sourcePathName
         property string targetPath
@@ -1057,18 +1072,43 @@ Page {
         onConfirm: {
             // If paste to current folder, targetPath is ended with / already.
             // If paste to selected folder, targetPath is not ended with /.
+            var action = clipboard.get(0).action;
+            var type = clipboard.get(0).type;
             var res = false;
             var actualTargetPath = cloudDriveModel.getRemotePath(selectedCloudType, targetPath, fileName.text);
-            if (isCopy) {
+
+            console.debug("folderPage fileOverwriteDialog onConfirm clipboard action " + action + " sourcePathName " + sourcePathName + " sourcePath " + sourcePath + " targetPath " + targetPath + " actualTargetPath " + actualTargetPath);
+            if (["copy","cut"].indexOf(action) > -1 && !type) {
+                isBusy = true;
+                if (cloudDriveModel.isDir(sourcePath)) {
+                    // TODO Check if cloud client's remotePath is absolute path.
+                    if (cloudDriveModel.isRemoteAbsolutePath(selectedCloudType)) {
+                        cloudDriveModel.syncFromLocal(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1, true);
+                    } else {
+                        cloudDriveModel.syncFromLocal_Block(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1, true);
+                    }
+                } else {
+                    cloudDriveModel.filePut(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1);
+                }
+                res = true;
+            } else if (["copy","cut"].indexOf(action) > -1 && cloudDriveModel.getClientType(type) != selectedCloudType) {
+                // TODO
+                console.debug("folderPage fileOverwriteDialog onConfirm migrate is not implemented. clipboard type " + type + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
+                res = false;
+            } else if (action == "copy") {
                 isBusy = true;
                 cloudDriveModel.copyFile(selectedCloudType, selectedUid, "", sourcePath, "", actualTargetPath);
-            } else {
+                res = true;
+            } else if (action == "cut") {
                 isBusy = true;
                 cloudDriveModel.moveFile(selectedCloudType, selectedUid, "", sourcePath, "", actualTargetPath);
+                res = true;
             }
 
             // Clear clipboard once confirm action.
-            clipboard.clear();
+            if (res) {
+                clipboard.clear();
+            }
         }
 
         onReject: {
