@@ -472,7 +472,7 @@ void GCDClient::renameFile(QString nonce, QString uid, QString remoteFilePath, Q
     }
 }
 
-QNetworkReply *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
+QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- GCDClient::fileGet -----" << remoteFilePath;
 
@@ -503,6 +503,11 @@ QNetworkReply *GCDClient::fileGet(QString nonce, QString uid, QString remoteFile
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
 
     return reply;
 }
@@ -566,6 +571,11 @@ QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source,
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
         connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
         connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+        while (!reply->isFinished()) {
+            QApplication::processEvents(QEventLoop::AllEvents, 100);
+            Sleeper::msleep(100);
+        }
 
         return reply;
     }

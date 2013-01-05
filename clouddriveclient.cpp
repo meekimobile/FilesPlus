@@ -137,7 +137,7 @@ void CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePat
     emit fileGetReplySignal(nonce, -1, objectName() + " " + tr("File Get"), tr("Service is not implemented."));
 }
 
-QNetworkReply *CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
+QIODevice *CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
 {
     emit fileGetReplySignal(nonce, -1, objectName() + " " + tr("File Get"), tr("Service is not implemented."));
     return 0;

@@ -628,7 +628,7 @@ void SkyDriveClient::renameFile(QString nonce, QString uid, QString remoteFilePa
     QNetworkReply *reply = manager->put(req, postData);
 }
 
-QNetworkReply *SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
+QIODevice *SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- SkyDriveClient::fileGet -----" << remoteFilePath;
 
@@ -672,6 +672,12 @@ QNetworkReply *SkyDriveClient::fileGet(QString nonce, QString uid, QString remot
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
         connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
         connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+        while (!reply->isFinished()) {
+            QApplication::processEvents(QEventLoop::AllEvents, 100);
+            Sleeper::msleep(100);
+        }
+
         return reply;
     }
 
@@ -699,6 +705,11 @@ QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *so
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
 
     return reply;
 }

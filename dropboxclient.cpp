@@ -354,7 +354,7 @@ void DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, 
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-QNetworkReply *DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
+QIODevice *DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- DropboxClient::fileGet -----" << uid << remoteFilePath;
 
@@ -371,6 +371,11 @@ QNetworkReply *DropboxClient::fileGet(QString nonce, QString uid, QString remote
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
 
     return reply;
 }
@@ -436,6 +441,11 @@ QNetworkReply *DropboxClient::filePut(QString nonce, QString uid, QIODevice *sou
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
 
     return reply;
 }

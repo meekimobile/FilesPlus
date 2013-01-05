@@ -1953,43 +1953,43 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
 {
     qDebug() << "CloudDriveModel::migrateFile_Block" << nonce << type << uid << remoteFilePath << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
 
-    QNetworkReply *sourceReply = getCloudClient(type)->fileGet(nonce, uid, remoteFilePath);
+    QIODevice *sourceReply = getCloudClient(type)->fileGet(nonce, uid, remoteFilePath);
     if (sourceReply == 0) {
         migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
         return;
     }
-    while (!sourceReply->isFinished()) {
-        QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper::msleep(100);
-    }
+//    while (!sourceReply->isFinished()) {
+//        QApplication::processEvents(QEventLoop::AllEvents, 100);
+//        Sleeper::msleep(100);
+//    }
 
-    if (sourceReply->error() == QNetworkReply::NoError) {
+//    if (sourceReply->error() == QNetworkReply::NoError) {
         QNetworkReply *targetReply = getCloudClient(targetType)->filePut(nonce, targetUid, sourceReply, targetRemoteParentPath, targetRemoteFileName);
         if (targetReply == 0) {
-            migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
+//            migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
 
             // Scheduled to delete later.
             sourceReply->deleteLater();
-            sourceReply->manager()->deleteLater();
+//            sourceReply->manager()->deleteLater();
             return;
         }
-        while (!targetReply->isFinished()) {
-            QApplication::processEvents(QEventLoop::AllEvents, 100);
-            Sleeper::msleep(100);
-        }
+//        while (!targetReply->isFinished()) {
+//            QApplication::processEvents(QEventLoop::AllEvents, 100);
+//            Sleeper::msleep(100);
+//        }
 
-        migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(), targetReply->readAll());
+//        migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(), targetReply->readAll());
 
         // Scheduled to delete later.
         targetReply->deleteLater();
         targetReply->manager()->deleteLater();
-    } else {
-        migrateFilePutFilter(nonce, sourceReply->error(), sourceReply->errorString(), sourceReply->readAll());
-    }
+//    } else {
+//        migrateFilePutFilter(nonce, sourceReply->error(), sourceReply->errorString(), sourceReply->readAll());
+//    }
 
     // Scheduled to delete later.
     sourceReply->deleteLater();
-    sourceReply->manager()->deleteLater();
+//    sourceReply->manager()->deleteLater();
 }
 
 void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, QString newRemoteFileName)

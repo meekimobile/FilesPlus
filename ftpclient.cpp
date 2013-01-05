@@ -320,6 +320,63 @@ void FtpClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
     emit shareFileReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, "FTP doesn't support resource link sharing.", "");
 }
 
+QIODevice *FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
+{
+    qDebug() << "FtpClient::fileGet" << uid << remoteFilePath;
+
+    QString remoteParentPath = getParentRemotePath(remoteFilePath);
+
+    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    m_ftp->cd(remoteParentPath);
+
+    // Creat buffer as QIODevice.
+    QBuffer *buf = new QBuffer();
+    if (buf->open(QIODevice::WriteOnly)) {
+        m_ftp->get(getRemoteFileName(remoteFilePath), buf);
+        m_ftp->waitForDone();
+        buf->close();
+    }
+
+    m_ftp->close();
+    m_ftp->deleteLater();
+    m_ftpHash->remove(m_ftp->getNonce());
+
+    return buf;
+}
+
+QNetworkReply *FtpClient::filePut(QString nonce, QString uid, QIODevice *source, QString remoteParentPath, QString remoteFileName)
+{
+    qDebug() << "FtpClient::filePut" << uid << remoteParentPath << remoteFileName << "source->bytesAvailable()" << source->bytesAvailable();
+
+    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    m_ftp->cd(remoteParentPath);
+
+    if (source->open(QIODevice::ReadOnly)) {
+        m_ftp->put(source, remoteFileName);
+        m_ftp->waitForDone();
+        source->close();
+
+        // TODO Get uploaded file property.
+        m_ftp->list(remoteParentPath + "/" + remoteFileName);
+        m_ftp->waitForDone();
+    }
+
+    if (m_ftp->getItemList().isEmpty()) {
+        // remoteFilePath is not found.
+        qDebug() << "FtpClient::filePut" << uid << remoteParentPath + "/" + remoteFileName << "is not found.";
+        emit filePutReplySignal(m_ftp->getNonce(), -1, tr("Can't put %1").arg(remoteParentPath + "/" + remoteFileName), "");
+    } else {
+        qDebug() << "FtpClient::filePut" << uid << remoteParentPath + "/" + remoteFileName << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_ftp->getItemList().first().name();
+        emit filePutReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), getPropertyJson(remoteParentPath, m_ftp->getItemList().first()) );
+    }
+
+    m_ftp->close();
+    m_ftp->deleteLater();
+    m_ftpHash->remove(m_ftp->getNonce());
+
+    return 0;
+}
+
 QFtpWrapper *FtpClient::connectToHost(QString nonce, QString uid)
 {
     /* Notes:

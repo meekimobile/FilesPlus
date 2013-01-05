@@ -2014,7 +2014,11 @@ PageStackWindow {
             cloudDriveModel.removeJob(nonce);
 
             if (err == 0) {
-                // TODO
+                // Refresh cloudFolderPage.
+                var p = findPage("cloudFolderPage");
+                if (p) {
+                    p.refreshSlot("cloudDriveModel onMigrateFilePutReplySignal");
+                }
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
