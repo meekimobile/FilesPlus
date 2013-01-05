@@ -1934,7 +1934,31 @@ PageStackWindow {
                 }
 
                 if (jobJson.type == CloudDriveModel.SkyDrive) {
+                    if (jsonObj.property) {
+                        // Migration starts from itself.
+                        if (jsonObj.property.type == "folder" || jsonObj.property.type == "album") { // Migrate folder.
+                            // Create target folder.
+                            var createdRemoteFolderPath = cloudDriveModel.createFolder_Block(jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
 
+                            for(var i=0; i<jsonObj.data.length; i++) {
+                                var item = jsonObj.data[i];
+                                var itemRemotePath = item.id;
+                                var itemRemotePathName = item.name;
+                                var itemIsDir = (item.type == "folder" || item.type == "album");
+                                console.debug("window cloudDriveModel onMigrateFileReplySignal itemRemotePath " + itemRemotePath + " itemRemotePathName " + itemRemotePathName + " itemIsDir " + itemIsDir);
+
+                                if (itemIsDir) {
+                                    // This flow will trigger recursive migrateFile calling.
+                                    cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
+                                } else {
+                                    // Migrate file.
+                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
+                                }
+                            }
+                        } else { // Migrate file.
+                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
+                        }
+                    }
                 }
 
                 if (jobJson.type == CloudDriveModel.GoogleDrive) {

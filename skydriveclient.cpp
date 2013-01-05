@@ -628,6 +628,81 @@ void SkyDriveClient::renameFile(QString nonce, QString uid, QString remoteFilePa
     QNetworkReply *reply = manager->put(req, postData);
 }
 
+QNetworkReply *SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
+{
+    qDebug() << "----- SkyDriveClient::fileGet -----" << remoteFilePath;
+
+    // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
+//    QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "fileGet");
+//    if (propertyReply->error() == QNetworkReply::NoError) {
+//        propertyReply->deleteLater();
+//    } else {
+//        emit fileGetReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));
+//        propertyReply->deleteLater();
+//        return 0;
+//    }
+
+    QString uri = fileGetURI.arg(remoteFilePath);
+    uri = encodeURI(uri);
+    qDebug() << "SkyDriveClient::fileGet uri " << uri;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    QNetworkReply *reply = manager->get(req);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+    // Redirect to download URL.
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    QVariant possibleRedirectUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+    if(!possibleRedirectUrl.toUrl().isEmpty()) {
+        qDebug() << "SkyDriveClient::fileGetReplyFinished redirectUrl" << possibleRedirectUrl.toUrl();
+
+        QNetworkRequest redirectedRequest = reply->request();
+        redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
+        reply = reply->manager()->get(redirectedRequest);
+        QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+        connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+        connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+        return reply;
+    }
+
+    return reply;
+}
+
+QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *source, QString remoteParentPath, QString remoteFileName)
+{
+    qDebug() << "----- SkyDriveClient::filePut -----" << remoteParentPath << remoteFileName << "source->bytesAvailable()" << source->bytesAvailable();
+
+    QString uri = filePutURI.arg(remoteParentPath).arg(remoteFileName);
+    uri = encodeURI(uri);
+    qDebug() << "SkyDriveClient::filePut uri " << uri;
+
+    qint64 fileSize = source->size();
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize);
+    QNetworkReply *reply = manager->put(req, source);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+    return reply;
+}
+
 QString SkyDriveClient::getRemoteRoot()
 {
     return RemoteRoot;
