@@ -832,9 +832,11 @@ Page {
             // Exmaple of clipboard entry { "action": "cut", "type": "Dropbox", "uid": "asdfdg", "sourcePath": sourcePath, "sourcePathName": sourcePathName }
             var text = "";
             if (clipboard.count == 1) {
-                text = getActionName(clipboard.get(0).action, clipboard.get(0).type, clipboard.get(0).uid)
-                        + ((cloudDriveModel.getClientType(clipboard.get(0).type) != selectedCloudType || clipboard.get(0).uid != selectedUid) ? (" (" + clipboard.get(0).type + " " + clipboard.get(0).uid + ")") : "")
-                        + " " + (clipboard.get(0).sourcePathName ? clipboard.get(0).sourcePathName : clipboard.get(0).sourcePath)
+                text = getActionName(clipboard.get(0).action, clipboard.get(0).type, clipboard.get(0).uid);
+                if (clipboard.get(0).type) {
+                    text = text + ((cloudDriveModel.getClientType(clipboard.get(0).type) != selectedCloudType || clipboard.get(0).uid != selectedUid) ? (" (" + clipboard.get(0).type + " " + clipboard.get(0).uid + ")") : "");
+                }
+                text = text + " " + (clipboard.get(0).sourcePathName ? clipboard.get(0).sourcePathName : clipboard.get(0).sourcePath)
                         + ((clipboard.get(0).action == "delete")?"":("\n" + qsTr("to") + " " + targetPathName))
                         + " ?";
             } else {

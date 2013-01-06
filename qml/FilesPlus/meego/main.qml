@@ -2086,7 +2086,13 @@ PageStackWindow {
             cloudDriveModel.removeJob(nonce);
 
             if (err == 0) {
-                pageStack.currentPage.parseCloudDriveMetadataJson(msg);
+                pageStack.find(function (page) {
+                    if (page.name == "cloudFolderPage") {
+                        page.parseCloudDriveMetadataJson(msg);
+                    } else if (page.name == "folderPage") {
+                        page.parseCloudDriveMetadataJson(msg);
+                    }
+                });
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
             } else {
