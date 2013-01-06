@@ -663,9 +663,19 @@ void DropboxClient::shareFile(QString nonce, QString uid, QString remoteFilePath
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-QNetworkReply *DropboxClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
+QString DropboxClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
     qDebug() << "----- DropboxClient::createFolder -----" << uid << remoteParentPath << newRemoteFolderName << synchronous;
+
+    if (remoteParentPath.isEmpty()) {
+        emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
+        return "";
+    }
+
+    if (newRemoteFolderName.isEmpty()) {
+        emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
+        return "";
+    }
 
     QString uri = createFolderURI;
     qDebug() << "DropboxClient::createFolder uri " << uri;
@@ -695,7 +705,7 @@ QNetworkReply *DropboxClient::createFolder(QString nonce, QString uid, QString r
 
     // TODO Return if asynchronous.
     if (!synchronous) {
-        return reply;
+        return "";
     }
 
     while (!reply->isFinished()) {
@@ -707,7 +717,7 @@ QNetworkReply *DropboxClient::createFolder(QString nonce, QString uid, QString r
     reply->deleteLater();
     reply->manager()->deleteLater();
 
-    return reply;
+    return QString::fromUtf8(reply->readAll());
 }
 
 void DropboxClient::requestTokenReplyFinished(QNetworkReply *reply)

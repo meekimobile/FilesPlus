@@ -170,6 +170,10 @@ Page {
                     }
                 }
             }
+
+            onClicked: {
+                console.debug("cloudDriveJobsPage listItem onClicked jobJson " + cloudDriveModel.getJobJson(job_id) );
+            }
         }
     }
 }

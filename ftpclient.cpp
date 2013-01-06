@@ -33,7 +33,7 @@ void FtpClient::quota(QString nonce, QString uid)
 
 void FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath)
 {
-    qDebug() << "FtpClient::fileGet" << uid << remoteFilePath << localFilePath;
+    qDebug() << "----- FtpClient::fileGet -----" << uid << remoteFilePath << localFilePath;
 
     QString remoteParentPath = getParentRemotePath(remoteFilePath);
 
@@ -114,7 +114,7 @@ void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
 
 void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
 {
-    qDebug() << "FtpClient::filePut" << uid << localFilePath << remoteFilePath;
+    qDebug() << "----- FtpClient::filePut -----" << uid << localFilePath << remoteFilePath;
 
     QString remoteParentPath = getParentRemotePath(remoteFilePath);
 
@@ -151,7 +151,7 @@ void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
 
 QString FtpClient::property(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "FtpClient::property" << uid << remoteFilePath;
+    qDebug() << "----- FtpClient::property -----" << uid << remoteFilePath;
 
     QString propertyJson = "";
     QString remoteParentPath = getParentRemotePath(remoteFilePath);
@@ -188,7 +188,7 @@ QString FtpClient::property(QString nonce, QString uid, QString remoteFilePath)
 
 void FtpClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "FtpClient::metadata" << uid << remoteFilePath;
+    qDebug() << "----- FtpClient::metadata -----" << uid << remoteFilePath;
 
     QString propertyJson = property(nonce, uid, remoteFilePath);
     if (propertyJson.isEmpty()) {
@@ -236,7 +236,7 @@ void FtpClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 
 void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "FtpClient::browse" << uid << remoteFilePath;
+    qDebug() << "----- FtpClient::browse -----" << uid << remoteFilePath;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
 
@@ -253,33 +253,9 @@ void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
     m_ftpHash->remove(m_ftp->getNonce());
 }
 
-void FtpClient::createFolder(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFolderName)
+void FtpClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
 {
-    qDebug() << "FtpClient::createFolder" << uid << remoteFilePath << newRemoteFolderName;
-
-    QString newRemoteFolderPath = remoteFilePath + "/" + newRemoteFolderName;
-
-    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
-
-    m_ftp->mkdir(newRemoteFolderPath);
-    m_ftp->waitForDone();
-
-    if (m_ftp->error() == QFtp::UnknownError) {
-        emit createFolderReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(newRemoteFolderPath) );
-    } else {
-        // Get property.
-        QString propertyJson = property(nonce, uid, newRemoteFolderPath);
-        if (propertyJson.isEmpty()) {
-            qDebug() << "FtpClient::createFolder" << uid << newRemoteFolderPath << "is not found.";
-            emit createFolderReplySignal(nonce, QNetworkReply::ContentNotFoundError, tr("%1 is not found.").arg(newRemoteFolderPath), "");
-        } else {
-            emit createFolderReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), propertyJson);
-        }
-    }
-
-    m_ftp->close();
-    m_ftp->deleteLater();
-    m_ftpHash->remove(m_ftp->getNonce());
+    createFolder(nonce, uid, remoteParentPath, newRemoteFolderName, false);
 }
 
 void FtpClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
@@ -289,12 +265,12 @@ void FtpClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QSt
 
 void FtpClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
-    emit moveFileReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, tr("FTP doesn't support copy command."), "");
+    emit copyFileReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, tr("FTP doesn't support copy command."), "");
 }
 
 void FtpClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "FtpClient::deleteFile" << uid << remoteFilePath;
+    qDebug() << "----- FtpClient::deleteFile -----" << uid << remoteFilePath;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
     m_ftp->m_remoteFilePath = remoteFilePath;
@@ -315,14 +291,57 @@ void FtpClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
 
 void FtpClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "FtpClient::shareFile" << uid << remoteFilePath;
+    qDebug() << "----- FtpClient::shareFile -----" << uid << remoteFilePath;
 
     emit shareFileReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, "FTP doesn't support resource link sharing.", "");
 }
 
+QString FtpClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
+{
+    qDebug() << "----- FtpClient::createFolder -----" << uid << remoteParentPath << newRemoteFolderName;
+
+    if (remoteParentPath.isEmpty()) {
+        emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
+        return "";
+    }
+
+    if (newRemoteFolderName.isEmpty()) {
+        emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
+        return "";
+    }
+
+    QString newRemoteFolderPath = remoteParentPath + "/" + newRemoteFolderName;
+
+    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+
+    m_ftp->mkdir(newRemoteFolderPath);
+    m_ftp->waitForDone();
+
+    QString result;
+    if (m_ftp->error() == QFtp::UnknownError) {
+        emit createFolderReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(newRemoteFolderPath) );
+    } else {
+        // Get property.
+        QString propertyJson = property(nonce, uid, newRemoteFolderPath);
+        if (propertyJson.isEmpty()) {
+            qDebug() << "FtpClient::createFolder" << uid << newRemoteFolderPath << "is not found.";
+            emit createFolderReplySignal(nonce, QNetworkReply::ContentNotFoundError, tr("Created path is not found."), QString("{ \"path\": \"%1\" }").arg(newRemoteFolderPath) );
+        } else {
+            result = propertyJson;
+            emit createFolderReplySignal(nonce, QNetworkReply::NoError, "", result);
+        }
+    }
+
+    m_ftp->close();
+    m_ftp->deleteLater();
+    m_ftpHash->remove(m_ftp->getNonce());
+
+    return result;
+}
+
 QIODevice *FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "FtpClient::fileGet" << uid << remoteFilePath;
+    qDebug() << "----- FtpClient::fileGet -----" << uid << remoteFilePath;
 
     QString remoteParentPath = getParentRemotePath(remoteFilePath);
 
@@ -346,7 +365,7 @@ QIODevice *FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath
 
 QNetworkReply *FtpClient::filePut(QString nonce, QString uid, QIODevice *source, QString remoteParentPath, QString remoteFileName)
 {
-    qDebug() << "FtpClient::filePut" << uid << remoteParentPath << remoteFileName << "source->bytesAvailable()" << source->bytesAvailable();
+    qDebug() << "----- FtpClient::filePut -----" << uid << remoteParentPath << remoteFileName << "source->bytesAvailable()" << source->bytesAvailable();
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
     m_ftp->cd(remoteParentPath);
@@ -468,7 +487,7 @@ QString FtpClient::getRemoteFileName(QString remotePath)
 
 bool FtpClient::testConnection(QString hostname, quint16 port, QString username, QString password)
 {
-    qDebug() << "FtpClient::testConnection";
+    qDebug() << "----- FtpClient::testConnection -----";
 
     // Reset m_isDone.
 //    m_isDone = false;
@@ -490,6 +509,8 @@ bool FtpClient::testConnection(QString hostname, quint16 port, QString username,
 
 void FtpClient::saveConnection(QString id, QString hostname, quint16 port, QString username, QString password)
 {
+    qDebug() << "----- FtpClient::saveConnection -----";
+
     /* Notes:
      * Stores token as user@host --> Token(token=user@host, secret=password, email=user@host)
      */

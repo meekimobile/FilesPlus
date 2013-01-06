@@ -1989,6 +1989,34 @@ PageStackWindow {
                     }
                 }
 
+                if (jobJson.type == CloudDriveModel.Ftp) {
+                    if (jsonObj.property) {
+                        // Migration starts from itself.
+                        if (jsonObj.property.isDir) { // Migrate folder.
+                            // Create target folder.
+                            var createdRemoteFolderPath = cloudDriveModel.createFolder_Block(jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
+
+                            for(var i=0; i<jsonObj.data.length; i++) {
+                                var item = jsonObj.data[i];
+                                var itemRemotePath = item.path;
+                                var itemRemotePathName = item.name;
+                                var itemIsDir = item.isDir;
+                                console.debug("window cloudDriveModel onMigrateFileReplySignal itemRemotePath " + itemRemotePath + " itemRemotePathName " + itemRemotePathName + " itemIsDir " + itemIsDir);
+
+                                if (itemIsDir) {
+                                    // This flow will trigger recursive migrateFile calling.
+                                    cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
+                                } else {
+                                    // Migrate file.
+                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
+                                }
+                            }
+                        } else { // Migrate file.
+                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
+                        }
+                    }
+                }
+
                 // Resume next jobs.
                 cloudDriveModel.resumeNextJob();
             } else if (err == 204) { // Refresh token

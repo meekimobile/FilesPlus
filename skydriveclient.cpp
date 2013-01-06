@@ -441,18 +441,18 @@ void SkyDriveClient::createFolder(QString nonce, QString uid, QString remotePare
     createFolder(nonce, uid, remoteParentPath, newRemoteFolderName, false);
 }
 
-QNetworkReply * SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
+QString SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
     qDebug() << "----- SkyDriveClient::createFolder -----" << newRemoteFolderName << remoteParentPath;
 
     if (remoteParentPath.isEmpty()) {
         emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
-        return 0;
+        return "";
     }
 
     if (newRemoteFolderName.isEmpty()) {
         emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
-        return 0;
+        return "";
     }
 
     QString uri = createFolderURI.arg(remoteParentPath);
@@ -477,7 +477,7 @@ QNetworkReply * SkyDriveClient::createFolder(QString nonce, QString uid, QString
 
     // TODO Return if asynchronous.
     if (!synchronous) {
-        return reply;
+        return "";
     }
 
     while (!reply->isFinished()) {
@@ -489,7 +489,7 @@ QNetworkReply * SkyDriveClient::createFolder(QString nonce, QString uid, QString
     reply->deleteLater();
     reply->manager()->deleteLater();
 
-    return reply;
+    return QString::fromUtf8(reply->readAll());
 }
 
 void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
@@ -570,7 +570,7 @@ void SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePa
     deleteFile(nonce, uid, remoteFilePath, false);
 }
 
-QNetworkReply * SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
+QString SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
     qDebug() << "----- SkyDriveClient::deleteFile -----";
 
@@ -590,7 +590,7 @@ QNetworkReply * SkyDriveClient::deleteFile(QString nonce, QString uid, QString r
 
     // TODO Return if asynchronous.
     if (!synchronous) {
-        return reply;
+        return "";
     }
 
     while (!reply->isFinished()) {
@@ -602,7 +602,7 @@ QNetworkReply * SkyDriveClient::deleteFile(QString nonce, QString uid, QString r
     reply->deleteLater();
     reply->manager()->deleteLater();
 
-    return reply;
+    return QString::fromUtf8(reply->readAll());
 }
 
 void SkyDriveClient::renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName)

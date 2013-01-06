@@ -347,18 +347,18 @@ void GCDClient::createFolder(QString nonce, QString uid, QString remoteParentPat
     createFolder(nonce, uid, remoteParentPath, newRemoteFolderName, false);
 }
 
-QNetworkReply * GCDClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
+QString GCDClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
     qDebug() << "----- GCDClient::createFolder -----" << remoteParentPath << newRemoteFolderName;
 
     if (remoteParentPath.isEmpty()) {
         emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
-        return 0;
+        return "";
     }
 
     if (newRemoteFolderName.isEmpty()) {
         emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
-        return 0;
+        return "";
     }
 
     QString uri = createFolderURI;
@@ -391,7 +391,7 @@ QNetworkReply * GCDClient::createFolder(QString nonce, QString uid, QString remo
 
     // TODO Return if asynchronous.
     if (!synchronous) {
-        return reply;
+        return "";
     }
 
     while (!reply->isFinished()) {
@@ -403,7 +403,7 @@ QNetworkReply * GCDClient::createFolder(QString nonce, QString uid, QString remo
     reply->deleteLater();
     reply->manager()->deleteLater();
 
-    return reply;
+    return QString::fromUtf8(reply->readAll());
 }
 
 void GCDClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
@@ -627,7 +627,7 @@ void GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
     deleteFile(nonce, uid, remoteFilePath, false);
 }
 
-QNetworkReply * GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
+QString GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
     qDebug() << "----- GCDClient::deleteFile -----";
 
@@ -649,7 +649,7 @@ QNetworkReply * GCDClient::deleteFile(QString nonce, QString uid, QString remote
 
     // TODO Return if asynchronous.
     if (!synchronous) {
-        return reply;
+        return "";
     }
 
     while (!reply->isFinished()) {
@@ -661,7 +661,7 @@ QNetworkReply * GCDClient::deleteFile(QString nonce, QString uid, QString remote
     reply->deleteLater();
     reply->manager()->deleteLater();
 
-    return reply;
+    return QString::fromUtf8(reply->readAll());
 }
 
 void GCDClient::shareFile(QString nonce, QString uid, QString remoteFilePath)

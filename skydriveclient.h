@@ -52,8 +52,8 @@ public:
 
     QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
-    QNetworkReply * createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous = false);
-    QNetworkReply * deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
+    QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous = false);
+    QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
     void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, QString remoteParentPath, QString remoteFileName);

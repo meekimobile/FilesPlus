@@ -1778,9 +1778,8 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
             job.newRemoteFileName = info.fileName();
             m_cloudDriveJobs->insert(job.jobId, job);
 
-            QNetworkReply * createFolderReply = cloudClient->createFolder(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFileName, true);
-            if (createFolderReply->error() == QNetworkReply::NoError) {
-                QString msg = QString::fromUtf8(createFolderReply->readAll());
+            QString msg = cloudClient->createFolder(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFileName, true);
+            if (msg != "") {
                 QScriptEngine engine;
                 QScriptValue sc = engine.evaluate("(" + msg + ")");
                 QString hash = "";
@@ -1806,13 +1805,13 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
                 qDebug() << "CloudDriveModel::syncFromLocal_Block createFolder success parentCloudDriveItem" << parentCloudDriveItem;
 
                 // Invoke to emit signal to QML for refreshing items.
-                createFolderReplyFilter(job.jobId, createFolderReply->error(), createFolderReply->errorString(), msg);
+//                createFolderReplyFilter(job.jobId, createFolderReply->error(), createFolderReply->errorString(), msg);
             } else {
                 // Insert dummy job and invoke slot to emit signal to front-end.
                 // TODO Suppress signal if newRemoteFolder is not requested path.
                 qDebug() << "CloudDriveModel::syncFromLocal_Block createFolder" << job.localFilePath << "failed";
                 // Invoke to emit signal to QML for refreshing items.
-                createFolderReplyFilter(job.jobId, createFolderReply->error(), createFolderReply->errorString(), QString::fromUtf8(createFolderReply->readAll()));
+//                createFolderReplyFilter(job.jobId, createFolderReply->error(), createFolderReply->errorString(), QString::fromUtf8(createFolderReply->readAll()));
                 return;
             }
         } else {
@@ -1921,13 +1920,11 @@ QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, Q
         return "";
     }
 
-    // Request SkyDriveClient's createFolder synchronously.
+    // Request cloudClient's createFolder synchronously.
+    QString createFolderReplyResult = cloudClient->createFolder(createNonce(), uid, remoteParentPath, newRemoteFolderName, true);
+    qDebug() << "CloudDriveModel::createFolder_Block createFolder createFolderReplyResult" << createFolderReplyResult;
 
-    QNetworkReply * createFolderReply = cloudClient->createFolder(createNonce(), uid, remoteParentPath, newRemoteFolderName, true);
-    if (createFolderReply->error() == QNetworkReply::NoError) {
-        QString createFolderReplyResult(createFolderReply->readAll());
-        qDebug() << "CloudDriveModel::createFolder_Block createFolder success" << createFolderReplyResult;
-
+    if (createFolderReplyResult != "") {
         QScriptEngine se;
         QScriptValue sc = se.evaluate("(" + createFolderReplyResult + ")");
         QString createdRemotePath = "";
@@ -1940,6 +1937,9 @@ QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, Q
             break;
         case GoogleDrive:
             createdRemotePath = sc.property("id").toString();
+            break;
+        case Ftp:
+            createdRemotePath = sc.property("path").toString();
             break;
         }
 
