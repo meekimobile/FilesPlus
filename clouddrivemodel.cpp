@@ -1742,22 +1742,8 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
 
     QApplication::processEvents();
 
-    CloudDriveClient *cloudClient = 0;
-    switch (type) {
-    case Dropbox:
-        cloudClient = dbClient;
-        break;
-    case SkyDrive:
-        cloudClient = skdClient;
-        break;
-    case GoogleDrive:
-        cloudClient = gcdClient;
-        break;
-    case Ftp:
-        cloudClient = ftpClient;
-        break;
-    default:
-        qDebug() << "CloudDriveModel::syncFromLocal_Block type" << type << "is not implemented yet.";
+    CloudDriveClient *cloudClient = getCloudClient(type);
+    if (cloudClient == 0) {
         return;
     }
 
@@ -1779,14 +1765,16 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
             job.newRemoteFileName = info.fileName();
             m_cloudDriveJobs->insert(job.jobId, job);
 
-            QString msg = cloudClient->createFolder(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFileName, true);
-            if (msg != "") {
+            QString createFolderReplyResult = cloudClient->createFolder(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFileName, true);
+            if (createFolderReplyResult != "") {
                 QScriptEngine engine;
-                QScriptValue sc = engine.evaluate("(" + msg + ")");
+                QScriptValue sc = engine.evaluate("(" + createFolderReplyResult + ")");
                 QString hash = "";
                 QString createdRemotePath = "";
                 switch (type) {
                 case Dropbox:
+                    hash = sc.property("rev").toString();
+                    createdRemotePath = sc.property("path").toString();
                     break;
                 case SkyDrive:
                     hash = sc.property("updated_time").toString();
@@ -1797,6 +1785,8 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
                     createdRemotePath = sc.property("id").toString();
                     break;
                 case Ftp:
+                    hash = sc.property("lastModified").toString();
+                    createdRemotePath = sc.property("path").toString();
                     break;
                 }
                 addItem(type, uid, localPath, createdRemotePath, hash);
@@ -1902,22 +1892,8 @@ QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, Q
         return "";
     }
 
-    CloudDriveClient *cloudClient = 0;
-    switch (type) {
-    case Dropbox:
-        cloudClient = dbClient;
-        break;
-    case SkyDrive:
-        cloudClient = skdClient;
-        break;
-    case GoogleDrive:
-        cloudClient = gcdClient;
-        break;
-    case Ftp:
-        cloudClient = ftpClient;
-        break;
-    default:
-        qDebug() << "CloudDriveModel::createFolder_Block type" << type << "is not implemented yet.";
+    CloudDriveClient *cloudClient = getCloudClient(type);
+    if (cloudClient == 0) {
         return "";
     }
 
@@ -3013,7 +2989,7 @@ CloudDriveClient * CloudDriveModel::getCloudClient(const int type)
     case Ftp:
         return ftpClient;
     default:
-        qDebug() << "CloudDriveModel::dispatchJob type" << type << "is not implemented yet.";
+        qDebug() << "CloudDriveModel::getCloudClient type" << type << "is not implemented yet.";
     }
 
     return 0;

@@ -166,10 +166,12 @@ public:
     Q_INVOKABLE bool testConnection(CloudDriveModel::ClientTypes type, QString hostname, quint16 port, QString username, QString password);
     Q_INVOKABLE void saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, quint16 port, QString username, QString password);
 
+    // TODO Needed ?
+    Q_INVOKABLE bool parseAuthorizationCode(CloudDriveModel::ClientTypes type, QString text);
+
     // Service Proxy with Job Queuing.
     Q_INVOKABLE void requestToken(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE void authorize(CloudDriveModel::ClientTypes type);
-    Q_INVOKABLE bool parseAuthorizationCode(CloudDriveModel::ClientTypes type, QString text);
     Q_INVOKABLE void accessToken(CloudDriveModel::ClientTypes type, QString pin = "");
     Q_INVOKABLE void refreshToken(CloudDriveModel::ClientTypes type, QString uid, QString nextNonce = "");
     Q_INVOKABLE void accountInfo(CloudDriveModel::ClientTypes type, QString uid);
