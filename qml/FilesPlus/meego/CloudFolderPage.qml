@@ -803,7 +803,7 @@ Page {
                     if (checked) {
                         fileName.text = fileActionDialog.sourcePathName;
                     } else {
-                        fileName.text = cloudFolderModel.getNewFileName(fileActionDialog.sourcePathName);
+                        fileName.text = fileActionDialog.getNewName();
                     }
                 }
             }
@@ -890,6 +890,25 @@ Page {
             }
         }
 
+        function canCopy() {
+            var foundIndex = -1;
+            var sourcePathName = (clipboard.get(0).sourcePathName) ? clipboard.get(0).sourcePathName : cloudDriveModel.getFileName(clipboard.get(0).sourcePath);
+            if (targetPath == remoteParentPath) {
+                for (var i=0; i<cloudFolderModel.count; i++) {
+                    var item = cloudFolderModel.get(i);
+                    if (item.name == sourcePathName) {
+                        foundIndex = i;
+                    }
+                }
+            }
+
+            return (foundIndex < 0);
+        }
+
+        function getNewName() {
+            return cloudFolderModel.getNewFileName(fileActionDialog.sourcePathName);
+        }
+
         onConfirm: {
             // It always replace existing names.
             cloudDriveModel.suspendNextJob();
@@ -903,7 +922,7 @@ Page {
                 var sourcePathName = (isOverwrite && i == 0) ? fileName.text : (clipboard.get(i).sourcePathName ? clipboard.get(i).sourcePathName : cloudDriveModel.getFileName(sourcePath));
                 var actualTargetPath = cloudDriveModel.getRemotePath(selectedCloudType, targetPath, sourcePathName);
 
-                console.debug("folderPage fileActionDialog onConfirm clipboard type " + clipboard.get(i).type + " uid " + clipboard.get(i).uid + " action " + action + " sourcePathName " + sourcePathName + " sourcePath " + sourcePath + " targetPath " + targetPath + " actualTargetPath " + actualTargetPath);
+                console.debug("cloudFolderPage fileActionDialog onConfirm clipboard type " + clipboard.get(i).type + " uid " + clipboard.get(i).uid + " action " + action + " sourcePathName " + sourcePathName + " sourcePath " + sourcePath + " targetPath " + targetPath + " actualTargetPath " + actualTargetPath);
                 if (["copy","cut"].indexOf(action) > -1 && !clipboard.get(i).type) {
                     isBusy = true;
                     if (cloudDriveModel.isDir(sourcePath)) {
@@ -918,25 +937,25 @@ Page {
                     }
                     res = true;
                 } else if (["copy","cut"].indexOf(action) > -1 && (cloudDriveModel.getClientType(clipboard.get(i).type) != selectedCloudType || clipboard.get(i).uid != selectedUid) ) {
-                    console.debug("folderPage fileActionDialog onConfirm migrate clipboard type " + clipboard.get(i).type + " uid " + clipboard.get(i).uid + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
+                    console.debug("cloudFolderPage fileActionDialog onConfirm migrate clipboard type " + clipboard.get(i).type + " uid " + clipboard.get(i).uid + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
                     cloudDriveModel.migrateFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, sourcePath, selectedCloudType, selectedUid, targetPath, sourcePathName);
                     res = true;
-                } else if (action == "copy") {
+                } else if (action == "copy" && clipboard.get(i).type) {
                     isBusy = true;
                     // TODO Support sourcePathName as newRemotePathName.
                     cloudDriveModel.copyFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath, "", actualTargetPath, sourcePathName);
                     res = true;
-                } else if (action == "cut") {
+                } else if (action == "cut" && clipboard.get(i).type) {
                     isBusy = true;
                     // TODO Support sourcePathName as newRemotePathName.
                     cloudDriveModel.moveFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath, "", actualTargetPath);
                     res = true;
-                } else if (action == "delete") {
+                } else if (action == "delete" && clipboard.get(i).type) {
                     isBusy = true;
                     cloudDriveModel.deleteFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath);
                     res = true;
                 } else {
-                    console.debug("folderPage fileActionDialog onButtonClicked invalid action " + action);
+                    console.debug("cloudFolderPage fileActionDialog onConfirm invalid action " + action);
                     res = false;
                 }
 
@@ -965,24 +984,12 @@ Page {
             if (clipboard.count == 1 && clipboard.get(0).action != "delete") {
                 // Copy/Move/Delete first file from clipboard.
                 // Check if there is existing file on target folder. Then show overwrite dialog.
-                // TODO How to check if folder/file exists.
-                var foundIndex = -1;
-                var sourcePathName = (clipboard.get(0).sourcePathName) ? clipboard.get(0).sourcePathName : cloudDriveModel.getFileName(clipboard.get(0).sourcePath);
-                if (targetPath == remoteParentPath) {
-                    for (var i=0; i<cloudFolderModel.count; i++) {
-                        var item = cloudFolderModel.get(i);
-                        if (item.name == sourcePathName) {
-                            foundIndex = i;
-                        }
-                    }
-                }
-
-                if (foundIndex > -1) {
+                fileActionDialog.sourcePath = clipboard.get(0).sourcePath;
+                fileActionDialog.sourcePathName = (clipboard.get(0).sourcePathName) ? clipboard.get(0).sourcePathName : cloudDriveModel.getFileName(clipboard.get(0).sourcePath);
+                if (!canCopy()) {
                     fileActionDialog.isOverwrite = true;
-                    fileActionDialog.sourcePath = clipboard.get(0).sourcePath;
-                    fileActionDialog.sourcePathName = sourcePathName;
                     fileName.forceActiveFocus();
-                    fileName.text = cloudFolderModel.getNewFileName(fileActionDialog.sourcePathName);
+                    fileName.text = getNewName();
                 }
             }
         }

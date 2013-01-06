@@ -163,6 +163,7 @@ Page {
 
         onPaste: {
             fileActionDialog.targetPath = fsModel.currentDir;
+            fileActionDialog.targetPathName = fsModel.currentDir;
             fileActionDialog.open();
         }
         onOpenMarkMenu: {
@@ -1114,6 +1115,7 @@ Page {
 
         onPasteClicked: {
             fileActionDialog.targetPath = targetPath;
+            fileActionDialog.targetPathName = selectedFileName;
             fileActionDialog.open();
         }
 
@@ -1198,15 +1200,77 @@ Page {
     ConfirmDialog {
         id: fileActionDialog
 
+        property string sourcePath
+        property string sourcePathName
         property string targetPath
+        property string targetPathName
+        property bool isOverwrite: false
 
         titleText: appInfo.emptyStr+fileActionDialog.getTitleText()
-        contentText: appInfo.emptyStr+fileActionDialog.getText() + "\n"
+        content: Column {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width - 10
+            spacing: 5
+
+            Text {
+                text: appInfo.emptyStr+fileActionDialog.getText()
+                color: "white"
+                width: parent.width
+                font.pointSize: 16
+                verticalAlignment: Text.AlignVCenter
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            }
+
+            Rectangle {
+                color: "grey"
+                width: parent.width
+                height: 1
+                visible: fileActionDialog.isOverwrite
+            }
+
+            Text {
+                text: appInfo.emptyStr+qsTr("Item exists, please input new name.")
+                color: "white"
+                width: parent.width
+                font.pointSize: 16
+                verticalAlignment: Text.AlignVCenter
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                visible: fileActionDialog.isOverwrite
+            }
+
+            TextField {
+                id: fileName
+                width: parent.width
+                visible: fileActionDialog.isOverwrite
+            }
+
+            CheckBox {
+                id: overwriteFile
+                width: parent.width
+                text: "<span style='color:white;font:16pt'>" + appInfo.emptyStr+qsTr("Overwrite existing item?") + "</span>"
+                checked: false
+                visible: fileActionDialog.isOverwrite
+
+                onClicked: {
+                    if (checked) {
+                        fileName.text = fileActionDialog.sourcePathName;
+                    } else {
+                        fileName.text = fileActionDialog.getNewName();
+                    }
+                }
+            }
+
+            Rectangle {
+                color: "transparent"
+                width: parent.width
+                height: 10
+            }
+        }
 
         function getTitleText() {
             var text = "";
             if (clipboard.count == 1) {
-                text = getActionName(clipboard.get(0).action, clipboard.get(0).type);
+                text = getActionName(clipboard.get(0).action, clipboard.get(0).type, clipboard.get(0).uid);
             } else {
                 // TODO if all copy, show "Multiple copy".
                 text = qsTr("Multiple actions");
@@ -1220,9 +1284,9 @@ Page {
             // Exmaple of clipboard entry { "action": "cut", "type": "Dropbox", "uid": "asdfdg", "sourcePath": sourcePath, "sourcePathName": sourcePathName }
             var text = "";
             if (clipboard.count == 1) {
-                text = getActionName(clipboard.get(0).action, clipboard.get(0).type)
+                text = getActionName(clipboard.get(0).action, clipboard.get(0).type, clipboard.get(0).uid)
                         + " " + (clipboard.get(0).sourcePathName ? clipboard.get(0).sourcePathName : clipboard.get(0).sourcePath)
-                        + ((clipboard.get(0).action == "delete")?"":("\n" + qsTr("to") + " " + targetPath))
+                        + ((clipboard.get(0).action == "delete")?"":("\n" + qsTr("to") + " " + targetPathName))
                         + " ?";
             } else {
                 var cutCount = 0;
@@ -1253,7 +1317,7 @@ Page {
             return text;
         }
 
-        function getActionName(actionText, type) {
+        function getActionName(actionText, type, uid) {
             if (type) {
                 if (["copy","cut"].indexOf(actionText) > -1) return qsTr("Download");
                 else return qsTr("Invalid action");
@@ -1265,19 +1329,15 @@ Page {
             }
         }
 
-        onConfirm: {
-            if (clipboard.count == 1) {
-                // Copy/Move/Delete first file from clipboard.
-                // Check if there is existing file on target folder. Then show overwrite dialog.
-                if (clipboard.get(0).action != "delete" && !fsModel.canCopy(clipboard.get(0).sourcePath, targetPath)) {
-                    fileOverwriteDialog.sourcePath = clipboard.get(0).sourcePath;
-                    fileOverwriteDialog.targetPath = targetPath;
-                    fileOverwriteDialog.isCopy = (clipboard.get(0).action == "copy");
-                    fileOverwriteDialog.open();
-                    return;
-                }
-            }
+        function canCopy() {
+            return fsModel.canCopy(clipboard.get(0).sourcePath, targetPath);
+        }
 
+        function getNewName() {
+            return fsModel.getNewFileName(fileActionDialog.sourcePathName, fileActionDialog.targetPath);
+        }
+
+        onConfirm: {
             // It always replace existing names.
             fsModel.suspendNextJob();
             cloudDriveModel.suspendNextJob();
@@ -1288,18 +1348,19 @@ Page {
             for (var i=0; i<clipboard.count; i++) {
                 var action = clipboard.get(i).action;
                 var sourcePath = clipboard.get(i).sourcePath;
-                var actualTargetPath = fsModel.getAbsolutePath(targetPath, fsModel.getFileName(sourcePath));
+                var sourcePathName = (isOverwrite && i == 0) ? fileName.text : (clipboard.get(i).sourcePathName ? clipboard.get(i).sourcePathName : fsModel.getFileName(sourcePath));
+                var actualTargetPath = fsModel.getAbsolutePath(targetPath, sourcePathName);
 
                 // console.debug("folderPage fileActionDialog onConfirm clipboard action " + action + " sourcePath " + sourcePath);
                 if (["copy","cut"].indexOf(action) > -1 && clipboard.get(i).type) {
-                    actualTargetPath = fsModel.getAbsolutePath(targetPath, clipboard.get(i).sourcePathName);
+//                    actualTargetPath = fsModel.getAbsolutePath(targetPath, clipboard.get(i).sourcePathName);
                     console.debug("folderPage fileActionDialog onConfirm Download type " + clipboard.get(i).type + " uid " + clipboard.get(i).uid + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
                     cloudDriveModel.metadata(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, actualTargetPath, sourcePath, -1);
-                } else if (action == "copy") {
+                } else if (action == "copy" && !clipboard.get(i).type) {
                     res = res && fsModel.copy(sourcePath, actualTargetPath);
-                } else if (action == "cut") {
+                } else if (action == "cut" && !clipboard.get(i).type) {
                     res = res && fsModel.move(sourcePath, actualTargetPath);
-                } else if (action == "delete") {
+                } else if (action == "delete" && !clipboard.get(i).type) {
                     res = res && fsModel.deleteFile(sourcePath);
                 } else {
                     console.debug("folderPage fileActionDialog onConfirm invalid action " + action);
@@ -1332,7 +1393,27 @@ Page {
             }
         }
 
+        onOpening: {
+            if (clipboard.count == 1 && clipboard.get(0).action != "delete") {
+                // Copy/Move/Delete first file from clipboard.
+                // Check if there is existing file on target folder. Then show overwrite dialog.
+                fileActionDialog.sourcePath = clipboard.get(0).sourcePath;
+                fileActionDialog.sourcePathName = (clipboard.get(0).sourcePathName) ? clipboard.get(0).sourcePathName : fsModel.getFileName(clipboard.get(0).sourcePath);
+                if (!canCopy()) {
+                    fileActionDialog.isOverwrite = true;
+                    fileName.forceActiveFocus();
+                    fileName.text = getNewName();
+                }
+            }
+        }
+
         onClosed: {
+            fileActionDialog.isOverwrite = false;
+            fileActionDialog.sourcePath = "";
+            fileActionDialog.sourcePathName = "";
+            fileName.text = "";
+            overwriteFile.checked = false;
+
             // Always clear clipboard's delete actions.
             clipboard.clearDeleteActions();
 
@@ -1448,98 +1529,6 @@ Page {
                 var res = fsModel.renameFile(fsModel.getFileName(renameDialog.sourcePath), newName.text);
                 refreshSlot();
             }
-        }
-    }
-
-    ConfirmDialog {
-        id: fileOverwriteDialog
-        titleText: appInfo.emptyStr+qsTr("File overwrite")
-        titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
-        content: Column {
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: parent.width - 10
-            height: 160
-            spacing: 3
-
-            Text {
-                text: appInfo.emptyStr+qsTr("Please input new file name.")
-                color: "white"
-                width: parent.width
-                height: 48
-                font.pointSize: 16
-                verticalAlignment: Text.AlignVCenter
-                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-            }
-
-            TextField {
-                id: fileName
-                width: parent.width
-            }
-
-            CheckBox {
-                id: overwriteFile
-                width: parent.width
-                text: "<font color='white'>" + appInfo.emptyStr+qsTr("Overwrite existing file") + "</font>"
-                checked: false
-
-                onClicked: {
-                    if (checked) {
-                        fileName.text = fsModel.getFileName(fileOverwriteDialog.sourcePath);
-                    } else {
-                        fileName.text = fsModel.getNewFileName(fileOverwriteDialog.sourcePath, fileOverwriteDialog.targetPath);
-                    }
-                }
-            }
-        }
-
-        property bool isCopy
-        property string sourcePath
-        property string targetPath
-
-        onOpened: {
-            fileName.forceActiveFocus();
-            fileName.text = fsModel.getNewFileName(sourcePath, targetPath);
-        }
-
-        onClosed: {
-            fileName.text = "";
-            overwriteFile.checked = false;
-        }
-
-        onConfirm: {
-            // If paste to current folder, targetPath is ended with / already.
-            // If paste to selected folder, targetPath is not ended with /.
-            var res = false;
-            if (isCopy) {
-                res = fsModel.copy(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
-            } else {
-                res = fsModel.move(sourcePath, fsModel.getAbsolutePath(targetPath, fileName.text) );
-            }
-
-            if (res) {
-                // Open progress dialogs if it's related.
-                fsModel.openCopyProgressDialog(fileActionDialog.getTitleText());
-
-                // Reset both source and target.
-                targetPath = "";
-                resetPopupToolPanelSlot();
-
-                // Clear clipboard as they should have been processed.
-                clipboard.clear();
-            } else {
-                // Reset target only.
-                targetPath = "";
-                popupToolPanel.pastePath = "";
-
-                // Cancel queued jobs.
-                fsModel.cancelQueuedJobs();
-                fsModel.resumeNextJob();
-            }
-        }
-
-        onReject: {
-            copyProgressDialog.close();
         }
     }
 
