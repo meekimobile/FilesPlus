@@ -457,6 +457,11 @@ void FolderSizeItemListModel::refreshItem(const int index)
 void FolderSizeItemListModel::refreshItem(const QString localPath)
 {
     int index = getIndexOnCurrentDir(localPath);
+//    qDebug() << "FolderSizeItemListModel::refreshItem localPath" << localPath << "index" << index;
+    if (index == IndexOnCurrentDirButNotFound) {
+        m_indexOnCurrentDirHash->remove(localPath);
+        index = getIndexOnCurrentDir(localPath);
+    }
     if (index > -1) {
         refreshItem(index);
     }
