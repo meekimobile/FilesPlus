@@ -713,11 +713,15 @@ QString DropboxClient::createFolder(QString nonce, QString uid, QString remotePa
         Sleeper().sleep(100);
     }
 
+    // Emit signal.
+    QString replyString = QString::fromUtf8(reply->readAll());
+    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyString);
+
     // Scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 
-    return QString::fromUtf8(reply->readAll());
+    return replyString;
 }
 
 void DropboxClient::requestTokenReplyFinished(QNetworkReply *reply)

@@ -399,11 +399,15 @@ QString GCDClient::createFolder(QString nonce, QString uid, QString remoteParent
         Sleeper().sleep(100);
     }
 
+    // Emit signal.
+    QString replyString = QString::fromUtf8(reply->readAll());
+    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyString);
+
     // Scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 
-    return QString::fromUtf8(reply->readAll());
+    return replyString;
 }
 
 void GCDClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
@@ -519,65 +523,69 @@ QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source,
     QString uri = filePutURI + "?uploadType=multipart";
     qDebug() << "GCDClient::filePut uri " << uri;
 
-    qint64 fileSize = source->size();
-    QString contentType = getContentType(remoteFileName);
-    qDebug() << "GCDClient::filePut remoteFileName" << remoteFileName << "contentType" << contentType << "fileSize" << fileSize;
+    if (source->open(QIODevice::ReadOnly)) {
+        qint64 fileSize = source->size();
+        QString contentType = getContentType(remoteFileName);
+        qDebug() << "GCDClient::filePut remoteFileName" << remoteFileName << "contentType" << contentType << "fileSize" << fileSize;
 
-    // Requires to submit job with multipart.
-    QString boundary = "----------" + nonce;
-    QString CRLF = "\r\n";
+        // Requires to submit job with multipart.
+        QString boundary = "----------" + nonce;
+        QString CRLF = "\r\n";
 
-    QByteArray metadata;
-    metadata.append("{");
-    metadata.append(" \"title\": \"" + remoteFileName.toUtf8() + "\", ");
-    metadata.append(" \"parents\": [{ \"id\": \"" + remoteParentPath.toUtf8() + "\" }] ");
-    metadata.append("}");
-    qDebug() << "GCDClient::filePut metadata " << metadata;
+        QByteArray metadata;
+        metadata.append("{");
+        metadata.append(" \"title\": \"" + remoteFileName.toUtf8() + "\", ");
+        metadata.append(" \"parents\": [{ \"id\": \"" + remoteParentPath.toUtf8() + "\" }] ");
+        metadata.append("}");
+        qDebug() << "GCDClient::filePut metadata " << metadata;
 
-    QByteArray postData;
-    postData.append("--" + boundary + CRLF);
-    postData.append("Content-Type: application/json; charset=UTF-8" + CRLF);
-    postData.append(CRLF);
-    postData.append(metadata);
-    postData.append(CRLF);
-    postData.append("--" + boundary + CRLF);
-    postData.append("Content-Type: " + contentType + CRLF);
-    postData.append(CRLF);
-    postData.append(source->readAll());
-    postData.append(CRLF);
-    postData.append("--" + boundary + "--" + CRLF);
-    qDebug() << "postData size" << postData.size();
+        QByteArray postData;
+        postData.append("--" + boundary + CRLF);
+        postData.append("Content-Type: application/json; charset=UTF-8" + CRLF);
+        postData.append(CRLF);
+        postData.append(metadata);
+        postData.append(CRLF);
+        postData.append("--" + boundary + CRLF);
+        postData.append("Content-Type: " + contentType + CRLF);
+        postData.append(CRLF);
+        postData.append(source->readAll());
+        postData.append(CRLF);
+        postData.append("--" + boundary + "--" + CRLF);
+        qDebug() << "postData size" << postData.size();
 
-    // Insert buffer to hash.
-    m_bufferHash.insert(nonce, new QBuffer());
-    m_bufferHash[nonce]->open(QIODevice::WriteOnly);
-    m_bufferHash[nonce]->write(postData);
-    m_bufferHash[nonce]->close();
+        // Insert buffer to hash.
+        m_bufferHash.insert(nonce, new QBuffer());
+        m_bufferHash[nonce]->open(QIODevice::WriteOnly);
+        m_bufferHash[nonce]->write(postData);
+        m_bufferHash[nonce]->close();
 
-    if (m_bufferHash[nonce]->open(QIODevice::ReadOnly)) {
-        // Send request.
-        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-        QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
-        req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-        req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-        req.setHeader(QNetworkRequest::ContentTypeHeader, "multipart/related; boundary=\"" + boundary + "\"");
-        req.setHeader(QNetworkRequest::ContentLengthHeader, postData.length());
+        if (m_bufferHash[nonce]->open(QIODevice::ReadOnly)) {
+            // Send request.
+            QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+            QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+            req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+            req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+            req.setHeader(QNetworkRequest::ContentTypeHeader, "multipart/related; boundary=\"" + boundary + "\"");
+            req.setHeader(QNetworkRequest::ContentLengthHeader, postData.length());
 
-        //        req.setHeader(QNetworkRequest::ContentTypeHeader, contentType);
-        //        req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize);
-        //        QNetworkReply *reply = manager->post(req, localSourceFile);
+            //        req.setHeader(QNetworkRequest::ContentTypeHeader, contentType);
+            //        req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize);
+            //        QNetworkReply *reply = manager->post(req, localSourceFile);
 
-        QNetworkReply *reply = manager->post(req, m_bufferHash[nonce]->readAll());
-        QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-        connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
-        connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+            QNetworkReply *reply = manager->post(req, m_bufferHash[nonce]->readAll());
+            QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+            connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+            connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
-        while (!reply->isFinished()) {
-            QApplication::processEvents(QEventLoop::AllEvents, 100);
-            Sleeper::msleep(100);
+            while (!reply->isFinished()) {
+                QApplication::processEvents(QEventLoop::AllEvents, 100);
+                Sleeper::msleep(100);
+            }
+
+            m_bufferHash.remove(nonce);
+
+            return reply;
         }
-
-        return reply;
     }
 
     return 0;

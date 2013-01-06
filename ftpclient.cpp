@@ -383,10 +383,10 @@ QNetworkReply *FtpClient::filePut(QString nonce, QString uid, QIODevice *source,
     if (m_ftp->getItemList().isEmpty()) {
         // remoteFilePath is not found.
         qDebug() << "FtpClient::filePut" << uid << remoteParentPath + "/" + remoteFileName << "is not found.";
-        emit filePutReplySignal(m_ftp->getNonce(), -1, tr("Can't put %1").arg(remoteParentPath + "/" + remoteFileName), "");
+        emit migrateFilePutReplySignal(m_ftp->getNonce(), -1, tr("Can't put %1").arg(remoteParentPath + "/" + remoteFileName), "");
     } else {
         qDebug() << "FtpClient::filePut" << uid << remoteParentPath + "/" + remoteFileName << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_ftp->getItemList().first().name();
-        emit filePutReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), getPropertyJson(remoteParentPath, m_ftp->getItemList().first()) );
+        emit migrateFilePutReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), getPropertyJson(remoteParentPath, m_ftp->getItemList().first()) );
     }
 
     m_ftp->close();

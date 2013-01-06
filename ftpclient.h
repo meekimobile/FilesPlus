@@ -35,7 +35,7 @@ public:
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, QString remoteParentPath, QString remoteFileName);
 signals:
-
+    void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
 public slots:
     void deleteFileReplyFinished(QString nonce, int error, QString errorString);
 private:

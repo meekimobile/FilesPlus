@@ -86,7 +86,6 @@ bool QFtpWrapper::deleteRecursive(QString remoteFilePath)
                 // Drill down into folder.
                 bool res = deleteRecursive(remoteFilePath + "/" + itemList.at(i).name());
                 if (!res) {
-                    emit deleteRecursiveFinished(m_nonce, error(), errorString());
                     return false;
                 }
             } else {

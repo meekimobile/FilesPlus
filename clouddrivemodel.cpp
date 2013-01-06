@@ -238,6 +238,7 @@ void CloudDriveModel::initializeFtpClient()
     connect(ftpClient, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
+    connect(ftpClient, SIGNAL(migrateFilePutReplySignal(QString,int,QString,QString)), SLOT(migrateFilePutFilter(QString,int,QString,QString)) ); // Added because FtpClient doesn't provide QNetworkReply.
 }
 
 QString CloudDriveModel::createNonce() {
@@ -1958,38 +1959,21 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
         migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
         return;
     }
-//    while (!sourceReply->isFinished()) {
-//        QApplication::processEvents(QEventLoop::AllEvents, 100);
-//        Sleeper::msleep(100);
-//    }
 
-//    if (sourceReply->error() == QNetworkReply::NoError) {
-        QNetworkReply *targetReply = getCloudClient(targetType)->filePut(nonce, targetUid, sourceReply, targetRemoteParentPath, targetRemoteFileName);
-        if (targetReply == 0) {
-//            migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
-
-            // Scheduled to delete later.
-            sourceReply->deleteLater();
-//            sourceReply->manager()->deleteLater();
-            return;
-        }
-//        while (!targetReply->isFinished()) {
-//            QApplication::processEvents(QEventLoop::AllEvents, 100);
-//            Sleeper::msleep(100);
-//        }
-
-//        migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(), targetReply->readAll());
+    QNetworkReply *targetReply = getCloudClient(targetType)->filePut(nonce, targetUid, sourceReply, targetRemoteParentPath, targetRemoteFileName);
+    if (targetReply == 0) {
+        // FtpClient doens't provide QNetworkReply. It emits migrateFilePutReplySignal internally.
+    } else {
+        // Invoke slot to reset running and emit signal.
+        migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(), QString::fromUtf8(targetReply->readAll()) );
 
         // Scheduled to delete later.
         targetReply->deleteLater();
         targetReply->manager()->deleteLater();
-//    } else {
-//        migrateFilePutFilter(nonce, sourceReply->error(), sourceReply->errorString(), sourceReply->readAll());
-//    }
+    }
 
     // Scheduled to delete later.
     sourceReply->deleteLater();
-//    sourceReply->manager()->deleteLater();
 }
 
 void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, QString newRemoteFileName)
@@ -2159,30 +2143,34 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
 
     if (err == 0) {
         // TODO handle other clouds.
-        switch (job.type) {
-        case Dropbox:
-            sc = engine.evaluate("(" + msg + ")");
-            hash = sc.property("rev").toString();
-            addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
-            break;
-        case SkyDrive:
-            sc = engine.evaluate("(" + msg + ")");
-            hash = sc.property("updated_time").toString();
-            addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, hash);
-            break;
-        case GoogleDrive:
-            sc = engine.evaluate("(" + msg + ")");
-            hash = sc.property("modifiedDate").toString();
-            addItem(GoogleDrive, job.uid, job.localFilePath, job.remoteFilePath, hash);
-            break;
-        case Ftp:
-            sc = engine.evaluate("(" + msg + ")");
-            hash = sc.property("lastModified").toString();
-            addItem(Ftp, job.uid, job.localFilePath, job.remoteFilePath, hash);
-            break;
+        if (job.localFilePath != "") {
+            switch (job.type) {
+            case Dropbox:
+                sc = engine.evaluate("(" + msg + ")");
+                hash = sc.property("rev").toString();
+                addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
+                break;
+            case SkyDrive:
+                sc = engine.evaluate("(" + msg + ")");
+                hash = sc.property("updated_time").toString();
+                addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, hash);
+                break;
+            case GoogleDrive:
+                sc = engine.evaluate("(" + msg + ")");
+                hash = sc.property("modifiedDate").toString();
+                addItem(GoogleDrive, job.uid, job.localFilePath, job.remoteFilePath, hash);
+                break;
+            case Ftp:
+                sc = engine.evaluate("(" + msg + ")");
+                hash = sc.property("lastModified").toString();
+                addItem(Ftp, job.uid, job.localFilePath, job.remoteFilePath, hash);
+                break;
+            }
         }
     } else {
-        removeItem(getClientType(job.type), job.uid, job.localFilePath);
+        if (job.localFilePath != "") {
+            removeItem(getClientType(job.type), job.uid, job.localFilePath);
+        }
     }
 
     // Update job running flag.
@@ -2202,39 +2190,42 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
     QScriptValue sc;
     QString hash;
     QString remoteFilePath;
-    QNetworkReply *propertyReply;
 
     if (err == 0) {
         // TODO handle other clouds.
-        switch (job.type) {
-        case Dropbox:
-            sc = engine.evaluate("(" + msg + ")");
-            hash = sc.property("rev").toString();
-            addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
-            break;
-        case SkyDrive:
-            // Parse result and update remote file path to item.
-            sc = engine.evaluate("(" + msg + ")");
-            remoteFilePath = sc.property("id").toString();
-            hash = sc.property("updated_time").toString();
-            addItem(SkyDrive, job.uid, job.localFilePath, remoteFilePath, hash);
-            break;
-        case GoogleDrive:
-            sc = engine.evaluate("(" + msg + ")");
-            remoteFilePath = sc.property("id").toString();
-            hash = sc.property("modifiedDate").toString();
-            addItem(GoogleDrive, job.uid, job.localFilePath, remoteFilePath, hash);
-            break;
-        case Ftp:
-            // Parse result and update remote file path to item.
-            sc = engine.evaluate("(" + msg + ")");
-            remoteFilePath = sc.property("path").toString();
-            hash = sc.property("lastModified").toString();
-            addItem(Ftp, job.uid, job.localFilePath, remoteFilePath, hash);
-            break;
+        if (job.localFilePath != "") {
+            switch (job.type) {
+            case Dropbox:
+                sc = engine.evaluate("(" + msg + ")");
+                hash = sc.property("rev").toString();
+                addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
+                break;
+            case SkyDrive:
+                // Parse result and update remote file path to item.
+                sc = engine.evaluate("(" + msg + ")");
+                remoteFilePath = sc.property("id").toString();
+                hash = sc.property("updated_time").toString();
+                addItem(SkyDrive, job.uid, job.localFilePath, remoteFilePath, hash);
+                break;
+            case GoogleDrive:
+                sc = engine.evaluate("(" + msg + ")");
+                remoteFilePath = sc.property("id").toString();
+                hash = sc.property("modifiedDate").toString();
+                addItem(GoogleDrive, job.uid, job.localFilePath, remoteFilePath, hash);
+                break;
+            case Ftp:
+                // Parse result and update remote file path to item.
+                sc = engine.evaluate("(" + msg + ")");
+                remoteFilePath = sc.property("path").toString();
+                hash = sc.property("lastModified").toString();
+                addItem(Ftp, job.uid, job.localFilePath, remoteFilePath, hash);
+                break;
+            }
         }
     } else {
-        removeItem(getClientType(job.type), job.uid, job.localFilePath);
+        if (job.localFilePath != "") {
+            removeItem(getClientType(job.type), job.uid, job.localFilePath);
+        }
     }
 
     // Update job running flag.
