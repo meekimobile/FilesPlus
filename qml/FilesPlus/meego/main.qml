@@ -1265,9 +1265,6 @@ PageStackWindow {
                                     qsTr("%1 was removed remotely.\nLink will be removed.").arg(jobJson.local_file_path),
                                     2000);
                     } else {
-                        // Suspend next job.
-                        cloudDriveModel.suspendNextJob();
-
                         // Sync starts from itself.
                         if (jsonObj.is_dir) { // Sync folder.
                             // If there is no local folder, create it and connect.
@@ -1326,9 +1323,6 @@ PageStackWindow {
                                 cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jsonObj.rev);
                             }
                         }
-
-                        // Resume next jobs.
-                        cloudDriveModel.resumeNextJob();
                     }
                 }
 
