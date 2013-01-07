@@ -45,7 +45,6 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(deleteProgress(int,QString,QString,int)), this, SLOT(deleteProgressFilter(int,QString,QString,int)) );
     connect(&m, SIGNAL(deleteFinished(int,QString,QString,int)), this, SLOT(deleteFinishedFilter(int,QString,QString,int)) );
     connect(&m, SIGNAL(finished()), this, SLOT(jobDone()) );
-    connect(&m, SIGNAL(terminated()), this, SLOT(jobDone()) );
 
     // Enqueue jobs. Queued jobs will proceed after folderPage is loaded.
     m_jobQueue.enqueue(FolderSizeJob(createNonce(), FolderSizeModelThread::LoadDirSizeCache, "", ""));
@@ -779,12 +778,14 @@ int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
                 index = i;
                 break;
             }
+            // Update index cache while looping.
+            m_indexOnCurrentDirHash->insert(item.absolutePath, i);
             i++;
         }
     }
 
     index = (isOnCurrentDir && index == IndexNotOnCurrentDir)?IndexOnCurrentDirButNotFound:index;
-    m_indexOnCurrentDirHash->insert(absFilePath, index);
+//    m_indexOnCurrentDirHash->insert(absFilePath, index);
 //    qDebug() << "FolderSizeItemListModel::getIndexOnCurrentDir insert cache for" << absFilePath << "index" << index;
 
     return index;
@@ -793,6 +794,15 @@ int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)
 void FolderSizeItemListModel::clearIndexOnCurrentDir()
 {
     m_indexOnCurrentDirHash->clear();
+}
+
+void FolderSizeItemListModel::refreshIndexOnCurrentDir()
+{
+    m_indexOnCurrentDirHash->clear();
+    int i = 0;
+    foreach (FolderSizeItem item, itemList) {
+        m_indexOnCurrentDirHash->insert(item.absolutePath, i++);
+    }
 }
 
 void FolderSizeItemListModel::removeCache(const QString absPath)
@@ -823,6 +833,8 @@ void FolderSizeItemListModel::refreshItemList()
     // Populate dir content to itemList. m.getDirContent() also sort itemList as current sortFlag.
     m.getDirContent(currentDir(), itemList);
 
+    refreshIndexOnCurrentDir();
+
     qDebug() << QTime::currentTime() << "FolderSizeItemListModel::refreshItemList is done.";
     emit refreshCompleted();
 }
@@ -840,6 +852,18 @@ FolderSizeItem FolderSizeItemListModel::getItem(const int index)
 void FolderSizeItemListModel::setItem(const int index, FolderSizeItem &item)
 {
     itemList.replace(index, item);
+}
+
+int FolderSizeItemListModel::addItem(const QString absPath)
+{
+    QFileInfo item(absPath);
+    qDebug() << "FolderSizeItemListModel::addItem" << item.absoluteFilePath() << item.isDir() << item.isFile();
+    itemList.append(m.getItem(item));
+    int index  = itemList.count()-1;
+    m_indexOnCurrentDirHash->insert(absPath, index);
+    refreshItems();
+
+    return index;
 }
 
 void FolderSizeItemListModel::loadDirSizeCacheFinishedFilter()
@@ -961,12 +985,13 @@ void FolderSizeItemListModel::deleteFinishedFilter(int fileAction, QString sourc
 
 void FolderSizeItemListModel::proceedNextJob()
 {
+    QApplication::processEvents();
+
     if (m.isRunning()) return;
 
     // Proceed next job in queue.
-    qDebug() << "FolderSizeItemListModel::proceedNextJob waiting runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue.count();
+    qDebug() << "FolderSizeItemListModel::proceedNextJob waiting runningJobCount" << runningJobCount << "MaxRunningJobCount" << MaxRunningJobCount << "m_jobQueue" << m_jobQueue.count() << (runningJobCount >= MaxRunningJobCount || m_jobQueue.count() <= 0 || m_isSuspended);
     if (runningJobCount >= MaxRunningJobCount || m_jobQueue.count() <= 0 || m_isSuspended) {
-        QApplication::processEvents();
         return;
     }
 
@@ -999,6 +1024,8 @@ void FolderSizeItemListModel::proceedNextJob()
     mutex.lock();
     runningJobCount++;
     mutex.unlock();
+
+    qDebug() << "FolderSizeItemListModel::proceedNextJob start job" << job.jobId << "runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue.count();
 
 //    qDebug() << "QThreadPool::globalInstance() active / max" << QThreadPool::globalInstance()->activeThreadCount()
 //             << "/" << QThreadPool::globalInstance()->maxThreadCount() << "runningJobCount" << runningJobCount;

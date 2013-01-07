@@ -317,13 +317,13 @@ PageStackWindow {
                     for (var i=0; i<json.length; i++) {
                         cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path);
                     }
-                }
 
-                // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
-                var paths = fsModel.getPathToRoot(sourcePath);
-                for (var i=1; i<paths.length; i++) {
-//                    console.debug("fsModel onDeleteFinished updateItems paths[" + i + "] " + paths[i]);
-                    cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
+                    // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
+                    var paths = fsModel.getPathToRoot(sourcePath);
+                    for (var i=1; i<paths.length; i++) {
+//                        console.debug("fsModel onDeleteFinished updateItems paths[" + i + "] " + paths[i]);
+                        cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
+                    }
                 }
             }
         }

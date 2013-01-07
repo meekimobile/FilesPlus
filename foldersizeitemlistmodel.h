@@ -106,6 +106,7 @@ public:
     Q_INVOKABLE QString getDirContentJson(const QString dirPath);
     Q_INVOKABLE int getIndexOnCurrentDir(const QString absFilePath);
     Q_INVOKABLE void clearIndexOnCurrentDir();
+    void refreshIndexOnCurrentDir();
     Q_INVOKABLE void removeCache(const QString absPath);
     Q_INVOKABLE bool isRunning();
 
@@ -143,6 +144,7 @@ public:
     void removeItem(const int index);
     FolderSizeItem getItem(const int index);
     void setItem(const int index, FolderSizeItem &item);
+    Q_INVOKABLE int addItem(const QString absPath);
 
     Q_INVOKABLE void proceedNextJob();
     Q_INVOKABLE void suspendNextJob();

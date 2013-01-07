@@ -540,6 +540,10 @@ Page {
         for(var i=0; i<pathList.length; i++) {
             var modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
 //            console.debug("folderPage updateItemSlot " + pathList[i] + " " + modelIndex + " " + jobJson.is_running);
+            if (modelIndex == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
+                fsModel.clearIndexOnCurrentDir();
+                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+            }
             if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
@@ -552,6 +556,10 @@ Page {
             for(i=0; i<pathList.length; i++) {
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
 //                console.debug("folderPage updateItemSlot " + pathList[i] + " " + modelIndex + " " + jobJson.is_running);
+                if (modelIndex == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
+                    fsModel.clearIndexOnCurrentDir();
+                    modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+                }
                 if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
@@ -567,6 +575,10 @@ Page {
         // Update ProgressBar on listItem.
         var runningOperation = fsModel.mapToFolderSizeListModelOperation(jobJson.operation);
         var modelIndex = fsModel.getIndexOnCurrentDir(jobJson.local_file_path);
+        if (modelIndex == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
+            fsModel.clearIndexOnCurrentDir();
+            modelIndex = fsModel.getIndexOnCurrentDir(jobJson.local_file_path);
+        }
         if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
             fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
             fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, runningOperation);
@@ -579,6 +591,10 @@ Page {
         var pathList = fsModel.getPathToRoot(jobJson.local_file_path);
         for(var i=1; i<pathList.length; i++) {
             modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+            if (modelIndex == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
+                fsModel.clearIndexOnCurrentDir();
+                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
+            }
             if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, runningOperation);
@@ -604,7 +620,7 @@ Page {
         if (index == FolderSizeItemListModel.IndexNotOnCurrentDir) {
             // do nothing.
         } else if (index == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
-            refreshSlot();
+            index = fsModel.addItem(localPath);
         } else {
             fsModel.refreshItem(index);
         }
