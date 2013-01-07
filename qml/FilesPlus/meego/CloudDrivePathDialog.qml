@@ -3,9 +3,9 @@ import com.nokia.meego 1.0
 import CloudDriveModel 1.0
 import "Utility.js" as Utility
 
-CommonDialog {
+ConfirmDialog {
     id: cloudDrivePathDialog
-    width: parent.width * 0.9
+    width: parent.width
 
     property string caller
     property int operation
@@ -104,9 +104,7 @@ CommonDialog {
         return selectedRemotePath;
     }
 
-    titleIcon: "FilesPlusIcon.svg"
     titleText: appInfo.emptyStr+getTitleText(localPath, selectedRemotePathName, remoteParentPathName)
-    buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
     content: Column {
         width: parent.width
         spacing: 5

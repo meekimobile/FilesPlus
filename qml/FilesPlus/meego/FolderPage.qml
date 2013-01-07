@@ -1905,9 +1905,9 @@ Page {
             }
         }
 
-        onButtonClicked: {
-            if (index === 0 && selectedIsValid) { // OK button is clicked.
-                console.debug("cloudDrivePathDialog onButtonClicked index " + index
+        onConfirm: {
+            if (selectedIsValid) { // OK button is clicked.
+                console.debug("cloudDrivePathDialog onConfirm "
                               + " selectedCloudType " + selectedCloudType + " selectedUid " + selectedUid
                               + " localPath " + localPath
                               + " selectedRemotePath " + selectedRemotePath
