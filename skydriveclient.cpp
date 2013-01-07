@@ -388,7 +388,7 @@ QNetworkReply * SkyDriveClient::files(QString nonce, QString uid, QString remote
 
     while (!reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper().sleep(100);
+        Sleeper::msleep(100);
     }
 
     // Scheduled to delete later.
@@ -426,7 +426,7 @@ QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString rem
 
     while (!reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper().sleep(100);
+        Sleeper::msleep(100);
     }
 
     // Scheduled to delete later.
@@ -482,7 +482,7 @@ QString SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteP
 
     while (!reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper().sleep(100);
+        Sleeper::msleep(100);
     }
 
     // Emit signal.
@@ -599,7 +599,7 @@ QString SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFil
 
     while (!reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper().sleep(100);
+        Sleeper::msleep(100);
     }
 
     // Scheduled to delete later.

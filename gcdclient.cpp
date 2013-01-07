@@ -396,7 +396,7 @@ QString GCDClient::createFolder(QString nonce, QString uid, QString remoteParent
 
     while (!reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper().sleep(100);
+        Sleeper::msleep(100);
     }
 
     // Emit signal.
@@ -662,7 +662,7 @@ QString GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath
 
     while (!reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper().sleep(100);
+        Sleeper::msleep(100);
     }
 
     // Scheduled to delete later.
@@ -747,7 +747,7 @@ QNetworkReply * GCDClient::files(QString nonce, QString uid, QString remoteFileP
 
     while (!reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper().sleep(100);
+        Sleeper::msleep(100);
     }
 
     // Scheduled to delete later.
@@ -785,7 +785,7 @@ QNetworkReply * GCDClient::property(QString nonce, QString uid, QString remoteFi
 
     while (!reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper().sleep(100);
+        Sleeper::msleep(100);
     }
 
     // Scheduled to delete later.

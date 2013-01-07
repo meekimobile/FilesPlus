@@ -710,7 +710,7 @@ QString DropboxClient::createFolder(QString nonce, QString uid, QString remotePa
 
     while (!reply->isFinished()) {
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper().sleep(100);
+        Sleeper::msleep(100);
     }
 
     // Emit signal.

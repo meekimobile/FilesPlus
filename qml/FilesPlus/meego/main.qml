@@ -1246,6 +1246,9 @@ PageStackWindow {
                 var localPathHash = cloudDriveModel.getItemHash(jobJson.local_file_path, jobJson.type, jobJson.uid);
 //                console.debug("window cloudDriveModel onMetadataReplySignal jobJson " + jobJson.local_file_path + " " + jobJson.type + " " + jobJson.uid + " " + localPathHash);
 
+                // Suspend next job.
+                cloudDriveModel.suspendNextJob();
+
                 if (jobJson.type == CloudDriveModel.Dropbox) {
                     // If remotePath was deleted, remove link from localPath.
                     if (jsonObj.is_deleted) {
@@ -1333,9 +1336,6 @@ PageStackWindow {
                     console.debug("window cloudDriveModel onMetadataReplySignal SkyDrive jobJson " + jobJson.type + " " + jobJson.uid + " " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + localPathHash);
 
                     if (jsonObj.property) {
-                        // Suspend next job.
-                        cloudDriveModel.suspendNextJob();
-
                         // Generate hash from updated_time.
                         var remotePathHash = jsonObj.property.updated_time;
     //                    console.debug("window cloudDriveModel onMetadataReplySignal remotePathHash " + remotePathHash);
@@ -1402,9 +1402,6 @@ PageStackWindow {
                                 cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
                             }
                         }
-
-                        // Resume next jobs.
-                        cloudDriveModel.resumeNextJob();
                     } else {
                         console.debug("window cloudDriveModel onMetadataReplySignal property is not found.");
                     }
@@ -1414,9 +1411,6 @@ PageStackWindow {
                     console.debug("window cloudDriveModel onMetadataReplySignal GoogleDrive jobJson " + jobJson.type + " " + jobJson.uid + " " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + localPathHash);
 
                     if (jsonObj.property) {
-                        // Suspend next job.
-                        cloudDriveModel.suspendNextJob();
-
                         // Generate hash from updated_time.
                         var remotePathHash = jsonObj.property.modifiedDate;
     //                    console.debug("window cloudDriveModel onMetadataReplySignal remotePathHash " + remotePathHash);
@@ -1489,9 +1483,6 @@ PageStackWindow {
                                 cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
                             }
                         }
-
-                        // Resume next jobs.
-                        cloudDriveModel.resumeNextJob();
                     } else {
                         console.debug("window cloudDriveModel onMetadataReplySignal property is not found.");
                     }
@@ -1501,9 +1492,6 @@ PageStackWindow {
                     console.debug("window cloudDriveModel onMetadataReplySignal Ftp jobJson " + jobJson.type + " " + jobJson.uid + " " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + localPathHash);
 
                     if (jsonObj.property) {
-                        // Suspend next job.
-                        cloudDriveModel.suspendNextJob();
-
                         // Generate hash from updated_time.
                         var remotePathHash = jsonObj.property.lastModified;
     //                    console.debug("window cloudDriveModel onMetadataReplySignal remotePathHash " + remotePathHash);
@@ -1568,14 +1556,13 @@ PageStackWindow {
                                 cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
                             }
                         }
-
-                        // Resume next jobs.
-                        cloudDriveModel.resumeNextJob();
                     } else {
                         console.debug("window cloudDriveModel onMetadataReplySignal property is not found.");
                     }
                 }
 
+                // Resume next jobs.
+                cloudDriveModel.resumeNextJob();
             } else if (err == 203) { // If metadata is not found, put it to cloud right away recursively.
                 console.debug("window cloudDriveModel onMetadataReplySignal " + err + " " + errMsg + " " + msg);
 
@@ -1724,8 +1711,9 @@ PageStackWindow {
 
         onJobQueueStatusSignal: {
             if (pageStack) {
-                if (pageStack.currentPage.name == "settingPage") {
-                    pageStack.currentPage.updateCloudDriveItemCount(itemCount);
+                var p = findPage("settingPage");
+                if (p) {
+                    p.updateCloudDriveItemCount(itemCount);
                 }
 
                 // Update job queue count on current page.
@@ -1736,8 +1724,9 @@ PageStackWindow {
         }
 
         onRefreshRequestSignal: {
-            if (pageStack.currentPage.name == "folderPage") {
-                pageStack.currentPage.refreshSlot("cloudDriveModel onRefreshRequestSignal");
+            var p = findPage("folderPage");
+            if (p) {
+                p.refreshSlot("cloudDriveModel onRefreshRequestSignal");
             }
         }
 

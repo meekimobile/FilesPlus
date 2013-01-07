@@ -113,9 +113,13 @@ void CloudDriveModelThread::setCloudDriveItems(QMultiMap<QString, CloudDriveItem
 
 void CloudDriveModelThread::run()
 {
-    qDebug() << "CloudDriveModelThread::run m_runMethod" << m_runMethod;
+    qDebug() << "CloudDriveModelThread::run job" << m_nonce << "started. Invoking dispatchJob method on parent" << parent();
+    QMetaObject::invokeMethod(parent(), "dispatchJob", Qt::QueuedConnection, Q_ARG(QString, m_nonce));
+    qDebug() << "CloudDriveModelThread::run job" << m_nonce << "done";
 
-    switch (m_runMethod) {
+//    qDebug() << "CloudDriveModelThread::run m_runMethod" << m_runMethod;
+
+//    switch (m_runMethod) {
 //    case FileGet:
 //        fileGet(m_clientType, m_uid, m_remoteFilePath, m_localFilePath);
 //        break;
@@ -128,10 +132,10 @@ void CloudDriveModelThread::run()
 //    case CreateFolder:
 //        createFolder(m_clientType, m_uid, m_localFilePath, m_remoteFilePath);
 //        break;
-    case LoadCloudDriveItems:
-        loadCloudDriveItems();
-        break;
-    }
+//    case LoadCloudDriveItems:
+//        loadCloudDriveItems();
+//        break;
+//    }
 }
 
 //void CloudDriveModelThread::requestToken(CloudDriveModelThread::ClientTypes type)
@@ -209,7 +213,7 @@ void CloudDriveModelThread::loadCloudDriveItems() {
         in >> *m_cloudDriveItems;
     }
 
-    qDebug() << QTime::currentTime() << "CloudDriveModel::loadCloudDriveItems " << m_cloudDriveItems->size();
+    qDebug() << QTime::currentTime() << "CloudDriveModelThread::loadCloudDriveItems " << m_cloudDriveItems->size();
 
     emit loadCloudDriveItemsFinished(m_nonce);
 }

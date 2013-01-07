@@ -44,13 +44,14 @@ private:
 
     QFtpWrapper *connectToHost(QString nonce, QString uid);
     QString property(QString nonce, QString uid, QString remoteFilePath);
+    bool deleteRecursive(QFtpWrapper *m_ftp, QString remoteFilePath);
 
     QString getPropertyJson(const QString parentPath, const QUrlInfo item);
     QString getItemListJson(const QString parentPath, const QList<QUrlInfo> itemList);
     QString getParentRemotePath(QString remotePath);
     QString getRemoteFileName(QString remotePath);
 
-    QThread t;
+//    QThread t;
 };
 
 #endif // FTPCLIENT_H

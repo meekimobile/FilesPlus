@@ -98,7 +98,7 @@ void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
 
         while (!reply->isFinished()) {
             QApplication::processEvents(QEventLoop::AllEvents, 100);
-            Sleeper().sleep(100);
+            Sleeper::msleep(100);
         }
 
         emit filePutReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
@@ -273,20 +273,17 @@ void FtpClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "----- FtpClient::deleteFile -----" << uid << remoteFilePath;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
-    m_ftp->m_remoteFilePath = remoteFilePath;
-    connect(m_ftp, SIGNAL(deleteRecursiveFinished(QString,int,QString)), this, SLOT(deleteFileReplyFinished(QString,int,QString)));
+//    m_ftp->m_remoteFilePath = remoteFilePath;
+//    connect(m_ftp, SIGNAL(deleteRecursiveFinished(QString,int,QString)), this, SLOT(deleteFileReplyFinished(QString,int,QString)));
+//    m_ftp->moveToThread(&t);
+//    connect(&t, SIGNAL(started()), m_ftp, SLOT(deleteRecursive()));
+//    t.start();
 
-    m_ftp->moveToThread(&t);
-    connect(&t, SIGNAL(started()), m_ftp, SLOT(deleteRecursive()));
-    t.start();
+    deleteRecursive(m_ftp, remoteFilePath);
 
-//    deleteRecursive(m_ftp, remoteFilePath);
-
-//    emit deleteFileReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(remoteFilePath) );
-
-//    m_ftp->close();
-//    m_ftp->deleteLater();
-//    m_ftpHash->remove(m_ftp->getNonce());
+    m_ftp->close();
+    m_ftp->deleteLater();
+    m_ftpHash->remove(m_ftp->getNonce());
 }
 
 void FtpClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
@@ -529,6 +526,76 @@ bool FtpClient::isRemoteAbsolutePath()
     return true;
 }
 
+bool FtpClient::deleteRecursive(QFtpWrapper *m_ftp, QString remoteFilePath)
+{
+    if (remoteFilePath == "") {
+        emit deleteFileReplySignal(m_ftp->getNonce(),-1, tr("Specified remote path is empty."), QString("{ \"path\": \"%1\" }").arg(remoteFilePath));
+        return false;
+    }
+
+    qDebug() << "FtpClient::deleteRecursive" << remoteFilePath;
+
+    // Check if it's folder by cd.
+    m_ftp->cd(remoteFilePath);
+    m_ftp->waitForDone();
+    if (m_ftp->error() == QFtp::NoError) {
+        // It's folder. Drill it down.
+        m_ftp->list();
+        m_ftp->waitForDone();
+        // ISSUE list() get clear before start listing. When pop to parent level, the list is empty.
+        QList<QUrlInfo> itemList = m_ftp->getItemList();
+        for (int i = 0; i < itemList.count(); i++) {
+            qDebug() << "FtpClient::deleteRecursive item" << remoteFilePath + "/" + itemList.at(i).name() << "isDir" << itemList.at(i).isDir();
+            if (itemList.at(i).isDir()) {
+                // Drill down into folder.
+                bool res = deleteRecursive(m_ftp, remoteFilePath + "/" + itemList.at(i).name());
+                if (!res) {
+                    return false;
+                }
+            } else {
+                // Delete a file.
+                m_ftp->remove(itemList.at(i).name());
+                m_ftp->waitForDone();
+                if (m_ftp->error() != QFtp::NoError) {
+                    qDebug() << "FtpClient::deleteRecursive can't delete file" << remoteFilePath + "/" + itemList.at(i).name() << m_ftp->error() << m_ftp->errorString();
+                    emit deleteFileReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(remoteFilePath));
+                    return false;
+                } else {
+                    qDebug() << "FtpClient::deleteRecursive delete file" << remoteFilePath + "/" + itemList.at(i).name();
+                    emit deleteFileReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(remoteFilePath));
+                }
+            }
+        }
+
+        // Delete parent folder.
+        m_ftp->cd("..");
+        m_ftp->rmdir(remoteFilePath);
+        m_ftp->waitForDone();
+        if (m_ftp->error() != QFtp::NoError) {
+            qDebug() << "FtpClient::deleteRecursive can't delete folder" << remoteFilePath << m_ftp->error() << m_ftp->errorString();
+            emit deleteFileReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(remoteFilePath));
+            return false;
+        } else {
+            qDebug() << "FtpClient::deleteRecursive delete folder" << remoteFilePath;
+        }
+    } else {
+        // It's a file. Delete it.
+        m_ftp->remove(remoteFilePath);
+        m_ftp->waitForDone();
+        if (m_ftp->error() != QFtp::NoError) {
+            qDebug() << "FtpClient::deleteRecursive can't delete file" << remoteFilePath << m_ftp->error() << m_ftp->errorString();
+            emit deleteFileReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(remoteFilePath));
+            return false;
+        } else {
+            qDebug() << "FtpClient::deleteRecursive delete file" << remoteFilePath;
+        }
+    }
+
+    // Emit signal for successful deleting.
+    emit deleteFileReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(remoteFilePath));
+    return true;
+}
+
 void FtpClient::deleteFileReplyFinished(QString nonce, int error, QString errorString)
 {
     qDebug() << "FtpClient::deleteFileReplyFinished" << nonce << error;
@@ -537,7 +604,7 @@ void FtpClient::deleteFileReplyFinished(QString nonce, int error, QString errorS
 
     emit deleteFileReplySignal(nonce, error, errorString, QString("{ \"path\": \"%1\" }").arg(m_ftp->m_remoteFilePath) );
 
-    m_ftp->close();
-    m_ftp->deleteLater();
-    m_ftpHash->remove(nonce);
+//    m_ftp->close();
+//    m_ftp->deleteLater();
+//    m_ftpHash->remove(nonce);
 }

@@ -56,7 +56,7 @@ void QFtpWrapper::waitForDone()
     while (!m_isDone && c-- > 0) {
 //        qDebug() << "QFtpWrapper::waitForDone" << m_isDone << c;
         QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper().sleep(100);
+        Sleeper::msleep(100);
     }
 
     // Reset m_isDone.

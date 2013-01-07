@@ -234,10 +234,11 @@ signals:
     void schedulerTimeoutSignal();
 public slots:
     void proceedNextJob();
+    void dispatchJob(const QString jobId);
     void dispatchJob(const CloudDriveJob job);
 
-    void threadFinishedFilter();
-    void loadCloudDriveItemsFilter(QString nonce);
+//    void threadFinishedFilter();
+//    void loadCloudDriveItemsFilter(QString nonce);
     void requestTokenReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectFilter(QString nonce, QString url, QString redirectFrom);
     void accessTokenReplyFilter(QString nonce, int err, QString errMsg, QString msg);
@@ -314,6 +315,7 @@ private:
 
     QMutex mutex;
 
+    void loadCloudDriveItems(QString nonce);
     void saveCloudDriveItems();
 
     CloudDriveClient * getCloudClient(const int type);

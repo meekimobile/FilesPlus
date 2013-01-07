@@ -26,9 +26,9 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     connect(this, SIGNAL(proceedNextJobSignal()), SLOT(proceedNextJob()) );
 
     // Connect with permanent thread.
-    connect(&m_thread, SIGNAL(finished()), this, SLOT(threadFinishedFilter()) );
-    connect(&m_thread, SIGNAL(terminated()), this, SLOT(threadFinishedFilter()) );
-    connect(&m_thread, SIGNAL(loadCloudDriveItemsFinished(QString)), this, SLOT(loadCloudDriveItemsFilter(QString)) );
+//    connect(&m_thread, SIGNAL(finished()), this, SLOT(threadFinishedFilter()) );
+//    connect(&m_thread, SIGNAL(terminated()), this, SLOT(threadFinishedFilter()) );
+//    connect(&m_thread, SIGNAL(loadCloudDriveItemsFinished(QString)), this, SLOT(loadCloudDriveItemsFilter(QString)) );
 //    connect(&m_thread, SIGNAL(uploadProgress(QString,qint64,qint64)), SLOT(uploadProgressFilter(QString,qint64,qint64)) );
 //    connect(&m_thread, SIGNAL(downloadProgress(QString,qint64,qint64)), SLOT(downloadProgressFilter(QString,qint64,qint64)) );
 //    connect(&m_thread, SIGNAL(requestTokenReplySignal(int,QString,QString)), SIGNAL(requestTokenReplySignal(int,QString,QString)) );
@@ -104,6 +104,24 @@ void CloudDriveModel::setDropboxFullAccess(bool flag)
         // Re-initialize DropboxClient.
         initializeDropboxClient();
     }
+}
+
+void CloudDriveModel::loadCloudDriveItems(QString nonce) {
+    QFile file(ITEM_DAT_PATH);
+    if (file.open(QIODevice::ReadOnly)) {
+        QDataStream in(&file);    // read the data serialized from the file
+        in >> *m_cloudDriveItems;
+    }
+
+    qDebug() << QTime::currentTime() << "CloudDriveModel::loadCloudDriveItems " << m_cloudDriveItems->size();
+
+    // Notify job done.
+    jobDone();
+
+    // RemoveJob
+    removeJob(nonce);
+
+    emit loadCloudDriveItemsFinished(nonce);
 }
 
 void CloudDriveModel::saveCloudDriveItems() {
@@ -2942,10 +2960,11 @@ void CloudDriveModel::jobDone() {
 
     qDebug() << "CloudDriveModel::jobDone runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count();
 
+    // TODO Needed ?
     // Refresh if no more running jobs and jobs in queue.
-    if (runningJobCount <= 0 && m_jobQueue->count() <= 0) {
-        emit refreshRequestSignal();
-    }
+//    if (runningJobCount <= 0 && m_jobQueue->count() <= 0) {
+//        emit refreshRequestSignal();
+//    }
 
     emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), getItemCount());
     emit proceedNextJobSignal();
@@ -2959,6 +2978,7 @@ void CloudDriveModel::proceedNextJob() {
 
     // Proceed next job in queue. Any jobs which haven't queued will be ignored.
     qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count();
+//    qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->keys();
     if (runningJobCount >= MaxRunningJobCount || m_jobQueue->count() <= 0 || m_isSuspended) {
         return;
     }
@@ -2972,7 +2992,12 @@ void CloudDriveModel::proceedNextJob() {
     mutex.unlock();
 
     // Dispatch job.
-    dispatchJob(job);
+//    dispatchJob(job);
+    CloudDriveModelThread *t = new CloudDriveModelThread(this);
+    connect(t, SIGNAL(finished()), t, SLOT(deleteLater()));
+//    connect(t, SIGNAL(finished()), this, SLOT(threadFinishedFilter()));
+    t->setNonce(nonce); // Set job ID to thread. It will invoke parent's dispatchJob later.
+    t->start();
 
     emit proceedNextJobSignal();
 }
@@ -2995,13 +3020,16 @@ CloudDriveClient * CloudDriveModel::getCloudClient(const int type)
     return 0;
 }
 
+void CloudDriveModel::dispatchJob(const QString jobId)
+{
+    dispatchJob(m_cloudDriveJobs->value(jobId));
+}
+
 void CloudDriveModel::dispatchJob(const CloudDriveJob job)
 {
-    // TODO
-    // If job.type==Dropbox, call DropboxClient.run() directly.
-    // If job.type==Any, start thread.
+    // NOTE This method will be invoke by QThread created by proceedNextJob.
 
-    // TODO Generalize cloud client.
+    // Generalize cloud client.
     CloudDriveClient *cloudClient = getCloudClient(job.type);
 
     qDebug() << "CloudDriveModel::dispatchJob" << job.jobId << job.operation << job.type << (cloudClient == 0 ? "no client" : cloudClient->objectName());
@@ -3010,11 +3038,12 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
     case LoadCloudDriveItems:
         // Execute logic asynchronously.
         // Configure thread.
-        m_thread.setHashFilePath(ITEM_DAT_PATH);
-        m_thread.setNonce(job.jobId);
-        m_thread.setRunMethod(job.operation);
-        m_thread.setCloudDriveItems(m_cloudDriveItems);
-        m_thread.start();
+//        m_thread.setHashFilePath(ITEM_DAT_PATH);
+//        m_thread.setNonce(job.jobId);
+//        m_thread.setRunMethod(job.operation);
+//        m_thread.setCloudDriveItems(m_cloudDriveItems);
+//        m_thread.start();
+        loadCloudDriveItems(job.jobId);
         break;
     case InitializeDB:
         // Execute initialize locally.
@@ -3072,12 +3101,12 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         cloudClient->browse(job.jobId, job.uid, job.remoteFilePath);
         break;
     case MigrateFilePut:
-        // Invoke in thread.
         migrateFile_Block(job.jobId, getClientType(job.type), job.uid, job.remoteFilePath, getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
         break;
     }
 }
 
+/*
 void CloudDriveModel::threadFinishedFilter()
 {
     // Notify job done.
@@ -3097,6 +3126,7 @@ void CloudDriveModel::loadCloudDriveItemsFilter(QString nonce)
 
     emit loadCloudDriveItemsFinished(nonce);
 }
+*/
 
 void CloudDriveModel::requestTokenReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
