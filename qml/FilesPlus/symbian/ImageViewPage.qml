@@ -93,8 +93,7 @@ Page {
                 iconSource: (!window.platformInverted) ? "print.svg" : "print_inverted.svg"
                 platformInverted: window.platformInverted
                 onClicked: {
-                    var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-                    if (p) p.printFileSlot(imageGrid.getViewFilePath(), -1);
+                    gcpClient.printFileSlot(imageGrid.getViewFilePath(), -1);
                 }
             }
         }

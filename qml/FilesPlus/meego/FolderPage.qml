@@ -1224,7 +1224,8 @@ Page {
 
         titleText: appInfo.emptyStr+fileActionDialog.getTitleText()
         content: Column {
-            anchors.horizontalCenter: parent.horizontalCenter
+            id: contentColumn
+            anchors.centerIn: parent
             width: parent.width - 10
             spacing: 5
 
@@ -1237,49 +1238,46 @@ Page {
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
             }
 
-            Rectangle {
-                color: "grey"
+            Column {
                 width: parent.width
-                height: 1
+                height: fileActionDialog.isOverwrite ? childrenRect.height : 0
                 visible: fileActionDialog.isOverwrite
-            }
+                spacing: 5
 
-            Text {
-                text: appInfo.emptyStr+qsTr("Item exists, please input new name.")
-                color: "white"
-                width: parent.width
-                font.pointSize: 16
-                verticalAlignment: Text.AlignVCenter
-                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                visible: fileActionDialog.isOverwrite
-            }
+                Rectangle {
+                    color: "grey"
+                    width: parent.width
+                    height: 1
+                }
 
-            TextField {
-                id: fileName
-                width: parent.width
-                visible: fileActionDialog.isOverwrite
-            }
+                Text {
+                    text: appInfo.emptyStr+qsTr("Item exists, please input new name.")
+                    color: "white"
+                    width: parent.width
+                    font.pointSize: 16
+                    verticalAlignment: Text.AlignVCenter
+                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                }
 
-            CheckBox {
-                id: overwriteFile
-                width: parent.width
-                text: "<span style='color:white;font:16pt'>" + appInfo.emptyStr+qsTr("Overwrite existing item?") + "</span>"
-                checked: false
-                visible: fileActionDialog.isOverwrite
+                TextField {
+                    id: fileName
+                    width: parent.width
+                }
 
-                onClicked: {
-                    if (checked) {
-                        fileName.text = fileActionDialog.sourcePathName;
-                    } else {
-                        fileName.text = fileActionDialog.getNewName();
+                CheckBox {
+                    id: overwriteFile
+                    width: parent.width
+                    text: "<span style='color:white;font:16pt'>" + appInfo.emptyStr+qsTr("Overwrite existing item") + "</span>"
+                    checked: false
+
+                    onClicked: {
+                        if (checked) {
+                            fileName.text = fileActionDialog.sourcePathName;
+                        } else {
+                            fileName.text = fileActionDialog.getNewName();
+                        }
                     }
                 }
-            }
-
-            Rectangle {
-                color: "transparent"
-                width: parent.width
-                height: 10
             }
         }
 
@@ -1346,7 +1344,7 @@ Page {
         }
 
         function canCopy() {
-            return fsModel.canCopy(clipboard.get(0).sourcePath, targetPath);
+            return fsModel.canCopy(fsModel.getAbsolutePath(targetPath, fileActionDialog.sourcePathName), targetPath);
         }
 
         function getNewName() {
@@ -1720,7 +1718,9 @@ Page {
         }
 
         onOpening: {
-            uidDialog.model.destroy();
+            if (uidDialog.model) {
+                uidDialog.model.destroy();
+            }
             uidDialog.model = cloudDriveModel.getUidListModel(localPath);
         }
 

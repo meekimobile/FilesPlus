@@ -61,13 +61,16 @@ Rectangle {
     property string srcFilePath
     property string selectedFilePath
     property int selectedFileIndex
+    property string selectedFileName
     property bool isCopy
     property string pastePath
-    property int clipboardCount
     property alias timeout: popupTimer.interval
 
     property int ringRadius: 60
     property int buttonRadius: 25
+
+    property alias model: buttonRing.model
+    property variant disabledButtons: []
 
     signal opened()
     signal closed()
@@ -192,38 +195,31 @@ Rectangle {
     function isButtonVisible(buttonName) {
         if (selectedFilePath == "") return false;
 
-        if (buttonName === "sync") {
-            return !fsModel.isRoot(selectedFilePath) && cloudDriveModel.canSync(selectedFilePath);
-        } else if (buttonName === "upload") {
-            return !fsModel.isRoot(selectedFilePath) && cloudDriveModel.canSync(selectedFilePath) && !cloudDriveModel.isParentConnected(selectedFilePath);
-        } else if (buttonName === "download") {
-            return !fsModel.isRoot(selectedFilePath) && cloudDriveModel.canSync(selectedFilePath) && !cloudDriveModel.isParentConnected(selectedFilePath);
-        } else if (buttonName === "disconnect") {
-            return cloudDriveModel.isConnected(selectedFilePath);
-        } else if (buttonName === "unsync") {
-            return cloudDriveModel.isConnected(selectedFilePath);
-        } else if (buttonName === "cloudSettings") {
-            return cloudDriveModel.isConnected(selectedFilePath);
-        } else if (buttonName === "cloudScheduler") {
-            return isDir && cloudDriveModel.isConnected(selectedFilePath);
-        } else if (buttonName === "paste") {
-            return (clipboardCount > 0);
-        } else if (buttonName == "mail") {
-            return cloudDriveModel.isConnected(selectedFilePath);
-        } else if (buttonName == "sms") {
-            return cloudDriveModel.isConnected(selectedFilePath);
-        } else if (buttonName == "bluetooth") {
-            return fsModel.isFile(selectedFilePath);
-        } else if (buttonName == "editFile") {
-            return fsModel.isFile(selectedFilePath);
-        }
+        if (disabledButtons.indexOf(buttonName) != -1) return false;
 
+        return isButtonVisibleCallback(buttonName);
+    }
+
+    // Needs to be overriden in host QML.
+    function isButtonVisibleCallback(buttonName) {
         return true;
     }
 
     function buttonHandler(buttonName, index) {
 //        console.debug("button " + index + " buttonName " + buttonName);
-        if (buttonName == "paste") {
+        if (buttonName == "tool") {
+            if (popupToolPanel.state == "main") {
+                popupToolPanel.state = "tools";
+            } else if (popupToolPanel.state == "tools") {
+                popupToolPanel.state = "main";
+            } else if (popupToolPanel.state == "share") {
+                popupToolPanel.state = "tools";
+            } else if (popupToolPanel.state == "cloud") {
+                popupToolPanel.state = "tools";
+            }
+            popupTimer.restart();
+            return;
+        } else if (buttonName == "paste") {
             pasteClicked(pastePath);
         } else if (buttonName == "cut") {
             cutClicked(selectedFilePath);
@@ -297,23 +293,13 @@ Rectangle {
 
     Button {
         id: toolButton
+        enabled: isButtonVisible("tool")
         anchors.centerIn: parent
         width: popupToolPanel.buttonRadius * 2
         height: popupToolPanel.buttonRadius * 2
         platformInverted: window.platformInverted
         onClicked: {
-            if (popupToolPanel.state == "main") {
-                popupToolPanel.state = "tools";
-            } else if (popupToolPanel.state == "tools") {
-                popupToolPanel.state = "main";
-            } else if (popupToolPanel.state == "share") {
-                popupToolPanel.state = "tools";
-            } else if (popupToolPanel.state == "cloud") {
-                popupToolPanel.state = "tools";
-            }
-
-            // Restart timer
-            popupTimer.restart();
+            buttonHandler("tool", -1);
         }
     }
 }

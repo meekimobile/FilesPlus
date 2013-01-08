@@ -59,10 +59,6 @@ Page {
         }
     }
 
-    MessageDialog {
-        id: messageDialog
-    }
-
     ListModel {
         id: settingModel
         ListElement {
@@ -83,12 +79,12 @@ Page {
             type: "button"
             group: "CloudPrint"
         }
-//        ListElement {
-//            name: "showCloudDriveJobs"
-//            title: ""
-//            type: "button"
-//            group: "CloudDrive"
-//        }
+        ListElement {
+            name: "showCloudDriveJobs"
+            title: ""
+            type: "button"
+            group: "CloudDrive"
+        }
         ListElement {
             name: "cancelAllCloudDriveJobs"
             title: ""
@@ -113,18 +109,6 @@ Page {
             type: "switch"
             group: "CloudDrive"
         }
-//        ListElement {
-//            name: "drivepage.clouddrive.enabled"
-//            title: ""
-//            type: "switch"
-//            group: "CloudDrive"
-//        }
-//        ListElement {
-//            name: "FolderPie.enabled"
-//            title: ""
-//            type: "switch"
-//            group: "FolderPie"
-//        }
         ListElement {
             name: "resetCache"
             title: ""
@@ -179,6 +163,12 @@ Page {
             type: "switch"
             group: "Developer"
         }
+        ListElement {
+            name: "drivepage.clouddrive.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
     }
 
     ListView {
@@ -203,7 +193,7 @@ Page {
         else if (name == "syncAllConnectedItems") return qsTr("Sync all connected items") + appInfo.emptyStr;
         else if (name == "showCloudDriveAccounts") return qsTr("Show accounts") + appInfo.emptyStr;
         else if (name == "sync.after.refresh") return qsTr("Auto-sync after refresh") + appInfo.emptyStr;
-//        else if (name == "drivepage.clouddrive.enabled") return qsTr("Show cloud storage on drive page") + appInfo.emptyStr;
+        else if (name == "drivepage.clouddrive.enabled") return qsTr("Show cloud storage on drive page") + appInfo.emptyStr;
         else if (name == "FolderPie.enabled") return qsTr("FolderPie feature") + appInfo.emptyStr;
         else if (name == "resetCache") return qsTr("Reset current folder cache") + appInfo.emptyStr;
         else if (name == "Theme.inverted") return qsTr("Theme") + appInfo.emptyStr;
@@ -220,40 +210,43 @@ Page {
     }
 
     function buttonClickedHandler(name) {
-        var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-        if (p) {
-            if (name == "showCloudPrintJobs") {
-                p.showCloudPrintJobsSlot();
-            } else if (name == "printFromURL") {
-                p.showWebViewPageSlot();
-            } else if (name == "resetCloudPrint") {
-                p.resetCloudPrintSlot();
-            } else if (name == "showCloudDriveJobs") {
-                p.showCloudDriveJobsSlot();
-            } else if (name == "cancelAllCloudDriveJobs") {
-                p.cancelAllCloudDriveJobsSlot();
-            } else if (name == "syncAllConnectedItems") {
-                p.syncAllConnectedItemsSlot();
-            } else if (name == "showCloudDriveAccounts") {
-                p.showCloudDriveAccountsSlot();
-            } else if (name == "resetCache") {
-                pageStack.pop();
+        if (name == "showCloudPrintJobs") {
+            pageStack.push(Qt.resolvedUrl("PrintJobsPage.qml"));
+        } else if (name == "printFromURL") {
+            pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
+        } else if (name == "resetCloudPrint") {
+            gcpClient.resetCloudPrintSlot();
+        } else if (name == "showCloudDriveJobs") {
+            pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"));
+        } else if (name == "cancelAllCloudDriveJobs") {
+            cancelQueuedCloudDriveJobsConfirmation.open();
+        } else if (name == "syncAllConnectedItems") {
+            cloudDriveModel.syncItems();
+        } else if (name == "showCloudDriveAccounts") {
+            pageStack.push(Qt.resolvedUrl("CloudDriveAccountsPage.qml"));
+        } else if (name == "resetCache") {
+            pageStack.pop();
+            var p = pageStack.find(function (page) { return page.name == "folderPage"; });
+            if (p) {
                 p.resetCacheSlot();
-            } else if (name == "Theme.inverted") {
-                window.platformInverted = !window.platformInverted;
-            } else if (name == "locale") {
-                languageSelector.open();
-            } else if (name == "Logging.enabled") {
-                quitConfirmation.open();
-            } else if (name == "dropbox.fullaccess.enabled") {
-                pageStack.pop();
+            }
+        } else if (name == "Theme.inverted") {
+            window.platformInverted = !window.platformInverted;
+        } else if (name == "locale") {
+            languageSelector.open();
+        } else if (name == "Logging.enabled") {
+            quitConfirmation.open();
+        } else if (name == "dropbox.fullaccess.enabled") {
+            pageStack.pop();
+            var p = pageStack.find(function (page) { return page.name == "folderPage"; });
+            if (p) {
                 p.showDropboxFullAccessConfirmationSlot();
-            } else if (name == "Monitoring.enabled") {
-                if (appInfo.isMonitoring()) {
-                    messageDialog.titleText = appInfo.emptyStr+qsTr("Monitoring");
-                    messageDialog.message = appInfo.emptyStr+qsTr("Monitoring is enabled. Log file is ") + appInfo.getMonitoringFilePath();
-                    messageDialog.open();
-                }
+            }
+        } else if (name == "Monitoring.enabled") {
+            if (appInfo.isMonitoring()) {
+                messageDialog.titleText = appInfo.emptyStr+qsTr("Monitoring");
+                messageDialog.message = appInfo.emptyStr+qsTr("Monitoring is enabled. Log file is ") + appInfo.getMonitoringFilePath();
+                messageDialog.open();
             }
         }
     }
@@ -515,6 +508,12 @@ Page {
 
                 return "Locale not found";
             }
+        }
+    }
+
+    onStatusChanged: {
+        if (status == PageStatus.Active) {
+            cloudDriveModel.requestJobQueueStatus();
         }
     }
 }

@@ -8,6 +8,10 @@ Menu {
 
     property variant disabledMenus: []
 
+    signal markAll()
+    signal markAllFiles()
+    signal markAllFolders()
+
     content: MenuLayout {
         id: markAllMenuLayout
 
@@ -15,21 +19,21 @@ Menu {
             platformInverted: window.platformInverted
             text: appInfo.emptyStr+qsTr("Mark all")
             onClicked: {
-                fsListView.markAll();
+                markAll();
             }
         }
         MenuItem {
             platformInverted: window.platformInverted
             text: appInfo.emptyStr+qsTr("Mark all files")
             onClicked: {
-                fsListView.markAllFiles();
+                markAllFiles();
             }
         }
         MenuItem {
             platformInverted: window.platformInverted
             text: appInfo.emptyStr+qsTr("Mark all folders")
             onClicked: {
-                fsListView.markAllFolders();
+                markAllFolders();
             }
         }
     }

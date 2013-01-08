@@ -1,5 +1,5 @@
 import QtQuick 1.1
-import com.nokia.meego 1.0
+import com.nokia.symbian 1.1
 import CloudDriveModel 1.0
 import ClipboardModel 1.0
 import "Utility.js" as Utility
@@ -177,9 +177,11 @@ Page {
     tools: ToolBarLayout {
         id: toolBarLayout
 
-        ToolIcon {
+        ToolButton {
             id: backButton
-            iconId: "toolbar-back"
+            iconSource: "toolbar-back"
+            platformInverted: window.platformInverted
+            flat: true
             onClicked: {
                 if (cloudFolderView.state == "mark") {
                     cloudFolderView.state = "";
@@ -191,9 +193,11 @@ Page {
             }
         }
 
-        ToolIcon {
+        ToolButton {
             id: refreshButton
-            iconId: "toolbar-refresh"
+            iconSource: "toolbar-refresh"
+            platformInverted: window.platformInverted
+            flat: true
             visible: (cloudFolderView.state != "mark")
             onClicked: {
                 // Force resume.
@@ -203,9 +207,11 @@ Page {
             }
         }
 
-        ToolIcon {
+        ToolButton {
             id: cloudButton
-            iconSource: (theme.inverted ? "cloud.svg" : "cloud_inverted.svg")
+            iconSource: (!window.platformInverted ? "cloud.svg" : "cloud_inverted.svg")
+            platformInverted: window.platformInverted
+            flat: true
             visible: (cloudFolderView.state != "mark")
             onClicked: {
                 syncConnectedItemsSlot();
@@ -221,9 +227,11 @@ Page {
             }
         }
 
-        ToolIcon {
+        ToolButton {
             id: menuButton
-            iconId: "toolbar-view-menu"
+            iconSource: "toolbar-menu"
+            platformInverted: window.platformInverted
+            flat: true
             onClicked: {
                 // Hide popupToolPanel.
                 popupToolPanel.visible = false;
@@ -570,7 +578,8 @@ Page {
                 id: busyIcon
                 visible: isBusy
                 running: isBusy
-                platformStyle: BusyIndicatorStyle { size: "large" }
+                width: 150
+                height: width
                 anchors.centerIn: parent
             }
 
@@ -675,8 +684,8 @@ Page {
 
     PopupToolRing {
         id: popupToolPanel
-        ringRadius: 80
-        buttonRadius: 35
+        ringRadius: 65
+        buttonRadius: 25
         timeout: appInfo.emptySetting+appInfo.getSettingValue("popup.timer.interval", 2) * 1000
         disabledButtons: ["print","editFile","cloud","bluetooth"]
 
@@ -753,6 +762,7 @@ Page {
 
     ConfirmDialog {
         id: fileActionDialog
+        height: contentColumn.height + 120 // Workaround for Symbian only.
 
         property string sourcePath
         property string sourcePathName
@@ -764,14 +774,14 @@ Page {
         content: Column {
             id: contentColumn
             anchors.centerIn: parent
-            width: parent.width - 10
+            width: parent.width - 20
             spacing: 5
 
             Text {
                 text: appInfo.emptyStr+fileActionDialog.getText()
                 color: "white"
                 width: parent.width
-                font.pointSize: 16
+                font.pointSize: 6
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
             }
@@ -792,7 +802,7 @@ Page {
                     text: appInfo.emptyStr+qsTr("Item exists, please input new name.")
                     color: "white"
                     width: parent.width
-                    font.pointSize: 16
+                    font.pointSize: 6
                     verticalAlignment: Text.AlignVCenter
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 }
@@ -805,7 +815,7 @@ Page {
                 CheckBox {
                     id: overwriteFile
                     width: parent.width
-                    text: "<span style='color:white;font:16pt'>" + appInfo.emptyStr+qsTr("Overwrite existing item") + "</span>"
+                    text: "<span style='color:white;font:6pt'>" + appInfo.emptyStr+qsTr("Overwrite existing item") + "</span>"
                     checked: false
 
                     onClicked: {

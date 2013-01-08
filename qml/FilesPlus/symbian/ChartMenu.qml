@@ -1,20 +1,25 @@
 import QtQuick 1.1
-import com.nokia.meego 1.0
+import com.nokia.symbian 1.1
 
 MenuWithIcon {
-    id: driveMenu
+    id: chartMenu
     z: 2
 
+    signal drives()
     signal openSettings()
     signal openMoreApps()
     signal openAbout()
     signal quit()
 
     content: MenuLayout {
-        id: menuLayout
-
-        // TODO Alias for fixing incorrect children.
-        default property alias children: menuLayout.menuChildren
+        MenuItemWithIcon {
+            id: driveMenuItem
+            name: "driveMenuItem"
+            text: appInfo.emptyStr+qsTr("Drives")
+            onClicked: {
+                drives();
+            }
+        }
 
         MenuItemWithIcon {
             name: "settings"

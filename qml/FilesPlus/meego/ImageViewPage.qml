@@ -90,8 +90,7 @@ Page {
                 id: printButton
                 iconSource: (theme.inverted) ? "print.svg" : "print_inverted.svg"
                 onClicked: {
-                    var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-                    if (p) p.printFileSlot(imageGrid.getViewFilePath(), -1);
+                    gcpClient.printFileSlot(imageGrid.getViewFilePath(), -1);
                 }
             }
         }

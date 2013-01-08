@@ -177,7 +177,7 @@ Page {
         }
     }
 
-    CommonDialog {
+    ConfirmDialog {
         id: addAccountDialog
 
         property alias connection: connectionName.text
@@ -187,8 +187,6 @@ Page {
 
         z: 2
         titleText: appInfo.emptyStr+qsTr("New FTP account")
-        titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
         content: Column {
             width: parent.width
             spacing: 5
@@ -262,22 +260,13 @@ Page {
             addAccountDialog.passwd = "";
             testConnectionButton.text = appInfo.emptyStr+qsTr("Test connection");
         }
-
-        onAccepted: {
+        onConfirm: {
             var tokens = hostname.text.split(":");
             cloudDriveModel.saveConnection(CloudDriveModel.Ftp,
                                            connectionName.text,
                                            tokens[0],
                                            (tokens.length > 1) ? parseInt(tokens[1]) : 21,
                                            username.text, password.text);
-        }
-
-        onButtonClicked: {
-            if (index == 0) {
-                accepted();
-            } else {
-                rejected();
-            }
         }
     }
 

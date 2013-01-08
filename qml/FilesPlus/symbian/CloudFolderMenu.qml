@@ -1,8 +1,9 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
+import CloudDriveModel 1.0
 
 MenuWithIcon {
-    id: mainMenu
+    id: cloudFolderMainMenu
     z: 2
 
     signal paste()
@@ -20,6 +21,8 @@ MenuWithIcon {
     signal quit()
 
     content: MenuLayout {
+        id: menuLayout
+
         MenuItemWithIcon {
             id: pasteMenuItem
             name: "paste"
@@ -50,7 +53,7 @@ MenuWithIcon {
         MenuItemWithIcon {
             id: newFolderMenuItem
             name: "newFolder"
-            text: appInfo.emptyStr+qsTr("New folder / file")
+            text: appInfo.emptyStr+qsTr("New folder")
             onClicked: {
                 newFolder();
             }

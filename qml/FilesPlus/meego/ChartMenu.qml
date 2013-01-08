@@ -9,6 +9,7 @@ MenuWithIcon {
     signal openSettings()
     signal openMoreApps()
     signal openAbout()
+    signal quit()
 
     content: MenuLayout {
         id: menuLayout

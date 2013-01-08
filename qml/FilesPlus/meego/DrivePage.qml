@@ -59,6 +59,12 @@ Page {
     DriveMenu {
         id: driveMenu
 
+        onOpenSettings: {
+            pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
+        }
+        onOpenAbout: {
+            pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
+        }
         onQuit: {
             window.quitSlot();
         }
@@ -175,7 +181,6 @@ Page {
                 } else { // Local drive is selected.
                     fsModel.currentDir = driveName;
                     pageStack.push(Qt.resolvedUrl("FolderPage.qml"));
-
                 }
             }
         }

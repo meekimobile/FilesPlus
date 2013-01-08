@@ -7,7 +7,6 @@ Page {
     id: cloudDriveAccountsPage
 
     property string name: "cloudDriveAccountsPage"
-    property variant cloudDriveModel
 
     function updateAccountInfoSlot(type, uid, name, email, shared, normal, quota) {
 //        console.debug("cloudDriveAccountsPage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
@@ -20,24 +19,13 @@ Page {
         }
     }
 
-    function refreshAccountsInfoSlot() {
-        // Refresh UID list.
-        accountListView.model = cloudDriveAccountsPage.cloudDriveModel.getUidListModel();
-
-        // Refresh quota.
-        for (var i=0; i<accountListView.model.count; i++) {
-            accountListView.model.set(i, { quota: 0 });
-            cloudDriveAccountsPage.cloudDriveModel.accountInfo(accountListView.model.get(i).type, accountListView.model.get(i).uid);
-        }
-    }
-
     function refreshCloudDriveAccountsSlot() {
-        accountListView.model = cloudDriveAccountsPage.cloudDriveModel.getUidListModel();
+        accountListView.model = cloudDriveModel.getUidListModel();
     }
 
     onStatusChanged: {
         if (status == PageStatus.Active) {
-            accountListView.model = cloudDriveAccountsPage.cloudDriveModel.getUidListModel();
+            refreshCloudDriveAccountsSlot();
         }
     }
 
@@ -61,7 +49,7 @@ Page {
             platformInverted: window.platformInverted
             flat: true
             onClicked: {
-                refreshAccountsInfoSlot();
+                refreshCloudDriveAccountsSlot();
             }
         }
         ToolButton {
@@ -70,8 +58,7 @@ Page {
             platformInverted: window.platformInverted
             flat: true
             onClicked: {
-                var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-                if (p) p.registerDropboxUserSlot();
+                cloudTypeSelection.open();
             }
         }
     }
@@ -112,6 +99,75 @@ Page {
         }
     }
 
+    SelectionDialog {
+        id: cloudTypeSelection
+        titleText: appInfo.emptyStr+qsTr("Select Cloud Storage")
+        model: ListModel {
+            ListElement {
+                name: "Dropbox"
+                type: CloudDriveModel.Dropbox
+            }
+            ListElement {
+                name: "SkyDrive"
+                type: CloudDriveModel.SkyDrive
+            }
+            ListElement {
+                name: "GoogleDrive"
+                type: CloudDriveModel.GoogleDrive
+            }
+            ListElement {
+                name: "FTP"
+                type: CloudDriveModel.Ftp
+            }
+        }
+        delegate: ListItem {
+            height: 60
+            Row {
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 5
+
+                Image {
+                    id: cloudIcon
+                    source: cloudDriveModel.getCloudIcon(type)
+                    width: 48
+                    height: 48
+                    fillMode: Image.PreserveAspectFit
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                Text {
+                    text: name
+                    width: parent.width - cloudIcon.width - parent.spacing
+                    font.pointSize: 8
+                    elide: Text.ElideMiddle
+                    color: (!window.platformInverted) ? "white" : "black"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+            onClicked: {
+                cloudTypeSelection.selectedIndex = index;
+                cloudTypeSelection.accept();
+            }
+        }
+        onAccepted: {
+            var type = model.get(selectedIndex).type;
+            switch (type) {
+            case CloudDriveModel.Dropbox:
+                cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
+                break;
+            case CloudDriveModel.SkyDrive:
+                cloudDriveModel.authorize(CloudDriveModel.SkyDrive);
+                break;
+            case CloudDriveModel.GoogleDrive:
+                cloudDriveModel.authorize(CloudDriveModel.GoogleDrive);
+                break;
+            case CloudDriveModel.Ftp:
+                addAccountDialog.open();
+                break;
+            }
+        }
+    }
+
     ConfirmDialog {
         id: removeAccountConfirmation
 
@@ -124,6 +180,99 @@ Page {
         }
         onOpening: {
             contentText = appInfo.emptyStr+qsTr("Please confirm to remove ") + cloudDriveModel.getCloudName(accountListView.model.get(index).type) + " UID " + accountListView.model.get(index).uid + " ?";
+        }
+    }
+
+    ConfirmDialog {
+        id: addAccountDialog
+
+        property alias connection: connectionName.text
+        property alias host: hostname.text
+        property alias user: username.text
+        property alias passwd: password.text
+
+        z: 2
+        titleText: appInfo.emptyStr+qsTr("New FTP account")
+        content: Column {
+            width: parent.width
+            spacing: 5
+
+            TextField {
+                id: connectionName
+                width: parent.width
+                placeholderText: "Input connection name"
+                validator: RegExpValidator {
+                    regExp: /[\w.-]+/
+                }
+            }
+            TextField {
+                id: hostname
+                width: parent.width
+                placeholderText: "Input hostname"
+                validator: RegExpValidator {
+                    regExp: /[\w.-:]+/
+                }
+            }
+            TextField {
+                id: username
+                width: parent.width
+                placeholderText: "Input username"
+                validator: RegExpValidator {
+                    regExp: /[\w.]+/
+                }
+            }
+            TextField {
+                id: password
+                width: parent.width
+                placeholderText: "Input password"
+                echoMode: TextInput.Password
+            }
+            Item {
+                width: parent.width
+                height: 80
+
+                Button {
+                    id: testConnectionButton
+                    text: appInfo.emptyStr+qsTr("Test connection");
+                    anchors.centerIn: parent
+                    onClicked: {
+                        console.debug("cloudDriveAccountsPage testConnectionButton.onClicked");
+                        if (hostname.text == "" || username.text == "") {
+                            return;
+                        }
+
+                        text = appInfo.emptyStr+qsTr("Connecting");
+
+                        var tokens = hostname.text.split(":");
+                        var res = cloudDriveModel.testConnection(CloudDriveModel.Ftp,
+                                                                 tokens[0],
+                                                                 (tokens.length > 1) ? parseInt(tokens[1]) : 21,
+                                                                 username.text, password.text);
+                        console.debug("cloudDriveAccountsPage testConnectionButton.onClicked res " + res);
+                        if (res) {
+                            text = appInfo.emptyStr+qsTr("Connection success");
+                        } else {
+                            text = appInfo.emptyStr+qsTr("Connection failed");
+                        }
+                    }
+                }
+            }
+        }
+
+        onClosed: {
+            addAccountDialog.connection = "";
+            addAccountDialog.host = "";
+            addAccountDialog.user = "";
+            addAccountDialog.passwd = "";
+            testConnectionButton.text = appInfo.emptyStr+qsTr("Test connection");
+        }
+        onConfirm: {
+            var tokens = hostname.text.split(":");
+            cloudDriveModel.saveConnection(CloudDriveModel.Ftp,
+                                           connectionName.text,
+                                           tokens[0],
+                                           (tokens.length > 1) ? parseInt(tokens[1]) : 21,
+                                           username.text, password.text);
         }
     }
 
@@ -201,30 +350,27 @@ Page {
             }
 
             onPressAndHold: {
-                var panelX = x + mouseX - accountListView.contentX;
-                var panelY = y + mouseY - accountListView.contentY + accountListView.y;
-                popupDeleteButton.x = panelX - (popupDeleteButton.width / 2);
-                popupDeleteButton.y = panelY - (popupDeleteButton.height);
-                popupDeleteButton.index = index;
-                popupDeleteButton.visible = true;
+                removeAccountConfirmation.index = index;
+                removeAccountConfirmation.open();
             }
 
-            MouseArea {
-                anchors.fill: parent
-                onPressed: {
-                    parent.mouseX = mouseX;
-                    parent.mouseY = mouseY;
-                    mouse.accepted = false;
+            onClicked: {
+                if (type == CloudDriveModel.Ftp) {
+                    var tokens = email.split("@");
+                    addAccountDialog.connection = uid;
+                    addAccountDialog.host = tokens[1];
+                    addAccountDialog.user = tokens[0];
+                    addAccountDialog.passwd = "";
+                    addAccountDialog.open();
                 }
             }
 
             Component.onCompleted: {
-//                console.debug("uid " + uid + " type " + type);
-                cloudDriveAccountsPage.cloudDriveModel.accountInfo(type, uid);
+                    if (email == "") {
+                        cloudDriveModel.accountInfo(type, uid);
+                    }
+                    cloudDriveModel.quota(type, uid);
             }
         }
-    }
-
-    Component.onCompleted: {
     }
 }

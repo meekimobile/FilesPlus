@@ -4,13 +4,10 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: btSelectionDialog
-    height: content.height + 70
+    height: 60 * 3 + 70 // 3 records + header
 
     property string srcFilePath
     property bool discovery
-    property alias model: btSelectionListView.model
-    property alias contentHeight: content.height
-    property alias delegate: btSelectionListView.delegate
 
     signal selected(string localPath, string deviceAddress)
 
@@ -45,6 +42,7 @@ SelectionDialog {
         }
     }
 
+    delegate: btItemDelegate
     Component {
         id: btItemDelegate
 
@@ -52,7 +50,7 @@ SelectionDialog {
             id: btItem
             height: 60
             Row {
-                width: parent.width - 20
+                width: parent.width - 40
                 height: parent.height
                 anchors.centerIn: parent
                 spacing: 5

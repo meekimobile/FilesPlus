@@ -62,8 +62,7 @@ Page {
             iconSource: (!window.platformInverted) ? "print.svg" : "print_inverted.svg"
             platformInverted: window.platformInverted
             onClicked: {
-                var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-                if (p) p.printURLSlot(webView.url);
+                gcpClient.printURLSlot(webView.url);
 
                 // Clear clipboard.
                 appInfo.addToClipboard("");
@@ -75,10 +74,6 @@ Page {
         if (status == PageStatus.Active) {
             pasteURL();
         }
-    }
-
-    MessageDialog {
-        id: messageDialog
     }
 
     Rectangle {
@@ -110,13 +105,14 @@ Page {
 
     TitlePanel {
         id: urlPanel
-        height: urlInput.height
+        height: 60
         z: 2
 
         TextField {
             id: urlInput
             text: webView.url
             anchors.fill: parent
+            anchors.margins: 5
             Keys.onPressed: {
                 // console.debug("urlInput Keys.onPressed " + event.key + " Return " + Qt.Key_Return + " Enter " + Qt.Key_Enter);
                 if (event.key == Qt.Key_Return || event.key == Qt.Key_Enter) {

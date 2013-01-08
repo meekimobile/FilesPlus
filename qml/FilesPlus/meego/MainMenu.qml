@@ -1,6 +1,5 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
-import CloudDriveModel 1.0
 
 MenuWithIcon {
     id: mainMenu
@@ -18,6 +17,7 @@ MenuWithIcon {
     signal openSettings()
     signal openMoreApps()
     signal openAbout()
+    signal quit()
 
     content: MenuLayout {
         id: menuLayout
@@ -139,11 +139,5 @@ MenuWithIcon {
                 quit();
             }
         }
-    }
-
-    // Override this function with menuItem logic.
-    function isMenuItemVisible(menuItem) {
-        // Validate each menu logic if it's specified, otherwise it's visible.
-        return false;
     }
 }

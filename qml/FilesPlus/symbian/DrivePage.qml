@@ -9,20 +9,14 @@ Page {
     id: drivePage
 
     property string name: "drivePage"
-    property variant cloudDriveModel
 
     tools: toolBarLayout
 
-    function quitSlot() {
-        var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-        if (p) p.quitSlot();
-    }
-
     function updateAccountInfoSlot(type, uid, name, email, shared, normal, quota) {
-        console.debug("drivePage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
+//        console.debug("drivePage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
         for (var i=0; i<driveGrid.model.count; i++) {
             var item = driveGrid.model.get(i);
-            console.debug("drivePage updateAccountInfoSlot item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
+//            console.debug("drivePage updateAccountInfoSlot item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
             if (item.uid == uid && item.driveType == 7 && item.cloudDriveType == type) {
                 console.debug("drivePage updateAccountInfoSlot found item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
                 driveGrid.model.set(i, { name: name, email: email, availableSpace: (quota - shared - normal), totalSpace: quota });
@@ -39,7 +33,21 @@ Page {
             platformInverted: window.platformInverted
             flat: true
             onClicked: {
-                quitSlot();
+                window.quitSlot();
+            }
+        }
+
+        ToolButton {
+            id: refreshButton
+            iconSource: "toolbar-refresh"
+            platformInverted: window.platformInverted
+            flat: true
+            onClicked: {
+                // Force resume.
+                cloudDriveModel.resumeNextJob();
+
+                // Parse all storages.
+                refreshSlot("drivePage refreshButton onClicked");
             }
         }
 
@@ -49,18 +57,22 @@ Page {
             platformInverted: window.platformInverted
             flat: true
             onClicked: {
-                mainMenu.open();
+                driveMenu.open();
             }
         }
     }
 
-    MainMenu {
-        id: mainMenu
-        // TODO refactor to use id.
-        enabledMenus: [appInfo.emptyStr+qsTr("About"), appInfo.emptyStr+qsTr("More Apps"), appInfo.emptyStr+qsTr("Settings"), appInfo.emptyStr+qsTr("Exit")]
+    DriveMenu {
+        id: driveMenu
 
+        onOpenSettings: {
+            pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
+        }
+        onOpenAbout: {
+            pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
+        }
         onQuit: {
-            quitSlot();
+            window.quitSlot();
         }
     }
 
@@ -70,10 +82,6 @@ Page {
 
     SystemInfoHelper {
         id: systemInfoHelper
-    }
-
-    MessageDialog {
-        id: messageDialog
     }
 
     function parseLocalStorage(model) {
@@ -106,17 +114,18 @@ Page {
         }
     }
 
-    function parseCloudStorage(type, model) {
+    function parseCloudStorage(model) {
         // TODO Check if authorized before parsing.
-        if (!cloudDriveModel.isAuthorized(type)) return;
+        if (!cloudDriveModel.isAuthorized()) return;
 
         // Get uid list from DropboxClient.
-        var dbUidList = cloudDriveModel.getStoredUidList(type);
+        var dbUidList = cloudDriveModel.getStoredUidList();
 
         for (var i=0; i<dbUidList.length; i++)
         {
             var json = JSON.parse(dbUidList[i]);
-            console.debug("parseCloudStorage type " + type + " i " + i + " uid " + json.uid + " email " + json.email);
+            var cloudType = cloudDriveModel.getClientType(json.type);
+            console.debug("parseCloudStorage type " + json.type + " " + cloudType + " i " + i + " uid " + json.uid + " email " + json.email);
             model.append({
                              logicalDrive: json.email,
                              availableSpace: 0,
@@ -125,12 +134,23 @@ Page {
                              email: json.email,
                              uid: json.uid,
                              name: "",
-                             cloudDriveType: type,
-                             iconSource: cloudDriveModel.getCloudIcon(type)
+                             cloudDriveType: cloudType,
+                             iconSource: cloudDriveModel.getCloudIcon(cloudType)
             });
 
-            // Request accountInfo.
-            cloudDriveModel.accountInfo(type, json.uid);
+            // Request quota.
+            cloudDriveModel.quota(cloudType, json.uid);
+        }
+    }
+
+    function refreshSlot(caller) {
+        console.debug("drivePage refreshSlot caller " + caller);
+
+        // TODO Parse all storages.
+        driveGridModel.clear();
+        parseLocalStorage(driveGridModel);
+        if (appInfo.getSettingBoolValue("drivepage.clouddrive.enabled", false)) {
+            parseCloudStorage(driveGridModel);
         }
     }
 
@@ -147,14 +167,23 @@ Page {
 //            console.debug("driveSelection onDriveSelected " + driveName + " index " + index);
             if (index > -1) {
                 var driveType = driveGridModel.get(index).driveType;
-                if (driveType == 7) {
-                    // TODO
+                if (driveType == 7) { // Cloud drive is selected.
                     var cloudUid = driveGridModel.get(index).uid;
+                    var cloudDriveType = driveGridModel.get(index).cloudDriveType;
                     console.debug("driveSelection onDriveSelected " + driveName + " index " + index + " cloudUid " + cloudUid);
-                } else {
-                    var p = pageStack.find(function(page) { return (page.name == "folderPage"); });
-                    if (p) p.currentDir = driveName;
-                    pageStack.pop(drivePage, true);
+                    pageStack.push(Qt.resolvedUrl("CloudFolderPage.qml"), {
+                                       remotePath: "",
+                                       remoteParentPath: "",
+                                       caller: "driveGrid onDriveSelected",
+                                       operation: CloudDriveModel.Browse,
+                                       localPath: "",
+                                       selectedCloudType: cloudDriveType,
+                                       selectedUid: cloudUid,
+                                       selectedModelIndex: -1
+                                   });
+                } else { // Local drive is selected.
+                    fsModel.currentDir = driveName;
+                    pageStack.push(Qt.resolvedUrl("FolderPage.qml"));
                 }
             }
         }
@@ -169,12 +198,8 @@ Page {
         if (status == PageStatus.Active) {
             driveGrid.currentIndex = -1;
 
-            // TODO Parse all storages.
-            driveGridModel.clear();
-            parseLocalStorage(driveGridModel);
-            if (appInfo.getSettingBoolValue("drivepage.clouddrive.enabled", false)) {
-                parseCloudStorage(CloudDriveModel.Dropbox, driveGridModel);
-            }
+            // Parse all storages.
+//            refreshSlot("drivePage onStatusChanged");
 
             // Stop startup logging.
             appInfo.stopLogging();
@@ -184,5 +209,8 @@ Page {
     Component.onCompleted: {
         console.debug(Utility.nowText() + " drivePage onCompleted");
         window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("DrivePage"), 0.2);
+
+        // Parse all storages.
+        refreshSlot("drivePage onCompleted");
     }
 }

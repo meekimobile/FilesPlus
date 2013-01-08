@@ -34,7 +34,8 @@ CommonDialog {
     signal reject()
     signal closed()
     signal opening()
-    
+    signal opened()
+
     onButtonClicked: {
         if (index === 0) confirm();
         else reject();
@@ -43,6 +44,8 @@ CommonDialog {
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
             opening();
+        } else if (status == DialogStatus.Open) {
+            opened();
         } else if (status == DialogStatus.Closed) {
             closed();
         }

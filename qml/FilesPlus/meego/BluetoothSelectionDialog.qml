@@ -4,8 +4,8 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: btSelectionDialog
+    height: 70 * 3 + 70 // 3 records + header
     style: SelectionDialogStyle { dim: 0.9; pressDelay: 100 }
-    height: 280 // 3 records + header
 
     property string srcFilePath
     property bool discovery

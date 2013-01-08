@@ -1,6 +1,7 @@
 import QtQuick 1.1
 import QtMobility.contacts 1.1
 import com.nokia.meego 1.0
+//import com.nokia.extras 1.1
 import AppInfo 1.0
 import ClipboardModel 1.0
 import GCPClient 1.0
@@ -2116,7 +2117,14 @@ PageStackWindow {
     MessageDialog {
         id: messageDialog
     }
-
+/*
+    InfoBanner {
+        id: infoBanner
+        topMargin: 35
+        timerEnabled: true
+        timerShowTime: 2000
+    }
+*/
     function showMessageDialogSlot(titleText, message, autoCloseInterval) {
         if (autoCloseInterval) {
             messageDialog.autoClose = true;
@@ -2336,6 +2344,7 @@ PageStackWindow {
         // Set to portrait to show splash screen. Then it will set back to default once it's destroyed.
         screen.allowedOrientations = Screen.Portrait;
 
+        // Connect activation signal to slot.
         platformWindow.activeChanged.connect(activateSlot);
     }
 
