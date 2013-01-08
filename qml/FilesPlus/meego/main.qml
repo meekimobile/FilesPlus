@@ -1082,6 +1082,9 @@ PageStackWindow {
                     // Refresh account page.
                     var p = findPage("cloudDriveAccountsPage");
                     if (p) p.refreshCloudDriveAccountsSlot();
+                    // Refresh drive page.
+                    p = findPage("drivePage");
+                    if (p) p.refreshSlot("window cloudDriveModel onAccessTokenReplySignal");
 //                }
             } else {
                 showMessageDialogSlot(

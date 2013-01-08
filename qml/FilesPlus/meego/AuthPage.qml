@@ -163,6 +163,7 @@ Page {
                     } else if (title.match(appInfo.emptyStr+qsTr("^API Request Authorized"))) {
     //                    console.debug("DropboxClient title " + title);
 
+                        pinInputPanel.pin = title;
                         cloudDriveModel.accessTokenSlot(authPage.redirectFrom, pinInputPanel.pin);
                         pageStack.pop();
                     } else {
