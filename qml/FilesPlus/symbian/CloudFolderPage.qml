@@ -103,6 +103,14 @@ Page {
         cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
     }
 
+    function setNameFiltersAndRefreshSlot(caller, nameFilter) {
+        var i = cloudFolderModel.findIndexByNameFilter(nameFilter);
+        console.debug("cloudFolderPage setNameFiltersAndRefreshSlot " + nameFilter + " i " + i);
+        if (i > -1) {
+            cloudFolderView.positionViewAtIndex(i, ListView.Beginning);
+        }
+    }
+
     function mailFileSlot(remotePath, remotePathName) {
         console.debug("cloudFolderPage mailFileSlot remotePath=" + remotePath);
         recipientSelectionDialog.refresh();
@@ -264,9 +272,19 @@ Page {
         }
     }
 
+    NameFilterPanel {
+        id: nameFilterPanel
+        requestAsType: true
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: (inputContext.visible ? (inputContext.height - 60) : 0) // Symbian only
+        onRequestRefresh: {
+            setNameFiltersAndRefreshSlot(caller, nameFilterPanel.nameFilters);
+        }
+    }
+
     CloudFolderMenu {
         id: mainMenu
-        disabledMenus: ["syncConnectedItems","syncCurrentFolder","setNameFilter","sortByMenu"]
+        disabledMenus: ["syncConnectedItems","syncCurrentFolder","sortByMenu"]
 
         onPaste: {
             fileActionDialog.targetPath = remoteParentPath;
@@ -281,6 +299,9 @@ Page {
         }
         onNewFolder: {
             newFolderDialog.open();
+        }
+        onSetNameFilter: {
+            nameFilterPanel.open();
         }
         onDrives: {
             pageStack.pop(cloudFolderPage);
@@ -379,6 +400,17 @@ Page {
             return -1;
         }
 
+        function findIndexByNameFilter(nameFilter) {
+            var rx = new RegExp(nameFilter, "i");
+            for (var i=0; i<cloudFolderModel.count; i++) {
+                if (rx.test(cloudFolderModel.get(i).name)) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
         function getNewFileName(remotePathName) {
 //            console.debug("cloudFolderModel getNewFileName " + remotePathName);
 
@@ -415,7 +447,7 @@ Page {
     ListView {
         id: cloudFolderView
         width: parent.width
-        height: parent.height - currentPath.height
+        height: parent.height - currentPath.height - (inputContext.visible ? (inputContext.height - 60) : 0) // Symbian only
         anchors.top: currentPath.bottom
         highlightRangeMode: ListView.NoHighlightRange
         highlightFollowsCurrentItem: false

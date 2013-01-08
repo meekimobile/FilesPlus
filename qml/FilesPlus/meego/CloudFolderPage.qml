@@ -103,6 +103,14 @@ Page {
         cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
     }
 
+    function setNameFiltersAndRefreshSlot(caller, nameFilter) {
+        var i = cloudFolderModel.findIndexByNameFilter(nameFilter);
+        console.debug("cloudFolderPage setNameFiltersAndRefreshSlot " + nameFilter + " i " + i);
+        if (i > -1) {
+            cloudFolderView.positionViewAtIndex(i, ListView.Beginning);
+        }
+    }
+
     function mailFileSlot(remotePath, remotePathName) {
         console.debug("cloudFolderPage mailFileSlot remotePath=" + remotePath);
         recipientSelectionDialog.refresh();
@@ -256,9 +264,19 @@ Page {
         }
     }
 
+    NameFilterPanel {
+        id: nameFilterPanel
+        requestAsType: true
+        anchors.bottom: parent.bottom
+
+        onRequestRefresh: {
+            setNameFiltersAndRefreshSlot(caller, nameFilterPanel.nameFilters);
+        }
+    }
+
     CloudFolderMenu {
         id: mainMenu
-        disabledMenus: ["syncConnectedItems","syncCurrentFolder","setNameFilter","sortByMenu"]
+        disabledMenus: ["syncConnectedItems","syncCurrentFolder","sortByMenu"]
 
         onPaste: {
             fileActionDialog.targetPath = remoteParentPath;
@@ -273,6 +291,9 @@ Page {
         }
         onNewFolder: {
             newFolderDialog.open();
+        }
+        onSetNameFilter: {
+            nameFilterPanel.open();
         }
         onDrives: {
             pageStack.pop(cloudFolderPage);
@@ -364,6 +385,17 @@ Page {
         function findIndexByRemotePathName(remotePathName) {
             for (var i=0; i<cloudFolderModel.count; i++) {
                 if (cloudFolderModel.get(i).name == remotePathName) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        function findIndexByNameFilter(nameFilter) {
+            var rx = new RegExp(nameFilter, "i");
+            for (var i=0; i<cloudFolderModel.count; i++) {
+                if (rx.test(cloudFolderModel.get(i).name)) {
                     return i;
                 }
             }

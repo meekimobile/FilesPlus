@@ -25,6 +25,7 @@ Rectangle {
     z: 1
     visible: false
     
+    property bool requestAsType: false
     property alias nameFilters: nameFilterInput.text
 
     signal requestRefresh(string caller);
@@ -51,7 +52,7 @@ Rectangle {
             placeholderText: appInfo.emptyStr+qsTr("Please input name filter.")
 
             Keys.onPressed: {
-                if (event.key == Qt.Key_Return || event.key == Qt.Key_Enter) {
+                if (requestAsType || event.key == Qt.Key_Return || event.key == Qt.Key_Enter) {
                     requestRefresh("nameFilterPanel nameFilterInput Keys.onPressed");
                 }
             }
@@ -64,7 +65,7 @@ Rectangle {
             iconSource: (theme.inverted) ? "close_stop.svg" : "close_stop_inverted.svg"
             onClicked: {
                 nameFilterPanel.close();
-                requestRefresh("nameFilterPanel closeButton");
+//                requestRefresh("nameFilterPanel closeButton");
             }
         }
         
