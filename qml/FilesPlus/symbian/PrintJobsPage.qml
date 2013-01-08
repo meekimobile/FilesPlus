@@ -45,6 +45,19 @@ Page {
     }
 
     ConfirmDialog {
+        id: deleteJobConfirmation
+
+        property string jobId
+        property int jobIndex
+
+        titleText: appInfo.emptyStr+qsTr("Delete")
+        contentText: appInfo.emptyStr+qsTr("Delete %1 ?").arg(jobId);
+        onConfirm: {
+            deleteJob(jobId, jobIndex);
+        }
+    }
+
+    ConfirmDialog {
         id: deleteConfirmation
         titleText: appInfo.emptyStr+qsTr("Delete print jobs")
         contentText: appInfo.emptyStr+qsTr("Delete all print jobs ?")
@@ -98,6 +111,12 @@ Page {
             jobModel.setProperty(i, "status", appInfo.emptyStr+qsTr("Deleting"));
             gcpClient.deletejob(jobId);
         }
+    }
+
+    function deleteJob(jobId, index) {
+        // Delete selected job.
+        jobModel.setProperty(index, "status", appInfo.emptyStr+qsTr("Deleting"));
+        gcpClient.deletejob(jobId);
     }
 
     TitlePanel {
@@ -194,12 +213,15 @@ Page {
             }
 
             onPressAndHold: {
-                var panelX = x + mouseX - jobListView.contentX;
-                var panelY = y + mouseY - jobListView.contentY + jobListView.y;
-                popupDeleteButton.x = panelX - (popupDeleteButton.width / 2);
-                popupDeleteButton.y = panelY - (popupDeleteButton.height);
-                popupDeleteButton.jobId = id;
-                popupDeleteButton.visible = true;
+//                var panelX = x + mouseX - jobListView.contentX;
+//                var panelY = y + mouseY - jobListView.contentY + jobListView.y;
+//                popupDeleteButton.x = panelX - (popupDeleteButton.width / 2);
+//                popupDeleteButton.y = panelY - (popupDeleteButton.height);
+//                popupDeleteButton.jobId = id;
+//                popupDeleteButton.visible = true;
+                deleteJobConfirmation.jobId = id;
+                deleteJobConfirmation.jobIndex = index;
+                deleteJobConfirmation.open();
             }
 
             MouseArea {

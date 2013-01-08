@@ -715,7 +715,10 @@ PageStackWindow {
                     gcpClient.jobs("");
                 }
             } else {
-                // TODO Notify failed refreshAccessToken.
+                // Notify failed refreshAccessToken.
+                showMessageDialogSlot(
+                            "CloudPrint " + qsTr("Refresh Token"),
+                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
         }
 

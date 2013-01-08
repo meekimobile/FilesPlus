@@ -341,6 +341,12 @@ void GCPClient::refreshAccessToken()
 {
     qDebug() << "----- GCPClient::refreshAccessToken -----";
 
+    if (!m_paramMap.contains("refresh_token") || m_paramMap["refresh_token"] == "") {
+        qDebug() << "GCPClient::refreshAccessToken refreshToken is empty. Operation is aborted.";
+        emit refreshAccessTokenReplySignal(-1, "Refresh token is missing", "Refresh token is missing. Please authorize Google Cloud Print account again.");
+        return;
+    }
+
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
     sortMap["refresh_token"] = m_paramMap["refresh_token"];
