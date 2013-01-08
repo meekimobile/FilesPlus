@@ -538,7 +538,7 @@ PageStackWindow {
             for (var i=0; i<favContactModel.contacts.length; i++) {
                 var contact = favContactModel.contacts[i];
                 var favorite = (contact.favorite) ? contact.favorite.favorite : false;
-//                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + favorite);
+//                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " phoneNumber " + contact.phoneNumber.number + " favorite " + favorite);
                 model.append({
                                  displayLabel: contact.displayLabel,
                                  email: contact.email.emailAddress,
@@ -2128,14 +2128,7 @@ PageStackWindow {
     MessageDialog {
         id: messageDialog
     }
-/*
-    InfoBanner {
-        id: infoBanner
-        topMargin: 35
-        timerEnabled: true
-        timerShowTime: 2000
-    }
-*/
+
     function showMessageDialogSlot(titleText, message, autoCloseInterval) {
         if (autoCloseInterval) {
             messageDialog.autoClose = true;
@@ -2215,7 +2208,9 @@ PageStackWindow {
         shareFileCaller: cloudDriveModel.shareFileCaller
 
         function refresh() {
-            model.destroy();
+            if (model) {
+                model.destroy();
+            }
             model = favContactModel.getFavListModel();
             // Update model for next opening.
             favContactModel.update();
@@ -2226,12 +2221,12 @@ PageStackWindow {
             console.debug("recipientSelectionDialog onAccepted messageBody " + messageBody);
             if (shareFileCaller == "mailFileSlot") {
                 // ISSUE Mail client doesn't get all message body if it contains URI with & in query string. Worksround by using message client.
-//                Qt.openUrlExternally("mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody);
-                msgClient.sendEmail(selectedEmail, messageSubject, messageBody);
+                Qt.openUrlExternally("mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody);
+//                msgClient.sendEmail(selectedEmail, messageSubject, messageBody);
             } else if (shareFileCaller == "smsFileSlot") {
                 // TODO Doesn't work on meego. Needs to use MessageClient.
-//                Qt.openUrlExternally("sms:" + selectedNumber + "?body=" + messageBody);
-                msgClient.sendSMS(selectedNumber, messageBody);
+                Qt.openUrlExternally("sms:" + selectedNumber + "?body=" + messageBody);
+//                msgClient.sendSMS(selectedNumber, messageBody);
             }
         }
     }

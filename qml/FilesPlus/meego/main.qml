@@ -1,7 +1,6 @@
 import QtQuick 1.1
 import QtMobility.contacts 1.1
 import com.nokia.meego 1.0
-//import com.nokia.extras 1.1
 import AppInfo 1.0
 import ClipboardModel 1.0
 import GCPClient 1.0
@@ -533,7 +532,7 @@ PageStackWindow {
             for (var i=0; i<favContactModel.contacts.length; i++) {
                 var contact = favContactModel.contacts[i];
                 var favorite = (contact.favorite) ? contact.favorite.favorite : false;
-//                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " favorite " + favorite);
+//                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " phoneNumber " + contact.phoneNumber.number + " favorite " + favorite);
                 model.append({
                                  displayLabel: contact.displayLabel,
                                  email: contact.email.emailAddress,
@@ -2123,14 +2122,7 @@ PageStackWindow {
     MessageDialog {
         id: messageDialog
     }
-/*
-    InfoBanner {
-        id: infoBanner
-        topMargin: 35
-        timerEnabled: true
-        timerShowTime: 2000
-    }
-*/
+
     function showMessageDialogSlot(titleText, message, autoCloseInterval) {
         if (autoCloseInterval) {
             messageDialog.autoClose = true;
@@ -2210,7 +2202,9 @@ PageStackWindow {
         shareFileCaller: cloudDriveModel.shareFileCaller
 
         function refresh() {
-            model.destroy();
+            if (model) {
+                model.destroy();
+            }
             model = favContactModel.getFavListModel();
             // Update model for next opening.
             favContactModel.update();

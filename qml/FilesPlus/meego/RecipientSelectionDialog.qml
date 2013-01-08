@@ -52,7 +52,7 @@ SelectionDialog {
         }
 
         onClicked: {
-            console.debug("recipientSelectionDialog recipientItem onClicked " + index + " email " + email + " phoneNumber " + phoneNumber);
+            console.debug("recipientSelectionDialog recipientItem onClicked " + index + " displayLabel " + displayLabel + " email " + email + " phoneNumber " + phoneNumber);
             recipientSelectionDialog.selectedIndex = index;
             recipientSelectionDialog.selectedEmail = email;
             recipientSelectionDialog.selectedNumber = phoneNumber;

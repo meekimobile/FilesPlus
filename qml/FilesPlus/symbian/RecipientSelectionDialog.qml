@@ -24,7 +24,7 @@ SelectionDialog {
         id: recipientItem
         height: 60
         Column {
-            width: parent.width - favIcon.width - parent.spacing
+            width: parent.width - favIcon.width
             anchors.left: parent.left
             anchors.leftMargin: 16
             anchors.verticalCenter: parent.verticalCenter
@@ -42,7 +42,6 @@ SelectionDialog {
                 role: "Subtitle"
             }
         }
-
         Image {
             id: favIcon
             source: "favourite.svg"
@@ -50,8 +49,9 @@ SelectionDialog {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
         }
+
         onClicked: {
-            console.debug("recipientSelectionDialog recipientItem onClicked " + index + " email " + email + " phoneNumber " + phoneNumber);
+            console.debug("recipientSelectionDialog recipientItem onClicked " + index + " displayLabel " + displayLabel + " email " + email + " phoneNumber " + phoneNumber);
             recipientSelectionDialog.selectedIndex = index;
             recipientSelectionDialog.selectedEmail = email;
             recipientSelectionDialog.selectedNumber = phoneNumber;
