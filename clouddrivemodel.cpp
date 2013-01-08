@@ -2971,9 +2971,6 @@ void CloudDriveModel::jobDone() {
 }
 
 void CloudDriveModel::proceedNextJob() {
-    // TODO delay start by process events.
-    QApplication::processEvents();
-
     if (m_thread.isRunning()) return;
 
     // Proceed next job in queue. Any jobs which haven't queued will be ignored.

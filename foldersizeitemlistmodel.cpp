@@ -985,8 +985,6 @@ void FolderSizeItemListModel::deleteFinishedFilter(int fileAction, QString sourc
 
 void FolderSizeItemListModel::proceedNextJob()
 {
-    QApplication::processEvents();
-
     if (m.isRunning()) return;
 
     // Proceed next job in queue.
@@ -994,9 +992,6 @@ void FolderSizeItemListModel::proceedNextJob()
     if (runningJobCount >= MaxRunningJobCount || m_jobQueue.count() <= 0 || m_isSuspended) {
         return;
     }
-
-    // Tell event loop to process event before it will process time consuming task.
-    QApplication::processEvents(QEventLoop::AllEvents, 50);
 
     // Dequeue job and create job thread with signal/slot connections.
     FolderSizeJob job = m_jobQueue.dequeue();
