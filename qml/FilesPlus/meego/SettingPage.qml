@@ -1,13 +1,14 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
-import AppInfo 1.0
 import com.nokia.extras 1.0
 
 Page {
     id: settingPage
 
     property string name: "settingPage"
+    property int jobQueueCount: 0
     property int cloudDriveItemCount: 0
+    property bool inverted: !theme.inverted
 
     function getIndexByName(name) {
         for (var i=0; i<settingModel.count; i++) {
@@ -22,14 +23,14 @@ Page {
     function updateJobQueueCount(runningJobCount, jobQueueCount) {
         var i = getIndexByName("cancelAllCloudDriveJobs");
         if (i > -1) {
-            settingModel.set(i, { title: getTitle("cancelAllCloudDriveJobs") + " (" + jobQueueCount + ")" + appInfo.emptyStr });
+            settingPage.jobQueueCount = jobQueueCount;
         }
     }
 
     function updateCloudDriveItemCount(cloudDriveItemCount) {
         var i = getIndexByName("syncAllConnectedItems");
         if (i > -1) {
-            settingModel.set(i, { title: getTitle("syncAllConnectedItems") + " (" + cloudDriveItemCount + ")" + appInfo.emptyStr });
+            settingPage.cloudDriveItemCount = cloudDriveItemCount;
         }
     }
 
@@ -61,6 +62,12 @@ Page {
     ListModel {
         id: settingModel
         ListElement {
+            name: "CloudPrint"
+            title: ""
+            type: "section"
+            group: "CloudPrint"
+        }
+        ListElement {
             name: "showCloudPrintJobs"
             title: ""
             type: "button"
@@ -77,6 +84,18 @@ Page {
             title: ""
             type: "button"
             group: "CloudPrint"
+        }
+        ListElement {
+            name: "Spacer"
+            title: ""
+            type: "spacer"
+            group: "Spacer"
+        }
+        ListElement {
+            name: "CloudDrive"
+            title: ""
+            type: "section"
+            group: "CloudDrive"
         }
         ListElement {
             name: "showCloudDriveJobs"
@@ -109,10 +128,34 @@ Page {
             group: "CloudDrive"
         }
         ListElement {
+            name: "CloudFolderPage.thumbnail.enabled"
+            title: ""
+            type: "switch"
+            group: "CloudDrive"
+        }
+        ListElement {
+            name: "drivepage.clouddrive.enabled"
+            title: ""
+            type: "switch"
+            group: "CloudDrive"
+        }
+        ListElement {
+            name: "FolderPie"
+            title: ""
+            type: "section"
+            group: "FolderPie"
+        }
+        ListElement {
             name: "resetCache"
             title: ""
             type: "button"
             group: "FolderPie"
+        }
+        ListElement {
+            name: "Personalization"
+            title: ""
+            type: "section"
+            group: "Personalization"
         }
         ListElement {
             name: "locale"
@@ -145,6 +188,12 @@ Page {
             group: "Personalization"
         }
         ListElement {
+            name: "Developer"
+            title: ""
+            type: "section"
+            group: "Developer"
+        }
+        ListElement {
             name: "Logging.enabled"
             title: ""
             type: "switch"
@@ -156,25 +205,21 @@ Page {
             type: "switch"
             group: "Developer"
         }
-        ListElement {
-            name: "drivepage.clouddrive.enabled"
-            title: ""
-            type: "switch"
-            group: "Developer"
-        }
     }
 
-    ListView {
+    GridView {
         id: settingList
         width: parent.width
         height: parent.height - titlePanel.height
         anchors.top: titlePanel.bottom
         model: settingModel
         delegate: settingListItemDelegate
-        section.property: "group"
-        section.criteria: ViewSection.FullString
-        section.delegate: settingListSectionDelegate
         cacheBuffer: 1600
+        cellWidth: (window.inPortrait) ? parent.width : (parent.width / 2)
+        cellHeight: (window.inPortrait) ? 70 : 69
+        flow: (window.inPortrait) ? GridView.LeftToRight : GridView.TopToBottom
+        snapMode: GridView.SnapToRow
+        pressDelay: 200
     }
 
     function getTitle(name) {
@@ -182,8 +227,8 @@ Page {
         else if (name == "printFromURL") return qsTr("Print from URL") + appInfo.emptyStr;
         else if (name == "resetCloudPrint") return qsTr("Reset cloud print") + appInfo.emptyStr;
         else if (name == "showCloudDriveJobs") return qsTr("Show cloud drive jobs") + appInfo.emptyStr;
-        else if (name == "cancelAllCloudDriveJobs") return qsTr("Cancel queued jobs") + appInfo.emptyStr;
-        else if (name == "syncAllConnectedItems") return qsTr("Sync all connected items") + appInfo.emptyStr;
+        else if (name == "cancelAllCloudDriveJobs") return qsTr("Cancel queued jobs") + " (" + settingPage.jobQueueCount + ")" + appInfo.emptyStr;
+        else if (name == "syncAllConnectedItems") return qsTr("Sync all connected items") + " (" + settingPage.cloudDriveItemCount + ")" + appInfo.emptyStr;
         else if (name == "showCloudDriveAccounts") return qsTr("Show accounts") + appInfo.emptyStr;
         else if (name == "sync.after.refresh") return qsTr("Auto-sync after refresh") + appInfo.emptyStr;
         else if (name == "drivepage.clouddrive.enabled") return qsTr("Show cloud storage on drive page") + appInfo.emptyStr;
@@ -192,7 +237,8 @@ Page {
         else if (name == "Theme.inverted") return qsTr("Theme") + appInfo.emptyStr;
         else if (name == "popup.timer.interval") return qsTr("Popup interval") + appInfo.emptyStr;
         else if (name == "locale") return languageModel.getLanguage(appInfo.getLocale(), appInfo.getSystemLocale()) + appInfo.emptyStr;
-        else if (name == "thumbnail.enabled") return qsTr("Show thumbnail") + appInfo.emptyStr;
+        else if (name == "thumbnail.enabled") return qsTr("Show thumbnail on local drive") + appInfo.emptyStr;
+        else if (name == "CloudFolderPage.thumbnail.enabled") return qsTr("Show thumbnail on cloud drive") + appInfo.emptyStr;
         else if (name == "keep.bluetooth.off") return qsTr("Keep bluetooth off") + appInfo.emptyStr;
         else if (name == "Logging.enabled") return qsTr("Logging (Debug)") + appInfo.emptyStr;
         else if (name == "dropbox.fullaccess.enabled") return qsTr("Dropbox full access") + appInfo.emptyStr;
@@ -218,11 +264,7 @@ Page {
         } else if (name == "showCloudDriveAccounts") {
             pageStack.push(Qt.resolvedUrl("CloudDriveAccountsPage.qml"));
         } else if (name == "resetCache") {
-            pageStack.pop();
-            var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-            if (p) {
-                p.resetCacheSlot();
-            }
+            resetCacheConfirmation.open();
         } else if (name == "Theme.inverted") {
             theme.inverted = !theme.inverted;
         } else if (name == "locale") {
@@ -230,16 +272,12 @@ Page {
         } else if (name == "Logging.enabled") {
             quitConfirmation.open();
         } else if (name == "dropbox.fullaccess.enabled") {
-            pageStack.pop();
-            var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-            if (p) {
-                p.showDropboxFullAccessConfirmationSlot();
-            }
+            dropboxFullAccessConfirmation.open();
         } else if (name == "Monitoring.enabled") {
             if (appInfo.isMonitoring()) {
-                messageDialog.titleText = appInfo.emptyStr+qsTr("Monitoring");
-                messageDialog.message = appInfo.emptyStr+qsTr("Monitoring is enabled. Log file is ") + appInfo.getMonitoringFilePath();
-                messageDialog.open();
+                showMessageDialogSlot(
+                            qsTr("Monitoring"),
+                            qsTr("Monitoring is enabled. Log file is ") + appInfo.getMonitoringFilePath());
             }
         }
     }
@@ -247,134 +285,191 @@ Page {
     Component {
         id: settingListItemDelegate
 
-        Rectangle {
-            width: settingList.width
-            height: 80
-            color: "transparent"
-            Row {
-                visible: (type == "switch")
-                width: parent.width - 40
+        Item {
+            width: settingList.cellWidth
+            height: settingList.cellHeight
+
+            Loader {
+                id: itemLoader
+                width: parent.width
                 anchors.centerIn: parent
-                Text {
-                    id: settingKey
-                    color: (theme.inverted) ? "white" : "black"
-                    font.pointSize: 18
-                    width: parent.width - settingValue.width
-                    height: parent.height
-                    verticalAlignment: Text.AlignVCenter
-                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                    text: (title=="") ? getTitle(name) : title
-                }
-                Switch {
-                    id: settingValue
-                    anchors.verticalCenter: parent.verticalCenter
-                    checked: (type == "switch") && appInfo.getSettingValue(name, false)
-                    onCheckedChanged: {
-//                        console.debug("settingListItemDelegate settingValue checked " + checked + " appInfo.getSettingValue " + name + " " + appInfo.getSettingValue(name, false));
-                        if (appInfo.setSettingValue(name, checked)) {
-                            console.debug("settingListItemDelegate switch " + name + " checked " + checked + " is changed.");
-                            // Handle only if it's enabled.
-                            buttonClickedHandler(name);
-                        }
-                    }
+                property variant name
+                property variant title
+                property variant type
+                property variant group
+            }
+
+            Binding {
+                target: itemLoader
+                property: "name"
+                value: name
+            }
+
+            Binding {
+                target: itemLoader
+                property: "title"
+                value: title
+            }
+
+            Binding {
+                target: itemLoader
+                property: "type"
+                value: type
+            }
+
+            Binding {
+                target: itemLoader
+                property: "group"
+                value: group
+            }
+
+            Component.onCompleted: {
+//                console.debug("settingListItemDelegate onCompleted " + name + " " + type + " " + title + " " + group);
+                if (type == "section") {
+                    itemLoader.sourceComponent = settingListSectionDelegate;
+                } else if (type == "button") {
+                    itemLoader.sourceComponent = buttonItemDelegate;
+                } else if (type == "switch") {
+                    itemLoader.sourceComponent = switchItemDelegate;
+                } else if (type == "popupInterval") {
+                    itemLoader.sourceComponent = sliderItemDelegate;
+                } else if (type == "locale") {
+                    itemLoader.sourceComponent = localeSelectorItemDelegate;
                 }
             }
-            Row {
-                visible: (type == "popupInterval")
-                width: parent.width - 40
+        }
+    }
+
+    Component {
+        id: buttonItemDelegate
+        Button {
+            id: settingButton
+            width: parent.width - 20
+            height: 60
+            anchors.centerIn: parent
+            text: (title=="") ? getTitle(name) : title
+            onClicked: {
+                buttonClickedHandler(name);
+            }
+        }
+    }
+
+    Component {
+        id: switchItemDelegate
+        Row {
+            width: parent.width - 40
+            anchors.centerIn: parent
+            Text {
+                id: settingKey
+                color: (!inverted) ? "white" : "black"
+                font.pointSize: 18
+                width: parent.width - settingValue.width
                 height: parent.height
-                anchors.horizontalCenter: parent.horizontalCenter
-                Text {
-                    id: sliderLabel
-                    color: (theme.inverted) ? "white" : "black"
-                    font.pointSize: 18
-                    width: parent.width / 3
-                    height: parent.height
-                    verticalAlignment: Text.AlignVCenter
-                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                    text: (title=="") ? getTitle(name) : title
-                }
-                Slider {
-                    id: sliderValue
-                    width: parent.width - sliderLabel.width
-                    height: parent.height
-                    minimumValue: 2
-                    maximumValue: 10
-                    stepSize: 1
-                    valueIndicatorText: appInfo.emptyStr+qsTr("%n sec.", "", value)
-                    valueIndicatorVisible: true
-
-                    onPressedChanged: {
-                        console.debug("popupInterval pressed " + pressed + " value " + value);
-                        if (!pressed) {
-                            appInfo.setSettingValue(name, value);
-                        }
-                    }
-
-                    Component.onCompleted: {
-                        if (type == "popupInterval") {
-                            var v = appInfo.getSettingValue(name, 5);
-                            console.debug("settingPage popupInterval getSettingValue " + v);
-                            value = v;
-                        }
-                    }
-                }
-            }
-            Button {
-                id: settingButton
-                visible: (type == "button")
-                width: parent.width - 20
-                anchors.centerIn: parent
+                verticalAlignment: Text.AlignVCenter
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 text: (title=="") ? getTitle(name) : title
-                onClicked: {
-                    buttonClickedHandler(name);
+            }
+            Switch {
+                id: settingValue
+                anchors.verticalCenter: parent.verticalCenter
+                checked: appInfo.getSettingBoolValue(name, false)
+                onCheckedChanged: {
+//                        console.debug("settingListItemDelegate settingValue checked " + checked + " appInfo.getSettingValue " + name + " " + appInfo.getSettingValue(name, false));
+                    if (appInfo.setSettingValue(name, checked)) {
+                        console.debug("settingListItemDelegate switch " + name + " checked " + checked + " is changed.");
+                        // Handle only if it's enabled.
+                        buttonClickedHandler(name);
+                    }
                 }
             }
-            ButtonRow {
-                id: localeSelector
-                visible: (type == "locale")
-                width: parent.width - 20
-                anchors.centerIn: parent
-                checkedButton: localeCN
-                Button {
-                    id: localeEN
-                    property string locale: "en"
-                    text: appInfo.emptyStr+qsTr("English")
-                    checkable: true
-                    onClicked: {
-                        appInfo.setLocale(locale);
-                        buttonClickedHandler("locale");
-                    }
-                }
-                Button {
-                    id: localeRU
-                    property string locale: "ru"
-                    text: appInfo.emptyStr+qsTr("Russian")
-                    checkable: true
-                    onClicked: {
-                        appInfo.setLocale(locale);
-                        buttonClickedHandler("locale");
-                    }
-                }
-                Button {
-                    id: localeCN
-                    property string locale: "zh"
-                    text: appInfo.emptyStr+qsTr("Chinese")
-                    checkable: true
-                    onClicked: {
-                        appInfo.setLocale(locale);
-                        buttonClickedHandler("locale");
+        }
+    }
+
+    Component {
+        id: sliderItemDelegate
+        Row {
+            width: parent.width - 40
+            anchors.centerIn: parent
+            Text {
+                id: sliderLabel
+                color: (!inverted) ? "white" : "black"
+                font.pointSize: 18
+                width: parent.width - sliderValue.width
+                height: parent.height
+                verticalAlignment: Text.AlignVCenter
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                text: (title=="") ? getTitle(name) : title
+            }
+            Slider {
+                id: sliderValue
+                width: parent.width * 0.65
+                anchors.verticalCenter: parent.verticalCenter
+                minimumValue: 2
+                maximumValue: 10
+                stepSize: 1
+                valueIndicatorText: appInfo.emptyStr+qsTr("%n sec.", "", value)
+                valueIndicatorVisible: true
+
+                onPressedChanged: {
+                    console.debug("settingPage sliderItemDelegate sliderValue onPressedChanged " + pressed + " value " + value);
+                    if (!pressed) {
+                        appInfo.setSettingValue(name, value);
                     }
                 }
 
                 Component.onCompleted: {
-                    var currentLocale = appInfo.getLocale();
-                    for (var i=0; i<localeSelector.children.length; i++) {
-                        var child = localeSelector.children[i];
-                        if (currentLocale.indexOf(child.locale) == 0) {
-                            localeSelector.checkedButton = child;
-                            break;
-                        }
+                    value = appInfo.getSettingValue(name, 5);
+                    console.debug("settingPage sliderItemDelegate sliderValue onCompleted value " + value);
+                }
+            }
+        }
+    }
+
+    Component {
+        id: localeSelectorItemDelegate
+        ButtonRow {
+            id: localeSelector
+            width: parent.width - 20
+            anchors.centerIn: parent
+            checkedButton: localeCN
+            Button {
+                id: localeEN
+                property string locale: "en"
+                text: appInfo.emptyStr+qsTr("English")
+                checkable: true
+                onClicked: {
+                    appInfo.setLocale(locale);
+                    buttonClickedHandler("locale");
+                }
+            }
+            Button {
+                id: localeRU
+                property string locale: "ru"
+                text: appInfo.emptyStr+qsTr("Russian")
+                checkable: true
+                onClicked: {
+                    appInfo.setLocale(locale);
+                    buttonClickedHandler("locale");
+                }
+            }
+            Button {
+                id: localeCN
+                property string locale: "zh"
+                text: appInfo.emptyStr+qsTr("Chinese")
+                checkable: true
+                onClicked: {
+                    appInfo.setLocale(locale);
+                    buttonClickedHandler("locale");
+                }
+            }
+
+            Component.onCompleted: {
+                var currentLocale = appInfo.getLocale();
+                for (var i=0; i<localeSelector.children.length; i++) {
+                    var child = localeSelector.children[i];
+                    if (currentLocale.indexOf(child.locale) == 0) {
+                        localeSelector.checkedButton = child;
+                        break;
                     }
                 }
             }
@@ -384,25 +479,24 @@ Page {
     Component {
         id: settingListSectionDelegate
 
-        Rectangle {
-            width: settingList.width
-            height: 24
-            color: "transparent"
-            Row {
-                width: parent.width
-                spacing: 5
-                Text {
-                    id: sectionText
-                    text: getTitle(section)
-                    color: (theme.inverted) ? "grey" : "black"
-                    font.pointSize: 14
-                }
-                Rectangle {
-                    width: parent.width - sectionText.width - parent.spacing
-                    height: 1
-                    anchors.verticalCenter: sectionText.verticalCenter
-                    color: (theme.inverted) ? "grey" : "black"
-                }
+        Row {
+            width: parent.width - 20
+            anchors.centerIn: parent
+            spacing: 5
+
+            Text {
+                id: sectionText
+                text: getTitle(name)
+                color: (!inverted) ? "grey" : "black"
+                font.pointSize: 18
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Rectangle {
+                width: parent.width - parent.spacing - sectionText.width
+                height: 1
+                color: (!inverted) ? "grey" : "black"
+                anchors.verticalCenter: parent.verticalCenter
             }
         }
     }
