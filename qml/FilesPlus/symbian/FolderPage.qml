@@ -695,6 +695,11 @@ Page {
             fsModel.refreshItems();
         }
 
+        ScrollDecorator {
+            id: scrollbar
+            flickableItem: fsListView
+        }
+
         transform: Rotation {
             id: rotation
             origin.x: flipable1.width/2
