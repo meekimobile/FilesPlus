@@ -146,5 +146,6 @@
         <file alias="qml/FilesPlus/DriveMenu.qml">qml/FilesPlus/symbian/DriveMenu.qml</file>
         <file alias="qml/FilesPlus/ChartMenu.qml">qml/FilesPlus/symbian/ChartMenu.qml</file>
         <file alias="qml/FilesPlus/ToolBarButton.qml">qml/FilesPlus/symbian/ToolBarButton.qml</file>
+        <file>qml/FilesPlus/next_inverted.svg</file>
     </qresource>
 </RCC>

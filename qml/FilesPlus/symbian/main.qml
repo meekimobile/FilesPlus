@@ -209,6 +209,30 @@ PageStackWindow {
             }
         }
 
+        function findIndexByNameFilter(nameFilter, startIndex, backward) {
+            backward = (!backward) ? false : true;
+            var rx = new RegExp(nameFilter, "i");
+            if (backward) {
+                startIndex = (!startIndex) ? (fsModel.count - 1) : startIndex;
+                startIndex = (startIndex < 0 || startIndex >= fsModel.count) ? (fsModel.count - 1) : startIndex;
+                for (var i=startIndex; i>=0; i--) {
+                    if (rx.test(fsModel.getProperty(i, FolderSizeItemListModel.NameRole))) {
+                        return i;
+                    }
+                }
+            } else {
+                startIndex = (!startIndex) ? 0 : startIndex;
+                startIndex = (startIndex < 0 || startIndex >= fsModel.count) ? 0 : startIndex;
+                for (var i=startIndex; i<fsModel.count; i++) {
+                    if (rx.test(fsModel.getProperty(i, FolderSizeItemListModel.NameRole))) {
+                        return i;
+                    }
+                }
+            }
+
+            return -1;
+        }
+
         onCurrentDirChanged: {
         }
 

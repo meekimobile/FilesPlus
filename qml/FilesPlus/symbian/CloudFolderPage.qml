@@ -103,14 +103,6 @@ Page {
         cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
     }
 
-    function setNameFiltersAndRefreshSlot(caller, nameFilter) {
-        var i = cloudFolderModel.findIndexByNameFilter(nameFilter);
-        console.debug("cloudFolderPage setNameFiltersAndRefreshSlot " + nameFilter + " i " + i);
-        if (i > -1) {
-            cloudFolderView.positionViewAtIndex(i, ListView.Beginning);
-        }
-    }
-
     function mailFileSlot(remotePath, remotePathName) {
         console.debug("cloudFolderPage mailFileSlot remotePath=" + remotePath);
         recipientSelectionDialog.refresh();
@@ -195,7 +187,7 @@ Page {
                     cloudFolderView.state = "";
                 } else {
                     // Specify local path to focus after cd to parent directory..
-//                    fsListView.focusLocalPath = fsModel.currentDir;
+//                    cloudFolderView.focusLocalPath = cloudFolderModel.currentDir;
                     goUpSlot();
                 }
             }
@@ -277,8 +269,35 @@ Page {
         requestAsType: true
         anchors.bottom: parent.bottom
         anchors.bottomMargin: (inputContext.visible ? (inputContext.height - 60) : 0) // Symbian only
-        onRequestRefresh: {
-            setNameFiltersAndRefreshSlot(caller, nameFilterPanel.nameFilters);
+
+        onPrevious: {
+            lastFindIndex = cloudFolderModel.findIndexByNameFilter(nameFilter, --lastFindIndex, true);
+            console.debug("cloudFolderPage nameFilterPanel onPrevious nameFilter " + nameFilter + " lastFindIndex " + lastFindIndex);
+            if (lastFindIndex > -1) {
+                cloudFolderView.positionViewAtIndex(lastFindIndex, ListView.Beginning);
+                cloudFolderView.currentIndex = lastFindIndex;
+            }
+        }
+
+        onNext: {
+            lastFindIndex = cloudFolderModel.findIndexByNameFilter(nameFilter, ++lastFindIndex, false);
+            console.debug("cloudFolderPage nameFilterPanel onNext nameFilter " + nameFilter + " lastFindIndex " + lastFindIndex);
+            if (lastFindIndex > -1) {
+                cloudFolderView.positionViewAtIndex(lastFindIndex, ListView.Beginning);
+                cloudFolderView.currentIndex = lastFindIndex;
+            }
+        }
+
+        onOpened: {
+            // Turn highlight on.
+            cloudFolderView.highlightFollowsCurrentItem = true;
+            lastFindIndex = cloudFolderView.currentIndex;
+        }
+
+        onClosed: {
+            // Turn highlight off.
+            cloudFolderView.highlightFollowsCurrentItem = false;
+            cloudFolderView.currentIndex = -1;
         }
     }
 
@@ -400,11 +419,24 @@ Page {
             return -1;
         }
 
-        function findIndexByNameFilter(nameFilter) {
+        function findIndexByNameFilter(nameFilter, startIndex, backward) {
+            backward = (!backward) ? false : true;
             var rx = new RegExp(nameFilter, "i");
-            for (var i=0; i<cloudFolderModel.count; i++) {
-                if (rx.test(cloudFolderModel.get(i).name)) {
-                    return i;
+            if (backward) {
+                startIndex = (!startIndex) ? (cloudFolderModel.count - 1) : startIndex;
+                startIndex = (startIndex < 0 || startIndex >= cloudFolderModel.count) ? (cloudFolderModel.count - 1) : startIndex;
+                for (var i=startIndex; i>=0; i--) {
+                    if (rx.test(cloudFolderModel.get(i).name)) {
+                        return i;
+                    }
+                }
+            } else {
+                startIndex = (!startIndex) ? 0 : startIndex;
+                startIndex = (startIndex < 0 || startIndex >= cloudFolderModel.count) ? 0 : startIndex;
+                for (var i=startIndex; i<cloudFolderModel.count; i++) {
+                    if (rx.test(cloudFolderModel.get(i).name)) {
+                        return i;
+                    }
                 }
             }
 
@@ -447,7 +479,7 @@ Page {
     ListView {
         id: cloudFolderView
         width: parent.width
-        height: parent.height - currentPath.height - (inputContext.visible ? (inputContext.height - 60) : 0) // Symbian only
+        height: parent.height - currentPath.height - (nameFilterPanel.visible ? nameFilterPanel.height : 0) - (inputContext.visible ? (inputContext.height - 60) : 0) // Symbian only
         anchors.top: currentPath.bottom
         highlightRangeMode: ListView.NoHighlightRange
         highlightFollowsCurrentItem: false

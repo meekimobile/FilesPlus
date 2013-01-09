@@ -315,16 +315,6 @@ Page {
         fsModel.refreshDir(caller, false);
     }
 
-    function setNameFiltersAndRefreshSlot(caller) {
-        caller = (!caller) ? "folderPage setNameFiltersAndRefreshSlot" : caller;
-        if (nameFilterPanel.nameFilters.trim() == "") {
-            fsModel.nameFilters = [];
-        } else {
-            fsModel.nameFilters = [nameFilterPanel.nameFilters.trim()];
-        }
-        fsModel.refreshDir(caller, false);
-    }
-
     function resetCacheSlot() {
         resetCacheConfirmation.open();
     }
@@ -784,7 +774,9 @@ Page {
         id: fsListView
         x: 0
         y: 0
-        anchors.fill: parent
+        width: parent.width
+        height: parent.height - (nameFilterPanel.visible ? nameFilterPanel.height : 0) - (inputContext.visible ? (inputContext.height - 60) : 0) // Symbian only
+        anchors.top: parent.top
         highlightRangeMode: ListView.NoHighlightRange
         highlightFollowsCurrentItem: false
         highlightMoveDuration: 1
@@ -1059,10 +1051,38 @@ Page {
 
     NameFilterPanel {
         id: nameFilterPanel
+        requestAsType: true
         anchors.bottom: parent.bottom
         anchors.bottomMargin: (inputContext.visible ? (inputContext.height - 60) : 0) // Symbian only
-        onRequestRefresh: {
-            setNameFiltersAndRefreshSlot(caller);
+
+        onPrevious: {
+            lastFindIndex = fsModel.findIndexByNameFilter(nameFilter, --lastFindIndex, true);
+            console.debug("folderPage nameFilterPanel onPrevious nameFilter " + nameFilter + " lastFindIndex " + lastFindIndex);
+            if (lastFindIndex > -1) {
+                fsListView.positionViewAtIndex(lastFindIndex, ListView.Beginning);
+                fsListView.currentIndex = lastFindIndex;
+            }
+        }
+
+        onNext: {
+            lastFindIndex = fsModel.findIndexByNameFilter(nameFilter, ++lastFindIndex, false);
+            console.debug("folderPage nameFilterPanel onNext nameFilter " + nameFilter + " lastFindIndex " + lastFindIndex);
+            if (lastFindIndex > -1) {
+                fsListView.positionViewAtIndex(lastFindIndex, ListView.Beginning);
+                fsListView.currentIndex = lastFindIndex;
+            }
+        }
+
+        onOpened: {
+            // Turn highlight on.
+            fsListView.highlightFollowsCurrentItem = true;
+            lastFindIndex = fsListView.currentIndex;
+        }
+
+        onClosed: {
+            // Turn highlight off.
+            fsListView.highlightFollowsCurrentItem = false;
+            fsListView.currentIndex = -1;
         }
     }
 

@@ -26,38 +26,32 @@ Rectangle {
     visible: false
     
     property bool requestAsType: false
-    property alias nameFilters: nameFilterInput.text
+    property int lastFindIndex: -1
+    property alias nameFilter: nameFilterInput.text
 
-    signal requestRefresh(string caller);
+    signal previous()
+    signal next()
+    signal opened()
+    signal closed()
 
     function open() {
-        nameFilterInput.text = "";
+        lastFindIndex = -1;
+        nameFilterInput.focus = true;
         visible = true;
+        opened();
     }
     
     function close() {
-        nameFilterInput.text = "";
+        closeButton.focus = true;
         visible = false;
+        closed();
     }
     
     Row {
         anchors.fill: parent
         anchors.margins: 10
         spacing: 5
-        
-        TextField {
-            id: nameFilterInput
-            width: parent.width - (2*parent.spacing) - closeButton.width - searchButton.width
-            height: parent.height
-            placeholderText: appInfo.emptyStr+qsTr("Please input name filter.")
 
-            Keys.onPressed: {
-                if (requestAsType || event.key == Qt.Key_Return || event.key == Qt.Key_Enter) {
-                    requestRefresh("nameFilterPanel nameFilterInput Keys.onPressed");
-                }
-            }
-        }
-        
         Button {
             id: closeButton
             width: parent.height
@@ -65,17 +59,44 @@ Rectangle {
             iconSource: (theme.inverted) ? "close_stop.svg" : "close_stop_inverted.svg"
             onClicked: {
                 nameFilterPanel.close();
-//                requestRefresh("nameFilterPanel closeButton");
+            }
+        }
+
+        TextField {
+            id: nameFilterInput
+            width: parent.width - (2*parent.spacing) - closeButton.width - buttons.width
+            height: parent.height
+            placeholderText: appInfo.emptyStr+qsTr("Please input name filter.")
+
+            Keys.onPressed: {
+                if (requestAsType || event.key == Qt.Key_Return || event.key == Qt.Key_Enter) {
+                    next();
+                }
             }
         }
         
-        Button {
-            id: searchButton
-            width: parent.height
+        ButtonRow {
+            id: buttons
+            width: parent.height * 2
             height: parent.height
-            iconSource: (theme.inverted) ? "search.svg" : "search_inverted.svg"
-            onClicked: {
-                requestRefresh("nameFilterPanel searchButton");
+            Button {
+                id: prevButton
+                width: parent.height
+                height: parent.height
+                iconSource: (theme.inverted) ? "back.svg" : "back_inverted.svg"
+                onClicked: {
+                    previous();
+                }
+            }
+
+            Button {
+                id: nextButton
+                width: parent.height
+                height: parent.height
+                iconSource: (theme.inverted) ? "next.svg" : "next_inverted.svg"
+                onClicked: {
+                    next();
+                }
             }
         }
     }

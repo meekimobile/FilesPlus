@@ -146,5 +146,6 @@
         <file alias="qml/FilesPlus/CloudFolderPage.qml">qml/FilesPlus/meego/CloudFolderPage.qml</file>
         <file alias="qml/FilesPlus/CloudListItem.qml">qml/FilesPlus/meego/CloudListItem.qml</file>
         <file alias="qml/FilesPlus/CloudFolderMenu.qml">qml/FilesPlus/meego/CloudFolderMenu.qml</file>
+        <file>qml/FilesPlus/next_inverted.svg</file>
     </qresource>
 </RCC>
