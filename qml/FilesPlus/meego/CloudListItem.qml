@@ -13,6 +13,7 @@ ListItem {
     property alias runningIconSource: runningIcon.source
     property alias syncIconSource: syncIcon.source
     property alias syncIconVisible: syncIcon.visible
+    property bool inverted: !theme.inverted
 
     signal pressAndHold()
     signal clicked()
@@ -62,7 +63,7 @@ ListItem {
                 anchors.left: parent.left
                 anchors.bottom: parent.bottom
                 visible: (listViewState == "mark" && isChecked)
-                source: (theme.inverted) ? "ok.svg" : "ok_inverted.svg"
+                source: (!inverted) ? "ok.svg" : "ok_inverted.svg"
             }
             Image {
                 id: listItemIcon
@@ -90,7 +91,7 @@ ListItem {
                     font.pointSize: 18
                     elide: Text.ElideMiddle
                     verticalAlignment: Text.AlignVCenter
-                    color: (theme.inverted) ? "white" : "black"
+                    color: (!inverted) ? "white" : "black"
                 }
                 Text {
                     id: sizeText
@@ -100,7 +101,7 @@ ListItem {
                     font.pointSize: 16
                     horizontalAlignment: Text.AlignRight
                     verticalAlignment: Text.AlignVCenter
-                    color: (theme.inverted) ? "white" : "black"
+                    color: (!inverted) ? "white" : "black"
                 }
             }
             Row {
@@ -127,7 +128,7 @@ ListItem {
                         elide: Text.ElideRight
                         verticalAlignment: Text.AlignVCenter
                         visible: !isRunning
-                        color: "grey"
+                        color: (!inverted) ? "#D0D0D0" : "#202020"
                     }
                     Row {
                         width: parent.width
@@ -139,7 +140,7 @@ ListItem {
                             width: 24
                             height: 24
                             anchors.verticalCenter: parent.verticalCenter
-                            source: (theme.inverted) ? "refresh.svg" : "refresh_inverted.svg"
+                            source: (!inverted) ? "refresh.svg" : "refresh_inverted.svg"
                         }
                         ProgressBar {
                             id: syncProgressBar

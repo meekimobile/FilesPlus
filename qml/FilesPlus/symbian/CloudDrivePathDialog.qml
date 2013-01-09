@@ -105,9 +105,9 @@ ConfirmDialog {
     }
 
     titleText: appInfo.emptyStr+getTitleText(localPath, selectedRemotePathName, remoteParentPathName)
-    content: Column {
+    content: Item {
         width: parent.width
-        spacing: 5
+        height: toolBar.height + cloudDrivePathListView.height + cloudDrivePathListView.anchors.topMargin
 
         Rectangle {
             id: toolBar
@@ -245,6 +245,8 @@ ConfirmDialog {
             highlightMoveSpeed: 2000
             pressDelay: 100
             clip: true
+            anchors.top: toolBar.bottom
+            anchors.topMargin: 5
             onMovementStarted: {
                 if (currentItem) {
                     currentItem.pressed = false;
@@ -258,6 +260,7 @@ ConfirmDialog {
                 opacity: 0.5
                 visible: isBusy
                 anchors.fill: parent
+                z: 2
 
                 BusyIndicator {
                     id: busyIcon
@@ -277,6 +280,11 @@ ConfirmDialog {
                 }
             }
         }
+
+        ScrollDecorator {
+            id: scrollBar
+            flickableItem: cloudDrivePathListView
+        }
     }
 
     Component {
@@ -287,6 +295,7 @@ ConfirmDialog {
             listViewState: (cloudDrivePathListView.state ? cloudDrivePathListView.state : "")
             syncIconVisible: cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, absolutePath)
             syncIconSource: "cloud.svg"
+            inverted: false
 
             // Override to support cloud items.
             function getIconSource() {
