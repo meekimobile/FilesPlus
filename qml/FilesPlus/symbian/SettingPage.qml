@@ -226,7 +226,7 @@ Page {
         cellHeight: (window.inPortrait) ? 52 : 50
         flow: (window.inPortrait) ? GridView.LeftToRight : GridView.TopToBottom
         snapMode: GridView.SnapToRow
-        pressDelay: 200
+        pressDelay: 100
     }
 
     function getTitle(name) {

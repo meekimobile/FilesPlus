@@ -106,6 +106,7 @@ Page {
         anchors.top: titlePanel.bottom
         model: cloudDriveModel.jobsModel
         delegate: jobDelegate
+        clip: true
     }
 
     Component {

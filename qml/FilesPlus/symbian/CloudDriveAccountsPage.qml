@@ -282,6 +282,7 @@ Page {
         height: parent.height - titlePanel.height
         anchors.top: titlePanel.bottom
         delegate: accountDelegate
+        clip: true
     }
 
     Component {
