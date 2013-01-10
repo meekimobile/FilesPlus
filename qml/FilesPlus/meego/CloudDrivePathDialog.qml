@@ -107,7 +107,7 @@ ConfirmDialog {
     titleText: appInfo.emptyStr+getTitleText(localPath, selectedRemotePathName, remoteParentPathName)
     content: Item {
         width: parent.width
-        height: toolBar.height + cloudDrivePathListView.height + cloudDrivePathListView.anchors.topMargin
+        height: childrenRect.height
 
         Rectangle {
             id: toolBar
