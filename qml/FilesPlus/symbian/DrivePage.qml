@@ -198,9 +198,6 @@ Page {
         if (status == PageStatus.Active) {
             driveGrid.currentIndex = -1;
 
-            // Parse all storages.
-//            refreshSlot("drivePage onStatusChanged");
-
             // Stop startup logging.
             appInfo.stopLogging();
         }

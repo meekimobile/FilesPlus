@@ -7,6 +7,7 @@ import GCPClient 1.0
 import CloudDriveModel 1.0
 import FolderSizeItemListModel 1.0
 import MessageClient 1.0
+import BluetoothClient 1.0
 import "Utility.js" as Utility
 
 PageStackWindow {
@@ -589,6 +590,73 @@ PageStackWindow {
 
     MessageClient {
         id: msgClient
+    }
+
+    BluetoothClient {
+        id: btClient
+
+        onHostModeStateChanged: {
+            if (hostMode != BluetoothClient.HostPoweredOff) {
+                btClient.startDiscovery();
+            }
+        }
+
+        onDiscoveryChanged: {
+            console.debug("btClient.onDiscoveryChanged " + discovery);
+        }
+
+        onServiceDiscovered: {
+            var i = btSelectionModel.findDeviceAddress(deviceAddress);
+            console.debug("btClient.onServiceDiscovered " + deviceName + " " + deviceAddress + " " + isTrusted + " " + isPaired + " i " + i);
+            var jsonObj = {
+                "deviceName": deviceName,
+                "deviceAddress": deviceAddress,
+                "isTrusted": isTrusted,
+                "isPaired": isPaired
+            };
+            if (i === -1) {
+                btSelectionModel.append(jsonObj);
+            } else {
+                btSelectionModel.set(i, jsonObj);
+            }
+        }
+
+        onRequestPowerOn: {
+            btPowerOnDialog.open();
+        }
+
+        onUploadStarted: {
+            btUploadProgressDialog.srcFilePath = localPath;
+            btUploadProgressDialog.autoClose = true;
+            btUploadProgressDialog.min = 0;
+            btUploadProgressDialog.max = 0;
+            btUploadProgressDialog.value = 0;
+            btUploadProgressDialog.indeterminate = true;
+            btUploadProgressDialog.message = "";
+            btUploadProgressDialog.open();
+        }
+
+        onUploadProgress: {
+            btUploadProgressDialog.indeterminate = false;
+            btUploadProgressDialog.max = bytesTotal;
+            btUploadProgressDialog.value = bytesSent;
+        }
+
+        onUploadFinished: {
+            btUploadProgressDialog.indeterminate = false;
+            btUploadProgressDialog.message = msg;
+            if (appInfo.getSettingBoolValue("keep.bluetooth.off", false)) {
+                btClient.powerOff();
+            }
+        }
+
+        Component.onCompleted: {
+            console.debug(Utility.nowText() + " folderPage btClient onCompleted");
+            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("BTClient"), 0.1);
+
+            // Workaround for meego to initialize SelectionDialog height.
+            btClient.requestDiscoveredDevices();
+        }
     }
 
     GCPClient {
@@ -2289,6 +2357,62 @@ PageStackWindow {
             recipientSelectionDialog.messageBody = appInfo.emptyStr+qsTr("Please download file with below link.") + "\n" + url;
             recipientSelectionDialog.senderEmail = senderEmail;
             recipientSelectionDialog.open();
+        }
+    }
+
+    UploadProgressDialog {
+        id: btUploadProgressDialog
+        titleText: appInfo.emptyStr+qsTr("Bluetooth transfering")
+        buttonTexts: [appInfo.emptyStr+qsTr("Cancel")]
+        onButtonClicked: {
+            if (index == 0) {
+                if (!btClient.isFinished) {
+                    btClient.uploadAbort();
+                }
+            }
+        }
+    }
+
+    ConfirmDialog {
+        id: btPowerOnDialog
+        titleText: appInfo.emptyStr+qsTr("Bluetooth transfering")
+        contentText: appInfo.emptyStr+qsTr("Transfering requires Bluetooth.\
+\n\nPlease click 'OK' to turn Bluetooth on.")
+        onConfirm: {
+            btClient.powerOn();
+            btSelectionDialog.open();
+        }
+    }
+
+    BluetoothSelectionDialog {
+        id: btSelectionDialog
+        model: ListModel {
+            id: btSelectionModel
+            function findDeviceAddress(deviceAddress) {
+                for (var i=0; i<btSelectionModel.count; i++) {
+                    var existingDeviceAddress = btSelectionModel.get(i).deviceAddress;
+                    if (existingDeviceAddress === deviceAddress) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+        }
+        discovery: btClient.discovery
+        onSelected: {
+            btClient.sendFile(localPath, deviceAddress);
+        }
+        onRejected: {
+            btClient.stopDiscovery();
+            if (appInfo.getSettingBoolValue("keep.bluetooth.off", false)) {
+                btClient.powerOff();
+            }
+        }
+        onStatusChanged: {
+            if (status == DialogStatus.Open) {
+                btClient.requestDiscoveredDevices();
+                btClient.startDiscovery(false, true);
+            }
         }
     }
 

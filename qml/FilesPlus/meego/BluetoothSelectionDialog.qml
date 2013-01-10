@@ -53,9 +53,9 @@ SelectionDialog {
                 }
                 Image {
                     id: pairIcon
-                    source: "lock.svg"
+                    source: (isTrusted) ? "lock.svg" : "bluetooth_paired.svg"
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: isTrusted
+                    visible: (isTrusted || isPaired)
                     width: (!visible ? 0 : implicitWidth)
                 }
             }

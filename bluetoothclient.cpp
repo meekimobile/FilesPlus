@@ -89,7 +89,7 @@ void BluetoothClient::requestDiscoveredDevices()
         QString deviceName = m_btServiceHash.value(addr);
         bool trusted = isTrusted(addr);
         bool paired = isPaired(addr);
-        qDebug() << "BluetoothClient::requestDiscoveredDevices" << addr << deviceName << trusted << paired;
+        qDebug() << "BluetoothClient::requestDiscoveredDevices" << addr << deviceName << "trusted" << trusted << "paired" << paired;
         if (paired) {
             emit serviceDiscovered(deviceName, addr, trusted, paired, false);
         }

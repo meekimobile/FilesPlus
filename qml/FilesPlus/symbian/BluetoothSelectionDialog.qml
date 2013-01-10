@@ -29,18 +29,6 @@ SelectionDialog {
             }
         }
     ]
-    titleIcon: "FilesPlusIcon.svg"
-    content: Item {
-        id: content
-        width: parent.width
-        height: 180
-
-        ListView {
-            id: btSelectionListView
-            anchors.fill: parent
-            delegate: btItemDelegate
-        }
-    }
 
     delegate: btItemDelegate
     Component {
@@ -64,9 +52,9 @@ SelectionDialog {
                 }
                 Image {
                     id: pairIcon
-                    source: "lock.svg"
+                    source: (isTrusted) ? "lock.svg" : "bluetooth_paired.svg"
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: isTrusted
+                    visible: (isTrusted || isPaired)
                     width: (!visible ? 0 : implicitWidth)
                 }
             }
