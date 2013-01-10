@@ -1,5 +1,4 @@
 import QtQuick 1.1
-import "Utility.js" as Utility
 
 // Clipboard element = { "action": "cut", "sourcePath": sourcePath }
 

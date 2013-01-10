@@ -1,11 +1,9 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
 
-Menu {
+MenuWithIcon {
     id: markAllMenu
     z: 2
-
-    property variant disabledMenus: []
 
     signal markAll()
     signal markAllFiles()
@@ -14,19 +12,22 @@ Menu {
     content: MenuLayout {
         id: markAllMenuLayout
 
-        MenuItem {
+        // TODO Alias for fixing incorrect children.
+        default property alias children: menuLayout.menuChildren
+
+        MenuItemWithIcon {
             text: appInfo.emptyStr+qsTr("Mark all")
             onClicked: {
                 markAll();
             }
         }
-        MenuItem {
+        MenuItemWithIcon {
             text: appInfo.emptyStr+qsTr("Mark all files")
             onClicked: {
                 markAllFiles();
             }
         }
-        MenuItem {
+        MenuItemWithIcon {
             text: appInfo.emptyStr+qsTr("Mark all folders")
             onClicked: {
                 markAllFolders();

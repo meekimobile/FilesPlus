@@ -5,6 +5,7 @@ MenuWithIcon {
     id: markMenu
     z: 2
 
+    property variant disabledMenus: []
     property bool isMarkAll: true
 
     signal markAll()

@@ -78,7 +78,6 @@
         <file alias="qml/FilesPlus/MarkAllMenu.qml">qml/FilesPlus/symbian/MarkAllMenu.qml</file>
         <file alias="qml/FilesPlus/MenuWithIcon.qml">qml/FilesPlus/symbian/MenuWithIcon.qml</file>
         <file alias="qml/FilesPlus/MenuItemWithIcon.qml">qml/FilesPlus/symbian/MenuItemWithIcon.qml</file>
-        <file alias="qml/FilesPlus/MenuItemWithCheck.qml">qml/FilesPlus/symbian/MenuItemWithCheck.qml</file>
         <file>qml/FilesPlus/folder_list.svg</file>
         <file>qml/FilesPlus/notes_list.svg</file>
         <file>qml/FilesPlus/photos_list.svg</file>
