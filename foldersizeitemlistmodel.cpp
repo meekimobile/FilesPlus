@@ -126,7 +126,7 @@ void FolderSizeItemListModel::setCurrentDir(const QString &path)
     // Invoke background refresh by clearing items while refreshing.
     refreshDir("FolderSizeItemListModel::setCurrentDir", false, true);
 
-    qDebug() << QTime::currentTime() << "FolderSizeItemListModel::setCurrentDir";
+//    qDebug() << QTime::currentTime() << "FolderSizeItemListModel::setCurrentDir";
 }
 
 QStringList FolderSizeItemListModel::getDriveList()
