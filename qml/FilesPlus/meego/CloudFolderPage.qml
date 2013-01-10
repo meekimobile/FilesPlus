@@ -1,7 +1,6 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
 import CloudDriveModel 1.0
-import ClipboardModel 1.0
 import "Utility.js" as Utility
 
 Page {
@@ -1076,76 +1075,24 @@ Page {
         }
     }
 
-    ConfirmDialog {
+    NewFolderDialog {
         id: newFolderDialog
         titleText: appInfo.emptyStr+qsTr("New folder")
-        titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
-        content: Item {
-            width: parent.width
-            height: 80
-
-            TextField {
-                id: folderName
-                width: parent.width
-                placeholderText: appInfo.emptyStr+qsTr("Please input folder name.")
-                anchors.centerIn: parent
-            }
-        }
-
-        onOpened: {
-            folderName.text = "";
-        }
+        folderOnly: true
 
         onConfirm: {
-            if (folderName.text !== "") {
-                createRemoteFolder(folderName.text.trim());
+            if (nameField.text !== "") {
+                createRemoteFolder(nameField.text.trim());
             }
         }
     }
 
-    ConfirmDialog {
+    RenameDialog {
         id: renameDialog
 
-        property string sourcePath
-        property string sourcePathName
-
-        titleText: appInfo.emptyStr+qsTr("Rename")
-        titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
-        content: Column {
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: parent.width - 10
-            height: 120
-            spacing: 3
-
-            Text {
-                width: parent.width
-                text: appInfo.emptyStr+qsTr("Rename %1 to").arg(renameDialog.sourcePathName);
-                color: "white"
-                font.pointSize: 16
-                elide: Text.ElideMiddle
-            }
-
-            TextField {
-                id: newName
-                width: parent.width
-                placeholderText: appInfo.emptyStr+qsTr("Please input new name.")
-            }
-        }
-
-        onOpened: {
-            newName.text = sourcePathName;
-            newName.forceActiveFocus();
-        }
-
-        onClosed: {
-            newName.text = "";
-        }
-
         onConfirm: {
-            if (newName.text != "" && newName.text != sourcePathName) {
-                renameRemotePath(sourcePath, newName.text);
+            if (nameField.text != "" && nameField.text != sourcePathName) {
+                renameRemotePath(sourcePath, nameField.text);
             }
         }
     }

@@ -1459,62 +1459,16 @@ Page {
         }
     }
 
-    ConfirmDialog {
+    NewFolderDialog {
         id: newFolderDialog
-        titleText: appInfo.emptyStr+qsTr("New folder / file")
-        titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
-        content: Column {
-            width: parent.width - 10
-            height: 120
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 10
-
-            Row {
-                width: parent.width
-                spacing: 10
-                RadioButton {
-                    id: newFolderButton
-                    width: (parent.width - parent.spacing) / 2
-                    text: "<font color='white'>" + appInfo.emptyStr+qsTr("Folder") + "</font>"
-                    onClicked: {
-                        newFileButton.checked = false;
-                    }
-                }
-                RadioButton {
-                    id: newFileButton
-                    width: (parent.width - parent.spacing) / 2
-                    text: "<font color='white'>" + appInfo.emptyStr+qsTr("File") + "</font>"
-                    onClicked: {
-                        newFolderButton.checked = false;
-                    }
-                }
-            }
-
-            TextField {
-                id: folderName
-                width: parent.width
-                placeholderText: appInfo.emptyStr+(newFolderButton.checked ? qsTr("Please input folder name.") : qsTr("Please input file name."))
-            }
-        }
-
-        onOpened: {
-            newFolderButton.checked = true;
-            newFileButton.checked = false;
-            folderName.text = "";
-        }
-
-        onClosed: {
-            folderName.text = "";
-        }
 
         onConfirm: {
-            if (folderName.text !== "") {
+            if (nameField.text !== "") {
                 var res = false;
-                if (newFolderButton.checked) {
-                    res = fsModel.createDir(folderName.text);
+                if (isNewFolder) {
+                    res = fsModel.createDir(nameField.text);
                 } else {
-                    res = fsModel.createEmptyFile(folderName.text);
+                    res = fsModel.createEmptyFile(nameField.text);
                 }
 
                 refreshSlot();
@@ -1522,158 +1476,16 @@ Page {
         }
     }
 
-    ConfirmDialog {
+    RenameDialog {
         id: renameDialog
-
-        property string sourcePath
-
-        titleText: appInfo.emptyStr+qsTr("Rename")
-        titleIcon: "FilesPlusIcon.svg"
-        buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
-        content: Column {
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: parent.width - 10
-            height: 120
-            spacing: 3
-
-            Text {
-                width: parent.width
-                text: appInfo.emptyStr+qsTr("Rename %1 to").arg(fsModel.getFileName(renameDialog.sourcePath));
-                color: "white"
-                font.pointSize: 16
-                elide: Text.ElideMiddle
-            }
-
-            TextField {
-                id: newName
-                width: parent.width
-                placeholderText: appInfo.emptyStr+qsTr("Please input new name.")
-            }
-        }
-
-        onOpened: {
-            newName.text = fsModel.getFileName(renameDialog.sourcePath);
-            newName.forceActiveFocus();
-        }
-
-        onClosed: {
-            newName.text = "";
-        }
+        sourcePathName: fsModel.getFileName(sourcePath)
 
         onConfirm: {
-            if (newName.text != "" && newName.text != fsModel.getFileName(renameDialog.sourcePath)) {
-                var res = fsModel.renameFile(fsModel.getFileName(renameDialog.sourcePath), newName.text);
+            if (nameField.text != "" && nameField.text != sourcePathName) {
+                var res = fsModel.renameFile(sourcePathName, nameField.text);
                 refreshSlot();
             }
         }
-    }
-
-    ConfirmDialog {
-        id: cancelQueuedFolderSizeJobsConfirmation
-        titleText: appInfo.emptyStr+qsTr("Cancel file action jobs")
-        content: Column {
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: parent.width - 20
-            spacing: 3
-                Text {
-                id: content
-                color: "white"
-                font.pointSize: 16
-                wrapMode: Text.Wrap
-                width: parent.width - 20
-                height: implicitHeight
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-            CheckBox {
-                id: rollbackFlag
-                text: appInfo.emptyStr+qsTr("Rollback changes")
-                checked: false
-            }
-        }
-        onOpening: {
-            var jobCount = fsModel.getQueuedJobCount();
-            if (jobCount > 0) {
-                content.text = appInfo.emptyStr+qsTr("Cancel %n job(s) and abort file action ?", "", jobCount);
-            } else {
-                content.text = appInfo.emptyStr+qsTr("Abort file action ?");
-            }
-            rollbackFlag.checked = false;
-        }
-        onConfirm: {
-            fsModel.cancelQueuedJobs();
-            // Abort thread with rollbackFlag.
-            fsModel.abortThread(rollbackFlag.checked);
-        }
-    }
-
-    ConfirmDialog {
-        id: dropboxFullAccessConfirmation
-        titleText: appInfo.emptyStr+appInfo.emptySetting
-                   + ( appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", true)
-                      ? qsTr("Dropbox full access")
-                      : qsTr("Dropbox app access") )
-        contentText: appInfo.emptyStr+appInfo.emptySetting
-                     + ( appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", true)
-                        ? qsTr("Change to have full access to your Dropbox?")
-                        : qsTr("Change to have app access to your Dropbox?") )
-                     + "\n\n" + qsTr("FilesPlus needs to convert its database. It will not effect your data.")
-                     + "\n\n" + qsTr("Please click OK to continue.")
-        onConfirm: {
-            // Update setting.
-            if (!appInfo.hasSettingValue("dropbox.fullaccess.enabled")) {
-                // Set to full access if no setting.
-                appInfo.setSettingValue("dropbox.fullaccess.enabled", true);
-            } else {
-                // Do nothing, value has been set by setting page.
-            }
-
-            // Migrate DAT to DB.
-            appInfo.setSettingValue("cloudItems.migration.confirmation", true);
-            cloudDriveModel.migrateCloudDriveItemsToDB();
-
-            // Update DB.
-            cloudDriveModel.updateDropboxPrefix(appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", false));
-
-            window.showMessageDialogSlot("Dropbox " + appInfo.emptyStr+qsTr("notify"),
-                                         qsTr("You have changed Dropbox access method.\nPlease re-authorize your accounts before proceed your actions."));
-        }
-        onReject: {
-            // Update setting.
-            if (!appInfo.hasSettingValue("dropbox.fullaccess.enabled")) {
-                // Set to app access if no setting.
-                appInfo.setSettingValue("dropbox.fullaccess.enabled", false);
-            } else {
-                // Rollback.
-                appInfo.setSettingValue("dropbox.fullaccess.enabled", !appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", false) );
-            }
-
-            // Check for cloud data migration.
-            if (!appInfo.hasSettingValue("cloudItems.migration.confirmation") && cloudDriveModel.getCloudDriveItemsCount() > 0) {
-                cloudItemsMigrationConfirmation.open();
-            }
-        }
-    }
-
-    ConfirmDialog {
-        id: cloudItemsMigrationConfirmation
-        titleText: appInfo.emptyStr+qsTr("Cloud data conversion")
-        contentText: appInfo.emptyStr+qsTr("FilesPlus needs to convert its database. It will not effect your data.")
-                     + "\n\n" + qsTr("Please click OK to continue.")
-        onConfirm: {
-            // Migrate DAT to DB.
-            cloudDriveModel.migrateCloudDriveItemsToDB();
-            appInfo.setSettingValue("cloudItems.migration.confirmation", "true");
-        }
-        onReject: {
-            appInfo.setSettingValue("cloudItems.migration.confirmation", "false");
-        }
-    }
-
-    ProgressDialog {
-        id: migrateProgressDialog
-        formatValue: false
-        autoClose: true
-        titleText: appInfo.emptyStr+qsTr("Cloud data conversion")
     }
 
     CloudDriveUsersDialog {
