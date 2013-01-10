@@ -10,7 +10,7 @@ MenuWithIcon {
     signal markAllFolders()
 
     content: MenuLayout {
-        id: markAllMenuLayout
+        id: menuLayout
 
         // TODO Alias for fixing incorrect children.
         default property alias children: menuLayout.menuChildren
