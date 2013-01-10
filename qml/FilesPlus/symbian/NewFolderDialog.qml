@@ -50,6 +50,7 @@ ConfirmDialog {
         newFolderButton.checked = true;
         newFileButton.checked = false;
         folderName.text = "";
+        folderName.forceActiveFocus();
     }
     
     onClosed: {

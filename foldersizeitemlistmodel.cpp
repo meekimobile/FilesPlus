@@ -545,7 +545,9 @@ bool FolderSizeItemListModel::createDir(const QString name)
     QDir dir(currentDir());
     bool res = dir.mkdir(name);
     if (res) {
-        emit createFinished(dir.absoluteFilePath(name));
+        emit createFinished(dir.absoluteFilePath(name), tr("Create %1 done.").arg(name), 0);
+    } else {
+        emit createFinished(currentDir() + "/" + name, tr("Create %1 failed.").arg(name), -1);
     }
     return res;
 }
@@ -557,7 +559,9 @@ bool FolderSizeItemListModel::createDirPath(const QString absPath)
     QDir dir(getDirPath(absPath));
     bool res = dir.mkdir(getFileName(absPath));
     if (res) {
-        emit createFinished(absPath);
+        emit createFinished(absPath, tr("Create %1 done.").arg(absPath), 0);
+    } else {
+        emit createFinished(absPath, tr("Create %1 failed.").arg(absPath), -1);
     }
     return res;
 }
@@ -579,10 +583,12 @@ bool FolderSizeItemListModel::createEmptyFile(const QString name)
 
     qDebug() << "FolderSizeItemListModel::createEmptyFile file" << absPath << "size" << c;
     if (c != -1) {
-        emit createFinished(dir.absoluteFilePath(name));
+        emit createFinished(dir.absoluteFilePath(name), tr("Create %1 done.").arg(name), 0);
         return true;
+    } else {
+        emit createFinished(currentDir() + "/" + name, tr("Create %1 failed.").arg(name), -1);
+        return false;
     }
-    return false;
 }
 
 bool FolderSizeItemListModel::renameFile(const QString fileName, const QString newFileName)

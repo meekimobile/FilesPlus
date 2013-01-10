@@ -354,29 +354,41 @@ PageStackWindow {
         }
 
         onCreateFinished: {
-            console.debug("fsModel onCreateFinished " + targetPath);
+            console.debug("fsModel onCreateFinished targetPath " + targetPath + " err " + err + " msg " + msg);;
 
-            // If created item is not found, refresh.
-            var targetIndex = fsModel.getIndexOnCurrentDir(targetPath);
-            console.debug("fsModel onCreateFinished targetIndex " + targetIndex + " FolderSizeItemListModel.IndexOnCurrentDirButNotFound " + FolderSizeItemListModel.IndexOnCurrentDirButNotFound);
-            if (targetIndex === FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
-                fsModel.clearIndexOnCurrentDir();
-                fsModel.refreshDir("fsModel onCreateFinished");
+            if (err == 0) {
+                // If created item is not found, refresh.
+                var targetIndex = fsModel.getIndexOnCurrentDir(targetPath);
+                console.debug("fsModel onCreateFinished targetIndex " + targetIndex + " FolderSizeItemListModel.IndexOnCurrentDirButNotFound " + FolderSizeItemListModel.IndexOnCurrentDirButNotFound);
+                if (targetIndex === FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
+                    fsModel.clearIndexOnCurrentDir();
+                    fsModel.refreshDir("fsModel onCreateFinished");
+                }
+
+                // Reset cloudDriveModel hash on parent.
+                // Reset hash upto root.
+                var paths = fsModel.getPathToRoot(targetPath);
+                for (var i=0; i<paths.length; i++) {
+                    console.debug("fsModel onCreateFinished updateItems paths[" + i + "] " + paths[i]);
+                    cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
+                }
+
+                // TODO request cloudDriveModel.createFolder
+            } else {
+                showMessageDialogSlot(qsTr("Create") + " " + qsTr("error"),
+                                      msg,
+                                      5000);
             }
-
-            // Reset cloudDriveModel hash on parent.
-            // Reset hash upto root.
-            var paths = fsModel.getPathToRoot(targetPath);
-            for (var i=0; i<paths.length; i++) {
-                console.debug("fsModel onCreateFinished updateItems paths[" + i + "] " + paths[i]);
-                cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
-            }
-
-            // TODO request cloudDriveModel.createFolder
         }
 
         onRenameFinished: {
             console.debug("fsModel onRenameFinished sourcePath " + sourcePath + " targetPath " + targetPath + " err " + err + " msg " + msg);
+
+            if (err != 0) {
+                showMessageDialogSlot(qsTr("Rename") + " " + qsTr("error"),
+                                      msg,
+                                      5000);
+            }
 
             // Rename file on clouds.
             if (err == 0 && cloudDriveModel.isConnected(sourcePath)) {
