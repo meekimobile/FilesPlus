@@ -1220,38 +1220,40 @@ PageStackWindow {
             if (err == 0) {
                 var jsonObj = Utility.createJsonObj(msg);
 
-                // Send info to currentPage.
-                if (pageStack.currentPage.updateAccountInfoSlot) {
-                    switch (jobJson.type) {
-                    case CloudDriveModel.Dropbox:
-                        // Send info to currentPage.
-                        var sharedValue = (jsonObj.quota_info && jsonObj.quota_info.shared) ? jsonObj.quota_info.shared : 0;
-                        var normalValue = (jsonObj.quota_info && jsonObj.quota_info.normal) ? jsonObj.quota_info.normal : 0;
-                        var quotaValue = (jsonObj.quota_info && jsonObj.quota_info.quota) ? jsonObj.quota_info.quota : 0;
-                        pageStack.currentPage.updateAccountInfoSlot(jobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email,
-                                                                    sharedValue,
-                                                                    normalValue,
-                                                                    quotaValue);
-                        break;
-                    case CloudDriveModel.SkyDrive:
-                        pageStack.currentPage.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
-                                                                    0,
-                                                                    jsonObj.quota-jsonObj.available,
-                                                                    jsonObj.quota);
-                        break;
-                    case CloudDriveModel.GoogleDrive:
-                        pageStack.currentPage.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
-                                                                    0,
-                                                                    jsonObj.quotaBytesUsed,
-                                                                    jsonObj.quotaBytesTotal);
-                        break;
-                    default:
-                        pageStack.currentPage.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
-                                                                    0,
-                                                                    0,
-                                                                    -1);
+                // Send info to relevant pages.
+                pageStack.find(function (page) {
+                    if (page.updateAccountInfoSlot) {
+                        switch (jobJson.type) {
+                        case CloudDriveModel.Dropbox:
+                            // Send info to currentPage.
+                            var sharedValue = (jsonObj.quota_info && jsonObj.quota_info.shared) ? jsonObj.quota_info.shared : 0;
+                            var normalValue = (jsonObj.quota_info && jsonObj.quota_info.normal) ? jsonObj.quota_info.normal : 0;
+                            var quotaValue = (jsonObj.quota_info && jsonObj.quota_info.quota) ? jsonObj.quota_info.quota : 0;
+                            page.updateAccountInfoSlot(jobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email,
+                                                                        sharedValue,
+                                                                        normalValue,
+                                                                        quotaValue);
+                            break;
+                        case CloudDriveModel.SkyDrive:
+                            page.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
+                                                                        0,
+                                                                        jsonObj.quota-jsonObj.available,
+                                                                        jsonObj.quota);
+                            break;
+                        case CloudDriveModel.GoogleDrive:
+                            page.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
+                                                                        0,
+                                                                        jsonObj.quotaBytesUsed,
+                                                                        jsonObj.quotaBytesTotal);
+                            break;
+                        default:
+                            page.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
+                                                                        0,
+                                                                        0,
+                                                                        -1);
+                        }
                     }
-                }
+                });
             } else if (err == 204) {
                 // TODO Refactor to support all SkyDriveClient services.
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);

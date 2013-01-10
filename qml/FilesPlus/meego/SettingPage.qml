@@ -205,6 +205,12 @@ Page {
             type: "switch"
             group: "Developer"
         }
+        ListElement {
+            name: "drivepage.systemdrive.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
     }
 
     GridView {
@@ -245,6 +251,7 @@ Page {
         else if (name == "Monitoring.enabled") return qsTr("Monitoring (RAM,CPU)") + appInfo.emptyStr;
         else if (name == "Personalization") return qsTr("Personalization") + appInfo.emptyStr;
         else if (name == "Developer") return qsTr("Developer") + appInfo.emptyStr;
+        else if (name == "drivepage.systemdrive.enabled") return qsTr("Show system drive on drive page") + appInfo.emptyStr;
         else return qsTr(name) + appInfo.emptyStr;
     }
 
@@ -279,6 +286,9 @@ Page {
                             qsTr("Monitoring"),
                             qsTr("Monitoring is enabled. Log file is ") + appInfo.getMonitoringFilePath());
             }
+        } else if (name == "drivepage.systemdrive.enabled") {
+            var p = window.findPage("drivePage");
+            if (p) p.refreshSlot("settingPage buttonClickedHandler drivepage.systemdrive.enabled");
         }
     }
 

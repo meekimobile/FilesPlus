@@ -9,6 +9,7 @@ Page {
     id: drivePage
 
     property string name: "drivePage"
+    property variant systemDriveNames: ["/","/home/user/.signon/signonfs-mnt"] // Meego only.
 
     tools: toolBarLayout
 
@@ -84,13 +85,15 @@ Page {
 
         for (var i=0; i<drives.length; i++)
         {
-            // Hide root.
-//            if (drives[i] == "/") continue;
-
             // Workaround for QtSimulator
             var driveName = drives[i];
             if (i < simulatedDriveNames.length) {
                 driveName = simulatedDriveNames[i];
+            }
+
+            // Hide system drives.
+            if (!appInfo.getSettingBoolValue("drivepage.systemdrive.enabled", false)) {
+                if (systemDriveNames.indexOf(driveName) != -1) continue;
             }
 
             var driveType = systemInfoHelper.getDriveTypeInt(drives[i]);

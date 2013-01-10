@@ -9,6 +9,7 @@ Page {
     id: drivePage
 
     property string name: "drivePage"
+    property variant systemDriveNames: ["Z:/"] // Symbian only.
 
     tools: toolBarLayout
 
@@ -94,6 +95,11 @@ Page {
             var driveName = drives[i];
             if (i < simulatedDriveNames.length) {
                 driveName = simulatedDriveNames[i];
+            }
+
+            // Hide system drives.
+            if (!appInfo.getSettingBoolValue("drivepage.systemdrive.enabled", false)) {
+                if (systemDriveNames.indexOf(driveName) != -1) continue;
             }
 
             var driveType = systemInfoHelper.getDriveTypeInt(drives[i]);
