@@ -1907,6 +1907,30 @@ PageStackWindow {
             });
         }
 
+        onDeltaReplySignal: {
+            console.debug("window cloudDriveModel onDeltaReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
+
+            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+
+            // Remove finished job.
+            cloudDriveModel.removeJob(nonce);
+
+            if (err == 0) {
+                // TODO
+            } else if (err == 204) { // Refresh token
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
+            } else {
+                showMessageDialogSlot(
+                            getCloudName(jobJson.type) + " " + qsTr("Delta"),
+                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+            }
+
+            // Update ProgressBar on listItem and its parent.
+            pageStack.find(function (page) {
+                if (page.updateItemSlot) page.updateItemSlot(jobJson);
+            });
+        }
+
         onMigrateFileReplySignal: {
             console.debug("window cloudDriveModel onMigrateFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 

@@ -189,6 +189,12 @@ void CloudDriveClient::shareFile(QString nonce, QString uid, QString remoteFileP
     emit shareFileReplySignal(nonce, -1, objectName() + " " + tr("Share Link"), tr("Service is not implemented."));
 }
 
+QString CloudDriveClient::delta(QString nonce, QString uid, bool synchronous)
+{
+    emit deltaReplySignal(nonce, -1, objectName() + " " + tr("Delta"), tr("Service is not implemented."));
+    return "";
+}
+
 QString CloudDriveClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
     emit createFolderReplySignal(nonce, -1, objectName() + " " + tr("Create Folder"), tr("Service is not implemented."));

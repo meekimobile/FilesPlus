@@ -29,6 +29,7 @@ const QString DropboxClient::deleteFileURI = "https://api.dropbox.com/1/fileops/
 const QString DropboxClient::sharesURI = "https://api.dropbox.com/1/shares/%1%2";
 const QString DropboxClient::mediaURI = "https://api.dropbox.com/1/media/%1%2";
 const QString DropboxClient::thumbnailURI = "https://api-content.dropbox.com/1/thumbnails/%1%2"; // GET with format and size.
+const QString DropboxClient::deltaURI = "https://api.dropbox.com/1/delta"; // POST
 
 DropboxClient::DropboxClient(QObject *parent, bool fullAccess) :
     CloudDriveClient(parent)
@@ -224,7 +225,7 @@ void DropboxClient::authorize(QString nonce)
     queryString.append("oauth_token=" + m_paramMap["oauth_token"]);
     queryString.append("&oauth_callback=" + m_paramMap["oauth_callback"]);
     queryString.append("&display=mobile");
-    // TODO Force with locale=en.
+    // Force with locale=en.
 //    queryString.append("&locale=en");
 
     // Send signal to redirect to URL.
@@ -468,7 +469,7 @@ bool DropboxClient::isRemoteAbsolutePath()
 void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
     qDebug() << "----- DropboxClient::metadata -----";
 
-    // TODO root dropbox(Full access) or sandbox(App folder access)
+    // root dropbox(Full access) or sandbox(App folder access)
     QString uri = metadataURI.arg(dropboxRoot).arg(remoteFilePath);
     uri = encodeURI(uri);
     qDebug() << "DropboxClient::metadata uri " << uri;
@@ -489,7 +490,7 @@ void DropboxClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- DropboxClient::browse -----" << remoteFilePath;
 
-    // TODO root dropbox(Full access) or sandbox(App folder access)
+    // root dropbox(Full access) or sandbox(App folder access)
     QString uri = metadataURI.arg(dropboxRoot).arg(remoteFilePath);
     uri = encodeURI(uri);
     qDebug() << "DropboxClient::browse uri " << uri;
@@ -642,7 +643,7 @@ void DropboxClient::shareFile(QString nonce, QString uid, QString remoteFilePath
 {
     qDebug() << "----- DropboxClient::shareFile -----";
 
-    // TODO root dropbox(Full access) or sandbox(App folder access)
+    // root dropbox(Full access) or sandbox(App folder access)
     QString uri = sharesURI.arg(dropboxRoot).arg(remoteFilePath);
 //    uri = encodeURI(uri);
     qDebug() << "DropboxClient::shareFile uri " << uri;
@@ -661,6 +662,56 @@ void DropboxClient::shareFile(QString nonce, QString uid, QString remoteFilePath
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+}
+
+QString DropboxClient::delta(QString nonce, QString uid, bool synchronous)
+{
+    qDebug() << "----- DropboxClient::delta -----" << uid << synchronous;
+
+    QString uri = deltaURI;
+    qDebug() << "DropboxClient::delta uri " << uri;
+
+    // Construct normalized query string.
+    QMap<QString, QString> sortMap;
+    sortMap["cursor"] = m_settings.value("DropboxClient." + uid + ".lastDeltaCursor").toString();
+    QString queryString = createNormalizedQueryString(sortMap);
+    qDebug() << "queryString " << queryString;
+
+    QByteArray postData;
+    postData.append(queryString);
+    qDebug() << "postData" << postData;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deltaReplyFinished(QNetworkReply*)));
+    }
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "POST", uri, sortMap));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    QNetworkReply *reply = manager->post(req, postData);
+
+    // Return if asynchronous.
+    if (!synchronous) {
+        return "";
+    }
+
+    while (!reply->isFinished()) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    // Emit signal.
+    QString replyString = QString::fromUtf8(reply->readAll());
+    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyString);
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return replyString;
 }
 
 QString DropboxClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
@@ -703,7 +754,7 @@ QString DropboxClient::createFolder(QString nonce, QString uid, QString remotePa
     QNetworkReply *reply = manager->post(req, postData);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
 
-    // TODO Return if asynchronous.
+    // Return if asynchronous.
     if (!synchronous) {
         return "";
     }
@@ -747,7 +798,7 @@ void DropboxClient::requestTokenReplyFinished(QNetworkReply *reply)
 
     emit requestTokenReplySignal(nonce, reply->error(), reply->errorString(), replyBody );
 
-    // TODO scheduled to delete later.
+    // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -787,7 +838,7 @@ void DropboxClient::accessTokenReplyFinished(QNetworkReply *reply)
 
     emit accessTokenReplySignal(nonce, reply->error(), reply->errorString(), replyBody );
 
-    // TODO scheduled to delete later.
+    // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -812,7 +863,7 @@ void DropboxClient::accountInfoReplyFinished(QNetworkReply *reply)
 
     emit accountInfoReplySignal(nonce, reply->error(), reply->errorString(), replyBody );
 
-    // TODO scheduled to delete later.
+    // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -825,7 +876,7 @@ void DropboxClient::quotaReplyFinished(QNetworkReply *reply)
 
     emit quotaReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll() );
 
-    // TODO scheduled to delete later.
+    // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -873,7 +924,7 @@ void DropboxClient::fileGetReplyFinished(QNetworkReply *reply) {
         emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
     }
 
-    // TODO scheduled to delete later.
+    // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -890,7 +941,7 @@ void DropboxClient::filePutReplyFinished(QNetworkReply *reply) {
 
     emit filePutReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 
-    // TODO scheduled to delete later.
+    // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -902,7 +953,7 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
 
     emit metadataReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 
-    // TODO scheduled to delete later.
+    // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -915,7 +966,7 @@ void DropboxClient::browseReplyFinished(QNetworkReply *reply)
 
     emit browseReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 
-    // TODO scheduled to delete later.
+    // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -928,7 +979,7 @@ void DropboxClient::createFolderReplyFinished(QNetworkReply *reply)
 
     emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 
-    // TODO scheduled to delete later.
+    // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -941,7 +992,7 @@ void DropboxClient::moveFileReplyFinished(QNetworkReply *reply)
 
     emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 
-    // TODO scheduled to delete later.
+    // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -954,7 +1005,7 @@ void DropboxClient::copyFileReplyFinished(QNetworkReply *reply)
 
     emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 
-    // TODO scheduled to delete later.
+    // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -967,7 +1018,7 @@ void DropboxClient::deleteFileReplyFinished(QNetworkReply *reply)
 
     emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 
-    // TODO scheduled to delete later.
+    // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -980,7 +1031,32 @@ void DropboxClient::shareFileReplyFinished(QNetworkReply *reply)
 
     emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 
-    // TODO scheduled to delete later.
+    // scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void DropboxClient::deltaReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "DropboxClient::deltaReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+
+    QString replyBody = QString::fromUtf8(reply->readAll());
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue sc;
+        sc = engine.evaluate("(" + replyBody + ")");
+        m_settings.setValue("DropboxClient." + uid + ".lastDeltaCursor", sc.property("cursor").toString());
+        bool isReset = sc.property("reset").toBool();
+        bool hasMore = sc.property("has_more").toBool();
+    }
+
+    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+
+    // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }

@@ -70,10 +70,7 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
 //    CloudDriveJob initializeCloudClientsJob(createNonce(), InitializeCloudClients, -1, "", "", "", -1);
 //    m_cloudDriveJobs->insert(initializeCloudClientsJob.jobId, initializeCloudClientsJob);
 //    m_jobQueue->enqueue(initializeCloudClientsJob.jobId);
-    initializeDropboxClient();
-    initializeSkyDriveClient();
-    initializeGoogleDriveClient();
-    initializeFtpClient();
+    initializeCloudClients(createNonce());
 }
 
 CloudDriveModel::~CloudDriveModel()
@@ -152,6 +149,7 @@ void CloudDriveModel::saveCloudDriveItems() {
 
 void CloudDriveModel::initializeCloudClients(QString nonce)
 {
+    // TODO Generalize to support plugable client.
     initializeDropboxClient();
     initializeSkyDriveClient();
     initializeGoogleDriveClient();
@@ -182,6 +180,7 @@ void CloudDriveModel::initializeDropboxClient() {
     connect(dbClient, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
 }
 
 void CloudDriveModel::initializeSkyDriveClient()
@@ -208,6 +207,7 @@ void CloudDriveModel::initializeSkyDriveClient()
     connect(skdClient, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
     connect(skdClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
     connect(skdClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
 }
 
 void CloudDriveModel::initializeGoogleDriveClient()
@@ -234,6 +234,7 @@ void CloudDriveModel::initializeGoogleDriveClient()
     connect(gcdClient, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
     connect(gcdClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
     connect(gcdClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
+    connect(gcdClient, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
 }
 
 void CloudDriveModel::initializeFtpClient()
@@ -257,6 +258,7 @@ void CloudDriveModel::initializeFtpClient()
     connect(ftpClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(migrateFilePutReplySignal(QString,int,QString,QString)), SLOT(migrateFilePutFilter(QString,int,QString,QString)) ); // Added because FtpClient doesn't provide QNetworkReply.
+    connect(ftpClient, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
 }
 
 QString CloudDriveModel::createNonce() {
@@ -679,6 +681,8 @@ QString CloudDriveModel::getOperationName(int operation) {
         return tr("Copy");
     case ShareFile:
         return tr("Share link");
+    case Delta:
+        return tr("Delta");
     case Browse:
         return tr("Browse");
     case LoadCloudDriveItems:
@@ -2090,6 +2094,20 @@ void CloudDriveModel::shareFile(CloudDriveModel::ClientTypes type, QString uid, 
     emit proceedNextJobSignal();
 }
 
+void CloudDriveModel::delta(CloudDriveModel::ClientTypes type, QString uid)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), Delta, type, uid, "", "", -1);
+    job.isRunning = true;
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show in job page.
+    emit jobEnqueuedSignal(job.jobId, "");
+
+    emit proceedNextJobSignal();
+}
+
 void CloudDriveModel::migrateFile(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
 {
     // Enqueue job.
@@ -2486,6 +2504,20 @@ void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMs
     emit shareFileReplySignal(nonce, err, errMsg, msg, url, expires);
 }
 
+void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    // Update job running flag.
+    job.isRunning = false;
+    m_cloudDriveJobs->insert(nonce, job);
+
+    // Notify job done.
+    jobDone();
+
+    emit deltaReplySignal(nonce, err, errMsg, msg);
+}
+
 void CloudDriveModel::migrateFilePutFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
@@ -2509,6 +2541,12 @@ void CloudDriveModel::schedulerTimeoutFilter()
     loadScheduledItems(cronValue);
     suspendNextJob();
     syncScheduledItems();
+
+    // TODO Request delta.
+//    QScriptEngine engine;
+//    QScriptValue sc = engine.evaluate("(" + dbClient->getStoredUidList().first() + ")");
+//    delta(Dropbox, sc.property("uid").toString());
+
     resumeNextJob();
 
     emit schedulerTimeoutSignal();
@@ -3093,6 +3131,9 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         break;
     case ShareFile:
         cloudClient->shareFile(job.jobId, job.uid, job.remoteFilePath);
+        break;
+    case Delta:
+        cloudClient->delta(job.jobId, job.uid);
         break;
     case MigrateFile:
         cloudClient->browse(job.jobId, job.uid, job.remoteFilePath);

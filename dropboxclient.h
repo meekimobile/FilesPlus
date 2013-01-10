@@ -32,6 +32,7 @@ public:
     static const QString sharesURI;
     static const QString mediaURI;
     static const QString thumbnailURI;
+    static const QString deltaURI;
 
     explicit DropboxClient(QObject *parent = 0, bool fullAccess = false);
     ~DropboxClient();
@@ -55,6 +56,7 @@ public:
     void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
     void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     void shareFile(QString nonce, QString uid, QString remoteFilePath);
+    QString delta(QString nonce, QString uid, bool synchronous = false);
 
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
@@ -75,6 +77,7 @@ public slots:
     void copyFileReplyFinished(QNetworkReply *reply);
     void deleteFileReplyFinished(QNetworkReply *reply);
     void shareFileReplyFinished(QNetworkReply *reply);
+    void deltaReplyFinished(QNetworkReply *reply);
 private:
     TokenPair requestTokenPair;
     QString localPath;
@@ -84,6 +87,8 @@ private:
     QString consumerKey;
     QString consumerSecret;
     QString dropboxRoot;
+
+    QSettings m_settings;
 
     QString createTimestamp();
     QString createNonce();

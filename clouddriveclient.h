@@ -39,6 +39,7 @@ public:
     virtual void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
     virtual void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     virtual void shareFile(QString nonce, QString uid, QString remoteFilePath);
+    virtual QString delta(QString nonce, QString uid, bool synchronous = false);
 
     virtual QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
     virtual QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
@@ -58,6 +59,7 @@ signals:
     void copyFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void deleteFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void deltaReplySignal(QString nonce, int err, QString errMsg, QString msg);
 
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
