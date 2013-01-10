@@ -365,6 +365,7 @@ Page {
             height: 44
             anchors.centerIn: parent
             text: (title=="") ? getTitle(name) : title
+            platformInverted: inverted
             onClicked: {
                 buttonClickedHandler(name);
             }
