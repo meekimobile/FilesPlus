@@ -676,7 +676,7 @@ Page {
                 if (isDir) {
                     return "folder_list.svg";
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                    var showThumbnail = appInfo.getSettingBoolValue("thumbnail.enabled", false);
+                    var showThumbnail = appInfo.getSettingBoolValue("CloudFolderPage.thumbnail.enabled", false);
                     if (showThumbnail && thumbnail && thumbnail != "") {
                         return thumbnail;
                     } else {
