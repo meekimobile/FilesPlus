@@ -23,7 +23,7 @@ Dialog {
     buttons: Row {
         id: buttonRow
         width: parent.width - 20
-        height: 60
+        height: 80
         spacing: 5
         anchors.horizontalCenter: parent.horizontalCenter
 
