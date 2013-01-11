@@ -1285,13 +1285,15 @@ void CloudDriveModel::requestJobQueueStatus()
 
 void CloudDriveModel::suspendNextJob()
 {
-    QApplication::processEvents();
+    qDebug() << "CloudDriveModel::suspendNextJob";
 
     m_isSuspended = true;
 }
 
 void CloudDriveModel::resumeNextJob()
 {
+    qDebug() << "CloudDriveModel::resumeNextJob";
+
     m_isSuspended = false;
 
     proceedNextJob();
@@ -3006,7 +3008,7 @@ void CloudDriveModel::proceedNextJob() {
     if (m_thread.isRunning()) return;
 
     // Proceed next job in queue. Any jobs which haven't queued will be ignored.
-    qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count();
+    qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count() << "m_isSuspended" << m_isSuspended;
 //    qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->keys();
 
     // Emit status signal.

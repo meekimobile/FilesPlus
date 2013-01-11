@@ -236,7 +236,7 @@ signals:
     // Scheduler.
     void schedulerTimeoutSignal();
 public slots:
-    void proceedNextJob();
+    void  proceedNextJob();
     void dispatchJob(const QString jobId);
     void dispatchJob(const CloudDriveJob job);
 

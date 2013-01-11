@@ -7,6 +7,7 @@ Page {
     id: cloudDriveJobsPage
 
     property string name: "cloudDriveJobsPage"
+    property bool inverted: !theme.inverted
 
     function updateJobQueueCount(runningJobCount, jobQueueCount) {
         // Update (runningJobCount + jobQueueCount) on cloudButton.
@@ -44,8 +45,23 @@ Page {
             }
         }
         ToolIcon {
+            id: controlButton
+
+            property bool showPlay: false
+
+            iconId: (showPlay) ? "toolbar-mediacontrol-play" : "toolbar-mediacontrol-pause"
+            onClicked: {
+                if (showPlay) {
+                    cloudDriveModel.resumeNextJob();
+                } else {
+                    cloudDriveModel.suspendNextJob();
+                }
+                showPlay = !showPlay;
+            }
+        }
+        ToolIcon {
             id: deleteAllButton
-            iconSource: (theme.inverted) ? "delete.svg" : "delete_inverted.svg"
+            iconSource: (!inverted) ? "delete.svg" : "delete_inverted.svg"
             onClicked: {
                 cancelQueuedCloudDriveJobsConfirmation.open();
             }
@@ -62,36 +78,6 @@ Page {
             anchors.right: parent.right
             anchors.rightMargin: 10
             anchors.verticalCenter: parent.verticalCenter
-        }
-    }
-
-    Button {
-        id: popupDeleteButton
-
-        property string jobId
-
-        iconSource: (theme.inverted) ? "delete.svg" : "delete_inverted.svg"
-        visible: false
-        width: 50
-        height: 50
-        z: 2
-        onClicked: {
-            // TODO delete selected job.
-            jobModel.setProperty(jobListView.currentIndex, "status", "Deleting");
-            gcpClient.deletejob(jobId);
-            visible = false;
-        }
-        onVisibleChanged: {
-            if (visible) popupDeleteButtonTimer.restart();
-        }
-
-        Timer {
-            id: popupDeleteButtonTimer
-            interval: 2000
-            running: false
-            onTriggered: {
-                parent.visible = false;
-            }
         }
     }
 
@@ -121,58 +107,102 @@ Page {
 
         ListItem {
             id: listItem
-            height: 80
 
-            Row {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 5
-
-                Image {
-                    id: cloudIcon
-                    source: cloudDriveModel.getCloudIcon(type)
-                    width: 48
-                    height: 48
-                    fillMode: Image.PreserveAspectFit
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-                Column {
-                    width: parent.width - cloudIcon.width
-                    spacing: 5
-                    Text {
-                        id: title
-                        text: local_file_path
-                        width: parent.width
-                        verticalAlignment: Text.AlignVCenter
-                        font.pointSize: 18
-                        elide: Text.ElideMiddle
-                        color: (theme.inverted) ? "white" : "black"
+            Column {
+                width: parent.width
+                anchors.centerIn: parent
+                Row {
+                    width: parent.width
+                    Image {
+                        id: runningIcon
+                        width: 24
+                        height: 24
+                        source: fsModel.getRunningOperationIconSource(fsModel.mapToFolderSizeListModelOperation(operation))
                     }
-                    Row {
+                    Text {
+                        text: cloudDriveModel.getOperationName(operation)
+                        width: parent.width - runningIcon.width - syncProgressBar.width
+                        anchors.verticalCenter: parent.verticalCenter
+                        font.pointSize: 14
+                        elide: Text.ElideRight
+                        color: (!inverted) ? "white" : "black"
+                    }
+                    ProgressBar {
+                        id: syncProgressBar
+                        width: parent.width / 2
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: is_running
+                        value: bytes
+                        minimumValue: 0
+                        maximumValue: bytes_total
+                    }
+                }
+                Row {
+                    width: parent.width
+                    Image {
+                        id: sourceCloudIcon
+                        source: {
+                            if (operation == CloudDriveModel.FileGet || operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
+                                return cloudDriveModel.getCloudIcon(type);
+                            } else {
+                                return "";
+                            }
+                        }
+                        width: 24
+                        height: 24
+                        fillMode: Image.PreserveAspectFit
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Text {
+                        id: sourceName
+                        text: {
+                            if (operation == CloudDriveModel.FileGet || operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
+                                return remote_file_path;
+                            } else {
+                                return local_file_path;
+                            }
+                        }
+                        width: parent.width - sourceCloudIcon.width
+                        font.pointSize: 14
+                        elide: Text.ElideMiddle
+                        color: (!inverted) ? "white" : "black"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+                Row {
+                    width: parent.width
+                    Image {
+                        id: targetCloudIcon
+                        source: {
+                            if (operation == CloudDriveModel.FileGet) {
+                                return "";
+                            } else if (operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
+                                return cloudDriveModel.getCloudIcon(target_type)
+                            } else {
+                                return cloudDriveModel.getCloudIcon(type)
+                            }
+                        }
+                        width: 24
+                        height: 24
+                        fillMode: Image.PreserveAspectFit
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Text {
+                        id: targetName
+                        text: {
+                            if (operation == CloudDriveModel.FileGet) {
+                                return local_file_path;
+                            } else if (operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
+                                return new_remote_file_name;
+                            } else {
+                                return remote_file_path;
+                            }
+                        }
                         width: parent.width
-                        Image {
-                            id: runningIcon
-                            width: 24
-                            height: 24
-                            source: fsModel.getRunningOperationIconSource(fsModel.mapToFolderSizeListModelOperation(operation))
-                        }
-                        Text {
-                            text: cloudDriveModel.getOperationName(operation)
-                            width: parent.width - runningIcon.width - syncProgressBar.width
-                            verticalAlignment: Text.AlignVCenter
-                            font.pointSize: 16
-                            elide: Text.ElideRight
-                            color: "grey"
-                        }
-                        ProgressBar {
-                            id: syncProgressBar
-                            width: parent.width / 2
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: is_running
-                            value: bytes
-                            minimumValue: 0
-                            maximumValue: bytes_total
-                        }
+                        font.pointSize: 14
+                        elide: Text.ElideMiddle
+                        color: (!inverted) ? "white" : "black"
+                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
             }
