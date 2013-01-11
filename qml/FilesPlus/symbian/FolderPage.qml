@@ -1050,6 +1050,18 @@ Page {
     TitlePanel {
         id: currentPath
         text: fsModel.currentDir
+
+        TextIndicator {
+            id: messageLoggerCounter
+            text: (messageLoggerModel.newMessageCount > 0) ? (appInfo.emptyStr + qsTr("Message") + " " + messageLoggerModel.newMessageCount) : ""
+            anchors.right: parent.right
+            anchors.rightMargin: 10
+            anchors.verticalCenter: parent.verticalCenter
+
+            onClicked: {
+                pageStack.push(Qt.resolvedUrl("MessageLoggerPage.qml"));
+            }
+        }
     }
 
     NameFilterPanel {

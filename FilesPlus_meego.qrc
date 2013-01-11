@@ -151,5 +151,7 @@
         <file>qml/FilesPlus/bluetooth_paired_inverted.svg</file>
         <file alias="qml/FilesPlus/RenameDialog.qml">qml/FilesPlus/meego/RenameDialog.qml</file>
         <file alias="qml/FilesPlus/NewFolderDialog.qml">qml/FilesPlus/meego/NewFolderDialog.qml</file>
+        <file alias="qml/FilesPlus/MessageLoggerPage.qml">qml/FilesPlus/meego/MessageLoggerPage.qml</file>
+        <file alias="qml/FilesPlus/MessageLoggerModel.qml">qml/FilesPlus/meego/MessageLoggerModel.qml</file>
     </qresource>
 </RCC>

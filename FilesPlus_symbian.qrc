@@ -150,5 +150,7 @@
         <file>qml/FilesPlus/bluetooth_paired_inverted.svg</file>
         <file alias="qml/FilesPlus/RenameDialog.qml">qml/FilesPlus/symbian/RenameDialog.qml</file>
         <file alias="qml/FilesPlus/NewFolderDialog.qml">qml/FilesPlus/symbian/NewFolderDialog.qml</file>
+        <file alias="qml/FilesPlus/MessageLoggerPage.qml">qml/FilesPlus/symbian/MessageLoggerPage.qml</file>
+        <file alias="qml/FilesPlus/MessageLoggerModel.qml">qml/FilesPlus/symbian/MessageLoggerModel.qml</file>
     </qresource>
 </RCC>

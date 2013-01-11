@@ -51,6 +51,7 @@ CommonDialog {
             hideAction.stop();
             titleText = "";
             message = "";
+            autoClose = false;
         }
     }
 }

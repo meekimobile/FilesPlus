@@ -2361,7 +2361,14 @@ PageStackWindow {
         id: messageDialog
     }
 
+    MessageLoggerModel {
+        id: messageLoggerModel
+    }
+
     function showMessageDialogSlot(titleText, message, autoCloseInterval) {
+        // Append to logger.
+        messageLoggerModel.log("error", titleText, message);
+
         if (autoCloseInterval) {
             messageDialog.autoClose = true;
             messageDialog.autoCloseInterval = autoCloseInterval;
