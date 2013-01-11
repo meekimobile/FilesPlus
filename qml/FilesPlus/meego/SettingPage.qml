@@ -282,10 +282,16 @@ Page {
             dropboxFullAccessConfirmation.open();
         } else if (name == "Monitoring.enabled") {
             if (appInfo.isMonitoring()) {
+                appInfo.toggleMonitoring();
                 showMessageDialogSlot(
                             qsTr("Monitoring"),
                             qsTr("Monitoring is enabled. Log file is ") + appInfo.getMonitoringFilePath());
+            } else {
+                appInfo.toggleMonitoring();
             }
+        } else if (name == "drivepage.clouddrive.enabled") {
+            var p = window.findPage("drivePage");
+            if (p) p.refreshSlot("settingPage buttonClickedHandler drivepage.systemdrive.enabled");
         } else if (name == "drivepage.systemdrive.enabled") {
             var p = window.findPage("drivePage");
             if (p) p.refreshSlot("settingPage buttonClickedHandler drivepage.systemdrive.enabled");

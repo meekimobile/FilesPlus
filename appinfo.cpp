@@ -3,6 +3,8 @@
 AppInfo::AppInfo(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
 {
+    // Start monitoring if it's enabled.
+    toggleMonitoring();
 }
 
 QString AppInfo::getDomainName() const
@@ -156,9 +158,6 @@ bool AppInfo::setSettingValue(const QString key, const QVariant v, const bool fo
         // Sync to backend.
         m_settings->sync();
 
-        // Call startMonitoring.
-        startMonitoring();
-
         // Emit setting changed.
         emit settingChanged();
 
@@ -175,7 +174,7 @@ bool AppInfo::hasSettingValue(const QString key)
     return res;
 }
 
-void AppInfo::startMonitoring()
+void AppInfo::toggleMonitoring()
 {
 #ifdef Q_OS_SYMBIAN
     qDebug() << "AppInfo m_settings isMonitoring()" << isMonitoring();
