@@ -613,15 +613,17 @@ PageStackWindow {
     ClipboardModel {
         id: clipboard
 
-        function getActionIcon(localPath) {
+        function getActionIcon(localPath, type, uid) {
             var jsonText = clipboard.getItemJsonText(localPath);
             if (jsonText != "") {
                 var json = Utility.createJsonObj(jsonText);
                 if (json) {
-                    if (json.action == "copy") {
-                        return (!window.platformInverted) ? "copy.svg" : "copy_inverted.svg";
-                    } else if (json.action == "cut") {
-                        return (!window.platformInverted) ? "trim.svg" : "trim_inverted.svg";
+                    if (json.type == type && json.uid == uid) {
+                        if (json.action == "copy") {
+                            return (!window.platformInverted) ? "copy.svg" : "copy_inverted.svg";
+                        } else if (json.action == "cut") {
+                            return (!window.platformInverted) ? "trim.svg" : "trim_inverted.svg";
+                        }
                     }
                 }
             }

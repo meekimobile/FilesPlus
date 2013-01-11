@@ -296,6 +296,7 @@ ConfirmDialog {
             listViewState: (cloudDrivePathListView.state ? cloudDrivePathListView.state : "")
             syncIconVisible: cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, absolutePath)
             syncIconSource: "cloud.svg"
+            actionIconSource: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath, cloudDriveModel.getCloudName(selectedCloudType), selectedUid) : ""
             inverted: false
 
             // Override to support cloud items.

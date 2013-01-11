@@ -688,6 +688,7 @@ Page {
             listViewState: (cloudFolderView.state ? cloudFolderView.state : "")
             syncIconVisible: cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, absolutePath)
             syncIconSource: (isRunning) ? "cloud_wait.svg" : "cloud.svg"
+            actionIconSource: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath, cloudDriveModel.getCloudName(selectedCloudType), selectedUid) : ""
 
             // Override to support cloud items.
             function getIconSource() {
