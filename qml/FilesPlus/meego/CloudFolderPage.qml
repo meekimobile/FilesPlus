@@ -815,6 +815,7 @@ Page {
 
     ConfirmDialog {
         id: fileActionDialog
+        height: contentColumn.height + 160 // Workaround for Meego only.
 
         property string sourcePath
         property string sourcePathName

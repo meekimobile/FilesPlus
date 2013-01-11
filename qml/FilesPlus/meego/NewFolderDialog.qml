@@ -4,6 +4,7 @@ import "Utility.js" as Utility
 
 ConfirmDialog {
     id: newFolderDialog
+    height: contentColumn.height + 160 // Workaround for Meego only.
 
     property alias nameField: folderName
     property bool folderOnly: false
