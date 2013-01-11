@@ -1948,9 +1948,9 @@ QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, Q
     return "";
 }
 
-void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
+void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 bytesTotal, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
 {
-    qDebug() << "CloudDriveModel::migrateFile_Block" << nonce << type << uid << remoteFilePath << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
+    qDebug() << "CloudDriveModel::migrateFile_Block" << nonce << type << uid << remoteFilePath << bytesTotal << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
 
     QIODevice *sourceReply = getCloudClient(type)->fileGet(nonce, uid, remoteFilePath);
     if (sourceReply == 0) {
@@ -1958,7 +1958,7 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
         return;
     }
 
-    QNetworkReply *targetReply = getCloudClient(targetType)->filePut(nonce, targetUid, sourceReply, targetRemoteParentPath, targetRemoteFileName);
+    QNetworkReply *targetReply = getCloudClient(targetType)->filePut(nonce, targetUid, sourceReply, bytesTotal, targetRemoteParentPath, targetRemoteFileName);
     if (targetReply == 0) {
         // FtpClient doens't provide QNetworkReply. It emits migrateFilePutReplySignal internally.
     } else {
@@ -2126,12 +2126,13 @@ void CloudDriveModel::migrateFile(CloudDriveModel::ClientTypes type, QString uid
     emit proceedNextJobSignal();
 }
 
-void CloudDriveModel::migrateFilePut(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
+void CloudDriveModel::migrateFilePut(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 bytesTotal, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
 {
-    qDebug() << "CloudDriveModel::migrateFilePut" << type << uid << remoteFilePath << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
+    qDebug() << "CloudDriveModel::migrateFilePut" << type << uid << remoteFilePath << bytesTotal << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), MigrateFilePut, type, uid, "", remoteFilePath, -1);
+    job.bytesTotal = bytesTotal;
     job.targetType = targetType;
     job.targetUid = targetUid;
     job.newRemoteFilePath = targetRemoteParentPath;
@@ -2998,13 +2999,6 @@ void CloudDriveModel::jobDone() {
 
     qDebug() << "CloudDriveModel::jobDone runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count();
 
-    // TODO Needed ?
-    // Refresh if no more running jobs and jobs in queue.
-//    if (runningJobCount <= 0 && m_jobQueue->count() <= 0) {
-//        emit refreshRequestSignal();
-//    }
-
-    emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), getItemCount());
     emit proceedNextJobSignal();
 }
 
@@ -3014,6 +3008,10 @@ void CloudDriveModel::proceedNextJob() {
     // Proceed next job in queue. Any jobs which haven't queued will be ignored.
     qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count();
 //    qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->keys();
+
+    // Emit status signal.
+    emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), getItemCount());
+
     if (runningJobCount >= MaxRunningJobCount || m_jobQueue->count() <= 0 || m_isSuspended) {
         return;
     }
@@ -3030,7 +3028,6 @@ void CloudDriveModel::proceedNextJob() {
 //    dispatchJob(job);
     CloudDriveModelThread *t = new CloudDriveModelThread(this);
     connect(t, SIGNAL(finished()), t, SLOT(deleteLater()));
-//    connect(t, SIGNAL(finished()), this, SLOT(threadFinishedFilter()));
     t->setNonce(nonce); // Set job ID to thread. It will invoke parent's dispatchJob later.
     t->start();
 
@@ -3139,7 +3136,7 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         cloudClient->browse(job.jobId, job.uid, job.remoteFilePath);
         break;
     case MigrateFilePut:
-        migrateFile_Block(job.jobId, getClientType(job.type), job.uid, job.remoteFilePath, getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
+        migrateFile_Block(job.jobId, getClientType(job.type), job.uid, job.remoteFilePath, job.bytesTotal, getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
         break;
     }
 }

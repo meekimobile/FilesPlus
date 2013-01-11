@@ -58,7 +58,7 @@ public:
     QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous);
     void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
-    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, QString remoteParentPath, QString remoteFileName);
+    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName);
 
     QString getRemoteRoot();
 signals:

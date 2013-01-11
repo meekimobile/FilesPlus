@@ -360,9 +360,9 @@ QIODevice *FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath
     return buf;
 }
 
-QNetworkReply *FtpClient::filePut(QString nonce, QString uid, QIODevice *source, QString remoteParentPath, QString remoteFileName)
+QNetworkReply *FtpClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName)
 {
-    qDebug() << "----- FtpClient::filePut -----" << uid << remoteParentPath << remoteFileName << "source->bytesAvailable()" << source->bytesAvailable();
+    qDebug() << "----- FtpClient::filePut -----" << uid << remoteParentPath << remoteFileName << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
     m_ftp->cd(remoteParentPath);

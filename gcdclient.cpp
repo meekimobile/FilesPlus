@@ -516,9 +516,9 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
     return reply;
 }
 
-QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source, QString remoteParentPath, QString remoteFileName)
+QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName)
 {
-    qDebug() << "----- GCDClient::filePut -----" << remoteParentPath << remoteFileName << "source->bytesAvailable()" << source->bytesAvailable();
+    qDebug() << "----- GCDClient::filePut -----" << remoteParentPath << remoteFileName << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
     QString uri = filePutURI + "?uploadType=multipart";
     qDebug() << "GCDClient::filePut uri " << uri;

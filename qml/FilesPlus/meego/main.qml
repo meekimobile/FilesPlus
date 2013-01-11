@@ -2146,6 +2146,7 @@ PageStackWindow {
                                 var itemRemotePath = item.path;
                                 var itemRemotePathName = cloudDriveModel.getRemoteName(jobJson.type, itemRemotePath);
                                 var itemIsDir = item.is_dir;
+                                var itemSize = item.bytes;
                                 console.debug("window cloudDriveModel onMigrateFileReplySignal itemRemotePath " + itemRemotePath + " itemRemotePathName " + itemRemotePathName + " itemIsDir " + itemIsDir);
 
                                 if (itemIsDir) {
@@ -2153,11 +2154,11 @@ PageStackWindow {
                                     cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
                                 } else {
                                     // Migrate file.
-                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
+                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, itemSize, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
                                 }
                             }
                         } else { // Migrate file.
-                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
+                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jobJson.remote_file_path, jsonObj.bytes, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
                         }
                     }
                 }
@@ -2174,6 +2175,7 @@ PageStackWindow {
                                 var itemRemotePath = item.id;
                                 var itemRemotePathName = item.name;
                                 var itemIsDir = (item.type == "folder" || item.type == "album");
+                                var itemSize = item.size;
                                 console.debug("window cloudDriveModel onMigrateFileReplySignal itemRemotePath " + itemRemotePath + " itemRemotePathName " + itemRemotePathName + " itemIsDir " + itemIsDir);
 
                                 if (itemIsDir) {
@@ -2181,11 +2183,11 @@ PageStackWindow {
                                     cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
                                 } else {
                                     // Migrate file.
-                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
+                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, itemSize, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
                                 }
                             }
                         } else { // Migrate file.
-                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
+                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, jsonObj.property.size, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
                         }
                     }
                 }
@@ -2202,6 +2204,7 @@ PageStackWindow {
                                 var itemRemotePath = item.id;
                                 var itemRemotePathName = item.title;
                                 var itemIsDir = (item.mimeType == "application/vnd.google-apps.folder");
+                                var itemSize = item.fileSize;
                                 console.debug("window cloudDriveModel onMigrateFileReplySignal itemRemotePath " + itemRemotePath + " itemRemotePathName " + itemRemotePathName + " itemIsDir " + itemIsDir);
 
                                 if (itemIsDir) {
@@ -2209,11 +2212,11 @@ PageStackWindow {
                                     cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
                                 } else {
                                     // Migrate file.
-                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, item.downloadUrl, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
+                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, item.downloadUrl, itemSize, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
                                 }
                             }
                         } else { // Migrate file.
-                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jsonObj.property.downloadUrl, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
+                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jsonObj.property.downloadUrl, jsonObj.property.fileSize, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
                         }
                     }
                 }
@@ -2230,6 +2233,7 @@ PageStackWindow {
                                 var itemRemotePath = item.path;
                                 var itemRemotePathName = item.name;
                                 var itemIsDir = item.isDir;
+                                var itemSize = item.size;
                                 console.debug("window cloudDriveModel onMigrateFileReplySignal itemRemotePath " + itemRemotePath + " itemRemotePathName " + itemRemotePathName + " itemIsDir " + itemIsDir);
 
                                 if (itemIsDir) {
@@ -2237,11 +2241,11 @@ PageStackWindow {
                                     cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
                                 } else {
                                     // Migrate file.
-                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
+                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, itemSize, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
                                 }
                             }
                         } else { // Migrate file.
-                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
+                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jobJson.remote_file_path, jsonObj.property.size, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
                         }
                     }
                 }

@@ -688,15 +688,13 @@ QIODevice *SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFil
     return reply;
 }
 
-QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *source, QString remoteParentPath, QString remoteFileName)
+QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName)
 {
-    qDebug() << "----- SkyDriveClient::filePut -----" << remoteParentPath << remoteFileName << "source->bytesAvailable()" << source->bytesAvailable();
+    qDebug() << "----- SkyDriveClient::filePut -----" << remoteParentPath << remoteFileName << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
     QString uri = filePutURI.arg(remoteParentPath).arg(remoteFileName);
     uri = encodeURI(uri);
     qDebug() << "SkyDriveClient::filePut uri " << uri;
-
-    qint64 fileSize = source->size();
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -704,7 +702,7 @@ QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *so
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize);
+    req.setHeader(QNetworkRequest::ContentLengthHeader, bytesTotal);
     QNetworkReply *reply = manager->put(req, source);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));

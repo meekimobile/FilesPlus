@@ -43,7 +43,7 @@ public:
 
     virtual QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
     virtual QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
-    virtual QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, QString remoteParentPath, QString remoteFileName);
+    virtual QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName);
 signals:
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
