@@ -109,6 +109,11 @@ Page {
         clip: true
     }
 
+    ScrollDecorator {
+        id: scrollbar
+        flickableItem: jobListView
+    }
+
     Component {
         id: jobDelegate
 
@@ -132,6 +137,7 @@ Page {
                 }
                 Column {
                     width: parent.width - cloudIcon.width
+                    spacing: 5
                     Text {
                         id: title
                         text: local_file_path

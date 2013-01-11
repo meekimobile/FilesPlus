@@ -166,6 +166,12 @@ Page {
         anchors.top: titlePanel.bottom
         model: jobModel
         delegate: jobDelegate
+        clip: true
+    }
+
+    ScrollDecorator {
+        id: scrollbar
+        flickableItem: jobListView
     }
 
     Component {

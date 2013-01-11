@@ -159,12 +159,18 @@ Page {
         anchors.top: titlePanel.bottom
         model: jobModel
         delegate: jobDelegate
+        clip: true
 
         onMovementStarted: {
             if (currentItem) {
                 currentItem.pressed = false;
             }
         }
+    }
+
+    ScrollDecorator {
+        id: scrollbar
+        flickableItem: jobListView
     }
 
     Component {
