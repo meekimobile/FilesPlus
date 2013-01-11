@@ -184,42 +184,80 @@ Page {
         property alias host: hostname.text
         property alias user: username.text
         property alias passwd: password.text
+        property int labelWidth: 120
 
         z: 2
-        titleText: appInfo.emptyStr+qsTr("New FTP account")
+        titleText: appInfo.emptyStr+qsTr("FTP account")
         content: Column {
             width: parent.width
+            anchors.centerIn: parent
             spacing: 5
 
-            TextField {
-                id: connectionName
+            Row {
                 width: parent.width
-                placeholderText: "Input connection name"
-                validator: RegExpValidator {
-                    regExp: /[\w.-]+/
+                Label {
+                    text: qsTr("Name")
+                    width: addAccountDialog.labelWidth
+                    color: "white"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                TextField {
+                    id: connectionName
+                    width: parent.width - addAccountDialog.labelWidth
+                    placeholderText: "Input connection name"
+                    validator: RegExpValidator {
+                        regExp: /[\w.-]+/
+                    }
                 }
             }
-            TextField {
-                id: hostname
+            Row {
                 width: parent.width
-                placeholderText: "Input hostname"
-                validator: RegExpValidator {
-                    regExp: /[\w.-:]+/
+                Label {
+                    text: qsTr("Host[:port]")
+                    width: addAccountDialog.labelWidth
+                    color: "white"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                TextField {
+                    id: hostname
+                    width: parent.width - addAccountDialog.labelWidth
+                    placeholderText: "Input hostname"
+                    validator: RegExpValidator {
+                        regExp: /[\w.-:]+/
+                    }
                 }
             }
-            TextField {
-                id: username
+            Row {
                 width: parent.width
-                placeholderText: "Input username"
-                validator: RegExpValidator {
-                    regExp: /[\w.]+/
+                Label {
+                    text: qsTr("Username")
+                    width: addAccountDialog.labelWidth
+                    color: "white"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                TextField {
+                    id: username
+                    width: parent.width - addAccountDialog.labelWidth
+                    placeholderText: "Input username"
+                    validator: RegExpValidator {
+                        regExp: /[\w.]+/
+                    }
                 }
             }
-            TextField {
-                id: password
+            Row {
                 width: parent.width
-                placeholderText: "Input password"
-                echoMode: TextInput.Password
+                Label {
+                    text: qsTr("Password")
+                    width: addAccountDialog.labelWidth
+                    color: "white"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                TextField {
+                    id: password
+                    width: parent.width - addAccountDialog.labelWidth
+                    placeholderText: "Input password"
+                    echoMode: TextInput.Password
+                }
             }
             Item {
                 width: parent.width
