@@ -2187,7 +2187,7 @@ PageStackWindow {
                                 }
                             }
                         } else { // Migrate file.
-                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, jsonObj.property.size, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
+                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jobJson.remote_file_path, jsonObj.property.size, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
                         }
                     }
                 }
