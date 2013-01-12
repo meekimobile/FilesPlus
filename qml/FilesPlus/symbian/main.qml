@@ -1122,14 +1122,16 @@ PageStackWindow {
         }
 
         function getClientType(typeText) {
-            if (["dropboxclient","dropbox"].indexOf(typeText.toLowerCase()) != -1) {
-                return CloudDriveModel.Dropbox;
-            } else if (["skydriveclient","skydrive"].indexOf(typeText.toLowerCase()) != -1) {
-                return CloudDriveModel.SkyDrive;
-            } else if (["gcdclient","googledriveclient","googledrive"].indexOf(typeText.toLowerCase()) != -1) {
-                return CloudDriveModel.GoogleDrive;
-            } else if (["ftpclient","ftp"].indexOf(typeText.toLowerCase()) != -1) {
-                return CloudDriveModel.Ftp;
+            if (typeText) {
+                if (["dropboxclient","dropbox"].indexOf(typeText.toLowerCase()) != -1) {
+                    return CloudDriveModel.Dropbox;
+                } else if (["skydriveclient","skydrive"].indexOf(typeText.toLowerCase()) != -1) {
+                    return CloudDriveModel.SkyDrive;
+                } else if (["gcdclient","googledriveclient","googledrive"].indexOf(typeText.toLowerCase()) != -1) {
+                    return CloudDriveModel.GoogleDrive;
+                } else if (["ftpclient","ftp"].indexOf(typeText.toLowerCase()) != -1) {
+                    return CloudDriveModel.Ftp;
+                }
             }
 
             return -1;

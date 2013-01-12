@@ -161,7 +161,7 @@ Page {
 
         onPaste: {
             fileActionDialog.targetPath = fsModel.currentDir;
-            fileActionDialog.targetPathName = fsModel.currentDir;
+            fileActionDialog.targetPathName = fsModel.getFileName(fsModel.currentDir);
             fileActionDialog.open();
         }
         onOpenMarkMenu: {
@@ -996,6 +996,7 @@ Page {
                 if (fsListView.state != "mark") {
                     fsListView.currentIndex = index;
                     popupToolPanel.selectedFilePath = absolutePath;
+                    popupToolPanel.selectedFileName = name;
                     popupToolPanel.selectedFileIndex = index;
                     popupToolPanel.isDir = isDir;
                     popupToolPanel.pastePath = (isDir) ? absolutePath : currentPath.text;
@@ -1129,7 +1130,7 @@ Page {
             } else if (buttonName === "cloudScheduler") {
                 return isDir && cloudDriveModel.isConnected(selectedFilePath);
             } else if (buttonName === "paste") {
-                return (clipboard.count > 0);
+                return (clipboard.count > 0 && isDir);
             } else if (buttonName == "mail") {
                 return cloudDriveModel.isConnected(selectedFilePath);
             } else if (buttonName == "sms") {
@@ -1247,144 +1248,8 @@ Page {
         }
     }
 
-    ConfirmDialog {
+    FileActionDialog {
         id: fileActionDialog
-        height: contentColumn.height + 160 // Workaround for Meego only.
-
-        property string sourcePath
-        property string sourcePathName
-        property string targetPath
-        property string targetPathName
-        property bool isOverwrite: false
-
-        titleText: appInfo.emptyStr+fileActionDialog.getTitleText()
-        content: Column {
-            id: contentColumn
-            anchors.centerIn: parent
-            width: parent.width - 10
-            spacing: 5
-
-            Text {
-                text: appInfo.emptyStr+fileActionDialog.getText()
-                color: "white"
-                width: parent.width
-                font.pointSize: 16
-                verticalAlignment: Text.AlignVCenter
-                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-            }
-
-            Column {
-                width: parent.width
-                height: fileActionDialog.isOverwrite ? childrenRect.height : 0
-                visible: fileActionDialog.isOverwrite
-                spacing: 5
-
-                Rectangle {
-                    color: "grey"
-                    width: parent.width
-                    height: 1
-                }
-
-                Text {
-                    text: appInfo.emptyStr+qsTr("Item exists, please input new name.")
-                    color: "white"
-                    width: parent.width
-                    font.pointSize: 16
-                    verticalAlignment: Text.AlignVCenter
-                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                }
-
-                TextField {
-                    id: fileName
-                    width: parent.width
-                }
-
-                CheckBox {
-                    id: overwriteFile
-                    width: parent.width
-                    text: "<span style='color:white;font:16pt'>" + appInfo.emptyStr+qsTr("Overwrite existing item") + "</span>"
-                    checked: false
-
-                    onClicked: {
-                        if (checked) {
-                            fileName.text = fileActionDialog.sourcePathName;
-                        } else {
-                            fileName.text = fileActionDialog.getNewName();
-                        }
-                    }
-                }
-            }
-        }
-
-        function getTitleText() {
-            var text = "";
-            if (clipboard.count == 1) {
-                text = getActionName(clipboard.get(0).action, clipboard.get(0).type, clipboard.get(0).uid);
-            } else {
-                // TODO if all copy, show "Multiple copy".
-                text = qsTr("Multiple actions");
-            }
-
-            return text;
-        }
-
-        function getText() {
-            // Exmaple of clipboard entry { "action": "cut", "sourcePath": sourcePath }
-            // Exmaple of clipboard entry { "action": "cut", "type": "Dropbox", "uid": "asdfdg", "sourcePath": sourcePath, "sourcePathName": sourcePathName }
-            var text = "";
-            if (clipboard.count == 1) {
-                text = getActionName(clipboard.get(0).action, clipboard.get(0).type, clipboard.get(0).uid)
-                        + " " + (clipboard.get(0).sourcePathName ? clipboard.get(0).sourcePathName : clipboard.get(0).sourcePath)
-                        + ((clipboard.get(0).action == "delete")?"":("\n" + qsTr("to") + " " + targetPathName))
-                        + " ?";
-            } else {
-                var cutCount = 0;
-                var copyCount = 0;
-                var deleteCount = 0;
-                var downloadCount = 0;
-                for (var i=0; i<clipboard.count; i++) {
-//                    console.debug("fileActionDialog getText clipboard i " + i + " action " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
-                    if (["copy","cut"].indexOf(clipboard.get(i).action) > -1 && clipboard.get(i).type) {
-                        downloadCount++;
-                    } else if (clipboard.get(i).action == "copy") {
-                        copyCount++;
-                    } else if (clipboard.get(i).action == "cut") {
-                        cutCount++;
-                    } else if (clipboard.get(i).action == "delete") {
-                        deleteCount++;
-                    }
-                }
-
-                if (downloadCount>0) text = text + (qsTr("Download %n item(s)\n", "", downloadCount));
-                if (deleteCount>0) text = text + (qsTr("Delete %n item(s)\n", "", deleteCount));
-                if (copyCount>0) text = text + (qsTr("Copy %n item(s)\n", "", copyCount));
-                if (cutCount>0) text = text + (qsTr("Move %n item(s)\n", "", cutCount));
-                if (copyCount>0 || cutCount>0 || downloadCount>0) text = text + qsTr("to") + " " + targetPath;
-                text = text + " ?";
-            }
-
-            return text;
-        }
-
-        function getActionName(actionText, type, uid) {
-            if (type) {
-                if (["copy","cut"].indexOf(actionText) > -1) return qsTr("Download");
-                else return qsTr("Invalid action");
-            } else {
-                if (actionText == "copy") return qsTr("Copy");
-                else if (actionText == "cut") return qsTr("Move");
-                else if (actionText == "delete") return qsTr("Delete");
-                else return qsTr("Invalid action");
-            }
-        }
-
-        function canCopy() {
-            return fsModel.canCopy(fsModel.getAbsolutePath(targetPath, fileActionDialog.sourcePathName), targetPath);
-        }
-
-        function getNewName() {
-            return fsModel.getNewFileName(fileActionDialog.sourcePathName, fileActionDialog.targetPath);
-        }
 
         onConfirm: {
             // It always replace existing names.
@@ -1397,7 +1262,7 @@ Page {
             for (var i=0; i<clipboard.count; i++) {
                 var action = clipboard.get(i).action;
                 var sourcePath = clipboard.get(i).sourcePath;
-                var sourcePathName = (isOverwrite && i == 0) ? fileName.text : (clipboard.get(i).sourcePathName ? clipboard.get(i).sourcePathName : fsModel.getFileName(sourcePath));
+                var sourcePathName = (isOverwrite && i == 0) ? newFileName : (clipboard.get(i).sourcePathName ? clipboard.get(i).sourcePathName : fsModel.getFileName(sourcePath));
                 var actualTargetPath = fsModel.getAbsolutePath(targetPath, sourcePathName);
 
                 // console.debug("folderPage fileActionDialog onConfirm clipboard action " + action + " sourcePath " + sourcePath);
@@ -1442,27 +1307,7 @@ Page {
             }
         }
 
-        onOpening: {
-            if (clipboard.count == 1 && clipboard.get(0).action != "delete") {
-                // Copy/Move/Delete first file from clipboard.
-                // Check if there is existing file on target folder. Then show overwrite dialog.
-                fileActionDialog.sourcePath = clipboard.get(0).sourcePath;
-                fileActionDialog.sourcePathName = (clipboard.get(0).sourcePathName) ? clipboard.get(0).sourcePathName : fsModel.getFileName(clipboard.get(0).sourcePath);
-                if (!canCopy()) {
-                    fileActionDialog.isOverwrite = true;
-                    fileName.forceActiveFocus();
-                    fileName.text = getNewName();
-                }
-            }
-        }
-
         onClosed: {
-            fileActionDialog.isOverwrite = false;
-            fileActionDialog.sourcePath = "";
-            fileActionDialog.sourcePathName = "";
-            fileName.text = "";
-            overwriteFile.checked = false;
-
             // Always clear clipboard's delete actions.
             clipboard.clearDeleteActions();
 

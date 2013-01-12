@@ -152,5 +152,6 @@
         <file alias="qml/FilesPlus/NewFolderDialog.qml">qml/FilesPlus/symbian/NewFolderDialog.qml</file>
         <file alias="qml/FilesPlus/MessageLoggerPage.qml">qml/FilesPlus/symbian/MessageLoggerPage.qml</file>
         <file alias="qml/FilesPlus/MessageLoggerModel.qml">qml/FilesPlus/symbian/MessageLoggerModel.qml</file>
+        <file alias="qml/FilesPlus/FileActionDialog.qml">qml/FilesPlus/symbian/FileActionDialog.qml</file>
     </qresource>
 </RCC>

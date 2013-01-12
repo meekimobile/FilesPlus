@@ -826,168 +826,11 @@ Page {
         }
     }
 
-    ConfirmDialog {
+    FileActionDialog {
         id: fileActionDialog
-        height: contentColumn.height + 160 // Workaround for Meego only.
-
-        property string sourcePath
-        property string sourcePathName
-        property string targetPath
-        property string targetPathName
-        property bool isOverwrite: false
-
-        titleText: appInfo.emptyStr+fileActionDialog.getTitleText()
-        content: Column {
-            id: contentColumn
-            anchors.centerIn: parent
-            width: parent.width - 10
-            spacing: 5
-
-            Text {
-                text: appInfo.emptyStr+fileActionDialog.getText()
-                color: "white"
-                width: parent.width
-                font.pointSize: 16
-                verticalAlignment: Text.AlignVCenter
-                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-            }
-
-            Column {
-                width: parent.width
-                height: fileActionDialog.isOverwrite ? childrenRect.height : 0
-                visible: fileActionDialog.isOverwrite
-                spacing: 5
-
-                Rectangle {
-                    color: "grey"
-                    width: parent.width
-                    height: 1
-                }
-
-                Text {
-                    text: appInfo.emptyStr+qsTr("Item exists, please input new name.")
-                    color: "white"
-                    width: parent.width
-                    font.pointSize: 16
-                    verticalAlignment: Text.AlignVCenter
-                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                }
-
-                TextField {
-                    id: fileName
-                    width: parent.width
-                }
-
-                CheckBox {
-                    id: overwriteFile
-                    width: parent.width
-                    text: "<span style='color:white;font:16pt'>" + appInfo.emptyStr+qsTr("Overwrite existing item") + "</span>"
-                    checked: false
-
-                    onClicked: {
-                        if (checked) {
-                            fileName.text = fileActionDialog.sourcePathName;
-                        } else {
-                            fileName.text = fileActionDialog.getNewName();
-                        }
-                    }
-                }
-            }
-        }
-
-        function getTitleText() {
-            var text = "";
-            if (clipboard.count == 1) {
-                text = getActionName(clipboard.get(0).action, clipboard.get(0).type, clipboard.get(0).uid);
-            } else {
-                // TODO if all copy, show "Multiple copy".
-                text = qsTr("Multiple actions");
-            }
-
-            return text;
-        }
-
-        function getText() {
-            // Exmaple of clipboard entry { "action": "cut", "sourcePath": sourcePath }
-            // Exmaple of clipboard entry { "action": "cut", "type": "Dropbox", "uid": "asdfdg", "sourcePath": sourcePath, "sourcePathName": sourcePathName }
-            var text = "";
-            if (clipboard.count == 1) {
-                text = getActionName(clipboard.get(0).action, clipboard.get(0).type, clipboard.get(0).uid);
-                if (clipboard.get(0).type) {
-                    text = text + ((cloudDriveModel.getClientType(clipboard.get(0).type) != selectedCloudType || clipboard.get(0).uid != selectedUid) ? (" (" + clipboard.get(0).type + " " + clipboard.get(0).uid + ")") : "");
-                }
-                text = text + " " + (clipboard.get(0).sourcePathName ? clipboard.get(0).sourcePathName : clipboard.get(0).sourcePath)
-                        + ((clipboard.get(0).action == "delete")?"":("\n" + qsTr("to") + " " + targetPathName))
-                        + " ?";
-            } else {
-                var cutCount = 0;
-                var copyCount = 0;
-                var deleteCount = 0;
-                var uploadCount = 0;
-                var migrateCount = 0;
-                for (var i=0; i<clipboard.count; i++) {
-//                    console.debug("fileActionDialog getText clipboard i " + i + " action " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
-                    if (["copy","cut"].indexOf(clipboard.get(i).action) > -1 && !clipboard.get(i).type) {
-                        uploadCount++;
-                    } else if (["copy","cut"].indexOf(clipboard.get(i).action) > -1 && (cloudDriveModel.getClientType(clipboard.get(i).type) != selectedCloudType || clipboard.get(i).uid != selectedUid) ) {
-                        migrateCount++;
-                    } else if (clipboard.get(i).action == "copy") {
-                        copyCount++;
-                    } else if (clipboard.get(i).action == "cut") {
-                        cutCount++;
-                    } else if (clipboard.get(i).action == "delete") {
-                        deleteCount++;
-                    }
-                }
-
-                if (uploadCount>0) text = text + qsTr("Upload %n item(s)\n", "", uploadCount);
-                if (migrateCount>0) text = text + qsTr("Migrate %n item(s)\n", "", migrateCount);
-                if (deleteCount>0) text = text + qsTr("Delete %n item(s)\n", "", deleteCount);
-                if (copyCount>0) text = text + qsTr("Copy %n item(s)\n", "", copyCount);
-                if (cutCount>0) text = text + qsTr("Move %n item(s)\n", "", cutCount);
-                if (copyCount>0 || cutCount>0) text = text + qsTr("to") + " " + targetPathName;
-                text = text + " ?";
-            }
-
-            return text;
-        }
-
-        function getActionName(actionText, type, uid) {
-//            console.debug("cloudFolderPage fileActionDialog " + selectedCloudType + " " + cloudDriveModel.getCloudName(selectedCloudType) + " getActionName actionText " + actionText + " type " + type + " uid " + uid);
-            if (type) {
-                if (cloudDriveModel.getClientType(type) == selectedCloudType && uid == selectedUid) {
-                    if (actionText == "copy") return qsTr("Copy");
-                    else if (actionText == "cut") return qsTr("Move");
-                    else if (actionText == "delete") return qsTr("Delete");
-                    else return qsTr("Invalid action");
-                } else {
-                    if (["copy","cut"].indexOf(actionText) > -1) return qsTr("Migrate");
-                    else return qsTr("Invalid action");
-                }
-            } else {
-                if (["copy","cut"].indexOf(actionText) > -1) return qsTr("Upload");
-                else return qsTr("Invalid action");
-            }
-        }
-
-        function canCopy() {
-            var foundIndex = -1;
-            var sourcePathName = (clipboard.get(0).sourcePathName) ? clipboard.get(0).sourcePathName : cloudDriveModel.getFileName(clipboard.get(0).sourcePath);
-            if (targetPath == remoteParentPath) {
-                for (var i=0; i<cloudFolderModel.count; i++) {
-                    var item = cloudFolderModel.get(i);
-                    if (item.name == sourcePathName) {
-                        foundIndex = i;
-                    }
-                }
-            }
-
-            return (foundIndex < 0);
-        }
-
-        function getNewName() {
-            return cloudFolderModel.getNewFileName(fileActionDialog.sourcePathName);
-        }
+        selectedCloudType: cloudFolderPage.selectedCloudType
+        selectedUid: cloudFolderPage.selectedUid
+        remoteParentPath: cloudFolderPage.remoteParentPath
 
         onConfirm: {
             // It always replace existing names.
@@ -999,7 +842,7 @@ Page {
             for (var i=0; i<clipboard.count; i++) {
                 var action = clipboard.get(i).action;
                 var sourcePath = clipboard.get(i).sourcePath;
-                var sourcePathName = (isOverwrite && i == 0) ? fileName.text : (clipboard.get(i).sourcePathName ? clipboard.get(i).sourcePathName : cloudDriveModel.getFileName(sourcePath));
+                var sourcePathName = (isOverwrite && i == 0) ? newFileName : (clipboard.get(i).sourcePathName ? clipboard.get(i).sourcePathName : cloudDriveModel.getFileName(sourcePath));
                 var actualTargetPath = cloudDriveModel.getRemotePath(selectedCloudType, targetPath, sourcePathName);
 
                 console.debug("cloudFolderPage fileActionDialog onConfirm clipboard type " + clipboard.get(i).type + " uid " + clipboard.get(i).uid + " action " + action + " sourcePathName " + sourcePathName + " sourcePath " + sourcePath + " targetPath " + targetPath + " actualTargetPath " + actualTargetPath);
@@ -1060,27 +903,7 @@ Page {
             }
         }
 
-        onOpening: {
-            if (clipboard.count == 1 && clipboard.get(0).action != "delete") {
-                // Copy/Move/Delete first file from clipboard.
-                // Check if there is existing file on target folder. Then show overwrite dialog.
-                fileActionDialog.sourcePath = clipboard.get(0).sourcePath;
-                fileActionDialog.sourcePathName = (clipboard.get(0).sourcePathName) ? clipboard.get(0).sourcePathName : cloudDriveModel.getFileName(clipboard.get(0).sourcePath);
-                if (!canCopy()) {
-                    fileActionDialog.isOverwrite = true;
-                    fileName.forceActiveFocus();
-                    fileName.text = getNewName();
-                }
-            }
-        }
-
         onClosed: {
-            fileActionDialog.isOverwrite = false;
-            fileActionDialog.sourcePath = "";
-            fileActionDialog.sourcePathName = "";
-            fileName.text = "";
-            overwriteFile.checked = false;
-
             // Always clear clipboard's delete actions.
             clipboard.clearDeleteActions();
 
