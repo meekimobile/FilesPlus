@@ -200,6 +200,22 @@ Page {
 
             // Stop startup logging.
             appInfo.stopLogging();
+
+            // Show notify if logging is enabled.
+            console.debug("drivePage onStatusChanged Logging.enabled " + appInfo.getSettingBoolValue("Logging.enabled", false));
+            if (appInfo.getSettingBoolValue("Logging.enabled", false)) {
+                showMessageDialogSlot(
+                            qsTr("Logging"),
+                            qsTr("Logging is enabled. Log file is at %1").arg(appInfo.getLogPath()) + "\n" + qsTr("You may turn off in Settings.") );
+            }
+
+            // Show notify if monitoring is enabled.
+            console.debug("drivePage onStatusChanged Monitoring.enabled " + appInfo.getSettingBoolValue("Monitoring.enabled", false));
+            if (appInfo.getSettingBoolValue("Monitoring.enabled", false)) {
+                showMessageDialogSlot(
+                            qsTr("Monitoring"),
+                            qsTr("Monitoring is enabled. Monitoring file is at %1").arg(appInfo.getMonitoringFilePath()) + "\n" + qsTr("You may turn off in Settings.") );
+            }
         }
     }
 

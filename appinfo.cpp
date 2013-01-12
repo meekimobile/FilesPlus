@@ -49,6 +49,15 @@ void AppInfo::stopLogging()
     }
 }
 
+QString AppInfo::getLogPath() const
+{
+#ifdef Q_OS_SYMBIAN
+    return "E:/";
+#elif defined(Q_WS_HARMATTAN)
+    return "/home/user/MyDocs/";
+#endif
+}
+
 QString AppInfo::getSystemLocale() const
 {
     return QLocale::system().name();

@@ -38,6 +38,7 @@ public:
     // Logging.
     Q_INVOKABLE bool isLogging();
     Q_INVOKABLE void stopLogging();
+    Q_INVOKABLE QString getLogPath() const;
 
     // Locale.
     Q_INVOKABLE QString getSystemLocale() const;
