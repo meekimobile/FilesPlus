@@ -1293,17 +1293,19 @@ PageStackWindow {
 //                    uidDialog.proceedPendingOperation();
 //                    syncFileSlot(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
 //                } else {
-                    // TODO Get account info and show in dialog.
+                // TODO Get account info and show in dialog.
+                if (jobJson.operation == CloudDriveModel.AccessToken) {
                     showMessageDialogSlot(getCloudName(jobJson.type) + " " + qsTr("Access Token"),
                                           qsTr("CloudDrive user is authorized.\nPlease proceed your sync action."),
                                           2000);
+                }
 
-                    // Refresh account page.
-                    var p = findPage("cloudDriveAccountsPage");
-                    if (p) p.refreshCloudDriveAccountsSlot();
-                    // Refresh drive page.
-                    p = findPage("drivePage");
-                    if (p) p.refreshSlot("window cloudDriveModel onAccessTokenReplySignal");
+                // Refresh account page.
+                var p = findPage("cloudDriveAccountsPage");
+                if (p) p.refreshCloudDriveAccountsSlot();
+                // Refresh drive page.
+                p = findPage("drivePage");
+                if (p) p.refreshSlot("window cloudDriveModel onAccessTokenReplySignal");
 //                }
             } else {
                 showMessageDialogSlot(

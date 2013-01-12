@@ -73,8 +73,6 @@ Page {
                 iconSource: "toolbar-back"
                 platformInverted: window.platformInverted
                 onClicked: {
-                    var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-                    if (p) p.setNameFiltersAndRefreshSlot();
                     pageStack.pop();
                 }
             }
