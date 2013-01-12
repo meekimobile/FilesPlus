@@ -29,6 +29,7 @@ Dialog {
     signal closed()
     signal buttonClicked(int index)
     signal confirm()
+    signal reject() // Override Dialog.reject() will prevent closing by clicking outside.
 
     title: Item {
         id: titleRow
