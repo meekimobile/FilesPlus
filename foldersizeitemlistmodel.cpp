@@ -273,12 +273,8 @@ QString FolderSizeItemListModel::formatFileSize(double size)
 
 void FolderSizeItemListModel::cancelQueuedJobs()
 {
+    qDebug() << "FolderSizeItemListModel::cancelQueuedJobs";
     m_jobQueue.clear();
-
-    // Abort current job thread.
-    m.terminate();
-
-    qDebug() << "FolderSizeItemListModel::cancelQueuedJobs done";
 }
 
 QList<FolderSizeItem> FolderSizeItemListModel::getItemList() const
