@@ -1927,9 +1927,20 @@ PageStackWindow {
         }
 
         onRefreshRequestSignal: {
+            console.debug("window cloudDriveModel onRefreshRequestSignal " + nonce);
+
             var p = findPage("folderPage");
             if (p) {
-                p.refreshSlot("cloudDriveModel onRefreshRequestSignal");
+                if (nonce != "") {
+                    var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+
+                    p.updateItemSlot(jobJson);
+
+                    // Remove finished job.
+                    cloudDriveModel.removeJob(nonce);
+                } else {
+                    p.refreshSlot("cloudDriveModel onRefreshRequestSignal");
+                }
             }
         }
 

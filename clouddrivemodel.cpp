@@ -858,6 +858,9 @@ void CloudDriveModel::removeItemWithChildren(CloudDriveModel::ClientTypes type, 
     foreach (CloudDriveItem item, findItemWithChildren(type, uid, localPath)) {
 //        qDebug() << "CloudDriveModel::removeItemWithChildren item" << item;
 
+        // Process events to avoid freezing UI.
+        QApplication::processEvents(QEventLoop::AllEvents, 50);
+
         // TODO Remove only localPath's children which have specified type and uid.
         removeCount += m_cloudDriveItems->remove(item.localPath, item);
         deleteCount += deleteItemToDB(type, uid, item.localPath);
@@ -1664,6 +1667,9 @@ void CloudDriveModel::browse(CloudDriveModel::ClientTypes type, QString uid, QSt
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->insert(0, job.jobId); // Browse get priority.
 
+    // Emit signal to show in job page.
+    emit jobEnqueuedSignal(job.jobId, "");
+
     emit proceedNextJobSignal();
 }
 
@@ -1974,6 +1980,20 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
 
     // Scheduled to delete later.
     sourceReply->deleteLater();
+}
+
+void CloudDriveModel::disconnect(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), Disconnect, type, uid, localPath, "", -1);
+    job.isRunning = true;
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show in job page.
+    emit jobEnqueuedSignal(job.jobId, "");
+
+    emit proceedNextJobSignal();
 }
 
 void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, QString newRemoteFileName)
@@ -2533,6 +2553,20 @@ void CloudDriveModel::migrateFilePutFilter(QString nonce, int err, QString errMs
     jobDone();
 
     emit migrateFilePutReplySignal(nonce, err, errMsg, msg);
+}
+
+void CloudDriveModel::refreshRequestFilter(QString nonce)
+{
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    // Update job running flag.
+    job.isRunning = false;
+    m_cloudDriveJobs->insert(nonce, job);
+
+    // Notify job done.
+    jobDone();
+
+    emit refreshRequestSignal(nonce);
 }
 
 void CloudDriveModel::schedulerTimeoutFilter()
@@ -3139,6 +3173,10 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         break;
     case MigrateFilePut:
         migrateFile_Block(job.jobId, getClientType(job.type), job.uid, job.remoteFilePath, job.bytesTotal, getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
+        break;
+    case Disconnect:
+        removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
+        refreshRequestFilter(job.jobId);
         break;
     }
 }

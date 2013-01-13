@@ -197,6 +197,8 @@ public:
     Q_INVOKABLE void migrateFile(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
     Q_INVOKABLE void migrateFilePut(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 bytesTotal, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
     void migrateFile_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 bytesTotal, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
+
+    Q_INVOKABLE void disconnect(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void initializeDBStarted(QString nonce);
@@ -206,7 +208,7 @@ signals:
     void localChangedSignal(QString localPath);
     void jobEnqueuedSignal(QString nonce, QString localPath);
     void jobRemovedSignal(QString nonce);
-    void refreshRequestSignal();
+    void refreshRequestSignal(QString nonce);
 
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
@@ -260,6 +262,9 @@ public slots:
     void shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void migrateFilePutFilter(QString nonce, int err, QString errMsg, QString msg);
+
+    // Refresh request
+    void refreshRequestFilter(QString nonce);
 
     // Scheduler
     void schedulerTimeoutFilter();

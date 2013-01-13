@@ -1398,8 +1398,7 @@ Page {
                 cloudDriveModel.deleteFile(type, uid, localPath, remotePath);
                 break;
             case CloudDriveModel.Disconnect:
-                cloudDriveModel.removeItemWithChildren(type, uid, localPath);
-                fsModel.refreshItem(localPath);
+                cloudDriveModel.disconnect(type, uid, localPath);
                 break;
             case CloudDriveModel.Browse:
                 // Show cloudDrivePathDialog.
