@@ -128,7 +128,7 @@ ListItem {
                         elide: Text.ElideRight
                         verticalAlignment: Text.AlignVCenter
                         visible: !isRunning
-                        color: (!inverted) ? "#D0D0D0" : "#202020"
+                        color: (!inverted) ? "#C0C0C0" : "#202020"
                     }
                     Row {
                         width: parent.width
