@@ -20,7 +20,7 @@ Page {
 //            console.debug("drivePage updateAccountInfoSlot item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
             if (item.uid == uid && item.driveType == 7 && item.cloudDriveType == type) {
                 console.debug("drivePage updateAccountInfoSlot found item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
-                driveGrid.model.set(i, { name: name, email: email, availableSpace: (quota - shared - normal), totalSpace: quota });
+                driveGrid.model.set(i, { logicalDrive: email, name: name, email: email, availableSpace: (quota - shared - normal), totalSpace: quota });
             }
         }
     }
@@ -154,6 +154,20 @@ Page {
         }
     }
 
+    function updateItemSlot(jobJson) {
+        if (!jobJson) return;
+
+        var i = driveGridModel.findIndexByCloudTypeAndUid(jobJson.type, jobJson.uid);
+        if (i != -1) {
+            // Request quota.
+            var cloudType = cloudDriveModel.getClientType(json.type);
+            cloudDriveModel.quota(cloudType, json.uid);
+        } else {
+            // Not found cloud drive, refresh to get newly authorized cloud drive.
+            refreshSlot("drivePage updateItemSlot type " + jobJson.type + " uid " + jobJson.uid);
+        }
+    }
+
     DriveGrid {
         id: driveGrid
         width: parent.width
@@ -161,6 +175,16 @@ Page {
         anchors.top: titlePanel.bottom
         model: ListModel {
             id: driveGridModel
+
+            function findIndexByCloudTypeAndUid(cloudType, uid) {
+                for (var i = 0; i < driveGridModel.count; i++) {
+                    if (driveGridModel.get(i).cloudDriveType == cloudType && driveGridModel.get(i).uid == uid) {
+                        return i;
+                    }
+                }
+
+                return -1;
+            }
         }
 
         onDriveSelected: {

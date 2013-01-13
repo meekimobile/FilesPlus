@@ -1279,11 +1279,6 @@ PageStackWindow {
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
             if (err == 0) {
-                // TODO find better way to proceed after got accessToken.
-//                if (popupToolPanel.selectedFilePath) {
-//                    uidDialog.proceedPendingOperation();
-//                    syncFileSlot(popupToolPanel.selectedFilePath, popupToolPanel.selectedFileIndex);
-//                } else {
                 // TODO Get account info and show in dialog.
                 if (jobJson.operation == CloudDriveModel.AccessToken) {
                     showMessageDialogSlot(getCloudName(jobJson.type) + " " + qsTr("Access Token"),
@@ -1294,10 +1289,9 @@ PageStackWindow {
                 // Refresh account page.
                 var p = findPage("cloudDriveAccountsPage");
                 if (p) p.refreshCloudDriveAccountsSlot();
-                // Refresh drive page.
+                // Update item on drive page.
                 p = findPage("drivePage");
-                if (p) p.refreshSlot("window cloudDriveModel onAccessTokenReplySignal");
-//                }
+                if (p) p.updateItemSlot(jobJson);
             } else {
                 showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Access Token"),
