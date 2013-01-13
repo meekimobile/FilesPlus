@@ -44,21 +44,21 @@ Page {
                 pageStack.pop();
             }
         }
-        ToolIcon {
-            id: controlButton
+//        ToolIcon {
+//            id: controlButton
 
-            property bool showPlay: false
+//            property bool showPlay: false
 
-            iconId: (showPlay) ? "toolbar-mediacontrol-play" : "toolbar-mediacontrol-pause"
-            onClicked: {
-                if (showPlay) {
-                    cloudDriveModel.resumeNextJob();
-                } else {
-                    cloudDriveModel.suspendNextJob();
-                }
-                showPlay = !showPlay;
-            }
-        }
+//            iconId: (showPlay) ? "toolbar-mediacontrol-play" : "toolbar-mediacontrol-pause"
+//            onClicked: {
+//                if (showPlay) {
+//                    cloudDriveModel.resumeNextJob();
+//                } else {
+//                    cloudDriveModel.suspendNextJob();
+//                }
+//                showPlay = !showPlay;
+//            }
+//        }
         ToolIcon {
             id: deleteAllButton
             iconSource: (!inverted) ? "delete.svg" : "delete_inverted.svg"

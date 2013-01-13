@@ -46,23 +46,23 @@ Page {
                 pageStack.pop();
             }
         }
-        ToolButton {
-            id: controlButton
+//        ToolButton {
+//            id: controlButton
 
-            property bool showPlay: false
+//            property bool showPlay: false
 
-            iconSource: (showPlay) ? "toolbar-mediacontrol-play" : "toolbar-mediacontrol-pause"
-            platformInverted: window.platformInverted
-            flat: true
-            onClicked: {
-                if (showPlay) {
-                    cloudDriveModel.resumeNextJob();
-                } else {
-                    cloudDriveModel.suspendNextJob();
-                }
-                showPlay = !showPlay;
-            }
-        }
+//            iconSource: (showPlay) ? "toolbar-mediacontrol-play" : "toolbar-mediacontrol-pause"
+//            platformInverted: window.platformInverted
+//            flat: true
+//            onClicked: {
+//                if (showPlay) {
+//                    cloudDriveModel.resumeNextJob();
+//                } else {
+//                    cloudDriveModel.suspendNextJob();
+//                }
+//                showPlay = !showPlay;
+//            }
+//        }
         ToolButton {
             id: deleteAllButton
             iconSource: (!window.platformInverted) ? "delete.svg" : "delete_inverted.svg"
