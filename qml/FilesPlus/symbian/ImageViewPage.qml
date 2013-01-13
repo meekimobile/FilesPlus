@@ -101,6 +101,16 @@ Page {
         console.debug("imageViewPage onCompleted imageGrid.currentIndex " + imageGrid.currentIndex);
     }
 
+    onStatusChanged: {
+        if (status == PageStatus.Active) {
+            fsModel.nameFilters = ["*.jpg", "*.png", "*.svg"];
+            fsModel.refreshDir("imageViewPage onStatusChanged", false);
+        } else if (status == PageStatus.Inactive) {
+            fsModel.nameFilters = [];
+            fsModel.refreshDir("imageViewPage onStatusChanged", false);
+        }
+    }
+
     onFileNameChanged: {
         console.debug("imageViewPage onFileNameChanged fileName " + fileName);
     }
@@ -132,6 +142,7 @@ Page {
             verticalAlignment: Text.AlignVCenter
             color: "white"
             elide: Text.ElideMiddle
+            font.pointSize: 8
         }
     }
 
@@ -152,6 +163,7 @@ Page {
         cacheBuffer: cellWidth * 3
         flow: GridView.TopToBottom
         snapMode: GridView.SnapOneRow
+        model: fsModel
         delegate: imageViewDelegate
         pressDelay: 200
 

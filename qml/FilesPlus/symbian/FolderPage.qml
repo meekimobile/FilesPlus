@@ -1030,15 +1030,11 @@ Page {
                         var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
                         var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
                         if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                            fsModel.nameFilters = ["*.jpg", "*.png", "*.svg"];
-                            fsModel.refreshDir("folderPage listItem onClicked", false);
-                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), {
-                                               fileName: name,
-                                               model: fsModel
-                                           });
+                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
+                                           { fileName: name });
                         } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
-                                           { filePath: absolutePath, fileName: fsModel.getFileName(absolutePath) });
+                                           { filePath: absolutePath, fileName: name });
                         } else {
                             Qt.openUrlExternally(fsModel.getUrl(absolutePath));
                         }
