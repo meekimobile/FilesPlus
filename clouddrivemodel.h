@@ -99,6 +99,7 @@ public:
     Q_INVOKABLE bool canSync(QString localPath);
     Q_INVOKABLE QString getFirstJobJson(QString localPath);
     Q_INVOKABLE QString getJobJson(QString jobId);
+    void updateJob(CloudDriveJob job);
     Q_INVOKABLE void removeJob(QString nonce);
     Q_INVOKABLE int getQueuedJobCount() const;
     Q_INVOKABLE void cancelQueuedJobs();
@@ -207,6 +208,7 @@ signals:
     void jobQueueStatusSignal(int runningJobCount, int jobQueueCount, int itemCount);
     void localChangedSignal(QString localPath);
     void jobEnqueuedSignal(QString nonce, QString localPath);
+    void jobUpdatedSignal(QString nonce);
     void jobRemovedSignal(QString nonce);
     void refreshRequestSignal(QString nonce);
 

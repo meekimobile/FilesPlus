@@ -14,24 +14,6 @@ Page {
         cloudJobsCountIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
     }
 
-    function updateItemSlot(jobJson) {
-        if (!jobJson) return;
-
-        var i = jobListView.model.findIndexByJobId(jobJson.job_id);
-        if (i >= 0) {
-            jobListView.model.set(i, { is_running: jobJson.is_running });
-        }
-    }
-
-    function updateItemProgressBarSlot(jobJson) {
-        if (!jobJson) return;
-
-        var i = jobListView.model.findIndexByJobId(jobJson.job_id);
-        if (i >= 0) {
-            jobListView.model.set(i, { is_running: jobJson.is_running, bytes: jobJson.bytes, bytes_total: jobJson.bytes_total });
-        }
-    }
-
     tools: toolBarLayout
 
     ToolBarLayout {

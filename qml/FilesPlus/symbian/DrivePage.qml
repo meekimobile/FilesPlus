@@ -160,19 +160,6 @@ Page {
         }
     }
 
-    function updateItemSlot(jobJson) {
-        if (!jobJson) return;
-
-        var i = driveGridModel.findIndexByCloudTypeAndUid(jobJson.type, jobJson.uid);
-        if (i != -1) {
-            // Request quota.
-            cloudDriveModel.quota(jobJson.type, jobJson.uid);
-        } else {
-            // Not found cloud drive, refresh to get newly authorized cloud drive.
-            refreshSlot("drivePage updateItemSlot type " + jobJson.type + " uid " + jobJson.uid);
-        }
-    }
-
     DriveGrid {
         id: driveGrid
         width: parent.width

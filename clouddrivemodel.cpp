@@ -764,16 +764,29 @@ QString CloudDriveModel::getJobJson(QString jobId)
     return job.toJsonText();
 }
 
+void CloudDriveModel::updateJob(CloudDriveJob job)
+{
+    mutex.lock();
+    m_isSyncingCache->remove(job.localFilePath);
+    m_cloudDriveJobs->insert(job.jobId, job);
+    mutex.unlock();
+
+    emit jobUpdatedSignal(job.jobId);
+
+//    qDebug() << "CloudDriveModel::updateJob job" << job.toJsonText();
+}
+
 void CloudDriveModel::removeJob(QString nonce)
 {
     mutex.lock();
     QString localPath = m_cloudDriveJobs->value(nonce).localFilePath;
     m_isSyncingCache->remove(localPath);
     int removeCount = m_cloudDriveJobs->remove(nonce);
+    mutex.unlock();
+
     if (removeCount > 0) {
         emit jobRemovedSignal(nonce);
     }
-    mutex.unlock();
 
     qDebug() << "CloudDriveModel::removeJob nonce" << nonce << "removeCount" << removeCount << "m_cloudDriveJobs->count()" << m_cloudDriveJobs->count();
 }
@@ -785,9 +798,12 @@ int CloudDriveModel::getQueuedJobCount() const
 
 void CloudDriveModel::cancelQueuedJobs()
 {
-    m_jobQueue->clear();
-    // TODO Should it also clear jobs? Some QNAM requests may need it after this method call.
-    m_cloudDriveJobs->clear();
+    while (!m_jobQueue->isEmpty()) {
+        CloudDriveJob job = m_cloudDriveJobs->value(m_jobQueue->dequeue());
+        if (!job.isRunning) {
+            removeJob(job.jobId);
+        }
+    }
 
     qDebug() << "CloudDriveModel::cancelQueuedJobs done m_jobQueue->count()" << m_jobQueue->count() << "m_cloudDriveJobs->count()" << m_cloudDriveJobs->count();
 }
@@ -1549,7 +1565,7 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), FileGet, type, uid, localFilePath, remoteFilePath, modelIndex);
-    job.isRunning = true;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -1592,7 +1608,7 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), FilePut, type, uid, localFilePath, remoteFilePath, modelIndex);
-    job.isRunning = true;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -1635,7 +1651,7 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), Metadata, type, uid, localFilePath, remoteFilePath, modelIndex);
-    job.isRunning = true;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -1890,7 +1906,7 @@ void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString ui
     // Enqueue job.
     CloudDriveJob job(createNonce(), CreateFolder, type, uid, localPath, remoteParentPath, -1);
     job.newRemoteFileName = newRemoteFolderName;
-    job.isRunning = true;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -1986,7 +2002,7 @@ void CloudDriveModel::disconnect(CloudDriveModel::ClientTypes type, QString uid,
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), Disconnect, type, uid, localPath, "", -1);
-    job.isRunning = true;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -2011,7 +2027,7 @@ void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, Q
     // Enqueue job.
     CloudDriveJob job(createNonce(), MoveFile, type, uid, localFilePath, remoteFilePath, newLocalFilePath, newRemoteFilePath, -1);
     job.newRemoteFileName = newRemoteFileName;
-    job.isRunning = true;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -2048,7 +2064,7 @@ void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, Q
     // Enqueue job.
     CloudDriveJob job(createNonce(), CopyFile, type, uid, localFilePath, remoteFilePath, newLocalFilePath, newRemoteFilePath, -1);
     job.newRemoteFileName = newRemoteFileName;
-    job.isRunning = true;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -2079,7 +2095,7 @@ void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid,
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), DeleteFile, type, uid, localFilePath, remoteFilePath, -1);
-    job.isRunning = true;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -2105,7 +2121,7 @@ void CloudDriveModel::shareFile(CloudDriveModel::ClientTypes type, QString uid, 
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), ShareFile, type, uid, localFilePath, remoteFilePath, -1);
-    job.isRunning = true;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -2120,7 +2136,7 @@ void CloudDriveModel::delta(CloudDriveModel::ClientTypes type, QString uid)
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), Delta, type, uid, "", "", -1);
-    job.isRunning = true;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -2138,7 +2154,7 @@ void CloudDriveModel::migrateFile(CloudDriveModel::ClientTypes type, QString uid
     job.targetUid = targetUid;
     job.newRemoteFilePath = targetRemoteParentPath;
     job.newRemoteFileName = targetRemoteFileName;
-    job.isRunning = true;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -2159,7 +2175,7 @@ void CloudDriveModel::migrateFilePut(CloudDriveModel::ClientTypes type, QString 
     job.targetUid = targetUid;
     job.newRemoteFilePath = targetRemoteParentPath;
     job.newRemoteFileName = targetRemoteFileName;
-    job.isRunning = true;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -2210,7 +2226,7 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
 
     // Update job running flag.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -2265,7 +2281,7 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
 
     // Update job running flag.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -2309,7 +2325,7 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
 
     // Update job running flag.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -2323,7 +2339,7 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
 
     // Update job running flag.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -2379,7 +2395,7 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
 
     // Stop running.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -2419,7 +2435,7 @@ void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg
 
     // Stop running.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -2451,7 +2467,7 @@ void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg
 
     // Stop running.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -2473,7 +2489,7 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
 
     // Stop running.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -2519,7 +2535,7 @@ void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMs
 
     // Stop running.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -2533,7 +2549,7 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
 
     // Update job running flag.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -2547,7 +2563,7 @@ void CloudDriveModel::migrateFilePutFilter(QString nonce, int err, QString errMs
 
     // Update job running flag.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -2561,7 +2577,7 @@ void CloudDriveModel::refreshRequestFilter(QString nonce)
 
     // Update job running flag.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -3012,7 +3028,7 @@ void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     job.bytes = bytesSent;
     job.bytesTotal = bytesTotal;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     emit uploadProgress(nonce, bytesSent, bytesTotal);
 }
@@ -3022,7 +3038,7 @@ void CloudDriveModel::downloadProgressFilter(QString nonce, qint64 bytesReceived
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     job.bytes = bytesReceived;
     job.bytesTotal = bytesTotal;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     emit downloadProgress(nonce, bytesReceived, bytesTotal);
 }
@@ -3054,6 +3070,8 @@ void CloudDriveModel::proceedNextJob() {
 
     QString nonce = m_jobQueue->dequeue();
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    job.isRunning = true;
+    updateJob(job);
     qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "operation" << getOperationName(job.operation);
 
     mutex.lock();
@@ -3096,11 +3114,10 @@ void CloudDriveModel::dispatchJob(const QString jobId)
 void CloudDriveModel::dispatchJob(const CloudDriveJob job)
 {
     // NOTE This method will be invoke by QThread created by proceedNextJob.
-
     // Generalize cloud client.
     CloudDriveClient *cloudClient = getCloudClient(job.type);
 
-    qDebug() << "CloudDriveModel::dispatchJob" << job.jobId << job.operation << job.type << (cloudClient == 0 ? "no client" : cloudClient->objectName());
+    qDebug() << "CloudDriveModel::dispatchJob" << job.jobId << job.operation << getOperationName(job.operation) << job.type << (cloudClient == 0 ? "no client" : cloudClient->objectName());
 
     switch (job.operation) {
     case LoadCloudDriveItems:
@@ -3208,7 +3225,7 @@ void CloudDriveModel::requestTokenReplyFilter(QString nonce, int err, QString er
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -3221,7 +3238,7 @@ void CloudDriveModel::authorizeRedirectFilter(QString nonce, QString url, QStrin
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -3234,7 +3251,7 @@ void CloudDriveModel::accessTokenReplyFilter(QString nonce, int err, QString err
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     if (err == QNetworkReply::NoError) {
         // Check if job.nextJobId is specified. (From quota request)
@@ -3282,7 +3299,7 @@ void CloudDriveModel::accountInfoReplyFilter(QString nonce, int err, QString err
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -3295,7 +3312,7 @@ void CloudDriveModel::quotaReplyFilter(QString nonce, int err, QString errMsg, Q
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();

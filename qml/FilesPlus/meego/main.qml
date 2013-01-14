@@ -1050,6 +1050,15 @@ PageStackWindow {
                 return -1;
             }
 
+            function updateJob(jobJson) {
+                if (!jobJson) return;
+
+                var i = findIndexByJobId(jobJson.job_id);
+                if (i >= 0) {
+                    cloudDriveJobsModel.set(i, jobJson);
+                }
+            }
+
             function removeJob(jobId) {
                 for (var i=0; i<cloudDriveJobsModel.count; i++) {
                     if (cloudDriveJobsModel.get(i).job_id == jobId) {
@@ -1059,6 +1068,19 @@ PageStackWindow {
                 }
 
                 return -1;
+            }
+
+            function removeQueuedJobs() {
+                var i = 0;
+                while (i<cloudDriveJobsModel.count) {
+                    var job = cloudDriveJobsModel.get(i);
+                    if (!job.is_running) {
+                        console.debug("cloudDriveJobsModel removeQueuedJobs " + i + " " + job.job_id);
+                        cloudDriveJobsModel.remove(i);
+                    } else {
+                        i++;
+                    }
+                }
             }
         }
 
@@ -1279,18 +1301,22 @@ PageStackWindow {
 
             if (err == 0) {
                 // TODO Get account info and show in dialog.
-                if (jobJson.operation == CloudDriveModel.AccessToken) {
+                if (jobJson.operation == CloudDriveModel.RefreshToken) {
+                    // Request quota.
+                    cloudDriveModel.quota(jobJson.type, jobJson.uid);
+                } else {
                     showMessageDialogSlot(getCloudName(jobJson.type) + " " + qsTr("Access Token"),
                                           qsTr("CloudDrive user is authorized.\nPlease proceed your sync action."),
                                           2000);
+
+                    // Refresh to get newly authorized cloud drive.
+                    p = findPage("drivePage");
+                    if (p) p.refreshSlot("window onAccessTokenReplySignal jobJson.type " + jobJson.type + " jobJson.uid " + jobJson.uid);
                 }
 
                 // Refresh account page.
                 var p = findPage("cloudDriveAccountsPage");
                 if (p) p.refreshCloudDriveAccountsSlot();
-                // Update item on drive page.
-                p = findPage("drivePage");
-                if (p) p.updateItemSlot(jobJson);
             } else {
                 showMessageDialogSlot(
                             getCloudName(jobJson.type) + " " + qsTr("Access Token"),
@@ -2301,7 +2327,14 @@ PageStackWindow {
             });
         }
 
+        onJobUpdatedSignal: {
+            // NOTE It's emitted from updateJob() to update job in job model.
+            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            cloudDriveJobsModel.updateJob(jobJson);
+        }
+
         onJobRemovedSignal: {
+            // NOTE It's emitted from removeJob() to remove job from job model.
             cloudDriveJobsModel.removeJob(nonce);
         }
 
