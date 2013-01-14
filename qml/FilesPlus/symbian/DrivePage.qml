@@ -166,8 +166,7 @@ Page {
         var i = driveGridModel.findIndexByCloudTypeAndUid(jobJson.type, jobJson.uid);
         if (i != -1) {
             // Request quota.
-            var cloudType = cloudDriveModel.getClientType(json.type);
-            cloudDriveModel.quota(cloudType, json.uid);
+            cloudDriveModel.quota(jobJson.type, jobJson.uid);
         } else {
             // Not found cloud drive, refresh to get newly authorized cloud drive.
             refreshSlot("drivePage updateItemSlot type " + jobJson.type + " uid " + jobJson.uid);
