@@ -290,9 +290,8 @@ Page {
         } else if (name == "Monitoring.enabled") {
             if (appInfo.isMonitoring()) {
                 appInfo.toggleMonitoring();
-                showMessageDialogSlot(
-                            qsTr("Monitoring"),
-                            qsTr("Monitoring is enabled. Log file is ") + appInfo.getMonitoringFilePath());
+                logInfo(qsTr("Monitoring"),
+                        qsTr("Monitoring is enabled. Log file is ") + appInfo.getMonitoringFilePath());
             } else {
                 appInfo.toggleMonitoring();
             }

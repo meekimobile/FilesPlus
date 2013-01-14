@@ -767,7 +767,11 @@ QString CloudDriveModel::getJobJson(QString jobId)
 void CloudDriveModel::updateJob(CloudDriveJob job)
 {
     mutex.lock();
+    // Remove cache for furthur refresh.
+    m_isConnectedCache->remove(job.localFilePath);
+    m_isDirtyCache->remove(job.localFilePath);
     m_isSyncingCache->remove(job.localFilePath);
+
     m_cloudDriveJobs->insert(job.jobId, job);
     mutex.unlock();
 
@@ -2007,7 +2011,7 @@ void CloudDriveModel::disconnect(CloudDriveModel::ClientTypes type, QString uid,
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show in job page.
-    emit jobEnqueuedSignal(job.jobId, "");
+    emit jobEnqueuedSignal(job.jobId, job.localFilePath);
 
     emit proceedNextJobSignal();
 }

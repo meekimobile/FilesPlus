@@ -274,9 +274,7 @@ PageStackWindow {
 
             // Show message if error.
             if (err < 0) {
-                showMessageDialogSlot(getActionName(fileAction) + " " + qsTr("error"),
-                                      msg,
-                                      5000);
+                logError(getActionName(fileAction) + " " + qsTr("error"), msg);
 
                 if (copyProgressDialog.status == DialogStatus.Open) {
                     copyProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " " + qsTr("failed") + ".\n";
@@ -320,9 +318,7 @@ PageStackWindow {
 
             // Show message if error.
             if (err < 0) {
-                showMessageDialogSlot(getActionName(fileAction) + " " + qsTr("error"),
-                                      msg,
-                                      5000);
+                logError(getActionName(fileAction) + " " + qsTr("error"), msg);
 
                 if (deleteProgressDialog.status == DialogStatus.Open) {
                     deleteProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " " + qsTr("failed") + ".\n";
@@ -372,9 +368,7 @@ PageStackWindow {
 
                 // TODO request cloudDriveModel.createFolder
             } else {
-                showMessageDialogSlot(qsTr("Create") + " " + qsTr("error"),
-                                      msg,
-                                      5000);
+                logError(qsTr("Create") + " " + qsTr("error"), msg);
             }
         }
 
@@ -382,9 +376,7 @@ PageStackWindow {
             console.debug("fsModel onRenameFinished sourcePath " + sourcePath + " targetPath " + targetPath + " err " + err + " msg " + msg);
 
             if (err != 0) {
-                showMessageDialogSlot(qsTr("Rename") + " " + qsTr("error"),
-                                      msg,
-                                      5000);
+                logError(qsTr("Rename") + " " + qsTr("error"), msg);
             }
 
             // Rename file on clouds.
@@ -520,7 +512,7 @@ PageStackWindow {
             // Update DB.
             cloudDriveModel.updateDropboxPrefix(appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", false));
 
-            window.showMessageDialogSlot("Dropbox " + appInfo.emptyStr+qsTr("notify"),
+            logInfo("Dropbox " + appInfo.emptyStr+qsTr("notify"),
                                          qsTr("You have changed Dropbox access method.\nPlease re-authorize your accounts before proceed your actions."));
         }
         onReject: {
@@ -926,9 +918,8 @@ PageStackWindow {
                 }
             } else {
                 // Notify failed refreshAccessToken.
-                showMessageDialogSlot(
-                            "CloudPrint " + qsTr("Refresh Token"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError("CloudPrint " + qsTr("Refresh Token"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
         }
 
@@ -1276,9 +1267,8 @@ PageStackWindow {
             if (err == 0) {
                 cloudDriveModel.authorize(jobJson.type);
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Request Token"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError(getCloudName(jobJson.type) + " " + qsTr("Request Token"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
             // Remove finished job.
@@ -1302,12 +1292,15 @@ PageStackWindow {
             if (err == 0) {
                 // TODO Get account info and show in dialog.
                 if (jobJson.operation == CloudDriveModel.RefreshToken) {
+                    logWarn(getCloudName(jobJson.type) + " " + qsTr("Refresh Token"),
+                            qsTr("Token was refreshed.") );
+
                     // Request quota.
                     cloudDriveModel.quota(jobJson.type, jobJson.uid);
                 } else {
-                    showMessageDialogSlot(getCloudName(jobJson.type) + " " + qsTr("Access Token"),
-                                          qsTr("CloudDrive user is authorized.\nPlease proceed your sync action."),
-                                          2000);
+                    logInfo(getCloudName(jobJson.type) + " " + qsTr("Access Token"),
+                            qsTr("CloudDrive user is authorized.\nPlease proceed your sync action."),
+                            2000);
 
                     // Refresh to get newly authorized cloud drive.
                     p = findPage("drivePage");
@@ -1318,9 +1311,8 @@ PageStackWindow {
                 var p = findPage("cloudDriveAccountsPage");
                 if (p) p.refreshCloudDriveAccountsSlot();
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Access Token"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError(getCloudName(jobJson.type) + " " + qsTr("Access Token"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
             // Remove finished job.
@@ -1338,9 +1330,8 @@ PageStackWindow {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
                 return;
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Account Info"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError(getCloudName(jobJson.type) + " " + qsTr("Account Info"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
             // Remove finished job.
@@ -1393,10 +1384,8 @@ PageStackWindow {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
                 return;
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Account Quota"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg,
-                            2000);
+                logError(getCloudName(jobJson.type) + " " + qsTr("Account Quota"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
             // Remove finished job.
@@ -1418,9 +1407,8 @@ PageStackWindow {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
                 return;
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("File Get"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError(getCloudName(jobJson.type) + " " + qsTr("File Get"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
             // Update ProgressBar on listItem and its parents.
@@ -1447,9 +1435,8 @@ PageStackWindow {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
                 return;
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("File Put"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError(getCloudName(jobJson.type) + " " + qsTr("File Put"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
 
                 // Reset cloudFolderPage.
                 var p = findPage("cloudFolderPage");
@@ -1488,15 +1475,10 @@ PageStackWindow {
                         // If dir, should remove all sub items.
                         cloudDriveModel.removeItemWithChildren(jobJson.type, jobJson.uid, jobJson.local_file_path);
 
-                        // TODO Why does it need here? As there is already below.
-                        // Update ProgressBar on listItem.
-//                        fsModel.setProperty(jobJson.local_file_path, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
-
                         // Notify removed link.
-                        showMessageDialogSlot(
-                                    getCloudName(jobJson.type) + " " + qsTr("Metadata"),
-                                    qsTr("%1 was removed remotely.\nLink will be removed.").arg(jobJson.local_file_path),
-                                    2000);
+                        logWarn(getCloudName(jobJson.type) + " " + qsTr("Metadata"),
+                                qsTr("%1 was removed remotely.\nLink will be removed.").arg(jobJson.local_file_path),
+                                2000);
                     } else {
                         // Sync starts from itself.
                         if (jsonObj.is_dir) { // Sync folder.
@@ -1817,12 +1799,8 @@ PageStackWindow {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
                 return;
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Metadata"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
-
-                // Reset running.
-                jobJson.is_running = false;
+                logError(getCloudName(jobJson.type) + " " + qsTr("Metadata"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
             // Update ProgressBar on listItem and its parent.
@@ -1854,12 +1832,11 @@ PageStackWindow {
                 return;
             } else if (err == 299 && jobJson.type == CloudDriveModel.SkyDrive && msgJson.error && msgJson.error.code == "resource_already_exists") {
                 // SkyDrive Folder already exists. Do nothing
-                showMessageDialogSlot(
+                logWarn(
                             getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
                             qsTr("Error") + " " + err + " " + errMsg + " " + msg +
                             "\n\n" +
-                            qsTr("Please proceed with sync."),
-                            2000);
+                            qsTr("Please proceed with sync.") );
 
                 // Reset cloudFolderPage.
                 var p = findPage("cloudFolderPage");
@@ -1867,10 +1844,8 @@ PageStackWindow {
                     p.resetBusySlot("cloudDriveModel onCreateFolderReplySignal");
                 }
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg,
-                            2000);
+                logError(getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
 
                 // Reset cloudFolderPage.
                 var p = findPage("cloudFolderPage");
@@ -1954,10 +1929,11 @@ PageStackWindow {
                 if (nonce != "") {
                     var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
-                    p.updateItemSlot(jobJson);
-
                     // Remove finished job.
                     cloudDriveModel.removeJob(nonce);
+
+                    // Update item after removing job as isSyncing will check if job exists.
+                    p.updateItemSlot(jobJson);
                 } else {
                     p.refreshSlot("cloudDriveModel onRefreshRequestSignal");
                 }
@@ -1983,9 +1959,8 @@ PageStackWindow {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
                 return;
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Copy"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError(getCloudName(jobJson.type) + " " + qsTr("Copy"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
 
                 // Reset cloudFolderPage.
                 var p = findPage("cloudFolderPage");
@@ -2022,9 +1997,8 @@ PageStackWindow {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
                 return;
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Move"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError(getCloudName(jobJson.type) + " " + qsTr("Move"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
 
                 // Reset cloudFolderPage.
                 var p = findPage("cloudFolderPage");
@@ -2057,9 +2031,8 @@ PageStackWindow {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
                 return;
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Delete"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError(getCloudName(jobJson.type) + " " + qsTr("Delete"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
 
                 // Reset cloudFolderPage.
                 var p = findPage("cloudFolderPage");
@@ -2097,9 +2070,8 @@ PageStackWindow {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
                 return;
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Share"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError(getCloudName(jobJson.type) + " " + qsTr("Share"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
             // Update ProgressBar on listItem and its parent.
@@ -2122,9 +2094,8 @@ PageStackWindow {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
                 return;
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Delta"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError(getCloudName(jobJson.type) + " " + qsTr("Delta"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
             // Update ProgressBar on listItem and its parent.
@@ -2272,9 +2243,8 @@ PageStackWindow {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
                 return;
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Migrate"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError(getCloudName(jobJson.type) + " " + qsTr("Migrate"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
             // Update ProgressBar on listItem and its parent.
@@ -2301,9 +2271,8 @@ PageStackWindow {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
                 return;
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Migrate"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError(getCloudName(jobJson.type) + " " + qsTr("Migrate"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
             // Update ProgressBar on listItem and its parent.
@@ -2320,7 +2289,7 @@ PageStackWindow {
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
             cloudDriveJobsModel.append(jobJson);
 
-            console.debug("window cloudDriveModel onJobEnqueuedSignal " + nonce + " " + localPath + " " + cloudDriveModel.getOperationName(jobJson.operation));
+            console.debug("window cloudDriveModel onJobEnqueuedSignal " + nonce + " " + cloudDriveModel.getOperationName(jobJson.operation) + " localPath " + localPath);
 
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
@@ -2355,9 +2324,8 @@ PageStackWindow {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
                 return;
             } else {
-                showMessageDialogSlot(
-                            getCloudName(jobJson.type) + " " + qsTr("Browse"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError(getCloudName(jobJson.type) + " " + qsTr("Browse"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
 
                 // Reset and close cloudDrivePathDialog.
                 var p = findPage("folderPage");
@@ -2400,10 +2368,28 @@ PageStackWindow {
         id: messageLoggerModel
     }
 
-    function showMessageDialogSlot(titleText, message, autoCloseInterval) {
+    function logError(titleText, message, autoCloseInterval) {
         // Append to logger.
         messageLoggerModel.log("error", titleText, message);
 
+        // Show alert.
+        showMessageDialogSlot(titleText, message, autoCloseInterval);
+    }
+
+    function logWarn(titleText, message, autoCloseInterval) {
+        // Append to logger.
+        messageLoggerModel.log("warn", titleText, message);
+    }
+
+    function logInfo(titleText, message, autoCloseInterval) {
+        // Append to logger.
+        messageLoggerModel.log("info", titleText, message);
+
+        // Show alert.
+        showMessageDialogSlot(titleText, message, autoCloseInterval);
+    }
+
+    function showMessageDialogSlot(titleText, message, autoCloseInterval) {
         if (autoCloseInterval) {
             messageDialog.autoClose = true;
             messageDialog.autoCloseInterval = autoCloseInterval;

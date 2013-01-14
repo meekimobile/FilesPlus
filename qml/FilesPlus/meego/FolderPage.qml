@@ -363,9 +363,9 @@ Page {
         if (!cloudDriveModel.canSync(srcFilePath)) return;
 
         if (!cloudDriveModel.isAuthorized()) {
-            window.showMessageDialogSlot(qsTr("Sync with Cloud"),
-                                         qsTr("FilesPlus syncs your files via cloud storage service.\nYou will be redirected to cloud account page."),
-                                         2000);
+            logInfo(qsTr("Sync with Cloud"),
+                    qsTr("FilesPlus syncs your files via cloud storage service.\nYou will be redirected to cloud account page."),
+                    2000);
 
             pageStack.push(Qt.resolvedUrl("CloudDriveAccountsPage.qml"));
         } else {
@@ -535,6 +535,7 @@ Page {
             if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
+                fsModel.refreshItem(modelIndex);
             }
         }
 
@@ -551,6 +552,7 @@ Page {
                 if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
+                    fsModel.refreshItem(modelIndex);
                 }
             }
         }
@@ -572,6 +574,7 @@ Page {
             fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, runningOperation);
             fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, jobJson.bytes);
             fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, jobJson.bytes_total);
+            fsModel.refreshItem(modelIndex);
         }
 
         // Show indicator on parent up to root.
@@ -586,6 +589,7 @@ Page {
             if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, runningOperation);
+                fsModel.refreshItem(modelIndex);
             }
         }
     }
