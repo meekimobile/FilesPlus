@@ -487,6 +487,18 @@ bool CloudDriveModel::isSyncing(QString localPath)
     return res;
 }
 
+bool CloudDriveModel::isSyncing(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
+{
+    bool res = false;
+    foreach (CloudDriveJob job, m_cloudDriveJobs->values()) {
+        if (job.localFilePath == localPath && getClientType(job.type) == type && job.uid == uid) {
+            res = true;
+        }
+    }
+
+    return res;
+}
+
 bool CloudDriveModel::isParentConnected(QString localPath)
 {
     // TODO
@@ -1867,13 +1879,14 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
 
             QString localFilePath = item.absoluteFilePath();
             CloudDriveItem cloudDriveItem = getItem(localFilePath, type, uid);
-//            qDebug() << "CloudDriveModel::syncFromLocal_Block item" << type << uid << localFilePath << cloudDriveItem.hash;
+            bool isNewItem = !isSyncing(type, uid, localFilePath) && (cloudDriveItem.hash == "" || cloudDriveItem.remotePath == "");
+//            qDebug() << "CloudDriveModel::syncFromLocal_Block item" << type << uid << localFilePath << cloudDriveItem.hash << isSyncing(localFilePath);
 
             // If dir/file don't have localHash which means it's not synced, put it right away.
             // If forcePut, put it right away.
-            if (forcePut || cloudDriveItem.hash == "" || cloudDriveItem.remotePath == "") {
+            if (forcePut || isNewItem) {
                 // Sync dir/file then it will decide whether get/put/do nothing by metadataReply.
-                qDebug() << "CloudDriveModel::syncFromLocal_Block new local item" << type << uid << localFilePath << cloudDriveItem.hash << "parentCloudDriveItem.remotePath" << parentCloudDriveItem.remotePath;
+                qDebug() << "CloudDriveModel::syncFromLocal_Block new local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "parentCloudDriveItem.remotePath" << parentCloudDriveItem.remotePath << "isNewItem" << isNewItem;
 
                 if (item.isDir()) {
                     // Drilldown local dir recursively.
@@ -1888,7 +1901,7 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
                 }
             } else {
                 // Skip any items that already have CloudDriveItem and has localHash.
-                qDebug() << "CloudDriveModel::syncFromLocal_Block skip existing local item" << type << uid << localFilePath << cloudDriveItem.remotePath << cloudDriveItem.hash;
+                qDebug() << "CloudDriveModel::syncFromLocal_Block skip existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isNewItem" << isNewItem;
             }
         }
 

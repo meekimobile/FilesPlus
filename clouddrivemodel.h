@@ -94,6 +94,7 @@ public:
     Q_INVOKABLE bool isRemotePathConnected(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, bool showDebug = false);
     Q_INVOKABLE bool isDirty(QString localPath, QDateTime lastModified);
     Q_INVOKABLE bool isSyncing(QString localPath);
+    Q_INVOKABLE bool isSyncing(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE bool isParentConnected(QString localPath);
     Q_INVOKABLE bool isRemoteRoot(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     Q_INVOKABLE bool canSync(QString localPath);
