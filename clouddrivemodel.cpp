@@ -116,7 +116,7 @@ void CloudDriveModel::loadCloudDriveItems(QString nonce) {
     jobDone();
 
     // RemoveJob
-    removeJob(nonce);
+    removeJob("CloudDriveModel::loadCloudDriveItems", nonce);
 
     emit loadCloudDriveItemsFinished(nonce);
 }
@@ -780,7 +780,7 @@ void CloudDriveModel::updateJob(CloudDriveJob job)
 //    qDebug() << "CloudDriveModel::updateJob job" << job.toJsonText();
 }
 
-void CloudDriveModel::removeJob(QString nonce)
+void CloudDriveModel::removeJob(QString caller, QString nonce)
 {
     mutex.lock();
     QString localPath = m_cloudDriveJobs->value(nonce).localFilePath;
@@ -792,7 +792,7 @@ void CloudDriveModel::removeJob(QString nonce)
         emit jobRemovedSignal(nonce);
     }
 
-    qDebug() << "CloudDriveModel::removeJob nonce" << nonce << "removeCount" << removeCount << "m_cloudDriveJobs->count()" << m_cloudDriveJobs->count();
+    qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce << "removeCount" << removeCount << "m_cloudDriveJobs->count()" << m_cloudDriveJobs->count();
 }
 
 int CloudDriveModel::getQueuedJobCount() const
@@ -805,7 +805,7 @@ void CloudDriveModel::cancelQueuedJobs()
     while (!m_jobQueue->isEmpty()) {
         CloudDriveJob job = m_cloudDriveJobs->value(m_jobQueue->dequeue());
         if (!job.isRunning) {
-            removeJob(job.jobId);
+            removeJob("CloudDriveModel::cancelQueuedJobs", job.jobId);
         }
     }
 
@@ -1880,7 +1880,11 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
                     syncFromLocal_Block(type, uid, localFilePath, parentCloudDriveItem.remotePath, -1, forcePut, false);
                 } else {
                     // Put file to remote parent path.
-                    filePut(type, uid, localFilePath, parentCloudDriveItem.remotePath, -1);
+                    if (cloudClient->isRemoteAbsolutePath()) {
+                        filePut(type, uid, localFilePath, parentCloudDriveItem.remotePath + "/" + getFileName(localFilePath), -1);
+                    } else {
+                        filePut(type, uid, localFilePath, parentCloudDriveItem.remotePath, -1);
+                    }
                 }
             } else {
                 // Skip any items that already have CloudDriveItem and has localHash.
@@ -2700,7 +2704,7 @@ void CloudDriveModel::initializeDB(QString nonce)
     jobDone();
 
     // RemoveJob
-    removeJob(nonce);
+    removeJob("CloudDriveModel::initializeDB", nonce);
 
     emit initializeDBFinished(nonce);
 }

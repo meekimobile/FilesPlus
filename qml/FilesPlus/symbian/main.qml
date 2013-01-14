@@ -1273,7 +1273,7 @@ PageStackWindow {
             }
 
             // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
+            cloudDriveModel.removeJob("cloudDriveModel.onRequestTokenReplySignal", jobJson.job_id);
         }
 
         onAuthorizeRedirectSignal: {
@@ -1282,7 +1282,7 @@ PageStackWindow {
             pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: redirectFrom }, true);
 
             // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
+            cloudDriveModel.removeJob("cloudDriveModel.onAuthorizeRedirectSignal", nonce);
         }
 
         onAccessTokenReplySignal: {
@@ -1317,7 +1317,7 @@ PageStackWindow {
             }
 
             // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
+            cloudDriveModel.removeJob("cloudDriveModel.onAccessTokenReplySignal", jobJson.job_id);
         }
 
         onAccountInfoReplySignal: {
@@ -1328,7 +1328,7 @@ PageStackWindow {
             if (err == 0) {
                 // Do nothing.
             } else if (err == 204) {
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Account Info"),
@@ -1336,7 +1336,7 @@ PageStackWindow {
             }
 
             // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
+            cloudDriveModel.removeJob("cloudDriveModel.onAccountInfoReplySignal", jobJson.job_id);
         }
 
         onQuotaReplySignal: {
@@ -1382,7 +1382,7 @@ PageStackWindow {
                     }
                 });
             } else if (err == 204) {
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Account Quota"),
@@ -1390,7 +1390,7 @@ PageStackWindow {
             }
 
             // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
+            cloudDriveModel.removeJob("cloudDriveModel.onQuotaReplySignal", jobJson.job_id);
         }
 
         onFileGetReplySignal: {
@@ -1405,20 +1405,20 @@ PageStackWindow {
                     p.refreshItemAfterFileGetSlot(jobJson.local_file_path);
                 }
             } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("File Get"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
-            // Update ProgressBar on listItem and its parents.
+            // Remove finished job.
+            cloudDriveModel.removeJob("cloudDriveModel.onFileGetReplySignal", jobJson.job_id);
+
+            // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
             });
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
         }
 
         onFilePutReplySignal: {
@@ -1433,7 +1433,7 @@ PageStackWindow {
                     p.refreshSlot("cloudDriveModel onFilePutReplySignal");
                 }
             } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("File Put"),
@@ -1446,13 +1446,13 @@ PageStackWindow {
                 }
             }
 
-            // Update ProgressBar on listItem and its parent.
+            // Remove finished job.
+            cloudDriveModel.removeJob("cloudDriveModel.onFilePutReplySignal", jobJson.job_id);
+
+            // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
             });
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
         }
 
         onMetadataReplySignal: {
@@ -1524,7 +1524,8 @@ PageStackWindow {
                             cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jsonObj.hash);
 
                             // Sync based on local contents.
-                            cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
+                            var remoteParentPath = cloudDriveModel.getParentRemotePath(jobJson.type, jobJson.remote_file_path);
+                            cloudDriveModel.syncFromLocal_Block(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
                         } else { // Sync file.
     //                        console.debug("cloudDriveModel onMetadataReplySignal file jsonObj.rev " + jsonObj.rev + " localPathHash " + localPathHash);
 
@@ -1751,7 +1752,8 @@ PageStackWindow {
                             cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, remotePathHash);
 
                             // Sync based on local contents.
-                            cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
+                            var remoteParentPath = cloudDriveModel.getParentRemotePath(jobJson.type, jobJson.remote_file_path);
+                            cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
                         } else { // Sync file.
                             console.debug("window cloudDriveModel onMetadataReplySignal file jobJson " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + jobJson.type + " " + jobJson.uid + " remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
 
@@ -1797,20 +1799,20 @@ PageStackWindow {
                 // Resume next jobs.
                 cloudDriveModel.resumeNextJob();
             } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Metadata"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
-            // Update ProgressBar on listItem and its parent.
+            // Remove finished job.
+            cloudDriveModel.removeJob("cloudDriveModel.onMetadataReplySignal", jobJson.job_id);
+
+            // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
             });
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
         }
 
         onCreateFolderReplySignal: {
@@ -1829,7 +1831,7 @@ PageStackWindow {
                 // Dropbox Folder already exists. proceed sync.
                 cloudDriveModel.metadata(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.model_index);
             } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else if (err == 299 && jobJson.type == CloudDriveModel.SkyDrive && msgJson.error && msgJson.error.code == "resource_already_exists") {
                 // SkyDrive Folder already exists. Do nothing
@@ -1855,6 +1857,9 @@ PageStackWindow {
                 }
             }
 
+            // Remove finished job.
+            cloudDriveModel.removeJob("cloudDriveModel.onCreateFolderReplySignal", jobJson.job_id);
+
             // TODO *** create SkyDrive folder freezes here *** TODO Does it need?
             // Update ProgressBar if localPath is specified.
             if (jobJson.type == CloudDriveModel.SkyDrive && pageStack.currentPage.name == "folderPage") {
@@ -1871,9 +1876,6 @@ PageStackWindow {
                 // Refresh cloudDrivePathDialog if it's opened.
                 pageStack.currentPage.updateCloudDrivePathDialogSlot(jobJson.new_remote_file_path);
             }
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
         }
 
         onDownloadProgress: {
@@ -1931,7 +1933,7 @@ PageStackWindow {
                     var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
                     // Remove finished job.
-                    cloudDriveModel.removeJob(nonce);
+                    cloudDriveModel.removeJob("cloudDriveModel.onRefreshRequestSignal", jobJson.job_id);
 
                     // Update item after removing job as isSyncing will check if job exists.
                     p.updateItemSlot(jobJson);
@@ -1957,7 +1959,7 @@ PageStackWindow {
                     p.refreshSlot("cloudDriveModel onCopyFileReplySignal");
                 }
             } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Copy"),
@@ -1970,13 +1972,13 @@ PageStackWindow {
                 }
             }
 
-            // Update ProgressBar on NEW listItem and its parent.
+            // Remove finished job.
+            cloudDriveModel.removeJob("cloudDriveModel.onCopyFileReplySignal", jobJson.job_id);
+
+            // Update ProgressBar on NEW listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
             });
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
         }
 
         onMoveFileReplySignal: {
@@ -1995,7 +1997,7 @@ PageStackWindow {
                     p.refreshSlot("cloudDriveModel onMoveFileReplySignal");
                 }
             } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Move"),
@@ -2008,13 +2010,13 @@ PageStackWindow {
                 }
             }
 
-            // Update ProgressBar on NEW listItem and its parent.
+            // Remove finished job.
+            cloudDriveModel.removeJob("cloudDriveModel.onMoveFileReplySignal", jobJson.job_id);
+
+            // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
             });
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
         }
 
         onDeleteFileReplySignal: {
@@ -2029,7 +2031,7 @@ PageStackWindow {
                     p.refreshSlot("cloudDriveModel onDeleteFileReplySignal");
                 }
             } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Delete"),
@@ -2042,7 +2044,10 @@ PageStackWindow {
                 }
             }
 
-            // Update ProgressBar on listItem and its parent.
+            // Remove finished job.
+            cloudDriveModel.removeJob("cloudDriveModel.onDeleteFileReplySignal", jobJson.job_id);
+
+            // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
             });
@@ -2052,9 +2057,6 @@ PageStackWindow {
                 // Refresh cloudDrivePathDialog if it's opened.
                 p.updateCloudDrivePathDialogSlot();
             }
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
         }
 
         onShareFileReplySignal: {
@@ -2068,20 +2070,20 @@ PageStackWindow {
                                                  (jobJson.local_file_path.indexOf("/") >= 0) ? cloudDriveModel.getFileName(jobJson.local_file_path) : jobJson.local_file_path,
                                                  url);
             } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Share"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
-            // Update ProgressBar on listItem and its parent.
+            // Remove finished job.
+            cloudDriveModel.removeJob("cloudDriveModel.onShareFileReplySignal", jobJson.job_id);
+
+            // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
             });
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
         }
 
         onDeltaReplySignal: {
@@ -2092,20 +2094,20 @@ PageStackWindow {
             if (err == 0) {
                 // TODO
             } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Delta"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
-            // Update ProgressBar on listItem and its parent.
+            // Remove finished job.
+            cloudDriveModel.removeJob("cloudDriveModel.onDeltaReplySignal", jobJson.job_id);
+
+            // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
             });
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
         }
 
         onMigrateFileReplySignal: {
@@ -2241,20 +2243,20 @@ PageStackWindow {
                 // Resume next jobs.
                 cloudDriveModel.resumeNextJob();
             } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Migrate"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
-            // Update ProgressBar on listItem and its parent.
+            // Remove finished job.
+            cloudDriveModel.removeJob("cloudDriveModel.onMigrateFileReplySignal", jobJson.job_id);
+
+            // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
             });
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
         }
 
         onMigrateFilePutReplySignal: {
@@ -2269,20 +2271,20 @@ PageStackWindow {
                     p.refreshSlot("cloudDriveModel onMigrateFilePutReplySignal");
                 }
             } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Migrate"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
-            // Update ProgressBar on listItem and its parent.
+            // Remove finished job.
+            cloudDriveModel.removeJob("cloudDriveModel.onMigrateFilePutReplySignal", jobJson.job_id);
+
+            // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
             });
-
-            // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
         }
 
         onJobEnqueuedSignal: {
@@ -2322,7 +2324,7 @@ PageStackWindow {
                     }
                 });
             } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, nonce);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Browse"),
@@ -2342,7 +2344,7 @@ PageStackWindow {
             }
 
             // Remove finished job.
-            cloudDriveModel.removeJob(nonce);
+            cloudDriveModel.removeJob("cloudDriveModel.onBrowseReplySignal", jobJson.job_id);
         }
 
         onMigrateProgressSignal: {
