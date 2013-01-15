@@ -315,14 +315,16 @@ QString FtpClient::createFolder(QString nonce, QString uid, QString remoteParent
     m_ftp->waitForDone();
 
     QString result;
-    if (m_ftp->error() == QFtp::UnknownError) {
-        emit createFolderReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, m_ftp->errorString(), QString("{ \"path\": \"%1\" }").arg(newRemoteFolderPath) );
+    if (m_ftp->error() != QFtp::NoError) {
+        // NOTE json string doesn't support newline character.
+        QString escapedErrorString =  m_ftp->errorString().replace("\n", " ");
+        emit createFolderReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, m_ftp->errorString(), QString("{ \"error\": \"%1\", \"path\": \"%2\" }").arg(escapedErrorString).arg(newRemoteFolderPath) );
     } else {
         // Get property.
         QString propertyJson = property(nonce, uid, newRemoteFolderPath);
         if (propertyJson.isEmpty()) {
             qDebug() << "FtpClient::createFolder" << uid << newRemoteFolderPath << "is not found.";
-            emit createFolderReplySignal(nonce, QNetworkReply::ContentNotFoundError, tr("Created path is not found."), QString("{ \"path\": \"%1\" }").arg(newRemoteFolderPath) );
+            emit createFolderReplySignal(nonce, QNetworkReply::ContentNotFoundError, "Created path is not found.", QString("{ \"error\": \"Created path is not found.\", \"path\": \"%1\" }").arg(newRemoteFolderPath) );
         } else {
             result = propertyJson;
             emit createFolderReplySignal(nonce, QNetworkReply::NoError, "", result);
