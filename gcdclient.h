@@ -33,6 +33,7 @@ public:
     static const QString deleteFileURI;
     static const QString renameFileURI;
     static const QString sharesURI;
+    static const QString trashFileURI;
 
     explicit GCDClient(QObject *parent = 0);
     ~GCDClient();

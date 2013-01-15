@@ -24,9 +24,10 @@ const QString GCDClient::propertyURI = "https://www.googleapis.com/drive/v2/file
 const QString GCDClient::createFolderURI = "https://www.googleapis.com/drive/v2/files"; // POST with json.
 const QString GCDClient::moveFileURI = "https://www.googleapis.com/drive/v2/files/%1"; // PATCH with partial json body.
 const QString GCDClient::copyFileURI = "https://www.googleapis.com/drive/v2/files/%1/copy"; // POST with partial json body.
-const QString GCDClient::deleteFileURI = "https://www.googleapis.com/drive/v2/files/%1/trash"; // POST
+const QString GCDClient::deleteFileURI = "https://www.googleapis.com/drive/v2/files/%1"; // DELETE
 const QString GCDClient::renameFileURI = "https://www.googleapis.com/drive/v2/files/%1"; // PATCH with partial json body.
 const QString GCDClient::sharesURI = "https://www.googleapis.com/drive/v2/files/%1/permissions"; // POST to insert permission.
+const QString GCDClient::trashFileURI = "https://www.googleapis.com/drive/v2/files/%1/trash"; // POST
 
 GCDClient::GCDClient(QObject *parent) :
     CloudDriveClient(parent)
@@ -653,7 +654,8 @@ QString GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    QNetworkReply *reply = manager->post(req, postData);
+//    QNetworkReply *reply = manager->post(req, postData);
+    QNetworkReply *reply = manager->deleteResource(req);
 
     // TODO Return if asynchronous.
     if (!synchronous) {
