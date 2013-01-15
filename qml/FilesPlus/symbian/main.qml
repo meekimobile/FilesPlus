@@ -1753,7 +1753,7 @@ PageStackWindow {
 
                             // Sync based on local contents.
                             var remoteParentPath = cloudDriveModel.getParentRemotePath(jobJson.type, jobJson.remote_file_path);
-                            cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
+                            cloudDriveModel.syncFromLocal_Block(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
                         } else { // Sync file.
                             console.debug("window cloudDriveModel onMetadataReplySignal file jobJson " + jobJson.local_file_path + " " + jobJson.remote_file_path + " " + jobJson.type + " " + jobJson.uid + " remotePathHash " + remotePathHash + " localPathHash " + localPathHash);
 
@@ -1785,12 +1785,8 @@ PageStackWindow {
                     console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " put " + jobJson.local_file_path + " to " + jobJson.remote_file_path);
                     if (cloudDriveModel.isDir(jobJson.local_file_path)) {
                         // Remote folder will be created in syncFromLocal if it's required.
-                        cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
-
-                        // Request metadata for current dir.
-                        // Once it got reply, it should get hash already.
-                        // Because its sub files/dirs are in prior queue.
-                        // cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
+                        var remoteParentPath = cloudDriveModel.getParentRemotePath(jobJson.type, jobJson.remote_file_path);
+                        cloudDriveModel.syncFromLocal_Block(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
                     } else {
                         cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
                     }
@@ -1821,6 +1817,7 @@ PageStackWindow {
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
             var msgJson = Utility.createJsonObj(msg);
 
+            // NOTE creatFolder always have jobJson.remote_file_path = remoteParentPath.
             if (err == 0) {
                 // Refresh cloudFolderPage.
                 var p = findPage("cloudFolderPage");
@@ -1828,33 +1825,23 @@ PageStackWindow {
                     p.refreshSlot("cloudDriveModel onCreateFolderReplySignal");
                 }
             } else if (err == 202 && jobJson.type == CloudDriveModel.Dropbox && jobJson.local_file_path != "") {
-                // Dropbox Folder already exists. proceed sync.
-                cloudDriveModel.metadata(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.model_index);
+                // Dropbox Folder already exists. Do nothing
+                logError(getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
+                        qsTr("Error") + " " + err + " " + errMsg + " " + msg +
+                        "\n\n" +
+                        qsTr("Please proceed with sync.") );
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else if (err == 299 && jobJson.type == CloudDriveModel.SkyDrive && msgJson.error && msgJson.error.code == "resource_already_exists") {
                 // SkyDrive Folder already exists. Do nothing
-                logWarn(
-                            getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
-                            qsTr("Error") + " " + err + " " + errMsg + " " + msg +
-                            "\n\n" +
-                            qsTr("Please proceed with sync.") );
-
-                // Reset cloudFolderPage.
-                var p = findPage("cloudFolderPage");
-                if (p) {
-                    p.resetBusySlot("cloudDriveModel onCreateFolderReplySignal");
-                }
+                logError(getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
+                        qsTr("Error") + " " + err + " " + errMsg + " " + msg +
+                        "\n\n" +
+                        qsTr("Please proceed with sync.") );
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
-
-                // Reset cloudFolderPage.
-                var p = findPage("cloudFolderPage");
-                if (p) {
-                    p.resetBusySlot("cloudDriveModel onCreateFolderReplySignal");
-                }
             }
 
             // Remove finished job.
@@ -1875,6 +1862,12 @@ PageStackWindow {
             if (pageStack.currentPage.name == "folderPage") {
                 // Refresh cloudDrivePathDialog if it's opened.
                 pageStack.currentPage.updateCloudDrivePathDialogSlot(jobJson.new_remote_file_path);
+            }
+
+            // Reset cloudFolderPage.
+            var p = findPage("cloudFolderPage");
+            if (p) {
+                p.resetBusySlot("cloudDriveModel onCreateFolderReplySignal");
             }
         }
 

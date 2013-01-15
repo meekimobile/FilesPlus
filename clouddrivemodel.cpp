@@ -1783,12 +1783,6 @@ void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString u
 
 void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut, bool isRootLocalPath)
 {
-    /* TODO Handling remotePath.
-     *
-     * For Dropbox, remotePath is remote absolute path of specified localPath.  Ex. /D/A
-     * For SkyDrive, remotePath is unique ID. Ex. folder.xxxxxxxx.yyyy!sss. By default it will not be specified.
-    */
-
     // This method is invoked from dir only as file which is not found will be put right away.
     qDebug() << "----- CloudDriveModel::syncFromLocal_Block -----" << type << uid << localPath << remoteParentPath << modelIndex << "forcePut" << forcePut;
 
@@ -1822,17 +1816,30 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
             qDebug() << "CloudDriveModel::syncFromLocal_Block remoteParentPath" << remoteParentPath;
 
             // Request SkyDriveClient's createFolder synchronously.
-            // Insert dummy job to support QML CloudDriveModel.onCreateFolderReplySignal.
+            // NOTE Insert dummy job to support QML CloudDriveModel.onCreateFolderReplySignal. It will be removed there.
             CloudDriveJob job(createNonce(), CreateFolder, type, uid, localPath, remoteParentPath, modelIndex);
             job.newRemoteFileName = info.fileName();
             m_cloudDriveJobs->insert(job.jobId, job);
 
             QString createFolderReplyResult = cloudClient->createFolder(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFileName, true);
+//            qDebug() << "CloudDriveModel::syncFromLocal_Block createFolderReplyResult" << createFolderReplyResult;
             if (createFolderReplyResult != "") {
                 QScriptEngine engine;
                 QScriptValue sc = engine.evaluate("(" + createFolderReplyResult + ")");
                 QString hash = "";
                 QString createdRemotePath = "";
+
+                /* Handle error result.
+                 *Dropbox {"error": " at path 'The folder 'C' already exists.'"}
+                 *SkyDrive {   "error": {      "code": "resource_already_exists",       "message": "The resource couldn't be created because a resource named 'C' already exists."   }}
+                 *GoogleDrive supports duplicated folder's name.
+                 *Ftp { "error": "Creating directory failed: /Users/test/D: File exists.", "path": "/Users/test/D" }
+                 */
+                if (sc.property("error").isValid()) {
+                    qDebug() << "CloudDriveModel::syncFromLocal_Block createFolder failed localPath" << localPath << "remoteParentPath" << remoteParentPath << "createFolderReplyResult" << createFolderReplyResult;
+                    return;
+                }
+
                 switch (type) {
                 case Dropbox:
                     hash = sc.property("rev").toString();
@@ -1856,19 +1863,19 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
                 // Update parentCloudDriveItem.
                 parentCloudDriveItem = getItem(localPath, type, uid);
                 qDebug() << "CloudDriveModel::syncFromLocal_Block createFolder success parentCloudDriveItem" << parentCloudDriveItem;
-
-                // Invoke to emit signal to QML for refreshing items.
-//                createFolderReplyFilter(job.jobId, createFolderReply->error(), createFolderReply->errorString(), msg);
             } else {
                 // Insert dummy job and invoke slot to emit signal to front-end.
                 // TODO Suppress signal if newRemoteFolder is not requested path.
-                qDebug() << "CloudDriveModel::syncFromLocal_Block createFolder" << job.localFilePath << "failed";
-                // Invoke to emit signal to QML for refreshing items.
-//                createFolderReplyFilter(job.jobId, createFolderReply->error(), createFolderReply->errorString(), QString::fromUtf8(createFolderReply->readAll()));
+                qDebug() << "CloudDriveModel::syncFromLocal_Block createFolder failed localPath" << localPath << "remoteParentPath" << remoteParentPath << "createFolderReplyResult" << createFolderReplyResult;
                 return;
             }
         } else {
             qDebug() << "CloudDriveModel::syncFromLocal_Block found parentCloudDriveItem" << parentCloudDriveItem;
+        }
+
+        // TODO Abort operation if remotePath is not specified.
+        if (parentCloudDriveItem.remotePath == "") {
+            qDebug() << "CloudDriveModel::syncFromLocal_Block remotePath is not specified. Operation is aborted. parentCloudDriveItem" << parentCloudDriveItem;
         }
 
         QDir dir(info.absoluteFilePath());
@@ -2381,20 +2388,23 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
     QString hash;
     QString createdRemotePath;
 
+//    qDebug() << "CloudDriveModel::createFolderReplyFilter jobJson" << job.toJsonText();
+//    qDebug() << "CloudDriveModel::createFolderReplyFilter msg" << msg;
+
     // Add connection if localFilePath is specified because createFolder was invoked in syncFromLocal.
-    if (err == 0) {
-        // TODO generalize to support other clouds.
-        switch (job.type) {
-        case Dropbox:
-            sc = engine.evaluate("(" + msg + ")");
-            hash = sc.property("rev").toString();
-            if (job.localFilePath != "") {
-                // Add cloud item if localPath is specified.
-                addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
-            }
-            break;
-        case SkyDrive:
-            // REMARK For SkyDrive, job.localFilePath stores newRemoteFolderName. It've never have correct localFilePath. So ignore addItem.
+    // NOTE It's not required to create cloud item for created folder. Because further sync operation will do.
+//    if (err == 0) {
+//        switch (job.type) {
+//        case Dropbox:
+//            sc = engine.evaluate("(" + msg + ")");
+//            hash = sc.property("rev").toString();
+//            if (job.localFilePath != "") {
+//                // Add cloud item if localPath is specified.
+//                addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
+//            }
+//            break;
+//        case SkyDrive:
+//            // REMARK For SkyDrive, job.localFilePath stores newRemoteFolderName. It've never have correct localFilePath. So ignore addItem.
 //            sc = engine.evaluate("(" + msg + ")");
 //            hash = sc.property("updated_time").toString();
 //            createdRemotePath = sc.property("id").toString();
@@ -2402,17 +2412,27 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
 //                // TODO SkyDrive expected to have newRemoteFolderName in job.localFilePath
 //                addItem(SkyDrive, job.uid, job.localFilePath, createdRemotePath, hash);
 //            }
-            break;
-        case Ftp:
-            sc = engine.evaluate("(" + msg + ")");
-            hash = sc.property("lastModified").toString();
-            if (job.localFilePath != "") {
-                // Add cloud item if localPath is specified.
-                addItem(Ftp, job.uid, job.localFilePath, job.remoteFilePath, hash);
-            }
-            break;
-        }
-    }
+//            break;
+//        case GoogleDrive:
+//            // REMARK For GoogleDrive, job.localFilePath stores newRemoteFolderName. It've never have correct localFilePath. So ignore addItem.
+//            sc = engine.evaluate("(" + msg + ")");
+//            hash = sc.property("modifiedDate").toString();
+//            createdRemotePath = sc.property("id").toString();
+//            if (job.localFilePath != "") {
+//                // TODO GoogleDrive expected to have newRemoteFolderName in job.localFilePath
+//                addItem(GoogleDrive, job.uid, job.localFilePath, createdRemotePath, hash);
+//            }
+//            break;
+//        case Ftp:
+//            sc = engine.evaluate("(" + msg + ")");
+//            hash = sc.property("lastModified").toString();
+//            if (job.localFilePath != "") {
+//                // Add cloud item if localPath is specified.
+//                addItem(Ftp, job.uid, job.localFilePath, job.remoteFilePath, hash);
+//            }
+//            break;
+//        }
+//    }
 
     // Stop running.
     job.isRunning = false;

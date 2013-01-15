@@ -527,7 +527,7 @@ Page {
         var pathList = fsModel.getPathToRoot(jobJson.local_file_path);
         for(var i=0; i<pathList.length; i++) {
             var modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-//            console.debug("folderPage updateItemSlot " + pathList[i] + " " + modelIndex + " " + jobJson.is_running);
+            console.debug("folderPage updateItemSlot " + pathList[i] + " modelIndex " + modelIndex + " jobJson.is_running " + jobJson.is_running);
             if (modelIndex == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
                 fsModel.clearIndexOnCurrentDir();
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
@@ -544,7 +544,7 @@ Page {
             pathList = fsModel.getPathToRoot(jobJson.new_local_file_path);
             for(i=0; i<pathList.length; i++) {
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-//                console.debug("folderPage updateItemSlot " + pathList[i] + " " + modelIndex + " " + jobJson.is_running);
+//                console.debug("folderPage updateItemSlot " + pathList[i] + " modelIndex " + modelIndex + " jobJson.is_running " + jobJson.is_running);
                 if (modelIndex == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
                     fsModel.clearIndexOnCurrentDir();
                     modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
@@ -1486,24 +1486,17 @@ Page {
 
                 // Upload selected local path into remote parent path.
                 if (remoteParentPath != "") {
-                    // TODO Check if cloud client's remotePath is absolute path.
-                    if (cloudDriveModel.isRemoteAbsolutePath(type)) {
-                        // Use remoteParentPath + "/" + local file/folder name.
-                        remotePath = (remoteParentPath == "/" ? "" : remoteParentPath) + "/" + fsModel.getFileName(localPath);
-                        console.debug("cloudDrivePathDialog proceedOperation FilePut adjusted remotePath " + remotePath);
-
-                        if (fsModel.isDir(localPath)) {
-                            cloudDriveModel.suspendNextJob();
-                            cloudDriveModel.syncFromLocal(type, uid, localPath, remotePath, modelIndex, true);
-                            cloudDriveModel.resumeNextJob();
-                        } else {
-                            cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
-                        }
+                    if (fsModel.isDir(localPath)) {
+                        cloudDriveModel.suspendNextJob();
+                        cloudDriveModel.syncFromLocal_Block(type, uid, localPath, remoteParentPath, modelIndex, true);
+                        cloudDriveModel.resumeNextJob();
                     } else {
-                        if (fsModel.isDir(localPath)) {
-                            cloudDriveModel.suspendNextJob();
-                            cloudDriveModel.syncFromLocal_Block(type, uid, localPath, remoteParentPath, modelIndex, true);
-                            cloudDriveModel.resumeNextJob();
+                        // Check if cloud client's remotePath is absolute path.
+                        if (cloudDriveModel.isRemoteAbsolutePath(type)) {
+                            // Use remoteParentPath + "/" + local file/folder name.
+                            remotePath = (remoteParentPath == "/" ? "" : remoteParentPath) + "/" + fsModel.getFileName(localPath);
+                            console.debug("cloudDrivePathDialog proceedOperation FilePut adjusted remotePath " + remotePath);
+                            cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
                         } else {
                             cloudDriveModel.filePut(type, uid, localPath, remoteParentPath, modelIndex);
                         }
