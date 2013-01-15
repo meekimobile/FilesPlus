@@ -1697,12 +1697,19 @@ void CloudDriveModel::browse(CloudDriveModel::ClientTypes type, QString uid, QSt
     CloudDriveJob job(createNonce(), Browse, type, uid, "", remoteFilePath, -1);
     job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->insert(0, job.jobId); // Browse get priority.
 
-    // Emit signal to show in job page.
-    emit jobEnqueuedSignal(job.jobId, "");
+    // Force start thread.
+    CloudDriveModelThread *t = new CloudDriveModelThread(this);
+    connect(t, SIGNAL(finished()), t, SLOT(deleteLater()));
+    t->setNonce(job.jobId); // Set job ID to thread. It will invoke parent's dispatchJob later.
+    t->start();
 
-    emit proceedNextJobSignal();
+//    m_jobQueue->insert(0, job.jobId); // Browse get priority.
+
+//    // Emit signal to show in job page.
+//    emit jobEnqueuedSignal(job.jobId, "");
+
+//    emit proceedNextJobSignal();
 }
 
 void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex, bool forcePut)
