@@ -165,20 +165,42 @@ Page {
 
     function updateItemSlot(jobJson) {
         if (!jobJson) return;
+        console.debug("cloudFolderPage updateItemSlot jobJson " + JSON.stringify(jobJson));
+
         if (jobJson.remote_file_path == "") return;
 
-        var i = cloudFolderModel.findIndexByRemotePath(jobJson.remote_file_path);
-        if (i >= 0) {
-            cloudFolderModel.set(i, { isRunning: jobJson.is_running });
+        if (jobJson.type == selectedCloudType && jobJson.uid == selectedUid) {
+            console.debug("cloudFolderPage updateItemSlot jobJson " + JSON.stringify(jobJson));
+            var i = cloudFolderModel.findIndexByRemotePath(jobJson.remote_file_path);
+            if (i >= 0) {
+                cloudFolderModel.set(i, { isRunning: jobJson.is_running });
+            }
+        }
+    }
+
+    function refreshItemAfterFilePutSlot(jobJson) {
+        if (!jobJson) return;
+        console.debug("cloudFolderPage refreshItemAfterFilePutSlot jobJson " + JSON.stringify(jobJson));
+
+        if (jobJson.type == selectedCloudType && jobJson.uid == selectedUid) {
+            if (cloudDriveModel.isRemoteAbsolutePath(jobJson.type)) {
+                if (jobJson.remote_file_path == remoteParentPath) {
+                    refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot");
+                }
+            } else {
+                if (cloudDriveModel.getParentRemotePath(jobJson.type, jobJson.remote_file_path) == remoteParentPath) {
+                    refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot");
+                }
+            }
         }
     }
 
     tools: ToolBarLayout {
         id: toolBarLayout
 
-        ToolIcon {
+        ToolBarButton {
             id: backButton
-            iconId: "toolbar-back"
+            buttonIconSource: "toolbar-back"
             onClicked: {
                 if (cloudFolderView.state == "mark") {
                     cloudFolderView.state = "";
@@ -190,9 +212,9 @@ Page {
             }
         }
 
-        ToolIcon {
+        ToolBarButton {
             id: refreshButton
-            iconId: "toolbar-refresh"
+            buttonIconSource: "toolbar-refresh"
             visible: (cloudFolderView.state != "mark")
             onClicked: {
                 // Force resume.
@@ -202,13 +224,10 @@ Page {
             }
         }
 
-        ToolIcon {
+        ToolBarButton {
             id: cloudButton
-            iconSource: (theme.inverted ? "cloud.svg" : "cloud_inverted.svg")
+            buttonIconSource: (theme.inverted ? "cloud.svg" : "cloud_inverted.svg")
             visible: (cloudFolderView.state != "mark")
-            onClicked: {
-                syncConnectedItemsSlot();
-            }
 
             TextIndicator {
                 id: cloudButtonIndicator
@@ -218,11 +237,20 @@ Page {
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 10
             }
+
+            onPressAndHold: {
+                pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"));
+            }
+            onClicked: {
+                if (isPressAndHold) return; // Workaround for Symbian only.
+
+                syncConnectedItemsSlot();
+            }
         }
 
-        ToolIcon {
+        ToolBarButton {
             id: menuButton
-            iconId: "toolbar-view-menu"
+            buttonIconSource: "toolbar-view-menu"
             onClicked: {
                 // Hide popupToolPanel.
                 popupToolPanel.visible = false;
@@ -849,12 +877,8 @@ Page {
                 if (["copy","cut"].indexOf(action) > -1 && !clipboard.get(i).type) {
                     isBusy = true;
                     if (cloudDriveModel.isDir(sourcePath)) {
-                        // TODO Check if cloud client's remotePath is absolute path.
-                        if (cloudDriveModel.isRemoteAbsolutePath(selectedCloudType)) {
-                            cloudDriveModel.syncFromLocal(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1, true);
-                        } else {
-                            cloudDriveModel.syncFromLocal_Block(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1, true);
-                        }
+                        // Sync from local into target path (remote parent path).
+                        cloudDriveModel.syncFromLocal_Block(selectedCloudType, selectedUid, sourcePath, targetPath, -1, true);
                     } else {
                         cloudDriveModel.filePut(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1);
                     }

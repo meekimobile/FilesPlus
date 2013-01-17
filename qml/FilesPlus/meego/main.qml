@@ -1429,7 +1429,7 @@ PageStackWindow {
                 // Refresh cloudFolderPage.
                 var p = findPage("cloudFolderPage");
                 if (p) {
-                    p.refreshSlot("cloudDriveModel onFilePutReplySignal");
+                    p.refreshItemAfterFilePutSlot(jobJson);
                 }
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
@@ -1850,6 +1850,7 @@ PageStackWindow {
             // Update ProgressBar if localPath is specified.
             if (jobJson.type == CloudDriveModel.SkyDrive && pageStack.currentPage.name == "folderPage") {
                 // Refresh all items because jobJson.local_file_path is new folder name.
+                // TODO jobJson.local_file_path is no longer contains new folder name. jobJson.new_remote_file_name does.
                 pageStack.currentPage.refreshItemSlot("cloudDriveModel onCreateFolderReplySignal SkyDrive");
             } else {
                 // Refresh only created folder and its parents.

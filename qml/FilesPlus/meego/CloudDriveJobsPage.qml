@@ -14,6 +14,12 @@ Page {
         cloudJobsCountIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
     }
 
+    onStatusChanged: {
+        if (status == PageStatus.Active) {
+            cloudDriveModel.requestJobQueueStatus();
+        }
+    }
+
     tools: toolBarLayout
 
     ToolBarLayout {
@@ -180,7 +186,7 @@ Page {
                                 return remote_file_path;
                             }
                         }
-                        width: parent.width
+                        width: parent.width - targetCloudIcon.width
                         font.pointSize: 14
                         elide: Text.ElideMiddle
                         color: (!inverted) ? "white" : "black"
