@@ -61,11 +61,9 @@ Page {
     ToolBarLayout {
         id: toolBarLayout
 
-        ToolButton {
+        ToolBarButton {
             id: backButton
-            iconSource: "toolbar-back"
-            platformInverted: window.platformInverted
-            flat: true
+            buttonIconSource: "toolbar-back"
             onClicked: {
                 if (fsListView.state == "mark") {
                     fsListView.state = "";
@@ -78,11 +76,9 @@ Page {
             }
         }
 
-        ToolButton {
+        ToolBarButton {
             id: refreshButton
-            iconSource: "toolbar-refresh"
-            platformInverted: window.platformInverted
-            flat: true
+            buttonIconSource: "toolbar-refresh"
             visible: (fsListView.state == "")
 
             Timer {
@@ -95,26 +91,23 @@ Page {
                 }
             }
 
-            MouseArea {
-                anchors.fill: parent
-                onPressAndHold: {
-                    resetCacheSlot();
-                }
-                onClicked: {
-                    // Force resume.
-                    fsModel.resumeNextJob();
-                    cloudDriveModel.resumeNextJob();
+            onPressAndHold: {
+                resetCacheSlot();
+            }
+            onClicked: {
+                if (isPressAndHold) return;// Workaround for Symbian only.
 
-                    refreshSlot("refreshButton");
-                }
+                // Force resume.
+                fsModel.resumeNextJob();
+                cloudDriveModel.resumeNextJob();
+
+                refreshSlot("refreshButton");
             }
         }
 
-        ToolButton {
+        ToolBarButton {
             id: flipButton
-            iconSource: (folderPage.state != "list") ? (!window.platformInverted ? "list.svg" : "list_inverted.svg") : (!window.platformInverted ? "chart.svg" : "chart_inverted.svg")
-            platformInverted: window.platformInverted
-            flat: true
+            buttonIconSource: (folderPage.state != "list") ? (!window.platformInverted ? "list.svg" : "list_inverted.svg") : (!window.platformInverted ? "chart.svg" : "chart_inverted.svg")
             visible: (fsListView.state == "")
 
             Component.onCompleted: {
@@ -122,14 +115,10 @@ Page {
             }
         }
 
-        ToolButton {
+        ToolBarButton {
             id: cloudButton
-            iconSource: (!window.platformInverted ? "cloud.svg" : "cloud_inverted.svg")
-            platformInverted: window.platformInverted
+            buttonIconSource: (!window.platformInverted ? "cloud.svg" : "cloud_inverted.svg")
             visible: (fsListView.state == "")
-            onClicked: {
-                syncConnectedItemsSlot();
-            }
 
             TextIndicator {
                 id: cloudButtonIndicator
@@ -139,13 +128,20 @@ Page {
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 10
             }
+
+            onPressAndHold: {
+                pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"));
+            }
+            onClicked: {
+                if (isPressAndHold) return; // Workaround for Symbian only.
+
+                syncConnectedItemsSlot();
+            }
         }
 
-        ToolButton {
+        ToolBarButton {
             id: menuButton
-            iconSource: "toolbar-menu"
-            platformInverted: window.platformInverted
-            flat: true
+            buttonIconSource: "toolbar-menu"
             onClicked: {
                 // Hide popupToolPanel.
                 popupToolPanel.visible = false;

@@ -3,18 +3,24 @@ import com.nokia.symbian 1.1
 
 ToolButton {
     id: toolBarButton
+    iconSource: buttonIconSource
     platformInverted: window.platformInverted
     flat: true
 
-    signal pressAndHold()
+    property string buttonIconSource
+    property bool isPressAndHold: false
 
-    MouseArea {
-        anchors.fill: parent
-        onPressAndHold: {
-            toolBarButton.pressAndHold(mouse);
+    signal pressAndHold()
+    signal clicked()
+
+    onPressedChanged: {
+        if (pressed) {
+            isPressAndHold = false;
         }
-        onClicked: {
-            toolBarButton.clicked(mouse);
-        }
+    }
+
+    onPlatformPressAndHold: {
+        isPressAndHold = true;
+        pressAndHold();
     }
 }

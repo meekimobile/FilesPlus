@@ -61,9 +61,9 @@ Page {
     ToolBarLayout {
         id: toolBarLayout
 
-        ToolIcon {
+        ToolBarButton {
             id: backButton
-            iconId: "toolbar-back"
+            buttonIconSource: "toolbar-back"
             onClicked: {
                 if (fsListView.state == "mark") {
                     fsListView.state = "";
@@ -76,9 +76,9 @@ Page {
             }
         }
 
-        ToolIcon {
+        ToolBarButton {
             id: refreshButton
-            iconId: "toolbar-refresh"
+            buttonIconSource: "toolbar-refresh"
             visible: (fsListView.state == "")
 
             Timer {
@@ -91,24 +91,21 @@ Page {
                 }
             }
 
-            MouseArea {
-                anchors.fill: parent
-                onPressAndHold: {
-                    resetCacheSlot();
-                }
-                onClicked: {
-                    // Force resume.
-                    fsModel.resumeNextJob();
-                    cloudDriveModel.resumeNextJob();
+            onPressAndHold: {
+                resetCacheSlot();
+            }
+            onClicked: {
+                // Force resume.
+                fsModel.resumeNextJob();
+                cloudDriveModel.resumeNextJob();
 
-                    refreshSlot("refreshButton");
-                }
+                refreshSlot("refreshButton");
             }
         }
 
-        ToolIcon {
+        ToolBarButton {
             id: flipButton
-            iconSource: (folderPage.state != "list") ? (theme.inverted ? "list.svg" : "list_inverted.svg") : (theme.inverted ? "chart.svg" : "chart_inverted.svg")
+            buttonIconSource: (folderPage.state != "list") ? (theme.inverted ? "list.svg" : "list_inverted.svg") : (theme.inverted ? "chart.svg" : "chart_inverted.svg")
             visible: (fsListView.state == "")
 
             Component.onCompleted: {
@@ -116,13 +113,10 @@ Page {
             }
         }
 
-        ToolIcon {
+        ToolBarButton {
             id: cloudButton
-            iconSource: (theme.inverted ? "cloud.svg" : "cloud_inverted.svg")
+            buttonIconSource: (theme.inverted ? "cloud.svg" : "cloud_inverted.svg")
             visible: (fsListView.state == "")
-            onClicked: {
-                syncConnectedItemsSlot();
-            }
 
             TextIndicator {
                 id: cloudButtonIndicator
@@ -132,11 +126,18 @@ Page {
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 10
             }
+
+            onPressAndHold: {
+                pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"));
+            }
+            onClicked: {
+                syncConnectedItemsSlot();
+            }
         }
 
-        ToolIcon {
+        ToolBarButton {
             id: menuButton
-            iconId: "toolbar-view-menu"
+            buttonIconSource: "toolbar-view-menu"
             onClicked: {
                 // Hide popupToolPanel.
                 popupToolPanel.visible = false;
@@ -1046,8 +1047,8 @@ Page {
         TextIndicator {
             id: messageLoggerCounter
             text: (messageLoggerModel.newMessageCount > 0) ? (appInfo.emptyStr + qsTr("Message") + " " + messageLoggerModel.newMessageCount) : ""
+            size: parent.height - 10
             anchors.right: parent.right
-            anchors.rightMargin: 10
             anchors.verticalCenter: parent.verticalCenter
 
             onClicked: {
