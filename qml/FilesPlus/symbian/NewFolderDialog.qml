@@ -46,6 +46,10 @@ ConfirmDialog {
         }
     }
     
+    onConfirming: {
+        folderName.closeSoftwareInputPanel(); // Uses for closing VKB for Symbian only.
+    }
+
     onOpened: {
         newFolderButton.checked = true;
         newFileButton.checked = false;

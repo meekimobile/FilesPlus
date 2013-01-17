@@ -58,7 +58,7 @@ Rectangle {
             height: parent.height
             iconSource: (!window.platformInverted) ? "close_stop.svg" : "close_stop_inverted.svg"
             platformInverted: window.platformInverted
-            onClicked: {
+            onClicked: {                
                 nameFilterPanel.close();
             }
         }
@@ -87,6 +87,7 @@ Rectangle {
                 iconSource: (!window.platformInverted) ? "back.svg" : "back_inverted.svg"
                 platformInverted: window.platformInverted
                 onClicked: {
+                    focus = true; // Force accept text field for Symbian only.
                     previous();
                 }
             }
@@ -98,6 +99,7 @@ Rectangle {
                 iconSource: (!window.platformInverted) ? "next.svg" : "next_inverted.svg"
                 platformInverted: window.platformInverted
                 onClicked: {
+                    focus = true; // Force accept text field for Symbian only.
                     next();
                 }
             }

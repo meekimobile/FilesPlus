@@ -30,6 +30,7 @@ CommonDialog {
         }
     }
 
+    signal confirming() // Uses for closing VKB for Symbian only.
     signal confirm()
     signal reject()
     signal closed()
@@ -37,8 +38,12 @@ CommonDialog {
     signal opened()
 
     onButtonClicked: {
-        if (index === 0) confirm();
-        else reject();
+        if (index === 0) {
+            confirming();
+            confirm();
+        } else {
+            reject();
+        }
     }
 
     onStatusChanged: {

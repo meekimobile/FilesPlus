@@ -245,6 +245,7 @@ CommonDialog {
     
     onButtonClicked: {
         if (index == 0) {
+            fileName.closeSoftwareInputPanel(); // For Symbian only.
             confirm();
             accept();
         } else {

@@ -305,6 +305,7 @@ Page {
             testConnectionButton.text = appInfo.emptyStr+qsTr("Test connection");
         }
         onConfirm: {
+            connectionName.closeSoftwareInputPanel(); // For Symbian onyl.
             var tokens = hostname.text.split(":");
             cloudDriveModel.saveConnection(CloudDriveModel.Ftp,
                                            connectionName.text,

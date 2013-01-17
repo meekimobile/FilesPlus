@@ -361,7 +361,7 @@ ConfirmDialog {
         id: newFolderDialog
         titleText: appInfo.emptyStr+qsTr("New folder")
         content: Item {
-            width: parent.width
+            width: parent.width - 20
             height: 80
 
             TextField {
@@ -374,9 +374,11 @@ ConfirmDialog {
 
         onOpened: {
             folderName.text = "";
+            folderName.forceActiveFocus();
         }
 
         onConfirm: {
+            folderName.closeSoftwareInputPanel();
             if (folderName.text !== "") {
                 isBusy = true;
                 createRemoteFolder(folderName.text.trim());

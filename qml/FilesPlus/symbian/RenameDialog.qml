@@ -30,7 +30,11 @@ ConfirmDialog {
             text: sourcePathName
         }
     }
-    
+
+    onConfirming: {
+        newName.closeSoftwareInputPanel(); // Uses for closing VKB for Symbian only.
+    }
+
     onOpened: {
         newName.text = sourcePathName;
         newName.forceActiveFocus();
