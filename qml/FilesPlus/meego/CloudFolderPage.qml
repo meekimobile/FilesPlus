@@ -285,8 +285,9 @@ Page {
         TextIndicator {
             id: messageLoggerCounter
             text: (messageLoggerModel.newMessageCount > 0) ? (appInfo.emptyStr + qsTr("Message") + " " + messageLoggerModel.newMessageCount) : ""
+            height: parent.height - 6
             anchors.right: parent.right
-            anchors.rightMargin: 10
+            anchors.rightMargin: 3
             anchors.verticalCenter: parent.verticalCenter
 
             onClicked: {
