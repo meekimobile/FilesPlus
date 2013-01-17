@@ -9,6 +9,8 @@
 #include <QUrl>
 #include <QDir>
 #include <QFileInfo>
+#include <QFileSystemWatcher>
+#include <QDesktopServices>
 #include <qsystemstorageinfo.h>
 #include "foldersizeitem.h"
 #include "foldersizemodelthread.h"
@@ -171,6 +173,9 @@ private:
     QStringList m_driveList;
 
     QMutex mutex;
+
+    QFileSystemWatcher *m_fsWatcher;
+    void initializeFSWatcher();
 public slots:
     void loadDirSizeCacheFinishedFilter();
     void fetchDirSizeFinishedFilter();
@@ -179,6 +184,7 @@ public slots:
     void deleteProgressFilter(int fileAction, QString sourceSubPath, QString msg, int err);
     void deleteFinishedFilter(int fileAction, QString sourcePath, QString msg, int err);
     void jobDone();
+    void fsWatcherDirectoryChangedSlot(const QString &entry);
 Q_SIGNALS:
     void loadDirSizeCacheFinished();
     void initializeDBStarted();

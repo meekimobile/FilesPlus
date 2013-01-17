@@ -1017,13 +1017,14 @@ void FolderSizeModelThread::getDirContent(const QString dirPath, QList<FolderSiz
     }
 }
 
-void FolderSizeModelThread::fetchDirSize(const bool clearCache) {
+void FolderSizeModelThread::fetchDirSize(const QString startPath, const bool clearCache) {
     // Fetch to cache only. No need to populate to itemList.
-    qDebug() << QTime::currentTime() << "FolderSizeModelThread::fetchDirSize started " << currentDir() << " clearCache " << clearCache;
+    QString sourcePath = (startPath.isEmpty()) ? currentDir() : startPath;
+    qDebug() << QTime::currentTime() << "FolderSizeModelThread::fetchDirSize started sourcePath" << sourcePath << "clearCache" << clearCache;
 
     emit fetchDirSizeStarted();
 
-    QFileInfo dirInfo(m_currentDir);
+    QFileInfo dirInfo(sourcePath);
     getCachedDir(dirInfo, clearCache);
 
     // Reset after fetch.
@@ -1031,7 +1032,7 @@ void FolderSizeModelThread::fetchDirSize(const bool clearCache) {
 
     emit fetchDirSizeFinished();
 
-    qDebug() << QTime::currentTime() << "FolderSizeModelThread::fetchDirSize is done " << currentDir();
+    qDebug() << QTime::currentTime() << "FolderSizeModelThread::fetchDirSize done sourcePath" << sourcePath;
 }
 
 FolderSizeItem FolderSizeModelThread::getItem(const QFileInfo fileInfo) {
@@ -1249,7 +1250,7 @@ void FolderSizeModelThread::run()
 
     switch (m_runMethod) {
     case FetchDirSize:
-        fetchDirSize(m_clearCache);
+        fetchDirSize(m_sourcePath, m_clearCache);
         break;
     case LoadDirSizeCache:
         loadDirSizeCache();

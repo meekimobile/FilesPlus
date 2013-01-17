@@ -49,6 +49,9 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     // Enqueue jobs. Queued jobs will proceed after folderPage is loaded.
     m_jobQueue.enqueue(FolderSizeJob(createNonce(), FolderSizeModelThread::LoadDirSizeCache, "", ""));
     m_jobQueue.enqueue(FolderSizeJob(createNonce(), FolderSizeModelThread::InitializeDB, "", ""));
+
+    // Initialize FS watcher.
+    initializeFSWatcher();
 }
 
 FolderSizeItemListModel::~FolderSizeItemListModel()
@@ -308,6 +311,17 @@ void FolderSizeItemListModel::jobDone()
     }
 
     qDebug() << "FolderSizeItemListModel::jobDone finished runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue.count() << "m.isFinished()" << m.isFinished();
+
+    emit proceedNextJobSignal();
+}
+
+void FolderSizeItemListModel::fsWatcherDirectoryChangedSlot(const QString &entry)
+{
+    qDebug() << "FolderSizeItemListModel::fsWatcherDirectoryChangedSlot changed entry" << entry << "m_fsWatcher->directories()" << m_fsWatcher->directories();
+
+    // Enqueue job.
+    FolderSizeJob job(createNonce(), FolderSizeModelThread::FetchDirSize, entry, "", true);
+    m_jobQueue.enqueue(job);
 
     emit proceedNextJobSignal();
 }
@@ -742,6 +756,23 @@ QStringList FolderSizeItemListModel::splitFileName(const QString fileName)
     }
 
     return caps;
+}
+
+void FolderSizeItemListModel::initializeFSWatcher()
+{
+    // TODO Make watched paths configurable.
+    m_fsWatcher = new QFileSystemWatcher(this);
+    m_fsWatcher->addPath( QDesktopServices::storageLocation( QDesktopServices::PicturesLocation ) );
+    m_fsWatcher->addPath( QDesktopServices::storageLocation( QDesktopServices::MusicLocation ) );
+    m_fsWatcher->addPath( QDesktopServices::storageLocation( QDesktopServices::MoviesLocation ) );
+#ifdef Q_OS_SYMBIAN
+//    m_fsWatcher->addPath( QDesktopServices::storageLocation( QDesktopServices::DocumentsLocation ) ); // It's E:/ on Symbian which is too wide scope.
+    m_fsWatcher->addPath( "E:/DCIM" ); // Captured images location for Symbian.
+#elif defined(Q_WS_HARMATTAN)
+    m_fsWatcher->addPath( QDesktopServices::storageLocation( QDesktopServices::DocumentsLocation ) );
+    m_fsWatcher->addPath( "/home/user/MyDocs/DCIM" ); // Captured images location for Meego.
+#endif
+    connect(m_fsWatcher, SIGNAL(directoryChanged(QString)), SLOT(fsWatcherDirectoryChangedSlot(QString)) );
 }
 
 QString FolderSizeItemListModel::getDirContentJson(const QString dirPath)

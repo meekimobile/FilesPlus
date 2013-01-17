@@ -107,7 +107,7 @@ private:
 
     // Thread methods.
     void loadDirSizeCache();
-    void fetchDirSize(const bool clearCache = false);
+    void fetchDirSize(const QString startPath, const bool clearCache = false);
     bool move(const QString sourcePath, const QString targetPath);
     bool copy(int method, const QString sourcePath, const QString targetPath);
     bool copyFile(int method, const QString sourcePath, const QString targetPath);
