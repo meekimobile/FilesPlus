@@ -782,7 +782,7 @@ Page {
     PopupToolRing {
         id: popupToolPanel
         ringRadius: 65
-        buttonRadius: 30
+        buttonRadius: 28
         timeout: appInfo.emptySetting+appInfo.getSettingValue("popup.timer.interval", 2) * 1000
         disabledButtons: ["print","editFile","cloud","bluetooth"]
 
