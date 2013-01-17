@@ -418,8 +418,7 @@ Page {
 
         BusyIndicator {
             id: imageViewBusy
-            width: 80
-            height: 80
+            style: BusyIndicatorStyle { size: "large" }
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             visible: (imageFlickView.progress < 1 && imageFlickView.status == Image.Loading)

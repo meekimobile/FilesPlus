@@ -89,7 +89,7 @@ Page {
 
         BusyIndicator {
             id: busyIdicator
-            width: 150
+            width: 100
             height: width
             anchors.centerIn: parent
             visible: parent.visible

@@ -267,7 +267,7 @@ ConfirmDialog {
                     visible: isBusy
                     running: isBusy
                     width: 100
-                    height: 100
+                    height: width
                     anchors.centerIn: parent
                 }
 

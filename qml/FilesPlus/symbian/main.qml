@@ -2585,8 +2585,8 @@ PageStackWindow {
             id: busyindicator1
             x: 0
             y: 0
-            width: 80
-            height: 80
+            width: 100
+            height: width
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
             running: false

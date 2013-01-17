@@ -2582,10 +2582,7 @@ PageStackWindow {
 
         BusyIndicator {
             id: busyindicator1
-            x: 0
-            y: 0
-            width: 80
-            height: 80
+            style: BusyIndicatorStyle { size: "large" }
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
             running: false

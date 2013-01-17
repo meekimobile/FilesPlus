@@ -673,7 +673,7 @@ Page {
                 id: busyIcon
                 visible: isBusy
                 running: isBusy
-                width: 150
+                width: 100
                 height: width
                 anchors.centerIn: parent
             }

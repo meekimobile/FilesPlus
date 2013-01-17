@@ -3,8 +3,8 @@ import com.nokia.meego 1.0
 
 ToolIcon {
     id: toolBarButton
-    iconId: (buttonIconSource.indexOf("toolbar-") == 0) ? buttonIconSource : undefined
-    iconSource: (buttonIconSource.indexOf("toolbar-") == 0) ? undefined : buttonIconSource
+    iconId: (buttonIconSource.indexOf("toolbar-") == 0) ? buttonIconSource : ""
+    iconSource: (buttonIconSource.indexOf("toolbar-") == 0) ? "" : buttonIconSource
 
     property string buttonIconSource
 

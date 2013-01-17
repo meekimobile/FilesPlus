@@ -294,7 +294,7 @@ Page {
 
             BusyIndicator {
                 id: imageViewBusy
-                width: 150
+                width: 100
                 height: width
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
@@ -422,8 +422,8 @@ Page {
 
         BusyIndicator {
             id: imageViewBusy
-            width: 80
-            height: 80
+            width: 100
+            height: width
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             visible: (imageFlickView.progress < 1 && imageFlickView.status == Image.Loading)
