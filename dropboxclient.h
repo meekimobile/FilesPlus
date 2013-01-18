@@ -61,6 +61,8 @@ public:
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName);
+
+    QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size);
 signals:
 
 public slots:
@@ -93,6 +95,7 @@ private:
     QString createTimestamp();
     QString createNonce();
     QString createNormalizedQueryString(QMap<QString, QString> sortMap);
+    QString createQueryString(QMap<QString, QString> sortMap);
     QByteArray createBaseString(QString method, QString uri, QString queryString);
     QString createSignature(QString signatureMethod, QString consumerSecret, QString tokenSecret, QByteArray baseString);
     QString createSignatureWithHMACSHA1(QString consumerSecret, QString tokenSecret, QByteArray baseString);

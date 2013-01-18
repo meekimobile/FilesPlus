@@ -160,6 +160,16 @@ QString DropboxClient::createNormalizedQueryString(QMap<QString, QString> sortMa
     return queryString;
 }
 
+QString DropboxClient::createQueryString(QMap<QString, QString> sortMap) {
+    QString queryString;
+    foreach (QString key, sortMap.keys()) {
+        if (queryString != "") queryString.append("&");
+        queryString.append(key).append("=").append(sortMap[key]);
+    }
+
+    return queryString;
+}
+
 QByteArray DropboxClient::createPostData(QString signature, QString queryString) {
     QByteArray postData;
     postData.append("oauth_signature=");
@@ -449,6 +459,38 @@ QNetworkReply *DropboxClient::filePut(QString nonce, QString uid, QIODevice *sou
     }
 
     return reply;
+}
+
+QString DropboxClient::thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size)
+{
+    QString uri = thumbnailURI.arg(dropboxRoot, remoteFilePath);
+
+    QMap<QString, QString> sortMap;
+    sortMap["oauth_consumer_key"] = consumerKey;
+    sortMap["oauth_token"] = accessTokenPairMap[uid].token;
+    sortMap["oauth_signature_method"] = signatureMethod;
+    sortMap["oauth_timestamp"] = createTimestamp();
+    sortMap["oauth_nonce"] = nonce;
+    // Add parameters.
+    sortMap["format"] = format;
+    sortMap["size"] = size;
+
+    // Construct baseString for creating signature.
+    QString queryString = createNormalizedQueryString(sortMap);
+    QString encodedURI = encodeURI(uri);
+    QByteArray baseString = createBaseString("GET", encodedURI, queryString);
+    qDebug() << "DropboxClient::thumbnail baseString " << baseString;
+
+    QString signature = createSignature(signatureMethod, consumerSecret, accessTokenPairMap[uid].secret, baseString);
+    qDebug() << "DropboxClient::thumbnail signature" << signatureMethod << signature;
+
+    // Set Authorization header with added signature.
+    sortMap["oauth_signature"] = signature;
+
+    QString url = uri + "?" + createNormalizedQueryString(sortMap);
+
+    qDebug() << "DropboxClient::thumbnail url" << url;
+    return url;
 }
 
 QString DropboxClient::getDefaultRemoteFilePath(const QString &localFilePath)

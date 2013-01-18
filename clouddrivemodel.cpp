@@ -2047,6 +2047,14 @@ void CloudDriveModel::disconnect(CloudDriveModel::ClientTypes type, QString uid,
     emit proceedNextJobSignal();
 }
 
+QString CloudDriveModel::thumbnail(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString format, QString size)
+{
+    CloudDriveClient *client = getCloudClient(getClientType(type));
+    if (client == 0) return "";
+
+    return client->thumbnail(createNonce(), uid, remoteFilePath, format, size);
+}
+
 void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
     if (remoteFilePath == "") {

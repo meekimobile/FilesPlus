@@ -61,7 +61,7 @@ ConfirmDialog {
         originalRemotePath = (originalRemotePath == "") ? remotePath : originalRemotePath;
 
         cloudDrivePathListModel.clear();
-        var responseJson = cloudDriveModel.parseCloudDriveMetadataJson(selectedCloudType, originalRemotePath, jsonText,  cloudDrivePathListModel);
+        var responseJson = cloudDriveModel.parseCloudDriveMetadataJson(selectedCloudType, selectedUid, originalRemotePath, jsonText,  cloudDrivePathListModel);
         console.debug("cloudDrivePathDialog parseCloudDriveMetadataJson responseJson " + JSON.stringify(responseJson));
 
         selectedIsValid = true;

@@ -40,7 +40,7 @@ Page {
         originalRemotePath = (originalRemotePath == "") ? remotePath : originalRemotePath;
 
         cloudFolderModel.clear();
-        var responseJson = cloudDriveModel.parseCloudDriveMetadataJson(selectedCloudType, originalRemotePath, jsonText,  cloudFolderModel);
+        var responseJson = cloudDriveModel.parseCloudDriveMetadataJson(selectedCloudType, selectedUid, originalRemotePath, jsonText,  cloudFolderModel);
 
         selectedIsValid = true;
         selectedIndex = responseJson.selectedIndex;

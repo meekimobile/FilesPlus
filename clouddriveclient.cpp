@@ -154,6 +154,11 @@ QNetworkReply *CloudDriveClient::filePut(QString nonce, QString uid, QIODevice *
     return 0;
 }
 
+QString CloudDriveClient::thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size)
+{
+    return "";
+}
+
 void CloudDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 {
     emit metadataReplySignal(nonce, -1, objectName() + " " + tr("Metadata"), tr("Service is not implemented."));

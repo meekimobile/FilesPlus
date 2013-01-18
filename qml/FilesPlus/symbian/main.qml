@@ -1159,7 +1159,7 @@ PageStackWindow {
             }
         }
 
-        function parseCloudDriveMetadataJson(selectedCloudType, originalRemotePath, jsonText,  model) {
+        function parseCloudDriveMetadataJson(selectedCloudType, selectedUid, originalRemotePath, jsonText,  model) {
             // Parse jsonText and return collected information.
             var json = Utility.createJsonObj(jsonText);
 
