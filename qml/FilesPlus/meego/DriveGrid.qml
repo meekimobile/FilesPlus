@@ -12,6 +12,7 @@ Rectangle {
     property variant driveTypeTexts: [appInfo.emptyStr+qsTr("No Drive"), appInfo.emptyStr+qsTr("Internal Drive"), appInfo.emptyStr+qsTr("Removable Drive"), appInfo.emptyStr+qsTr("Remote Drive"), appInfo.emptyStr+qsTr("Cdrom Drive"), appInfo.emptyStr+qsTr("Internal Flash Drive"), appInfo.emptyStr+qsTr("Ram Drive"), appInfo.emptyStr+qsTr("Cloud Drive")]
     property variant driveIcons:     ["", "device.svg", "memory_card.svg", "", "music_player_update.svg", "memory_card.svg", "device.svg", ""]
     property int currentIndex: driveGrid.currentIndex
+    property bool busy: false
 
     GridView {
         id: driveGrid
@@ -30,7 +31,10 @@ Rectangle {
         property string currentDriveName: ""
 
         onMovementStarted: {
-            if (currentItem) currentItem.state = "normal";
+            if (currentItem) {
+                busy = false;
+                currentItem.state = "normal";
+            }
         }
     }
 
@@ -164,8 +168,13 @@ Rectangle {
                 acceptedButtons: Qt.LeftButton
 
                 onPressed: {
-                    driveCellItem.state = "highlight";
-                    driveGrid.currentIndex = index;
+                    if (!busy) {
+                        busy = true;
+                        driveCellItem.state = "highlight";
+                        driveGrid.currentIndex = index;
+                    } else {
+                        mouse.accepted = false;
+                    }
                 }
 
                 onClicked: {

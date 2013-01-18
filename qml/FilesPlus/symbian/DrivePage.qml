@@ -10,6 +10,7 @@ Page {
 
     property string name: "drivePage"
     property variant systemDriveNames: ["Z:/"] // Symbian only.
+    property alias busy: driveGrid.busy
 
     tools: toolBarLayout
 
@@ -226,6 +227,7 @@ Page {
     onStatusChanged: {
         if (status == PageStatus.Active) {
             driveGrid.currentIndex = -1;
+            busy = false;
 
             // Stop startup logging.
             appInfo.stopLogging();
