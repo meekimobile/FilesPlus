@@ -363,6 +363,7 @@ ConfirmDialog {
         content: Item {
             width: parent.width - 20
             height: 80
+            anchors.horizontalCenter: parent.horizontalCenter
 
             TextField {
                 id: folderName
