@@ -513,33 +513,21 @@ bool CloudDriveModel::isParentConnected(QString localPath)
 
 bool CloudDriveModel::isRemoteRoot(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
 {
-    switch (type) {
-    case Dropbox:
-        return (remotePath == "");
-    case SkyDrive:
-        return (remotePath == "");
-    case GoogleDrive:
-        return (remotePath == "");
-    case Ftp:
-        return (remotePath == "");
-    default:
+    CloudDriveClient *client = getCloudClient(type);
+    if (client == 0) {
         return false;
+    } else {
+        return client->getRemoteRoot() == remotePath;
     }
 }
 
 QString CloudDriveModel::getRemoteRoot(CloudDriveModel::ClientTypes type)
 {
-    switch (type) {
-    case Dropbox:
-        return dbClient->getRemoteRoot();
-    case SkyDrive:
-        return skdClient->getRemoteRoot();
-    case GoogleDrive:
-        return gcdClient->getRemoteRoot();
-    case Ftp:
-        return ftpClient->getRemoteRoot();
-    default:
+    CloudDriveClient *client = getCloudClient(type);
+    if (client == 0) {
         return "";
+    } else {
+        return client->getRemoteRoot();
     }
 }
 
@@ -711,6 +699,8 @@ QString CloudDriveModel::getOperationName(int operation) {
         return tr("Migrate");
     case MigrateFilePut:
         return tr("Migrate file");
+    case SyncFromLocal:
+        return tr("Sync from local");
     default:
         return tr("Invalid operation");
     }
@@ -1659,6 +1649,11 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
         return;
     }
 
+    if (isRemoteRoot(type, uid, remoteFilePath) || remoteFilePath == "/") {
+        qDebug() << "CloudDriveModel::metadata remoteFilePath" << remoteFilePath << " is root, can't sync.";
+        return;
+    }
+
     // TODO Restrict file types.
     if (!canSync(localFilePath)) {
         qDebug() << "CloudDriveModel::metadata localFilePath" << localFilePath << " is restricted, can't sync.";
@@ -1712,80 +1707,33 @@ void CloudDriveModel::browse(CloudDriveModel::ClientTypes type, QString uid, QSt
 //    emit proceedNextJobSignal();
 }
 
-void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex, bool forcePut)
+void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut)
 {
-    /* TODO Handling remotePath.
-     *
-     * For Dropbox, remotePath is remote absolute path of specified localPath.  Ex. /D/A
-     * For SkyDrive, remotePath is unique ID. Ex. folder.xxxxxxxx.yyyy!sss. By default it will not be specified.
-    */
-
-    // This method is invoked from dir only as file which is not found will be put right away.
-    qDebug() << "----- CloudDriveModel::syncFromLocal -----" << type << uid << localPath << remotePath << modelIndex << "forcePut" << forcePut;
+    qDebug() << "----- CloudDriveModel::syncFromLocal -----" << type << uid << localPath << "remoteParentPath" << remoteParentPath << "forcePut" << forcePut;
 
     if (localPath == "") {
         qDebug() << "CloudDriveModel::syncFromLocal localPath" << localPath << "is empty. Operation is aborted.";
         return;
     }
 
-    if (remotePath == "") {
-        qDebug() << "CloudDriveModel::syncFromLocal remotePath" << remotePath << "is empty. Operation is aborted.";
+    if (remoteParentPath == "") {
+        qDebug() << "CloudDriveModel::syncFromLocal remoteParentPath" << remoteParentPath << "is empty. Operation is aborted.";
         return;
     }
 
-    QFileInfo info(localPath);
-    if (info.isDir()) {
-        // Sync based on local contents.
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), SyncFromLocal, type, uid, localPath, remoteParentPath, modelIndex);
+    job.forcePut = forcePut;
+//    job.isRunning = true;
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
 
-        // TODO create remote directory if no content or pending refresh metadata.
-        CloudDriveItem cloudItem = getItem(localPath, type, uid);
-        if (cloudItem.localPath == "" || cloudItem.hash == CloudDriveModel::DirtyHash) {
-            qDebug() << "CloudDriveModel::syncFromLocal not found cloudItem. Invoke creatFolder.";
-            createFolder(type, uid, localPath, getParentRemotePath(type, remotePath), info.fileName());
-        } else {
-            qDebug() << "CloudDriveModel::syncFromLocal found cloudItem" << cloudItem;
-        }
+    // Emit signal to show cloud_wait.
+    m_isConnectedCache->remove(localPath);
+    m_isSyncingCache->remove(localPath);
+    emit jobEnqueuedSignal(job.jobId, localPath);
 
-        QDir dir(info.absoluteFilePath());
-        dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
-        foreach (QFileInfo item, dir.entryInfoList()) {
-            // Process events to avoid freezing UI.
-            QApplication::processEvents();
-
-            QString localFilePath = item.absoluteFilePath();
-            CloudDriveItem cloudDriveItem = getItem(localFilePath, type, uid);
-//            qDebug() << "CloudDriveModel::syncFromLocal item" << type << uid << localFilePath << cloudDriveItem.hash;
-
-            // If dir/file don't have localHash which means it's not synced, put it right away.
-            // If forcePut, put it right away.
-            if (forcePut || cloudDriveItem.hash == "" || cloudDriveItem.remotePath == "") {
-                QString remoteFilePath;
-                remoteFilePath = remotePath + "/" + item.fileName();
-
-                // Sync dir/file then it will decide whether get/put/do nothing by metadataReply.
-                qDebug() << "CloudDriveModel::syncFromLocal new local item" << type << uid << localFilePath << remoteFilePath << cloudDriveItem.hash;
-
-                if (forcePut) {
-                    if (item.isDir()) {
-                        // Drilldown local dir recursively.
-                        syncFromLocal(type, uid, localFilePath, remoteFilePath, -1, forcePut);
-                    } else {
-                        filePut(type, uid, localFilePath, remoteFilePath, -1);
-                    }
-                } else {
-                    metadata(type, uid, localFilePath, remoteFilePath, -1);
-                }
-            } else {
-                // Skip any items that already have CloudDriveItem and has localHash.
-//                qDebug() << "CloudDriveModel::syncFromLocal skip existing local item" << type << uid << localFilePath << remoteFilePath << cloudDriveItem.hash;
-            }
-        }
-
-        // TODO avoid having below line. It caused infinite loop.
-        // Update hash for itself will be requested from QML externally.
-    } else {
-        qDebug() << "CloudDriveModel::syncFromLocal file is not supported." << type << uid << localPath << remotePath << modelIndex << "forcePut" << forcePut;
-    }
+    emit proceedNextJobSignal();
 }
 
 void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut, bool isRootLocalPath)
@@ -1843,7 +1791,7 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
                  *Ftp { "error": "Creating directory failed: /Users/test/D: File exists.", "path": "/Users/test/D" }
                  */
                 if (sc.property("error").isValid()) {
-                    qDebug() << "CloudDriveModel::syncFromLocal_Block createFolder failed localPath" << localPath << "remoteParentPath" << remoteParentPath << "createFolderReplyResult" << createFolderReplyResult;
+                    qDebug() << "CloudDriveModel::syncFromLocal_Block createFolder error localPath" << localPath << "remoteParentPath" << remoteParentPath << "createFolderReplyResult" << createFolderReplyResult;
                     return;
                 }
 
@@ -3144,6 +3092,24 @@ void CloudDriveModel::proceedNextJob() {
     emit proceedNextJobSignal();
 }
 
+CloudDriveClient * CloudDriveModel::getCloudClient(ClientTypes type)
+{
+    switch (type) {
+    case Dropbox:
+        return dbClient;
+    case SkyDrive:
+        return skdClient;
+    case GoogleDrive:
+        return gcdClient;
+    case Ftp:
+        return ftpClient;
+    default:
+        qDebug() << "CloudDriveModel::getCloudClient type" << type << "is not implemented yet.";
+    }
+
+    return 0;
+}
+
 CloudDriveClient * CloudDriveModel::getCloudClient(const int type)
 {
     switch (type) {
@@ -3249,6 +3215,10 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         break;
     case Disconnect:
         removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
+        refreshRequestFilter(job.jobId);
+        break;
+    case SyncFromLocal:
+        syncFromLocal_Block(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, job.modelIndex, job.forcePut);
         refreshRequestFilter(job.jobId);
         break;
     }

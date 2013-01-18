@@ -59,6 +59,7 @@ QString CloudDriveJob::toJsonText()
     jsonText.append(QString("\"model_index\": %1, ").arg(modelIndex));
     jsonText.append(QString("\"bytes\": %1, ").arg(bytes));
     jsonText.append(QString("\"bytes_total\": %1, ").arg(bytesTotal));
+    jsonText.append(QString("\"force_put\": %1, ").arg( (forcePut)?"true":"false" ));
     jsonText.append(QString("\"next_job_id\": \"%1\" ").arg(nextJobId));
     jsonText.append(" }");
 

@@ -1490,7 +1490,7 @@ Page {
                 if (remoteParentPath != "") {
                     if (fsModel.isDir(localPath)) {
                         cloudDriveModel.suspendNextJob();
-                        cloudDriveModel.syncFromLocal_Block(type, uid, localPath, remoteParentPath, modelIndex, true);
+                        cloudDriveModel.syncFromLocal(type, uid, localPath, remoteParentPath, modelIndex, true);
                         cloudDriveModel.resumeNextJob();
                     } else {
                         // Check if cloud client's remotePath is absolute path.

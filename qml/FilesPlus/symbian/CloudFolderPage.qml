@@ -184,11 +184,11 @@ Page {
 
         if (jobJson.type == selectedCloudType && jobJson.uid == selectedUid) {
             if (cloudDriveModel.isRemoteAbsolutePath(jobJson.type)) {
-                if (jobJson.remote_file_path == remoteParentPath) {
+                if (cloudDriveModel.getParentRemotePath(jobJson.type, jobJson.remote_file_path) == remoteParentPath) {
                     refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot");
                 }
             } else {
-                if (cloudDriveModel.getParentRemotePath(jobJson.type, jobJson.remote_file_path) == remoteParentPath) {
+                if (jobJson.remote_file_path == remoteParentPath) {
                     refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot");
                 }
             }
@@ -881,7 +881,7 @@ Page {
                     isBusy = true;
                     if (cloudDriveModel.isDir(sourcePath)) {
                         // Sync from local into target path (remote parent path).
-                        cloudDriveModel.syncFromLocal_Block(selectedCloudType, selectedUid, sourcePath, targetPath, -1, true);
+                        cloudDriveModel.syncFromLocal(selectedCloudType, selectedUid, sourcePath, targetPath, -1, true);
                     } else {
                         cloudDriveModel.filePut(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1);
                     }

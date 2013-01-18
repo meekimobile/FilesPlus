@@ -70,7 +70,8 @@ public:
         ScheduleSync,
         MigrateFile,
         MigrateFilePut,
-        Delta
+        Delta,
+        SyncFromLocal
     };
 
     explicit CloudDriveModel(QDeclarativeItem *parent = 0);
@@ -184,7 +185,7 @@ public:
     Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
     Q_INVOKABLE void browse(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
 
-    void syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex, bool forcePut = false);
+    Q_INVOKABLE void syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false);
     Q_INVOKABLE void syncFromLocal_Block(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, bool isRootLocalPath = true);
 
     Q_INVOKABLE void createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, QString newRemoteFolderName);
@@ -333,6 +334,7 @@ private:
     void saveCloudDriveItems();
 
     CloudDriveClient * getCloudClient(const int type);
+    CloudDriveClient * getCloudClient(ClientTypes type);
 
     void initializeCloudClients(QString nonce);
     void initializeDropboxClient();
