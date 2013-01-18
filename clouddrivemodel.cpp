@@ -517,7 +517,7 @@ bool CloudDriveModel::isRemoteRoot(CloudDriveModel::ClientTypes type, QString ui
     if (client == 0) {
         return false;
     } else {
-        return client->getRemoteRoot() == remotePath;
+        return (client->getRemoteRoot() == remotePath || remotePath == "" || remotePath == "/");
     }
 }
 
