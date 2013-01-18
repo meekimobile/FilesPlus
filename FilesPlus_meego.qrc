@@ -155,5 +155,7 @@
         <file alias="qml/FilesPlus/MessageLoggerPage.qml">qml/FilesPlus/meego/MessageLoggerPage.qml</file>
         <file alias="qml/FilesPlus/MessageLoggerModel.qml">qml/FilesPlus/meego/MessageLoggerModel.qml</file>
         <file alias="qml/FilesPlus/FileActionDialog.qml">qml/FilesPlus/meego/FileActionDialog.qml</file>
+        <file>qml/FilesPlus/internet.svg</file>
+        <file>qml/FilesPlus/internet_inverted.svg</file>
     </qresource>
 </RCC>

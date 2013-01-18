@@ -755,7 +755,13 @@ Page {
                         if (isRunning) return;
 
                         if (source && source != "") {
-                            Qt.openUrlExternally(source);
+                            var viewableFileTypes = ["JPG", "PNG", "GIF", "SVG", "TXT", "TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
+                            if (viewableFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                                appInfo.addToClipboard(source);
+                                pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
+                            } else {
+                                Qt.openUrlExternally(source);
+                            }
                         }
                     }
                 }

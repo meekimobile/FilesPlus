@@ -42,6 +42,14 @@ Page {
         }
 
         ToolIcon {
+            id: openButton
+            iconSource: (theme.inverted) ? "internet.svg" : "internet_inverted.svg"
+            onClicked: {
+                Qt.openUrlExternally(url);
+            }
+        }
+
+        ToolIcon {
             id: actionButton
             iconSource: (webViewBusy.visible)
                         ? ((theme.inverted) ? "close_stop.svg" : "close_stop_inverted.svg")
@@ -152,6 +160,7 @@ Page {
 
             onLoadFailed: {
                 console.debug("webViewPage webView onLoadFailed " + webView.progress);
+                webView.html = qsTr("Page loading failed. Please open with internet browser.");
                 webViewBusy.visible = false;
             }
 

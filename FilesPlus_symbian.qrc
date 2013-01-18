@@ -153,5 +153,7 @@
         <file alias="qml/FilesPlus/MessageLoggerPage.qml">qml/FilesPlus/symbian/MessageLoggerPage.qml</file>
         <file alias="qml/FilesPlus/MessageLoggerModel.qml">qml/FilesPlus/symbian/MessageLoggerModel.qml</file>
         <file alias="qml/FilesPlus/FileActionDialog.qml">qml/FilesPlus/symbian/FileActionDialog.qml</file>
+        <file>qml/FilesPlus/internet.svg</file>
+        <file>qml/FilesPlus/internet_inverted.svg</file>
     </qresource>
 </RCC>
