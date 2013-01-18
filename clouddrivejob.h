@@ -2,6 +2,7 @@
 #define CLOUDDRIVEJOB_H
 
 #include <QDebug>
+#include <QDateTime>
 
 class CloudDriveJob
 {
@@ -27,6 +28,17 @@ public:
     qint64 bytesTotal;
 
     bool forcePut;
+
+    QString uploadId;
+    qint64 uploadBytesTotal;
+    qint64 uploadOffset;
+
+    QDateTime createdTime;
+    QDateTime lastStartedTime;
+    QDateTime lastStoppedTime;
+    int err;
+    QString errString;
+    QString errMessage;
 
     QString nextJobId;
 

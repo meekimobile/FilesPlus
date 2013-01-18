@@ -34,6 +34,8 @@ public:
     static const QString renameFileURI;
     static const QString sharesURI;
     static const QString trashFileURI;
+    static const QString startResumableUploadURI;
+    static const QString resumeUploadURI;
 
     explicit GCDClient(QObject *parent = 0);
     ~GCDClient();
@@ -61,6 +63,10 @@ public:
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName);
 
+    QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString uploadId, qint64 offset);
+    QNetworkReply * filePutResumeUpload(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString uploadId, qint64 offset);
+    QNetworkReply * filePutResumeStatus(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString uploadId, qint64 offset);
+
     QString getRemoteRoot();
 signals:
 
@@ -82,6 +88,10 @@ public slots:
     void copyFileReplyFinished(QNetworkReply *reply);
     void deleteFileReplyFinished(QNetworkReply *reply);
     void shareFileReplyFinished(QNetworkReply *reply);
+
+    void filePutResumeReplyFinished(QNetworkReply *reply);
+    void filePutResumeUploadReplyFinished(QNetworkReply *reply);
+    void filePutResumeStatusReplyFinished(QNetworkReply *reply);
 private:
     QString localPath;
     QHash<QString, QString> m_contentTypeHash;

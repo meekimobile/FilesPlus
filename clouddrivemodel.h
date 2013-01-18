@@ -71,7 +71,9 @@ public:
         MigrateFile,
         MigrateFilePut,
         Delta,
-        SyncFromLocal
+        SyncFromLocal,
+        FilePutResume,
+        FilePutCommit
     };
 
     explicit CloudDriveModel(QDeclarativeItem *parent = 0);
@@ -197,6 +199,8 @@ public:
     Q_INVOKABLE void shareFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath);
     Q_INVOKABLE void delta(CloudDriveModel::ClientTypes type, QString uid);
 
+    Q_INVOKABLE void filePutResume(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId = "", qint64 offset = 0);
+
     Q_INVOKABLE void migrateFile(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
     Q_INVOKABLE void migrateFilePut(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 bytesTotal, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
     void migrateFile_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 bytesTotal, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
@@ -236,6 +240,7 @@ signals:
     void deltaReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void migrateFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void filePutResumeReplySignal(QString nonce, int err, QString errMsg, QString msg);
 
     void migrateStartedSignal(qint64 total);
     void migrateProgressSignal(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, qint64 count, qint64 total);
@@ -244,7 +249,7 @@ signals:
     // Scheduler.
     void schedulerTimeoutSignal();
 public slots:
-    void  proceedNextJob();
+    void proceedNextJob();
     void dispatchJob(const QString jobId);
     void dispatchJob(const CloudDriveJob job);
 
@@ -268,6 +273,7 @@ public slots:
     void shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void migrateFilePutFilter(QString nonce, int err, QString errMsg, QString msg);
+    void filePutResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg);
 
     // Refresh request
     void refreshRequestFilter(QString nonce);

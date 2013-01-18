@@ -33,6 +33,8 @@ public:
     static const QString mediaURI;
     static const QString thumbnailURI;
     static const QString deltaURI;
+    static const QString chunkedUploadURI;
+    static const QString commitChunkedUploadURI;
 
     explicit DropboxClient(QObject *parent = 0, bool fullAccess = false);
     ~DropboxClient();
@@ -61,6 +63,8 @@ public:
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName);
+    QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId, qint64 offset);
+    QNetworkReply * filePutCommit(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId);
 
     QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size);
 signals:
@@ -80,6 +84,7 @@ public slots:
     void deleteFileReplyFinished(QNetworkReply *reply);
     void shareFileReplyFinished(QNetworkReply *reply);
     void deltaReplyFinished(QNetworkReply *reply);
+    void filePutResumeReplyFinished(QNetworkReply *reply);
 private:
     TokenPair requestTokenPair;
     QString localPath;

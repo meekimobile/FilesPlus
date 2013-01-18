@@ -28,6 +28,8 @@ const QString GCDClient::deleteFileURI = "https://www.googleapis.com/drive/v2/fi
 const QString GCDClient::renameFileURI = "https://www.googleapis.com/drive/v2/files/%1"; // PATCH with partial json body.
 const QString GCDClient::sharesURI = "https://www.googleapis.com/drive/v2/files/%1/permissions"; // POST to insert permission.
 const QString GCDClient::trashFileURI = "https://www.googleapis.com/drive/v2/files/%1/trash"; // POST
+const QString GCDClient::startResumableUploadURI = "https://www.googleapis.com/upload/drive/v2/files?uploadType=resumable"; // POST with json includes file properties.
+const QString GCDClient::resumeUploadURI = "%1"; // PUT with specified URL.
 
 GCDClient::GCDClient(QObject *parent) :
     CloudDriveClient(parent)
@@ -590,6 +592,125 @@ QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source,
     }
 
     return 0;
+}
+
+QNetworkReply *GCDClient::filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString uploadId, qint64 offset)
+{
+    qDebug() << "----- GCDClient::filePutResume -----" << nonce << uid << localFilePath << remoteParentPath << uploadId << offset;
+
+    if (localFilePath.isEmpty()) {
+        emit filePutResumeReplySignal(nonce, -1, "localFilePath is empty.", "");
+        return 0;
+    }
+
+    if (remoteParentPath.isEmpty()) {
+        emit filePutResumeReplySignal(nonce, -1, "remoteParentPath is empty.", "");
+        return 0;
+    }
+
+    if (!uploadId.isEmpty()) {
+        if (offset < 0) {
+            qDebug() << "GCDClient::filePutResume redirect to filePutResumeStatus" << uploadId << offset;
+            filePutResumeStatus(nonce, uid, localFilePath, remoteParentPath, uploadId, offset);
+        } else {
+            qDebug() << "GCDClient::filePutResume redirect to filePutResumeUpload" << uploadId << offset;
+            filePutResumeUpload(nonce, uid, localFilePath, remoteParentPath, uploadId, offset);
+        }
+        return 0;
+    }
+
+    QString uri = startResumableUploadURI;
+    qDebug() << "GCDClient::filePutResume uri " << uri;
+/*
+    {
+      "title": "pets",
+      "parents": [{"id":"0ADK06pfg"}]
+    }
+*/
+    QString localFileName = QFileInfo(localFilePath).fileName();
+    qint64 localFileSize = QFileInfo(localFilePath).size();
+
+    QByteArray postData;
+    postData.append("{");
+    postData.append(" \"title\": \"" + localFileName.toUtf8() + "\", ");
+    postData.append(" \"parents\": [{\"id\":\"" + remoteParentPath.toUtf8() + "\"}] ");
+    postData.append("}");
+    qDebug() << "GCDClient::filePutResume postData" << postData;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutResumeReplyFinished(QNetworkReply*)));
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    req.setRawHeader("X-Upload-Content-Type", getContentType(localFileName).toAscii() );
+    req.setRawHeader("X-Upload-Content-Length", QString("%1").arg(localFileSize).toAscii() );
+    req.setHeader(QNetworkRequest::ContentLengthHeader, postData.length());
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QNetworkReply *reply = manager->post(req, postData);
+
+    return reply;
+}
+
+QNetworkReply *GCDClient::filePutResumeUpload(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString uploadId, qint64 offset)
+{
+    qDebug() << "----- GCDClient::filePutResumeUpload -----" << nonce << uid << localFilePath << remoteParentPath << uploadId << offset;
+
+    QString uri = resumeUploadURI.arg(uploadId);
+    qDebug() << "GCDClient::filePutResumeUpload uri " << uri;
+
+    QString contentType = getContentType(localFilePath);
+    qDebug() << "GCDClient::filePutResumeUpload localFilePath" << localFilePath << "contentType" << contentType;
+
+    m_localFileHash[nonce] = new QFile(localFilePath);
+    QFile *localSourceFile = m_localFileHash[nonce];
+    if (localSourceFile->open(QIODevice::ReadOnly)) {
+        qint64 fileSize = localSourceFile->size();
+        localSourceFile->seek(offset);
+
+        // Send request.
+        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutResumeUploadReplyFinished(QNetworkReply*)) );
+        QNetworkRequest req = QNetworkRequest(QUrl(uri));
+        req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+        req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+        req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize-offset);
+        req.setHeader(QNetworkRequest::ContentTypeHeader, contentType);
+        req.setRawHeader("Content-Range", QString("bytes %1-%2/%3").arg(offset).arg(fileSize-1).arg(fileSize).toAscii() );
+        QNetworkReply *reply = manager->put(req, localSourceFile);
+        QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+        connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+        connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+        return reply;
+    } else {
+        qDebug() << "GCDClient::filePutResumeUpload file " << localFilePath << " can't be opened.";
+        emit filePutResumeReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");
+
+        return 0;
+    }
+}
+
+QNetworkReply *GCDClient::filePutResumeStatus(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString uploadId, qint64 offset)
+{
+    qDebug() << "----- GCDClient::filePutResumeStatus -----" << nonce << uid << localFilePath << remoteParentPath << uploadId << offset;
+
+    QString uri = resumeUploadURI.arg(uploadId);
+    qDebug() << "GCDClient::filePutResumeStatus uri " << uri;
+
+    qint64 fileSize = QFileInfo(localFilePath).size();
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutResumeStatusReplyFinished(QNetworkReply*)) );
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    req.setHeader(QNetworkRequest::ContentLengthHeader, 0);
+    req.setRawHeader("Content-Range", QString("bytes */%1").arg(fileSize).toAscii() );
+    QNetworkReply *reply = manager->put(req, QByteArray());
+
+    return reply;
 }
 
 QString GCDClient::getRemoteRoot()
@@ -1318,6 +1439,84 @@ void GCDClient::shareFileReplyFinished(QNetworkReply *reply)
     }
 
     // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void GCDClient::filePutResumeReplyFinished(QNetworkReply *reply)
+{
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    QByteArray replyBody = reply->readAll();
+    qDebug() << "GCDClient::filePutResumeReplyFinished" << reply << QString(" Error=%1").arg(reply->error()) << "replyBody" << QString::fromUtf8(replyBody);
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QString uploadId = reply->header(QNetworkRequest::LocationHeader).toString();
+
+        // Emit signal with upload_location to start uploading.
+        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"upload_location\": \"%1\" }").arg(uploadId) );
+    } else {
+        // REMARK Use QString::fromUtf8() to support unicode text.
+        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
+    }
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void GCDClient::filePutResumeUploadReplyFinished(QNetworkReply *reply)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    QByteArray replyBody = reply->readAll();
+    qDebug() << "GCDClient::filePutResumeUploadReplyFinished" << reply << QString(" Error=%1").arg(reply->error()) << "replyBody" << QString::fromUtf8(replyBody);
+
+    if (reply->error() == QNetworkReply::NoError) {
+        // TODO Handle successful upload whole file.
+        emit filePutReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
+    } else if (reply->error() == 503) {
+        // TODO Put empty request with Content-Length: 0, Content-Range: bytes */<fileSize>.
+        // Emit signal with offset=-1 to request status.
+        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"offset\": %1 }").arg(-1) );
+    } else {
+        // REMARK Use QString::fromUtf8() to support unicode text.
+        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
+    }
+
+    // Close source file.
+    QFile *localTargetFile = m_localFileHash[nonce];
+    localTargetFile->close();
+    m_localFileHash.remove(nonce);
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void GCDClient::filePutResumeStatusReplyFinished(QNetworkReply *reply)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    QByteArray replyBody = reply->readAll();
+    qDebug() << "GCDClient::filePutResumeStatusReplyFinished" << reply << QString(" Error=%1").arg(reply->error()) << "replyBody" << QString::fromUtf8(replyBody);
+
+    if (reply->error() == QNetworkReply::NoError) {
+        if (reply->hasRawHeader("Range")) {
+            QStringList ranges = QString::fromAscii(reply->rawHeader("Range")).split("-");
+            qint64 offset = ranges.at(1).toInt() + 1;
+            qDebug() << "GCDClient::filePutResumeStatusReplyFinished ranges" << ranges << "offset" << offset;
+
+            // Emit signal with offset to resume upload.
+            emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"offset\": %1 }").arg(offset) );
+        }
+    } else {
+        // REMARK Use QString::fromUtf8() to support unicode text.
+        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
+    }
+
+    // Scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }

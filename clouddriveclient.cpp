@@ -154,6 +154,18 @@ QNetworkReply *CloudDriveClient::filePut(QString nonce, QString uid, QIODevice *
     return 0;
 }
 
+QNetworkReply *CloudDriveClient::filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId, qint64 offset)
+{
+    emit filePutResumeReplySignal(nonce, -1, objectName() + " " + tr("File Put Resume"), tr("Service is not implemented."));
+    return 0;
+}
+
+QNetworkReply *CloudDriveClient::filePutCommit(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId)
+{
+    emit filePutCommitReplySignal(nonce, -1, objectName() + " " + tr("File Put Commit"), tr("Service is not implemented."));
+    return 0;
+}
+
 QString CloudDriveClient::thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size)
 {
     return "";

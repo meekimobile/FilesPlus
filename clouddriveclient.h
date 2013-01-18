@@ -44,6 +44,8 @@ public:
     virtual QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
     virtual QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
     virtual QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName);
+    virtual QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId, qint64 offset);
+    virtual QNetworkReply * filePutCommit(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId);
 
     virtual QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size);
 signals:
@@ -62,6 +64,8 @@ signals:
     void deleteFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void deltaReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void filePutResumeReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void filePutCommitReplySignal(QString nonce, int err, QString errMsg, QString msg);
 
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);

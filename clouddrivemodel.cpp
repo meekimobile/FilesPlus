@@ -181,6 +181,8 @@ void CloudDriveModel::initializeDropboxClient() {
     connect(dbClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
+    connect(dbClient, SIGNAL(filePutCommitReplySignal(QString,int,QString,QString)), SLOT(filePutCommitReplyFilter(QString,int,QString,QString)) );
 }
 
 void CloudDriveModel::initializeSkyDriveClient()
@@ -208,6 +210,8 @@ void CloudDriveModel::initializeSkyDriveClient()
     connect(skdClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
     connect(skdClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
     connect(skdClient, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
+    connect(skdClient, SIGNAL(filePutCommitReplySignal(QString,int,QString,QString)), SLOT(filePutCommitReplyFilter(QString,int,QString,QString)) );
 }
 
 void CloudDriveModel::initializeGoogleDriveClient()
@@ -235,6 +239,8 @@ void CloudDriveModel::initializeGoogleDriveClient()
     connect(gcdClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
     connect(gcdClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
     connect(gcdClient, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
+    connect(gcdClient, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
+    connect(gcdClient, SIGNAL(filePutCommitReplySignal(QString,int,QString,QString)), SLOT(filePutCommitReplyFilter(QString,int,QString,QString)) );
 }
 
 void CloudDriveModel::initializeFtpClient()
@@ -259,6 +265,8 @@ void CloudDriveModel::initializeFtpClient()
     connect(ftpClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(migrateFilePutReplySignal(QString,int,QString,QString)), SLOT(migrateFilePutFilter(QString,int,QString,QString)) ); // Added because FtpClient doesn't provide QNetworkReply.
     connect(ftpClient, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
+    connect(ftpClient, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
+    connect(ftpClient, SIGNAL(filePutCommitReplySignal(QString,int,QString,QString)), SLOT(filePutCommitReplyFilter(QString,int,QString,QString)) );
 }
 
 QString CloudDriveModel::createNonce() {
@@ -1612,6 +1620,15 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
         return;
     }
 
+    // TODO Redirect to filePutResume for large file.
+    // TODO Make chunk size be configurable.
+    qint64 fileSize = QFileInfo(localFilePath).size();
+    if (fileSize > 1048576) {
+        qDebug() << "CloudDriveModel::filePut" << localFilePath << "size" << fileSize << "redirect to filePutResume.";
+        filePutResume(type, uid, localFilePath, remoteFilePath);
+        return;
+    }
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), FilePut, type, uid, localFilePath, remoteFilePath, modelIndex);
 //    job.isRunning = true;
@@ -2137,6 +2154,24 @@ void CloudDriveModel::delta(CloudDriveModel::ClientTypes type, QString uid)
     emit proceedNextJobSignal();
 }
 
+void CloudDriveModel::filePutResume(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId, qint64 offset)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), FilePutResume, type, uid, localFilePath, remoteFilePath, -1);
+    job.uploadId = uploadId;
+    job.uploadOffset = offset;
+    job.uploadBytesTotal = QFileInfo(localFilePath).size();
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show cloud_wait.
+    m_isConnectedCache->remove(localFilePath);
+    m_isSyncingCache->remove(localFilePath);
+    emit jobEnqueuedSignal(job.jobId, localFilePath);
+
+    emit proceedNextJobSignal();
+}
+
 void CloudDriveModel::migrateFile(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
 {
     // Enqueue job.
@@ -2573,6 +2608,58 @@ void CloudDriveModel::migrateFilePutFilter(QString nonce, int err, QString errMs
     jobDone();
 
     emit migrateFilePutReplySignal(nonce, err, errMsg, msg);
+}
+
+void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    qDebug() << "CloudDriveModel::filePutResumeReplyFilter" << nonce << err << errMsg << msg;
+
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    QScriptEngine engine;
+    QScriptValue sc;
+
+    if (err == 0) {
+        if (job.localFilePath != "") {
+            switch (job.type) {
+            case Dropbox:
+                sc = engine.evaluate("(" + msg + ")");
+                job.uploadId = sc.property("upload_id").toString();
+                job.uploadOffset = sc.property("offset").toUInt32(); // ISSUE offset doesn't specify next offset to upload.
+                // Enqueue and resume job.
+                if (job.uploadOffset < job.uploadBytesTotal) {
+                    m_jobQueue->enqueue(job.jobId);
+                } else {
+                    job.operation = FilePutCommit;
+                }
+                break;
+            case GoogleDrive:
+                sc = engine.evaluate("(" + msg + ")");
+                if (sc.property("upload_location").isValid()) {
+                    job.uploadId = sc.property("upload_location").toString();
+                }
+                if (sc.property("offset").isValid()) {
+                    job.uploadOffset = sc.property("offset").toUInt32();
+                }
+                // Enqueue and resume job.
+                if (job.uploadOffset < job.uploadBytesTotal) {
+                    m_jobQueue->enqueue(job.jobId);
+                }
+                break;
+            }
+
+        }
+    } else {
+        qDebug() << "CloudDriveModel::filePutResumeReplyFilter failed. Operation is aborted. jobId" << nonce << "error" << err << errMsg << msg;
+        job.isRunning = false;
+    }
+
+    // Update job.
+    updateJob(job);
+
+    // Notify job done.
+    jobDone();
+
+    emit filePutResumeReplySignal(nonce, err, errMsg, msg);
 }
 
 void CloudDriveModel::refreshRequestFilter(QString nonce)
@@ -3220,6 +3307,12 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
     case SyncFromLocal:
         syncFromLocal_Block(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, job.modelIndex, job.forcePut);
         refreshRequestFilter(job.jobId);
+        break;
+    case FilePutResume:
+        cloudClient->filePutResume(job.jobId, job.uid, job.localFilePath, job.remoteFilePath, job.uploadId, job.uploadOffset);
+        break;
+    case FilePutCommit:
+        cloudClient->filePutCommit(job.jobId, job.uid, job.localFilePath, job.remoteFilePath, job.uploadId);
         break;
     }
 }
