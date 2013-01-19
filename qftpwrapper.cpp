@@ -1,5 +1,7 @@
 #include "qftpwrapper.h"
 
+const int QFtpWrapper::MaxWaitCount = 36000; // 36000*100 msec = 60 mins.
+
 QFtpWrapper::QFtpWrapper(QString nonce, QObject *parent) :
     QFtp(parent)
 {
@@ -52,7 +54,7 @@ void QFtpWrapper::waitForDone()
 {
     qDebug() << "QFtpWrapper::waitForDone" << m_isDone;
 
-    int c = 100;
+    int c = MaxWaitCount;
     while (!m_isDone && c-- > 0) {
 //        qDebug() << "QFtpWrapper::waitForDone" << m_isDone << c;
         QApplication::processEvents(QEventLoop::AllEvents, 100);
@@ -154,6 +156,8 @@ void QFtpWrapper::listInfoFilter(const QUrlInfo &i)
 //    m_itemList.append(mod);
 
 //    emit listInfo(m_nonce, mod);
+
+    qDebug() << "QFtpWrapper::listInfoFilter name" << i.name() << "isDir" << i.isDir();
 
     m_itemList.append(i);
 

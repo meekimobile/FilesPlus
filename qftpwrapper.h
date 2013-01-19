@@ -11,6 +11,8 @@ class QFtpWrapper : public QFtp
 {
     Q_OBJECT
 public:
+    static const int MaxWaitCount;
+
     explicit QFtpWrapper(QString nonce, QObject *parent = 0);
     
     int pwd();
