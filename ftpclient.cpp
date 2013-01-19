@@ -38,34 +38,17 @@ void FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QStr
     QString remoteParentPath = getParentRemotePath(remoteFilePath);
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    m_ftp->m_remoteFilePath = remoteFilePath;
+    m_ftp->m_localFilePath = localFilePath;
+    connect(m_ftp, SIGNAL(done(QString,bool)), this, SLOT(fileGetReplyFinished(QString,bool)) );
+
     m_ftp->cd(remoteParentPath);
 
     m_localFileHash[nonce] = new QFile(localFilePath);
     QFile *localTargetFile = m_localFileHash[nonce];
     if (localTargetFile->open(QIODevice::WriteOnly)) {
         m_ftp->get(getRemoteFileName(remoteFilePath), localTargetFile);
-        m_ftp->waitForDone();
-
-        // TODO Get uploaded file property.
-        m_ftp->list(remoteFilePath);
-        m_ftp->waitForDone();
     }
-
-    localTargetFile->close();
-    m_localFileHash.remove(nonce);
-
-    if (m_ftp->getItemList().isEmpty()) {
-        // remoteFilePath is not found.
-        qDebug() << "FtpClient::fileGet" << uid << remoteFilePath << "is not found.";
-        emit fileGetReplySignal(m_ftp->getNonce(), -1, tr("Can't get %1").arg(remoteFilePath), "");
-    } else {
-        qDebug() << "FtpClient::fileGet" << uid << remoteFilePath << localFilePath << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_ftp->getItemList().first().name();
-        emit fileGetReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), getPropertyJson(remoteParentPath, m_ftp->getItemList().first()) );
-    }
-
-    m_ftp->close();
-    m_ftp->deleteLater();
-    m_ftpHash->remove(m_ftp->getNonce());
 }
 
 /*
@@ -119,6 +102,10 @@ void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
     QString remoteParentPath = getParentRemotePath(remoteFilePath);
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    m_ftp->m_localFilePath = localFilePath;
+    m_ftp->m_remoteFilePath = remoteFilePath;
+    connect(m_ftp, SIGNAL(done(QString,bool)), this, SLOT(filePutReplyFinished(QString,bool)) );
+
     m_ftp->cd(remoteParentPath);
 
     m_localFileHash[nonce] = new QFile(localFilePath);
@@ -126,27 +113,7 @@ void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
     if (localSourceFile->open(QIODevice::ReadOnly)) {
         m_ftp->put(localSourceFile, getRemoteFileName(remoteFilePath));
         m_ftp->waitForDone();
-
-        // TODO Get uploaded file property.
-        m_ftp->list(remoteFilePath);
-        m_ftp->waitForDone();
     }
-
-    localSourceFile->close();
-    m_localFileHash.remove(nonce);
-
-    if (m_ftp->getItemList().isEmpty()) {
-        // remoteFilePath is not found.
-        qDebug() << "FtpClient::filePut" << uid << remoteFilePath << "is not found.";
-        emit filePutReplySignal(m_ftp->getNonce(), -1, tr("Can't put %1").arg(remoteFilePath), "");
-    } else {
-        qDebug() << "FtpClient::filePut" << uid << localFilePath << remoteFilePath << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_ftp->getItemList().first().name();
-        emit filePutReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), getPropertyJson(remoteParentPath, m_ftp->getItemList().first()) );
-    }
-
-    m_ftp->close();
-    m_ftp->deleteLater();
-    m_ftpHash->remove(m_ftp->getNonce());
 }
 
 QString FtpClient::property(QString nonce, QString uid, QString remoteFilePath)
@@ -273,11 +240,6 @@ void FtpClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "----- FtpClient::deleteFile -----" << uid << remoteFilePath;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
-//    m_ftp->m_remoteFilePath = remoteFilePath;
-//    connect(m_ftp, SIGNAL(deleteRecursiveFinished(QString,int,QString)), this, SLOT(deleteFileReplyFinished(QString,int,QString)));
-//    m_ftp->moveToThread(&t);
-//    connect(&t, SIGNAL(started()), m_ftp, SLOT(deleteRecursive()));
-//    t.start();
 
     deleteRecursive(m_ftp, remoteFilePath);
 
@@ -345,6 +307,7 @@ QIODevice *FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath
     QString remoteParentPath = getParentRemotePath(remoteFilePath);
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    m_ftp->m_remoteFilePath = remoteFilePath;
     m_ftp->cd(remoteParentPath);
 
     // Creat buffer as QIODevice.
@@ -367,6 +330,7 @@ QNetworkReply *FtpClient::filePut(QString nonce, QString uid, QIODevice *source,
     qDebug() << "----- FtpClient::filePut -----" << uid << remoteParentPath << remoteFileName << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    m_ftp->m_remoteFilePath = remoteParentPath + "/" + remoteFileName;
     m_ftp->cd(remoteParentPath);
 
     if (source->open(QIODevice::ReadOnly)) {
@@ -419,6 +383,7 @@ QFtpWrapper *FtpClient::connectToHost(QString nonce, QString uid)
     qDebug() << "FtpClient::connectToHost" << hostname << port << username << password;
 
     QFtpWrapper *m_ftp = new QFtpWrapper(nonce, this);
+    m_ftp->m_uid = uid;
     connect(m_ftp, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(m_ftp, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
@@ -609,4 +574,68 @@ void FtpClient::deleteFileReplyFinished(QString nonce, int error, QString errorS
 //    m_ftp->close();
 //    m_ftp->deleteLater();
 //    m_ftpHash->remove(nonce);
+}
+
+void FtpClient::fileGetReplyFinished(QString nonce, bool error)
+{
+    QFtpWrapper *m_ftp = m_ftpHash->value(nonce);
+
+    if (!error) {
+        // TODO Get uploaded file property.
+        m_ftp->list(m_ftp->m_remoteFilePath);
+        m_ftp->waitForDone();
+
+        if (m_ftp->getItemList().isEmpty()) {
+            // remoteFilePath is not found.
+            qDebug() << "FtpClient::fileGetReplyFinished" << m_ftp->m_uid << m_ftp->m_remoteFilePath << "is not found.";
+            emit fileGetReplySignal(m_ftp->getNonce(), -1, tr("Can't get %1").arg(m_ftp->m_remoteFilePath), "");
+        } else {
+            qDebug() << "FtpClient::fileGetReplyFinished" << m_ftp->m_uid << m_ftp->m_remoteFilePath << "is a file.";
+            emit fileGetReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), getPropertyJson(getParentRemotePath(m_ftp->m_remoteFilePath), m_ftp->getItemList().first()) );
+        }
+    } else {
+        emit fileGetReplySignal(m_ftp->getNonce(), m_ftp->error(), tr("Can't get %1").arg(m_ftp->m_remoteFilePath), m_ftp->errorString());
+    }
+
+    // Close and remove localFile pointer.
+    if (m_localFileHash.contains(nonce)) {
+        m_localFileHash[nonce]->close();
+        m_localFileHash.remove(nonce);
+    }
+
+    m_ftp->close();
+    m_ftp->deleteLater();
+    m_ftpHash->remove(m_ftp->getNonce());
+}
+
+void FtpClient::filePutReplyFinished(QString nonce, bool error)
+{
+    QFtpWrapper *m_ftp = m_ftpHash->value(nonce);
+
+    if (!error) {
+        // TODO Get uploaded file property.
+        m_ftp->list(m_ftp->m_remoteFilePath);
+        m_ftp->waitForDone();
+
+        if (m_ftp->getItemList().isEmpty()) {
+            // remoteFilePath is not found.
+            qDebug() << "FtpClient::filePutReplyFinished" << m_ftp->m_uid << m_ftp->m_remoteFilePath << "is not found.";
+            emit filePutReplySignal(m_ftp->getNonce(), -1, tr("Can't put %1").arg(m_ftp->m_remoteFilePath), "");
+        } else {
+            qDebug() << "FtpClient::filePutReplyFinished" << m_ftp->m_uid << m_ftp->m_remoteFilePath << "is a file.";
+            emit filePutReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), getPropertyJson(getParentRemotePath(m_ftp->m_remoteFilePath), m_ftp->getItemList().first()) );
+        }
+    } else {
+        emit filePutReplySignal(m_ftp->getNonce(), m_ftp->error(), tr("Can't put %1").arg(m_ftp->m_remoteFilePath), m_ftp->errorString());
+    }
+
+    // Close and remove localFile pointer.
+    if (m_localFileHash.contains(nonce)) {
+        m_localFileHash[nonce]->close();
+        m_localFileHash.remove(nonce);
+    }
+
+    m_ftp->close();
+    m_ftp->deleteLater();
+    m_ftpHash->remove(m_ftp->getNonce());
 }

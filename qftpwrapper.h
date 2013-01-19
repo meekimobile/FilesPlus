@@ -25,6 +25,8 @@ public:
     void waitForDone();
 
     // Parameter storage.
+    QString m_uid;
+    QString m_localFilePath;
     QString m_remoteFilePath;
 signals:
     void uploadProgress(QString nonce, qint64 done, qint64 total);

@@ -37,6 +37,8 @@ public:
 signals:
     void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
 public slots:
+    void fileGetReplyFinished(QString nonce, bool error);
+    void filePutReplyFinished(QString nonce, bool error);
     void deleteFileReplyFinished(QString nonce, int error, QString errorString);
 private:
     QHash<QString, QFtpWrapper*> *m_ftpHash;
@@ -50,8 +52,6 @@ private:
     QString getItemListJson(const QString parentPath, const QList<QUrlInfo> itemList);
     QString getParentRemotePath(QString remotePath);
     QString getRemoteFileName(QString remotePath);
-
-//    QThread t;
 };
 
 #endif // FTPCLIENT_H
