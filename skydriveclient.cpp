@@ -214,7 +214,6 @@ void SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath,
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
@@ -241,7 +240,6 @@ void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, 
         req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize);
         QNetworkReply *reply = manager->put(req, localSourceFile);
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-        connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
         connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
 //        qDebug() << "SkyDriveClient::filePut put file" << localFilePath << "to" << remoteParentPath;
@@ -657,7 +655,6 @@ QIODevice *SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFil
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
     // Redirect to download URL.
@@ -674,7 +671,6 @@ QIODevice *SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFil
         redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
         reply = reply->manager()->get(redirectedRequest);
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-        connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
         connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
         while (!reply->isFinished()) {
@@ -706,7 +702,6 @@ QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *so
     QNetworkReply *reply = manager->put(req, source);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
-    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
     while (!reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
@@ -856,7 +851,6 @@ void SkyDriveClient::fileGetReplyFinished(QNetworkReply *reply) {
         redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
         reply = reply->manager()->get(redirectedRequest);
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-        connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
         connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
         return;
     }

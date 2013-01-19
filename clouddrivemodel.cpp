@@ -782,6 +782,11 @@ void CloudDriveModel::updateJob(CloudDriveJob job)
     m_isDirtyCache->remove(job.localFilePath);
     m_isSyncingCache->remove(job.localFilePath);
 
+    if (job.isRunning) {
+        job.lastStartedTime = QDateTime::currentDateTime();
+    } else {
+        job.lastStoppedTime = QDateTime::currentDateTime();
+    }
     m_cloudDriveJobs->insert(job.jobId, job);
     mutex.unlock();
 
@@ -1632,6 +1637,8 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
     // Enqueue job.
     CloudDriveJob job(createNonce(), FilePut, type, uid, localFilePath, remoteFilePath, modelIndex);
 //    job.isRunning = true;
+    job.uploadOffset = 0;
+    job.bytesTotal = QFileInfo(localFilePath).size();
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -2160,7 +2167,7 @@ void CloudDriveModel::filePutResume(CloudDriveModel::ClientTypes type, QString u
     CloudDriveJob job(createNonce(), FilePutResume, type, uid, localFilePath, remoteFilePath, -1);
     job.uploadId = uploadId;
     job.uploadOffset = offset;
-    job.uploadBytesTotal = QFileInfo(localFilePath).size();
+    job.bytesTotal = QFileInfo(localFilePath).size();
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -2624,9 +2631,11 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
             case Dropbox:
                 sc = engine.evaluate("(" + msg + ")");
                 job.uploadId = sc.property("upload_id").toString();
-                job.uploadOffset += sc.property("offset").toUInt32(); // NOTE offset is uploaded bytes of chunk. Needs to added to current offset before resume uploading.
+                job.uploadOffset = sc.property("offset").toUInt32(); // NOTE It's actually the offset for resume uploading.
+
                 // Enqueue and resume job.
-                if (job.uploadOffset < job.uploadBytesTotal) {
+                qDebug() << "CloudDriveModel::filePutResumeReplyFilter" << nonce << "job" << job.toJsonText();
+                if (job.uploadOffset < job.bytesTotal) {
                     m_jobQueue->enqueue(job.jobId);
                 } else {
                     job.operation = FilePutCommit;
@@ -2642,7 +2651,8 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
                     job.uploadOffset = sc.property("offset").toUInt32(); // NOTE offset got from (maxRange+1) returned from status request. It's actually the offset for resume uploading.
                 }
                 // Enqueue and resume job.
-                if (job.uploadOffset < job.uploadBytesTotal) {
+                qDebug() << "CloudDriveModel::filePutResumeReplyFilter" << nonce << "job" << job.toJsonText();
+                if (job.uploadOffset < job.bytesTotal) {
                     m_jobQueue->enqueue(job.jobId);
                 }
                 break;
@@ -3118,8 +3128,7 @@ int CloudDriveModel::countItemByTypeAndUidAndRemotePathFromDB(CloudDriveModel::C
 void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint64 bytesTotal)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
-    job.bytes = bytesSent;
-    job.bytesTotal = bytesTotal;
+    job.bytes = (job.uploadOffset - 1) + bytesSent; // Add (job.uploadOffset - 1) to support filePutResume.
     updateJob(job);
 
     emit uploadProgress(nonce, bytesSent, bytesTotal);
@@ -3129,7 +3138,7 @@ void CloudDriveModel::downloadProgressFilter(QString nonce, qint64 bytesReceived
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     job.bytes = bytesReceived;
-    job.bytesTotal = bytesTotal;
+    job.bytesTotal = bytesTotal; // TODO Get total from metadata before start getting.
     updateJob(job);
 
     emit downloadProgress(nonce, bytesReceived, bytesTotal);

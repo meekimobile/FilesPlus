@@ -508,7 +508,6 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
     while (!reply->isFinished()) {
@@ -578,7 +577,6 @@ QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source,
             QNetworkReply *reply = manager->post(req, m_bufferHash[nonce]->readAll());
             QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
             connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
-            connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
             while (!reply->isFinished()) {
                 QApplication::processEvents(QEventLoop::AllEvents, 100);
@@ -680,7 +678,6 @@ QNetworkReply *GCDClient::filePutResumeUpload(QString nonce, QString uid, QStrin
         QNetworkReply *reply = manager->put(req, localSourceFile);
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
         connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
-        connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
         return reply;
     } else {
@@ -954,7 +951,6 @@ void GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QStr
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
@@ -1020,7 +1016,6 @@ void GCDClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
             QNetworkReply *reply = manager->post(req, m_bufferHash[nonce]->readAll());
             QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
             connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
-            connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
         }
 
 //        qDebug() << "GCDClient::filePut put file" << localFilePath << "to" << remoteParentPath;

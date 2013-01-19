@@ -30,7 +30,6 @@ public:
     bool forcePut;
 
     QString uploadId;
-    qint64 uploadBytesTotal;
     qint64 uploadOffset;
 
     QDateTime createdTime;

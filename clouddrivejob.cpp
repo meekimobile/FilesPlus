@@ -21,6 +21,7 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->bytesTotal = 0;
     this->targetType = -1;
     this->createdTime = QDateTime::currentDateTime();
+    this->uploadOffset = 0;
 }
 
 CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, int modelIndex)
@@ -40,6 +41,7 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->bytesTotal = 0;
     this->targetType = -1;
     this->createdTime = QDateTime::currentDateTime();
+    this->uploadOffset = 0;
 }
 
 QString CloudDriveJob::toJsonText()
@@ -63,8 +65,10 @@ QString CloudDriveJob::toJsonText()
     jsonText.append(QString("\"bytes_total\": %1, ").arg(bytesTotal));
     jsonText.append(QString("\"force_put\": %1, ").arg( (forcePut)?"true":"false" ));
     jsonText.append(QString("\"upload_id\": \"%1\", ").arg(uploadId));
-    jsonText.append(QString("\"upload_bytes_total\": %1, ").arg(uploadBytesTotal));
     jsonText.append(QString("\"upload_offset\": %1, ").arg(uploadOffset));
+    jsonText.append(QString("\"created_time\": \"%1\", ").arg(createdTime.toString(Qt::ISODate)));
+    jsonText.append(QString("\"last_started_time\": \"%1\", ").arg(lastStartedTime.toString(Qt::ISODate)));
+    jsonText.append(QString("\"last_stopped_time\": \"%1\", ").arg(lastStoppedTime.toString(Qt::ISODate)));
     jsonText.append(QString("\"next_job_id\": \"%1\" ").arg(nextJobId));
     jsonText.append(" }");
 
