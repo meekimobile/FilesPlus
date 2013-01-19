@@ -33,6 +33,8 @@ const QString DropboxClient::deltaURI = "https://api.dropbox.com/1/delta"; // PO
 const QString DropboxClient::chunkedUploadURI = "https://api-content.dropbox.com/1/chunked_upload"; // PUT with upload_id and offset.
 const QString DropboxClient::commitChunkedUploadURI = "https://api-content.dropbox.com/1/commit_chunked_upload/%1%2"; // POST with upload_id.
 
+const qint64 DropboxClient::ChunkSize = 4194304; // 4MB
+
 DropboxClient::DropboxClient(QObject *parent, bool fullAccess) :
     CloudDriveClient(parent)
 {
@@ -506,6 +508,11 @@ bool DropboxClient::isRemoteAbsolutePath()
     return true;
 }
 
+bool DropboxClient::isFilePutResumable(QString localFilePath)
+{
+    return (QFileInfo(localFilePath).size() >= ChunkSize);
+}
+
 void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
     qDebug() << "----- DropboxClient::metadata -----";
 
@@ -713,9 +720,6 @@ QNetworkReply * DropboxClient::filePutResume(QString nonce, QString uid, QString
 {
     qDebug() << "----- DropboxClient::filePutResume -----" << nonce << uid << localFilePath << remoteFilePath << uploadId << offset;
 
-    // TODO Make it configurable.
-    qint64 chunkSize = 1048576; // 1MB
-
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
     if (uploadId != "") sortMap["upload_id"] = uploadId;
@@ -732,7 +736,7 @@ QNetworkReply * DropboxClient::filePutResume(QString nonce, QString uid, QString
     QFile *localSourceFile = m_localFileHash[nonce];
     if (localSourceFile->open(QIODevice::ReadOnly)) {
         localSourceFile->seek(offset);
-        QByteArray buf = localSourceFile->read(chunkSize);
+        QByteArray buf = localSourceFile->read(ChunkSize);
 
         // Send request.
         QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -740,7 +744,6 @@ QNetworkReply * DropboxClient::filePutResume(QString nonce, QString uid, QString
         QNetworkRequest req = QNetworkRequest(url);
         req.setAttribute(QNetworkRequest::User, QVariant(nonce));
         req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "PUT", uri, sortMap));
-//        req.setHeader(QNetworkRequest::ContentLengthHeader, chunkSize);
         QNetworkReply *reply = manager->put(req, buf);
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
         connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
@@ -1140,9 +1143,11 @@ void DropboxClient::filePutResumeReplyFinished(QNetworkReply *reply)
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
     // Close source file.
-    QFile *localTargetFile = m_localFileHash[nonce];
-    localTargetFile->close();
-    m_localFileHash.remove(nonce);
+    if (m_localFileHash.contains(nonce)) {
+        QFile *localTargetFile = m_localFileHash[nonce];
+        localTargetFile->close();
+        m_localFileHash.remove(nonce);
+    }
 
     emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 

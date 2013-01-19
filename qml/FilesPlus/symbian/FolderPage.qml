@@ -1564,7 +1564,7 @@ Page {
                     console.debug("cloudDrivePathDialog proceedOperation Metadata sync from " + localPath + " to " + remotePath);
                     cloudDriveModel.metadata(type, uid, localPath, remotePath, selectedModelIndex);
                 } else {
-                    // TODO Check if cloud client's remotePath is absolute path.
+                    // Check if cloud client's remotePath is absolute path.
                     if (cloudDriveModel.isRemoteAbsolutePath(type)) {
                         // If localPath is file or remotePath is not specified.
                         // Use remoteParentPath + "/" + folderName.
@@ -1575,6 +1575,7 @@ Page {
                         // Find remote path by name.
                         var newRemoteFolderName = fsModel.getFileName(localPath);
                         for (var i=0; i<contentModel.count; i++) {
+                            // TODO Find exactly match with name and isDir.
                             if (contentModel.get(i).name == newRemoteFolderName) {
                                 remotePath = contentModel.get(i).absolutePath;
                                 console.debug("cloudDrivePathDialog proceedOperation Metadata found remotePath " + remotePath + " for " + newRemoteFolderName);
@@ -1583,10 +1584,17 @@ Page {
                         }
                         // Create remote folder and get its remote path (id).
                         if (remotePath == "") {
-                            remotePath = cloudDriveModel.createFolder_Block(type, uid, remoteParentPath, newRemoteFolderName);
-                        }
-                        // Start sync with remotePath.
-                        if (remotePath != "") {
+                            if (fsModel.isDir(localPath)) {
+                                remotePath = cloudDriveModel.createFolder_Block(type, uid, remoteParentPath, newRemoteFolderName);
+                                console.debug("cloudDrivePathDialog proceedOperation Metadata sync from " + localPath + " to " + remotePath);
+                                cloudDriveModel.metadata(type, uid, localPath, remotePath, selectedModelIndex);
+                            } else {
+                                // Proceed put file as selected file name doesn't exist on remote parent path.
+                                console.debug("cloudDrivePathDialog proceedOperation Metadata filePut from " + localPath + " to " + remoteParentPath);
+                                cloudDriveModel.filePut(type, uid, localPath, remoteParentPath, selectedModelIndex);
+                            }
+                        } else {
+                            // Start sync with remotePath.
                             console.debug("cloudDrivePathDialog proceedOperation Metadata sync from " + localPath + " to " + remotePath);
                             cloudDriveModel.metadata(type, uid, localPath, remotePath, selectedModelIndex);
                         }

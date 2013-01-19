@@ -715,6 +715,11 @@ QString GCDClient::getRemoteRoot()
     return RemoteRoot;
 }
 
+bool GCDClient::isFilePutResumable(QString localFilePath)
+{
+    return true;
+}
+
 void GCDClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
 {
     qDebug() << "----- GCDClient::copyFile -----" << uid << remoteFilePath << targetRemoteParentPath;

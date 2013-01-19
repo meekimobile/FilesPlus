@@ -199,7 +199,7 @@ public:
     Q_INVOKABLE void shareFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath);
     Q_INVOKABLE void delta(CloudDriveModel::ClientTypes type, QString uid);
 
-    Q_INVOKABLE void filePutResume(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId = "", qint64 offset = 0);
+    void filePutResume(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId = "", qint64 offset = 0);
 
     Q_INVOKABLE void migrateFile(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
     Q_INVOKABLE void migrateFilePut(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 bytesTotal, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);

@@ -57,6 +57,11 @@ QString CloudDriveClient::getRemoteRoot()
     return "";
 }
 
+bool CloudDriveClient::isFilePutResumable(QString localFilePath)
+{
+    return false;
+}
+
 void CloudDriveClient::loadAccessPairMap() {
     qDebug() << QTime::currentTime() << objectName() << "::loadAccessPairMap";
 

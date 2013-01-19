@@ -709,6 +709,10 @@ QString CloudDriveModel::getOperationName(int operation) {
         return tr("Migrate file");
     case SyncFromLocal:
         return tr("Sync from local");
+    case FilePutResume:
+        return tr("Upload");
+    case FilePutCommit:
+        return tr("Upload ");
     default:
         return tr("Invalid operation");
     }
@@ -1625,11 +1629,9 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
         return;
     }
 
-    // TODO Redirect to filePutResume for large file.
-    // TODO Make chunk size be configurable.
-    qint64 fileSize = QFileInfo(localFilePath).size();
-    if (fileSize > 1048576) {
-        qDebug() << "CloudDriveModel::filePut" << localFilePath << "size" << fileSize << "redirect to filePutResume.";
+    // Redirect to filePutResume for large file.
+    if (getCloudClient(type)->isFilePutResumable(localFilePath)) {
+        qDebug() << "CloudDriveModel::filePut" << localFilePath << "redirect to filePutResume.";
         filePutResume(type, uid, localFilePath, remoteFilePath);
         return;
     }

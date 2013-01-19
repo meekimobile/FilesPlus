@@ -36,6 +36,8 @@ public:
     static const QString chunkedUploadURI;
     static const QString commitChunkedUploadURI;
 
+    static const qint64 ChunkSize;
+
     explicit DropboxClient(QObject *parent = 0, bool fullAccess = false);
     ~DropboxClient();
 
@@ -43,6 +45,7 @@ public:
     QString getDefaultRemoteFilePath(const QString &localFilePath);
 
     bool isRemoteAbsolutePath();
+    bool isFilePutResumable(QString localFilePath);
 
     void requestToken(QString nonce);
     void authorize(QString nonce);

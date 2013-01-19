@@ -68,6 +68,8 @@ public:
     QNetworkReply * filePutResumeStatus(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString uploadId, qint64 offset);
 
     QString getRemoteRoot();
+    bool isFilePutResumable(QString localFilePath);
+
 signals:
 
 public slots:

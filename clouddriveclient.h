@@ -20,6 +20,7 @@ public:
 
     virtual bool isRemoteAbsolutePath();
     virtual QString getRemoteRoot();
+    virtual bool isFilePutResumable(QString localFilePath);
 
     virtual bool testConnection(QString hostname, quint16 port, QString username, QString password);
     virtual void saveConnection(QString id, QString hostname, quint16 port, QString username, QString password);
@@ -44,6 +45,7 @@ public:
     virtual QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
     virtual QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
     virtual QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName);
+
     virtual QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId, qint64 offset);
     virtual QNetworkReply * filePutCommit(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId);
 
