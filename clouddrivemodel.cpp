@@ -2624,12 +2624,13 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
             case Dropbox:
                 sc = engine.evaluate("(" + msg + ")");
                 job.uploadId = sc.property("upload_id").toString();
-                job.uploadOffset = sc.property("offset").toUInt32(); // ISSUE offset doesn't specify next offset to upload.
+                job.uploadOffset += sc.property("offset").toUInt32(); // NOTE offset is uploaded bytes of chunk. Needs to added to current offset before resume uploading.
                 // Enqueue and resume job.
                 if (job.uploadOffset < job.uploadBytesTotal) {
                     m_jobQueue->enqueue(job.jobId);
                 } else {
                     job.operation = FilePutCommit;
+                    m_jobQueue->enqueue(job.jobId);
                 }
                 break;
             case GoogleDrive:
@@ -2638,7 +2639,7 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
                     job.uploadId = sc.property("upload_location").toString();
                 }
                 if (sc.property("offset").isValid()) {
-                    job.uploadOffset = sc.property("offset").toUInt32();
+                    job.uploadOffset = sc.property("offset").toUInt32(); // NOTE offset got from (maxRange+1) returned from status request. It's actually the offset for resume uploading.
                 }
                 // Enqueue and resume job.
                 if (job.uploadOffset < job.uploadBytesTotal) {

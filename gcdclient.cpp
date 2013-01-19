@@ -1505,7 +1505,7 @@ void GCDClient::filePutResumeStatusReplyFinished(QNetworkReply *reply)
     if (reply->error() == QNetworkReply::NoError) {
         if (reply->hasRawHeader("Range")) {
             QStringList ranges = QString::fromAscii(reply->rawHeader("Range")).split("-");
-            qint64 offset = ranges.at(1).toInt() + 1;
+            qint64 offset = ranges.at(1).toUInt() + 1;
             qDebug() << "GCDClient::filePutResumeStatusReplyFinished ranges" << ranges << "offset" << offset;
 
             // Emit signal with offset to resume upload.

@@ -738,16 +738,17 @@ QNetworkReply * DropboxClient::filePutResume(QString nonce, QString uid, QString
     // TODO Make it configurable.
     qint64 chunkSize = 1048576; // 1MB
 
-    QString uri = chunkedUploadURI;
-    uri = encodeURI(uri);
-    qDebug() << "DropboxClient::filePutResume uri " << uri;
-
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
     if (uploadId != "") sortMap["upload_id"] = uploadId;
     if (offset > 0) sortMap["offset"] = QString("%1").arg(offset);
     QString queryString = createNormalizedQueryString(sortMap);
     qDebug() << "DropboxClient::filePutResume queryString" << queryString;
+
+    QString uri = chunkedUploadURI;
+    qDebug() << "DropboxClient::filePutResume uri " << uri;
+    QUrl url = QUrl(uri + (queryString.isEmpty() ? "" : ("?" + queryString)));
+    qDebug() << "DropboxClient::filePutResume url " << url;
 
     m_localFileHash[nonce] = new QFile(localFilePath);
     QFile *localSourceFile = m_localFileHash[nonce];
@@ -758,9 +759,9 @@ QNetworkReply * DropboxClient::filePutResume(QString nonce, QString uid, QString
         // Send request.
         QNetworkAccessManager *manager = new QNetworkAccessManager(this);
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutResumeReplyFinished(QNetworkReply*)));
-        QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+        QNetworkRequest req = QNetworkRequest(url);
         req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-        req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "PUT", uri));
+        req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "PUT", uri, sortMap));
 //        req.setHeader(QNetworkRequest::ContentLengthHeader, chunkSize);
         QNetworkReply *reply = manager->put(req, buf);
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
@@ -1027,9 +1028,11 @@ void DropboxClient::filePutReplyFinished(QNetworkReply *reply) {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
     // Close source file.
-    QFile *localTargetFile = m_localFileHash[nonce];
-    localTargetFile->close();
-    m_localFileHash.remove(nonce);
+    if (m_localFileHash.contains(nonce)) {
+        QFile *localTargetFile = m_localFileHash[nonce];
+        localTargetFile->close();
+        m_localFileHash.remove(nonce);
+    }
 
     emit filePutReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
 
