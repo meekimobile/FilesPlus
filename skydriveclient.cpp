@@ -240,7 +240,7 @@ void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, 
         req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize);
         QNetworkReply *reply = manager->put(req, localSourceFile);
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-        connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+        connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
 
 //        qDebug() << "SkyDriveClient::filePut put file" << localFilePath << "to" << remoteParentPath;
     } else {
