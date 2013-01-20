@@ -69,6 +69,9 @@ QString CloudDriveJob::toJsonText()
     jsonText.append(QString("\"created_time\": \"%1\", ").arg(createdTime.toString(Qt::ISODate)));
     jsonText.append(QString("\"last_started_time\": \"%1\", ").arg(lastStartedTime.toString(Qt::ISODate)));
     jsonText.append(QString("\"last_stopped_time\": \"%1\", ").arg(lastStoppedTime.toString(Qt::ISODate)));
+    jsonText.append(QString("\"err\": %1, ").arg(err));
+    jsonText.append(QString("\"err_string\": \"%1\", ").arg(errString));
+    jsonText.append(QString("\"err_message\": \"%1\", ").arg(errMessage));
     jsonText.append(QString("\"next_job_id\": \"%1\" ").arg(nextJobId));
     jsonText.append(" }");
 

@@ -124,6 +124,15 @@ Page {
                         minimumValue: 0
                         maximumValue: bytes_total
                     }
+                    Text {
+                        text: appInfo.emptyStr+qsTr("Error %1 %2").arg(err).arg(err_string)
+                        width: parent.width / 2
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: !is_running
+                        font.pointSize: 14
+                        elide: Text.ElideRight
+                        color: (!inverted) ? "white" : "black"
+                    }
                 }
                 Row {
                     width: parent.width
@@ -197,6 +206,11 @@ Page {
 
             onClicked: {
                 console.debug("cloudDriveJobsPage listItem onClicked jobJson " + cloudDriveModel.getJobJson(job_id) );
+            }
+
+            onPressAndHold: {
+                console.debug("cloudDriveJobsPage listItem onPressAndHold jobJson " + cloudDriveModel.getJobJson(job_id) );
+                cloudDriveModel.resumeJob(job_id);
             }
         }
     }

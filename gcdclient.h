@@ -37,6 +37,8 @@ public:
     static const QString startResumableUploadURI;
     static const QString resumeUploadURI;
 
+    static const qint64 ChunkSize;
+
     explicit GCDClient(QObject *parent = 0);
     ~GCDClient();
 

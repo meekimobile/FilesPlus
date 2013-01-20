@@ -182,7 +182,6 @@ void CloudDriveModel::initializeDropboxClient() {
     connect(dbClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
     connect(dbClient, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(filePutCommitReplySignal(QString,int,QString,QString)), SLOT(filePutCommitReplyFilter(QString,int,QString,QString)) );
 }
 
 void CloudDriveModel::initializeSkyDriveClient()
@@ -211,7 +210,6 @@ void CloudDriveModel::initializeSkyDriveClient()
     connect(skdClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
     connect(skdClient, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
     connect(skdClient, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
-    connect(skdClient, SIGNAL(filePutCommitReplySignal(QString,int,QString,QString)), SLOT(filePutCommitReplyFilter(QString,int,QString,QString)) );
 }
 
 void CloudDriveModel::initializeGoogleDriveClient()
@@ -240,7 +238,6 @@ void CloudDriveModel::initializeGoogleDriveClient()
     connect(gcdClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
     connect(gcdClient, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
     connect(gcdClient, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
-    connect(gcdClient, SIGNAL(filePutCommitReplySignal(QString,int,QString,QString)), SLOT(filePutCommitReplyFilter(QString,int,QString,QString)) );
 }
 
 void CloudDriveModel::initializeFtpClient()
@@ -266,7 +263,6 @@ void CloudDriveModel::initializeFtpClient()
     connect(ftpClient, SIGNAL(migrateFilePutReplySignal(QString,int,QString,QString)), SLOT(migrateFilePutFilter(QString,int,QString,QString)) ); // Added because FtpClient doesn't provide QNetworkReply.
     connect(ftpClient, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
-    connect(ftpClient, SIGNAL(filePutCommitReplySignal(QString,int,QString,QString)), SLOT(filePutCommitReplyFilter(QString,int,QString,QString)) );
 }
 
 QString CloudDriveModel::createNonce() {
@@ -1631,7 +1627,7 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
 
     // Redirect to filePutResume for large file.
     if (getCloudClient(type)->isFilePutResumable(localFilePath)) {
-        qDebug() << "CloudDriveModel::filePut" << localFilePath << "redirect to filePutResume.";
+        qDebug() << "CloudDriveModel::filePut" << localFilePath << "size" << QFileInfo(localFilePath).size() << ", request is redirected to filePutResume.";
         filePutResume(type, uid, localFilePath, remoteFilePath);
         return;
     }
@@ -2315,6 +2311,9 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
     }
 
     // Update job running flag.
+    job.err = err;
+    job.errString = errMsg;
+//    job.errMessage = msg.replace(QRegExp("\""), "\\\""); // TODO encode to ?
     job.isRunning = false;
     updateJob(job);
 
@@ -2636,10 +2635,11 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
                 job.uploadOffset = sc.property("offset").toUInt32(); // NOTE It's actually the offset for resume uploading.
 
                 // Enqueue and resume job.
-                qDebug() << "CloudDriveModel::filePutResumeReplyFilter" << nonce << "job" << job.toJsonText();
                 if (job.uploadOffset < job.bytesTotal) {
+                    qDebug() << "CloudDriveModel::filePutResumeReplyFilter resume uploading job" << job.toJsonText();
                     m_jobQueue->enqueue(job.jobId);
                 } else {
+                    qDebug() << "CloudDriveModel::filePutResumeReplyFilter commit uploading job" << job.toJsonText();
                     job.operation = FilePutCommit;
                     m_jobQueue->enqueue(job.jobId);
                 }
@@ -2648,22 +2648,44 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
                 sc = engine.evaluate("(" + msg + ")");
                 if (sc.property("upload_location").isValid()) {
                     job.uploadId = sc.property("upload_location").toString();
+                    job.uploadOffset = -1; // Force request status.
                 }
                 if (sc.property("offset").isValid()) {
                     job.uploadOffset = sc.property("offset").toUInt32(); // NOTE offset got from (maxRange+1) returned from status request. It's actually the offset for resume uploading.
                 }
-                // Enqueue and resume job.
-                qDebug() << "CloudDriveModel::filePutResumeReplyFilter" << nonce << "job" << job.toJsonText();
+
+                // Check whether resume or commit.
                 if (job.uploadOffset < job.bytesTotal) {
+                    // Enqueue and resume job.
+                    qDebug() << "CloudDriveModel::filePutResumeReplyFilter resume uploading job" << job.toJsonText();
                     m_jobQueue->enqueue(job.jobId);
+                } else {
+                    // Invoke to handle successful uploading.
+                    qDebug() << "CloudDriveModel::filePutResumeReplyFilter commit uploading job" << job.toJsonText();
+                    filePutReplyFilter(job.jobId, err, errMsg, msg);
+                    return;
                 }
                 break;
             }
-
         }
+    } else if (err == QNetworkReply::AuthenticationRequiredError && job.type == GoogleDrive) {
+        // TODO For GoogleDrive only.
+        // Emit signal with offset=-1 to request status.
+        job.uploadOffset = -1; // Force filePutResumeStatus.
+        m_cloudDriveJobs->insert(job.jobId, job);
+        filePutReplyFilter(job.jobId, err, errMsg, msg);
+        return;
+    } else if (err == 503 && job.type == GoogleDrive) { // 503 Service Unavailable.
+        // TODO For GoogleDrive only.
+        // Emit signal with offset=-1 to request status.
+        job.uploadOffset = -1; // Force filePutResumeStatus.
+        m_cloudDriveJobs->insert(job.jobId, job);
+        filePutReplyFilter(job.jobId, err, errMsg, msg);
+        return;
     } else {
         qDebug() << "CloudDriveModel::filePutResumeReplyFilter failed. Operation is aborted. jobId" << nonce << "error" << err << errMsg << msg;
-        job.isRunning = false;
+        filePutReplyFilter(job.jobId, err, errMsg, msg);
+        return;
     }
 
     // Update job.
@@ -2671,8 +2693,6 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
 
     // Notify job done.
     jobDone();
-
-    emit filePutResumeReplySignal(nonce, err, errMsg, msg);
 }
 
 void CloudDriveModel::refreshRequestFilter(QString nonce)
@@ -3186,7 +3206,7 @@ void CloudDriveModel::proceedNextJob() {
     CloudDriveModelThread *t = new CloudDriveModelThread(this);
     connect(t, SIGNAL(finished()), t, SLOT(deleteLater()));
     t->setNonce(nonce); // Set job ID to thread. It will invoke parent's dispatchJob later.
-    t->start();
+    t->start(QThread::LowPriority);
 
     emit proceedNextJobSignal();
 }
@@ -3242,22 +3262,14 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
 
     switch (job.operation) {
     case LoadCloudDriveItems:
-        // Execute logic asynchronously.
-        // Configure thread.
-//        m_thread.setHashFilePath(ITEM_DAT_PATH);
-//        m_thread.setNonce(job.jobId);
-//        m_thread.setRunMethod(job.operation);
-//        m_thread.setCloudDriveItems(m_cloudDriveItems);
-//        m_thread.start();
         loadCloudDriveItems(job.jobId);
         break;
     case InitializeDB:
-        // Execute initialize locally.
         initializeDB(job.jobId);
         break;
     case InitializeCloudClients:
-        // Execute initialize locally.
         initializeCloudClients(job.jobId);
+        break;
     case FileGet:
         cloudClient->fileGet(job.jobId, job.uid, job.remoteFilePath, job.localFilePath);
         break;
@@ -3326,6 +3338,20 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
     case FilePutCommit:
         cloudClient->filePutCommit(job.jobId, job.uid, job.localFilePath, job.remoteFilePath, job.uploadId);
         break;
+    }
+}
+
+void CloudDriveModel::resumeJob(const QString jobId)
+{
+    // Enqueue job.
+    CloudDriveJob job = m_cloudDriveJobs->value(jobId);
+    if (!job.isRunning) {
+        m_jobQueue->enqueue(jobId);
+
+        // Emit signal to show in job page.
+//        emit jobEnqueuedSignal(job.jobId, job.localFilePath);
+
+        emit proceedNextJobSignal();
     }
 }
 

@@ -1434,7 +1434,9 @@ PageStackWindow {
                     p.refreshItemAfterFilePutSlot(jobJson);
                 }
             } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
+                // TODO Whether it should stop and let user manually resume?
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
+//                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("File Put"),
@@ -1448,7 +1450,10 @@ PageStackWindow {
             }
 
             // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onFilePutReplySignal", jobJson.job_id);
+            // TODO Remove only success job.
+            if (err == 0) {
+                cloudDriveModel.removeJob("cloudDriveModel.onFilePutReplySignal", jobJson.job_id);
+            }
 
             // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {

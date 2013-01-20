@@ -31,6 +31,8 @@ const QString GCDClient::trashFileURI = "https://www.googleapis.com/drive/v2/fil
 const QString GCDClient::startResumableUploadURI = "https://www.googleapis.com/upload/drive/v2/files?uploadType=resumable"; // POST with json includes file properties.
 const QString GCDClient::resumeUploadURI = "%1"; // PUT with specified URL.
 
+const qint64 GCDClient::ChunkSize = 4194304; // 4194304=4MB, 1048576=1MB  TODO Optimize to have largest chink size which is still valid before token is expired.
+
 GCDClient::GCDClient(QObject *parent) :
     CloudDriveClient(parent)
 {
@@ -608,6 +610,7 @@ QNetworkReply *GCDClient::filePutResume(QString nonce, QString uid, QString loca
 
     if (!uploadId.isEmpty()) {
         if (offset < 0) {
+            // Request latest uploading status if offset = -1.
             qDebug() << "GCDClient::filePutResume redirect to filePutResumeStatus" << uploadId << offset;
             filePutResumeStatus(nonce, uid, localFilePath, remoteParentPath, uploadId, offset);
         } else {
@@ -664,6 +667,10 @@ QNetworkReply *GCDClient::filePutResumeUpload(QString nonce, QString uid, QStrin
     QFile *localSourceFile = m_localFileHash[nonce];
     if (localSourceFile->open(QIODevice::ReadOnly)) {
         qint64 fileSize = localSourceFile->size();
+        qint64 chunkSize = qMin(fileSize-offset, ChunkSize);
+        QString contentRange = QString("bytes %1-%2/%3").arg(offset).arg(offset+chunkSize-1).arg(fileSize);
+        qDebug() << "GCDClient::filePutResumeUpload fileSize" << fileSize << "offset" << offset << "chunkSize" << chunkSize << "contentRange" << contentRange;
+
         localSourceFile->seek(offset);
 
         // Send request.
@@ -672,9 +679,9 @@ QNetworkReply *GCDClient::filePutResumeUpload(QString nonce, QString uid, QStrin
         QNetworkRequest req = QNetworkRequest(QUrl(uri));
         req.setAttribute(QNetworkRequest::User, QVariant(nonce));
         req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-        req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize-offset);
+        req.setHeader(QNetworkRequest::ContentLengthHeader, chunkSize);
         req.setHeader(QNetworkRequest::ContentTypeHeader, contentType);
-        req.setRawHeader("Content-Range", QString("bytes %1-%2/%3").arg(offset).arg(fileSize-1).arg(fileSize).toAscii() );
+        req.setRawHeader("Content-Range", contentRange.toAscii() );
         QNetworkReply *reply = manager->put(req, localSourceFile);
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
         connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
@@ -698,6 +705,7 @@ QNetworkReply *GCDClient::filePutResumeStatus(QString nonce, QString uid, QStrin
     qint64 fileSize = QFileInfo(localFilePath).size();
 
     // Send request.
+    // Put empty request with Content-Length: 0, Content-Range: bytes */<fileSize>.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutResumeStatusReplyFinished(QNetworkReply*)) );
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
@@ -717,7 +725,7 @@ QString GCDClient::getRemoteRoot()
 
 bool GCDClient::isFilePutResumable(QString localFilePath)
 {
-    return true;
+    return (QFileInfo(localFilePath).size() >= ChunkSize);
 }
 
 void GCDClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
@@ -1474,12 +1482,18 @@ void GCDClient::filePutResumeUploadReplyFinished(QNetworkReply *reply)
     qDebug() << "GCDClient::filePutResumeUploadReplyFinished" << reply << QString(" Error=%1").arg(reply->error()) << "replyBody" << QString::fromUtf8(replyBody);
 
     if (reply->error() == QNetworkReply::NoError) {
-        // TODO Handle successful upload whole file.
-        emit filePutReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
-    } else if (reply->error() == 503) {
-        // TODO Put empty request with Content-Length: 0, Content-Range: bytes */<fileSize>.
-        // Emit signal with offset=-1 to request status.
-        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"offset\": %1 }").arg(-1) );
+        // TODO Get range and check if resume upload is required.
+        if (reply->hasRawHeader("Range")) {
+            QStringList ranges = QString::fromAscii(reply->rawHeader("Range")).split("-");
+            qint64 offset = ranges.at(1).toUInt() + 1;
+            qDebug() << "GCDClient::filePutResumeUploadReplyFinished ranges" << ranges << "offset" << offset;
+
+            // Emit signal with offset to resume upload.
+            emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"offset\": %1 }").arg(offset) );
+        } else {
+            // Emit signal with successful upload reply.
+            emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
+        }
     } else {
         // REMARK Use QString::fromUtf8() to support unicode text.
         emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
@@ -1503,14 +1517,15 @@ void GCDClient::filePutResumeStatusReplyFinished(QNetworkReply *reply)
     qDebug() << "GCDClient::filePutResumeStatusReplyFinished" << reply << QString(" Error=%1").arg(reply->error()) << "replyBody" << QString::fromUtf8(replyBody);
 
     if (reply->error() == QNetworkReply::NoError) {
+        qint64 offset = 0;
         if (reply->hasRawHeader("Range")) {
             QStringList ranges = QString::fromAscii(reply->rawHeader("Range")).split("-");
-            qint64 offset = ranges.at(1).toUInt() + 1;
+            offset = ranges.at(1).toUInt() + 1;
             qDebug() << "GCDClient::filePutResumeStatusReplyFinished ranges" << ranges << "offset" << offset;
-
-            // Emit signal with offset to resume upload.
-            emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"offset\": %1 }").arg(offset) );
         }
+
+        // Emit signal with offset to resume upload.
+        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"offset\": %1 }").arg(offset) );
     } else {
         // REMARK Use QString::fromUtf8() to support unicode text.
         emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));

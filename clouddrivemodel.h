@@ -130,6 +130,7 @@ public:
     Q_INVOKABLE void requestJobQueueStatus();
     Q_INVOKABLE void suspendNextJob();
     Q_INVOKABLE void resumeNextJob();
+    Q_INVOKABLE void resumeJob(const QString jobId);
 
     // Other.
     Q_INVOKABLE QString getRemoteRoot(CloudDriveModel::ClientTypes type);
@@ -240,7 +241,6 @@ signals:
     void deltaReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void migrateFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void filePutResumeReplySignal(QString nonce, int err, QString errMsg, QString msg);
 
     void migrateStartedSignal(qint64 total);
     void migrateProgressSignal(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, qint64 count, qint64 total);
