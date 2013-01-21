@@ -32,6 +32,8 @@ public:
     static const QString renameFileURI;
     static const QString sharesURI;
 
+    static const qint64 ChunkSize;
+
     explicit SkyDriveClient(QObject *parent = 0);
     ~SkyDriveClient();
 
@@ -58,7 +60,10 @@ public:
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName);
 
+    QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
+
     QString getRemoteRoot();
+    bool isFileGetResumable(qint64 remoteFileSize);
 signals:
 
 public slots:
@@ -79,6 +84,8 @@ public slots:
     void copyFileReplyFinished(QNetworkReply *reply);
     void deleteFileReplyFinished(QNetworkReply *reply);
     void shareFileReplyFinished(QNetworkReply *reply);
+
+    void fileGetResumeReplyFinished(QNetworkReply *reply);
 private:
     QString localPath;
     QHash<QString, QFile*> m_localFileHash;

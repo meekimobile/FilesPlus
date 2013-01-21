@@ -46,6 +46,7 @@ public:
 
     bool isRemoteAbsolutePath();
     bool isFilePutResumable(QString localFilePath);
+    bool isFileGetResumable(qint64 remoteFileSize);
 
     void requestToken(QString nonce);
     void authorize(QString nonce);
@@ -64,9 +65,10 @@ public:
     QString delta(QString nonce, QString uid, bool synchronous = false);
 
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
-    QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
+    QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = 0);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName);
 
+    QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
     QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId, qint64 offset);
     QNetworkReply * filePutCommit(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId);
 
@@ -88,6 +90,7 @@ public slots:
     void deleteFileReplyFinished(QNetworkReply *reply);
     void shareFileReplyFinished(QNetworkReply *reply);
     void deltaReplyFinished(QNetworkReply *reply);
+    void fileGetResumeReplyFinished(QNetworkReply *reply);
     void filePutResumeReplyFinished(QNetworkReply *reply);
 private:
     TokenPair requestTokenPair;

@@ -25,6 +25,8 @@ const QString SkyDriveClient::deleteFileURI = "https://apis.live.net/v5.0/%1"; /
 const QString SkyDriveClient::renameFileURI = "https://apis.live.net/v5.0/%1"; // PUT with json with name = new folder name.
 const QString SkyDriveClient::sharesURI = "https://apis.live.net/v5.0/%1/shared_read_link";
 
+const qint64 SkyDriveClient::ChunkSize = 4194304; // 4MB
+
 SkyDriveClient::SkyDriveClient(QObject *parent) :
     CloudDriveClient(parent)
 {
@@ -184,7 +186,8 @@ void SkyDriveClient::quota(QString nonce, QString uid)
     QNetworkReply *reply = manager->get(req);
 }
 
-void SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath) {
+void SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath)
+{
     qDebug() << "----- SkyDriveClient::fileGet -----" << remoteFilePath << "to" << localFilePath;
 
     // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
@@ -711,9 +714,55 @@ QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *so
     return reply;
 }
 
+QIODevice *SkyDriveClient::fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset)
+{
+    qDebug() << "----- SkyDriveClient::fileGetResume -----" << remoteFilePath << "to" << localFilePath << "offset" << offset;
+
+    // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
+    QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "fileGetResume");
+    if (propertyReply->error() == QNetworkReply::NoError) {
+        // For further using in fileGetReplyFinished.
+        m_propertyReplyHash->insert(nonce, propertyReply->readAll());
+        propertyReply->deleteLater();
+    } else {
+        emit fileGetReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));
+        propertyReply->deleteLater();
+        return 0;
+    }
+
+    QString uri = fileGetURI.arg(remoteFilePath);
+    uri = encodeURI(uri);
+    qDebug() << "SkyDriveClient::fileGetResume uri " << uri;
+
+    // Create localTargetFile for file getting.
+    m_localFileHash[nonce] = new QFile(localFilePath);
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetResumeReplyFinished(QNetworkReply*)));
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    if (offset >= 0) {
+        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+ChunkSize-1);
+        qDebug() << "SkyDriveClient::fileGetResume rangeHeader" << rangeHeader;
+        req.setRawHeader("Range", rangeHeader.toAscii() );
+    }
+    QNetworkReply *reply = manager->get(req);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+    return reply;
+}
+
 QString SkyDriveClient::getRemoteRoot()
 {
     return RemoteRoot;
+}
+
+bool SkyDriveClient::isFileGetResumable(qint64 remoteFileSize)
+{
+    return (remoteFileSize >= ChunkSize);
 }
 
 void SkyDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
@@ -839,7 +888,8 @@ void SkyDriveClient::quotaReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void SkyDriveClient::fileGetReplyFinished(QNetworkReply *reply) {
+void SkyDriveClient::fileGetReplyFinished(QNetworkReply *reply)
+{
     qDebug() << "SkyDriveClient::fileGetReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     // Detect redirection.
@@ -1118,6 +1168,66 @@ void SkyDriveClient::shareFileReplyFinished(QNetworkReply *reply)
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
     emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void SkyDriveClient::fileGetResumeReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "SkyDriveClient::fileGetResumeReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    // Detect redirection.
+    QVariant possibleRedirectUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+    if(!possibleRedirectUrl.toUrl().isEmpty()) {
+        qDebug() << "SkyDriveClient::fileGetResumeReplyFinished redirectUrl" << possibleRedirectUrl.toUrl();
+
+        QNetworkRequest redirectedRequest = reply->request();
+        redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
+        reply = reply->manager()->get(redirectedRequest);
+        QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+        connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+        return;
+    }
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    if (reply->error() == QNetworkReply::NoError) {
+        qDebug() << "SkyDriveClient::fileGetResumeReplyFinished reply bytesAvailable" << reply->bytesAvailable();
+
+        // Stream replyBody to a file on localPath.
+        qint64 totalBytes = 0;
+        char buf[1024];
+        QFile *localTargetFile = m_localFileHash[nonce];
+        if (localTargetFile->open(QIODevice::Append)) {
+            // Read first buffer.
+            qint64 c = reply->read(buf, sizeof(buf));
+            while (c > 0) {
+                localTargetFile->write(buf, c);
+                totalBytes += c;
+
+                // Tell event loop to process event before it will process time consuming task.
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+
+                // Read next buffer.
+                c = reply->read(buf, sizeof(buf));
+            }
+        }
+
+        qDebug() << "SkyDriveClient::fileGetResumeReplyFinished reply totalBytes=" << totalBytes;
+
+        // Close target file.
+        localTargetFile->close();
+
+        emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(m_propertyReplyHash->value(nonce)));
+    } else {
+        emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+    }
+
+    // Remove once used.
+    m_localFileHash.remove(nonce);
+    m_propertyReplyHash->remove(nonce);
 
     // TODO scheduled to delete later.
     reply->deleteLater();

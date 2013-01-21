@@ -62,6 +62,11 @@ bool CloudDriveClient::isFilePutResumable(QString localFilePath)
     return false;
 }
 
+bool CloudDriveClient::isFileGetResumable(qint64 remoteFileSize)
+{
+    return false;
+}
+
 void CloudDriveClient::loadAccessPairMap() {
     qDebug() << QTime::currentTime() << objectName() << "::loadAccessPairMap";
 
@@ -142,7 +147,7 @@ void CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePat
     emit fileGetReplySignal(nonce, -1, objectName() + " " + tr("File Get"), tr("Service is not implemented."));
 }
 
-QIODevice *CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
+QIODevice *CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset)
 {
     emit fileGetReplySignal(nonce, -1, objectName() + " " + tr("File Get"), tr("Service is not implemented."));
     return 0;
@@ -153,9 +158,15 @@ void CloudDriveClient::filePut(QString nonce, QString uid, QString localFilePath
     emit filePutReplySignal(nonce, -1, objectName() + " " + tr("File Put"), tr("Service is not implemented."));
 }
 
-QNetworkReply *CloudDriveClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal,  QString remoteParentPath, QString remoteFileName)
+QNetworkReply *CloudDriveClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal,  QString remoteParentPath, QString remoteFileName, QString uploadId, qint64 offset)
 {
     emit filePutReplySignal(nonce, -1, objectName() + " " + tr("File Put"), tr("Service is not implemented."));
+    return 0;
+}
+
+QIODevice *CloudDriveClient::fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset)
+{
+    emit fileGetResumeReplySignal(nonce, -1, objectName() + " " + tr("File Get Resume"), tr("Service is not implemented."));
     return 0;
 }
 

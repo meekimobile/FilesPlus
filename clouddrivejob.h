@@ -29,6 +29,8 @@ public:
 
     bool forcePut;
 
+    qint64 downloadOffset;
+
     QString uploadId;
     qint64 uploadOffset;
 

@@ -1002,6 +1002,8 @@ Page {
             }
 
             onPressAndHold: {
+                console.debug("folderPage listItem.onPressAndHold size " + size);
+
                 if (fsListView.state != "mark") {
                     fsListView.currentIndex = index;
                     popupToolPanel.selectedFilePath = absolutePath;

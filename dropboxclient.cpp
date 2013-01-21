@@ -368,9 +368,9 @@ void DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, 
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 }
 
-QIODevice *DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
+QIODevice *DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset)
 {
-    qDebug() << "----- DropboxClient::fileGet -----" << uid << remoteFilePath;
+    qDebug() << "----- DropboxClient::fileGet -----" << uid << remoteFilePath << offset;
 
     QString uri = fileGetURI.arg(dropboxRoot, remoteFilePath);
     uri = encodeURI(uri);
@@ -381,6 +381,7 @@ QIODevice *DropboxClient::fileGet(QString nonce, QString uid, QString remoteFile
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
+    if (offset >= 0) req.setRawHeader("Range", QString("bytes=%1-%2").arg(offset).arg(offset+ChunkSize-1).toAscii() );
     QNetworkReply *reply = manager->get(req);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
@@ -511,6 +512,11 @@ bool DropboxClient::isRemoteAbsolutePath()
 bool DropboxClient::isFilePutResumable(QString localFilePath)
 {
     return (QFileInfo(localFilePath).size() >= ChunkSize);
+}
+
+bool DropboxClient::isFileGetResumable(qint64 remoteFileSize)
+{
+    return (remoteFileSize >= ChunkSize);
 }
 
 void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
@@ -714,6 +720,35 @@ QString DropboxClient::delta(QString nonce, QString uid, bool synchronous)
     reply->manager()->deleteLater();
 
     return replyString;
+}
+
+QIODevice *DropboxClient::fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset)
+{
+    qDebug() << "----- DropboxClient::fileGetResume -----" << nonce << uid << remoteFilePath << localFilePath << offset;
+
+    QString uri = fileGetURI.arg(dropboxRoot, remoteFilePath);
+    uri = encodeURI(uri);
+    qDebug() << "DropboxClient::fileGetResume uri " << uri;
+
+    // Create localTargetFile for file getting.
+    m_localFileHash[nonce] = new QFile(localFilePath);
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetResumeReplyFinished(QNetworkReply*)));
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
+    if (offset >= 0) {
+        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+ChunkSize-1);
+        qDebug() << "DropboxClient::fileGetResume rangeHeader" << rangeHeader;
+        req.setRawHeader("Range", rangeHeader.toAscii() );
+    }
+    QNetworkReply *reply = manager->get(req);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+    return reply;
 }
 
 QNetworkReply * DropboxClient::filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId, qint64 offset)
@@ -1130,6 +1165,54 @@ void DropboxClient::deltaReplyFinished(QNetworkReply *reply)
     }
 
     emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+
+    // scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void DropboxClient::fileGetResumeReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "DropboxClient::fileGetResumeReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QString metadata;
+        metadata.append(reply->rawHeader("x-dropbox-metadata"));
+        qDebug() << "x-dropbox-metadata " << metadata;
+
+        // Stream replyBody to a file on localPath.
+        qint64 totalBytes = 0;
+        char buf[1024];
+        QFile *localTargetFile = m_localFileHash[nonce];
+        if (localTargetFile->open(QIODevice::Append)) {
+            qDebug() << "DropboxClient::fileGetResumeReplyFinished localTargetFile->pos()" << localTargetFile->pos();
+
+            // Read first buffer.
+            qint64 c = reply->read(buf, sizeof(buf));
+            while (c > 0) {
+                localTargetFile->write(buf, c);
+                totalBytes += c;
+
+                // Tell event loop to process event before it will process time consuming task.
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+
+                // Read next buffer.
+                c = reply->read(buf, sizeof(buf));
+            }
+        }
+
+        qDebug() << "DropboxClient::fileGetResumeReplyFinished reply totalBytes=" << totalBytes;
+
+        // Close target file.
+        localTargetFile->close();
+        m_localFileHash.remove(nonce);
+
+        emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), metadata);
+    } else {
+        emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    }
 
     // scheduled to delete later.
     reply->deleteLater();

@@ -119,8 +119,10 @@ PageStackWindow {
             case CloudDriveModel.Metadata:
                 return FolderSizeItemListModel.SyncOperation;
             case CloudDriveModel.FileGet:
+            case CloudDriveModel.FileGetResume:
                 return FolderSizeItemListModel.DownloadOperation;
             case CloudDriveModel.FilePut:
+            case CloudDriveModel.FilePutResume:
                 return FolderSizeItemListModel.UploadOperation;
             case CloudDriveModel.SyncFromLocal:
                 return FolderSizeItemListModel.UploadOperation;
@@ -1510,6 +1512,7 @@ PageStackWindow {
                                     var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
                                     var itemRemotePath = item.path;
                                     var itemRemoteHash = item.rev;
+                                    var itemRemoteSize = item.bytes;
                                     if (item.is_dir) {
                                         // This flow will trigger recursive metadata calling.
 //                                        console.debug("cloudDriveModel onMetadataReplySignal dir itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
@@ -1517,7 +1520,7 @@ PageStackWindow {
                                     } else {
 //                                        console.debug("cloudDriveModel onMetadataReplySignal file itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
                                         if (itemRemoteHash > itemLocalHash) {
-                                            cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemLocalPath, -1);
+                                            cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemRemoteSize, itemLocalPath, -1);
                                         } else if (itemRemoteHash < itemLocalHash) {
                                             cloudDriveModel.filePut(jobJson.type, jobJson.uid, itemLocalPath, itemRemotePath, -1);
                                         } else {
@@ -1539,7 +1542,7 @@ PageStackWindow {
                             // If (rev is newer or there is no local file), get from remote.
                             if (jsonObj.rev > localPathHash || !cloudDriveModel.isFile(jobJson.local_file_path)) {
                                 // TODO Add item to ListView.
-                                cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.local_file_path, jobJson.modelIndex);
+                                cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jsonObj.bytes, jobJson.local_file_path, jobJson.modelIndex);
                             } else if (jsonObj.rev < localPathHash) {
                                 cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
                             } else {
@@ -1580,6 +1583,7 @@ PageStackWindow {
                                     var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
                                     var itemRemotePath = item.id;
                                     var itemRemoteHash = item.updated_time;
+                                    var itemRemoteSize = item.size;
                                     if (item.type == "folder" || item.type == "album") {
                                         // This flow will trigger recursive metadata calling.
                                         console.debug("cloudDriveModel onMetadataReplySignal dir itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
@@ -1587,7 +1591,7 @@ PageStackWindow {
                                     } else {
                                         console.debug("cloudDriveModel onMetadataReplySignal file itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
                                         if (itemRemoteHash > itemLocalHash) {
-                                            cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemLocalPath, -1);
+                                            cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemRemoteSize, itemLocalPath, -1);
                                         } else if (itemRemoteHash < itemLocalHash) {
                                             // Put file to remote parent path. Or root if parent_id is null.
                                             itemRemotePath = (item.parent_id) ? item.parent_id : cloudDriveModel.getRemoteRoot(jobJson.type);
@@ -1610,7 +1614,7 @@ PageStackWindow {
                             // If (rev is newer or there is no local file), get from remote.
                             if (remotePathHash > localPathHash || !cloudDriveModel.isFile(jobJson.local_file_path)) {
                                 // TODO Add item to ListView.
-                                cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.local_file_path, jobJson.modelIndex);
+                                cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jsonObj.property.size, jobJson.local_file_path, jobJson.modelIndex);
                             } else if (remotePathHash < localPathHash) {
                                 // Put file to remote parent path. Or root if parent_id is null.
                                 var remoteParentPath = (jsonObj.property.parent_id) ? jsonObj.property.parent_id : cloudDriveModel.getRemoteRoot(jobJson.type);
@@ -1654,6 +1658,7 @@ PageStackWindow {
                                     var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
                                     var itemRemotePath = item.id;
                                     var itemRemoteHash = item.modifiedDate;
+                                    var itemRemoteSize = item.fileSize;
                                     if (item.mimeType == "application/vnd.google-apps.folder") {
                                         // This flow will trigger recursive metadata calling.
                                         console.debug("cloudDriveModel onMetadataReplySignal dir itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.updated_time);
@@ -1664,7 +1669,7 @@ PageStackWindow {
                                             // TODO Uses downloadUrl if it exists.
                                             // TODO It should be downloadUrl because it will not be albe to create connection in CloudDriveModel.fileGetReplyFilter.
 //                                            itemRemotePath = (item.downloadUrl) ? item.downloadUrl : itemRemotePath;
-                                            cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemLocalPath, -1);
+                                            cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemRemoteSize, itemLocalPath, -1);
                                         } else if (itemRemoteHash < itemLocalHash) {
                                             // Put file to remote parent path. Or root if parent_id is null.
                                             itemRemotePath = (item.parents && item.parents.length > 0) ? item.parents[0].id : cloudDriveModel.getRemoteRoot(jobJson.type);
@@ -1691,7 +1696,7 @@ PageStackWindow {
                                 // TODO Uses downloadUrl if it exists.
                                 // TODO It should be downloadUrl because it will not be albe to create connection in CloudDriveModel.fileGetReplyFilter.
 //                                var remoteParentPath = (jsonObj.property.downloadUrl) ? jsonObj.property.downloadUrl : jobJson.remote_file_path;
-                                cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.local_file_path, jobJson.modelIndex);
+                                cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jsonObj.property.fileSize, jobJson.local_file_path, jobJson.modelIndex);
                             } else if (remotePathHash < localPathHash) {
                                 // Put file to remote parent path. Or root if parent_id is null.
                                 var remoteParentPath = (jsonObj.property.parents && jsonObj.property.parents.length > 0) ? jsonObj.property.parents[0].id : cloudDriveModel.getRemoteRoot(jobJson.type);
@@ -1736,6 +1741,7 @@ PageStackWindow {
                                     var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
                                     var itemRemotePath = item.path;
                                     var itemRemoteHash = item.lastModified;
+                                    var itemRemoteSize = item.size;
                                     if (item.isDir) {
                                         // This flow will trigger recursive metadata calling.
                                         console.debug("cloudDriveModel onMetadataReplySignal dir itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.lastModified);
@@ -1743,7 +1749,7 @@ PageStackWindow {
                                     } else {
                                         console.debug("cloudDriveModel onMetadataReplySignal file itemRemotePath " + itemRemotePath + " itemLocalHash " + itemLocalHash + " itemRemoteHash " + itemRemoteHash + " " + item.lastModified);
                                         if (itemRemoteHash > itemLocalHash) {
-                                            cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemLocalPath, -1);
+                                            cloudDriveModel.fileGet(jobJson.type, jobJson.uid, itemRemotePath, itemRemoteSize, itemLocalPath, -1);
                                         } else if (itemRemoteHash < itemLocalHash) {
                                             // Put file to remote parent path. Or root if parent_id is null.
                                             itemRemotePath = (item.parent_id) ? item.parent_id : cloudDriveModel.getRemoteRoot(jobJson.type);
@@ -1767,7 +1773,7 @@ PageStackWindow {
                             // If (rev is newer or there is no local file), get from remote.
                             if (remotePathHash > localPathHash || !cloudDriveModel.isFile(jobJson.local_file_path)) {
                                 // TODO Add item to ListView.
-                                cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jobJson.local_file_path, jobJson.modelIndex);
+                                cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jobJson.remote_file_path, jsonObj.property.size, jobJson.local_file_path, jobJson.modelIndex);
                             } else if (remotePathHash < localPathHash) {
                                 cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jobJson.modelIndex);
                             } else {

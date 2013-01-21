@@ -73,7 +73,9 @@ public:
         Delta,
         SyncFromLocal,
         FilePutResume,
-        FilePutCommit
+        FilePutCommit,
+        FileGetResume,
+        FileGetCommit
     };
 
     explicit CloudDriveModel(QDeclarativeItem *parent = 0);
@@ -183,7 +185,7 @@ public:
     Q_INVOKABLE void refreshToken(CloudDriveModel::ClientTypes type, QString uid, QString nextNonce = "");
     Q_INVOKABLE void accountInfo(CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE void quota(CloudDriveModel::ClientTypes type, QString uid);
-    Q_INVOKABLE void fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString localFilePath, int modelIndex);
+    Q_INVOKABLE void fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, QString localFilePath, int modelIndex);
     Q_INVOKABLE void filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
     Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
     Q_INVOKABLE void browse(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
@@ -201,6 +203,7 @@ public:
     Q_INVOKABLE void delta(CloudDriveModel::ClientTypes type, QString uid);
 
     void filePutResume(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId = "", qint64 offset = 0);
+    void fileGetResume(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFIleSize, QString localFilePath, qint64 offset = 0);
 
     Q_INVOKABLE void migrateFile(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
     Q_INVOKABLE void migrateFilePut(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 bytesTotal, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
@@ -273,6 +276,7 @@ public slots:
     void shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void migrateFilePutFilter(QString nonce, int err, QString errMsg, QString msg);
+    void fileGetResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void filePutResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg);
 
     // Refresh request
