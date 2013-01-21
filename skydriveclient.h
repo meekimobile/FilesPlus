@@ -57,13 +57,13 @@ public:
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous = false);
     QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
     void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
-    QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
-    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName);
+    QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
+    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
 
     QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
 
     QString getRemoteRoot();
-    bool isFileGetResumable(qint64 remoteFileSize);
+    bool isFileGetResumable(qint64 fileSize);
 signals:
 
 public slots:

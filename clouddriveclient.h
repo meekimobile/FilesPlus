@@ -20,8 +20,8 @@ public:
 
     virtual bool isRemoteAbsolutePath();
     virtual QString getRemoteRoot();
-    virtual bool isFilePutResumable(QString localFilePath);
-    virtual bool isFileGetResumable(qint64 remoteFileSize);
+    virtual bool isFilePutResumable(qint64 fileSize);
+    virtual bool isFileGetResumable(qint64 fileSize);
 
     virtual bool testConnection(QString hostname, quint16 port, QString username, QString password);
     virtual void saveConnection(QString id, QString hostname, quint16 port, QString username, QString password);
@@ -41,15 +41,33 @@ public:
     virtual void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
     virtual void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     virtual void shareFile(QString nonce, QString uid, QString remoteFilePath);
-    virtual QString delta(QString nonce, QString uid, bool synchronous = false);
 
+    virtual QString delta(QString nonce, QString uid, bool synchronous = false);
     virtual QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
-    virtual QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = 0);
-    virtual QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, QString uploadId = "", qint64 offset = 0);
+
+    virtual QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
+    virtual QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
 
     virtual QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
     virtual QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId, qint64 offset);
-    virtual QNetworkReply * filePutCommit(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId);
+    /*
+     *filePutResumeStart
+     *return json contains upload_id.
+     */
+    virtual QString filePutResumeStart(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString remoteParentPath, bool synchronous = false);
+    /*
+     *filePutResumeUpload
+     *source must be seeked to required offset before invoking this method.
+     *bytesTotal is total source file size.
+     *offset is uploading offset.
+     */
+    virtual QString filePutResumeUpload(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString uploadId, qint64 offset, QString contentType, bool synchronous = false);
+    /*
+     *filePutResumeStatus
+     *return json contains next uploading offset.
+     */
+    virtual QString filePutResumeStatus(QString nonce, QString uid, qint64 bytesTotal, QString uploadId, qint64 offset, QString contentType, bool synchronous = false);
+    virtual QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
 
     virtual QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size);
 signals:

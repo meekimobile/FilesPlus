@@ -300,9 +300,9 @@ QString FtpClient::createFolder(QString nonce, QString uid, QString remoteParent
     return result;
 }
 
-QIODevice *FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath)
+QIODevice *FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)
 {
-    qDebug() << "----- FtpClient::fileGet -----" << uid << remoteFilePath;
+    qDebug() << "----- FtpClient::fileGet -----" << uid << remoteFilePath << "synchronous" << synchronous;
 
     QString remoteParentPath = getParentRemotePath(remoteFilePath);
 
@@ -325,9 +325,9 @@ QIODevice *FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath
     return buf;
 }
 
-QNetworkReply *FtpClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName)
+QNetworkReply *FtpClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
 {
-    qDebug() << "----- FtpClient::filePut -----" << uid << remoteParentPath << remoteFileName << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
+    qDebug() << "----- FtpClient::filePut -----" << uid << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
     m_ftp->m_remoteFilePath = remoteParentPath + "/" + remoteFileName;

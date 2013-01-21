@@ -45,8 +45,8 @@ public:
     QString getDefaultRemoteFilePath(const QString &localFilePath);
 
     bool isRemoteAbsolutePath();
-    bool isFilePutResumable(QString localFilePath);
-    bool isFileGetResumable(qint64 remoteFileSize);
+    bool isFilePutResumable(qint64 fileSize);
+    bool isFileGetResumable(qint64 fileSize);
 
     void requestToken(QString nonce);
     void authorize(QString nonce);
@@ -65,12 +65,15 @@ public:
     QString delta(QString nonce, QString uid, bool synchronous = false);
 
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
-    QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = 0);
-    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName);
+    QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
+    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
 
     QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
     QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId, qint64 offset);
-    QNetworkReply * filePutCommit(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId);
+    QString filePutResumeStart(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString remoteParentPath, bool synchronous = false);
+    QString filePutResumeUpload(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString uploadId, qint64 offset, QString contentType, bool synchronous = false);
+    QString filePutResumeStatus(QString nonce, QString uid, qint64 bytesTotal, QString uploadId, qint64 offset, QString contentType, bool synchronous = false);
+    QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
 
     QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size);
 signals:

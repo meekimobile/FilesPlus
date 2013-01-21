@@ -62,17 +62,19 @@ public:
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
     QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous);
     void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
-    QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
-    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName);
+    QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
+    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
 
     QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
     QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString uploadId, qint64 offset);
-    QNetworkReply * filePutResumeUpload(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString uploadId, qint64 offset);
-    QNetworkReply * filePutResumeStatus(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString uploadId, qint64 offset);
+    QString filePutResumeStart(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString remoteParentPath, bool synchronous = false);
+    QString filePutResumeUpload(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString uploadId, qint64 offset, QString contentType, bool synchronous = false);
+    QString filePutResumeStatus(QString nonce, QString uid, qint64 bytesTotal, QString uploadId, qint64 offset, QString contentType, bool synchronous = false);
+    QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
 
     QString getRemoteRoot();
-    bool isFilePutResumable(QString localFilePath);
-    bool isFileGetResumable(qint64 remoteFileSize);
+    bool isFilePutResumable(qint64 fileSize);
+    bool isFileGetResumable(qint64 fileSize);
 signals:
 
 public slots:

@@ -32,8 +32,8 @@ public:
     void shareFile(QString nonce, QString uid, QString remoteFilePath);
 
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
-    QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath);
-    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName);
+    QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
+    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
 signals:
     void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
 public slots:

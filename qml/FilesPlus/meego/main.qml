@@ -1416,7 +1416,10 @@ PageStackWindow {
             }
 
             // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onFileGetReplySignal", jobJson.job_id);
+            // TODO Remove only success job.
+            if (err == 0) {
+                cloudDriveModel.removeJob("cloudDriveModel.onFileGetReplySignal", jobJson.job_id);
+            }
 
             // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
@@ -1437,8 +1440,7 @@ PageStackWindow {
                 }
             } else if (err == 204) { // Refresh token
                 // TODO Whether it should stop and let user manually resume?
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid);
-//                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("File Put"),
