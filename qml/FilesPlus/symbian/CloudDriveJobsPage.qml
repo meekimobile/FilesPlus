@@ -90,6 +90,18 @@ Page {
         flickableItem: jobListView
     }
 
+    ConfirmDialog {
+        id: resumeJobConfirmation
+
+        property string jobId
+
+        titleText: appInfo.emptyStr+qsTr("Resume job")
+        contentText: appInfo.emptyStr+qsTr("Resume job %1?").arg(jobId);
+        onConfirm: {
+            cloudDriveModel.resumeJob(jobId);
+        }
+    }
+
     Component {
         id: jobDelegate
 
@@ -98,6 +110,7 @@ Page {
 
             property int mouseX
             property int mouseY
+            property bool showBytes: false
 
             Column {
                 width: parent.width
@@ -122,16 +135,25 @@ Page {
                         id: syncProgressBar
                         width: parent.width / 2
                         anchors.verticalCenter: parent.verticalCenter
-                        visible: is_running
+                        visible: is_running && !listItem.showBytes
                         value: bytes
                         minimumValue: 0
                         maximumValue: bytes_total
                     }
                     Text {
+                        text: appInfo.emptyStr+Utility.formatFileSize(bytes, 1)+" / "+Utility.formatFileSize(bytes_total, 1)
+                        width: parent.width / 2
+                        anchors.verticalCenter: parent.verticalCenter
+                        horizontalAlignment: Text.AlignRight
+                        visible: listItem.showBytes
+                        font.pointSize: 6
+                        color: (!inverted) ? "white" : "black"
+                    }
+                    Text {
                         text: appInfo.emptyStr+qsTr("Error %1 %2").arg(err).arg(err_string)
                         width: parent.width / 2
                         anchors.verticalCenter: parent.verticalCenter
-                        visible: !is_running
+                        visible: !is_running && !listItem.showBytes
                         font.pointSize: 6
                         elide: Text.ElideRight
                         color: (!inverted) ? "white" : "black"
@@ -209,11 +231,13 @@ Page {
 
             onClicked: {
                 console.debug("cloudDriveJobsPage listItem onClicked jobJson " + cloudDriveModel.getJobJson(job_id) );
+                showBytes = !showBytes;
             }
 
             onPressAndHold: {
                 console.debug("cloudDriveJobsPage listItem onPressAndHold jobJson " + cloudDriveModel.getJobJson(job_id) );
-                cloudDriveModel.resumeJob(job_id);
+                resumeJobConfirmation.jobId = job_id;
+                resumeJobConfirmation.open();
             }
         }
     }
