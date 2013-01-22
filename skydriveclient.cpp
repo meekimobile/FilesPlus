@@ -206,7 +206,7 @@ void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, 
         qint64 fileSize = localSourceFile->size();
 
         // Send request.
-        QString remoteFileName = localSourceFile->fileName();
+        QString remoteFileName = QFileInfo(localFilePath).fileName();
         filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
     } else {
         qDebug() << "SkyDriveClient::filePut file " << localFilePath << " can't be opened.";
