@@ -23,6 +23,7 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->createdTime = QDateTime::currentDateTime();
     this->downloadOffset = 0;
     this->uploadOffset = 0;
+    this->err = 0;
 }
 
 CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, int modelIndex)
@@ -44,6 +45,7 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->createdTime = QDateTime::currentDateTime();
     this->downloadOffset = 0;
     this->uploadOffset = 0;
+    this->err = 0;
 }
 
 QString CloudDriveJob::toJsonText()
