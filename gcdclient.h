@@ -28,10 +28,9 @@ public:
     static const QString filesURI;
     static const QString propertyURI;
     static const QString createFolderURI;
-    static const QString moveFileURI;
     static const QString copyFileURI;
     static const QString deleteFileURI;
-    static const QString renameFileURI;
+    static const QString patchFileURI;
     static const QString sharesURI;
     static const QString trashFileURI;
     static const QString startResumableUploadURI;
@@ -61,9 +60,10 @@ public:
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
     QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous);
-    void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
+    QNetworkReply * patchFile(QString nonce, QString uid, QString remoteFilePath, QByteArray postData);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
+    QNetworkReply * filePutMulipart(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
 
     QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
     QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString uploadId, qint64 offset);
@@ -84,6 +84,7 @@ public slots:
 
     void fileGetReplyFinished(QNetworkReply *reply);
     void filePutReplyFinished(QNetworkReply *reply);
+    void filePutMultipartReplyFinished(QNetworkReply *reply);
     void metadataReplyFinished(QNetworkReply *reply);
     void browseReplyFinished(QNetworkReply *reply);
 

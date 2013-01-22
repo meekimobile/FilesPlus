@@ -412,7 +412,7 @@ void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, Q
 
         // Send request.
         QString remoteParentPath = getParentRemotePath(remoteFilePath);
-        QString remoteFileName = localSourceFile->fileName();
+        QString remoteFileName = QFileInfo(localFilePath).fileName();
         filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
     } else {
         qDebug() << "DropboxClient::filePut file " << localFilePath << " can't be opened.";
