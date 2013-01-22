@@ -4,6 +4,7 @@ import com.nokia.meego 1.0
 Menu {
     id: menu
     z: 2
+    signal closed()
 
     property variant enabledMenus: []
     property variant disabledMenus: []
@@ -90,6 +91,8 @@ Menu {
             updateBgImageSources();
 //        } else if (status == DialogStatus.Open) {
 //            console.debug("MenuWithIcon onStatusChanged height " + height + " implicitHeight " + implicitHeight);
+        } else if (status == DialogStatus.Closed) {
+            closed();
         }
     }
 }

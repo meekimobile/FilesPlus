@@ -6,6 +6,8 @@ Menu {
     z: 2
     platformInverted: window.platformInverted
 
+    signal closed()
+
     property variant enabledMenus: []
     property variant disabledMenus: []
 
@@ -47,6 +49,8 @@ Menu {
 //        console.debug("MenuWithIcon onStatusChanged status " + status);
         if (status == DialogStatus.Opening) {
             toggleMenuItems();
+        } else if (status == DialogStatus.Closed) {
+            closed();
         }
     }
 }

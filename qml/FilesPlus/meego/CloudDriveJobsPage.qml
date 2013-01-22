@@ -77,6 +77,24 @@ Page {
         model: cloudDriveModel.jobsModel
         delegate: jobDelegate
         clip: true
+        highlightRangeMode: ListView.NoHighlightRange
+        highlightFollowsCurrentItem: false
+        highlightMoveDuration: 1
+        highlightMoveSpeed: 4000
+        highlight: Rectangle {
+            width: jobListView.width
+            gradient: Gradient {
+                GradientStop {
+                    position: 0
+                    color: "#0080D0"
+                }
+
+                GradientStop {
+                    position: 1
+                    color: "#53A3E6"
+                }
+            }
+        }
 
         onMovementStarted: {
             if (currentItem) {
@@ -88,6 +106,41 @@ Page {
     ScrollDecorator {
         id: scrollbar
         flickableItem: jobListView
+    }
+
+    MenuWithIcon {
+        id: jobMenu
+
+        content: MenuLayout {
+            id: menuLayout
+
+            // TODO Alias for fixing incorrect children.
+            default property alias children: menuLayout.menuChildren
+
+            MenuItemWithIcon {
+                name: "resume"
+                text: appInfo.emptyStr+qsTr("Resume")
+                onClicked: {
+                    var jobId = jobListView.model.get(jobListView.currentIndex).job_id;
+                    cloudDriveModel.resumeJob(jobId);
+                }
+            }
+
+            MenuItemWithIcon {
+                name: "remove"
+                text: appInfo.emptyStr+qsTr("Remove")
+                onClicked: {
+                    var jobId = jobListView.model.get(jobListView.currentIndex).job_id;
+                    cloudDriveModel.removeJob("cloudDriveJobsPage jobMenu", jobId);
+                }
+            }
+        }
+
+        onClosed: {
+            // Hide highlight.
+            jobListView.currentIndex = -1;
+            jobListView.highlightFollowsCurrentItem = false;
+        }
     }
 
     ConfirmDialog {
@@ -129,32 +182,33 @@ Page {
                         elide: Text.ElideRight
                         color: (!inverted) ? "white" : "black"
                     }
-                    ProgressBar {
-                        id: syncProgressBar
+                    Column {
                         width: parent.width / 2
                         anchors.verticalCenter: parent.verticalCenter
-                        visible: is_running && !listItem.showBytes
-                        value: bytes
-                        minimumValue: 0
-                        maximumValue: bytes_total
-                    }
-                    Text {
-                        text: appInfo.emptyStr+Utility.formatFileSize(bytes, 1)+" / "+Utility.formatFileSize(bytes_total, 1)
-                        width: parent.width / 2
-                        anchors.verticalCenter: parent.verticalCenter
-                        horizontalAlignment: Text.AlignRight
-                        visible: listItem.showBytes
-                        font.pointSize: 14
-                        color: (!inverted) ? "white" : "black"
-                    }
-                    Text {
-                        text: appInfo.emptyStr+qsTr("Error %1 %2").arg(err).arg(err_string)
-                        width: parent.width / 2
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: !is_running && !listItem.showBytes
-                        font.pointSize: 14
-                        elide: Text.ElideRight
-                        color: (!inverted) ? "white" : "black"
+                        ProgressBar {
+                            id: syncProgressBar
+                            width: parent.width
+                            visible: is_running && !listItem.showBytes
+                            value: bytes
+                            minimumValue: 0
+                            maximumValue: bytes_total
+                        }
+                        Text {
+                            text: appInfo.emptyStr+Utility.formatFileSize(bytes, 1)+" / "+Utility.formatFileSize(bytes_total, 1)
+                            width: parent.width
+                            horizontalAlignment: Text.AlignRight
+                            visible: listItem.showBytes
+                            font.pointSize: 14
+                            color: (!inverted) ? "white" : "black"
+                        }
+                        Text {
+                            text: appInfo.emptyStr+(err != 0 ? qsTr("Error %1 %2").arg(err).arg(err_string) : "")
+                            width: parent.width
+                            visible: !is_running && !listItem.showBytes
+                            font.pointSize: 14
+                            elide: Text.ElideRight
+                            color: (!inverted) ? "white" : "black"
+                        }
                     }
                 }
                 Row {
@@ -234,8 +288,13 @@ Page {
 
             onPressAndHold: {
                 console.debug("cloudDriveJobsPage listItem onPressAndHold jobJson " + cloudDriveModel.getJobJson(job_id) );
-                resumeJobConfirmation.jobId = job_id;
-                resumeJobConfirmation.open();
+                if (!is_running) {
+//                    resumeJobConfirmation.jobId = job_id;
+//                    resumeJobConfirmation.open();
+                    jobListView.currentIndex = index;
+                    jobListView.highlightFollowsCurrentItem = true;
+                    jobMenu.open();
+                }
             }
         }
     }
