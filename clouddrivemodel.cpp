@@ -821,6 +821,11 @@ int CloudDriveModel::getQueuedJobCount() const
     return m_jobQueue->count();
 }
 
+int CloudDriveModel::getRunningJobCount() const
+{
+    return runningJobCount;
+}
+
 void CloudDriveModel::cancelQueuedJobs()
 {
     while (!m_jobQueue->isEmpty()) {
@@ -831,6 +836,16 @@ void CloudDriveModel::cancelQueuedJobs()
     }
 
     qDebug() << "CloudDriveModel::cancelQueuedJobs done m_jobQueue->count()" << m_jobQueue->count() << "m_cloudDriveJobs->count()" << m_cloudDriveJobs->count();
+}
+
+void CloudDriveModel::removeJobs(bool removeAll)
+{
+    // Remove unqueued jobs.
+    foreach (CloudDriveJob job, m_cloudDriveJobs->values()) {
+        if (removeAll || !job.isRunning) {
+            removeJob("CloudDriveModel::removeJobs", job.jobId);
+        }
+    }
 }
 
 void CloudDriveModel::addItem(QString localPath, CloudDriveItem item)
@@ -2049,7 +2064,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
                 m_cloudDriveJobs->insert(job.jobId, job);
             }
             if (sc.property("error").isValid()) {
-                int err = sc.property("error").toInteger();
+                int err = sc.property("error").toInt32();
                 QString errString = sc.property("error_string").toString();
                 migrateFilePutFilter(job.jobId, err, errString, "");
                 return;
@@ -2067,7 +2082,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
                 m_cloudDriveJobs->insert(job.jobId, job);
             }
             if (sc.property("error").isValid()) {
-                int err = sc.property("error").toInteger();
+                int err = sc.property("error").toInt32();
                 QString errString = sc.property("error_string").toString();
                 migrateFilePutFilter(job.jobId, err, errString, "");
                 return;
@@ -2118,7 +2133,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
         m_cloudDriveJobs->insert(job.jobId, job);
 
         if (sc.property("error").isValid()) {
-            int err = sc.property("error").toInteger();
+            int err = sc.property("error").toInt32();
             QString errString = sc.property("error_string").toString();
             job.uploadOffset = -1; // Failed upload needs to get status on resume.
             migrateFilePutFilter(job.jobId, err, errString, "");
@@ -2144,7 +2159,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
             qDebug() << "GCDClient::migrateFile_Block commitResult" << commitResult;
             sc = engine.evaluate("(" + uploadResult + ")");
             if (sc.property("error").isValid()) {
-                int err = sc.property("error").toInteger();
+                int err = sc.property("error").toInt32();
                 QString errString = sc.property("error_string").toString();
                 migrateFilePutFilter(job.jobId, err, errString, "");
                 return;
@@ -3369,7 +3384,7 @@ int CloudDriveModel::countItemByTypeAndUidAndRemotePathFromDB(CloudDriveModel::C
 void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint64 bytesTotal)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
-    qDebug() << "CloudDriveModel::uploadProgressFilter" << nonce << bytesSent << bytesTotal << job.downloadOffset;
+//    qDebug() << "CloudDriveModel::uploadProgressFilter" << nonce << bytesSent << bytesTotal << job.downloadOffset;
     job.bytes = job.uploadOffset + bytesSent; // Add job.uploadOffset to support filePutResume.
     updateJob(job);
 
@@ -3379,7 +3394,7 @@ void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint
 void CloudDriveModel::downloadProgressFilter(QString nonce, qint64 bytesReceived, qint64 bytesTotal)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
-    qDebug() << "CloudDriveModel::downloadProgressFilter" << nonce << bytesReceived << bytesTotal << job.downloadOffset;
+//    qDebug() << "CloudDriveModel::downloadProgressFilter" << nonce << bytesReceived << bytesTotal << job.downloadOffset;
     job.bytes = job.downloadOffset + bytesReceived; // Add job.downloadOffset to support fileGetResume.
     updateJob(job);
 

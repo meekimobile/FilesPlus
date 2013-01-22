@@ -1079,6 +1079,11 @@ int FolderSizeItemListModel::getQueuedJobCount() const
     return m_jobQueue.count();
 }
 
+int FolderSizeItemListModel::getRunningJobCount() const
+{
+    return runningJobCount;
+}
+
 void FolderSizeItemListModel::abortThread(bool rollbackFlag)
 {
     m.setAbortFlag(true);

@@ -140,6 +140,7 @@ public:
     Q_INVOKABLE QString formatFileSize(double size);
     Q_INVOKABLE void cancelQueuedJobs();
     Q_INVOKABLE int getQueuedJobCount() const;
+    Q_INVOKABLE int getRunningJobCount() const;
     Q_INVOKABLE void abortThread(bool rollbackFlag = true);
 
     QList<FolderSizeItem> getItemList() const;

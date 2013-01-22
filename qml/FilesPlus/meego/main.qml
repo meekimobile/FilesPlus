@@ -59,13 +59,7 @@ PageStackWindow {
     }
 
     function quitSlot() {
-        if (fsModel.isRunning()) {
-            messageDialog.titleText = appInfo.emptyStr+qsTr("Notify");
-            messageDialog.message = appInfo.emptyStr+qsTr("Reset Cache is running. Please wait until it's done.");
-            messageDialog.open();
-        } else {
-            Qt.quit();
-        }
+        quitConfirmation.open();
     }
 
     AppInfo {
@@ -414,6 +408,27 @@ PageStackWindow {
 
             // Proceeds queued jobs during constructions.
             fsModel.proceedNextJob();
+        }
+    }
+
+    ConfirmDialog {
+        id: quitConfirmation
+        titleText: appInfo.emptyStr+qsTr("Quit")
+
+        function getText() {
+            var text = "";
+            text += (cloudDriveModel.getRunningJobCount()+fsModel.getRunningJobCount() > 0) ? qsTr("There are %n running job(s).", "", cloudDriveModel.getRunningJobCount()+fsModel.getRunningJobCount())+"\n" : "";
+            text += (cloudDriveModel.getQueuedJobCount()+fsModel.getQueuedJobCount() > 0) ? qsTr("There are %n queued job(s).", "", cloudDriveModel.getQueuedJobCount()+fsModel.getQueuedJobCount())+"\n" : "";
+            text += (text != "") ? "\n" : "";
+            text += qsTr("Please click OK to continue.");
+            return text;
+        }
+
+        onOpening: {
+            contentText = appInfo.emptyStr+getText();
+        }
+        onConfirm: {
+            Qt.quit();
         }
     }
 
