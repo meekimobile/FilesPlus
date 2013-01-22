@@ -358,7 +358,7 @@ void DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, 
 
 QIODevice *DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)
 {
-    qDebug() << "----- DropboxClient::fileGet -----" << uid << remoteFilePath << "synchronous" << synchronous;
+    qDebug() << "----- DropboxClient::fileGet -----" << uid << remoteFilePath << offset << "synchronous" << synchronous;
 
     QString uri = fileGetURI.arg(dropboxRoot, remoteFilePath);
     uri = encodeURI(uri);
@@ -748,7 +748,7 @@ QNetworkReply * DropboxClient::filePutResume(QString nonce, QString uid, QString
         localSourceFile->seek(offset);
 
         // Send request.
-        filePutResumeUpload(nonce, uid, localSourceFile, ChunkSize, uploadId, offset, false);
+        filePutResumeUpload(nonce, uid, localSourceFile, localSourceFile->fileName(), ChunkSize, uploadId, offset, false);
         return 0;
     } else {
         qDebug() << "DropboxClient::filePutResume file " << localFilePath << " can't be opened.";
@@ -763,7 +763,7 @@ QString DropboxClient::filePutResumeStart(QString nonce, QString uid, QString fi
     return "";
 }
 
-QString DropboxClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString uploadId, qint64 offset, QString contentType, bool synchronous)
+QString DropboxClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *source, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous)
 {
     /*
      *NOTE
@@ -775,8 +775,8 @@ QString DropboxClient::filePutResumeUpload(QString nonce, QString uid, QIODevice
 
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
-    sortMap["upload_id"] = uploadId;
-    sortMap["offset"] = QString("%1").arg(offset);
+    if (uploadId != "") sortMap["upload_id"] = uploadId;
+    if (offset >= 0) sortMap["offset"] = QString("%1").arg(offset);
     QString queryString = createNormalizedQueryString(sortMap);
     qDebug() << "DropboxClient::filePutResumeUpload queryString" << queryString;
 
@@ -809,7 +809,16 @@ QString DropboxClient::filePutResumeUpload(QString nonce, QString uid, QIODevice
     QString result = "";
     if (reply->error() == QNetworkReply::NoError) {
         result = QString::fromUtf8(reply->readAll());
+    } else if (reply->error() == 400) { // Check if it's incorrect offset, then re-queue job.
+        QScriptEngine engine;
+        QScriptValue sc = engine.evaluate("(" + result + ")");
+        if (sc.property("offset").isValid()) {
+            result = QString::fromUtf8(reply->readAll());
+        } else {
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
+        }
     } else {
+        qDebug() << "DropboxClient::filePutResumeUpload nonce" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
         result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
     }
 
@@ -820,9 +829,66 @@ QString DropboxClient::filePutResumeUpload(QString nonce, QString uid, QIODevice
     return result;
 }
 
-QString DropboxClient::filePutResumeStatus(QString nonce, QString uid, qint64 bytesTotal, QString uploadId, qint64 offset, QString contentType, bool synchronous)
+QString DropboxClient::filePutResumeStatus(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous)
 {
-    return "";
+    /*
+     *NOTE
+     *source must be seeked to required offset before invoking this method.
+     *bytesTotal is total source file size.
+     *offset is uploading offset.
+     */
+    qDebug() << "----- DropboxClient::filePutResumeStatus -----" << nonce << uid << uploadId << offset << "synchronous" << synchronous;
+
+    // Construct normalized query string.
+    QMap<QString, QString> sortMap;
+    if (uploadId != "") sortMap["upload_id"] = uploadId;
+    if (offset >= 0) sortMap["offset"] = QString("%1").arg(offset);
+    QString queryString = createNormalizedQueryString(sortMap);
+    qDebug() << "DropboxClient::filePutResumeStatus queryString" << queryString;
+
+    QString uri = chunkedUploadURI;
+    QUrl url = QUrl(uri + "?" + queryString);
+    qDebug() << "DropboxClient::filePutResumeStatus url " << url;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutResumeReplyFinished(QNetworkReply*)));
+    }
+    QNetworkRequest req = QNetworkRequest(url);
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "PUT", uri, sortMap));
+    req.setHeader(QNetworkRequest::ContentLengthHeader, 0);
+    QNetworkReply *reply = manager->put(req, QByteArray());
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+
+    while (synchronous && !reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    // Construct result.
+    QString result = "";
+    if (reply->error() == QNetworkReply::NoError) {
+        result = QString::fromUtf8(reply->readAll());
+    } else {
+        result = QString::fromUtf8(reply->readAll());
+        qDebug() << "DropboxClient::filePutResumeStatus nonce" << nonce << reply->error() << reply->errorString() << result;
+        QScriptEngine engine;
+        QScriptValue sc = engine.evaluate("(" + result + ")");
+        if (sc.property("offset").isValid()) {
+            qint64 offset = sc.property("offset").toInteger();
+            result = QString("{ \"offset\": %1 }").arg(offset);
+        } else {
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
+        }
+    }
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return result;
 }
 
 QString DropboxClient::filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous)

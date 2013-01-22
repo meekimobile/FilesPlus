@@ -61,12 +61,12 @@ public:
      *bytesTotal is total source file size.
      *offset is uploading offset.
      */
-    virtual QString filePutResumeUpload(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString uploadId, qint64 offset, QString contentType, bool synchronous = false);
+    virtual QString filePutResumeUpload(QString nonce, QString uid, QIODevice * source, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
     /*
      *filePutResumeStatus
      *return json contains next uploading offset.
      */
-    virtual QString filePutResumeStatus(QString nonce, QString uid, qint64 bytesTotal, QString uploadId, qint64 offset, QString contentType, bool synchronous = false);
+    virtual QString filePutResumeStatus(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
     virtual QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
 
     virtual QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size);

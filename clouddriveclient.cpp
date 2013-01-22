@@ -182,13 +182,13 @@ QString CloudDriveClient::filePutResumeStart(QString nonce, QString uid, QString
     return "";
 }
 
-QString CloudDriveClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString uploadId, qint64 offset, QString contentType, bool synchronous)
+QString CloudDriveClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *source, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous)
 {
     emit filePutResumeReplySignal(nonce, -1, objectName() + " " + tr("File Put Resume"), tr("Service is not implemented."));
     return "";
 }
 
-QString CloudDriveClient::filePutResumeStatus(QString nonce, QString uid, qint64 bytesTotal, QString uploadId, qint64 offset, QString contentType, bool synchronous)
+QString CloudDriveClient::filePutResumeStatus(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous)
 {
     emit filePutResumeReplySignal(nonce, -1, objectName() + " " + tr("File Put Resume"), tr("Service is not implemented."));
     return "";

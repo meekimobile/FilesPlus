@@ -483,7 +483,7 @@ void GCDClient::renameFile(QString nonce, QString uid, QString remoteFilePath, Q
 
 QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)
 {
-    qDebug() << "----- GCDClient::fileGet -----" << remoteFilePath << "synchronous" << synchronous;
+    qDebug() << "----- GCDClient::fileGet -----" << remoteFilePath << "offset" << offset << "synchronous" << synchronous;
 
     QString uri = remoteFilePath;
     // TODO It should be downloadUrl because it will not be able to create connection in CloudDriveModel.fileGetReplyFilter.
@@ -511,6 +511,11 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    if (offset >= 0) {
+        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+ChunkSize-1);
+        qDebug() << "GCDClient::fileGet rangeHeader" << rangeHeader;
+        req.setRawHeader("Range", rangeHeader.toAscii() );
+    }
     QNetworkReply *reply = manager->get(req);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
@@ -672,7 +677,7 @@ QNetworkReply *GCDClient::filePutResume(QString nonce, QString uid, QString loca
         if (offset < 0) {
             // Request latest uploading status if offset = -1.
             qDebug() << "GCDClient::filePutResume redirect to filePutResumeStatus" << uploadId << offset;
-            filePutResumeStatus(nonce, uid, localFileInfo.size(), uploadId, offset, getContentType(localFileInfo.fileName()), false);
+            filePutResumeStatus(nonce, uid, localFileInfo.fileName(), localFileInfo.size(), uploadId, offset, false);
         } else {
             qDebug() << "GCDClient::filePutResume redirect to filePutResumeUpload" << uploadId << offset;
             m_localFileHash[nonce] = new QFile(localFilePath);
@@ -685,7 +690,7 @@ QNetworkReply *GCDClient::filePutResume(QString nonce, QString uid, QString loca
 
                 localSourceFile->seek(offset);
 
-                filePutResumeUpload(nonce, uid, localSourceFile, chunkSize, uploadId, offset, false);
+                filePutResumeUpload(nonce, uid, localSourceFile, localFileInfo.fileName(), chunkSize, uploadId, offset, false);
             } else {
                 qDebug() << "GCDClient::filePutResumeUpload file " << localFilePath << " can't be opened.";
                 emit filePutResumeReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");
@@ -755,7 +760,7 @@ QString GCDClient::filePutResumeStart(QString nonce, QString uid, QString fileNa
     return result;
 }
 
-QString GCDClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString uploadId, qint64 offset, QString contentType, bool synchronous)
+QString GCDClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *source, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous)
 {
     /*
      *NOTE
@@ -763,7 +768,7 @@ QString GCDClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *so
      *bytesTotal is total source file size.
      *offset is uploading offset.
      */
-    qDebug() << "----- GCDClient::filePutResumeUpload -----" << nonce << uid << uploadId << offset << contentType << "synchronous" << synchronous;
+    qDebug() << "----- GCDClient::filePutResumeUpload -----" << nonce << uid << fileName << bytesTotal << uploadId << offset << "synchronous" << synchronous;
 
     QString uri = resumeUploadURI.arg(uploadId);
     QUrl url(uri);
@@ -782,7 +787,7 @@ QString GCDClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *so
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentLengthHeader, chunkSize);
-    req.setHeader(QNetworkRequest::ContentTypeHeader, contentType);
+    req.setHeader(QNetworkRequest::ContentTypeHeader, QVariant(getContentType(fileName)));
     req.setRawHeader("Content-Range", contentRange.toAscii() );
     QNetworkReply *reply = manager->put(req, source);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
@@ -816,9 +821,9 @@ QString GCDClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *so
     return result;
 }
 
-QString GCDClient::filePutResumeStatus(QString nonce, QString uid, qint64 bytesTotal, QString uploadId, qint64 offset, QString contentType, bool synchronous)
+QString GCDClient::filePutResumeStatus(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous)
 {
-    qDebug() << "----- GCDClient::filePutResumeStatus -----" << nonce << uid << bytesTotal << uploadId << offset << contentType << "synchronous" << synchronous;
+    qDebug() << "----- GCDClient::filePutResumeStatus -----" << nonce << uid << fileName << bytesTotal << uploadId << offset << "synchronous" << synchronous;
 
     QString uri = resumeUploadURI.arg(uploadId);
     qDebug() << "GCDClient::filePutResumeStatus uri " << uri;

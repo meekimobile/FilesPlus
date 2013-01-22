@@ -1996,60 +1996,57 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
 {
     qDebug() << "CloudDriveModel::migrateFile_Block" << nonce << type << uid << remoteFilePath << remoteFileSize << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
 
-    // TODO Implement as streaming or chunk downloading then uploading. Needs to check if source/target supports chunking.
-    // TODO Limit migration size to fit in RAM. Larger file needs to be downloaded to local before proceed uploading.
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     QScriptEngine engine;
     QScriptValue sc;
 
-    // Check if both source and target support resumable.
+    // Migrates using synchronous methods.
+    // TODO Limit migration size to fit in RAM. Larger file needs to be downloaded to local before proceed uploading.
+    QIODevice *sourceReply = getCloudClient(type)->fileGet(nonce, uid, remoteFilePath, -1, true);
+    if (sourceReply == 0) {
+        migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
+        return;
+    }
+
+    QNetworkReply *targetReply = getCloudClient(targetType)->filePut(nonce, targetUid, sourceReply, remoteFileSize, targetRemoteParentPath, targetRemoteFileName, true);
+    if (targetReply == 0) {
+        // FtpClient doens't provide QNetworkReply. It emits migrateFilePutReplySignal internally.
+    } else {
+        // Invoke slot to reset running and emit signal.
+        migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(), QString::fromUtf8(targetReply->readAll()) );
+
+        // Scheduled to delete later.
+        targetReply->deleteLater();
+        targetReply->manager()->deleteLater();
+    }
+
+    // Scheduled to delete later.
+    sourceReply->deleteLater();
+}
+
+void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
+{
+    qDebug() << "CloudDriveModel::migrateFileResume_Block" << nonce << type << uid << remoteFilePath << remoteFileSize << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
+
+    // Migrates using resumable methods.
+    // TODO Implement as streaming or chunk downloading then uploading. Needs to check if source/target supports chunking.
     // TODO Source and target chunk size may not be the same.
-    if (getCloudClient(type)->isFileGetResumable(remoteFileSize) && getCloudClient(targetType)->isFilePutResumable(remoteFileSize)) {
-        // TODO Migrates using resumable methods.
-        QIODevice *sourceReply = getCloudClient(type)->fileGet(nonce, uid, remoteFilePath, true, job.downloadOffset);
-        if (sourceReply == 0) {
-            // Error occurs in fileGet method.
-            migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
-            return;
-        }
-        // Start uploading session and get upload_id.
-        CloudDriveClient *targetClient = getCloudClient(targetType);
-        if (job.uploadId == "") {
-            QString startResult = targetClient->filePutResumeStart(nonce, targetUid, targetRemoteFileName, remoteFileSize, targetRemoteParentPath, true);
-            if (startResult != "") {
-                qDebug() << "GCDClient::migrateFile_Block startResult" << startResult;
-                sc = engine.evaluate("(" + startResult + ")");
-                if (sc.property("upload_id").isValid()) {
-                    job.uploadId = sc.property("upload_id").toString();
-                }
-                if (sc.property("error").isValid()) {
-                    int err = sc.property("error").toInteger();
-                    QString errString = sc.property("error_string").toString();
-                    migrateFilePutFilter(job.jobId, err, errString, "");
-                    return;
-                }
-            }
-        }
-        // Upload chunk and get offset (and upload_id if exists).
-        QString uploadResult = targetClient->filePutResumeUpload(nonce, targetUid, sourceReply, remoteFileSize, job.uploadId, job.uploadOffset, "", true);
-        QString targetRemoteFilePath = "";
-        if (uploadResult != "") {
-            // TODO Get range and check if resume upload is required.
-            qDebug() << "GCDClient::migrateFile_Block uploadResult" << uploadResult;
-            sc = engine.evaluate("(" + uploadResult + ")");
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    CloudDriveClient *sourceClient = getCloudClient(type);
+    CloudDriveClient *targetClient = getCloudClient(targetType);
+    QScriptEngine engine;
+    QScriptValue sc;
+    qDebug() << "CloudDriveModel::migrateFileResume_Block job" << job.toJsonText();
+
+    // Start uploading session and get upload_id.
+    if (job.uploadId == "") {
+        QString startResult = targetClient->filePutResumeStart(nonce, targetUid, targetRemoteFileName, remoteFileSize, targetRemoteParentPath, true);
+        if (startResult != "") {
+            qDebug() << "GCDClient::migrateFile_Block startResult" << startResult;
+            sc = engine.evaluate("(" + startResult + ")");
             if (sc.property("upload_id").isValid()) {
                 job.uploadId = sc.property("upload_id").toString();
-            }
-            if (sc.property("offset").isValid()) {
-                job.uploadOffset = sc.property("offset").toUInt32();
-            }
-            if (sc.property("id").isValid()) {
-                if (sc.property("id").isValid()) {
-                    targetRemoteFilePath = sc.property("id").toString();
-                }
-            }
-            if (sc.property("path").isValid()) {
-                targetRemoteFilePath = sc.property("path").toString();
+                m_cloudDriveJobs->insert(job.jobId, job);
             }
             if (sc.property("error").isValid()) {
                 int err = sc.property("error").toInteger();
@@ -2057,59 +2054,109 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
                 migrateFilePutFilter(job.jobId, err, errString, "");
                 return;
             }
-        } else {
-            migrateFilePutFilter(job.jobId, -1, "Unexpected error.", "Unexpected upload result is empty.");
-            return;
         }
-        // Check whether resume or commit.
-        if (job.uploadOffset < job.bytesTotal) {
-            // Enqueue and resume job.
-            qDebug() << "CloudDriveModel::migrateFile_Block resume uploading job" << job.toJsonText();
-            m_jobQueue->enqueue(job.jobId);
-        } else {
-            // Invoke to handle successful uploading.
-            qDebug() << "CloudDriveModel::migrateFile_Block commit uploading job" << job.toJsonText();
-            QString commitResult = targetClient->filePutCommit(nonce, targetUid, targetRemoteFilePath, job.uploadId, true);
-            if (commitResult != "") {
-                qDebug() << "GCDClient::migrateFile_Block commitResult" << commitResult;
-                sc = engine.evaluate("(" + uploadResult + ")");
-                if (sc.property("error").isValid()) {
-                    int err = sc.property("error").toInteger();
-                    QString errString = sc.property("error_string").toString();
-                    migrateFilePutFilter(job.jobId, err, errString, "");
-                    return;
-                }
+    } else if (job.uploadOffset < 0) {
+        // Check uploading status.
+        QString statusResult = targetClient->filePutResumeStatus(nonce, targetUid, targetRemoteFileName, remoteFileSize, job.uploadId, job.uploadOffset, true);
+        if (statusResult != "") {
+            // TODO Get range and check if resume upload is required.
+            qDebug() << "GCDClient::migrateFile_Block statusResult" << statusResult;
+            sc = engine.evaluate("(" + statusResult + ")");
+            if (sc.property("offset").isValid()) {
+                job.uploadOffset = sc.property("offset").toUInt32();
+                m_cloudDriveJobs->insert(job.jobId, job);
+            }
+            if (sc.property("error").isValid()) {
+                int err = sc.property("error").toInteger();
+                QString errString = sc.property("error_string").toString();
+                migrateFilePutFilter(job.jobId, err, errString, "");
+                return;
             }
         }
-        // Proceed filter and job done.
-        migrateFilePutFilter(job.jobId, QNetworkReply::NoError, "", uploadResult);
+    }
 
+    // Adjust downloadOffset to follow uploadOffset.
+    job.uploadOffset = (job.uploadOffset < 0) ? 0 : job.uploadOffset;
+    job.downloadOffset = job.uploadOffset;
+    m_cloudDriveJobs->insert(job.jobId, job);
+
+    // Download chunk.
+    QIODevice *sourceReply = sourceClient->fileGet(nonce, uid, remoteFilePath, job.downloadOffset, true);
+    if (sourceReply == 0) {
+        // Error occurs in fileGet method.
+        migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
+        return;
     } else {
-        // TODO Migrates usiing synchronous methods.
-        QIODevice *sourceReply = getCloudClient(type)->fileGet(nonce, uid, remoteFilePath, -1, true);
-        if (sourceReply == 0) {
-            migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
+        qDebug() << "CloudDriveModel::migrateFileResume_Block chunk is downloaded. size" << sourceReply->size() << "bytesAvailable" << sourceReply->bytesAvailable() << "job" << job.toJsonText();
+        job.downloadOffset += sourceReply->size();
+        m_cloudDriveJobs->insert(job.jobId, job);
+    }
+    // Upload chunk and get offset (and upload_id if exists).
+    QString uploadResult = targetClient->filePutResumeUpload(nonce, targetUid, sourceReply, targetRemoteFileName, remoteFileSize, job.uploadId, job.uploadOffset, true);
+    QString targetRemoteFilePath = "";
+    if (uploadResult != "") {
+        // TODO Get range and check if resume upload is required.
+        qDebug() << "GCDClient::migrateFile_Block uploadResult" << uploadResult;
+        sc = engine.evaluate("(" + uploadResult + ")");
+        if (sc.property("upload_id").isValid()) {
+            job.uploadId = sc.property("upload_id").toString();
+        }
+        if (sc.property("offset").isValid()) {
+            job.uploadOffset = sc.property("offset").toUInt32();
+        }
+        if (sc.property("id").isValid()) { // Find targetRemoteFilePath from GoogleDrive reply.
+            targetRemoteFilePath = sc.property("id").toString();
+            job.uploadOffset = sc.property("fileSize").toUInt32(); // Get fileSize to uploadOffset.
+            qDebug() << "GCDClient::migrateFile_Block uploaded file with targetRemoteFilePath" << targetRemoteFilePath;
+        }
+        if (sc.property("path").isValid()) { // Find targetRemoteFilePath from Dropbox reply.
+            targetRemoteFilePath = sc.property("path").toString();
+            job.uploadOffset = sc.property("bytes").toUInt32(); // Get fileSize to uploadOffset.
+            qDebug() << "GCDClient::migrateFile_Block uploaded file with targetRemoteFilePath" << targetRemoteFilePath;
+        }
+        // Update changed job.
+        m_cloudDriveJobs->insert(job.jobId, job);
+
+        if (sc.property("error").isValid()) {
+            int err = sc.property("error").toInteger();
+            QString errString = sc.property("error_string").toString();
+            job.uploadOffset = -1; // Failed upload needs to get status on resume.
+            migrateFilePutFilter(job.jobId, err, errString, "");
             return;
         }
-
-        QNetworkReply *targetReply = getCloudClient(targetType)->filePut(nonce, targetUid, sourceReply, remoteFileSize, targetRemoteParentPath, targetRemoteFileName, true);
-        if (targetReply == 0) {
-            // FtpClient doens't provide QNetworkReply. It emits migrateFilePutReplySignal internally.
+    } else {
+        migrateFilePutFilter(job.jobId, -1, "Unexpected error.", "Unexpected upload result is empty.");
+        return;
+    }
+    // Check whether resume or commit.
+    if (job.uploadOffset < job.bytesTotal) {
+        // Enqueue and resume job.
+        qDebug() << "CloudDriveModel::migrateFile_Block resume uploading job" << job.toJsonText();
+        m_jobQueue->enqueue(job.jobId);
+        updateJob(job);
+        jobDone();
+        return;
+    } else {
+        // Invoke to handle successful uploading.
+        qDebug() << "CloudDriveModel::migrateFile_Block commit uploading job" << job.toJsonText();
+        QString commitResult = targetClient->filePutCommit(nonce, targetUid, targetRemoteFilePath, job.uploadId, true);
+        if (commitResult != "") {
+            qDebug() << "GCDClient::migrateFile_Block commitResult" << commitResult;
+            sc = engine.evaluate("(" + uploadResult + ")");
+            if (sc.property("error").isValid()) {
+                int err = sc.property("error").toInteger();
+                QString errString = sc.property("error_string").toString();
+                migrateFilePutFilter(job.jobId, err, errString, "");
+                return;
+            }
+            // Proceed filter with commit result and job done.
+            migrateFilePutFilter(job.jobId, QNetworkReply::NoError, "", commitResult);
         } else {
-            // Invoke slot to reset running and emit signal.
-            migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(), QString::fromUtf8(targetReply->readAll()) );
-
-            // Scheduled to delete later.
-            targetReply->deleteLater();
-            targetReply->manager()->deleteLater();
+            // Proceed filter with last upload result and job done.
+            migrateFilePutFilter(job.jobId, QNetworkReply::NoError, "", uploadResult);
         }
-
-        // Scheduled to delete later.
-        sourceReply->deleteLater();
     }
 }
-
-
 
 void CloudDriveModel::disconnect(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
 {
@@ -3322,6 +3369,7 @@ int CloudDriveModel::countItemByTypeAndUidAndRemotePathFromDB(CloudDriveModel::C
 void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint64 bytesTotal)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    qDebug() << "CloudDriveModel::uploadProgressFilter" << nonce << bytesSent << bytesTotal << job.downloadOffset;
     job.bytes = job.uploadOffset + bytesSent; // Add job.uploadOffset to support filePutResume.
     updateJob(job);
 
@@ -3331,6 +3379,7 @@ void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint
 void CloudDriveModel::downloadProgressFilter(QString nonce, qint64 bytesReceived, qint64 bytesTotal)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    qDebug() << "CloudDriveModel::downloadProgressFilter" << nonce << bytesReceived << bytesTotal << job.downloadOffset;
     job.bytes = job.downloadOffset + bytesReceived; // Add job.downloadOffset to support fileGetResume.
     updateJob(job);
 
@@ -3493,7 +3542,11 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         cloudClient->browse(job.jobId, job.uid, job.remoteFilePath);
         break;
     case MigrateFilePut:
-        migrateFile_Block(job.jobId, getClientType(job.type), job.uid, job.remoteFilePath, job.bytesTotal, getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
+        if (cloudClient->isFileGetResumable(job.bytesTotal) && getCloudClient(job.targetType)->isFilePutResumable(job.bytesTotal)) {
+            migrateFileResume_Block(job.jobId, getClientType(job.type), job.uid, job.remoteFilePath, job.bytesTotal, getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
+        } else {
+            migrateFile_Block(job.jobId, getClientType(job.type), job.uid, job.remoteFilePath, job.bytesTotal, getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
+        }
         break;
     case Disconnect:
         removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
@@ -3524,9 +3577,6 @@ void CloudDriveModel::resumeJob(const QString jobId)
     CloudDriveJob job = m_cloudDriveJobs->value(jobId);
     if (!job.isRunning) {
         m_jobQueue->enqueue(jobId);
-
-        // Emit signal to show in job page.
-//        emit jobEnqueuedSignal(job.jobId, job.localFilePath);
 
         emit proceedNextJobSignal();
     }
