@@ -2288,7 +2288,10 @@ PageStackWindow {
             }
 
             // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onMigrateFilePutReplySignal", jobJson.job_id);
+            // TODO Remove only success job.
+            if (err == 0) {
+                cloudDriveModel.removeJob("cloudDriveModel.onMigrateFilePutReplySignal", jobJson.job_id);
+            }
 
             // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
