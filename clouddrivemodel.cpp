@@ -5,11 +5,13 @@
 const QString CloudDriveModel::ITEM_DAT_PATH = "/home/user/.filesplus/CloudDriveModel.dat";
 const QString CloudDriveModel::ITEM_DB_PATH = "/home/user/.filesplus/CloudDriveModel.db";
 const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
+const QString CloudDriveModel::TEMP_PATH = "/home/user/.filesplus";
 const int CloudDriveModel::MaxRunningJobCount = 3;
 #else
 const QString CloudDriveModel::ITEM_DAT_PATH = "C:/CloudDriveModel.dat";
 const QString CloudDriveModel::ITEM_DB_PATH = "CloudDriveModel.db";
 const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
+const QString CloudDriveModel::TEMP_PATH = "E:";
 const int CloudDriveModel::MaxRunningJobCount = 2;
 #endif
 const QString CloudDriveModel::DirtyHash = "FFFFFFFF";
@@ -1174,7 +1176,7 @@ int CloudDriveModel::getItemCount()
     // Get count from DB and DAT.
     int dbCount = countItemDB();
     int datCount = m_cloudDriveItems->count();
-    qDebug() << "CloudDriveModel::getItemCount db" << dbCount << "dat" << datCount << "total" << (dbCount + datCount);
+//    qDebug() << "CloudDriveModel::getItemCount db" << dbCount << "dat" << datCount << "total" << (dbCount + datCount);
     return (dbCount + datCount);
 }
 
@@ -2012,31 +2014,102 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
     qDebug() << "CloudDriveModel::migrateFile_Block" << nonce << type << uid << remoteFilePath << remoteFileSize << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
 
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    CloudDriveClient *sourceClient = getCloudClient(type);
+    CloudDriveClient *targetClient = getCloudClient(targetType);
+    QString tempFilePath = m_settings.value("temp.path", TEMP_PATH).toString() + "/" + nonce;
     QScriptEngine engine;
     QScriptValue sc;
 
     // Migrates using synchronous methods.
     // TODO Limit migration size to fit in RAM. Larger file needs to be downloaded to local before proceed uploading.
-    QIODevice *sourceReply = getCloudClient(type)->fileGet(nonce, uid, remoteFilePath, -1, true);
-    if (sourceReply == 0) {
-        migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
-        return;
-    }
+    if (sourceClient->isFileGetResumable(remoteFileSize)) {
+        // TODO Get each chunk to file.
+        while (job.downloadOffset < remoteFileSize) {
+            QIODevice *source = sourceClient->fileGet(nonce, uid, remoteFilePath, job.downloadOffset, true);
+            if (source == 0) {
+                migrateFilePutFilter(nonce, -1, "Service is not implemented.", "{ }");
+                return;
+            }
+            // Handle error.
+            // TODO Check type before cast.
+            QNetworkReply *sourceReply = dynamic_cast<QNetworkReply *>(source);
+            if (sourceReply->error() != QNetworkReply::NoError) {
+                migrateFilePutFilter(nonce, sourceReply->error(), sourceReply->errorString(), QString::fromUtf8(sourceReply->readAll()) );
+                return;
+            }
+            qDebug() << "CloudDriveModel::migrateFile_Block chunk is downloaded. size" << source->size() << "bytesAvailable" << source->bytesAvailable() << "job" << job.toJsonText();
 
-    QNetworkReply *targetReply = getCloudClient(targetType)->filePut(nonce, targetUid, sourceReply, remoteFileSize, targetRemoteParentPath, targetRemoteFileName, true);
-    if (targetReply == 0) {
-        // FtpClient doens't provide QNetworkReply. It emits migrateFilePutReplySignal internally.
+            // Stream source to a file on localPath.
+            qDebug() << "CloudDriveModel::migrateFile_Block tempFilePath" << tempFilePath;
+            qint64 totalBytes = 0;
+            char buf[1024];
+            QFile *localTargetFile = new QFile(tempFilePath);
+            if (localTargetFile->open(QIODevice::Append)) {
+                qint64 c = source->read(buf, sizeof(buf));
+                while (c > 0) {
+                    localTargetFile->write(buf, c);
+                    totalBytes += c;
+
+                    // Tell event loop to process event before it will process time consuming task.
+                    QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+
+                    // Read next buffer.
+                    c = source->read(buf, sizeof(buf));
+                }
+                qDebug() << "CloudDriveModel::migrateFile_Block chunk is written at offset" << job.downloadOffset << "totalBytes"  << totalBytes << "to" << tempFilePath;
+            } else {
+                qDebug() << "CloudDriveModel::migrateFile_Block can't open tempFilePath" << tempFilePath;
+                migrateFilePutFilter(nonce, -1, QString("Can't open temp file %1").arg(tempFilePath), "{ }");
+                return;
+            }
+
+            // Close target file.
+            localTargetFile->close();
+            localTargetFile->deleteLater();
+
+            // Close source.
+            source->close();
+            source->deleteLater();
+
+            job.downloadOffset += totalBytes;
+            updateJob(job);
+        }
     } else {
-        // Invoke slot to reset running and emit signal.
-        migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(), QString::fromUtf8(targetReply->readAll()) );
-
-        // Scheduled to delete later.
-        targetReply->deleteLater();
-        targetReply->manager()->deleteLater();
+        // TODO Get whole data to file. (FTPClient)
+        sourceClient->fileGet(nonce, uid, remoteFilePath, tempFilePath);
+        job.downloadOffset = QFileInfo(tempFilePath).size();
+        updateJob(job);
     }
 
-    // Scheduled to delete later.
-    sourceReply->deleteLater();
+    // Always put from file.
+    QFile *localSourceFile = new QFile(tempFilePath);
+    if (localSourceFile->open(QFile::ReadOnly)) {
+        QNetworkReply *targetReply = targetClient->filePut(nonce, targetUid, localSourceFile, remoteFileSize, targetRemoteParentPath, targetRemoteFileName, true);
+        if (targetReply == 0) {
+            // FtpClient doens't provide QNetworkReply. It emits migrateFilePutReplySignal internally.
+            job.uploadOffset = remoteFileSize;
+            updateJob(job);
+        } else {
+            if (targetReply->error() == QNetworkReply::NoError){
+                job.uploadOffset = remoteFileSize;
+            }
+
+            // Invoke slot to reset running and emit signal.
+            migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(), QString::fromUtf8(targetReply->readAll()) );
+
+            // Scheduled to delete later.
+            targetReply->deleteLater();
+            targetReply->manager()->deleteLater();
+        }
+    }
+    localSourceFile->close();
+    localSourceFile->deleteLater();
+
+    // Delete temp file.
+    if (job.uploadOffset == job.downloadOffset) {
+        QFile(tempFilePath).remove();
+        qDebug() << "CloudDriveModel::migrateFile_Block job" << nonce << "done." << tempFilePath << "is removed.";
+    }
 }
 
 void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
@@ -2044,7 +2117,6 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
     qDebug() << "CloudDriveModel::migrateFileResume_Block" << nonce << type << uid << remoteFilePath << remoteFileSize << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
 
     // Migrates using resumable methods.
-    // TODO Implement as streaming or chunk downloading then uploading. Needs to check if source/target supports chunking.
     // TODO Source and target chunk size may not be the same.
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     CloudDriveClient *sourceClient = getCloudClient(type);
@@ -2096,18 +2168,18 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
     m_cloudDriveJobs->insert(job.jobId, job);
 
     // Download chunk.
-    QIODevice *sourceReply = sourceClient->fileGet(nonce, uid, remoteFilePath, job.downloadOffset, true);
-    if (sourceReply == 0) {
+    QIODevice *source = sourceClient->fileGet(nonce, uid, remoteFilePath, job.downloadOffset, true);
+    if (source == 0) {
         // Error occurs in fileGet method.
         migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
         return;
     } else {
-        qDebug() << "CloudDriveModel::migrateFileResume_Block chunk is downloaded. size" << sourceReply->size() << "bytesAvailable" << sourceReply->bytesAvailable() << "job" << job.toJsonText();
-        job.downloadOffset += sourceReply->size();
+        qDebug() << "CloudDriveModel::migrateFileResume_Block chunk is downloaded. size" << source->size() << "bytesAvailable" << source->bytesAvailable() << "job" << job.toJsonText();
+        job.downloadOffset += source->size();
         m_cloudDriveJobs->insert(job.jobId, job);
     }
     // Upload chunk and get offset (and upload_id if exists).
-    QString uploadResult = targetClient->filePutResumeUpload(nonce, targetUid, sourceReply, targetRemoteFileName, remoteFileSize, job.uploadId, job.uploadOffset, true);
+    QString uploadResult = targetClient->filePutResumeUpload(nonce, targetUid, source, targetRemoteFileName, remoteFileSize, job.uploadId, job.uploadOffset, true);
     QString targetRemoteFilePath = "";
     if (uploadResult != "") {
         // TODO Get range and check if resume upload is required.

@@ -14,6 +14,7 @@
 #include <QDebug>
 #include <QApplication>
 #include <QtSql>
+#include <QSettings>
 #include "clouddriveitem.h"
 #include "clouddrivejob.h"
 #include "clouddrivemodelthread.h"
@@ -34,6 +35,7 @@ public:
     static const QString ITEM_DAT_PATH;
     static const QString ITEM_DB_PATH;
     static const QString ITEM_DB_CONNECTION_NAME;
+    static const QString TEMP_PATH;
     static const int MaxRunningJobCount;
     static const QString DirtyHash;
     static const QStringList restrictFileTypes;
@@ -363,6 +365,8 @@ private:
     QTimer m_schedulerTimer;
     void initScheduler();
     bool matchCronExp(QString cronExp, QString cronValue);
+
+    QSettings m_settings;
 };
 
 #endif // CLOUDDRIVEMODEL_H
