@@ -491,8 +491,11 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
         // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
         QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "fileGet");
         if (propertyReply->error() == QNetworkReply::NoError) {
+            // Stores property for using in fileGetReplyFinished().
+            m_propertyReplyHash->insert(nonce, propertyReply->readAll());
+
             QScriptEngine engine;
-            QScriptValue sc = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
+            QScriptValue sc = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
             uri = sc.property("downloadUrl").toString();
             propertyReply->deleteLater();
         } else {
