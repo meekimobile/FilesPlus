@@ -333,15 +333,13 @@ QNetworkReply *FtpClient::filePut(QString nonce, QString uid, QIODevice *source,
     m_ftp->m_remoteFilePath = remoteParentPath + "/" + remoteFileName;
     m_ftp->cd(remoteParentPath);
 
-    if (source->open(QIODevice::ReadOnly)) {
-        m_ftp->put(source, remoteFileName);
-        m_ftp->waitForDone();
-        source->close();
+    m_ftp->put(source, remoteFileName);
+    m_ftp->waitForDone();
+    source->close();
 
-        // TODO Get uploaded file property.
-        m_ftp->list(remoteParentPath + "/" + remoteFileName);
-        m_ftp->waitForDone();
-    }
+    // TODO Get uploaded file property.
+    m_ftp->list(remoteParentPath + "/" + remoteFileName);
+    m_ftp->waitForDone();
 
     if (m_ftp->getItemList().isEmpty()) {
         // remoteFilePath is not found.
