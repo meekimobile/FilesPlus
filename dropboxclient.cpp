@@ -345,15 +345,26 @@ void DropboxClient::quota(QString nonce, QString uid)
     QNetworkReply *reply = manager->get(req);
 }
 
-void DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath)
+QString DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous)
 {
-    qDebug() << "----- DropboxClient::fileGet -----" << uid << remoteFilePath << localFilePath;
+    qDebug() << "----- DropboxClient::fileGet -----" << uid << remoteFilePath << localFilePath << synchronous;
 
     // Create localTargetFile for file getting.
     m_localFileHash[nonce] = new QFile(localFilePath);
 
     // Send request.
-    fileGet(nonce, uid, remoteFilePath, -1, false);
+    QNetworkReply *reply = dynamic_cast<QNetworkReply *>( fileGet(nonce, uid, remoteFilePath, -1, synchronous) );
+
+    if (!synchronous) return "";
+
+    // Construct result.
+    QString result = fileGetReplySave(reply);
+
+    // scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return result;
 }
 
 QIODevice *DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)
@@ -1107,23 +1118,27 @@ void DropboxClient::quotaReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::fileGetReplyFinished(QNetworkReply *reply) {
-    qDebug() << "DropboxClient::fileGetReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+QString DropboxClient::fileGetReplySave(QNetworkReply *reply)
+{
+    qDebug() << "DropboxClient::fileGetReplySave " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
     if (reply->error() == QNetworkReply::NoError) {
         QString metadata;
         metadata.append(reply->rawHeader("x-dropbox-metadata"));
-        qDebug() << "x-dropbox-metadata " << metadata;
+        qDebug() << "DropboxClient::fileGetReplySave x-dropbox-metadata" << metadata;
 
         // Stream replyBody to a file on localPath.
         qint64 totalBytes = 0;
         char buf[1024];
         QFile *localTargetFile = m_localFileHash[nonce];
-        if (localTargetFile->open(QIODevice::WriteOnly)) {
+        if (localTargetFile->open(QIODevice::Append)) {
             // Issue: Writing to file with QDataStream << QByteArray will automatically prepend with 4-bytes prefix(size).
             // Solution: Use QIODevice to write directly.
+
+            // TODO Move to offset.
+            qDebug() << "DropboxClient::fileGetReplySave localTargetFile->pos()" << localTargetFile->pos();
 
             // Read first buffer.
             qint64 c = reply->read(buf, sizeof(buf));
@@ -1139,16 +1154,30 @@ void DropboxClient::fileGetReplyFinished(QNetworkReply *reply) {
             }
         }
 
-        qDebug() << "DropboxClient::fileGetReplyFinished reply totalBytes=" << totalBytes;
+        qDebug() << "DropboxClient::fileGetReplySave reply totalBytes=" << totalBytes;
 
         // Close target file.
         localTargetFile->close();
-        m_localFileHash.remove(nonce);
 
-        emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), metadata);
+        return metadata;
     } else {
-        emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+        qDebug() << "DropboxClient::fileGetReplySave nonce" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
+        return QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
     }
+
+    // Remove once used.
+    m_localFileHash.remove(nonce);
+}
+
+void DropboxClient::fileGetReplyFinished(QNetworkReply *reply) {
+    qDebug() << "DropboxClient::fileGetReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    // Construct result.
+    QString result = fileGetReplySave(reply);
+
+    emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), result);
 
     // scheduled to delete later.
     reply->deleteLater();
@@ -1295,42 +1324,10 @@ void DropboxClient::fileGetResumeReplyFinished(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    if (reply->error() == QNetworkReply::NoError) {
-        QString metadata;
-        metadata.append(reply->rawHeader("x-dropbox-metadata"));
-        qDebug() << "x-dropbox-metadata " << metadata;
+    // Construct result.
+    QString result = fileGetReplySave(reply);
 
-        // Stream replyBody to a file on localPath.
-        qint64 totalBytes = 0;
-        char buf[1024];
-        QFile *localTargetFile = m_localFileHash[nonce];
-        if (localTargetFile->open(QIODevice::Append)) {
-            qDebug() << "DropboxClient::fileGetResumeReplyFinished localTargetFile->pos()" << localTargetFile->pos();
-
-            // Read first buffer.
-            qint64 c = reply->read(buf, sizeof(buf));
-            while (c > 0) {
-                localTargetFile->write(buf, c);
-                totalBytes += c;
-
-                // Tell event loop to process event before it will process time consuming task.
-                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
-
-                // Read next buffer.
-                c = reply->read(buf, sizeof(buf));
-            }
-        }
-
-        qDebug() << "DropboxClient::fileGetResumeReplyFinished reply totalBytes=" << totalBytes;
-
-        // Close target file.
-        localTargetFile->close();
-        m_localFileHash.remove(nonce);
-
-        emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), metadata);
-    } else {
-        emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
-    }
+    emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), result);
 
     // scheduled to delete later.
     reply->deleteLater();

@@ -42,7 +42,7 @@ public:
     void refreshToken(QString nonce, QString uid);
     void accountInfo(QString nonce, QString uid);
     void quota(QString nonce, QString uid);
-    void fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
+    QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
@@ -58,6 +58,7 @@ public:
     QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
     void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
+    QString fileGetReplySave(QNetworkReply *reply);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
 
     QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);

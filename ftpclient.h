@@ -21,7 +21,7 @@ public:
     bool isRemoteAbsolutePath();
 
     void quota(QString nonce, QString uid);
-    void fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
+    QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = true);
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);

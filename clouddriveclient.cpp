@@ -142,9 +142,10 @@ void CloudDriveClient::quota(QString nonce, QString uid)
     emit quotaReplySignal(nonce, -1, objectName() + " " + tr("Quota"), tr("Service is not implemented."));
 }
 
-void CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath)
+QString CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous)
 {
     emit fileGetReplySignal(nonce, -1, objectName() + " " + tr("File Get"), tr("Service is not implemented."));
+    return "";
 }
 
 QIODevice *CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)

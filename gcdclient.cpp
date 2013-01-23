@@ -518,6 +518,53 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
     return reply;
 }
 
+QString GCDClient::fileGetReplySave(QNetworkReply *reply)
+{
+    qDebug() << "GCDClient::fileGetReplySave " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    if (reply->error() == QNetworkReply::NoError) {
+        qDebug() << "GCDClient::fileGetReplySave reply bytesAvailable" << reply->bytesAvailable();
+
+        // Stream replyBody to a file on localPath.
+        qint64 totalBytes = 0;
+        char buf[1024];
+        QFile *localTargetFile = m_localFileHash[nonce];
+        if (localTargetFile->open(QIODevice::Append)) {
+            // Issue: Writing to file with QDataStream << QByteArray will automatically prepend with 4-bytes prefix(size).
+            // Solution: Use QIODevice to write directly.
+
+            // Read first buffer.
+            qint64 c = reply->read(buf, sizeof(buf));
+            while (c > 0) {
+                localTargetFile->write(buf, c);
+                totalBytes += c;
+
+                // Tell event loop to process event before it will process time consuming task.
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+
+                // Read next buffer.
+                c = reply->read(buf, sizeof(buf));
+            }
+        }
+
+        qDebug() << "GCDClient::fileGetReplySave reply totalBytes=" << totalBytes;
+
+        // Close target file.
+        localTargetFile->close();
+
+        return QString::fromUtf8(m_propertyReplyHash->value(nonce));
+    } else {
+        qDebug() << "GCDClient::fileGetReplySave nonce" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
+        return QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
+    }
+
+    // Remove once used.
+    m_localFileHash.remove(nonce);
+    m_propertyReplyHash->remove(nonce);
+}
+
 QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
 {
     qDebug() << "----- GCDClient::filePut -----" << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
@@ -1127,15 +1174,26 @@ QNetworkReply * GCDClient::property(QString nonce, QString uid, QString remoteFi
     return reply;
 }
 
-void GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath)
+QString GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous)
 {
-    qDebug() << "----- GCDClient::fileGet -----" << remoteFilePath << "to" << localFilePath;
+    qDebug() << "----- GCDClient::fileGet -----" << uid << remoteFilePath << localFilePath << synchronous;
 
     // Create localTargetFile for file getting.
     m_localFileHash[nonce] = new QFile(localFilePath);
 
     // Send request.
-    fileGet(nonce, uid, remoteFilePath, false);
+    QNetworkReply *reply = dynamic_cast<QNetworkReply *>( fileGet(nonce, uid, remoteFilePath, -1, synchronous) );
+
+    if (!synchronous) return "";
+
+    // Construct result.
+    QString result = fileGetReplySave(reply);
+
+    // scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return result;
 }
 
 void GCDClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath)
@@ -1307,44 +1365,10 @@ void GCDClient::fileGetReplyFinished(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    if (reply->error() == QNetworkReply::NoError) {
-        qDebug() << "GCDClient::fileGetReplyFinished reply bytesAvailable" << reply->bytesAvailable();
+    // Construct result.
+    QString result = fileGetReplySave(reply);
 
-        // Stream replyBody to a file on localPath.
-        qint64 totalBytes = 0;
-        char buf[1024];
-        QFile *localTargetFile = m_localFileHash[nonce];
-        if (localTargetFile->open(QIODevice::WriteOnly)) {
-            // Issue: Writing to file with QDataStream << QByteArray will automatically prepend with 4-bytes prefix(size).
-            // Solution: Use QIODevice to write directly.
-
-            // Read first buffer.
-            qint64 c = reply->read(buf, sizeof(buf));
-            while (c > 0) {
-                localTargetFile->write(buf, c);
-                totalBytes += c;
-
-                // Tell event loop to process event before it will process time consuming task.
-                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
-
-                // Read next buffer.
-                c = reply->read(buf, sizeof(buf));
-            }
-        }
-
-        qDebug() << "GCDClient::fileGetReplyFinished reply totalBytes=" << totalBytes;
-
-        // Close target file.
-        localTargetFile->close();
-
-        emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(m_propertyReplyHash->value(nonce)));
-    } else {
-        emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
-    }
-
-    // Remove once used.
-    m_localFileHash.remove(nonce);
-    m_propertyReplyHash->remove(nonce);
+    emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), result);
 
     // TODO scheduled to delete later.
     reply->deleteLater();
@@ -1614,41 +1638,10 @@ void GCDClient::fileGetResumeReplyFinished(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    if (reply->error() == QNetworkReply::NoError) {
-        qDebug() << "GCDClient::fileGetResumeReplyFinished reply bytesAvailable" << reply->bytesAvailable();
+    // Construct result.
+    QString result = fileGetReplySave(reply);
 
-        // Stream replyBody to a file on localPath.
-        qint64 totalBytes = 0;
-        char buf[1024];
-        QFile *localTargetFile = m_localFileHash[nonce];
-        if (localTargetFile->open(QIODevice::Append)) {
-            // Read first buffer.
-            qint64 c = reply->read(buf, sizeof(buf));
-            while (c > 0) {
-                localTargetFile->write(buf, c);
-                totalBytes += c;
-
-                // Tell event loop to process event before it will process time consuming task.
-                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
-
-                // Read next buffer.
-                c = reply->read(buf, sizeof(buf));
-            }
-        }
-
-        qDebug() << "GCDClient::fileGetResumeReplyFinished reply totalBytes=" << totalBytes;
-
-        // Close target file.
-        localTargetFile->close();
-
-        emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(m_propertyReplyHash->value(nonce)));
-    } else {
-        emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
-    }
-
-    // Remove once used.
-    m_localFileHash.remove(nonce);
-    m_propertyReplyHash->remove(nonce);
+    emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), result);
 
     // TODO scheduled to delete later.
     reply->deleteLater();

@@ -32,7 +32,7 @@ public:
     virtual void refreshToken(QString nonce, QString uid);
     virtual void accountInfo(QString nonce, QString uid);
     virtual void quota(QString nonce, QString uid);
-    virtual void fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
+    virtual QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
     virtual void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
     virtual void metadata(QString nonce, QString uid, QString remoteFilePath);
     virtual void browse(QString nonce, QString uid, QString remoteFilePath);

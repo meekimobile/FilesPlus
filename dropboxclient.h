@@ -53,7 +53,7 @@ public:
     void accessToken(QString nonce, QString pin = "");
     void accountInfo(QString nonce, QString uid);
     void quota(QString nonce, QString uid);
-    void fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
+    QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
@@ -66,6 +66,7 @@ public:
 
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
+    QString fileGetReplySave(QNetworkReply *reply);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
 
     QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
