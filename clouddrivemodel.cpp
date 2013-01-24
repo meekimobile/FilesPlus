@@ -2039,7 +2039,7 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
             // TODO Check type before cast.
             QNetworkReply *sourceReply = dynamic_cast<QNetworkReply *>(source);
             if (sourceReply->error() != QNetworkReply::NoError) {
-                migrateFilePutFilter(nonce, sourceReply->error(), sourceReply->errorString(), QString::fromUtf8(sourceReply->readAll()) );
+                migrateFilePutFilter(nonce, sourceReply->error(), sourceReply->errorString(), sourceReply->readAll());
                 return;
             }
             qDebug() << "CloudDriveModel::migrateFile_Block chunk is downloaded. size" << source->size() << "bytesAvailable" << source->bytesAvailable() << "job" << job.toJsonText();
@@ -2099,11 +2099,11 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
             if (targetReply->error() == QNetworkReply::NoError){
                 job.uploadOffset = remoteFileSize;
                 // Invoke slot to reset running and emit signal.
-                migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(), QString::fromUtf8(targetReply->readAll()) );
+                migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(),targetReply->readAll());
             } else {
                 // Invoke slot to reset running and emit signal.
                 // TODO How to shows if error occurs from target?
-                migrateFilePutFilter(nonce, targetReply->error(), getCloudName(job.targetType) + " " + targetReply->errorString(), getCloudName(job.targetType) + " " + QString::fromUtf8(targetReply->readAll()) );
+                migrateFilePutFilter(nonce, targetReply->error(), getCloudName(job.targetType) + " " + targetReply->errorString(), getCloudName(job.targetType).append(" ").append(targetReply->readAll()) );
             }
 
             // Scheduled to delete later.
@@ -2957,8 +2957,12 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
             switch (job.type) {
             case Dropbox:
                 sc = engine.evaluate("(" + msg + ")");
-                job.uploadId = sc.property("upload_id").toString();
-                job.uploadOffset = sc.property("offset").toUInt32(); // NOTE It's actually the offset for resume uploading.
+                if (sc.property("upload_id").isValid()) {
+                    job.uploadId = sc.property("upload_id").toString();
+                }
+                if (sc.property("offset").isValid()) {
+                    job.uploadOffset = sc.property("offset").toUInt32(); // NOTE It's actually the offset for resume uploading.
+                }
 
                 // Enqueue and resume job.
                 if (job.uploadOffset < job.bytesTotal) {
@@ -2978,6 +2982,9 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
                 }
                 if (sc.property("offset").isValid()) {
                     job.uploadOffset = sc.property("offset").toUInt32(); // NOTE offset got from (maxRange+1) returned from status request. It's actually the offset for resume uploading.
+                }
+                if (sc.property("id").isValid()) {
+                    job.uploadOffset = sc.property("fileSize").toUInt32(); // NOTE fileSize got from upload request is actually the offset for resume uploading.
                 }
 
                 // Check whether resume or commit.
