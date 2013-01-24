@@ -1623,6 +1623,8 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
     // Enqueue job.
     CloudDriveJob job(createNonce(), FileGet, type, uid, localFilePath, remoteFilePath, modelIndex);
 //    job.isRunning = true;
+    job.downloadOffset = 0;
+    job.bytesTotal = remoteFileSize;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
