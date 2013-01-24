@@ -14,7 +14,7 @@ Rectangle {
     property alias text: textLabel.text
     property alias textPointSize: textLabel.font.pointSize
 
-    property int size: 20
+    property int size: 24
     property color textColor: "white"
     property color textColorInverted: "white"
     property color borderColor: "white"
@@ -27,7 +27,7 @@ Rectangle {
     Text {
         id: textLabel
         color: (!inverted) ? textColor : textColorInverted
-        font.pointSize: 12
+        font.pointSize: 14
         anchors.centerIn: parent
         text: ""
     }

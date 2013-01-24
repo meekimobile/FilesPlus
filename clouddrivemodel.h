@@ -36,6 +36,7 @@ public:
     static const QString ITEM_DB_PATH;
     static const QString ITEM_DB_CONNECTION_NAME;
     static const QString TEMP_PATH;
+    static const QString JOB_DAT_PATH;
     static const int MaxRunningJobCount;
     static const QString DirtyHash;
     static const QStringList restrictFileTypes;
@@ -51,6 +52,7 @@ public:
 
     enum Operations {
         LoadCloudDriveItems,
+        LoadCloudDriveJobs,
         InitializeDB,
         InitializeCloudClients,
         FileGet,
@@ -134,8 +136,8 @@ public:
     Q_INVOKABLE QStringList getStoredUidList(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE int removeUid(CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE void requestJobQueueStatus();
-    Q_INVOKABLE void suspendNextJob();
-    Q_INVOKABLE void resumeNextJob();
+    Q_INVOKABLE void suspendNextJob(bool abort = false);
+    Q_INVOKABLE void resumeNextJob(bool resetAbort = false);
     Q_INVOKABLE void resumeJob(const QString jobId);
 
     // Other.
@@ -296,6 +298,7 @@ private:
     QQueue<CloudDriveItem> *m_scheduledItems;
     int runningJobCount;
     bool m_isSuspended;
+    bool m_isAborted;
 
     QSqlDatabase m_db;
     QSqlQuery m_selectByPrimaryKeyPS;
@@ -348,6 +351,9 @@ private:
     void loadCloudDriveItems(QString nonce);
     void saveCloudDriveItems();
 
+    void loadCloudDriveJobs(QString nonce);
+    void saveCloudDriveJobs();
+
     CloudDriveClient * getCloudClient(const int type);
     CloudDriveClient * getCloudClient(ClientTypes type);
 
@@ -356,6 +362,7 @@ private:
     void initializeSkyDriveClient();
     void initializeGoogleDriveClient();
     void initializeFtpClient();
+
     QString createNonce();
     void jobDone();
 

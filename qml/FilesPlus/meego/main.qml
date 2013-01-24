@@ -428,7 +428,13 @@ PageStackWindow {
             contentText = appInfo.emptyStr+getText();
         }
         onConfirm: {
-            Qt.quit();
+            var runningCount = cloudDriveModel.getRunningJobCount()+fsModel.getRunningJobCount();
+            if (runningCount > 0) {
+                cloudDriveModel.suspendNextJob(true);
+                logInfo(qsTr("Quit"), qsTr("FilesPlus will quit automatically once current running jobs are aborted."), 3000);
+            } else {
+                Qt.quit();
+            }
         }
     }
 

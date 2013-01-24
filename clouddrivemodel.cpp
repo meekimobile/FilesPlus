@@ -5,13 +5,15 @@
 const QString CloudDriveModel::ITEM_DAT_PATH = "/home/user/.filesplus/CloudDriveModel.dat";
 const QString CloudDriveModel::ITEM_DB_PATH = "/home/user/.filesplus/CloudDriveModel.db";
 const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
-const QString CloudDriveModel::TEMP_PATH = "/home/user/.filesplus";
+const QString CloudDriveModel::TEMP_PATH = "/home/user/MyDocs";
+const QString CloudDriveModel::JOB_DAT_PATH = "/home/user/.filesplus/CloudDriveJobs.dat";
 const int CloudDriveModel::MaxRunningJobCount = 3;
 #else
 const QString CloudDriveModel::ITEM_DAT_PATH = "C:/CloudDriveModel.dat";
 const QString CloudDriveModel::ITEM_DB_PATH = "CloudDriveModel.db";
 const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
 const QString CloudDriveModel::TEMP_PATH = "E:";
+const QString CloudDriveModel::JOB_DAT_PATH = "E:/CloudDriveJobs.dat";
 const int CloudDriveModel::MaxRunningJobCount = 2;
 #endif
 const QString CloudDriveModel::DirtyHash = "FFFFFFFF";
@@ -58,6 +60,9 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     CloudDriveJob loadCloudDriveItemsJob(createNonce(), LoadCloudDriveItems, -1, "", "", "", -1);
     m_cloudDriveJobs->insert(loadCloudDriveItemsJob.jobId, loadCloudDriveItemsJob);
     m_jobQueue->enqueue(loadCloudDriveItemsJob.jobId);
+    CloudDriveJob loadCloudDriveJobsJob(createNonce(), LoadCloudDriveJobs, -1, "", "", "", -1);
+    m_cloudDriveJobs->insert(loadCloudDriveJobsJob.jobId, loadCloudDriveJobsJob);
+    m_jobQueue->enqueue(loadCloudDriveJobsJob.jobId);
     CloudDriveJob initializeDBJob(createNonce(), InitializeDB, -1, "", "", "", -1);
     m_cloudDriveJobs->insert(initializeDBJob.jobId, initializeDBJob);
     m_jobQueue->enqueue(initializeDBJob.jobId);
@@ -73,12 +78,18 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
 //    m_cloudDriveJobs->insert(initializeCloudClientsJob.jobId, initializeCloudClientsJob);
 //    m_jobQueue->enqueue(initializeCloudClientsJob.jobId);
     initializeCloudClients(createNonce());
+
+    // Load saved jobs.
+    loadCloudDriveJobs(createNonce());
 }
 
 CloudDriveModel::~CloudDriveModel()
 {
     // TODO Migrate DAT to DB.
     saveCloudDriveItems();
+
+    // Save current jobs.
+    saveCloudDriveJobs();
 
     // Close DB.
     cleanDB();
@@ -147,6 +158,88 @@ void CloudDriveModel::saveCloudDriveItems() {
     }
 
     qDebug() << "CloudDriveModel::saveCloudDriveItems" << m_cloudDriveItems->size();
+}
+
+void CloudDriveModel::loadCloudDriveJobs(QString nonce)
+{
+    QScriptEngine engine;
+    QScriptValue sc;
+    int i = 0;
+
+    QFile file(JOB_DAT_PATH);
+    if (file.open(QIODevice::ReadOnly)) {
+        sc = engine.evaluate(QString::fromUtf8(file.readAll()));
+        if (sc.isArray()) {
+            int len = sc.toVariant().toList().length();
+            for (i = 0; i < len; i++) {
+                QScriptValue item = sc.property(i);
+                CloudDriveJob job(item.property("job_id").toString(),
+                                  item.property("operation").toInt32(),
+                                  item.property("type").toInt32(),
+                                  item.property("uid").toString(),
+                                  item.property("local_file_path").toString(),
+                                  item.property("remote_file_path").toString(), -1);
+                job.newLocalFilePath = item.property("new_local_file_path").toString();
+                job.newRemoteFilePath = item.property("new_remote_file_path").toString();
+                job.newRemoteFileName = item.property("new_remote_file_name").toString();
+                job.targetUid = item.property("target_uid").toString();
+                job.targetType = item.property("target_type").toInt32();
+                job.bytes = item.property("bytes").toInt32();
+                job.bytesTotal = item.property("bytes_total").toInt32();
+                job.forcePut = item.property("force_put").toBool();
+                job.downloadOffset = item.property("download_offset").toInt32();
+                job.uploadId = item.property("upload_id").toString();
+                job.uploadOffset = item.property("upload_offset").toInt32();
+                job.createdTime = item.property("created_time").toDateTime();
+                job.lastStartedTime = item.property("last_started_time").toDateTime();
+                job.lastStoppedTime = item.property("last_stopped_time").toDateTime();
+                job.err = item.property("err").toInt32();
+                job.errString = item.property("err_string").toString();
+                job.errMessage = item.property("err_message").toString();
+                job.nextJobId = item.property("next_job_id").toString();
+                m_cloudDriveJobs->insert(job.jobId, job);
+
+                // Add job to jobModel for displaying on job page.
+                emit jobEnqueuedSignal(job.jobId, job.localFilePath);
+            }
+        }
+    }
+
+    qDebug() << "CloudDriveModel::loadCloudDriveJobs " << i;
+
+    // Notify job done.
+    jobDone();
+
+    // RemoveJob
+    removeJob("CloudDriveModel::loadCloudDriveJobs", nonce);
+}
+
+void CloudDriveModel::saveCloudDriveJobs()
+{
+    QFile file(JOB_DAT_PATH);
+    QFileInfo info(file);
+    if (!info.absoluteDir().exists()) {
+        qDebug() << "CloudDriveModel::saveCloudDriveJobs dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
+        bool res = QDir::home().mkpath(info.absolutePath());
+        if (!res) {
+            qDebug() << "CloudDriveModel::saveCloudDriveJobs can't make dir" << info.absolutePath();
+        } else {
+            qDebug() << "CloudDriveModel::saveCloudDriveJobs make dir" << info.absolutePath();
+        }
+    }
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write("[ ");
+        int c = 0;
+        foreach (CloudDriveJob job, m_cloudDriveJobs->values()) {
+            if (c > 0) file.write(", ");
+            file.write(job.toJsonText().toUtf8());
+            c++;
+        }
+        file.write(" ]");
+    }
+    file.close();
+
+    qDebug() << "CloudDriveModel::saveCloudDriveJobs" << m_cloudDriveJobs->size() << "fileSize" << file.size();
 }
 
 void CloudDriveModel::initializeCloudClients(QString nonce)
@@ -1351,18 +1444,24 @@ void CloudDriveModel::requestJobQueueStatus()
     emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), getItemCount());
 }
 
-void CloudDriveModel::suspendNextJob()
+void CloudDriveModel::suspendNextJob(bool abort)
 {
-    qDebug() << "CloudDriveModel::suspendNextJob";
+    qDebug() << "CloudDriveModel::suspendNextJob abort" << abort;
 
     m_isSuspended = true;
+    if (abort) {
+        m_isAborted = true;
+    }
 }
 
-void CloudDriveModel::resumeNextJob()
+void CloudDriveModel::resumeNextJob(bool resetAbort)
 {
-    qDebug() << "CloudDriveModel::resumeNextJob";
+    qDebug() << "CloudDriveModel::resumeNextJob resetAbort" << resetAbort;
 
     m_isSuspended = false;
+    if (resetAbort) {
+        m_isAborted = false;
+    }
 
     proceedNextJob();
 }
@@ -2033,7 +2132,7 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
     // TODO Limit migration size to fit in RAM. Larger file needs to be downloaded to local before proceed uploading.
     if (sourceClient->isFileGetResumable(remoteFileSize)) {
         // Get each chunk to file.
-        while (job.downloadOffset < remoteFileSize) {
+        while (job.downloadOffset < remoteFileSize && !m_isAborted) {
             QIODevice *source = sourceClient->fileGet(nonce, uid, remoteFilePath, job.downloadOffset, true);
             if (source == 0) {
                 migrateFilePutFilter(nonce, -1, "Service is not implemented.", "{ }");
@@ -2090,6 +2189,12 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
         updateJob(job);
     }
     qDebug() << "CloudDriveModel::migrateFile_Block source is downloaded to temp file. tempFilePath" << tempFilePath << "size" << job.downloadOffset << "remoteFileSize" << remoteFileSize;
+
+    // Check isAborted.
+    if (m_isAborted) {
+        migrateFilePutFilter(nonce, -1, "job is aborted.","");
+        return;
+    }
 
     // Put from file.
     QFile *localSourceFile = new QFile(tempFilePath);
@@ -2183,6 +2288,12 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
     job.downloadOffset = job.uploadOffset;
     m_cloudDriveJobs->insert(job.jobId, job);
 
+    // Check isAborted.
+    if (m_isAborted) {
+        migrateFilePutFilter(nonce, -1, "job is aborted.","");
+        return;
+    }
+
     // Download chunk.
     QIODevice *source = sourceClient->fileGet(nonce, uid, remoteFilePath, job.downloadOffset, true);
     if (source == 0) {
@@ -2201,6 +2312,16 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
         job.downloadOffset += source->size();
         m_cloudDriveJobs->insert(job.jobId, job);
     }
+
+    // Check isAborted.
+    // Reset downloadOffset as migrateFileResume_Block never store downloaded chunk.
+    if (m_isAborted) {
+        job.downloadOffset = 0;
+        m_cloudDriveJobs->insert(job.jobId, job);
+        migrateFilePutFilter(nonce, -1, "job is aborted.","");
+        return;
+    }
+
     // Upload chunk and get offset (and upload_id if exists).
     QString uploadResult = targetClient->filePutResumeUpload(nonce, targetUid, source, targetRemoteFileName, remoteFileSize, job.uploadId, job.uploadOffset, true);
     // Default target remote path for client with remote absolute path. (Ex. Dropbox, FTP)
@@ -3537,7 +3658,13 @@ void CloudDriveModel::proceedNextJob() {
     // Emit status signal.
     emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), getItemCount());
 
-    if (runningJobCount >= MaxRunningJobCount || m_jobQueue->count() <= 0 || m_isSuspended) {
+    if (runningJobCount >= MaxRunningJobCount || m_jobQueue->count() <= 0 || m_isSuspended || m_isAborted) {
+
+        // TODO Check if there is no running job and is aborted.
+        if (runningJobCount <= 0 && m_isAborted) {
+            QApplication::quit();
+        }
+
         return;
     }
 
@@ -3613,6 +3740,9 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
     switch (job.operation) {
     case LoadCloudDriveItems:
         loadCloudDriveItems(job.jobId);
+        break;
+    case LoadCloudDriveJobs:
+        loadCloudDriveJobs(job.jobId);
         break;
     case InitializeDB:
         initializeDB(job.jobId);
