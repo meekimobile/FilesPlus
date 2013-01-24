@@ -29,7 +29,7 @@ Page {
 
     function goUpSlot() {
         console.debug("cloudFolderPage goUpSlot selectedCloudType " + selectedCloudType + " selectedUid " + selectedUid + " remoteParentPath " + remoteParentPath + " remoteParentParentPath " + remoteParentParentPath);
-        if (cloudDriveModel.isRemoteRoot(selectedCloudType, selectedUid, remoteParentParentPath)) {
+        if (remoteParentParentPath == "") {
             pageStack.pop(cloudFolderPage);
         } else {
             changeRemotePath(remoteParentParentPath);
@@ -183,14 +183,10 @@ Page {
         console.debug("cloudFolderPage refreshItemAfterFilePutSlot jobJson " + JSON.stringify(jobJson));
 
         if (jobJson.type == selectedCloudType && jobJson.uid == selectedUid) {
-            if (cloudDriveModel.isRemoteAbsolutePath(jobJson.type)) {
-                if (cloudDriveModel.getParentRemotePath(jobJson.type, jobJson.remote_file_path) == remoteParentPath) {
-                    refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot");
-                }
-            } else {
-                if (jobJson.remote_file_path == remoteParentPath) {
-                    refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot");
-                }
+            if (jobJson.remote_file_path == remoteParentPath) {
+                refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot");
+            } else if (jobJson.remote_file_path == "/" && remoteParentPath == "") {
+                refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot Dropbox");
             }
         }
     }
@@ -882,12 +878,11 @@ Page {
 
                 console.debug("cloudFolderPage fileActionDialog onConfirm clipboard type " + clipboard.get(i).type + " uid " + clipboard.get(i).uid + " action " + action + " sourcePathName " + sourcePathName + " sourcePath " + sourcePath + " targetPath " + targetPath + " actualTargetPath " + actualTargetPath);
                 if (["copy","cut"].indexOf(action) > -1 && !clipboard.get(i).type) {
-                    isBusy = true;
                     if (cloudDriveModel.isDir(sourcePath)) {
                         // Sync from local into target path (remote parent path).
                         cloudDriveModel.syncFromLocal(selectedCloudType, selectedUid, sourcePath, targetPath, -1, true);
                     } else {
-                        cloudDriveModel.filePut(selectedCloudType, selectedUid, sourcePath, actualTargetPath, -1);
+                        cloudDriveModel.filePut(selectedCloudType, selectedUid, sourcePath, targetPath, sourcePathName, -1);
                     }
                     res = true;
                 } else if (["copy","cut"].indexOf(action) > -1 && (cloudDriveModel.getClientType(clipboard.get(i).type) != selectedCloudType || clipboard.get(i).uid != selectedUid) ) {
@@ -895,17 +890,12 @@ Page {
                     cloudDriveModel.migrateFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, sourcePath, selectedCloudType, selectedUid, targetPath, sourcePathName);
                     res = true;
                 } else if (action == "copy" && clipboard.get(i).type) {
-                    isBusy = true;
-                    // TODO Support sourcePathName as newRemotePathName.
                     cloudDriveModel.copyFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath, "", actualTargetPath, sourcePathName);
                     res = true;
                 } else if (action == "cut" && clipboard.get(i).type) {
-                    isBusy = true;
-                    // TODO Support sourcePathName as newRemotePathName.
                     cloudDriveModel.moveFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath, "", actualTargetPath);
                     res = true;
                 } else if (action == "delete" && clipboard.get(i).type) {
-                    isBusy = true;
                     cloudDriveModel.deleteFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, "", sourcePath);
                     res = true;
                 } else {

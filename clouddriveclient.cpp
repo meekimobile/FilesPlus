@@ -154,7 +154,7 @@ QIODevice *CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteF
     return 0;
 }
 
-void CloudDriveClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
+void CloudDriveClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName)
 {
     emit filePutReplySignal(nonce, -1, objectName() + " " + tr("File Put"), tr("Service is not implemented."));
 }
@@ -171,7 +171,7 @@ QIODevice *CloudDriveClient::fileGetResume(QString nonce, QString uid, QString r
     return 0;
 }
 
-QNetworkReply *CloudDriveClient::filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId, qint64 offset)
+QNetworkReply *CloudDriveClient::filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, QString uploadId, qint64 offset)
 {
     emit filePutResumeReplySignal(nonce, -1, objectName() + " " + tr("File Put Resume"), tr("Service is not implemented."));
     return 0;

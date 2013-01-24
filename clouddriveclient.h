@@ -33,7 +33,7 @@ public:
     virtual void accountInfo(QString nonce, QString uid);
     virtual void quota(QString nonce, QString uid);
     virtual QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
-    virtual void filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath);
+    virtual void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
     virtual void metadata(QString nonce, QString uid, QString remoteFilePath);
     virtual void browse(QString nonce, QString uid, QString remoteFilePath);
     virtual void createFolder(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFolderName);
@@ -54,7 +54,7 @@ public:
     virtual QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
 
     virtual QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
-    virtual QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId, qint64 offset);
+    virtual QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, QString uploadId, qint64 offset);
     /*
      *filePutResumeStart
      *return json contains upload_id.

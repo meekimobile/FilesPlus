@@ -412,9 +412,9 @@ QString DropboxClient::getDefaultLocalFilePath(const QString &remoteFilePath)
     return "";
 }
 
-void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
+void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName)
 {
-    qDebug() << "----- DropboxClient::filePut -----" << uid << localFilePath << "to" << remoteFilePath;
+    qDebug() << "----- DropboxClient::filePut -----" << uid << localFilePath << "to" << remoteParentPath << remoteFileName;
 
     m_localFileHash[nonce] = new QFile(localFilePath);
     QFile *localSourceFile = m_localFileHash[nonce];
@@ -422,8 +422,6 @@ void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, Q
         qint64 fileSize = localSourceFile->size();
 
         // Send request.
-        QString remoteParentPath = getParentRemotePath(remoteFilePath);
-        QString remoteFileName = QFileInfo(localFilePath).fileName();
         filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
     } else {
         qDebug() << "DropboxClient::filePut file " << localFilePath << " can't be opened.";
@@ -749,17 +747,19 @@ QIODevice *DropboxClient::fileGetResume(QString nonce, QString uid, QString remo
     return reply;
 }
 
-QNetworkReply * DropboxClient::filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId, qint64 offset)
+QNetworkReply * DropboxClient::filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, QString uploadId, qint64 offset)
 {
-    qDebug() << "----- DropboxClient::filePutResume -----" << nonce << uid << localFilePath << remoteFilePath << uploadId << offset;
+    qDebug() << "----- DropboxClient::filePutResume -----" << nonce << uid << localFilePath << remoteParentPath << remoteFileName << uploadId << offset;
 
     m_localFileHash[nonce] = new QFile(localFilePath);
     QFile *localSourceFile = m_localFileHash[nonce];
     if (localSourceFile->open(QIODevice::ReadOnly)) {
+        qint64 fileSize = localSourceFile->size();
+
         localSourceFile->seek(offset);
 
         // Send request.
-        filePutResumeUpload(nonce, uid, localSourceFile, localSourceFile->fileName(), ChunkSize, uploadId, offset, false);
+        filePutResumeUpload(nonce, uid, localSourceFile, remoteFileName, fileSize, uploadId, offset, false);
         return 0;
     } else {
         qDebug() << "DropboxClient::filePutResume file " << localFilePath << " can't be opened.";
@@ -810,6 +810,9 @@ QString DropboxClient::filePutResumeUpload(QString nonce, QString uid, QIODevice
     QNetworkReply *reply = manager->put(req, source);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+
+    // Return immediately if it's not synchronous.
+    if (!synchronous) return "";
 
     while (synchronous && !reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
@@ -873,6 +876,9 @@ QString DropboxClient::filePutResumeStatus(QString nonce, QString uid, QString f
     QNetworkReply *reply = manager->put(req, QByteArray());
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
 
+    // Return immediately if it's not synchronous.
+    if (!synchronous) return "";
+
     while (synchronous && !reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
@@ -930,6 +936,9 @@ QString DropboxClient::filePutCommit(QString nonce, QString uid, QString remoteF
     req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "POST", uri, sortMap));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QNetworkReply *reply = manager->post(req, postData);
+
+    // Return immediately if it's not synchronous.
+    if (!synchronous) return "";
 
     while (synchronous && !reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);

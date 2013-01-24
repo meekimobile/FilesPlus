@@ -1645,15 +1645,20 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
     emit proceedNextJobSignal();
 }
 
-void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex)
+void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, int modelIndex)
 {
     if (localFilePath == "") {
         qDebug() << "CloudDriveModel::filePut localFilePath" << localFilePath << " is empty, can't sync.";
         return;
     }
 
-    if (remoteFilePath == "") {
-        qDebug() << "CloudDriveModel::filePut remoteFilePath" << remoteFilePath << " is empty, can't sync.";
+    if (remoteParentPath == "") {
+        qDebug() << "CloudDriveModel::filePut remoteParentPath" << remoteParentPath << " is empty, can't sync.";
+        return;
+    }
+
+    if (remoteFileName == "") {
+        qDebug() << "CloudDriveModel::filePut remoteFileName" << remoteFileName << " is empty, can't sync.";
         return;
     }
 
@@ -1667,13 +1672,14 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
     qint64 localFileSize = QFileInfo(localFilePath).size();
     if (getCloudClient(type)->isFilePutResumable(localFileSize)) {
         qDebug() << "CloudDriveModel::filePut" << localFilePath << "size" << localFileSize << ", request is redirected to filePutResume.";
-        filePutResume(type, uid, localFilePath, remoteFilePath);
+        filePutResume(type, uid, localFilePath, remoteParentPath, remoteFileName);
         return;
     }
 
     // Enqueue job.
-    CloudDriveJob job(createNonce(), FilePut, type, uid, localFilePath, remoteFilePath, modelIndex);
+    CloudDriveJob job(createNonce(), FilePut, type, uid, localFilePath, remoteParentPath, modelIndex);
 //    job.isRunning = true;
+    job.newRemoteFileName = remoteFileName;
     job.uploadOffset = 0;
     job.bytesTotal = QFileInfo(localFilePath).size();
     m_cloudDriveJobs->insert(job.jobId, job);
@@ -1916,11 +1922,7 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
                     syncFromLocal_Block(type, uid, localFilePath, parentCloudDriveItem.remotePath, -1, forcePut, false);
                 } else {
                     // Put file to remote parent path.
-                    if (cloudClient->isRemoteAbsolutePath()) {
-                        filePut(type, uid, localFilePath, parentCloudDriveItem.remotePath + "/" + getFileName(localFilePath), -1);
-                    } else {
-                        filePut(type, uid, localFilePath, parentCloudDriveItem.remotePath, -1);
-                    }
+                    filePut(type, uid, localFilePath, parentCloudDriveItem.remotePath, getFileName(localFilePath), -1);
                 }
             } else {
                 // Skip any items that already have CloudDriveItem and has localHash.
@@ -2418,10 +2420,11 @@ void CloudDriveModel::delta(CloudDriveModel::ClientTypes type, QString uid)
     emit proceedNextJobSignal();
 }
 
-void CloudDriveModel::filePutResume(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString uploadId, qint64 offset)
+void CloudDriveModel::filePutResume(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, QString uploadId, qint64 offset)
 {
     // Enqueue job.
-    CloudDriveJob job(createNonce(), FilePutResume, type, uid, localFilePath, remoteFilePath, -1);
+    CloudDriveJob job(createNonce(), FilePutResume, type, uid, localFilePath, remoteParentPath, -1);
+    job.newRemoteFileName = remoteFileName;
     job.uploadId = uploadId;
     job.uploadOffset = offset;
     job.bytesTotal = QFileInfo(localFilePath).size();
@@ -2558,20 +2561,24 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
             switch (job.type) {
             case Dropbox:
                 sc = engine.evaluate("(" + msg + ")");
+                remoteFilePath = sc.property("path").toString();
                 hash = sc.property("rev").toString();
-                addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
+                job.newRemoteFilePath = remoteFilePath;
+                addItem(Dropbox, job.uid, job.localFilePath, remoteFilePath, hash);
                 break;
             case SkyDrive:
                 // Parse result and update remote file path to item.
                 sc = engine.evaluate("(" + msg + ")");
                 remoteFilePath = sc.property("id").toString();
                 hash = sc.property("updated_time").toString();
+                job.newRemoteFilePath = remoteFilePath;
                 addItem(SkyDrive, job.uid, job.localFilePath, remoteFilePath, hash);
                 break;
             case GoogleDrive:
                 sc = engine.evaluate("(" + msg + ")");
                 remoteFilePath = sc.property("id").toString();
                 hash = sc.property("modifiedDate").toString();
+                job.newRemoteFilePath = remoteFilePath;
                 addItem(GoogleDrive, job.uid, job.localFilePath, remoteFilePath, hash);
                 break;
             case Ftp:
@@ -2579,6 +2586,7 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
                 sc = engine.evaluate("(" + msg + ")");
                 remoteFilePath = sc.property("path").toString();
                 hash = sc.property("lastModified").toString();
+                job.newRemoteFilePath = remoteFilePath;
                 addItem(Ftp, job.uid, job.localFilePath, remoteFilePath, hash);
                 break;
             }
@@ -2970,6 +2978,8 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
                     m_jobQueue->enqueue(job.jobId);
                 } else {
                     qDebug() << "CloudDriveModel::filePutResumeReplyFilter commit uploading job" << job.toJsonText();
+                    // Get uploaded path.
+                    job.newRemoteFilePath = getRemotePath(getClientType(job.type), job.remoteFilePath, job.newRemoteFileName);
                     job.operation = FilePutCommit;
                     m_jobQueue->enqueue(job.jobId);
                 }
@@ -2995,6 +3005,10 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
                 } else {
                     // Invoke to handle successful uploading.
                     qDebug() << "CloudDriveModel::filePutResumeReplyFilter commit uploading job" << job.toJsonText();
+                    // Get uploaded path.
+                    if (sc.property("id").isValid()) {
+                        job.newRemoteFilePath = sc.property("id").toString();
+                    }
                     filePutReplyFilter(job.jobId, err, errMsg, msg);
                     return;
                 }
@@ -3608,7 +3622,7 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         cloudClient->fileGet(job.jobId, job.uid, job.remoteFilePath, job.localFilePath);
         break;
     case FilePut:
-        cloudClient->filePut(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
+        cloudClient->filePut(job.jobId, job.uid, job.localFilePath, job.remoteFilePath, job.newRemoteFileName);
         break;
     case Metadata:
         cloudClient->metadata(job.jobId, job.uid, job.remoteFilePath);
@@ -3678,10 +3692,10 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         // TODO
         break;
     case FilePutResume:
-        cloudClient->filePutResume(job.jobId, job.uid, job.localFilePath, job.remoteFilePath, job.uploadId, job.uploadOffset);
+        cloudClient->filePutResume(job.jobId, job.uid, job.localFilePath, job.remoteFilePath, job.newRemoteFileName, job.uploadId, job.uploadOffset);
         break;
     case FilePutCommit:
-        cloudClient->filePutCommit(job.jobId, job.uid, job.remoteFilePath, job.uploadId);
+        cloudClient->filePutCommit(job.jobId, job.uid, job.newRemoteFilePath, job.uploadId);
         break;
     }
 }

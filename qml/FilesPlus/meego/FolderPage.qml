@@ -1495,15 +1495,7 @@ Page {
                         cloudDriveModel.syncFromLocal(type, uid, localPath, remoteParentPath, modelIndex, true);
                         cloudDriveModel.resumeNextJob();
                     } else {
-                        // Check if cloud client's remotePath is absolute path.
-                        if (cloudDriveModel.isRemoteAbsolutePath(type)) {
-                            // Use remoteParentPath + "/" + local file/folder name.
-                            remotePath = (remoteParentPath == "/" ? "" : remoteParentPath) + "/" + fsModel.getFileName(localPath);
-                            console.debug("cloudDrivePathDialog proceedOperation FilePut adjusted remotePath " + remotePath);
-                            cloudDriveModel.filePut(type, uid, localPath, remotePath, modelIndex);
-                        } else {
-                            cloudDriveModel.filePut(type, uid, localPath, remoteParentPath, modelIndex);
-                        }
+                        cloudDriveModel.filePut(type, uid, localPath, remoteParentPath, fsModel.getFileName(localPath), modelIndex);
                     }
                 } else {
                     console.debug("cloudDrivePathDialog proceedOperation FilePut ignored remoteParentPath " + remoteParentPath + " is empty.");
@@ -1588,7 +1580,7 @@ Page {
                             } else {
                                 // Proceed put file as selected file name doesn't exist on remote parent path.
                                 console.debug("cloudDrivePathDialog proceedOperation Metadata filePut from " + localPath + " to " + remoteParentPath);
-                                cloudDriveModel.filePut(type, uid, localPath, remoteParentPath, selectedModelIndex);
+                                cloudDriveModel.filePut(type, uid, localPath, remoteParentPath, newRemoteFolderName, selectedModelIndex);
                             }
                         } else {
                             // Start sync with remotePath.

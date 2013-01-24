@@ -208,8 +208,8 @@ QString SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePa
     return result;
 }
 
-void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath) {
-    qDebug() << "----- SkyDriveClient::filePut -----" << localFilePath << "to" << remoteParentPath;
+void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName) {
+    qDebug() << "----- SkyDriveClient::filePut -----" << localFilePath << "to" << remoteParentPath << remoteFileName;
 
     m_localFileHash[nonce] = new QFile(localFilePath);
     QFile *localSourceFile = m_localFileHash[nonce];
@@ -217,7 +217,6 @@ void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, 
         qint64 fileSize = localSourceFile->size();
 
         // Send request.
-        QString remoteFileName = QFileInfo(localFilePath).fileName();
         filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
     } else {
         qDebug() << "SkyDriveClient::filePut file " << localFilePath << " can't be opened.";

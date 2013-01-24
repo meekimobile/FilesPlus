@@ -129,11 +129,11 @@ void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
 }
 */
 
-void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
+void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName)
 {
-    qDebug() << "----- FtpClient::filePut -----" << uid << localFilePath << remoteFilePath;
+    qDebug() << "----- FtpClient::filePut -----" << uid << localFilePath << remoteParentPath << remoteFileName;
 
-    QString remoteParentPath = getParentRemotePath(remoteFilePath);
+    QString remoteFilePath = remoteParentPath + "/" + remoteFileName;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
     m_ftp->m_localFilePath = localFilePath;
@@ -145,7 +145,7 @@ void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
     m_localFileHash[nonce] = new QFile(localFilePath);
     QFile *localSourceFile = m_localFileHash[nonce];
     if (localSourceFile->open(QIODevice::ReadOnly)) {
-        m_ftp->put(localSourceFile, getRemoteFileName(remoteFilePath));
+        m_ftp->put(localSourceFile, remoteFileName);
         m_ftp->waitForDone();
     }
 }
@@ -363,8 +363,10 @@ QNetworkReply *FtpClient::filePut(QString nonce, QString uid, QIODevice *source,
 {
     qDebug() << "----- FtpClient::filePut -----" << uid << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
+    QString remoteFilePath = remoteParentPath + "/" + remoteFileName;
+
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
-    m_ftp->m_remoteFilePath = remoteParentPath + "/" + remoteFileName;
+    m_ftp->m_remoteFilePath = remoteFilePath;
     m_ftp->cd(remoteParentPath);
 
     m_ftp->put(source, remoteFileName);
@@ -372,15 +374,15 @@ QNetworkReply *FtpClient::filePut(QString nonce, QString uid, QIODevice *source,
     source->close();
 
     // TODO Get uploaded file property.
-    m_ftp->list(remoteParentPath + "/" + remoteFileName);
+    m_ftp->list(remoteFilePath);
     m_ftp->waitForDone();
 
     if (m_ftp->getItemList().isEmpty()) {
         // remoteFilePath is not found.
-        qDebug() << "FtpClient::filePut" << uid << remoteParentPath + "/" + remoteFileName << "is not found.";
-        emit migrateFilePutReplySignal(m_ftp->getNonce(), -1, tr("Can't put %1").arg(remoteParentPath + "/" + remoteFileName), "");
+        qDebug() << "FtpClient::filePut" << uid << remoteFilePath << "is not found.";
+        emit migrateFilePutReplySignal(m_ftp->getNonce(), -1, tr("Can't put %1").arg(remoteFilePath), "");
     } else {
-        qDebug() << "FtpClient::filePut" << uid << remoteParentPath + "/" + remoteFileName << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_ftp->getItemList().first().name();
+        qDebug() << "FtpClient::filePut" << uid << remoteFilePath << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_ftp->getItemList().first().name();
         emit migrateFilePutReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), getPropertyJson(remoteParentPath, m_ftp->getItemList().first()) );
     }
 

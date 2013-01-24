@@ -43,7 +43,7 @@ public:
     void accountInfo(QString nonce, QString uid);
     void quota(QString nonce, QString uid);
     QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
-    void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath);
+    void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
     void createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName);
