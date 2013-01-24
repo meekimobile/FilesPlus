@@ -51,6 +51,15 @@ MenuWithIcon {
             onClicked: {
                 clearClipboard();
             }
+
+            TextIndicator {
+                id: clipboardIndicator
+                color: "#00AAFF"
+                anchors.right: parent.right
+                anchors.rightMargin: 16
+                anchors.verticalCenter: parent.verticalCenter
+                text: clipboard.count
+            }
         }
 
         MenuItemWithIcon {
