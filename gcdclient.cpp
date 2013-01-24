@@ -470,7 +470,7 @@ QNetworkReply * GCDClient::patchFile(QString nonce, QString uid, QString remoteF
 
 QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)
 {
-    qDebug() << "----- GCDClient::fileGet -----" << remoteFilePath << "offset" << offset << "synchronous" << synchronous;
+    qDebug() << "----- GCDClient::fileGet -----" << nonce << remoteFilePath << "offset" << offset << "synchronous" << synchronous;
 
     QString uri = remoteFilePath;
     // TODO It should be downloadUrl because it will not be able to create connection in CloudDriveModel.fileGetReplyFilter.
@@ -567,7 +567,7 @@ QString GCDClient::fileGetReplySave(QNetworkReply *reply)
 
 QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
 {
-    qDebug() << "----- GCDClient::filePut -----" << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
+    qDebug() << "----- GCDClient::filePut -----" << nonce << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
     QString uri = filePutURI + "?uploadType=media";
     qDebug() << "GCDClient::filePut uri " << uri;

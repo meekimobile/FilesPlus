@@ -811,6 +811,13 @@ void CloudDriveModel::removeJob(QString caller, QString nonce)
     int removeCount = m_cloudDriveJobs->remove(nonce);
     mutex.unlock();
 
+    // Remove temp file if it exists.
+    QString tempFilePath = m_settings.value("temp.path", TEMP_PATH).toString() + "/" + nonce;
+    if (QFileInfo(tempFilePath).exists()) {
+        QFile(tempFilePath).remove();
+        qDebug() << "CloudDriveModel::removeJob temp file" << tempFilePath << "is removed.";
+    }
+
     if (removeCount > 0) {
         emit jobRemovedSignal(nonce);
     }
@@ -2091,10 +2098,13 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
         } else {
             if (targetReply->error() == QNetworkReply::NoError){
                 job.uploadOffset = remoteFileSize;
+                // Invoke slot to reset running and emit signal.
+                migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(), QString::fromUtf8(targetReply->readAll()) );
+            } else {
+                // Invoke slot to reset running and emit signal.
+                // TODO How to shows if error occurs from target?
+                migrateFilePutFilter(nonce, targetReply->error(), getCloudName(job.targetType) + " " + targetReply->errorString(), getCloudName(job.targetType) + " " + QString::fromUtf8(targetReply->readAll()) );
             }
-
-            // Invoke slot to reset running and emit signal.
-            migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(), QString::fromUtf8(targetReply->readAll()) );
 
             // Scheduled to delete later.
             targetReply->deleteLater();
@@ -2176,7 +2186,14 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
         migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
         return;
     } else {
-        qDebug() << "CloudDriveModel::migrateFileResume_Block chunk is downloaded. size" << source->size() << "bytesAvailable" << source->bytesAvailable() << "job" << job.toJsonText();
+        qDebug() << "CloudDriveModel::migrateFileResume_Block chunk is downloaded. source->metaObject()->className()" << source->metaObject()->className() << "size" << source->size() << "bytesAvailable" << source->bytesAvailable() << "job" << job.toJsonText();
+        // TODO Handle source error.
+        if (QNetworkReply *sourceReply = dynamic_cast<QNetworkReply*>(source)) {
+            if (sourceReply->error() != QNetworkReply::NoError) {
+                migrateFilePutFilter(job.jobId, sourceReply->error(), sourceReply->errorString(), QString::fromUtf8(sourceReply->readAll()));
+                return;
+            }
+        }
         job.downloadOffset += source->size();
         m_cloudDriveJobs->insert(job.jobId, job);
     }

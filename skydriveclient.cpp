@@ -608,7 +608,7 @@ void SkyDriveClient::renameFile(QString nonce, QString uid, QString remoteFilePa
 
 QIODevice *SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)
 {
-    qDebug() << "----- SkyDriveClient::fileGet -----" << remoteFilePath << "synchronous" << synchronous;
+    qDebug() << "----- SkyDriveClient::fileGet -----" << nonce << uid << remoteFilePath << offset << "synchronous" << synchronous;
 
     // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
     if (!synchronous) {
@@ -722,7 +722,7 @@ QString SkyDriveClient::fileGetReplySave(QNetworkReply *reply)
 
 QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
 {
-    qDebug() << "----- SkyDriveClient::filePut -----" << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
+    qDebug() << "----- SkyDriveClient::filePut -----" << nonce << uid << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
     QString uri = filePutURI.arg(remoteParentPath).arg(remoteFileName);
     uri = encodeURI(uri);
