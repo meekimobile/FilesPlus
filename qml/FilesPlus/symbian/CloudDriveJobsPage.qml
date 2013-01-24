@@ -11,7 +11,7 @@ Page {
 
     function updateJobQueueCount(runningJobCount, jobQueueCount) {
         // Update (runningJobCount + jobQueueCount) on cloudButton.
-        cloudJobsCountIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
+        cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
     }
 
     onStatusChanged: {
@@ -25,11 +25,9 @@ Page {
     ToolBarLayout {
         id: toolBarLayout
 
-        ToolButton {
+        ToolBarButton {
             id: backButton
-            iconSource: "toolbar-back"
-            platformInverted: window.platformInverted
-            flat: true
+            buttonIconSource: "toolbar-back"
             onClicked: {
                 pageStack.pop();
             }
@@ -51,11 +49,22 @@ Page {
 //                showPlay = !showPlay;
 //            }
 //        }
-        ToolButton {
+        ToolBarButton {
+            id: cloudButton
+            buttonIconSource: (!window.platformInverted ? "cloud.svg" : "cloud_inverted.svg")
+
+            TextIndicator {
+                id: cloudButtonIndicator
+                color: "#00AAFF"
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 10
+            }
+        }
+        ToolBarButton {
             id: deleteAllButton
-            iconSource: (!window.platformInverted) ? "delete.svg" : "delete_inverted.svg"
-            platformInverted: window.platformInverted
-            flat: true
+            buttonIconSource: (!inverted) ? "delete.svg" : "delete_inverted.svg"
             onClicked: {
                 cancelQueuedCloudDriveJobsConfirmation.open();
             }
@@ -67,11 +76,16 @@ Page {
         text: appInfo.emptyStr+qsTr("Cloud Drive Jobs")
 
         TextIndicator {
-            id: cloudJobsCountIndicator
-            color: "#00AAFF"
+            id: messageLoggerCounter
+            text: (messageLoggerModel.newMessageCount > 0) ? (appInfo.emptyStr + qsTr("Message") + " " + messageLoggerModel.newMessageCount) : ""
+            height: parent.height - 6
             anchors.right: parent.right
-            anchors.rightMargin: 10
+            anchors.rightMargin: 3
             anchors.verticalCenter: parent.verticalCenter
+
+            onClicked: {
+                pageStack.push(Qt.resolvedUrl("MessageLoggerPage.qml"));
+            }
         }
     }
 
