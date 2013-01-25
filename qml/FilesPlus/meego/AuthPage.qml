@@ -37,7 +37,7 @@ Page {
     function parseSkyDriveCode(url) {
         console.debug("authPage parseSkyDriveCode url " + url + " typeof " + (typeof url));
         var text = url + "";
-        var caps = text.match("\\?code=([^&]*)");
+        var caps = text.match("[\\?&]code=([^&]*)");
         if (caps) {
             console.debug("authPage parseSkyDriveCode caps " + caps + " caps.length " + caps.length);
             var code = caps[1];
@@ -53,12 +53,28 @@ Page {
     function parseGoogleDriveCode(title) {
         console.debug("authPage parseGoogleDriveCode title " + title + " typeof " + (typeof title));
         var text = title + "";
-        var caps = text.match("\\&code=([^&]*)");
+        var caps = text.match("[\\?&]code=([^&]*)");
         if (caps) {
             console.debug("authPage parseGoogleDriveCode caps " + caps + " caps.length " + caps.length);
             var code = caps[1];
             if (code && code != "") {
                 console.debug("authPage parseGoogleDriveCode code " + code);
+                return code;
+            }
+        }
+
+        return "PinNotFound";
+    }
+
+    function parseWebDAVCode(url) {
+        console.debug("authPage parseWebDAVCode url " + url + " typeof " + (typeof url));
+        var text = url + "";
+        var caps = text.match("[\\?&]code=([^&]*)");
+        if (caps) {
+            console.debug("authPage parseWebDAVCode caps " + caps + " caps.length " + caps.length);
+            var code = caps[1];
+            if (code && code != "") {
+                console.debug("authPage parseWebDAVCode code " + code);
                 return code;
             }
         }
@@ -179,6 +195,13 @@ Page {
                     var pin = authPage.parseSkyDriveCode(url);
                     pinInputPanel.pin = pin;
                     okButton.visible = pinInputPanel.visible;
+                } else if (authPage.redirectFrom == "WebDavClient") {
+                    // WebDavClient handler
+                    console.debug("WebDavClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom);
+
+                    var pin = authPage.parseWebDAVCode(url);
+                    pinInputPanel.pin = pin;
+                    okButton.visible = pinInputPanel.visible;
                 }
             }
         }
@@ -195,7 +218,7 @@ Page {
         anchors.bottom: flickable.bottom
         anchors.bottomMargin: 5
         z: 2
-        visible: (pin != "" && pin != "PinNotFound")
+        visible: (pin != "" && pin != "PinNotFound") // TODO Should it show even PIN can't be detected?
 
         onVisibleChanged: {
             pinInput.closeSoftwareInputPanel();

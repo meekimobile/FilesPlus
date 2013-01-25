@@ -155,7 +155,6 @@ Page {
         }
         onAccepted: {
             var type = model.get(selectedIndex).type;
-            console.debug("cloudTypeSelection onAccepted type " + type);
             switch (type) {
             case CloudDriveModel.Dropbox:
                 cloudDriveModel.requestToken(CloudDriveModel.Dropbox);

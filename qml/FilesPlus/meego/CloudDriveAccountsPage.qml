@@ -113,6 +113,10 @@ Page {
                 name: "FTP"
                 type: CloudDriveModel.Ftp
             }
+            ListElement {
+                name: "WebDAV"
+                type: CloudDriveModel.WebDAV
+            }
         }
         delegate: ListItem {
             height: 80
@@ -156,7 +160,10 @@ Page {
                 cloudDriveModel.authorize(CloudDriveModel.GoogleDrive);
                 break;
             case CloudDriveModel.Ftp:
-                addAccountDialog.open();
+                addAccountDialog.show(type);
+                break;
+            case CloudDriveModel.WebDAV:
+                addAccountDialog.show(type); // Get host name from user.
                 break;
             }
         }
@@ -180,14 +187,21 @@ Page {
     ConfirmDialog {
         id: addAccountDialog
 
+        property int cloudType: -1
         property alias connection: connectionName.text
         property alias host: hostname.text
         property alias user: username.text
         property alias passwd: password.text
         property int labelWidth: 120
 
+        function show(type) {
+            console.debug("addAccountDialog show type " + type);
+            cloudType = type;
+            addAccountDialog.open();
+        }
+
         z: 2
-        titleText: appInfo.emptyStr+qsTr("FTP account")
+        titleText: appInfo.emptyStr+cloudDriveModel.getCloudName(cloudType)+" "+qsTr("account")
         content: Column {
             width: parent.width
             anchors.centerIn: parent
@@ -275,11 +289,7 @@ Page {
 
                         text = appInfo.emptyStr+qsTr("Connecting");
 
-                        var tokens = hostname.text.split(":");
-                        var res = cloudDriveModel.testConnection(CloudDriveModel.Ftp,
-                                                                 tokens[0],
-                                                                 (tokens.length > 1) ? parseInt(tokens[1]) : 21,
-                                                                 username.text, password.text);
+                        var res = cloudDriveModel.testConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text);
                         console.debug("cloudDriveAccountsPage testConnectionButton.onClicked res " + res);
                         if (res) {
                             text = appInfo.emptyStr+qsTr("Connection success");
@@ -299,12 +309,8 @@ Page {
             testConnectionButton.text = appInfo.emptyStr+qsTr("Test connection");
         }
         onConfirm: {
-            var tokens = hostname.text.split(":");
-            cloudDriveModel.saveConnection(CloudDriveModel.Ftp,
-                                           connectionName.text,
-                                           tokens[0],
-                                           (tokens.length > 1) ? parseInt(tokens[1]) : 21,
-                                           username.text, password.text);
+            cloudDriveModel.saveConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text);
+            // TODO Refresh accounts.
         }
     }
 
@@ -392,14 +398,12 @@ Page {
             }
 
             onClicked: {
-                if (type == CloudDriveModel.Ftp) {
-                    var tokens = email.split("@");
-                    addAccountDialog.connection = uid;
-                    addAccountDialog.host = tokens[1];
-                    addAccountDialog.user = tokens[0];
-                    addAccountDialog.passwd = "";
-                    addAccountDialog.open();
-                }
+                var tokens = email.split("@");
+                addAccountDialog.connection = uid;
+                addAccountDialog.host = tokens[1];
+                addAccountDialog.user = tokens[0];
+                addAccountDialog.passwd = secret;
+                addAccountDialog.show(type);
             }
 
             Component.onCompleted: {

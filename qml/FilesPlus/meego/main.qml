@@ -1118,6 +1118,8 @@ PageStackWindow {
                                  type: getClientType(json.type),
                                  uid: json.uid,
                                  email: json.email,
+                                 token: json.token,
+                                 secret: json.secret,
                                  hash: cloudItem.hash,
                                  name: "",
                                  shared: 0,
@@ -1152,9 +1154,12 @@ PageStackWindow {
                 return "skydrive_icon.png";
             case CloudDriveModel.Ftp:
                 return "ftp_icon.png";
+            case CloudDriveModel.WebDAV:
+                return "webdav_icon.png";
             }
         }
 
+        // TODO Move to CloudDriveModel class?
         function getClientType(typeText) {
             if (typeText) {
                 if (["dropboxclient","dropbox"].indexOf(typeText.toLowerCase()) != -1) {
@@ -1165,6 +1170,8 @@ PageStackWindow {
                     return CloudDriveModel.GoogleDrive;
                 } else if (["ftpclient","ftp"].indexOf(typeText.toLowerCase()) != -1) {
                     return CloudDriveModel.Ftp;
+                } else if (["webdavclient","webdav"].indexOf(typeText.toLowerCase()) != -1) {
+                    return CloudDriveModel.WebDAV;
                 }
             }
 
@@ -1196,84 +1203,20 @@ PageStackWindow {
             var remoteParentPathName = "";
             var remoteParentParentPath = "";
 
-            // TODO Generalize
-            switch (selectedCloudType) {
-            case CloudDriveModel.Dropbox:
-                remoteParentPath = json.path;
-                remoteParentPathName = json.path;
-                remoteParentParentPath = cloudDriveModel.getParentRemotePath(selectedCloudType, remoteParentPath);
-                for (var i=0; i<json.contents.length; i++) {
-                    var item = json.contents[i];
-                    var modelItem = { "name": cloudDriveModel.getRemoteName(selectedCloudType, item.path), "absolutePath": item.path,
-                        "isChecked": false, "source": "", "thumbnail": "", "fileType": cloudDriveModel.getFileType(item.path), "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
-                        "subDirCount": 0, "subFileCount": 0, "isDirty": false,
-                        "lastModified": (new Date(item.modified)), "size": item.bytes, "isDir": item.is_dir};
-                    model.append(modelItem);
-                    if (modelItem.absolutePath == originalRemotePath) {
-                        selectedIndex = i;
-                        selectedRemotePath = modelItem.absolutePath;
-                        selectedRemotePathName = modelItem.name;
-                        selectedIsDir = modelItem.isDir;
-                    }
+            // Generalize by using common metadata json.
+            var parsedObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, json);
+            remoteParentPath = parsedObj.absolutePath;
+            remoteParentPathName = parsedObj.name;
+            remoteParentParentPath = parsedObj.parentPath;
+            for (var i=0; i < parsedObj.children.length; i++) {
+                var modelItem = parsedObj.children[i];
+                model.append(modelItem);
+                if (modelItem.absolutePath == originalRemotePath) {
+                    selectedIndex = i;
+                    selectedRemotePath = modelItem.absolutePath;
+                    selectedRemotePathName = modelItem.name;
+                    selectedIsDir = modelItem.isDir;
                 }
-                break;
-            case CloudDriveModel.SkyDrive:
-                remoteParentPath = json.property.id;
-                remoteParentPathName = json.property.name;
-                remoteParentParentPath = (json.property.parent_id ? json.property.parent_id : "");
-                for (var i=0; i<json.data.length; i++) {
-                    var item = json.data[i];
-                    var modelItem = { "name": item.name, "absolutePath": item.id,
-                        "isChecked": false, "source": (item.source ? item.source : ""), "thumbnail": (item.picture ? item.picture : ""), "fileType": cloudDriveModel.getFileType(item.name), "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
-                        "subDirCount": 0, "subFileCount": 0, "isDirty": false,
-                        "lastModified": Utility.parseJSONDate(item.updated_time), "size": item.size, "isDir": (item.type == "folder" || item.type == "album") };
-                    model.append(modelItem);
-                    if (modelItem.absolutePath == originalRemotePath) {
-                        selectedIndex = i;
-                        selectedRemotePath = modelItem.absolutePath;
-                        selectedRemotePathName = modelItem.name;
-                        selectedIsDir = modelItem.isDir;
-                    }
-                }
-                break;
-            case CloudDriveModel.GoogleDrive:
-                remoteParentPath = json.property.id;
-                remoteParentPathName = json.property.title;
-                remoteParentParentPath = ((json.property.parents && json.property.parents.length > 0) ? json.property.parents[0].id : "");
-                for (var i=0; i<json.items.length; i++) {
-                    var item = json.items[i];
-                    var modelItem = { "name": item.title, "absolutePath": item.id,
-                        "isChecked": false, "source": (item.webContentLink ? item.webContentLink : ""), "thumbnail": (item.thumbnailLink ? item.thumbnailLink : ""), "fileType": (item.fileExtension ? item.fileExtension : ""), "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
-                        "subDirCount": 0, "subFileCount": 0, "isDirty": false,
-                        "lastModified": Utility.parseJSONDate(item.modifiedDate), "size": (item.fileSize ? item.fileSize : 0), "isDir": (item.mimeType == "application/vnd.google-apps.folder") };
-                    model.append(modelItem);
-                    if (modelItem.absolutePath == originalRemotePath) {
-                        selectedIndex = i;
-                        selectedRemotePath = modelItem.absolutePath;
-                        selectedRemotePathName = modelItem.name;
-                        selectedIsDir = modelItem.isDir;
-                    }
-                }
-                break;
-            case CloudDriveModel.Ftp:
-                remoteParentPath = json.property.path;
-                remoteParentPathName = json.property.path;
-                remoteParentParentPath = cloudDriveModel.getParentRemotePath(selectedCloudType, remoteParentPath);
-                for (var i=0; i<json.data.length; i++) {
-                    var item = json.data[i];
-                    var modelItem = { "name": item.name, "absolutePath": item.path,
-                        "isChecked": false, "source": "", "thumbnail": "", "fileType": cloudDriveModel.getFileType(item.name), "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
-                        "subDirCount": 0, "subFileCount": 0, "isDirty": false,
-                        "lastModified": Utility.parseJSONDate(item.lastModified), "size": item.size, "isDir": item.isDir };
-                    model.append(modelItem);
-                    if (modelItem.absolutePath == originalRemotePath) {
-                        selectedIndex = i;
-                        selectedRemotePath = modelItem.absolutePath;
-                        selectedRemotePathName = modelItem.name;
-                        selectedIsDir = modelItem.isDir;
-                    }
-                }
-                break;
             }
 
             var responseJson = { "selectedIndex": selectedIndex,
@@ -1319,7 +1262,7 @@ PageStackWindow {
                 } else {
                     parsedObj.name = jsonObj.name;
                     parsedObj.absolutePath = jsonObj.id;
-                    parsedObj.parentPath = (jsonObj.parents && jsonObj.parents.length > 0) ? jsonObj.parents[0].id : cloudDriveModel.getRemoteRoot(selectedCloudType);
+                    parsedObj.parentPath = (jsonObj.parents && jsonObj.parents.length > 0) ? jsonObj.parents[0].id : "";
                     parsedObj.size = (jsonObj.size) ? jsonObj.size : 0;
                     parsedObj.isDeleted = false;
                     parsedObj.isDir = (jsonObj.type == "folder" || jsonObj.type == "album");
@@ -1343,7 +1286,7 @@ PageStackWindow {
                 } else {
                     parsedObj.name = jsonObj.title;
                     parsedObj.absolutePath = jsonObj.id;
-                    parsedObj.parentPath = (jsonObj.parents && jsonObj.parents.length > 0) ? jsonObj.parents[0].id : cloudDriveModel.getRemoteRoot(selectedCloudType);
+                    parsedObj.parentPath = (jsonObj.parents && jsonObj.parents.length > 0) ? jsonObj.parents[0].id : "";
                     parsedObj.size = (jsonObj.fileSize) ? jsonObj.fileSize : 0;
                     parsedObj.isDeleted = false;
                     parsedObj.isDir = (jsonObj.mimeType == "application/vnd.google-apps.folder");
