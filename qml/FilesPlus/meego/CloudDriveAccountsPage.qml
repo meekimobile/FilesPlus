@@ -14,7 +14,7 @@ Page {
 //            console.debug("cloudDriveAccountsPage updateAccountInfoSlot accountModel i " + i + " uid " + accountListView.model.get(i).uid + " type " + accountListView.model.get(i).type);
             if (accountListView.model.get(i).uid == uid && accountListView.model.get(i).type == type) {
                 console.debug("cloudDriveAccountsPage updateAccountInfoSlot i " + i + " uid " + uid + " type " + type);
-                accountListView.model.set(i, { name: name, email: email, shared: shared, normal: normal, quota: quota });
+                accountListView.model.set(i, { name: name, email: email, shared: Number(shared), normal: Number(normal), quota: Number(quota) });
             }
         }
     }
