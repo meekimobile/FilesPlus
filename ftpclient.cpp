@@ -90,7 +90,7 @@ void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
 {
     qDebug() << "----- FtpClient::filePut -----" << localFilePath << "to" << remoteFilePath;
 
-    QStringList tokens = accessTokenPairMap[uid].token.split("@");
+    QStringList tokens = accessTokenPairMap[uid].email.split("@");
 
     QUrl uploadurl("ftp://" + tokens[1] + remoteFilePath);
     uploadurl.setUserName(tokens[0]);
@@ -396,9 +396,9 @@ QNetworkReply *FtpClient::filePut(QString nonce, QString uid, QIODevice *source,
 QFtpWrapper *FtpClient::connectToHost(QString nonce, QString uid)
 {
     /* Notes:
-     * Stores token as user@host --> Token(token=user@host, secret=password, email=user@host)
+     * Stores email as user@host --> Token(token="", secret=password, email=user@host)
      */
-    QString url = accessTokenPairMap[uid].token;
+    QString url = accessTokenPairMap[uid].email;
     QString username, hostname;
     quint16 port = 21; // Default ftp port = 21
     QRegExp rx("([^@]*)@([^:]*)(:.*)*");
@@ -513,14 +513,19 @@ void FtpClient::saveConnection(QString id, QString hostname, QString username, Q
     qDebug() << "----- FtpClient::saveConnection -----";
 
     /* Notes:
-     * Stores token as username@hostname --> Token(token=username@hostname, secret=password, email=username@hostname)
+     * Stores email as username@hostname --> Token(token="", secret=password, email=username@hostname)
      */
     // TODO Encrypt password before store to file.
-    TokenPair tokenPair;
-    tokenPair.token = QString("%1@%2").arg(username).arg(hostname);
-    tokenPair.secret = password;
-    tokenPair.email = QString("%1@%2").arg(username).arg(hostname);
-    accessTokenPairMap[id] = tokenPair;
+    if (accessTokenPairMap.contains(id)) {
+        accessTokenPairMap[id].secret = password;
+        accessTokenPairMap[id].email = QString("%1@%2").arg(username).arg(hostname);
+    } else {
+        TokenPair tokenPair;
+        tokenPair.token = "";
+        tokenPair.secret = password;
+        tokenPair.email = QString("%1@%2").arg(username).arg(hostname);
+        accessTokenPairMap[id] = tokenPair;
+    }
 
     saveAccessPairMap();
 }
