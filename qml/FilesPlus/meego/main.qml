@@ -1308,7 +1308,7 @@ PageStackWindow {
                 if (jsonObj.property) {
                     parsedObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.property);
                 } else {
-                    parsedObj.name = jsonObj.name;
+                    parsedObj.name = (jsonObj.name) ? jsonObj.name : cloudDriveModel.getRemoteName(selectedCloudType, jsonObj.path);
                     parsedObj.absolutePath = jsonObj.path;
                     parsedObj.parentPath = cloudDriveModel.getParentRemotePath(selectedCloudType, jsonObj.path);
                     parsedObj.size = (jsonObj.size) ? jsonObj.size : 0;

@@ -211,7 +211,9 @@ void FtpClient::metadata(QString nonce, QString uid, QString remoteFilePath)
         m_ftp->list();
         m_ftp->waitForDone();
 
-        emit metadataReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), QString("{ \"data\": %1, \"property\": %2 }").arg(getItemListJson(m_ftp->getCurrentPath(), m_ftp->getItemList())).arg(propertyJson) );
+        QString dataJson = getItemListJson(m_ftp->getCurrentPath(), m_ftp->getItemList());
+
+        emit metadataReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), QString("{ \"data\": %1, \"property\": %2 }").arg(dataJson).arg(propertyJson) );
     } else {
         // remoteFilePath is file or not found.
         qDebug() << "FtpClient::metadata" << uid << remoteFilePath << "is file or not found. error" << m_ftp->error() << m_ftp->errorString();
@@ -247,7 +249,10 @@ void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
     m_ftp->list(remoteFilePath);
     m_ftp->waitForDone();
 
-    emit browseReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), QString("{ \"data\": %1, \"property\": %2 }").arg(getItemListJson(m_ftp->getCurrentPath(), m_ftp->getItemList())).arg(QString("{ \"path\": \"%1\", \"isDir\": true }").arg(m_ftp->getCurrentPath())) );
+    QString dataJson = getItemListJson(m_ftp->getCurrentPath(), m_ftp->getItemList());
+    QString propertyJson = QString("{ \"path\": \"%1\", \"isDir\": true }").arg(m_ftp->getCurrentPath());
+
+    emit browseReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), QString("{ \"data\": %1, \"property\": %2 }").arg(dataJson).arg(propertyJson) );
 
     m_ftp->close();
     m_ftp->deleteLater();
