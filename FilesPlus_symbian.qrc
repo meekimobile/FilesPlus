@@ -155,5 +155,6 @@
         <file alias="qml/FilesPlus/FileActionDialog.qml">qml/FilesPlus/symbian/FileActionDialog.qml</file>
         <file>qml/FilesPlus/internet.svg</file>
         <file>qml/FilesPlus/internet_inverted.svg</file>
+        <file>qml/FilesPlus/webdav_icon.png</file>
     </qresource>
 </RCC>

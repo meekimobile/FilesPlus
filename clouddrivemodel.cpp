@@ -249,6 +249,7 @@ void CloudDriveModel::initializeCloudClients(QString nonce)
     initializeSkyDriveClient();
     initializeGoogleDriveClient();
     initializeFtpClient();
+    initializeWebDAVClient();
 }
 
 void CloudDriveModel::initializeDropboxClient() {
@@ -362,6 +363,32 @@ void CloudDriveModel::initializeFtpClient()
     connect(ftpClient, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(fileGetResumeReplySignal(QString,int,QString,QString)), SLOT(fileGetResumeReplyFilter(QString,int,QString,QString)) );
     connect(ftpClient, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
+}
+
+void CloudDriveModel::initializeWebDAVClient()
+{
+    // TODO Generalize initialization.
+    qDebug() << "CloudDriveModel::initializeWebDAVClient";
+
+    webDavClient = new WebDavClient(this);
+    connect(webDavClient, SIGNAL(uploadProgress(QString,qint64,qint64)), SLOT(uploadProgressFilter(QString,qint64,qint64)) );
+    connect(webDavClient, SIGNAL(downloadProgress(QString,qint64,qint64)), SLOT(downloadProgressFilter(QString,qint64,qint64)) );
+    connect(webDavClient, SIGNAL(authorizeRedirectSignal(QString,QString,QString)), SLOT(authorizeRedirectFilter(QString,QString,QString)) );
+    connect(webDavClient, SIGNAL(accessTokenReplySignal(QString,int,QString,QString)), SLOT(accessTokenReplyFilter(QString,int,QString,QString)) );
+    connect(webDavClient, SIGNAL(accountInfoReplySignal(QString,int,QString,QString)), SLOT(accountInfoReplyFilter(QString,int,QString,QString)) );
+    connect(webDavClient, SIGNAL(quotaReplySignal(QString,int,QString,QString)), SLOT(quotaReplyFilter(QString,int,QString,QString)) );
+    connect(webDavClient, SIGNAL(fileGetReplySignal(QString,int,QString,QString)), SLOT(fileGetReplyFilter(QString,int,QString,QString)) );
+    connect(webDavClient, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SLOT(filePutReplyFilter(QString,int,QString,QString)) );
+    connect(webDavClient, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
+    connect(webDavClient, SIGNAL(browseReplySignal(QString,int,QString,QString)), SLOT(browseReplyFilter(QString,int,QString,QString)) );
+    connect(webDavClient, SIGNAL(createFolderReplySignal(QString,int,QString,QString)), SLOT(createFolderReplyFilter(QString,int,QString,QString)) );
+    connect(webDavClient, SIGNAL(moveFileReplySignal(QString,int,QString,QString)), SLOT(moveFileReplyFilter(QString,int,QString,QString)) );
+    connect(webDavClient, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
+    connect(webDavClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
+    connect(webDavClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
+    connect(webDavClient, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
+    connect(webDavClient, SIGNAL(fileGetResumeReplySignal(QString,int,QString,QString)), SLOT(fileGetResumeReplyFilter(QString,int,QString,QString)) );
+    connect(webDavClient, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
 }
 
 QString CloudDriveModel::createNonce() {
@@ -725,7 +752,7 @@ QString CloudDriveModel::getFileType(QString localPath)
 
 CloudDriveModel::ClientTypes CloudDriveModel::getClientType(int typeInt)
 {
-    qDebug() << "CloudDriveModel::getClientType" << typeInt;
+//    qDebug() << "CloudDriveModel::getClientType" << typeInt;
 
     switch (typeInt) {
     case Dropbox:
@@ -736,6 +763,8 @@ CloudDriveModel::ClientTypes CloudDriveModel::getClientType(int typeInt)
         return GoogleDrive;
     case Ftp:
         return Ftp;
+    case WebDAV:
+        return WebDAV;
     }
 }
 
@@ -749,6 +778,8 @@ QString CloudDriveModel::getCloudName(int type) {
         return "SkyDrive";
     case Ftp:
         return "FTP";
+    case WebDAV:
+        return "WebDAV";
     default:
         return QString("Invalid type(%1)").arg(type);
     }
@@ -817,18 +848,7 @@ QString CloudDriveModel::getOperationName(int operation) {
 
 bool CloudDriveModel::isRemoteAbsolutePath(CloudDriveModel::ClientTypes type)
 {
-    switch (type) {
-    case Dropbox:
-        return dbClient->isRemoteAbsolutePath();
-    case SkyDrive:
-        return skdClient->isRemoteAbsolutePath();
-    case GoogleDrive:
-        return gcdClient->isRemoteAbsolutePath();
-    case Ftp:
-        return ftpClient->isRemoteAbsolutePath();
-    default:
-        return false;
-    }
+    return getCloudClient(type)->isRemoteAbsolutePath();
 }
 
 void CloudDriveModel::initScheduler()
@@ -1381,18 +1401,7 @@ bool CloudDriveModel::isAuthorized()
 
 bool CloudDriveModel::isAuthorized(CloudDriveModel::ClientTypes type)
 {
-    switch (type) {
-    case Dropbox:
-        return dbClient->isAuthorized();
-    case GoogleDrive:
-        return gcdClient->isAuthorized();
-    case SkyDrive:
-        return skdClient->isAuthorized();
-    case Ftp:
-        return ftpClient->isAuthorized();
-    }
-
-    return false;
+    return getCloudClient(type)->isAuthorized();
 }
 
 QStringList CloudDriveModel::getStoredUidList()
@@ -1403,40 +1412,19 @@ QStringList CloudDriveModel::getStoredUidList()
     uidList.append(gcdClient->getStoredUidList());
     uidList.append(skdClient->getStoredUidList());
     uidList.append(ftpClient->getStoredUidList());
+    uidList.append(webDavClient->getStoredUidList());
 
     return uidList;
 }
 
 QStringList CloudDriveModel::getStoredUidList(CloudDriveModel::ClientTypes type)
 {
-    switch (type) {
-    case Dropbox:
-        return dbClient->getStoredUidList();
-    case GoogleDrive:
-        return gcdClient->getStoredUidList();
-    case SkyDrive:
-        return skdClient->getStoredUidList();
-    case Ftp:
-        return ftpClient->getStoredUidList();
-    }
-
-    return QStringList();
+    return getCloudClient(type)->getStoredUidList();
 }
 
 int CloudDriveModel::removeUid(CloudDriveModel::ClientTypes type, QString uid)
 {
-    switch (type) {
-    case Dropbox:
-        return dbClient->removeUid(uid);
-    case SkyDrive:
-        return skdClient->removeUid(uid);
-    case GoogleDrive:
-        return gcdClient->removeUid(uid);
-    case Ftp:
-        return ftpClient->removeUid(uid);
-    }
-
-    return -1;
+    return getCloudClient(type)->removeUid(uid);
 }
 
 void CloudDriveModel::requestJobQueueStatus()
@@ -1657,6 +1645,8 @@ bool CloudDriveModel::parseAuthorizationCode(CloudDriveModel::ClientTypes type, 
 
 void CloudDriveModel::accessToken(CloudDriveModel::ClientTypes type, QString pin)
 {
+    // TODO Validate type.
+
     // Store access token pin temporarily.
     accessTokenPin = pin;
 
@@ -3332,19 +3322,14 @@ bool CloudDriveModel::updateDropboxPrefix(bool fullAccess)
     return res;
 }
 
-bool CloudDriveModel::testConnection(CloudDriveModel::ClientTypes type, QString hostname, quint16 port, QString username, QString password)
+bool CloudDriveModel::testConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password)
 {
-    if (type == Ftp && ftpClient != 0) {
-        return ftpClient->testConnection(hostname, port, username, password);
-    }
-    return false;
+    return getCloudClient(type)->testConnection(uid, hostname, username, password);
 }
 
-void CloudDriveModel::saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, quint16 port, QString username, QString password)
+void CloudDriveModel::saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password)
 {
-    if (type == Ftp && ftpClient != 0) {
-        ftpClient->saveConnection(uid, hostname, port, username, password);
-    }
+    getCloudClient(type)->saveConnection(uid, hostname, username, password);
 }
 
 QString CloudDriveModel::getItemCacheKey(int type, QString uid, QString localPath)
@@ -3699,6 +3684,8 @@ CloudDriveClient * CloudDriveModel::getCloudClient(ClientTypes type)
         return gcdClient;
     case Ftp:
         return ftpClient;
+    case WebDAV:
+        return webDavClient;
     default:
         qDebug() << "CloudDriveModel::getCloudClient type" << type << "is not implemented yet.";
     }
@@ -3717,6 +3704,8 @@ CloudDriveClient * CloudDriveModel::getCloudClient(const int type)
         return gcdClient;
     case Ftp:
         return ftpClient;
+    case WebDAV:
+        return webDavClient;
     default:
         qDebug() << "CloudDriveModel::getCloudClient type" << type << "is not implemented yet.";
     }
@@ -3928,6 +3917,11 @@ void CloudDriveModel::accessTokenReplyFilter(QString nonce, int err, QString err
                 // GoogleDrive's accessTokenReply doesn't provide uid yet. Continue to get account.
 //                qDebug() << "CloudDriveModel::accessTokenReplyFilter GoogleDrive uid" << job.uid;
                 accountInfo(GoogleDrive, job.uid);
+                break;
+            case WebDAV:
+                // WebDAV's accessTokenReply doesn't provide uid yet. Continue to get account.
+//                qDebug() << "CloudDriveModel::accessTokenReplyFilter WebDAV uid" << job.uid;
+                accountInfo(WebDAV, job.uid);
                 break;
             }
         }

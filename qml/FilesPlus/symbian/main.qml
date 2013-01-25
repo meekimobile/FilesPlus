@@ -1119,6 +1119,8 @@ PageStackWindow {
                                  type: getClientType(json.type),
                                  uid: json.uid,
                                  email: json.email,
+                                 token: json.token,
+                                 secret: json.secret,
                                  hash: cloudItem.hash,
                                  name: "",
                                  shared: 0,
@@ -1153,9 +1155,12 @@ PageStackWindow {
                 return "skydrive_icon.png";
             case CloudDriveModel.Ftp:
                 return "ftp_icon.png";
+            case CloudDriveModel.WebDAV:
+                return "webdav_icon.png";
             }
         }
 
+        // TODO Move to CloudDriveModel class?
         function getClientType(typeText) {
             if (typeText) {
                 if (["dropboxclient","dropbox"].indexOf(typeText.toLowerCase()) != -1) {
@@ -1166,6 +1171,8 @@ PageStackWindow {
                     return CloudDriveModel.GoogleDrive;
                 } else if (["ftpclient","ftp"].indexOf(typeText.toLowerCase()) != -1) {
                     return CloudDriveModel.Ftp;
+                } else if (["webdavclient","webdav"].indexOf(typeText.toLowerCase()) != -1) {
+                    return CloudDriveModel.WebDAV;
                 }
             }
 

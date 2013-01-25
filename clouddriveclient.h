@@ -23,8 +23,8 @@ public:
     virtual bool isFilePutResumable(qint64 fileSize);
     virtual bool isFileGetResumable(qint64 fileSize);
 
-    virtual bool testConnection(QString hostname, quint16 port, QString username, QString password);
-    virtual void saveConnection(QString id, QString hostname, quint16 port, QString username, QString password);
+    virtual bool testConnection(QString id, QString hostname, QString username, QString password);
+    virtual void saveConnection(QString id, QString hostname, QString username, QString password);
 
     virtual void requestToken(QString nonce);
     virtual void authorize(QString nonce);
@@ -105,6 +105,12 @@ protected:
 
     void loadAccessPairMap();
     void saveAccessPairMap();
+
+    QString createNonce();
+    QString createTimestamp();
+    QString createNormalizedQueryString(QMap<QString, QString> sortMap);
+    QString encodeURI(const QString uri);
+    QString createQueryString(QMap<QString, QString> sortMap);
 private:
 
 };

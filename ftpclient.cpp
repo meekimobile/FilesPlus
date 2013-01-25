@@ -483,16 +483,19 @@ QString FtpClient::getRemoteFileName(QString remotePath)
     return name;
 }
 
-bool FtpClient::testConnection(QString hostname, quint16 port, QString username, QString password)
+bool FtpClient::testConnection(QString id, QString hostname, QString username, QString password)
 {
     qDebug() << "----- FtpClient::testConnection -----";
 
     // Reset m_isDone.
 //    m_isDone = false;
+    QStringList tokens = hostname.split(":");
+    QString host = tokens.at(0);
+    int port = (tokens.length() >= 2) ? tokens.at(1).toInt() : 21;
 
     bool res = false;
     QFtpWrapper *m_ftp = new QFtpWrapper("test", this);
-    m_ftp->connectToHost(hostname, port);
+    m_ftp->connectToHost(host, port);
     m_ftp->login(username, password);
     m_ftp->waitForDone();
     qDebug() << "FtpClient::testConnection done state" << m_ftp->state();
@@ -505,18 +508,18 @@ bool FtpClient::testConnection(QString hostname, quint16 port, QString username,
     return res;
 }
 
-void FtpClient::saveConnection(QString id, QString hostname, quint16 port, QString username, QString password)
+void FtpClient::saveConnection(QString id, QString hostname, QString username, QString password)
 {
     qDebug() << "----- FtpClient::saveConnection -----";
 
     /* Notes:
-     * Stores token as user@host --> Token(token=user@host, secret=password, email=user@host)
+     * Stores token as username@hostname --> Token(token=username@hostname, secret=password, email=username@hostname)
      */
     // TODO Encrypt password before store to file.
     TokenPair tokenPair;
-    tokenPair.token = QString("%1@%2:%3").arg(username).arg(hostname).arg(port);
+    tokenPair.token = QString("%1@%2").arg(username).arg(hostname);
     tokenPair.secret = password;
-    tokenPair.email = QString("%1@%2:%3").arg(username).arg(hostname).arg(port);
+    tokenPair.email = QString("%1@%2").arg(username).arg(hostname);
     accessTokenPairMap[id] = tokenPair;
 
     saveAccessPairMap();

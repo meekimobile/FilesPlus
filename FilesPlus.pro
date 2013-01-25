@@ -87,7 +87,8 @@ SOURCES += main.cpp \
     skydriveclient.cpp \
     sleeper.cpp \
     qftpwrapper.cpp \
-    clouddriveclient.cpp
+    clouddriveclient.cpp \
+    webdavclient.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -123,7 +124,8 @@ HEADERS += \
     skydriveclient.h \
     sleeper.h \
     qftpwrapper.h \
-    clouddriveclient.h
+    clouddriveclient.h \
+    webdavclient.h
 
 OTHER_FILES += \
     qtc_packaging/debian_harmattan/rules \

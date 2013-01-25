@@ -30,6 +30,8 @@ QStringList CloudDriveClient::getStoredUidList()
         QString jsonText = "{ ";
         jsonText.append( QString("\"uid\": \"%1\", ").arg(s) );
         jsonText.append( QString("\"email\": \"%1\", ").arg(t.email) );
+        jsonText.append( QString("\"token\": \"%1\", ").arg(t.token) );
+        jsonText.append( QString("\"secret\": \"%1\", ").arg(t.secret) );
         jsonText.append( QString("\"type\": \"%1\"").arg(objectName()) );
         jsonText.append(" }");
 
@@ -104,12 +106,56 @@ void CloudDriveClient::saveAccessPairMap() {
     }
 }
 
-bool CloudDriveClient::testConnection(QString hostname, quint16 port, QString username, QString password)
+QString CloudDriveClient::createNonce() {
+    QString ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    QString nonce;
+
+    for(int i = 0; i <= 16; ++i)
+    {
+        nonce += ALPHANUMERIC.at( qrand() % ALPHANUMERIC.length() );
+    }
+
+    return nonce;
+}
+
+QString CloudDriveClient::createTimestamp() {
+    qint64 seconds = QDateTime::currentMSecsSinceEpoch() / 1000;
+
+    return QString("%1").arg(seconds);
+}
+
+QString CloudDriveClient::createNormalizedQueryString(QMap<QString, QString> sortMap) {
+    QString queryString;
+    foreach (QString key, sortMap.keys()) {
+        if (queryString != "") queryString.append("&");
+        queryString.append(QUrl::toPercentEncoding(key)).append("=").append(QUrl::toPercentEncoding(sortMap[key]));
+    }
+
+    return queryString;
+}
+
+QString CloudDriveClient::encodeURI(const QString uri) {
+    // Example: https://api.dropbox.com/1/metadata/sandbox/C/B/NES/Solomon's Key (E) [!].nes
+    // All non-alphanumeric except : and / must be encoded.
+    return QUrl::toPercentEncoding(uri, ":/");
+}
+
+QString CloudDriveClient::createQueryString(QMap<QString, QString> sortMap) {
+    QString queryString;
+    foreach (QString key, sortMap.keys()) {
+        if (queryString != "") queryString.append("&");
+        queryString.append(key).append("=").append(sortMap[key]);
+    }
+
+    return queryString;
+}
+
+bool CloudDriveClient::testConnection(QString id, QString hostname, QString username, QString password)
 {
     return false;
 }
 
-void CloudDriveClient::saveConnection(QString id, QString hostname, quint16 port, QString username, QString password)
+void CloudDriveClient::saveConnection(QString id, QString hostname, QString username, QString password)
 {
 }
 
