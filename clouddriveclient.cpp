@@ -44,7 +44,8 @@ int CloudDriveClient::removeUid(QString uid)
 {
     qDebug() << QString(objectName()) << "::removeUid uid" << uid;
     int n = accessTokenPairMap.remove(uid);
-    qDebug() << objectName() << "::removeUid accessTokenPairMap" << accessTokenPairMap;
+
+    saveAccessPairMap();
 
     return n;
 }
