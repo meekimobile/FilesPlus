@@ -1159,7 +1159,6 @@ PageStackWindow {
             }
         }
 
-        // TODO Move to CloudDriveModel class?
         function getClientType(typeText) {
             if (typeText) {
                 if (["dropboxclient","dropbox"].indexOf(typeText.toLowerCase()) != -1) {
@@ -1326,6 +1325,28 @@ PageStackWindow {
                 }
             }
 
+            if (selectedCloudType == CloudDriveModel.WebDAV) {
+                if (jsonObj.property) {
+                    parsedObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.property);
+                } else {
+                    parsedObj.name = (jsonObj.propstat && jsonObj.propstat.prop && jsonObj.propstat.prop.displayname) ? jsonObj.propstat.prop.displayname : cloudDriveModel.getRemoteName(selectedCloudType, jsonObj.href);
+                    parsedObj.absolutePath = jsonObj.href;
+                    parsedObj.parentPath = cloudDriveModel.getParentRemotePath(selectedCloudType, jsonObj.href.substr(0, jsonObj.href.length-1)); // Workaround because it ended with /
+                    parsedObj.size = (jsonObj.propstat && jsonObj.propstat.prop && jsonObj.propstat.prop.getcontentlength) ? jsonObj.propstat.prop.getcontentlength : 0;
+                    parsedObj.isDeleted = false;
+                    parsedObj.isDir = parsedObj.absolutePath.lastIndexOf("/") == (parsedObj.absolutePath.length -1);
+                    parsedObj.lastModified = (jsonObj.propstat && jsonObj.propstat.prop && jsonObj.propstat.prop.getlastmodified) ? Utility.parseDate(jsonObj.propstat.prop.getlastmodified) : undefined;
+                    parsedObj.hash = (parsedObj.lastModified) ? Qt.formatDateTime(parsedObj.lastModified, Qt.ISODate) : cloudDriveModel.dirtyHash; // Uses DirtyHash if last modified doesn't exist.
+                    parsedObj.fileType = cloudDriveModel.getFileType(parsedObj.name);
+                }
+                if (jsonObj.data) {
+                    for(var i=0; i<jsonObj.data.length; i++) {
+                        var parsedChildObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.data[i]);
+                        parsedObj.children.push(parsedChildObj);
+                    }
+                }
+            }
+
             return parsedObj;
         }
 
@@ -1460,6 +1481,43 @@ PageStackWindow {
 
             // Remove finished job.
             cloudDriveModel.removeJob("cloudDriveModel.onQuotaReplySignal", jobJson.job_id);
+        }
+
+        onBrowseReplySignal: {
+            console.debug("window cloudDriveModel onBrowseReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
+
+            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+
+            if (err == 0) {
+                pageStack.find(function (page) {
+                    if (page.name == "cloudFolderPage") {
+                        page.parseCloudDriveMetadataJson(msg);
+                    } else if (page.name == "folderPage") {
+                        page.parseCloudDriveMetadataJson(msg);
+                    }
+                });
+            } else if (err == 204) { // Refresh token
+                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
+                return;
+            } else {
+                logError(getCloudName(jobJson.type) + " " + qsTr("Browse"),
+                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+
+                // Reset and close cloudDrivePathDialog.
+                var p = findPage("folderPage");
+                if (p) {
+                    p.closeCloudDrivePathDialogSlot();
+                }
+
+                // Reset cloudFolderPage.
+                var p = findPage("cloudFolderPage");
+                if (p) {
+                    p.resetBusySlot("cloudDriveModel onBrowseReplySignal");
+                }
+            }
+
+            // Remove finished job.
+            cloudDriveModel.removeJob("cloudDriveModel.onBrowseReplySignal", jobJson.job_id);
         }
 
         onFileGetReplySignal: {
@@ -2142,43 +2200,6 @@ PageStackWindow {
         onJobRemovedSignal: {
             // NOTE It's emitted from removeJob() to remove job from job model.
             cloudDriveJobsModel.removeJob(nonce);
-        }
-
-        onBrowseReplySignal: {
-            console.debug("window cloudDriveModel onBrowseReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
-
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
-
-            if (err == 0) {
-                pageStack.find(function (page) {
-                    if (page.name == "cloudFolderPage") {
-                        page.parseCloudDriveMetadataJson(msg);
-                    } else if (page.name == "folderPage") {
-                        page.parseCloudDriveMetadataJson(msg);
-                    }
-                });
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
-                return;
-            } else {
-                logError(getCloudName(jobJson.type) + " " + qsTr("Browse"),
-                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
-
-                // Reset and close cloudDrivePathDialog.
-                var p = findPage("folderPage");
-                if (p) {
-                    p.closeCloudDrivePathDialogSlot();
-                }
-
-                // Reset cloudFolderPage.
-                var p = findPage("cloudFolderPage");
-                if (p) {
-                    p.resetBusySlot("cloudDriveModel onBrowseReplySignal");
-                }
-            }
-
-            // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onBrowseReplySignal", jobJson.job_id);
         }
 
         onMigrateProgressSignal: {

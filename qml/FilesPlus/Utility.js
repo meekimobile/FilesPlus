@@ -145,6 +145,16 @@ function compareTime(jsonDateStringA, jsonDateStringB) {
     return a-b;
 }
 
+function parseDate(dateString) {
+    var d = new Date(dateString);
+//    console.debug("Utility.parseDate " + dateString + " " + d);
+    if (d == "Invalid Date") {
+        d = parseJSONDate(dateString);
+    }
+
+    return d;
+}
+
 function parseJSONDate(jsonDateString) {
 //    console.debug("Utility.parseJSONDate jsonDateString " + jsonDateString);
 
@@ -152,6 +162,7 @@ function parseJSONDate(jsonDateString) {
 
     var re = /(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(\.\d+)?(Z|([+-])(\d\d):(\d\d)|([+-])(\d\d\d\d))/;
     var d = jsonDateString.match(re);
+    if (!d) return d; // Return d if it's null
 //    console.debug("Utility.parseJSONDate d " + d + " d.length " + d.length);
 
     // "2010-12-07T11:00:00.000-09:00" parses to:

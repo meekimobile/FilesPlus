@@ -1,5 +1,5 @@
-# Add network, script
-QT += declarative network script sql
+# Add modules
+QT += declarative network script sql xml
 
 # Add more folders to ship with the application, here
 #folder_01.source = qml/FilesPlus

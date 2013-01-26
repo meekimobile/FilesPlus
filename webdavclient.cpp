@@ -1,6 +1,5 @@
 #include "webdavclient.h"
 #include <QApplication>
-#include <QScriptEngine>
 
 const QString WebDavClient::ConsumerKey = "ce970eaaff0f4c1fbc8268bec6e804e4";
 const QString WebDavClient::ConsumerSecret = "13bd2edd92344f04b23ee3170521f7fe";
@@ -10,6 +9,7 @@ const QString WebDavClient::authorizeURI = "https://oauth.yandex.com/authorize";
 const QString WebDavClient::accessTokenURI = "https://oauth.yandex.com/token"; // POST with grant_type=authorization_code&code=<code>&client_id=<client_id>&client_secret=<client_secret> or basic auth with only grant_type=authorization_code&code=<code>
 const QString WebDavClient::accountInfoURI = "https://api-fotki.yandex.ru/api/me/";
 const QString WebDavClient::quotaURI = "https://%1/"; // PROPFIND
+const QString WebDavClient::propertyURI = "https://%1%2"; // PROPFIND with arguments (hostname, path)
 
 WebDavClient::WebDavClient(QObject *parent) :
     CloudDriveClient(parent)
@@ -104,8 +104,33 @@ void WebDavClient::accountInfo(QString nonce, QString uid)
 
 void WebDavClient::quota(QString nonce, QString uid)
 {
-    // Signal with empty message to get default quota value.
-    emit quotaReplySignal(nonce, 0, "", "{ }");
+    qDebug() << "----- WebDavClient::quota -----" << nonce << uid;
+
+    QString requestBody = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><propfind xmlns=\"DAV:\"><prop><quota-available-bytes/><quota-used-bytes/></prop></propfind>";
+
+    QNetworkReply *reply = property(nonce, uid, "/", requestBody, 0);
+
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "WebDavClient::quota nonce" << nonce << "replyBody" << replyBody;
+
+    // Parse XML and convert to JSON.
+    QScriptEngine engine;
+    QScriptValue jsonObj = engine.newObject();
+    QDomDocument doc;
+    doc.setContent(replyBody, true);
+    QDomElement docElem = doc.documentElement();
+    // Populate jsonObj starts from first child.
+    QDomNode n = docElem.firstChild();
+    while(!n.isNull()) {
+        jsonObj.setProperty(n.localName(), createScriptValue(engine, n, "quota"));
+        n = n.nextSibling();
+    }
+    // Stringify jsonObj.
+    replyBody = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
+
+    qDebug() << "WebDavClient::quota nonce" << nonce << "JSON replyBody" << replyBody;
+
+    emit quotaReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 }
 
 QString WebDavClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous)
@@ -227,41 +252,39 @@ void WebDavClient::filePut(QString nonce, QString uid, QString localFilePath, QS
 //    }
 }
 
-QString WebDavClient::property(QString nonce, QString uid, QString remoteFilePath)
+QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remoteFilePath, QString requestBody, int depth)
 {
-    qDebug() << "----- WebDavClient::property -----" << uid << remoteFilePath;
+    qDebug() << "----- WebDavClient::property -----" << uid << remoteFilePath << requestBody << depth;
 
-    QString propertyJson = "";
-    QString remoteParentPath = getParentRemotePath(remoteFilePath);
-    QString remoteFileName = getRemoteFileName(remoteFilePath);
+    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString uri = propertyURI.arg(hostname).arg(remoteFilePath);
+    qDebug() << "WebDavClient::property uri" << uri;
 
-//    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
-//    m_ftp->list(remoteParentPath);
-//    m_ftp->waitForDone();
+    QByteArray authHeader;
+    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    qDebug() << "WebDavClient::property authHeader" << authHeader;
 
-//    if (m_ftp->error() == QFtp::NoError) {
-//        if (m_ftp->getItemList().isEmpty()) {
-//            // remoteFilePath is not found.
-//            qDebug() << "WebDavClient::property" << uid << remoteFilePath << "is not found.";
-//        } else {
-//            for (int i=0; i < m_ftp->getItemList().count(); i++) {
-////                qDebug() << "WebDavClient::property item" << m_ftp->getItemList().at(i).name();
-//                if (m_ftp->getItemList().at(i).name() == remoteFileName) {
-//                    propertyJson = getPropertyJson(remoteParentPath, m_ftp->getItemList().at(i));
-//                    break;
-//                }
-//            }
-//        }
-//    } else {
-//        qDebug() << "WebDavClient::property" << uid << remoteFilePath << "error" << m_ftp->error() << m_ftp->errorString();
-//        propertyJson = QString("{ \"error\": %1, \"errorString\": \"%2\" }").arg(m_ftp->error()).arg(m_ftp->errorString());
-//    }
+    QBuffer dataBuf;
+    dataBuf.open(QIODevice::ReadWrite);
+    dataBuf.write(requestBody.toUtf8());
 
-//    m_ftp->close();
-//    m_ftp->deleteLater();
-//    m_ftpHash->remove(m_ftp->getNonce());
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(createNonce()));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    req.setHeader(QNetworkRequest::ContentLengthHeader, requestBody.length());
+    req.setRawHeader("Authorization", authHeader);
+    req.setRawHeader("Accept", QByteArray("*/*"));
+    req.setRawHeader("Depth", QString("%1").arg(depth).toAscii());
+    QNetworkReply *reply = manager->sendCustomRequest(req, "PROPFIND", &dataBuf);
 
-    return propertyJson;
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    return reply;
 }
 
 void WebDavClient::metadata(QString nonce, QString uid, QString remoteFilePath)
@@ -312,23 +335,73 @@ void WebDavClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 //    m_ftpHash->remove(m_ftp->getNonce());
 }
 
+QScriptValue WebDavClient::createScriptValue(QScriptEngine &engine, QDomNode &n, QString caller)
+{
+    qDebug() << "WebDavClient::createScriptValue caller" << caller << "nodeName" << n.nodeName() << "localName" << n.localName() << "nodeType" << n.nodeType();
+
+    if (n.isText()) {
+        return QScriptValue(n.toText().nodeValue());
+    } else if (n.hasChildNodes()) {
+        if (n.firstChild().isText()) {
+            // Get text node value if there is only 1 text child node.
+            QDomNode textNode = n.firstChild();
+            return createScriptValue(engine, textNode, caller);
+        } else {
+            // Create object from node with children.
+            QScriptValue jsonObj = engine.newObject();
+            for (int i=0; i < n.childNodes().length(); i++) {
+                QDomNode childNode = n.childNodes().at(i);
+//                qDebug() << "WebDavClient::createScriptValue child i" << i << childNode.nodeName() << childNode.localName() << childNode.nodeType();
+                // Drilldown recursively to create JSON object.
+                jsonObj.setProperty(childNode.localName(), createScriptValue(engine, childNode, caller));
+            }
+            return jsonObj;
+        }
+    } else {
+        return QScriptValue();
+    }
+}
+
 void WebDavClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "----- WebDavClient::browse -----" << uid << remoteFilePath;
+    qDebug() << "----- WebDavClient::browse -----" << nonce << uid << remoteFilePath;
 
-//    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    if (remoteFilePath == "") {
+        remoteFilePath = "/";
+    }
 
-//    // Get item list.
-//    if (!remoteFilePath.isEmpty()) m_ftp->cd(remoteFilePath);
-//    m_ftp->pwd();
-//    m_ftp->list(remoteFilePath);
-//    m_ftp->waitForDone();
+    QNetworkReply *reply = property(nonce, uid, remoteFilePath, "", 1);
 
-//    emit browseReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), QString("{ \"data\": %1, \"property\": %2 }").arg(getItemListJson(m_ftp->getCurrentPath(), m_ftp->getItemList())).arg(QString("{ \"path\": \"%1\", \"isDir\": true }").arg(m_ftp->getCurrentPath())) );
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "WebDavClient::browse nonce" << nonce << "replyBody" << replyBody;
 
-//    m_ftp->close();
-//    m_ftp->deleteLater();
-//    m_ftpHash->remove(m_ftp->getNonce());
+    // Parse XML and convert to JSON.
+    QScriptEngine engine;
+    QScriptValue jsonObj = engine.newObject();
+    QDomDocument doc;
+    doc.setContent(replyBody, true);
+    QDomElement docElem = doc.documentElement();
+    QDomNode n = docElem.firstChild();
+    // Populate property from first child.
+    if (!n.isNull()) {
+        QScriptValue propertyObj = createScriptValue(engine, n, "browse");
+        jsonObj.setProperty("property", propertyObj);
+    }
+    // Populate data from remain children.
+    QScriptValue dataArrayObj = engine.newArray();
+    int dataArrayIndex = 0;
+    n = n.nextSibling();
+    while(!n.isNull()) {
+        dataArrayObj.setProperty(dataArrayIndex++, createScriptValue(engine, n, "browse"));
+        n = n.nextSibling();
+    }
+    jsonObj.setProperty("data", dataArrayObj);
+    // Stringify jsonObj.
+    replyBody = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
+
+    qDebug() << "WebDavClient::browse nonce" << nonce << "JSON replyBody" << replyBody;
+
+    emit browseReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 }
 
 void WebDavClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
@@ -506,21 +579,7 @@ bool WebDavClient::testConnection(QString id, QString hostname, QString username
     }
 
     // Test connection (with empty PROPFIND method) with id's stored access token.
-    QString uri = quotaURI.arg(hostname);
-    qDebug() << "WebDavClient::testConnection uri" << uri;
-
-    QByteArray authHeader;
-    authHeader.append("OAuth " + accessTokenPairMap[id].token);
-    qDebug() << "WebDavClient::testConnection authHeader" << authHeader;
-
-    // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    QNetworkRequest req = QNetworkRequest(QUrl(uri));
-    req.setAttribute(QNetworkRequest::User, QVariant(createNonce()));
-    req.setRawHeader("Authorization", authHeader);
-    req.setRawHeader("Accept", QByteArray("*/*"));
-    req.setRawHeader("Depth", QByteArray("0"));
-    QNetworkReply *reply = manager->sendCustomRequest(req, "PROPFIND");
+    QNetworkReply *reply = property(createNonce(), id, "/");
 
     while (!reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
