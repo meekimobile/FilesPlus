@@ -2238,7 +2238,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
     if (job.uploadId == "") {
         QString startResult = targetClient->filePutResumeStart(nonce, targetUid, targetRemoteFileName, remoteFileSize, targetRemoteParentPath, true);
         if (startResult != "") {
-            qDebug() << "GCDClient::migrateFile_Block startResult" << startResult;
+            qDebug() << "CloudDriveModel::migrateFile_Block startResult" << startResult;
             sc = engine.evaluate("(" + startResult + ")");
 
             if (sc.property("upload_id").isValid()) {
@@ -2257,7 +2257,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
         QString statusResult = targetClient->filePutResumeStatus(nonce, targetUid, targetRemoteFileName, remoteFileSize, job.uploadId, job.uploadOffset, true);
         if (statusResult != "") {
             // TODO Get range and check if resume upload is required.
-            qDebug() << "GCDClient::migrateFile_Block statusResult" << statusResult;
+            qDebug() << "CloudDriveModel::migrateFile_Block statusResult" << statusResult;
             sc = engine.evaluate("(" + statusResult + ")");
 
             if (sc.property("offset").isValid()) {
@@ -2974,6 +2974,10 @@ void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMs
                 url = sc.property("webViewLink").toString();
             }
             break;
+        case WebDAV:
+            sc = engine.evaluate("(" + msg + ")");
+            url = sc.property("url").toString();
+            break;
         }
     } else if (err == 202) {
         // Issue: handle 202 Nonce already in used.
@@ -3029,7 +3033,7 @@ void CloudDriveModel::fileGetResumeReplyFilter(QString nonce, int err, QString e
 
     if (err == 0) {
         if (job.localFilePath != "") {
-            // TODO Get next offset from metadata.
+            // TODO Get next offset from metadata. But it will require type switch because each client has its response format.
             job.downloadOffset = job.bytes;
 
             // Enqueue and resume job.

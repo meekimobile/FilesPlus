@@ -1208,7 +1208,7 @@ QString GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath, Q
 
 void GCDClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName)
 {
-    qDebug() << "----- GCDClient::filePut -----" << localFilePath << "to" << remoteParentPath << remoteFileName;
+    qDebug() << "----- GCDClient::filePut -----" << uid << localFilePath << remoteParentPath << remoteFileName;
 
     m_localFileHash[nonce] = new QFile(localFilePath);
     QFile *localSourceFile = m_localFileHash[nonce];

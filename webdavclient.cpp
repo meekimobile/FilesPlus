@@ -3,13 +3,24 @@
 
 const QString WebDavClient::ConsumerKey = "ce970eaaff0f4c1fbc8268bec6e804e4";
 const QString WebDavClient::ConsumerSecret = "13bd2edd92344f04b23ee3170521f7fe";
+
 const QString WebDavClient::WebDavRoot = "";
-const QString WebDavClient::loginURI = "https://%1/?userinfo"; // GET
+
+const QString WebDavClient::loginURI = "https://%1"; // GET with ?userinfo
 const QString WebDavClient::authorizeURI = "https://oauth.yandex.com/authorize"; // ?response_type=<token|code>&client_id=<client_id>[&display=popup][&state=<state>]
 const QString WebDavClient::accessTokenURI = "https://oauth.yandex.com/token"; // POST with grant_type=authorization_code&code=<code>&client_id=<client_id>&client_secret=<client_secret> or basic auth with only grant_type=authorization_code&code=<code>
 const QString WebDavClient::accountInfoURI = "https://api-fotki.yandex.ru/api/me/";
-const QString WebDavClient::quotaURI = "https://%1/"; // PROPFIND
 const QString WebDavClient::propertyURI = "https://%1%2"; // PROPFIND with arguments (hostname, path)
+const QString WebDavClient::createFolderURI = "https://%1%2"; // MKCOL with arguments (hostname, path)
+const QString WebDavClient::moveFileURI = "https://%1%2"; // MOVE with arguments (hostname, path) and destination in header
+const QString WebDavClient::copyFileURI = "https://%1%2"; // COPY with arguments (hostname, path) and destination in header
+const QString WebDavClient::deleteFileURI = "https://%1%2"; // DELETE with arguments (hostname, path)
+const QString WebDavClient::fileGetURI = "https://%1%2"; // GET with arguments (hostname, path)
+const QString WebDavClient::filePutURI = "https://%1%2"; // PUT with arguments (hostname, path)
+const QString WebDavClient::sharesURI = "https://%1%2"; // POST with arguments (hostname, path) and ?publish
+const QString WebDavClient::renameFileURI = "https://%1%2"; // PROPPATCH with arguments (hostname, path)
+
+const qint64 WebDavClient::ChunkSize = 4194304; // 4194304=4MB, 1048576=1MB  TODO Optimize to have largest chink size which is still valid before token is expired.
 
 WebDavClient::WebDavClient(QObject *parent) :
     CloudDriveClient(parent)
@@ -85,7 +96,7 @@ void WebDavClient::accountInfo(QString nonce, QString uid)
 
 //    QString uri = accountInfoURI; // + "?oauth_token=" + accessToken;
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = loginURI.arg(hostname);
+    QString uri = loginURI.arg(hostname) + "?userinfo";
     qDebug() << "WebDavClient::accountInfo uri" << uri;
 
     QByteArray authHeader;
@@ -114,90 +125,42 @@ void WebDavClient::quota(QString nonce, QString uid)
     qDebug() << "WebDavClient::quota nonce" << nonce << "replyBody" << replyBody;
 
     // Parse XML and convert to JSON.
-    QScriptEngine engine;
-    QScriptValue jsonObj = engine.newObject();
-    QDomDocument doc;
-    doc.setContent(replyBody, true);
-    QDomElement docElem = doc.documentElement();
-    // Populate jsonObj starts from first child.
-    QDomNode n = docElem.firstChild();
-    while(!n.isNull()) {
-        jsonObj.setProperty(n.localName(), createScriptValue(engine, n, "quota"));
-        n = n.nextSibling();
-    }
-    // Stringify jsonObj.
-    replyBody = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
+    replyBody = createResponseJson(replyBody);
 
     qDebug() << "WebDavClient::quota nonce" << nonce << "JSON replyBody" << replyBody;
 
     emit quotaReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 QString WebDavClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous)
 {
-    qDebug() << "----- WebDavClient::fileGet -----" << uid << remoteFilePath << localFilePath << synchronous;
+    qDebug() << "----- WebDavClient::fileGet -----" << nonce << uid << remoteFilePath << localFilePath << synchronous;
 
-    QString remoteParentPath = getParentRemotePath(remoteFilePath);
+    // Create localTargetFile for file getting.
+    m_localFileHash[nonce] = new QFile(localFilePath);
 
-//    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
-//    m_ftp->m_remoteFilePath = remoteFilePath;
-//    m_ftp->m_localFilePath = localFilePath;
-//    if (!synchronous) {
-//        connect(m_ftp, SIGNAL(done(QString,bool)), this, SLOT(fileGetReplyFinished(QString,bool)) );
-//    }
+    // Send request.
+    QNetworkReply *reply = dynamic_cast<QNetworkReply *>( fileGet(nonce, uid, remoteFilePath, -1, synchronous) );
 
-//    m_ftp->cd(remoteParentPath);
+    if (!synchronous) return "";
 
-//    m_localFileHash[nonce] = new QFile(localFilePath);
-//    QFile *localTargetFile = m_localFileHash[nonce];
-//    if (localTargetFile->open(QIODevice::WriteOnly)) {
-//        m_ftp->get(getRemoteFileName(remoteFilePath), localTargetFile);
-//    }
+    // Construct result.
+    QString result = fileGetReplySave(reply);
 
-//    if (!synchronous) return "";
+    // scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 
-//    // Construct result.
-//    QString result;
-//    if (m_ftp->error() == QFtp::NoError) {
-//        m_ftp->list(remoteFilePath);
-//        m_ftp->waitForDone();
-
-//        if (m_ftp->getItemList().isEmpty()) {
-//            // remoteFilePath is not found.
-//            qDebug() << "WebDavClient::fileGet" << uid << remoteFilePath << "is not found.";
-//            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(-1).arg(tr("%1 is not found.").arg(remoteFilePath));
-//        } else {
-//            qDebug() << "WebDavClient::fileGet" << m_ftp->m_uid << m_ftp->m_remoteFilePath << "is a file.";
-//            result = getPropertyJson(getParentRemotePath(remoteFilePath), m_ftp->getItemList().first());
-//        }
-//    } else {
-//        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(m_ftp->error()).arg(m_ftp->errorString());
-//    }
-
-//    // Close and remove localFile pointer.
-//    if (m_localFileHash.contains(nonce)) {
-//        m_localFileHash[nonce]->close();
-//        m_localFileHash.remove(nonce);
-//    }
-
-//    // Clean up.
-//    m_ftp->close();
-//    m_ftp->deleteLater();
-
-//    return result;
+    return result;
 }
 
-/*
-void WebDavClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteFilePath)
+void WebDavClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName)
 {
-    qDebug() << "----- WebDavClient::filePut -----" << localFilePath << "to" << remoteFilePath;
-
-    QStringList tokens = accessTokenPairMap[uid].token.split("@");
-
-    QUrl uploadurl("ftp://" + tokens[1] + remoteFilePath);
-    uploadurl.setUserName(tokens[0]);
-    uploadurl.setPassword(accessTokenPairMap[uid].secret);
-    qDebug() << "WebDavClient::filePut uploadurl" << uploadurl;
+    qDebug() << "----- WebDavClient::filePut -----" << uid << localFilePath << remoteParentPath << remoteFileName;
 
     m_localFileHash[nonce] = new QFile(localFilePath);
     QFile *localSourceFile = m_localFileHash[nonce];
@@ -205,51 +168,11 @@ void WebDavClient::filePut(QString nonce, QString uid, QString localFilePath, QS
         qint64 fileSize = localSourceFile->size();
 
         // Send request.
-        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-//        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)));
-        QNetworkRequest req = QNetworkRequest(uploadurl);
-        req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-        req.setHeader(QNetworkRequest::ContentLengthHeader, fileSize);
-        QNetworkReply *reply = manager->put(req, localSourceFile);
-        QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-        connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
-        connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
-
-        while (!reply->isFinished()) {
-            QApplication::processEvents(QEventLoop::AllEvents, 100);
-            Sleeper::msleep(100);
-        }
-
-        emit filePutReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
-
-        // Scheduled to delete later.
-        reply->deleteLater();
-        reply->manager()->deleteLater();
+        filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
     } else {
-        emit filePutReplySignal(nonce, -1, tr("Can't open %1").arg(localFilePath), "");
+        qDebug() << "WebDavClient::filePut file " << localFilePath << " can't be opened.";
+        emit filePutReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");
     }
-}
-*/
-
-void WebDavClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName)
-{
-    qDebug() << "----- WebDavClient::filePut -----" << uid << localFilePath << remoteParentPath << remoteFileName;
-
-    QString remoteFilePath = remoteParentPath + "/" + remoteFileName;
-
-//    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
-//    m_ftp->m_localFilePath = localFilePath;
-//    m_ftp->m_remoteFilePath = remoteFilePath;
-//    connect(m_ftp, SIGNAL(done(QString,bool)), this, SLOT(filePutReplyFinished(QString,bool)) );
-
-//    m_ftp->cd(remoteParentPath);
-
-//    m_localFileHash[nonce] = new QFile(localFilePath);
-//    QFile *localSourceFile = m_localFileHash[nonce];
-//    if (localSourceFile->open(QIODevice::ReadOnly)) {
-//        m_ftp->put(localSourceFile, remoteFileName);
-//        m_ftp->waitForDone();
-//    }
 }
 
 QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remoteFilePath, QString requestBody, int depth)
@@ -258,6 +181,7 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
 
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
     QString uri = propertyURI.arg(hostname).arg(remoteFilePath);
+    uri = encodeURI(uri);
     qDebug() << "WebDavClient::property uri" << uri;
 
     QByteArray authHeader;
@@ -270,8 +194,8 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    QNetworkRequest req = QNetworkRequest(QUrl(uri));
-    req.setAttribute(QNetworkRequest::User, QVariant(createNonce()));
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     req.setHeader(QNetworkRequest::ContentLengthHeader, requestBody.length());
     req.setRawHeader("Authorization", authHeader);
@@ -289,58 +213,36 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
 
 void WebDavClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "----- WebDavClient::metadata -----" << uid << remoteFilePath;
+    qDebug() << "----- WebDavClient::metadata -----" << nonce << uid << remoteFilePath;
 
-//    QString propertyJson = property(nonce, uid, remoteFilePath);
-//    if (propertyJson.isEmpty()) {
-//        qDebug() << "WebDavClient::metadata" << uid << remoteFilePath << "is not found.";
-//        emit metadataReplySignal(nonce, QNetworkReply::ContentNotFoundError, tr("%1 is not found.").arg(remoteFilePath), "");
-//        return;
-//    }
+    if (remoteFilePath == "") {
+        remoteFilePath = "/";
+    }
 
-//    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    QNetworkReply *reply = property(nonce, uid, remoteFilePath, "", 1);
 
-//    // Check if remoteFilePath is dir or file by change directory.
-//    m_ftp->cd(remoteFilePath);
-//    m_ftp->waitForDone();
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "WebDavClient::metadata nonce" << nonce << "replyBody" << replyBody;
 
-//    if (m_ftp->error() == QFtp::NoError) {
-//        // remoteFilePath is dir.
-//        qDebug() << "WebDavClient::metadata" << uid << remoteFilePath << " is dir.";
-//        m_ftp->pwd();
-//        m_ftp->list();
-//        m_ftp->waitForDone();
+    // Parse XML and convert to JSON.
+    replyBody = createPropertyJson(replyBody);
 
-//        emit metadataReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), QString("{ \"data\": %1, \"property\": %2 }").arg(getItemListJson(m_ftp->getCurrentPath(), m_ftp->getItemList())).arg(propertyJson) );
-//    } else {
-//        // remoteFilePath is file or not found.
-//        qDebug() << "WebDavClient::metadata" << uid << remoteFilePath << "is file or not found. error" << m_ftp->error() << m_ftp->errorString();
-//        m_ftp->list(remoteFilePath);
-//        m_ftp->waitForDone();
+//    qDebug() << "WebDavClient::metadata nonce" << nonce << "JSON replyBody" << replyBody;
 
-//        if (m_ftp->getItemList().isEmpty()) {
-//            // remoteFilePath is not found.
-//            qDebug() << "WebDavClient::metadata" << uid << remoteFilePath << "is not found.";
-//            emit metadataReplySignal(m_ftp->getNonce(), QNetworkReply::ContentNotFoundError, tr("%1 is not found.").arg(remoteFilePath), "");
-//        } else {
-//            // remoteFilePath is file.
-//            QString remoteParentPath = getParentRemotePath(remoteFilePath);
-//            qDebug() << "WebDavClient::metadata" << uid << remoteFilePath << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_ftp->getItemList().first().name();
-//            emit metadataReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), QString("{ \"data\": [], \"property\": %1 }").arg(getPropertyJson(remoteParentPath, m_ftp->getItemList().first())) );
-//        }
-//    }
+    emit metadataReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
-//    m_ftp->close();
-//    m_ftp->deleteLater();
-//    m_ftpHash->remove(m_ftp->getNonce());
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 QScriptValue WebDavClient::createScriptValue(QScriptEngine &engine, QDomNode &n, QString caller)
 {
-    qDebug() << "WebDavClient::createScriptValue caller" << caller << "nodeName" << n.nodeName() << "localName" << n.localName() << "nodeType" << n.nodeType();
+//    qDebug() << "WebDavClient::createScriptValue caller" << caller << "nodeName" << n.nodeName() << "localName" << n.localName() << "nodeType" << n.nodeType();
 
     if (n.isText()) {
-        return QScriptValue(n.toText().nodeValue());
+        QString v = QUrl::fromPercentEncoding(n.toText().nodeValue().toAscii());
+        return QScriptValue(v);
     } else if (n.hasChildNodes()) {
         if (n.firstChild().isText()) {
             // Get text node value if there is only 1 text child node.
@@ -362,20 +264,8 @@ QScriptValue WebDavClient::createScriptValue(QScriptEngine &engine, QDomNode &n,
     }
 }
 
-void WebDavClient::browse(QString nonce, QString uid, QString remoteFilePath)
+QString WebDavClient::createPropertyJson(QString replyBody)
 {
-    qDebug() << "----- WebDavClient::browse -----" << nonce << uid << remoteFilePath;
-
-    if (remoteFilePath == "") {
-        remoteFilePath = "/";
-    }
-
-    QNetworkReply *reply = property(nonce, uid, remoteFilePath, "", 1);
-
-    QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "WebDavClient::browse nonce" << nonce << "replyBody" << replyBody;
-
-    // Parse XML and convert to JSON.
     QScriptEngine engine;
     QScriptValue jsonObj = engine.newObject();
     QDomDocument doc;
@@ -397,11 +287,53 @@ void WebDavClient::browse(QString nonce, QString uid, QString remoteFilePath)
     }
     jsonObj.setProperty("data", dataArrayObj);
     // Stringify jsonObj.
-    replyBody = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
+    QString jsonText = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
 
-    qDebug() << "WebDavClient::browse nonce" << nonce << "JSON replyBody" << replyBody;
+    return jsonText;
+}
+
+QString WebDavClient::createResponseJson(QString replyBody)
+{
+    QScriptEngine engine;
+    QScriptValue jsonObj = engine.newObject();
+    QDomDocument doc;
+    doc.setContent(replyBody, true);
+    QDomElement docElem = doc.documentElement();
+    // Populate jsonObj starts from first child.
+    QDomNode n = docElem.firstChild();
+    while(!n.isNull()) {
+        jsonObj.setProperty(n.localName(), createScriptValue(engine, n, "createResponseJson"));
+        n = n.nextSibling();
+    }
+    // Stringify jsonObj.
+    QString jsonText = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
+
+    return jsonText;
+}
+
+void WebDavClient::browse(QString nonce, QString uid, QString remoteFilePath)
+{
+    qDebug() << "----- WebDavClient::browse -----" << nonce << uid << remoteFilePath;
+
+    if (remoteFilePath == "") {
+        remoteFilePath = "/";
+    }
+
+    QNetworkReply *reply = property(nonce, uid, remoteFilePath, "", 1);
+
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "WebDavClient::browse nonce" << nonce << "replyBody" << replyBody;
+
+    // Parse XML and convert to JSON.
+    replyBody = createPropertyJson(replyBody);
+
+//    qDebug() << "WebDavClient::browse nonce" << nonce << "JSON replyBody" << replyBody;
 
     emit browseReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void WebDavClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
@@ -411,102 +343,310 @@ void WebDavClient::createFolder(QString nonce, QString uid, QString remoteParent
 
 void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
-    emit moveFileReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, tr("FTP doesn't support move command."), "");
+    if (newRemoteFileName != "" && newRemoteFilePath == "") {
+        newRemoteFilePath = getParentRemotePath(remoteFilePath) + "/" + newRemoteFileName;
+        qDebug() << "WebDavClient::moveFile rename" << uid << remoteFilePath << newRemoteFilePath << newRemoteFileName;
+    } else {
+        qDebug() << "WebDavClient::moveFile move" << uid << remoteFilePath << newRemoteFilePath << newRemoteFileName;
+    }
+
+    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString uri = moveFileURI.arg(hostname).arg(remoteFilePath);
+    uri = encodeURI(uri);
+    qDebug() << "WebDavClient::moveFile uri " << uri;
+
+    QByteArray authHeader;
+    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    qDebug() << "WebDavClient::moveFile authHeader" << authHeader;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", authHeader);
+    req.setRawHeader("Accept", QByteArray("*/*"));
+    req.setRawHeader("Destination", newRemoteFilePath.toUtf8());
+    QNetworkReply *reply = manager->sendCustomRequest(req, "MOVE");
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "WebDavClient::moveFile replyBody" << replyBody;
+    replyBody = createResponseJson(replyBody);
+    emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
-    emit copyFileReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, tr("FTP doesn't support copy command."), "");
+    qDebug() << "----- WebDavClient::copyFile -----" << uid << remoteFilePath << newRemoteFilePath << newRemoteFileName;
+
+    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString uri = copyFileURI.arg(hostname).arg(remoteFilePath);
+    uri = encodeURI(uri);
+    qDebug() << "WebDavClient::copyFile uri " << uri;
+
+    QByteArray authHeader;
+    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    qDebug() << "WebDavClient::copyFile authHeader" << authHeader;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", authHeader);
+    req.setRawHeader("Accept", QByteArray("*/*"));
+    req.setRawHeader("Destination", newRemoteFilePath.toUtf8());
+    QNetworkReply *reply = manager->sendCustomRequest(req, "COPY");
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "WebDavClient::copyFile replyBody" << replyBody;
+    replyBody = createResponseJson(replyBody);
+    emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void WebDavClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- WebDavClient::deleteFile -----" << uid << remoteFilePath;
 
-//    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString uri = deleteFileURI.arg(hostname).arg(remoteFilePath);
+    uri = encodeURI(uri);
+    qDebug() << "WebDavClient::deleteFile uri " << uri;
 
-//    deleteRecursive(m_ftp, remoteFilePath);
+    QByteArray authHeader;
+    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    qDebug() << "WebDavClient::deleteFile authHeader" << authHeader;
 
-//    m_ftp->close();
-//    m_ftp->deleteLater();
-//    m_ftpHash->remove(m_ftp->getNonce());
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", authHeader);
+    req.setRawHeader("Accept", QByteArray("*/*"));
+    QNetworkReply *reply = manager->deleteResource(req);
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "WebDavClient::deleteFile replyBody" << replyBody;
+    replyBody = createResponseJson(replyBody);
+    emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 void WebDavClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "----- WebDavClient::shareFile -----" << uid << remoteFilePath;
+    qDebug() << "----- WebDavClient::shareFile -----" << nonce << uid << remoteFilePath;
 
-    emit shareFileReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, "FTP doesn't support resource link sharing.", "");
+    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString uri = sharesURI.arg(hostname).arg(remoteFilePath);
+    uri = encodeURI(uri) + "?publish";
+    qDebug() << "WebDavClient::shareFile uri" << uri;
+
+    QByteArray authHeader;
+    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    qDebug() << "WebDavClient::shareFile authHeader" << authHeader;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", authHeader);
+    req.setRawHeader("Accept", QByteArray("*/*"));
+    QNetworkReply *reply = manager->post(req, QByteArray());
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    QString result;
+    if (reply->error() == QNetworkReply::NoError) {
+        if (reply->header(QNetworkRequest::LocationHeader).isValid()) {
+            QString location = reply->header(QNetworkRequest::LocationHeader).toUrl().toString();
+            result = QString("{ \"url\": \"%1\" }").arg(location);
+        } else {
+            result = createResponseJson(QString::fromUtf8(reply->readAll()));
+        }
+    } else {
+        result = createResponseJson(QString::fromUtf8(reply->readAll()));
+    }
+
+    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), result);
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 }
 
 QString WebDavClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
-    qDebug() << "----- WebDavClient::createFolder -----" << uid << remoteParentPath << newRemoteFolderName;
+    qDebug() << "----- WebDavClient::createFolder -----" << nonce << uid << remoteParentPath << newRemoteFolderName;
 
-//    if (remoteParentPath.isEmpty()) {
-//        emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
-//        return "";
-//    }
+    QString remoteFilePath = remoteParentPath + "/" + newRemoteFolderName;
+    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString uri = createFolderURI.arg(hostname).arg(remoteFilePath);
+    uri = encodeURI(uri);
+    qDebug() << "WebDavClient::createFolder uri" << uri;
 
-//    if (newRemoteFolderName.isEmpty()) {
-//        emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
-//        return "";
-//    }
+    QByteArray authHeader;
+    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    qDebug() << "WebDavClient::createFolder authHeader" << authHeader;
 
-//    QString newRemoteFolderPath = remoteParentPath + "/" + newRemoteFolderName;
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", authHeader);
+    req.setRawHeader("Accept", QByteArray("*/*"));
+    QNetworkReply *reply = manager->sendCustomRequest(req, "MKCOL");
 
-//    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
 
-//    m_ftp->mkdir(newRemoteFolderPath);
-//    m_ftp->waitForDone();
+    QString result;
+    if (reply->error() == QNetworkReply::NoError) {
+        reply = property(nonce, uid, remoteFilePath);
+        if (reply->error() == QNetworkReply::NoError) {
+            result = createPropertyJson(QString::fromUtf8(reply->readAll()));
+        } else {
+            result = createResponseJson(QString::fromUtf8(reply->readAll()));
+        }
+    } else {
+        result = createResponseJson(QString::fromUtf8(reply->readAll()));
+    }
 
-//    QString result;
-//    if (m_ftp->error() != QFtp::NoError) {
-//        // NOTE json string doesn't support newline character.
-//        QString escapedErrorString =  m_ftp->errorString().replace("\n", " ");
-//        emit createFolderReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, m_ftp->errorString(), QString("{ \"error\": \"%1\", \"path\": \"%2\" }").arg(escapedErrorString).arg(newRemoteFolderPath) );
-//    } else {
-//        // Get property.
-//        QString propertyJson = property(nonce, uid, newRemoteFolderPath);
-//        if (propertyJson.isEmpty()) {
-//            qDebug() << "WebDavClient::createFolder" << uid << newRemoteFolderPath << "is not found.";
-//            emit createFolderReplySignal(nonce, QNetworkReply::ContentNotFoundError, "Created path is not found.", QString("{ \"error\": \"Created path is not found.\", \"path\": \"%1\" }").arg(newRemoteFolderPath) );
-//        } else {
-//            result = propertyJson;
-//            emit createFolderReplySignal(nonce, QNetworkReply::NoError, "", result);
-//        }
-//    }
+    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), result);
 
-//    m_ftp->close();
-//    m_ftp->deleteLater();
-//    m_ftpHash->remove(m_ftp->getNonce());
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 
-//    return result;
+    return result;
 }
 
 QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)
 {
-    qDebug() << "----- WebDavClient::fileGet -----" << uid << remoteFilePath << "synchronous" << synchronous;
+    qDebug() << "----- WebDavClient::fileGet -----" << nonce << uid << remoteFilePath << offset << "synchronous" << synchronous;
 
-    QString remoteParentPath = getParentRemotePath(remoteFilePath);
+    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString uri = fileGetURI.arg(hostname).arg(remoteFilePath);
+    uri = encodeURI(uri);
+    qDebug() << "WebDavClient::fileGet uri" << uri;
 
-//    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
-//    m_ftp->m_remoteFilePath = remoteFilePath;
-//    m_ftp->cd(remoteParentPath);
+    QByteArray authHeader;
+    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    qDebug() << "WebDavClient::fileGet authHeader" << authHeader;
 
-//    // Creat buffer as QIODevice.
-//    QBuffer *buf = new QBuffer();
-//    if (buf->open(QIODevice::WriteOnly)) {
-//        m_ftp->get(getRemoteFileName(remoteFilePath), buf);
-//        m_ftp->waitForDone();
-//        buf->close();
-//    }
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetReplyFinished(QNetworkReply*)));
+    }
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
+    req.setRawHeader("Authorization", authHeader);
+    req.setRawHeader("Accept", QByteArray("*/*"));
+    if (offset >= 0) {
+        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+ChunkSize-1);
+        qDebug() << "WebDavClient::fileGet rangeHeader" << rangeHeader;
+        req.setRawHeader("Range", rangeHeader.toAscii() );
+    }
+    // TODO TE: chunked, Accept-Encoding: gzip
+    QNetworkReply *reply = manager->get(req);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
-//    m_ftp->close();
-//    m_ftp->deleteLater();
-//    m_ftpHash->remove(m_ftp->getNonce());
+    while (synchronous && !reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
 
-//    return buf;
+    return reply;
+}
+
+QString WebDavClient::fileGetReplySave(QNetworkReply *reply)
+{
+    qDebug() << "WebDavClient::fileGetReplySave" << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+
+    if (reply->error() == QNetworkReply::NoError) {
+        qDebug() << "WebDavClient::fileGetReplySave reply bytesAvailable" << reply->bytesAvailable();
+
+        // Stream replyBody to a file on localPath.
+        qint64 totalBytes = 0;
+        char buf[1024];
+        QFile *localTargetFile = m_localFileHash[nonce];
+        qDebug() << "WebDavClient::fileGetReplySave" << nonce << "localTargetFile" << localTargetFile;
+        if (localTargetFile->open(QIODevice::Append)) {
+            // Issue: Writing to file with QDataStream << QByteArray will automatically prepend with 4-bytes prefix(size).
+            // Solution: Use QIODevice to write directly.
+
+            // Read first buffer.
+            qint64 c = reply->read(buf, sizeof(buf));
+            while (c > 0) {
+                localTargetFile->write(buf, c);
+                totalBytes += c;
+
+                // Tell event loop to process event before it will process time consuming task.
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+
+                // Read next buffer.
+                c = reply->read(buf, sizeof(buf));
+            }
+        }
+
+        qDebug() << "WebDavClient::fileGetReplySave reply totalBytes=" << totalBytes;
+
+        // Close target file.
+        localTargetFile->close();
+
+        // Get property.
+        QString result;
+        if (reply->error() == QNetworkReply::NoError) {
+            reply = property(nonce, uid, remoteFilePath);
+            if (reply->error() == QNetworkReply::NoError) {
+                result = createPropertyJson(QString::fromUtf8(reply->readAll()));
+            }
+        }
+
+        return result;
+    } else {
+        qDebug() << "WebDavClient::fileGetReplySave nonce" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
+        return QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
+    }
+
+    // Remove once used.
+    m_localFileHash.remove(nonce);
 }
 
 QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
@@ -514,33 +654,84 @@ QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *sour
     qDebug() << "----- WebDavClient::filePut -----" << uid << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
     QString remoteFilePath = remoteParentPath + "/" + remoteFileName;
+    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString uri = filePutURI.arg(hostname).arg(remoteFilePath);
+    uri = encodeURI(uri);
+    qDebug() << "WebDavClient::filePut uri " << uri;
 
-//    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
-//    m_ftp->m_remoteFilePath = remoteFilePath;
-//    m_ftp->cd(remoteParentPath);
+    QByteArray authHeader;
+    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    qDebug() << "WebDavClient::filePut authHeader" << authHeader;
 
-//    m_ftp->put(source, remoteFileName);
-//    m_ftp->waitForDone();
-//    source->close();
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)));
+    }
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteParentPath));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3), QVariant(remoteFileName));
+    req.setRawHeader("Authorization", authHeader);
+    req.setRawHeader("Accept", QByteArray("*/*"));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/binary"));
+    req.setHeader(QNetworkRequest::ContentLengthHeader, bytesTotal);
+    // TODO Content-Encoding: gzip, Transfer-Encoding: chunked
+    QNetworkReply *reply = manager->put(req, source);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
 
-//    // TODO Get uploaded file property.
-//    m_ftp->list(remoteFilePath);
-//    m_ftp->waitForDone();
+    while (synchronous && !reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
 
-//    if (m_ftp->getItemList().isEmpty()) {
-//        // remoteFilePath is not found.
-//        qDebug() << "WebDavClient::filePut" << uid << remoteFilePath << "is not found.";
-//        emit migrateFilePutReplySignal(m_ftp->getNonce(), -1, tr("Can't put %1").arg(remoteFilePath), "");
-//    } else {
-//        qDebug() << "WebDavClient::filePut" << uid << remoteFilePath << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_ftp->getItemList().first().name();
-//        emit migrateFilePutReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), getPropertyJson(remoteParentPath, m_ftp->getItemList().first()) );
-//    }
+    if (synchronous) {
+        // Close source file.
+        source->close();
+    }
 
-//    m_ftp->close();
-//    m_ftp->deleteLater();
-//    m_ftpHash->remove(m_ftp->getNonce());
+    return reply;
+}
 
-//    return 0;
+QIODevice *WebDavClient::fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset)
+{
+    qDebug() << "----- WebDavClient::fileGetResume -----" << remoteFilePath << "to" << localFilePath << "offset" << offset;
+
+    // Create localTargetFile for file getting.
+    m_localFileHash[nonce] = new QFile(localFilePath);
+
+    // Send request.
+    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString uri = fileGetURI.arg(hostname).arg(remoteFilePath);
+    uri = encodeURI(uri);
+    qDebug() << "WebDavClient::fileGet uri" << uri;
+
+    QByteArray authHeader;
+    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    qDebug() << "WebDavClient::fileGet authHeader" << authHeader;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetResumeReplyFinished(QNetworkReply*)));
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
+    req.setRawHeader("Authorization", authHeader);
+    req.setRawHeader("Accept", QByteArray("*/*"));
+    if (offset >= 0) {
+        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+ChunkSize-1);
+        qDebug() << "WebDavClient::fileGetResume rangeHeader" << rangeHeader;
+        req.setRawHeader("Range", rangeHeader.toAscii() );
+    }
+    // TODO TE: chunked, Accept-Encoding: gzip
+    QNetworkReply *reply = manager->get(req);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+    return reply;
 }
 
 QString WebDavClient::getParentRemotePath(QString remotePath)
@@ -623,95 +814,9 @@ bool WebDavClient::isRemoteAbsolutePath()
     return true;
 }
 
-void WebDavClient::deleteFileReplyFinished(QString nonce, int error, QString errorString)
+bool WebDavClient::isFileGetResumable(qint64 fileSize)
 {
-    qDebug() << "WebDavClient::deleteFileReplyFinished" << nonce << error;
-
-//    QFtpWrapper *m_ftp = m_ftpHash->value(nonce);
-
-//    emit deleteFileReplySignal(nonce, error, errorString, QString("{ \"path\": \"%1\" }").arg(m_ftp->m_remoteFilePath) );
-
-//    m_ftp->close();
-//    m_ftp->deleteLater();
-//    m_ftpHash->remove(nonce);
-}
-
-void WebDavClient::fileGetReplyFinished(QString nonce, bool error)
-{
-    // Get stored parameters and clean ftp object.
-//    QFtpWrapper *m_ftp = m_ftpHash->value(nonce);
-//    QString uid = m_ftp->m_uid;
-//    QString remoteFilePath = m_ftp->m_remoteFilePath;
-//    m_ftp->close();
-//    m_ftp->deleteLater();
-//    m_ftpHash->remove(m_ftp->getNonce());
-
-//    if (!error) {
-//        // Connect and get uploaded file property.
-//        m_ftp = connectToHost(nonce, uid);
-//        m_ftp->list(remoteFilePath);
-//        m_ftp->waitForDone();
-
-//        if (m_ftp->getItemList().isEmpty()) {
-//            // remoteFilePath is not found.
-//            qDebug() << "WebDavClient::fileGetReplyFinished" << uid << remoteFilePath << "is not found.";
-//            emit fileGetReplySignal(m_ftp->getNonce(), -1, tr("Can't get %1").arg(remoteFilePath), "");
-//        } else {
-//            qDebug() << "WebDavClient::fileGetReplyFinished" << m_ftp->m_uid << m_ftp->m_remoteFilePath << "is a file.";
-//            emit fileGetReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), getPropertyJson(getParentRemotePath(remoteFilePath), m_ftp->getItemList().first()) );
-//        }
-//    } else {
-//        emit fileGetReplySignal(m_ftp->getNonce(), m_ftp->error(), tr("Can't get %1").arg(remoteFilePath), m_ftp->errorString());
-//    }
-
-//    // Close and remove localFile pointer.
-//    if (m_localFileHash.contains(nonce)) {
-//        m_localFileHash[nonce]->close();
-//        m_localFileHash.remove(nonce);
-//    }
-
-//    // Clean up.
-//    m_ftp->close();
-//    m_ftp->deleteLater();
-}
-
-void WebDavClient::filePutReplyFinished(QString nonce, bool error)
-{
-    // Get stored parameters and clean ftp object.
-//    QFtpWrapper *m_ftp = m_ftpHash->value(nonce);
-//    QString uid = m_ftp->m_uid;
-//    QString remoteFilePath = m_ftp->m_remoteFilePath;
-//    m_ftp->close();
-//    m_ftp->deleteLater();
-//    m_ftpHash->remove(m_ftp->getNonce());
-
-//    if (!error) {
-//        // Connect and get uploaded file property.
-//        m_ftp = connectToHost(nonce, uid);
-//        m_ftp->list(remoteFilePath);
-//        m_ftp->waitForDone();
-
-//        if (m_ftp->getItemList().isEmpty()) {
-//            // remoteFilePath is not found.
-//            qDebug() << "WebDavClient::filePutReplyFinished" << uid << remoteFilePath << "is not found.";
-//            emit filePutReplySignal(m_ftp->getNonce(), -1, tr("Can't put %1").arg(remoteFilePath), "");
-//        } else {
-//            qDebug() << "WebDavClient::filePutReplyFinished" << uid << remoteFilePath << "is a file.";
-//            emit filePutReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), getPropertyJson(getParentRemotePath(remoteFilePath), m_ftp->getItemList().first()) );
-//        }
-//    } else {
-//        emit filePutReplySignal(m_ftp->getNonce(), m_ftp->error(), tr("Can't put %1").arg(remoteFilePath), m_ftp->errorString());
-//    }
-
-//    // Close and remove localFile pointer.
-//    if (m_localFileHash.contains(nonce)) {
-//        m_localFileHash[nonce]->close();
-//        m_localFileHash.remove(nonce);
-//    }
-
-//    // Clean up.
-//    m_ftp->close();
-//    m_ftp->deleteLater();
+    return (fileSize >= ChunkSize);
 }
 
 void WebDavClient::accessTokenReplyFinished(QNetworkReply *reply)
@@ -795,6 +900,191 @@ void WebDavClient::accountInfoReplyFinished(QNetworkReply *reply)
     emit accountInfoReplySignal(nonce, reply->error(), reply->errorString(), replyBody );
 
     // scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void WebDavClient::fileGetReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "WebDavClient::fileGetReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    // TODO Content-Type: multipart/byteranges.
+
+    // Construct result.
+    QString result = fileGetReplySave(reply);
+
+    emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), result);
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void WebDavClient::filePutReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "WebDavClient::filePutReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteParentPath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+    QString remoteFileName = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3)).toString();
+
+    QString remoteFilePath = remoteParentPath + "/" + remoteFileName;
+
+    // Close source file.
+    if (m_localFileHash.contains(nonce)) {
+        QFile *localTargetFile = m_localFileHash[nonce];
+        localTargetFile->close();
+        m_localFileHash.remove(nonce);
+    }
+
+    QString replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        reply = property(nonce, uid, remoteFilePath);
+        if (reply->error() == QNetworkReply::NoError) {
+            replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()));
+        } else {
+            replyBody = createResponseJson(QString::fromUtf8(reply->readAll()));
+        }
+    } else {
+        replyBody = createResponseJson(QString::fromUtf8(reply->readAll()));
+    }
+
+    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void WebDavClient::createFolderReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "WebDavClient::createFolderReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+
+    QString replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        reply = property(nonce, uid, remoteFilePath);
+        if (reply->error() == QNetworkReply::NoError) {
+            replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()));
+        } else {
+            replyBody = createResponseJson(QString::fromUtf8(reply->readAll()));
+        }
+    } else {
+        replyBody = createResponseJson(QString::fromUtf8(reply->readAll()));
+    }
+
+    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void WebDavClient::fileGetResumeReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "WebDavClient::fileGetResumeReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    // TODO Content-Type: multipart/byteranges.
+    qDebug() << "WebDavClient::fileGetResumeReplyFinished ContentTypeHeader" << reply->header(QNetworkRequest::ContentTypeHeader);
+
+    // Construct result.
+    QString result = fileGetReplySave(reply);
+
+    emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), result);
+
+    // TODO scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void WebDavClient::filePutResumeReplyFinished(QNetworkReply *reply)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    QByteArray replyBody = reply->readAll();
+    qDebug() << "WebDavClient::filePutResumeReplyFinished" << reply << QString(" Error=%1").arg(reply->error()) << "replyBody" << QString::fromUtf8(replyBody);
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QString uploadId = reply->header(QNetworkRequest::LocationHeader).toString();
+
+        // Emit signal with upload_location to start uploading.
+        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"upload_id\": \"%1\" }").arg(uploadId) );
+    } else {
+        // REMARK Use QString::fromUtf8() to support unicode text.
+        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
+    }
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void WebDavClient::filePutResumeUploadReplyFinished(QNetworkReply *reply)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    QByteArray replyBody = reply->readAll();
+    qDebug() << "WebDavClient::filePutResumeUploadReplyFinished" << reply << QString(" Error=%1").arg(reply->error()) << "replyBody" << QString::fromUtf8(replyBody) << "hasRange" << reply->hasRawHeader("Range");
+
+    if (reply->error() == QNetworkReply::NoError) {
+        // TODO Get range and check if resume upload is required.
+        if (reply->hasRawHeader("Range")) {
+            QStringList ranges = QString::fromAscii(reply->rawHeader("Range")).split("-");
+            qint64 offset = ranges.at(1).toUInt() + 1;
+            qDebug() << "WebDavClient::filePutResumeUploadReplyFinished ranges" << ranges << "offset" << offset;
+
+            // Emit signal with offset to resume upload.
+            emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"offset\": %1 }").arg(offset) );
+        } else {
+            // Emit signal with successful upload reply which include uploaded file size.
+            emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
+        }
+    } else {
+        // REMARK Use QString::fromUtf8() to support unicode text.
+        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
+    }
+
+    // Close source file.
+    QFile *localTargetFile = m_localFileHash[nonce];
+    localTargetFile->close();
+    m_localFileHash.remove(nonce);
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void WebDavClient::filePutResumeStatusReplyFinished(QNetworkReply *reply)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    QByteArray replyBody = reply->readAll();
+    qDebug() << "WebDavClient::filePutResumeStatusReplyFinished" << reply << QString(" Error=%1").arg(reply->error()) << "replyBody" << QString::fromUtf8(replyBody);
+
+    if (reply->error() == QNetworkReply::NoError) {
+        qint64 offset = 0;
+        if (reply->hasRawHeader("Range")) {
+            QStringList ranges = QString::fromAscii(reply->rawHeader("Range")).split("-");
+            offset = ranges.at(1).toUInt() + 1;
+            qDebug() << "WebDavClient::filePutResumeStatusReplyFinished ranges" << ranges << "offset" << offset;
+        }
+
+        // Emit signal with offset to resume upload.
+        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"offset\": %1 }").arg(offset) );
+    } else {
+        // REMARK Use QString::fromUtf8() to support unicode text.
+        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
+    }
+
+    // Scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
