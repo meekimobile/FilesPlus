@@ -15,8 +15,8 @@ public:
     explicit FtpClient(QObject *parent = 0);
     ~FtpClient();
 
-    bool testConnection(QString id, QString hostname, QString username, QString password);
-    void saveConnection(QString id, QString hostname, QString username, QString password);
+    bool testConnection(QString id, QString hostname, QString username, QString password, QString token);
+    void saveConnection(QString id, QString hostname, QString username, QString password, QString token);
 
     bool isRemoteAbsolutePath();
 

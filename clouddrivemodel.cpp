@@ -3326,14 +3326,14 @@ bool CloudDriveModel::updateDropboxPrefix(bool fullAccess)
     return res;
 }
 
-bool CloudDriveModel::testConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password)
+bool CloudDriveModel::testConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token)
 {
-    return getCloudClient(type)->testConnection(uid, hostname, username, password);
+    return getCloudClient(type)->testConnection(uid, hostname, username, password, token);
 }
 
-void CloudDriveModel::saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password)
+void CloudDriveModel::saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token)
 {
-    getCloudClient(type)->saveConnection(uid, hostname, username, password);
+    getCloudClient(type)->saveConnection(uid, hostname, username, password, token);
 }
 
 QString CloudDriveModel::getItemCacheKey(int type, QString uid, QString localPath)

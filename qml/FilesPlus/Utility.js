@@ -259,3 +259,7 @@ function getIndexInArray(array, propertyName, propertyValue) {
 function ifUndefined(o, defaultValue) {
     return (!o) ? defaultValue : o;
 }
+
+function endWith(s1, s2) {
+    return (s1.lastIndexOf(s2) == (s1.length-1));
+}

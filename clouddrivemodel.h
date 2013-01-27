@@ -180,8 +180,8 @@ public:
     Q_INVOKABLE bool updateDropboxPrefix(bool fullAccess);
 
     // FTP specific functions.
-    Q_INVOKABLE bool testConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password);
-    Q_INVOKABLE void saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password);
+    Q_INVOKABLE bool testConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token);
+    Q_INVOKABLE void saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password,  QString token);
 
     // TODO Needed ?
     Q_INVOKABLE bool parseAuthorizationCode(CloudDriveModel::ClientTypes type, QString text);

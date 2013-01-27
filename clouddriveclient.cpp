@@ -151,12 +151,12 @@ QString CloudDriveClient::createQueryString(QMap<QString, QString> sortMap) {
     return queryString;
 }
 
-bool CloudDriveClient::testConnection(QString id, QString hostname, QString username, QString password)
+bool CloudDriveClient::testConnection(QString id, QString hostname, QString username, QString password, QString token)
 {
     return false;
 }
 
-void CloudDriveClient::saveConnection(QString id, QString hostname, QString username, QString password)
+void CloudDriveClient::saveConnection(QString id, QString hostname, QString username, QString password, QString token)
 {
 }
 

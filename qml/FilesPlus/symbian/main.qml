@@ -1206,7 +1206,7 @@ PageStackWindow {
             // Generalize by using common metadata json.
             var parsedObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, json);
             remoteParentPath = parsedObj.absolutePath;
-            remoteParentPathName = parsedObj.name;
+            remoteParentPathName = cloudDriveModel.isRemoteAbsolutePath(selectedCloudType) ? parsedObj.absolutePath : parsedObj.name;
             remoteParentParentPath = parsedObj.parentPath;
             for (var i=0; i < parsedObj.children.length; i++) {
                 var modelItem = parsedObj.children[i];
@@ -1330,12 +1330,14 @@ PageStackWindow {
                 if (jsonObj.property) {
                     parsedObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.property);
                 } else {
-                    parsedObj.name = (jsonObj.propstat && jsonObj.propstat.prop && jsonObj.propstat.prop.displayname) ? jsonObj.propstat.prop.displayname : cloudDriveModel.getRemoteName(selectedCloudType, jsonObj.href);
+                    var objIsDir = Utility.endWith(jsonObj.href, "/");
+                    var objRemotePath = (objIsDir ? jsonObj.href.substr(0, jsonObj.href.length-1) : jsonObj.href); // Workaround because it ended with /
+                    parsedObj.name = (jsonObj.propstat && jsonObj.propstat.prop && jsonObj.propstat.prop.displayname) ? jsonObj.propstat.prop.displayname : cloudDriveModel.getRemoteName(selectedCloudType, objRemotePath);
                     parsedObj.absolutePath = jsonObj.href;
-                    parsedObj.parentPath = cloudDriveModel.getParentRemotePath(selectedCloudType, jsonObj.href.substr(0, jsonObj.href.length-1)); // Workaround because it ended with /
+                    parsedObj.parentPath = cloudDriveModel.getParentRemotePath(selectedCloudType, objRemotePath) + "/"; // Directory must end with /
                     parsedObj.size = (jsonObj.propstat && jsonObj.propstat.prop && jsonObj.propstat.prop.getcontentlength) ? jsonObj.propstat.prop.getcontentlength : 0;
                     parsedObj.isDeleted = false;
-                    parsedObj.isDir = parsedObj.absolutePath.lastIndexOf("/") == (parsedObj.absolutePath.length -1);
+                    parsedObj.isDir = objIsDir;
                     parsedObj.lastModified = (jsonObj.propstat && jsonObj.propstat.prop && jsonObj.propstat.prop.getlastmodified) ? Utility.parseDate(jsonObj.propstat.prop.getlastmodified) : undefined;
                     parsedObj.hash = (parsedObj.lastModified) ? Qt.formatDateTime(parsedObj.lastModified, Qt.ISODate) : cloudDriveModel.dirtyHash; // Uses DirtyHash if last modified doesn't exist.
                     parsedObj.fileType = cloudDriveModel.getFileType(parsedObj.name);

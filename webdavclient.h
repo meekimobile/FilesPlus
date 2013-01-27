@@ -14,7 +14,6 @@ class WebDavClient : public CloudDriveClient
 public:
     static const QString ConsumerKey;
     static const QString ConsumerSecret;
-    static const QString WebDavRoot;
 
     static const QString loginURI;
     static const QString authorizeURI;
@@ -36,9 +35,10 @@ public:
     explicit WebDavClient(QObject *parent = 0);
     ~WebDavClient();
 
-    bool testConnection(QString id, QString hostname, QString username, QString password);
-    void saveConnection(QString id, QString hostname, QString username, QString password);
+    bool testConnection(QString id, QString hostname, QString username, QString password, QString token);
+    void saveConnection(QString id, QString hostname, QString username, QString password, QString token);
 
+    QString getRemoteRoot();
     bool isRemoteAbsolutePath();
     bool isFileGetResumable(qint64 fileSize);
 
@@ -64,8 +64,11 @@ public:
 
     QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
 signals:
-    void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
+
 public slots:
+    void sslErrorsReplyFilter(QNetworkReply *reply, QList<QSslError> sslErrors);
+    void sslErrorsReplyFilter(QList<QSslError> sslErrors);
+
     void accessTokenReplyFinished(QNetworkReply *reply);
     void accountInfoReplyFinished(QNetworkReply *reply);
 
@@ -75,15 +78,17 @@ public slots:
     void createFolderReplyFinished(QNetworkReply *reply);
 
     void fileGetResumeReplyFinished(QNetworkReply *reply);
-    void filePutResumeReplyFinished(QNetworkReply *reply);
-    void filePutResumeUploadReplyFinished(QNetworkReply *reply);
-    void filePutResumeStatusReplyFinished(QNetworkReply *reply);
 private:
+    QString remoteRoot;
     QHash<QString, QFile*> m_localFileHash;
 
+    QByteArray createAuthHeader(QString uid);
     QScriptValue createScriptValue(QScriptEngine &engine, QDomNode &n, QString caller);
     QString createPropertyJson(QString replyBody);
     QString createResponseJson(QString replyBody);
+    QString prepareRemotePath(QString prefix, QString remoteFilePath);
+
+    void testSSLConnection(QString hostname);
 
     QString getParentRemotePath(QString remotePath);
     QString getRemoteFileName(QString remotePath);

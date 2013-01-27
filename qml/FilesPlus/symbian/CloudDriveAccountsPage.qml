@@ -198,11 +198,16 @@ Page {
         property alias host: hostname.text
         property alias user: username.text
         property alias passwd: password.text
+        property alias token: tokenInput.text
         property int labelWidth: 100
 
-        function show(type) {
-            console.debug("addAccountDialog show type " + type);
-            cloudType = type;
+        function show(type, uid, host, user, passwd, token) {
+            addAccountDialog.cloudType = type;
+            addAccountDialog.connection = uid ? uid : "";
+            addAccountDialog.host = host ? host : "";
+            addAccountDialog.user = user ? user : "";
+            addAccountDialog.passwd = passwd ? passwd : "";
+            addAccountDialog.token = token ? token : "";
             addAccountDialog.open();
         }
 
@@ -243,7 +248,7 @@ Page {
                     width: parent.width - addAccountDialog.labelWidth
                     placeholderText: "Input hostname"
                     validator: RegExpValidator {
-                        regExp: /[\w.-:]+/
+                        regExp: /[\w.-:~]+/
                     }
                 }
             }
@@ -279,44 +284,95 @@ Page {
                     echoMode: TextInput.Password
                 }
             }
-            Item {
+            Row {
                 width: parent.width
-                height: 80
-
+                Label {
+                    text: qsTr("Token")
+                    width: addAccountDialog.labelWidth
+                    color: "white"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                TextField {
+                    id: tokenInput
+                    width: parent.width - addAccountDialog.labelWidth
+                    placeholderText: "Input token"
+                }
+            }
+            Row {
+                width: parent.width
+                height: 60
+                spacing: 10
+                layoutDirection: Qt.RightToLeft
                 Button {
                     id: testConnectionButton
-                    text: appInfo.emptyStr+qsTr("Test connection");
-                    anchors.centerIn: parent
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: (parent.width - parent.spacing) / 2
                     onClicked: {
-                        console.debug("cloudDriveAccountsPage testConnectionButton.onClicked");
                         if (hostname.text == "" || username.text == "") {
                             return;
                         }
 
-                        text = appInfo.emptyStr+qsTr("Connecting");
-
-                        var res = cloudDriveModel.testConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text);
-                        console.debug("cloudDriveAccountsPage testConnectionButton.onClicked res " + res);
+                        text = appInfo.emptyStr+qsTr("Testing");
+                        var res = cloudDriveModel.testConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text, tokenInput.text);
                         if (res) {
-                            text = appInfo.emptyStr+qsTr("Connection success");
+                            text = appInfo.emptyStr+qsTr("Success");
                         } else {
-                            text = appInfo.emptyStr+qsTr("Connection failed");
+                            text = appInfo.emptyStr+qsTr("Failed");
+                        }
+                    }
+                }
+                ButtonRow {
+                    id: authSelector
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width - parent.spacing - testConnectionButton.width
+                    visible: (addAccountDialog.cloudType == CloudDriveModel.WebDAV)
+                    Button {
+                        id: authorizeButton
+                        text: appInfo.emptyStr+qsTr("Token");
+                        onClicked: {
+                            if (hostname.text == "") {
+                                return;
+                            }
+
+                            cloudDriveModel.testConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text, "OAuth");
+                            addAccountDialog.close();
+                        }
+                    }
+                    Button {
+                        id: basicAuthButton
+                        text: appInfo.emptyStr+qsTr("Basic");
+                        onClicked: {
+                            if (hostname.text == "" || username.text == "") {
+                                return;
+                            }
+
+                            tokenInput.text = "Basic";
                         }
                     }
                 }
             }
         }
 
+        onOpened: {
+            testConnectionButton.text = appInfo.emptyStr+qsTr("Test");
+            basicAuthButton.checked = (addAccountDialog.token.toLowerCase() == "basic");
+            authorizeButton.checked = !basicAuthButton.checked;
+        }
         onClosed: {
             addAccountDialog.connection = "";
             addAccountDialog.host = "";
             addAccountDialog.user = "";
             addAccountDialog.passwd = "";
-            testConnectionButton.text = appInfo.emptyStr+qsTr("Test connection");
+            addAccountDialog.token = "";
         }
         onConfirm: {
             connectionName.closeSoftwareInputPanel(); // For Symbian only.
-            cloudDriveModel.saveConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text);
+
+            if (connectionName.text == "") {
+                return;
+            }
+
+            cloudDriveModel.saveConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text, tokenInput.text);
             // TODO Refresh accounts.
         }
     }
@@ -401,12 +457,10 @@ Page {
             }
 
             onClicked: {
-                var tokens = email.split("@");
-                addAccountDialog.connection = uid;
-                addAccountDialog.host = tokens[1];
-                addAccountDialog.user = tokens[0];
-                addAccountDialog.passwd = secret;
-                addAccountDialog.show(type);
+                if (type == CloudDriveModel.WebDAV || type == CloudDriveModel.Ftp) {
+                    var tokens = email.split("@");
+                    addAccountDialog.show(type, uid, tokens[1], tokens[0], secret, token);
+                }
             }
 
             Component.onCompleted: {

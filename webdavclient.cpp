@@ -4,8 +4,6 @@
 const QString WebDavClient::ConsumerKey = "ce970eaaff0f4c1fbc8268bec6e804e4";
 const QString WebDavClient::ConsumerSecret = "13bd2edd92344f04b23ee3170521f7fe";
 
-const QString WebDavClient::WebDavRoot = "";
-
 const QString WebDavClient::loginURI = "https://%1"; // GET with ?userinfo
 const QString WebDavClient::authorizeURI = "https://oauth.yandex.com/authorize"; // ?response_type=<token|code>&client_id=<client_id>[&display=popup][&state=<state>]
 const QString WebDavClient::accessTokenURI = "https://oauth.yandex.com/token"; // POST with grant_type=authorization_code&code=<code>&client_id=<client_id>&client_secret=<client_secret> or basic auth with only grant_type=authorization_code&code=<code>
@@ -83,28 +81,17 @@ void WebDavClient::accountInfo(QString nonce, QString uid)
 {
     qDebug() << "----- WebDavClient::accountInfo -----" << uid;
 
-    QString accessToken;
-    if (uid == "") {
-        // After accessToken, then uses temp access token..
-        uid = m_paramMap["authorize_uid"];
-        accessToken = m_paramMap["access_token"];
-        qDebug() << "WebDavClient::accountInfo accessToken" << accessToken << "from m_paramMap.";
-    } else {
-        accessToken = accessTokenPairMap[uid].token;
-        qDebug() << "WebDavClient::accountInfo accessToken" << accessToken << "from uid" << uid;
-    }
-
 //    QString uri = accountInfoURI; // + "?oauth_token=" + accessToken;
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
     QString uri = loginURI.arg(hostname) + "?userinfo";
     qDebug() << "WebDavClient::accountInfo uri" << uri;
 
-    QByteArray authHeader;
-    authHeader.append(QString("OAuth %1").arg(accessToken));
+    QByteArray authHeader = createAuthHeader(uid);
     qDebug() << "WebDavClient::accountInfo authHeader" << authHeader;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -179,13 +166,15 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
 {
     qDebug() << "----- WebDavClient::property -----" << uid << remoteFilePath << requestBody << depth;
 
+    // Default to / if remoteFilePath is empty.
+    remoteFilePath = (remoteFilePath == "") ? "/" : remoteFilePath;
+
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = propertyURI.arg(hostname).arg(remoteFilePath);
+    QString uri = propertyURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::property uri" << uri;
 
-    QByteArray authHeader;
-    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    QByteArray authHeader = createAuthHeader(uid);
     qDebug() << "WebDavClient::property authHeader" << authHeader;
 
     QBuffer dataBuf;
@@ -194,6 +183,7 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
@@ -215,14 +205,10 @@ void WebDavClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- WebDavClient::metadata -----" << nonce << uid << remoteFilePath;
 
-    if (remoteFilePath == "") {
-        remoteFilePath = "/";
-    }
-
     QNetworkReply *reply = property(nonce, uid, remoteFilePath, "", 1);
 
     QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "WebDavClient::metadata nonce" << nonce << "replyBody" << replyBody;
+//    qDebug() << "WebDavClient::metadata nonce" << nonce << "replyBody" << replyBody;
 
     // Parse XML and convert to JSON.
     replyBody = createPropertyJson(replyBody);
@@ -234,6 +220,29 @@ void WebDavClient::metadata(QString nonce, QString uid, QString remoteFilePath)
     // Scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+}
+
+QByteArray WebDavClient::createAuthHeader(QString uid)
+{
+    QByteArray authHeader;
+    if (uid == "") {
+        // After accessToken, then uses temp access token..
+        QString uid = m_paramMap["authorize_uid"];
+        QString accessToken = m_paramMap["access_token"];
+        qDebug() << "WebDavClient::createAuthHeader get uid" << uid << "accessToken" << accessToken << "from m_paramMap.";
+        authHeader.append("OAuth " + accessToken);
+    } else if (accessTokenPairMap.contains(uid)) {
+        if (accessTokenPairMap[uid].token.toLower() == "basic") {
+            QByteArray token;
+            token.append(QString("%1:%2").arg(accessTokenPairMap[uid].email.split("@").at(0)).arg(accessTokenPairMap[uid].secret));
+            authHeader.append("Basic ");
+            authHeader.append(token.toBase64());
+        } else {
+            authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+        }
+    }
+
+    return authHeader;
 }
 
 QScriptValue WebDavClient::createScriptValue(QScriptEngine &engine, QDomNode &n, QString caller)
@@ -311,13 +320,23 @@ QString WebDavClient::createResponseJson(QString replyBody)
     return jsonText;
 }
 
+QString WebDavClient::prepareRemotePath(QString prefix, QString remoteFilePath)
+{
+    QString path = remoteFilePath;
+
+    // Remove prefix.
+    if (prefix != "") {
+        path = path.replace(QRegExp("^"+prefix), "/");
+    }
+    // Replace double slash.
+    path = path.replace(QRegExp("//"), "/");
+
+    return path;
+}
+
 void WebDavClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- WebDavClient::browse -----" << nonce << uid << remoteFilePath;
-
-    if (remoteFilePath == "") {
-        remoteFilePath = "/";
-    }
 
     QNetworkReply *reply = property(nonce, uid, remoteFilePath, "", 1);
 
@@ -326,6 +345,14 @@ void WebDavClient::browse(QString nonce, QString uid, QString remoteFilePath)
 
     // Parse XML and convert to JSON.
     replyBody = createPropertyJson(replyBody);
+
+    // TODO Get remote root. It should be gotten while parsing XML in createPropertyJson().
+    // TODO Needs to be UID-safety.
+    QScriptEngine engine;
+    QScriptValue sc = engine.evaluate("(" + replyBody + ")");
+    if (remoteFilePath == "") {
+        remoteRoot = sc.property("property").property("href").toString();
+    }
 
 //    qDebug() << "WebDavClient::browse nonce" << nonce << "JSON replyBody" << replyBody;
 
@@ -344,28 +371,41 @@ void WebDavClient::createFolder(QString nonce, QString uid, QString remoteParent
 void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
     if (newRemoteFileName != "" && newRemoteFilePath == "") {
-        newRemoteFilePath = getParentRemotePath(remoteFilePath) + "/" + newRemoteFileName;
-        qDebug() << "WebDavClient::moveFile rename" << uid << remoteFilePath << newRemoteFilePath << newRemoteFileName;
+        if (remoteFilePath.endsWith("/")) {
+            // Directory
+            newRemoteFilePath = getParentRemotePath(remoteFilePath.mid(0, remoteFilePath.length()-1)) + "/" + newRemoteFileName + "/";
+        } else {
+            // File
+            newRemoteFilePath = getParentRemotePath(remoteFilePath) + "/" + newRemoteFileName;
+        }
+        qDebug() << "WebDavClient::moveFile rename" << uid << remoteFilePath << newRemoteFilePath;
     } else {
-        qDebug() << "WebDavClient::moveFile move" << uid << remoteFilePath << newRemoteFilePath << newRemoteFileName;
+        if (remoteFilePath.endsWith("/")) {
+            // Directory
+            newRemoteFilePath = newRemoteFilePath + "/";
+        }
+        qDebug() << "WebDavClient::moveFile move" << uid << remoteFilePath << newRemoteFilePath;
     }
 
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = moveFileURI.arg(hostname).arg(remoteFilePath);
+    QString uri = moveFileURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::moveFile uri " << uri;
 
-    QByteArray authHeader;
-    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    QByteArray authHeader = createAuthHeader(uid);
     qDebug() << "WebDavClient::moveFile authHeader" << authHeader;
+
+    QByteArray destinationHeader = newRemoteFilePath.toUtf8();
+    qDebug() << "WebDavClient::moveFile destinationHeader" << destinationHeader;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", authHeader);
     req.setRawHeader("Accept", QByteArray("*/*"));
-    req.setRawHeader("Destination", newRemoteFilePath.toUtf8());
+    req.setRawHeader("Destination", destinationHeader);
     QNetworkReply *reply = manager->sendCustomRequest(req, "MOVE");
 
     while (!reply->isFinished()) {
@@ -387,22 +427,31 @@ void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, 
 {
     qDebug() << "----- WebDavClient::copyFile -----" << uid << remoteFilePath << newRemoteFilePath << newRemoteFileName;
 
+    if (remoteFilePath.endsWith("/")) {
+        // Directory
+        newRemoteFilePath = newRemoteFilePath + "/";
+        qDebug() << "WebDavClient::copyFile" << uid << remoteFilePath << "prepared newRemoteFilePath" << newRemoteFilePath;
+    }
+
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = copyFileURI.arg(hostname).arg(remoteFilePath);
+    QString uri = copyFileURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::copyFile uri " << uri;
 
-    QByteArray authHeader;
-    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    QByteArray authHeader = createAuthHeader(uid);
     qDebug() << "WebDavClient::copyFile authHeader" << authHeader;
+
+    QByteArray destinationHeader = newRemoteFilePath.toUtf8();
+    qDebug() << "WebDavClient::copyFile destinationHeader" << destinationHeader;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", authHeader);
     req.setRawHeader("Accept", QByteArray("*/*"));
-    req.setRawHeader("Destination", newRemoteFilePath.toUtf8());
+    req.setRawHeader("Destination", destinationHeader);
     QNetworkReply *reply = manager->sendCustomRequest(req, "COPY");
 
     while (!reply->isFinished()) {
@@ -425,16 +474,16 @@ void WebDavClient::deleteFile(QString nonce, QString uid, QString remoteFilePath
     qDebug() << "----- WebDavClient::deleteFile -----" << uid << remoteFilePath;
 
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = deleteFileURI.arg(hostname).arg(remoteFilePath);
+    QString uri = deleteFileURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::deleteFile uri " << uri;
 
-    QByteArray authHeader;
-    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    QByteArray authHeader = createAuthHeader(uid);
     qDebug() << "WebDavClient::deleteFile authHeader" << authHeader;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", authHeader);
@@ -461,16 +510,16 @@ void WebDavClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "----- WebDavClient::shareFile -----" << nonce << uid << remoteFilePath;
 
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = sharesURI.arg(hostname).arg(remoteFilePath);
+    QString uri = sharesURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
     uri = encodeURI(uri) + "?publish";
     qDebug() << "WebDavClient::shareFile uri" << uri;
 
-    QByteArray authHeader;
-    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    QByteArray authHeader = createAuthHeader(uid);
     qDebug() << "WebDavClient::shareFile authHeader" << authHeader;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", authHeader);
@@ -505,18 +554,18 @@ QString WebDavClient::createFolder(QString nonce, QString uid, QString remotePar
 {
     qDebug() << "----- WebDavClient::createFolder -----" << nonce << uid << remoteParentPath << newRemoteFolderName;
 
-    QString remoteFilePath = remoteParentPath + "/" + newRemoteFolderName;
+    QString remoteFilePath = remoteParentPath + newRemoteFolderName;
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = createFolderURI.arg(hostname).arg(remoteFilePath);
+    QString uri = createFolderURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::createFolder uri" << uri;
 
-    QByteArray authHeader;
-    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    QByteArray authHeader = createAuthHeader(uid);
     qDebug() << "WebDavClient::createFolder authHeader" << authHeader;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", authHeader);
@@ -554,16 +603,16 @@ QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFileP
     qDebug() << "----- WebDavClient::fileGet -----" << nonce << uid << remoteFilePath << offset << "synchronous" << synchronous;
 
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = fileGetURI.arg(hostname).arg(remoteFilePath);
+    QString uri = fileGetURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::fileGet uri" << uri;
 
-    QByteArray authHeader;
-    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    QByteArray authHeader = createAuthHeader(uid);
     qDebug() << "WebDavClient::fileGet authHeader" << authHeader;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetReplyFinished(QNetworkReply*)));
     }
@@ -653,18 +702,18 @@ QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *sour
 {
     qDebug() << "----- WebDavClient::filePut -----" << uid << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
-    QString remoteFilePath = remoteParentPath + "/" + remoteFileName;
+    QString remoteFilePath = remoteParentPath + remoteFileName;
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = filePutURI.arg(hostname).arg(remoteFilePath);
+    QString uri = filePutURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::filePut uri " << uri;
 
-    QByteArray authHeader;
-    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    QByteArray authHeader = createAuthHeader(uid);
     qDebug() << "WebDavClient::filePut authHeader" << authHeader;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)));
     }
@@ -704,16 +753,16 @@ QIODevice *WebDavClient::fileGetResume(QString nonce, QString uid, QString remot
 
     // Send request.
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = fileGetURI.arg(hostname).arg(remoteFilePath);
+    QString uri = fileGetURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::fileGet uri" << uri;
 
-    QByteArray authHeader;
-    authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+    QByteArray authHeader = createAuthHeader(uid);
     qDebug() << "WebDavClient::fileGet authHeader" << authHeader;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetResumeReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -754,20 +803,75 @@ QString WebDavClient::getRemoteFileName(QString remotePath)
     return name;
 }
 
-bool WebDavClient::testConnection(QString id, QString hostname, QString username, QString password)
+void WebDavClient::testSSLConnection(QString hostname)
 {
-    qDebug() << "----- WebDavClient::testConnection -----";
+    QSslSocket socket;
+//    qDebug() << "WebDavClient::testConnection SSL socket localCertificate" << socket.localCertificate();
+//    qDebug() << "WebDavClient::testConnection SSL socket peerCertificate" << socket.peerCertificate();
+//    qDebug() << "WebDavClient::testConnection SSL socket peerCertificateChain" << socket.peerCertificateChain();
+//    qDebug() << "WebDavClient::testConnection SSL socket defaultCaCertificates" << socket.defaultCaCertificates();
+//    qDebug() << "WebDavClient::testConnection SSL socket caCertificates" << socket.caCertificates();
+//    qDebug() << "WebDavClient::testConnection SSL socket systemCaCertificates" << socket.systemCaCertificates();
+//    qDebug() << "WebDavClient::testConnection SSL socket defaultCiphers" << socket.defaultCiphers();
+//    qDebug() << "WebDavClient::testConnection SSL socket ciphers" << socket.ciphers();
+    qDebug() << "WebDavClient::testConnection SSL socket peerVerifyDepth" << socket.peerVerifyDepth();
+    qDebug() << "WebDavClient::testConnection SSL socket peerVerifyMode" << socket.peerVerifyMode();
+    qDebug() << "WebDavClient::testConnection SSL socket privateKey" << socket.privateKey();
+//    qDebug() << "WebDavClient::testConnection SSL socket supportedCiphers" << socket.supportedCiphers() ;
+//    qDebug() << "WebDavClient::testConnection SSL socket supportsSsl" << socket.supportsSsl();
 
-    if (!accessTokenPairMap.contains(id) || accessTokenPairMap[id].token == "") {
-        // Save id.
-        saveConnection(id, hostname, username, password);
+    // Configure to ignore errors for self-signed certificate.
+    QList<QSslCertificate> cert = QSslCertificate::fromPath(QLatin1String("E:/certificates/server.crt"));
+    qDebug() << "WebDavClient::testConnection SSL socket loaded certificate" << cert.at(0) << "isValid" << cert.at(0).isValid();
+    QList<QSslError> expectedSslErrors;
+    expectedSslErrors.append(QSslError(QSslError::SelfSignedCertificate, cert.at(0)));
+    expectedSslErrors.append(QSslError(QSslError::HostNameMismatch, cert.at(0)));
+    socket.ignoreSslErrors(expectedSslErrors);
+    connect(&socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QList<QSslError>)) );
+
+    socket.connectToHostEncrypted(hostname, 443);
+    if (!socket.waitForConnected()) {
+        qDebug() << "WebDavClient::testConnection SSL socket connection error" << socket.error() << socket.errorString();
+    } else {
+        qDebug() << "WebDavClient::testConnection SSL socket connection success";
+    }
+    if (!socket.waitForEncrypted()) {
+        qDebug() << "WebDavClient::testConnection SSL socket encryption error" << socket.error() << socket.errorString();
+        qDebug() << "WebDavClient::testConnection SSL socket encryption error localCertificate" << socket.localCertificate() << "peerCertificate" << socket.peerCertificate();
+    } else {
+        qDebug() << "WebDavClient::testConnection SSL socket encryption success";
+        qDebug() << "WebDavClient::testConnection SSL socket encryption success localCertificate" << socket.localCertificate() << "peerCertificate" << socket.peerCertificate();
+
+        QByteArray requestBody("GET / HTTP/1.0\r\n\r\n");
+        qDebug() << "WebDavClient::testConnection SSL socket request" << requestBody;
+        socket.write(requestBody);
+        while (socket.waitForReadyRead()) {
+            qDebug() << "WebDavClient::testConnection SSL socket response" << socket.readAll().data();
+        }
+    }
+    socket.disconnectFromHost();
+    qDebug() << "WebDavClient::testConnection SSL socket connection closed";
+}
+
+bool WebDavClient::testConnection(QString id, QString hostname, QString username, QString password, QString token)
+{
+    qDebug() << "----- WebDavClient::testConnection -----" << id << hostname << username << token;
+
+    // Redirects to authorize if token is oauth.
+    if (token.toLower() == "oauth") {
+        // Save id and proceed authorizing.
+        saveConnection(id, hostname, username, password, token);
         // Store id while authorizing. It will be used in accountInfo() after authorized access token.
         m_paramMap["authorize_uid"] = id;
-        // Request authorize to get access token.
         authorize(createNonce());
-        // TODO Emit signal to close add connection dialog.
         return false;
     }
+
+    // Save id and proceed testing.
+    saveConnection(id, hostname, username, password, token);
+
+    // TODO SSL
+    testSSLConnection(hostname);
 
     // Test connection (with empty PROPFIND method) with id's stored access token.
     QNetworkReply *reply = property(createNonce(), id, "/");
@@ -785,28 +889,37 @@ bool WebDavClient::testConnection(QString id, QString hostname, QString username
     }
 }
 
-void WebDavClient::saveConnection(QString id, QString hostname, QString username, QString password)
+void WebDavClient::saveConnection(QString id, QString hostname, QString username, QString password, QString token)
 {
-    qDebug() << "----- WebDavClient::saveConnection -----";
+    qDebug() << "----- WebDavClient::saveConnection -----" << id << hostname << username << token;
 
     /* Notes:
-     * Stores token as (user:password).toBase64();
+     * For basic authentication, stores token as "Basic". App will construct token from (user:password).toBase64() at runtime.
+     * For oauth, stores token from oauth process.
      */
     // TODO Encrypt password before store to file.
     if (accessTokenPairMap.contains(id)) {
-//        accessTokenPairMap[id].token = QByteArray().append(username + ":" + password).toBase64();
+        if (token.toLower() == "oauth") {
+            // Preserves current toekn which will be updated once authorization is done.
+        } else {
+            accessTokenPairMap[id].token = token;
+        }
         accessTokenPairMap[id].email = QString("%1@%2").arg(username).arg(hostname);
         accessTokenPairMap[id].secret = password;
     } else {
         TokenPair tokenPair;
-//       tokenPair.token = QByteArray().append(username + ":" + password).toBase64();
-        tokenPair.token = "";
-        tokenPair.secret = password;
+        tokenPair.token = token;
         tokenPair.email = QString("%1@%2").arg(username).arg(hostname);
+        tokenPair.secret = password;
         accessTokenPairMap[id] = tokenPair;
     }
 
     saveAccessPairMap();
+}
+
+QString WebDavClient::getRemoteRoot()
+{
+    return remoteRoot;
 }
 
 bool WebDavClient::isRemoteAbsolutePath()
@@ -1005,86 +1118,28 @@ void WebDavClient::fileGetResumeReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void WebDavClient::filePutResumeReplyFinished(QNetworkReply *reply)
+void WebDavClient::sslErrorsReplyFilter(QNetworkReply *reply, QList<QSslError> sslErrors)
 {
+    qDebug() << "WebDavClient::sslErrorsReplyFilter" << reply << QString(" Error=%1").arg(reply->error()) << "sslErrors" << sslErrors;
+
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    QByteArray replyBody = reply->readAll();
-    qDebug() << "WebDavClient::filePutResumeReplyFinished" << reply << QString(" Error=%1").arg(reply->error()) << "replyBody" << QString::fromUtf8(replyBody);
-
-    if (reply->error() == QNetworkReply::NoError) {
-        QString uploadId = reply->header(QNetworkRequest::LocationHeader).toString();
-
-        // Emit signal with upload_location to start uploading.
-        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"upload_id\": \"%1\" }").arg(uploadId) );
-    } else {
-        // REMARK Use QString::fromUtf8() to support unicode text.
-        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
+    // TODO Configure to ignore errors for self-signed certificate.
+    QList<QSslError> expectedSslErrors;
+    foreach (QSslError sslError, sslErrors) {
+        qDebug() << "WebDavClient::sslErrorsReplyFilter sslError" << sslError << sslError.certificate();
+        if (sslError.error() == QSslError::SelfSignedCertificate || sslError.error() == QSslError::HostNameMismatch) {
+            expectedSslErrors.append(sslError);
+        }
     }
 
-    // Scheduled to delete later.
-    reply->deleteLater();
-    reply->manager()->deleteLater();
+    // TODO Make ignore errors configurable.
+    reply->ignoreSslErrors(expectedSslErrors);
 }
 
-void WebDavClient::filePutResumeUploadReplyFinished(QNetworkReply *reply)
+void WebDavClient::sslErrorsReplyFilter(QList<QSslError> sslErrors)
 {
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-
-    QByteArray replyBody = reply->readAll();
-    qDebug() << "WebDavClient::filePutResumeUploadReplyFinished" << reply << QString(" Error=%1").arg(reply->error()) << "replyBody" << QString::fromUtf8(replyBody) << "hasRange" << reply->hasRawHeader("Range");
-
-    if (reply->error() == QNetworkReply::NoError) {
-        // TODO Get range and check if resume upload is required.
-        if (reply->hasRawHeader("Range")) {
-            QStringList ranges = QString::fromAscii(reply->rawHeader("Range")).split("-");
-            qint64 offset = ranges.at(1).toUInt() + 1;
-            qDebug() << "WebDavClient::filePutResumeUploadReplyFinished ranges" << ranges << "offset" << offset;
-
-            // Emit signal with offset to resume upload.
-            emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"offset\": %1 }").arg(offset) );
-        } else {
-            // Emit signal with successful upload reply which include uploaded file size.
-            emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
-        }
-    } else {
-        // REMARK Use QString::fromUtf8() to support unicode text.
-        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
+    foreach (QSslError sslError, sslErrors) {
+        qDebug() << "WebDavClient::sslErrorsReplyFilter sslError" << sslError << sslError.certificate();
     }
-
-    // Close source file.
-    QFile *localTargetFile = m_localFileHash[nonce];
-    localTargetFile->close();
-    m_localFileHash.remove(nonce);
-
-    // Scheduled to delete later.
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-}
-
-void WebDavClient::filePutResumeStatusReplyFinished(QNetworkReply *reply)
-{
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-
-    QByteArray replyBody = reply->readAll();
-    qDebug() << "WebDavClient::filePutResumeStatusReplyFinished" << reply << QString(" Error=%1").arg(reply->error()) << "replyBody" << QString::fromUtf8(replyBody);
-
-    if (reply->error() == QNetworkReply::NoError) {
-        qint64 offset = 0;
-        if (reply->hasRawHeader("Range")) {
-            QStringList ranges = QString::fromAscii(reply->rawHeader("Range")).split("-");
-            offset = ranges.at(1).toUInt() + 1;
-            qDebug() << "WebDavClient::filePutResumeStatusReplyFinished ranges" << ranges << "offset" << offset;
-        }
-
-        // Emit signal with offset to resume upload.
-        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"offset\": %1 }").arg(offset) );
-    } else {
-        // REMARK Use QString::fromUtf8() to support unicode text.
-        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
-    }
-
-    // Scheduled to delete later.
-    reply->deleteLater();
-    reply->manager()->deleteLater();
 }

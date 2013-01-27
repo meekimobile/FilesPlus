@@ -23,8 +23,8 @@ public:
     virtual bool isFilePutResumable(qint64 fileSize);
     virtual bool isFileGetResumable(qint64 fileSize);
 
-    virtual bool testConnection(QString id, QString hostname, QString username, QString password);
-    virtual void saveConnection(QString id, QString hostname, QString username, QString password);
+    virtual bool testConnection(QString id, QString hostname, QString username, QString password, QString token);
+    virtual void saveConnection(QString id, QString hostname, QString username, QString password, QString token);
 
     virtual void requestToken(QString nonce);
     virtual void authorize(QString nonce);

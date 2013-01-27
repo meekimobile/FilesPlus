@@ -488,7 +488,7 @@ QString FtpClient::getRemoteFileName(QString remotePath)
     return name;
 }
 
-bool FtpClient::testConnection(QString id, QString hostname, QString username, QString password)
+bool FtpClient::testConnection(QString id, QString hostname, QString username, QString password, QString token)
 {
     qDebug() << "----- FtpClient::testConnection -----";
 
@@ -513,7 +513,7 @@ bool FtpClient::testConnection(QString id, QString hostname, QString username, Q
     return res;
 }
 
-void FtpClient::saveConnection(QString id, QString hostname, QString username, QString password)
+void FtpClient::saveConnection(QString id, QString hostname, QString username, QString password, QString token)
 {
     qDebug() << "----- FtpClient::saveConnection -----";
 
