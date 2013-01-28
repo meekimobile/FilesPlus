@@ -234,103 +234,17 @@ void SkyDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath
 
     property(nonce, uid, remoteFilePath, false, "metadata");
     files(nonce, uid, remoteFilePath, false, "metadata");
-
-/*
-    // Merge files and property into single JSON string.
-    QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath);
-    if (propertyReply->error() != QNetworkReply::NoError) {
-        propertyReply->deleteLater();
-        propertyReply->manager()->deleteLater();
-        emit metadataReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), propertyReply->readAll());
-        return;
-    }
-
-    QScriptEngine engine;
-    QScriptValue sc;
-    QScriptValue scProperty;
-    QScriptValue scJsonStringify;
-
-    QString propertyJsonText = propertyReply->readAll();
-    scProperty = engine.evaluate("(" + propertyJsonText + ")");
-    QString typeName = scProperty.property("type").toString();
-//    qDebug() << "SkyDriveClient::metadata propertyJsonText" << propertyJsonText << "typeName" << typeName;
-
-    QNetworkReply *filesReply;
-    if (typeName == "folder" || typeName == "album") {
-        filesReply = files(nonce, uid, remoteFilePath);
-        if (filesReply->error() != QNetworkReply::NoError) {
-            filesReply->deleteLater();
-            filesReply->manager()->deleteLater();
-            emit metadataReplySignal(nonce, filesReply->error(), filesReply->errorString(), filesReply->readAll());
-            return;
-        }
-
-        sc = engine.evaluate("(" + filesReply->readAll() + ")");
-    } else {
-        sc = engine.evaluate("({})");
-    }
-
-    sc.setProperty("property", scProperty);
-    scJsonStringify = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << sc);
-//    qDebug() << "SkyDriveClient::metadata scJsonStringify.toString()" << scJsonStringify.toString();
-
-    // TODO scheduled to delete later.
-    propertyReply->deleteLater();
-    propertyReply->manager()->deleteLater();
-    filesReply->deleteLater();
-    filesReply->manager()->deleteLater();
-
-    emit metadataReplySignal(nonce, QNetworkReply::NoError, "", scJsonStringify.toString());
-*/
 }
 
 void SkyDriveClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- SkyDriveClient::browse -----" << remoteFilePath;
-    if (remoteFilePath.isEmpty()) {
-        emit browseReplySignal(nonce, -1, "remoteFilePath is empty.", "");
-        return;
-    }
+
+    // Default remoteFilePath if it's empty from DrivePage.
+    remoteFilePath = (remoteFilePath == "") ? RemoteRoot : remoteFilePath;
 
     property(nonce, uid, remoteFilePath, false, "browse");
     files(nonce, uid, remoteFilePath, false, "browse");
-
-/*
-    // Merge files and property into single JSON string.
-    QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath);
-    if (propertyReply->error() != QNetworkReply::NoError) {
-        propertyReply->deleteLater();
-        propertyReply->manager()->deleteLater();
-        emit browseReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), propertyReply->readAll());
-        return;
-    }
-    QNetworkReply *filesReply = files(nonce, uid, remoteFilePath);
-    if (filesReply->error() != QNetworkReply::NoError) {
-        filesReply->deleteLater();
-        filesReply->manager()->deleteLater();
-        emit browseReplySignal(nonce, filesReply->error(), filesReply->errorString(), filesReply->readAll());
-        return;
-    }
-
-    QScriptEngine engine;
-    QScriptValue sc;
-    QScriptValue scProperty;
-    QScriptValue scJsonStringify;
-    sc = engine.evaluate("(" + filesReply->readAll() + ")");
-    scProperty = engine.evaluate("(" + propertyReply->readAll() + ")");
-    sc.setProperty("property", scProperty);
-
-    scJsonStringify = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << sc);
-//    qDebug() << "SkyDriveClient::browse scJsonStringify.toString()" << scJsonStringify.toString();
-
-    // TODO scheduled to delete later.
-    propertyReply->deleteLater();
-    propertyReply->manager()->deleteLater();
-    filesReply->deleteLater();
-    filesReply->manager()->deleteLater();
-
-    emit browseReplySignal(nonce, QNetworkReply::NoError, "", scJsonStringify.toString());
-*/
 }
 
 QNetworkReply * SkyDriveClient::files(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)

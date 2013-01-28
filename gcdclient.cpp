@@ -337,11 +337,8 @@ void GCDClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 void GCDClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- GCDClient::browse -----" << uid << remoteFilePath;
-    if (remoteFilePath.isEmpty()) {
-        emit browseReplySignal(nonce, -1, "remoteFilePath is empty.", "");
-        return;
-    }
 
+    // remoteFilePath can be empty while browsing from DrivePage.
     property(nonce, uid, remoteFilePath, false, "browse");
     files(nonce, uid, remoteFilePath, false, "browse");
 }
