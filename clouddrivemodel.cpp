@@ -647,17 +647,17 @@ bool CloudDriveModel::isRemoteRoot(CloudDriveModel::ClientTypes type, QString ui
     if (client == 0) {
         return false;
     } else {
-        return (client->getRemoteRoot() == remotePath || remotePath == "" || remotePath == "/");
+        return (client->getRemoteRoot(uid) == remotePath || remotePath == "" || remotePath == "/");
     }
 }
 
-QString CloudDriveModel::getRemoteRoot(CloudDriveModel::ClientTypes type)
+QString CloudDriveModel::getRemoteRoot(CloudDriveModel::ClientTypes type, QString uid)
 {
     CloudDriveClient *client = getCloudClient(type);
     if (client == 0) {
         return "";
     } else {
-        return client->getRemoteRoot();
+        return client->getRemoteRoot(uid);
     }
 }
 
@@ -671,7 +671,7 @@ QString CloudDriveModel::getParentRemotePath(CloudDriveModel::ClientTypes type, 
         }
         return remoteParentPath;
     } else {
-        return getRemoteRoot(type);
+        return "";
     }
 }
 

@@ -63,7 +63,7 @@ public:
 
     QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
 
-    QString getRemoteRoot();
+    QString getRemoteRoot(QString uid);
     bool isFileGetResumable(qint64 fileSize);
 signals:
 

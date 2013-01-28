@@ -73,7 +73,7 @@ public:
     QString filePutResumeStatus(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
     QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
 
-    QString getRemoteRoot();
+    QString getRemoteRoot(QString uid);
     bool isFilePutResumable(qint64 fileSize);
     bool isFileGetResumable(qint64 fileSize);
 signals:

@@ -143,7 +143,7 @@ public:
     Q_INVOKABLE void resumeJob(const QString jobId);
 
     // Other.
-    Q_INVOKABLE QString getRemoteRoot(CloudDriveModel::ClientTypes type);
+    Q_INVOKABLE QString getRemoteRoot(CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE QString getParentRemotePath(CloudDriveModel::ClientTypes type, QString remotePath);
     Q_INVOKABLE bool isRemoteAbsolutePath(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE QString getRemoteName(CloudDriveModel::ClientTypes type, QString remotePath);

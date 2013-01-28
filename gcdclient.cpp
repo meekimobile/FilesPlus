@@ -969,7 +969,7 @@ QString GCDClient::filePutCommit(QString nonce, QString uid, QString remoteFileP
     return "";
 }
 
-QString GCDClient::getRemoteRoot()
+QString GCDClient::getRemoteRoot(QString uid)
 {
     return RemoteRoot;
 }

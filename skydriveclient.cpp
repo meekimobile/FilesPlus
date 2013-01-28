@@ -790,7 +790,7 @@ QIODevice *SkyDriveClient::fileGetResume(QString nonce, QString uid, QString rem
     return reply;
 }
 
-QString SkyDriveClient::getRemoteRoot()
+QString SkyDriveClient::getRemoteRoot(QString uid)
 {
     return RemoteRoot;
 }

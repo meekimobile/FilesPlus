@@ -19,7 +19,7 @@ public:
     int removeUid(QString uid);
 
     virtual bool isRemoteAbsolutePath();
-    virtual QString getRemoteRoot();
+    virtual QString getRemoteRoot(QString id);
     virtual bool isFilePutResumable(qint64 fileSize);
     virtual bool isFileGetResumable(qint64 fileSize);
 

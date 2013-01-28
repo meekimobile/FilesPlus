@@ -38,7 +38,7 @@ public:
     bool testConnection(QString id, QString hostname, QString username, QString password, QString token);
     void saveConnection(QString id, QString hostname, QString username, QString password, QString token);
 
-    QString getRemoteRoot();
+    QString getRemoteRoot(QString uid);
     bool isRemoteAbsolutePath();
     bool isFileGetResumable(qint64 fileSize);
 
@@ -79,14 +79,15 @@ public slots:
 
     void fileGetResumeReplyFinished(QNetworkReply *reply);
 private:
-    QString remoteRoot;
+    QHash<QString, QString> m_remoteRootHash;
     QHash<QString, QFile*> m_localFileHash;
 
     QByteArray createAuthHeader(QString uid);
     QScriptValue createScriptValue(QScriptEngine &engine, QDomNode &n, QString caller);
     QString createPropertyJson(QString replyBody);
     QString createResponseJson(QString replyBody);
-    QString prepareRemotePath(QString prefix, QString remoteFilePath);
+    QString prepareRemotePath(QString uid, QString remoteFilePath);
+    QString removeDoubleSlash(QString remoteFilePath);
 
     void testSSLConnection(QString hostname);
 

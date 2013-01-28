@@ -55,7 +55,7 @@ bool CloudDriveClient::isRemoteAbsolutePath()
     return false;
 }
 
-QString CloudDriveClient::getRemoteRoot()
+QString CloudDriveClient::getRemoteRoot(QString id)
 {
     return "";
 }

@@ -170,7 +170,7 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
     remoteFilePath = (remoteFilePath == "") ? "/" : remoteFilePath;
 
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = propertyURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
+    QString uri = propertyURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::property uri" << uri;
 
@@ -320,16 +320,33 @@ QString WebDavClient::createResponseJson(QString replyBody)
     return jsonText;
 }
 
-QString WebDavClient::prepareRemotePath(QString prefix, QString remoteFilePath)
+QString WebDavClient::prepareRemotePath(QString uid, QString remoteFilePath)
 {
     QString path = remoteFilePath;
 
-    // Remove prefix.
-    if (prefix != "") {
-        path = path.replace(QRegExp("^"+prefix), "/");
+    // Remove prefix remote root path.
+    if (uid != "") {
+        if (!m_remoteRootHash.contains(uid)) {
+            QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+            QString remoteRoot = (hostname.indexOf("/") != -1) ? hostname.mid(hostname.indexOf("/")) : "/";
+            path = path.replace(QRegExp("^"+remoteRoot), "/");
+            // TODO Stores remoteRoot in m_remoteRootHash[uid].
+        } else {
+            path = path.replace(QRegExp("^"+m_remoteRootHash[uid]), "/");
+        }
     }
     // Replace double slash.
-    path = path.replace(QRegExp("//"), "/");
+    path = path.replace("//", "/");
+
+    return path;
+}
+
+QString WebDavClient::removeDoubleSlash(QString remoteFilePath)
+{
+    QString path = remoteFilePath;
+
+    // Replace double slash.
+    path = path.replace("//", "/");
 
     return path;
 }
@@ -351,7 +368,8 @@ void WebDavClient::browse(QString nonce, QString uid, QString remoteFilePath)
     QScriptEngine engine;
     QScriptValue sc = engine.evaluate("(" + replyBody + ")");
     if (remoteFilePath == "") {
-        remoteRoot = sc.property("property").property("href").toString();
+        m_remoteRootHash[uid] = sc.property("property").property("href").toString();
+        qDebug() << "WebDavClient::browse nonce" << nonce << "uid" << uid << "remote root" << m_remoteRootHash[uid];
     }
 
 //    qDebug() << "WebDavClient::browse nonce" << nonce << "JSON replyBody" << replyBody;
@@ -370,6 +388,8 @@ void WebDavClient::createFolder(QString nonce, QString uid, QString remoteParent
 
 void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
+    qDebug() << "----- WebDavClient::moveFile -----" << nonce << uid << remoteFilePath << newRemoteFilePath << newRemoteFileName;
+
     if (newRemoteFileName != "" && newRemoteFilePath == "") {
         if (remoteFilePath.endsWith("/")) {
             // Directory
@@ -388,14 +408,14 @@ void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, 
     }
 
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = moveFileURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
+    QString uri = moveFileURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::moveFile uri " << uri;
 
     QByteArray authHeader = createAuthHeader(uid);
     qDebug() << "WebDavClient::moveFile authHeader" << authHeader;
 
-    QByteArray destinationHeader = newRemoteFilePath.toUtf8();
+    QByteArray destinationHeader = copyFileURI.arg(hostname).arg(prepareRemotePath(uid, newRemoteFilePath)).toUtf8();
     qDebug() << "WebDavClient::moveFile destinationHeader" << destinationHeader;
 
     // Send request.
@@ -415,7 +435,6 @@ void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, 
 
     QString replyBody = QString::fromUtf8(reply->readAll());
     qDebug() << "WebDavClient::moveFile replyBody" << replyBody;
-    replyBody = createResponseJson(replyBody);
     emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // Scheduled to delete later.
@@ -434,14 +453,14 @@ void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, 
     }
 
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = copyFileURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
+    QString uri = copyFileURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::copyFile uri " << uri;
 
     QByteArray authHeader = createAuthHeader(uid);
     qDebug() << "WebDavClient::copyFile authHeader" << authHeader;
 
-    QByteArray destinationHeader = newRemoteFilePath.toUtf8();
+    QByteArray destinationHeader = copyFileURI.arg(hostname).arg(prepareRemotePath(uid, newRemoteFilePath)).toUtf8();
     qDebug() << "WebDavClient::copyFile destinationHeader" << destinationHeader;
 
     // Send request.
@@ -452,6 +471,7 @@ void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, 
     req.setRawHeader("Authorization", authHeader);
     req.setRawHeader("Accept", QByteArray("*/*"));
     req.setRawHeader("Destination", destinationHeader);
+    req.setRawHeader("Overwrite", "F");
     QNetworkReply *reply = manager->sendCustomRequest(req, "COPY");
 
     while (!reply->isFinished()) {
@@ -461,7 +481,6 @@ void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, 
 
     QString replyBody = QString::fromUtf8(reply->readAll());
     qDebug() << "WebDavClient::copyFile replyBody" << replyBody;
-    replyBody = createResponseJson(replyBody);
     emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // Scheduled to delete later.
@@ -474,7 +493,7 @@ void WebDavClient::deleteFile(QString nonce, QString uid, QString remoteFilePath
     qDebug() << "----- WebDavClient::deleteFile -----" << uid << remoteFilePath;
 
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = deleteFileURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
+    QString uri = deleteFileURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::deleteFile uri " << uri;
 
@@ -497,7 +516,6 @@ void WebDavClient::deleteFile(QString nonce, QString uid, QString remoteFilePath
 
     QString replyBody = QString::fromUtf8(reply->readAll());
     qDebug() << "WebDavClient::deleteFile replyBody" << replyBody;
-    replyBody = createResponseJson(replyBody);
     emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // Scheduled to delete later.
@@ -510,7 +528,7 @@ void WebDavClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "----- WebDavClient::shareFile -----" << nonce << uid << remoteFilePath;
 
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = sharesURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
+    QString uri = sharesURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri) + "?publish";
     qDebug() << "WebDavClient::shareFile uri" << uri;
 
@@ -522,28 +540,40 @@ void WebDavClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
     req.setRawHeader("Authorization", authHeader);
     req.setRawHeader("Accept", QByteArray("*/*"));
     QNetworkReply *reply = manager->post(req, QByteArray());
+
+    // TODO Loop until readyRead.
+    // ISSUE readyRead is never fired.
+//    QEventLoop loop;
+//    connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
+//    loop.exec();
 
     while (!reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
     }
 
+    qDebug() << "WebDavClient::shareFile reply ContentTypeHeader" << reply->header(QNetworkRequest::ContentTypeHeader) << "ContentLengthHeader" << reply->header(QNetworkRequest::ContentLengthHeader);
     QString result;
     if (reply->error() == QNetworkReply::NoError) {
         if (reply->header(QNetworkRequest::LocationHeader).isValid()) {
             QString location = reply->header(QNetworkRequest::LocationHeader).toUrl().toString();
+            qDebug() << "WebDavClient::shareFile reply LocationHeader" << location;
             result = QString("{ \"url\": \"%1\" }").arg(location);
+            emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), result);
         } else {
-            result = createResponseJson(QString::fromUtf8(reply->readAll()));
+            // Share link service replies with actual content. Return the URI then abort connection.
+            result = QString("{ \"url\": \"%1\" }").arg(uri);
+            emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), result);
+            reply->abort();
         }
     } else {
-        result = createResponseJson(QString::fromUtf8(reply->readAll()));
+        result = QString::fromUtf8(reply->readAll());
+        emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), result);
     }
-
-    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), result);
 
     // Scheduled to delete later.
     reply->deleteLater();
@@ -556,7 +586,7 @@ QString WebDavClient::createFolder(QString nonce, QString uid, QString remotePar
 
     QString remoteFilePath = remoteParentPath + newRemoteFolderName;
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = createFolderURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
+    QString uri = createFolderURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::createFolder uri" << uri;
 
@@ -603,7 +633,7 @@ QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFileP
     qDebug() << "----- WebDavClient::fileGet -----" << nonce << uid << remoteFilePath << offset << "synchronous" << synchronous;
 
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = fileGetURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
+    QString uri = fileGetURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::fileGet uri" << uri;
 
@@ -704,7 +734,7 @@ QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *sour
 
     QString remoteFilePath = remoteParentPath + remoteFileName;
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = filePutURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
+    QString uri = filePutURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::filePut uri " << uri;
 
@@ -753,7 +783,7 @@ QIODevice *WebDavClient::fileGetResume(QString nonce, QString uid, QString remot
 
     // Send request.
     QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = fileGetURI.arg(hostname).arg(prepareRemotePath(remoteRoot, remoteFilePath));
+    QString uri = fileGetURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::fileGet uri" << uri;
 
@@ -870,9 +900,6 @@ bool WebDavClient::testConnection(QString id, QString hostname, QString username
     // Save id and proceed testing.
     saveConnection(id, hostname, username, password, token);
 
-    // TODO SSL
-    testSSLConnection(hostname);
-
     // Test connection (with empty PROPFIND method) with id's stored access token.
     QNetworkReply *reply = property(createNonce(), id, "/");
 
@@ -917,9 +944,9 @@ void WebDavClient::saveConnection(QString id, QString hostname, QString username
     saveAccessPairMap();
 }
 
-QString WebDavClient::getRemoteRoot()
+QString WebDavClient::getRemoteRoot(QString uid)
 {
-    return remoteRoot;
+    return m_remoteRootHash[uid];
 }
 
 bool WebDavClient::isRemoteAbsolutePath()
