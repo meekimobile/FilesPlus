@@ -29,7 +29,7 @@ Page {
 
     function goUpSlot() {
         console.debug("cloudFolderPage goUpSlot selectedCloudType " + selectedCloudType + " selectedUid " + selectedUid + " remoteParentPath " + remoteParentPath + " remoteParentParentPath " + remoteParentParentPath);
-        if (remoteParentParentPath == "") {
+        if (cloudDriveModel.isRemoteRoot(selectedCloudType, selectedUid, remoteParentPath) || remoteParentParentPath == "") {
             pageStack.pop(cloudFolderPage);
         } else {
             changeRemotePath(remoteParentParentPath);

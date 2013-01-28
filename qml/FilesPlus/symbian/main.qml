@@ -1262,7 +1262,7 @@ PageStackWindow {
                 } else {
                     parsedObj.name = jsonObj.name;
                     parsedObj.absolutePath = jsonObj.id;
-                    parsedObj.parentPath = (jsonObj.parents && jsonObj.parents.length > 0) ? jsonObj.parents[0].id : "";
+                    parsedObj.parentPath = (jsonObj.parent_id) ? jsonObj.parent_id : "";
                     parsedObj.size = (jsonObj.size) ? jsonObj.size : 0;
                     parsedObj.isDeleted = false;
                     parsedObj.isDir = (jsonObj.type == "folder" || jsonObj.type == "album");
@@ -2008,127 +2008,34 @@ PageStackWindow {
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
             if (err == 0) {
-                var jsonObj = Utility.createJsonObj(msg);
+                // Parse to common json object.
+                var jsonObj = cloudDriveModel.parseCommonCloudDriveMetadataJson(jobJson.type, jobJson.uid, Utility.createJsonObj(msg));
 
                 // Suspend next job.
                 cloudDriveModel.suspendNextJob();
 
-                if (jobJson.type == CloudDriveModel.Dropbox) {
-                    // If remotePath was deleted, remove link from localPath.
-                    if (jsonObj.is_deleted) {
+                if (jsonObj.isDeleted) {
                         // Do nothing.
-                    } else {
-                        // Migration starts from itself.
-                        if (jsonObj.is_dir) { // Migrate folder.
-                            // Create target folder.
-                            var createdRemoteFolderPath = cloudDriveModel.createFolder_Block(jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
+                } else {
+                    // Migration starts from itself.
+                    if (jsonObj.isDir) { // Migrate folder.
+                        // Create target folder.
+                        var createdRemoteFolderPath = cloudDriveModel.createFolder_Block(jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
 
-                            for(var i=0; i<jsonObj.contents.length; i++) {
-                                var item = jsonObj.contents[i];
-                                var itemRemotePath = item.path;
-                                var itemRemotePathName = cloudDriveModel.getRemoteName(jobJson.type, itemRemotePath);
-                                var itemIsDir = item.is_dir;
-                                var itemSize = item.bytes;
-                                console.debug("window cloudDriveModel onMigrateFileReplySignal itemRemotePath " + itemRemotePath + " itemRemotePathName " + itemRemotePathName + " itemIsDir " + itemIsDir);
+                        for(var i=0; i<jsonObj.children.length; i++) {
+                            var item = jsonObj.children[i];
+                            console.debug("window cloudDriveModel onMigrateFileReplySignal item " + JSON.stringify(item));
 
-                                if (itemIsDir) {
-                                    // This flow will trigger recursive migrateFile calling.
-                                    cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
-                                } else {
-                                    // Migrate file.
-                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, itemSize, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
-                                }
+                            if (item.isDir) {
+                                // This flow will trigger recursive migrateFile calling.
+                                cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, item.absolutePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, item.name);
+                            } else {
+                                // Migrate file.
+                                cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, item.absolutePath, item.size, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, item.name);
                             }
-                        } else { // Migrate file.
-                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jobJson.remote_file_path, jsonObj.bytes, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
                         }
-                    }
-                }
-
-                if (jobJson.type == CloudDriveModel.SkyDrive) {
-                    if (jsonObj.property) {
-                        // Migration starts from itself.
-                        if (jsonObj.property.type == "folder" || jsonObj.property.type == "album") { // Migrate folder.
-                            // Create target folder.
-                            var createdRemoteFolderPath = cloudDriveModel.createFolder_Block(jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
-
-                            for(var i=0; i<jsonObj.data.length; i++) {
-                                var item = jsonObj.data[i];
-                                var itemRemotePath = item.id;
-                                var itemRemotePathName = item.name;
-                                var itemIsDir = (item.type == "folder" || item.type == "album");
-                                var itemSize = item.size;
-                                console.debug("window cloudDriveModel onMigrateFileReplySignal itemRemotePath " + itemRemotePath + " itemRemotePathName " + itemRemotePathName + " itemIsDir " + itemIsDir);
-
-                                if (itemIsDir) {
-                                    // This flow will trigger recursive migrateFile calling.
-                                    cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
-                                } else {
-                                    // Migrate file.
-                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, itemSize, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
-                                }
-                            }
-                        } else { // Migrate file.
-                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jobJson.remote_file_path, jsonObj.property.size, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
-                        }
-                    }
-                }
-
-                if (jobJson.type == CloudDriveModel.GoogleDrive) {
-                    if (jsonObj.property) {
-                        // Migration starts from itself.
-                        if (jsonObj.property.mimeType == "application/vnd.google-apps.folder") { // Migrate folder.
-                            // Create target folder.
-                            var createdRemoteFolderPath = cloudDriveModel.createFolder_Block(jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
-
-                            for(var i=0; i<jsonObj.items.length; i++) {
-                                var item = jsonObj.items[i];
-                                var itemRemotePath = item.id;
-                                var itemRemotePathName = item.title;
-                                var itemIsDir = (item.mimeType == "application/vnd.google-apps.folder");
-                                var itemSize = item.fileSize;
-                                console.debug("window cloudDriveModel onMigrateFileReplySignal itemRemotePath " + itemRemotePath + " itemRemotePathName " + itemRemotePathName + " itemIsDir " + itemIsDir);
-
-                                if (itemIsDir) {
-                                    // This flow will trigger recursive migrateFile calling.
-                                    cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
-                                } else {
-                                    // Migrate file.
-                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, item.downloadUrl, itemSize, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
-                                }
-                            }
-                        } else { // Migrate file.
-                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jsonObj.property.downloadUrl, jsonObj.property.fileSize, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
-                        }
-                    }
-                }
-
-                if (jobJson.type == CloudDriveModel.Ftp) {
-                    if (jsonObj.property) {
-                        // Migration starts from itself.
-                        if (jsonObj.property.isDir) { // Migrate folder.
-                            // Create target folder.
-                            var createdRemoteFolderPath = cloudDriveModel.createFolder_Block(jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
-
-                            for(var i=0; i<jsonObj.data.length; i++) {
-                                var item = jsonObj.data[i];
-                                var itemRemotePath = item.path;
-                                var itemRemotePathName = item.name;
-                                var itemIsDir = item.isDir;
-                                var itemSize = item.size;
-                                console.debug("window cloudDriveModel onMigrateFileReplySignal itemRemotePath " + itemRemotePath + " itemRemotePathName " + itemRemotePathName + " itemIsDir " + itemIsDir);
-
-                                if (itemIsDir) {
-                                    // This flow will trigger recursive migrateFile calling.
-                                    cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, itemRemotePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
-                                } else {
-                                    // Migrate file.
-                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, itemRemotePath, itemSize, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, itemRemotePathName);
-                                }
-                            }
-                        } else { // Migrate file.
-                            cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jobJson.remote_file_path, jsonObj.property.size, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
-                        }
+                    } else { // Migrate file.
+                        cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jobJson.remote_file_path, jsonObj.size, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
                     }
                 }
 
@@ -2447,8 +2354,6 @@ PageStackWindow {
 
         BusyIndicator {
             id: busyindicator1
-            x: 0
-            y: 0
             width: 100
             height: width
             anchors.verticalCenter: parent.verticalCenter
