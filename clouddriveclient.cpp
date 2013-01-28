@@ -151,7 +151,7 @@ QString CloudDriveClient::createQueryString(QMap<QString, QString> sortMap) {
     return queryString;
 }
 
-bool CloudDriveClient::testConnection(QString id, QString hostname, QString username, QString password, QString token)
+bool CloudDriveClient::testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname)
 {
     return false;
 }
@@ -165,7 +165,7 @@ void CloudDriveClient::requestToken(QString nonce)
     emit requestTokenReplySignal(nonce, -1, objectName() + " " + tr("Request Token"), tr("Service is not implemented."));
 }
 
-void CloudDriveClient::authorize(QString nonce)
+void CloudDriveClient::authorize(QString nonce, QString hostname)
 {
 }
 

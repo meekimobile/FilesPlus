@@ -179,8 +179,8 @@ public:
     // Dropbox specific functions.
     Q_INVOKABLE bool updateDropboxPrefix(bool fullAccess);
 
-    // FTP specific functions.
-    Q_INVOKABLE bool testConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token);
+    // FTP/WebDAV specific functions.
+    Q_INVOKABLE bool testConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token, QString authHostname = "");
     Q_INVOKABLE void saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password,  QString token);
 
     // TODO Needed ?

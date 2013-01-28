@@ -25,7 +25,8 @@ Page {
 
     onStatusChanged: {
         if (status == PageStatus.Active) {
-            refreshCloudDriveAccountsSlot();
+            // TODO Should not refresh here.
+//            refreshCloudDriveAccountsSlot();
         }
     }
 
@@ -193,6 +194,7 @@ Page {
         property alias user: username.text
         property alias passwd: password.text
         property alias token: tokenInput.text
+        property string originalToken
         property int labelWidth: 120
 
         function show(type, uid, host, user, passwd, token) {
@@ -207,140 +209,220 @@ Page {
 
         z: 2
         titleText: appInfo.emptyStr+cloudDriveModel.getCloudName(cloudType)+" "+qsTr("account")
-        content: Column {
-            width: parent.width
-            anchors.centerIn: parent
-            spacing: 5
+        buttonTexts: [appInfo.emptyStr+qsTr("Save"), appInfo.emptyStr+qsTr("Cancel")]
+        content: Item {
+            id: contentItem
 
-            Row {
-                width: parent.width
-                Label {
-                    text: qsTr("Name")
-                    width: addAccountDialog.labelWidth
-                    color: "white"
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-                TextField {
-                    id: connectionName
-                    width: parent.width - addAccountDialog.labelWidth
-                    placeholderText: "Input connection name"
-                    validator: RegExpValidator {
-                        regExp: /[\w.-]+/
-                    }
-                }
-            }
-            Row {
-                width: parent.width
-                Label {
-                    text: qsTr("Host[:port]")
-                    width: addAccountDialog.labelWidth
-                    color: "white"
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-                TextField {
-                    id: hostname
-                    width: parent.width - addAccountDialog.labelWidth
-                    placeholderText: "Input hostname"
-                    validator: RegExpValidator {
-                        regExp: /[\w.-:~]+/
-                    }
-                }
-            }
-            Row {
-                width: parent.width
-                Label {
-                    text: qsTr("Username")
-                    width: addAccountDialog.labelWidth
-                    color: "white"
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-                TextField {
-                    id: username
-                    width: parent.width - addAccountDialog.labelWidth
-                    placeholderText: "Input username"
-                    validator: RegExpValidator {
-                        regExp: /[\w.]+/
-                    }
-                }
-            }
-            Row {
-                width: parent.width
-                Label {
-                    text: qsTr("Password")
-                    width: addAccountDialog.labelWidth
-                    color: "white"
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-                TextField {
-                    id: password
-                    width: parent.width - addAccountDialog.labelWidth
-                    placeholderText: "Input password"
-                    echoMode: TextInput.Password
-                }
-            }
-            Row {
-                width: parent.width
-                Label {
-                    text: qsTr("Token")
-                    width: addAccountDialog.labelWidth
-                    color: "white"
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-                TextField {
-                    id: tokenInput
-                    width: parent.width - addAccountDialog.labelWidth
-                    placeholderText: "Input token"
-                }
-            }
-            Row {
-                width: parent.width
-                height: 80
-                spacing: 10
-                layoutDirection: Qt.RightToLeft
-                Button {
-                    id: testConnectionButton
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: (parent.width - parent.spacing) / 2
-                    onClicked: {
-                        if (hostname.text == "" || username.text == "") {
-                            return;
-                        }
+            property real maxContentHeight: screen.height - 110 // Title + Buttons height
 
-                        text = appInfo.emptyStr+qsTr("Testing");
-                        var res = cloudDriveModel.testConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text, tokenInput.text);
-                        if (res) {
-                            text = appInfo.emptyStr+qsTr("Success");
-                        } else {
-                            text = appInfo.emptyStr+qsTr("Failed");
+            onHeightChanged: {
+                console.debug("onHeightChanged " + height + " maxContentHeight " + maxContentHeight + " inputContext.height " + inputContext.height + " screen.height " + screen.height);
+            }
+
+            width: (window.inPortrait) ? (screen.width - 40) : (screen.width - 160)
+            height: (window.inPortrait) ? Math.min(240, maxContentHeight) : Math.min(180, maxContentHeight)
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            Flickable {
+                id: contentFlick
+                anchors.fill: parent
+                contentWidth: contentColumn.width
+                contentHeight: contentColumn.height
+                flickableDirection: Flickable.VerticalFlick
+                clip: true
+
+                Column {
+                    id: contentColumn
+                    width: contentItem.width
+                    spacing: 5
+
+                    Row {
+                        width: parent.width
+                        Label {
+                            text: qsTr("Name")
+                            width: addAccountDialog.labelWidth
+                            color: "white"
+                            anchors.verticalCenter: parent.verticalCenter
                         }
-                    }
-                }
-                ButtonRow {
-                    id: authSelector
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width - parent.spacing - testConnectionButton.width
-                    visible: (addAccountDialog.cloudType == CloudDriveModel.WebDAV)
-                    Button {
-                        id: authorizeButton
-                        text: appInfo.emptyStr+qsTr("Token");
-                        onClicked: {
-                            if (hostname.text == "") {
-                                return;
+                        TextField {
+                            id: connectionName
+                            width: parent.width - addAccountDialog.labelWidth
+                            placeholderText: "Input connection name"
+                            validator: RegExpValidator {
+                                regExp: /[\w.-]+/
                             }
-
-                            cloudDriveModel.testConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text, "OAuth");
-                            addAccountDialog.close();
                         }
                     }
-                    Button {
-                        id: basicAuthButton
-                        text: appInfo.emptyStr+qsTr("Basic");
-                        onClicked: {
-                            if (hostname.text == "" || username.text == "") {
-                                return;
+                    Row {
+                        width: parent.width
+                        Label {
+                            text: qsTr("Host[:port]")
+                            width: addAccountDialog.labelWidth
+                            color: "white"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        TextField {
+                            id: hostname
+                            width: parent.width - addAccountDialog.labelWidth
+                            placeholderText: "Input hostname"
+                            validator: RegExpValidator {
+                                regExp: /[\w.-:~]+/
                             }
+                        }
+                    }
+                    Row {
+                        width: parent.width
+                        visible: basicAuthButton.checked
+                        Label {
+                            text: qsTr("Username")
+                            width: addAccountDialog.labelWidth
+                            color: "white"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        TextField {
+                            id: username
+                            width: parent.width - addAccountDialog.labelWidth
+                            placeholderText: "Input username"
+                            validator: RegExpValidator {
+                                regExp: /[\w.@]+/
+                            }
+                        }
+                    }
+                    Row {
+                        width: parent.width
+                        visible: basicAuthButton.checked
+                        Label {
+                            text: qsTr("Password")
+                            width: addAccountDialog.labelWidth
+                            color: "white"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        TextField {
+                            id: password
+                            width: parent.width - addAccountDialog.labelWidth
+                            placeholderText: "Input password"
+                            echoMode: TextInput.Password
+                        }
+                    }
+                    Row {
+                        width: parent.width
+                        visible: tokenAuthButton.checked
+                        Label {
+                            text: qsTr("Token")
+                            width: addAccountDialog.labelWidth
+                            color: "white"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        TextField {
+                            id: tokenInput
+                            width: parent.width - addAccountDialog.labelWidth
+                            placeholderText: "Input token"
+                        }
+                    }
+                    Row {
+                        width: parent.width
+                        visible: tokenAuthButton.checked
+                        Label {
+                            text: qsTr("OAuth host")
+                            width: addAccountDialog.labelWidth
+                            color: "white"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        TextField {
+                            id: authHostname
+                            width: parent.width - addAccountDialog.labelWidth
+                            placeholderText: "Input auth. hostname"
+                        }
+                    }
+                    Row {
+                        width: parent.width
+                        height: 60
+                        spacing: 10
+                        layoutDirection: Qt.RightToLeft
+                        Button {
+                            id: testConnectionButton
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: (parent.width - parent.spacing) / 2
+                            states: [
+                                State {
+                                    name: "ready"
+                                    PropertyChanges {
+                                        target: testConnectionButton
+                                        text: (tokenAuthButton.checked && tokenInput.text == "OAuth") ? qsTr("Authorize") : qsTr("Test")
+                                    }
+                                },
+                                State {
+                                    name: "testing"
+                                    PropertyChanges {
+                                        target: testConnectionButton
+                                        explicit: true
+                                        text: qsTr("Testing")
+                                    }
+                                },
+                                State {
+                                    name: "success"
+                                    PropertyChanges {
+                                        target: testConnectionButton
+                                        explicit: true
+                                        text: qsTr("Success")
+                                    }
+                                },
+                                State {
+                                    name: "failed"
+                                    PropertyChanges {
+                                        target: testConnectionButton
+                                        explicit: true
+                                        text: qsTr("Failed")
+                                    }
+                                }
+                            ]
+                            onClicked: {
+                                if (hostname.text == "" || username.text == "") {
+                                    return;
+                                }
 
-                            tokenInput.text = "Basic";
+                                if (tokenAuthButton.checked && tokenInput.text == "OAuth") {
+                                    // Authorize.
+                                    if (authHostname.text == "") {
+                                        // Focus missing auth hostname.
+                                        authHostname.forceActiveFocus();
+                                    } else {
+                                        // Get token by using auth hostname.
+                                        cloudDriveModel.testConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text, tokenInput.text, authHostname.text);
+                                        addAccountDialog.close();
+                                    }
+                                } else {
+                                    // Test connection.
+                                    testConnectionButton.state = "testing";
+                                    var res = cloudDriveModel.testConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text, tokenInput.text);
+                                    testConnectionButton.state = (res) ? "success" : "failed";
+                                }
+                            }
+                        }
+                        ButtonRow {
+                            id: authSelector
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width - parent.spacing - testConnectionButton.width
+                            visible: (addAccountDialog.cloudType == CloudDriveModel.WebDAV)
+                            Button {
+                                id: tokenAuthButton
+                                text: appInfo.emptyStr+qsTr("OAuth");
+                                onClicked: {
+                                    // TODO Open confirmation.
+                                    tokenInput.text = "OAuth";
+                                    authHostname.text = "";
+                                    testConnectionButton.state = "ready";
+                                }
+                            }
+                            Button {
+                                id: basicAuthButton
+                                text: appInfo.emptyStr+qsTr("Basic");
+                                onClicked: {
+                                    // TODO Open confirmation.
+                                    tokenInput.text = "Basic";
+                                    testConnectionButton.state = "ready";
+                                }
+                            }
                         }
                     }
                 }
@@ -348,9 +430,11 @@ Page {
         }
 
         onOpened: {
-            testConnectionButton.text = appInfo.emptyStr+qsTr("Test");
-            basicAuthButton.checked = (addAccountDialog.token.toLowerCase() == "basic");
-            authorizeButton.checked = !basicAuthButton.checked;
+            basicAuthButton.checked = (addAccountDialog.token.toLowerCase() == "basic" || addAccountDialog.token == "");
+            tokenAuthButton.checked = !basicAuthButton.checked;
+            originalToken = token;
+            authHostname.text = "";
+            testConnectionButton.state = "ready";
         }
         onClosed: {
             addAccountDialog.connection = "";
@@ -453,8 +537,10 @@ Page {
 
             onClicked: {
                 if (type == CloudDriveModel.WebDAV || type == CloudDriveModel.Ftp) {
-                    var tokens = email.split("@");
-                    addAccountDialog.show(type, uid, tokens[1], tokens[0], secret, token);
+                    var atPos = email.lastIndexOf("@");
+                    var host = email.substring(atPos+1);
+                    var user = email.substring(0, atPos);
+                    addAccountDialog.show(type, uid, host, user, secret, token);
                 }
             }
 

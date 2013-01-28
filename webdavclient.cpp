@@ -4,10 +4,9 @@
 const QString WebDavClient::ConsumerKey = "ce970eaaff0f4c1fbc8268bec6e804e4";
 const QString WebDavClient::ConsumerSecret = "13bd2edd92344f04b23ee3170521f7fe";
 
-const QString WebDavClient::loginURI = "https://%1"; // GET with ?userinfo
-const QString WebDavClient::authorizeURI = "https://oauth.yandex.com/authorize"; // ?response_type=<token|code>&client_id=<client_id>[&display=popup][&state=<state>]
-const QString WebDavClient::accessTokenURI = "https://oauth.yandex.com/token"; // POST with grant_type=authorization_code&code=<code>&client_id=<client_id>&client_secret=<client_secret> or basic auth with only grant_type=authorization_code&code=<code>
-const QString WebDavClient::accountInfoURI = "https://api-fotki.yandex.ru/api/me/";
+const QString WebDavClient::authorizeURI = "https://%1/authorize"; // ?response_type=<token|code>&client_id=<client_id>[&display=popup][&state=<state>]
+const QString WebDavClient::accessTokenURI = "https://%1/token"; // POST with grant_type=authorization_code&code=<code>&client_id=<client_id>&client_secret=<client_secret> or basic auth with only grant_type=authorization_code&code=<code>
+const QString WebDavClient::accountInfoURI = "https://%1"; // GET with ?userinfo
 const QString WebDavClient::propertyURI = "https://%1%2"; // PROPFIND with arguments (hostname, path)
 const QString WebDavClient::createFolderURI = "https://%1%2"; // MKCOL with arguments (hostname, path)
 const QString WebDavClient::moveFileURI = "https://%1%2"; // MOVE with arguments (hostname, path) and destination in header
@@ -36,9 +35,11 @@ WebDavClient::~WebDavClient()
     saveAccessPairMap();
 }
 
-void WebDavClient::authorize(QString nonce)
+void WebDavClient::authorize(QString nonce, QString hostname)
 {
-    qDebug() << "----- WebDavClient::authorize -----";
+    qDebug() << "----- WebDavClient::authorize -----" << nonce << hostname;
+
+    m_paramMap["authorize_hostname"] = hostname;
 
     QString queryString;
     queryString.append("response_type=code");
@@ -46,14 +47,21 @@ void WebDavClient::authorize(QString nonce)
     queryString.append("&display=popup");
     queryString.append("&state=" + nonce);
 
+    QString url = authorizeURI.arg(hostname) + "?" + queryString;
+    qDebug() << "WebDavClient::authorize url" << url;
+
     // Send signal to redirect to URL.
-    emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, this->metaObject()->className());
+    emit authorizeRedirectSignal(nonce, url, this->metaObject()->className());
 }
 
 void WebDavClient::accessToken(QString nonce, QString pin)
 {
-    qDebug() << "----- WebDavClient::accessToken -----";
-// grant_type=authorization_code&code=<code>&client_id=<client_id>&client_secret=<client_secret>
+    qDebug() << "----- WebDavClient::accessToken -----" << nonce << pin;
+
+    // Uses hostname set by authorize().
+    QString hostname = m_paramMap["authorize_hostname"];
+    QString uri = accessTokenURI.arg(hostname);
+    qDebug() << "WebDavClient::accessToken uri" << uri;
 
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
@@ -71,7 +79,7 @@ void WebDavClient::accessToken(QString nonce, QString pin)
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accessTokenReplyFinished(QNetworkReply*)));
-    QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QNetworkReply *reply = manager->post(req, postData);
@@ -81,9 +89,14 @@ void WebDavClient::accountInfo(QString nonce, QString uid)
 {
     qDebug() << "----- WebDavClient::accountInfo -----" << uid;
 
-//    QString uri = accountInfoURI; // + "?oauth_token=" + accessToken;
-    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
-    QString uri = loginURI.arg(hostname) + "?userinfo";
+    uid = (uid == "") ? m_paramMap["authorize_uid"] : uid;
+    if (uid == "") {
+        qDebug() << "WebDavClient::accountInfo uid is empty. Operation is aborted.";
+        return;
+    }
+
+    QString hostname = getHostname(accessTokenPairMap[uid].email);
+    QString uri = accountInfoURI.arg(hostname) + "?userinfo";
     qDebug() << "WebDavClient::accountInfo uri" << uri;
 
     QByteArray authHeader = createAuthHeader(uid);
@@ -169,7 +182,7 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
     // Default to / if remoteFilePath is empty.
     remoteFilePath = (remoteFilePath == "") ? "/" : remoteFilePath;
 
-    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = propertyURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::property uri" << uri;
@@ -327,7 +340,7 @@ QString WebDavClient::prepareRemotePath(QString uid, QString remoteFilePath)
     // Remove prefix remote root path.
     if (uid != "") {
         if (!m_remoteRootHash.contains(uid)) {
-            QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+            QString hostname = getHostname(accessTokenPairMap[uid].email);
             QString remoteRoot = (hostname.indexOf("/") != -1) ? hostname.mid(hostname.indexOf("/")) : "/";
             path = path.replace(QRegExp("^"+remoteRoot), "/");
             // TODO Stores remoteRoot in m_remoteRootHash[uid].
@@ -349,6 +362,11 @@ QString WebDavClient::removeDoubleSlash(QString remoteFilePath)
     path = path.replace("//", "/");
 
     return path;
+}
+
+QString WebDavClient::getHostname(QString email)
+{
+    return email.mid(email.lastIndexOf("@")+1);
 }
 
 void WebDavClient::browse(QString nonce, QString uid, QString remoteFilePath)
@@ -407,7 +425,7 @@ void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, 
         qDebug() << "WebDavClient::moveFile move" << uid << remoteFilePath << newRemoteFilePath;
     }
 
-    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = moveFileURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::moveFile uri " << uri;
@@ -452,7 +470,7 @@ void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, 
         qDebug() << "WebDavClient::copyFile" << uid << remoteFilePath << "prepared newRemoteFilePath" << newRemoteFilePath;
     }
 
-    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = copyFileURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::copyFile uri " << uri;
@@ -492,7 +510,7 @@ void WebDavClient::deleteFile(QString nonce, QString uid, QString remoteFilePath
 {
     qDebug() << "----- WebDavClient::deleteFile -----" << uid << remoteFilePath;
 
-    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = deleteFileURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::deleteFile uri " << uri;
@@ -527,7 +545,7 @@ void WebDavClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- WebDavClient::shareFile -----" << nonce << uid << remoteFilePath;
 
-    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = sharesURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri) + "?publish";
     qDebug() << "WebDavClient::shareFile uri" << uri;
@@ -585,7 +603,7 @@ QString WebDavClient::createFolder(QString nonce, QString uid, QString remotePar
     qDebug() << "----- WebDavClient::createFolder -----" << nonce << uid << remoteParentPath << newRemoteFolderName;
 
     QString remoteFilePath = remoteParentPath + newRemoteFolderName;
-    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = createFolderURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::createFolder uri" << uri;
@@ -632,7 +650,7 @@ QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFileP
 {
     qDebug() << "----- WebDavClient::fileGet -----" << nonce << uid << remoteFilePath << offset << "synchronous" << synchronous;
 
-    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = fileGetURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::fileGet uri" << uri;
@@ -733,7 +751,7 @@ QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *sour
     qDebug() << "----- WebDavClient::filePut -----" << uid << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
     QString remoteFilePath = remoteParentPath + remoteFileName;
-    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = filePutURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::filePut uri " << uri;
@@ -782,7 +800,7 @@ QIODevice *WebDavClient::fileGetResume(QString nonce, QString uid, QString remot
     m_localFileHash[nonce] = new QFile(localFilePath);
 
     // Send request.
-    QString hostname = accessTokenPairMap[uid].email.split("@").at(1);
+    QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = fileGetURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
     qDebug() << "WebDavClient::fileGet uri" << uri;
@@ -883,7 +901,7 @@ void WebDavClient::testSSLConnection(QString hostname)
     qDebug() << "WebDavClient::testConnection SSL socket connection closed";
 }
 
-bool WebDavClient::testConnection(QString id, QString hostname, QString username, QString password, QString token)
+bool WebDavClient::testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname)
 {
     qDebug() << "----- WebDavClient::testConnection -----" << id << hostname << username << token;
 
@@ -893,7 +911,8 @@ bool WebDavClient::testConnection(QString id, QString hostname, QString username
         saveConnection(id, hostname, username, password, token);
         // Store id while authorizing. It will be used in accountInfo() after authorized access token.
         m_paramMap["authorize_uid"] = id;
-        authorize(createNonce());
+        m_paramMap["authorize_hostname"] = authHostname;
+        authorize(createNonce(), authHostname);
         return false;
     }
 
@@ -981,6 +1000,7 @@ void WebDavClient::accessTokenReplyFinished(QNetworkReply *reply)
         qDebug() << "m_paramMap " << m_paramMap;
 
         if (accessTokenPairMap.contains(uid)) {
+            // Update access token to UID's account.
             accessTokenPairMap[uid].token = m_paramMap["access_token"];
 
             // Save account.
@@ -1017,27 +1037,13 @@ void WebDavClient::accountInfoReplyFinished(QNetworkReply *reply)
 
         if (accessTokenPairMap.contains(uid)) {
             qDebug() << "WebDavClient::accountInfoReplyFinished found existing accessToken for uid" << uid << accessTokenPairMap[uid];
-
-            if (m_paramMap.contains("access_token")) {
-                accessTokenPairMap[uid].token = m_paramMap["access_token"];
-//                if (m_paramMap.contains("refresh_token") && m_paramMap["refresh_token"] != "") {
-//                    accessTokenPairMap[uid].secret = m_paramMap["refresh_token"];
-//                }
-
-                // Reset temp. accessToken and refreshToken.
-                m_paramMap.remove("authorize_uid");
-                m_paramMap.remove("access_token");
-//                m_paramMap.remove("refresh_token");
-
-                // Save account after got id and email.
-                saveAccessPairMap();
-            }
+            // TODO Update username to UID's account?
         } else {
             qDebug() << "WebDavClient::accountInfoReplyFinished not found existing accessToken for uid" << uid;
         }
     }
 
-    emit accountInfoReplySignal(nonce, reply->error(), reply->errorString(), replyBody );
+    emit accountInfoReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // scheduled to delete later.
     reply->deleteLater();

@@ -3326,9 +3326,9 @@ bool CloudDriveModel::updateDropboxPrefix(bool fullAccess)
     return res;
 }
 
-bool CloudDriveModel::testConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token)
+bool CloudDriveModel::testConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token, QString authHostname)
 {
-    return getCloudClient(type)->testConnection(uid, hostname, username, password, token);
+    return getCloudClient(type)->testConnection(uid, hostname, username, password, token, authHostname);
 }
 
 void CloudDriveModel::saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token)
@@ -3912,21 +3912,8 @@ void CloudDriveModel::accessTokenReplyFilter(QString nonce, int err, QString err
 
                 accountInfo(Dropbox, m_paramMap["uid"]);
                 break;
-            case SkyDrive:
-                // SkyDrive's accessTokenReply doesn't provide uid yet. Continue to get account.
-//                qDebug() << "CloudDriveModel::accessTokenReplyFilter SkyDrive uid" << job.uid;
-                accountInfo(SkyDrive, job.uid);
-                break;
-            case GoogleDrive:
-                // GoogleDrive's accessTokenReply doesn't provide uid yet. Continue to get account.
-//                qDebug() << "CloudDriveModel::accessTokenReplyFilter GoogleDrive uid" << job.uid;
-                accountInfo(GoogleDrive, job.uid);
-                break;
-            case WebDAV:
-                // WebDAV's accessTokenReply doesn't provide uid yet. Continue to get account.
-//                qDebug() << "CloudDriveModel::accessTokenReplyFilter WebDAV uid" << job.uid;
-                accountInfo(WebDAV, job.uid);
-                break;
+            default:
+                accountInfo(getClientType(job.type), job.uid);
             }
         }
     }

@@ -488,7 +488,7 @@ QString FtpClient::getRemoteFileName(QString remotePath)
     return name;
 }
 
-bool FtpClient::testConnection(QString id, QString hostname, QString username, QString password, QString token)
+bool FtpClient::testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname)
 {
     qDebug() << "----- FtpClient::testConnection -----";
 
@@ -522,11 +522,12 @@ void FtpClient::saveConnection(QString id, QString hostname, QString username, Q
      */
     // TODO Encrypt password before store to file.
     if (accessTokenPairMap.contains(id)) {
+        accessTokenPairMap[id].token = token;
         accessTokenPairMap[id].secret = password;
         accessTokenPairMap[id].email = QString("%1@%2").arg(username).arg(hostname);
     } else {
         TokenPair tokenPair;
-        tokenPair.token = "";
+        tokenPair.token = token;
         tokenPair.secret = password;
         tokenPair.email = QString("%1@%2").arg(username).arg(hostname);
         accessTokenPairMap[id] = tokenPair;

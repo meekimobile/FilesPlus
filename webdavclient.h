@@ -15,7 +15,6 @@ public:
     static const QString ConsumerKey;
     static const QString ConsumerSecret;
 
-    static const QString loginURI;
     static const QString authorizeURI;
     static const QString accessTokenURI;
     static const QString accountInfoURI;
@@ -35,16 +34,16 @@ public:
     explicit WebDavClient(QObject *parent = 0);
     ~WebDavClient();
 
-    bool testConnection(QString id, QString hostname, QString username, QString password, QString token);
+    bool testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname);
     void saveConnection(QString id, QString hostname, QString username, QString password, QString token);
 
     QString getRemoteRoot(QString uid);
     bool isRemoteAbsolutePath();
     bool isFileGetResumable(qint64 fileSize);
 
-    void authorize(QString nonce);
+    void authorize(QString nonce, QString hostname = "");
     void accessToken(QString nonce, QString pin = "");
-    void accountInfo(QString nonce, QString uid);
+    void accountInfo(QString nonce, QString uid); // TODO Still not work.
     void quota(QString nonce, QString uid); // TODO Still not work.
     QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = true);
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
@@ -88,6 +87,7 @@ private:
     QString createResponseJson(QString replyBody);
     QString prepareRemotePath(QString uid, QString remoteFilePath);
     QString removeDoubleSlash(QString remoteFilePath);
+    QString getHostname(QString email);
 
     void testSSLConnection(QString hostname);
 
