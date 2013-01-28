@@ -468,6 +468,7 @@ PageStackWindow {
         }
         onConfirm: {
             cloudDriveModel.cancelQueuedJobs();
+            cloudDriveModel.removeJobs();
             cloudDriveModel.requestJobQueueStatus();
         }
     }
@@ -1093,9 +1094,7 @@ PageStackWindow {
                     var job = cloudDriveJobsModel.get(i);
                     if (!job.is_running) {
                         console.debug("cloudDriveJobsModel removeQueuedJobs " + i + " " + job.job_id);
-                        cloudDriveJobsModel.remove(i);
-                    } else {
-                        i++;
+                        cloudDriveModel.removeJob("window cloudDriveJobsModel removeQueuedJobs", job.job_id);
                     }
                 }
             }

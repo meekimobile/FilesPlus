@@ -32,21 +32,6 @@ Page {
                 pageStack.pop();
             }
         }
-//        ToolIcon {
-//            id: controlButton
-
-//            property bool showPlay: false
-
-//            iconId: (showPlay) ? "toolbar-mediacontrol-play" : "toolbar-mediacontrol-pause"
-//            onClicked: {
-//                if (showPlay) {
-//                    cloudDriveModel.resumeNextJob();
-//                } else {
-//                    cloudDriveModel.suspendNextJob();
-//                }
-//                showPlay = !showPlay;
-//            }
-//        }
         ToolBarButton {
             id: cloudButton
             buttonIconSource: (!window.platformInverted ? "cloud.svg" : "cloud_inverted.svg")

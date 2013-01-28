@@ -508,7 +508,7 @@ Page {
                             mode: listItem.mode
                             role: "SubTitle"
                             text: "UID " + uid
-                            width: parent.width - quotaText.width
+                            width: parent.width - (quotaText.visible ? quotaText.width : 0) - (runningIcon.visible ? runningIcon.width : 0)
                             verticalAlignment: Text.AlignVCenter
                             platformInverted: window.platformInverted
                         }
@@ -527,7 +527,6 @@ Page {
                             id: runningIcon
                             width: 24
                             height: 24
-                            anchors.right: parent.right
                             source: (!window.platformInverted ? "refresh.svg" : "refresh_inverted.svg")
                             visible: (quota <= 0)
                         }

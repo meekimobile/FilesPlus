@@ -502,7 +502,7 @@ Page {
                         width: parent.width
                         Text {
                             text: "UID " + uid
-                            width: parent.width - quotaText.width
+                            width: parent.width - (quotaText.visible ? quotaText.width : 0) - (runningIcon.visible ? runningIcon.width : 0)
                             verticalAlignment: Text.AlignVCenter
                             font.pointSize: 16
                             elide: Text.ElideMiddle
@@ -522,7 +522,6 @@ Page {
                             id: runningIcon
                             width: 24
                             height: 24
-                            anchors.right: parent.right
                             source: (theme.inverted ? "refresh.svg" : "refresh_inverted.svg")
                             visible: (quota <= 0)
                         }
