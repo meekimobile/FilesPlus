@@ -410,8 +410,8 @@ QFtpWrapper *FtpClient::connectToHost(QString nonce, QString uid)
     if (rx.exactMatch(url)) {
         qDebug() << "FtpClient::connectToHost" << rx.captureCount() << rx.capturedTexts();
         if (rx.captureCount() >= 2) {
-            if (rx.captureCount() == 3) {
-                // Skip : by start at position 1.
+            if (rx.captureCount() == 3 && rx.cap(3) != "") {
+                // Skip ':' by start at position 1.
                 port = rx.cap(3).mid(1).toInt();
             }
             username = rx.cap(1);
