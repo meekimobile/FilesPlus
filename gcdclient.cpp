@@ -813,7 +813,7 @@ QString GCDClient::filePutResumeStart(QString nonce, QString uid, QString fileNa
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     if (!synchronous) {
-        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutResumeReplyFinished(QNetworkReply*)));
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutResumeStartReplyFinished(QNetworkReply*)));
     }
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -1665,12 +1665,12 @@ void GCDClient::fileGetResumeReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void GCDClient::filePutResumeReplyFinished(QNetworkReply *reply)
+void GCDClient::filePutResumeStartReplyFinished(QNetworkReply *reply)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
     QByteArray replyBody = reply->readAll();
-    qDebug() << "GCDClient::filePutResumeReplyFinished" << reply << QString(" Error=%1").arg(reply->error()) << "replyBody" << QString::fromUtf8(replyBody);
+    qDebug() << "GCDClient::filePutResumeStartReplyFinished" << reply << QString(" Error=%1").arg(reply->error()) << "replyBody" << QString::fromUtf8(replyBody);
 
     if (reply->error() == QNetworkReply::NoError) {
         QString uploadId = reply->header(QNetworkRequest::LocationHeader).toString();

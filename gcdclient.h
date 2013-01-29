@@ -99,7 +99,7 @@ public slots:
     void shareFileReplyFinished(QNetworkReply *reply);
 
     void fileGetResumeReplyFinished(QNetworkReply *reply);
-    void filePutResumeReplyFinished(QNetworkReply *reply);
+    void filePutResumeStartReplyFinished(QNetworkReply *reply);
     void filePutResumeUploadReplyFinished(QNetworkReply *reply);
     void filePutResumeStatusReplyFinished(QNetworkReply *reply);
 private:
