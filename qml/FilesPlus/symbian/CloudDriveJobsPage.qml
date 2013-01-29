@@ -209,13 +209,7 @@ Page {
                     width: parent.width
                     Image {
                         id: sourceCloudIcon
-                        source: {
-                            if (operation == CloudDriveModel.FileGet || operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
-                                return cloudDriveModel.getCloudIcon(type);
-                            } else {
-                                return "";
-                            }
-                        }
+                        source: cloudDriveModel.getCloudIcon(type)
                         width: 22
                         height: 22
                         fillMode: Image.PreserveAspectFit
@@ -223,13 +217,7 @@ Page {
                     }
                     Text {
                         id: sourceName
-                        text: {
-                            if (operation == CloudDriveModel.FileGet || operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
-                                return remote_file_path;
-                            } else {
-                                return local_file_path;
-                            }
-                        }
+                        text: remote_file_path
                         width: parent.width - sourceCloudIcon.width
                         font.pointSize: 6
                         elide: Text.ElideMiddle
@@ -242,12 +230,10 @@ Page {
                     Image {
                         id: targetCloudIcon
                         source: {
-                            if (operation == CloudDriveModel.FileGet) {
-                                return "";
-                            } else if (operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
+                            if (operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
                                 return cloudDriveModel.getCloudIcon(target_type)
                             } else {
-                                return cloudDriveModel.getCloudIcon(type)
+                                return "";
                             }
                         }
                         width: 22
@@ -258,12 +244,14 @@ Page {
                     Text {
                         id: targetName
                         text: {
-                            if (operation == CloudDriveModel.FileGet) {
-                                return local_file_path;
-                            } else if (operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
-                                return new_remote_file_name;
+                            if (operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
+                                if (cloudDriveModel.isRemoteAbsolutePath(type)) {
+                                    return new_remote_file_path + "/" + new_remote_file_name;
+                                } else {
+                                    return new_remote_file_path;
+                                }
                             } else {
-                                return remote_file_path;
+                                return local_file_path;
                             }
                         }
                         width: parent.width - targetCloudIcon.width
