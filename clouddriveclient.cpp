@@ -186,7 +186,7 @@ void CloudDriveClient::accountInfo(QString nonce, QString uid)
 
 void CloudDriveClient::quota(QString nonce, QString uid)
 {
-    emit quotaReplySignal(nonce, -1, objectName() + " " + tr("Quota"), tr("Service is not implemented."));
+    emit quotaReplySignal(nonce, -1, objectName() + " " + tr("Quota"), tr("Service is not implemented."), 0, 0, -1);
 }
 
 QString CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous)

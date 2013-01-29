@@ -237,7 +237,7 @@ signals:
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
     void accessTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void accountInfoReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void quotaReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void quotaReplySignal(QString nonce, int err, QString errMsg, QString msg, qint64 normalBytes, qint64 sharedBytes, qint64 quotaBytes);
 
     void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
@@ -271,7 +271,7 @@ public slots:
     void authorizeRedirectFilter(QString nonce, QString url, QString redirectFrom);
     void accessTokenReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void accountInfoReplyFilter(QString nonce, int err, QString errMsg, QString msg);
-    void quotaReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void quotaReplyFilter(QString nonce, int err, QString errMsg, QString msg, qint64 normalBytes, qint64 sharedBytes, qint64 quotaBytes);
     void fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplyFilter(QString nonce, int err, QString errMsg, QString msg);
@@ -361,6 +361,7 @@ private:
     CloudDriveClient * getCloudClient(ClientTypes type);
 
     void initializeCloudClients(QString nonce);
+    void connectCloudClientsSignal(CloudDriveClient *client);
     void initializeDropboxClient();
     void initializeSkyDriveClient();
     void initializeGoogleDriveClient();

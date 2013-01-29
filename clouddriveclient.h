@@ -80,7 +80,7 @@ signals:
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
     void accessTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void accountInfoReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void quotaReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void quotaReplySignal(QString nonce, int err, QString errMsg, QString msg, qint64 normalBytes, qint64 sharedBytes, qint64 quotaBytes);
     void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplySignal(QString nonce, int err, QString errMsg, QString msg);
@@ -94,6 +94,7 @@ signals:
     void fileGetResumeReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutResumeReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutCommitReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg); // Signal for supporting FTPClient.
 
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);

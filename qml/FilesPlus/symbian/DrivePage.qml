@@ -21,7 +21,10 @@ Page {
 //            console.debug("drivePage updateAccountInfoSlot item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
             if (item.uid == uid && item.driveType == 7 && item.cloudDriveType == type) {
                 console.debug("drivePage updateAccountInfoSlot found item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
-                driveGrid.model.set(i, { logicalDrive: email, name: name, email: email, availableSpace: (quota - shared - normal), totalSpace: quota });
+                driveGrid.model.set(i, { availableSpace: (quota - shared - normal), totalSpace: quota });
+                if (email) {
+                    driveGrid.model.set(i, { logicalDrive: email, name: name, email: email });
+                }
             }
         }
     }
@@ -158,6 +161,8 @@ Page {
         parseLocalStorage(driveGridModel);
         if (appInfo.getSettingBoolValue("drivepage.clouddrive.enabled", false)) {
             parseCloudStorage(driveGridModel);
+            // TODO Parse accounts into CloudDriveAccountsModel and also copy to driveGridModel.
+//            cloudDriveModel.parseCloudDriveAccountsModel();
         }
     }
 

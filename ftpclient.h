@@ -35,7 +35,7 @@ public:
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
 signals:
-    void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
+
 public slots:
     void fileGetReplyFinished(QString nonce, bool error);
     void filePutReplyFinished(QString nonce, bool error);

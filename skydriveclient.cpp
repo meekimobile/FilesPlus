@@ -829,8 +829,19 @@ void SkyDriveClient::quotaReplyFinished(QNetworkReply *reply)
     qDebug() << "SkyDriveClient::quotaReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString replyBody = QString::fromUtf8(reply->readAll());
 
-    emit quotaReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody + ")");
+        qint64 sharedValue = 0;
+        qint64 normalValue = jsonObj.property("quota").toInteger() - jsonObj.property("available").toInteger();
+        qint64 quotaValue = jsonObj.property("quota").toInteger();
+
+        emit quotaReplySignal(nonce, reply->error(), reply->errorString(), replyBody, normalValue, sharedValue, quotaValue);
+    } else {
+        emit quotaReplySignal(nonce, reply->error(), reply->errorString(), replyBody, 0, 0, -1);
+    }
 
     // TODO scheduled to delete later.
     reply->deleteLater();

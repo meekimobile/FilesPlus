@@ -1100,6 +1100,10 @@ PageStackWindow {
             }
         }
 
+        ListModel {
+            id: cloudDriveAccountsModel
+        }
+
         function getUidListModel(localPath) {
             console.debug("window cloudDriveModel getUidListModel localPath " + localPath);
 
@@ -1186,6 +1190,35 @@ PageStackWindow {
                 messageDialog.open();
             } else {
                 cloudDriveModel.accessToken(clientType, pin);
+            }
+        }
+
+        function parseCloudDriveAccountsModel() {
+            // Check if authorized before parsing.
+            if (!cloudDriveModel.isAuthorized()) return;
+
+            // Get uid list from DropboxClient.
+            var dbUidList = cloudDriveModel.getStoredUidList();
+
+            for (var i=0; i<dbUidList.length; i++)
+            {
+                var json = JSON.parse(dbUidList[i]);
+                var cloudType = cloudDriveModel.getClientType(json.type);
+                console.debug("window cloudDriveModel parseCloudDriveAccountsModel type " + json.type + " " + cloudType + " i " + i + " uid " + json.uid + " email " + json.email);
+                cloudDriveAccountsModel.append({
+                                 logicalDrive: json.email,
+                                 availableSpace: 0,
+                                 totalSpace: 0,
+                                 driveType: 7, // Cloud Drive in driveGrid.
+                                 email: json.email,
+                                 uid: json.uid,
+                                 name: "",
+                                 cloudDriveType: cloudType,
+                                 iconSource: cloudDriveModel.getCloudIcon(cloudType)
+                });
+
+                // Request quota.
+                cloudDriveModel.quota(cloudType, json.uid);
             }
         }
 
@@ -1432,7 +1465,7 @@ PageStackWindow {
         }
 
         onQuotaReplySignal: {
-            console.debug("window cloudDriveModel onQuotaReplySignal " + err + " " + errMsg + " " + msg);
+            console.debug("window cloudDriveModel onQuotaReplySignal " + nonce + " " + err + " " + errMsg + " " + msg + " normalBytes " + normalBytes + " sharedBytes " + sharedBytes + " quotaBytes " + quotaBytes);
 
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
@@ -1442,35 +1475,7 @@ PageStackWindow {
                 // Send info to relevant pages.
                 pageStack.find(function (page) {
                     if (page.updateAccountInfoSlot) {
-                        switch (jobJson.type) {
-                        case CloudDriveModel.Dropbox:
-                            // Send info to currentPage.
-                            var sharedValue = (jsonObj.quota_info && jsonObj.quota_info.shared) ? jsonObj.quota_info.shared : 0;
-                            var normalValue = (jsonObj.quota_info && jsonObj.quota_info.normal) ? jsonObj.quota_info.normal : 0;
-                            var quotaValue = (jsonObj.quota_info && jsonObj.quota_info.quota) ? jsonObj.quota_info.quota : 0;
-                            page.updateAccountInfoSlot(jobJson.type, jsonObj.uid, jsonObj.name, jsonObj.email,
-                                                                        sharedValue,
-                                                                        normalValue,
-                                                                        quotaValue);
-                            break;
-                        case CloudDriveModel.SkyDrive:
-                            page.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
-                                                                        0,
-                                                                        jsonObj.quota-jsonObj.available,
-                                                                        jsonObj.quota);
-                            break;
-                        case CloudDriveModel.GoogleDrive:
-                            page.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
-                                                                        0,
-                                                                        jsonObj.quotaBytesUsed,
-                                                                        jsonObj.quotaBytesTotal);
-                            break;
-                        default:
-                            page.updateAccountInfoSlot(jobJson.type, jobJson.uid, "", cloudDriveModel.getUidEmail(jobJson.type, jobJson.uid),
-                                                                        0,
-                                                                        0,
-                                                                        -1);
-                        }
+                        page.updateAccountInfoSlot(jobJson.type, jobJson.uid, jsonObj.name, jsonObj.email, sharedBytes, normalBytes, quotaBytes);
                     }
                 });
             } else if (err == 204) {

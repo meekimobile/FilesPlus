@@ -129,7 +129,17 @@ void WebDavClient::quota(QString nonce, QString uid)
 
     qDebug() << "WebDavClient::quota nonce" << nonce << "JSON replyBody" << replyBody;
 
-    emit quotaReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody + ")");
+        qint64 sharedValue = 0;
+        qint64 normalValue = jsonObj.property("multistatus").property("response").property("propstat").property("prop").property("quota-used-bytes").toInteger();
+        qint64 quotaValue = jsonObj.property("multistatus").property("response").property("propstat").property("prop").property("quota-available-bytes").toInteger();
+
+        emit quotaReplySignal(nonce, reply->error(), reply->errorString(), replyBody, normalValue, sharedValue, quotaValue);
+    } else {
+        emit quotaReplySignal(nonce, reply->error(), reply->errorString(), replyBody, 0, 0, -1);
+    }
 
     // Scheduled to delete later.
     reply->deleteLater();

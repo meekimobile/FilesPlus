@@ -1119,8 +1119,19 @@ void DropboxClient::quotaReplyFinished(QNetworkReply *reply)
     qDebug() << "DropboxClient::quotaReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString replyBody = QString::fromUtf8(reply->readAll());
 
-    emit quotaReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll() );
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody + ")");
+        qint64 sharedValue = jsonObj.property("quota_info").property("shared").toInteger();
+        qint64 normalValue = jsonObj.property("quota_info").property("normal").toInteger();
+        qint64 quotaValue = jsonObj.property("quota_info").property("quota").toInteger();
+
+        emit quotaReplySignal(nonce, reply->error(), reply->errorString(), replyBody, normalValue, sharedValue, quotaValue);
+    } else {
+        emit quotaReplySignal(nonce, reply->error(), reply->errorString(), replyBody, 0, 0, -1);
+    }
 
     // scheduled to delete later.
     reply->deleteLater();
