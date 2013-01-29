@@ -16,33 +16,53 @@ Page {
 
     function updateAccountInfoSlot(type, uid, name, email, shared, normal, quota) {
 //        console.debug("drivePage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
-        for (var i=0; i<driveGrid.model.count; i++) {
+        var i = driveGridModel.findIndexByCloudTypeAndUid(type, uid);
+        if (i > -1) {
             var item = driveGrid.model.get(i);
-//            console.debug("drivePage updateAccountInfoSlot item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
-            if (item.uid == uid && item.driveType == 7 && item.cloudDriveType == type) {
-                console.debug("drivePage updateAccountInfoSlot found item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
-                driveGrid.model.set(i, { availableSpace: (quota - shared - normal), totalSpace: quota });
-                if (email) {
-                    driveGrid.model.set(i, { logicalDrive: email, name: name, email: email });
-                }
+            console.debug("drivePage updateAccountInfoSlot found item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
+
+            driveGrid.model.set(i, { availableSpace: (quota - shared - normal), totalSpace: quota });
+            if (email) {
+                driveGrid.model.set(i, { logicalDrive: email, email: email });
             }
+            if (name) {
+                driveGrid.model.set(i, { name: name });
+            }
+            // Return if found.
+            return;
+        }
+
+        console.debug("drivePage updateAccountInfoSlot not found uid " + uid + " cloudDriveType " + type + ". Proceed refresh cloud drive from accounts.");
+        // Remove cloud drive from driveGrid model.
+        i = 0;
+        while (i < driveGrid.model.count) {
+            item = driveGrid.model.get(i);
+            if (item.driveType == 7) {
+                driveGrid.model.remove(i);
+            } else {
+                i++;
+            }
+        }
+        // Proceed copying cloud drive items.
+        for (i = 0; i < cloudDriveAccountsModel.count; i++) {
+            driveGrid.model.append(cloudDriveAccountsModel.get(i));
         }
     }
 
     ToolBarLayout {
         id: toolBarLayout
 
-        ToolIcon {
+        ToolBarButton {
             id: backButton
-            iconId: "toolbar-back"
+            buttonIconSource: "toolbar-back"
             onClicked: {
                 window.quitSlot();
             }
         }
 
-        ToolIcon {
+        ToolBarButton {
             id: refreshButton
-            iconId: "toolbar-refresh"
+            buttonIconSource: "toolbar-refresh"
             onClicked: {
                 // Force resume.
                 cloudDriveModel.resumeNextJob();
@@ -52,9 +72,9 @@ Page {
             }
         }
 
-        ToolIcon {
+        ToolBarButton {
             id: menuButton
-            iconId: "toolbar-view-menu"
+            buttonIconSource: "toolbar-view-menu"
             onClicked: {
                 driveMenu.open();
             }
@@ -118,35 +138,6 @@ Page {
         }
     }
 
-    function parseCloudStorage(model) {
-        // TODO Check if authorized before parsing.
-        if (!cloudDriveModel.isAuthorized()) return;
-
-        // Get uid list from DropboxClient.
-        var dbUidList = cloudDriveModel.getStoredUidList();
-
-        for (var i=0; i<dbUidList.length; i++)
-        {
-            var json = JSON.parse(dbUidList[i]);
-            var cloudType = cloudDriveModel.getClientType(json.type);
-            console.debug("parseCloudStorage type " + json.type + " " + cloudType + " i " + i + " uid " + json.uid + " email " + json.email);
-            model.append({
-                             logicalDrive: json.email,
-                             availableSpace: 0,
-                             totalSpace: 0,
-                             driveType: 7, // Cloud Drive in driveGrid.
-                             email: json.email,
-                             uid: json.uid,
-                             name: "",
-                             cloudDriveType: cloudType,
-                             iconSource: cloudDriveModel.getCloudIcon(cloudType)
-            });
-
-            // Request quota.
-            cloudDriveModel.quota(cloudType, json.uid);
-        }
-    }
-
     function refreshSlot(caller) {
         console.debug("drivePage refreshSlot caller " + caller);
 
@@ -154,7 +145,8 @@ Page {
         driveGridModel.clear();
         parseLocalStorage(driveGridModel);
         if (appInfo.getSettingBoolValue("drivepage.clouddrive.enabled", false)) {
-            parseCloudStorage(driveGridModel);
+            // Parse accounts into CloudDriveAccountsModel and also copy to driveGridModel.
+            cloudDriveAccountsModel.parseCloudDriveAccountsModel(driveGridModel);
         }
     }
 
@@ -168,7 +160,8 @@ Page {
 
             function findIndexByCloudTypeAndUid(cloudType, uid) {
                 for (var i = 0; i < driveGridModel.count; i++) {
-                    if (driveGridModel.get(i).cloudDriveType == cloudType && driveGridModel.get(i).uid == uid) {
+                    var item = driveGridModel.get(i);
+                    if (item.driveType == 7 && item.cloudDriveType == cloudType && item.uid == uid) {
                         return i;
                     }
                 }

@@ -16,6 +16,7 @@ public:
 
     bool isAuthorized();
     QStringList getStoredUidList();
+    QString getStoredUid(QString uid);
     int removeUid(QString uid);
 
     virtual bool isRemoteAbsolutePath();

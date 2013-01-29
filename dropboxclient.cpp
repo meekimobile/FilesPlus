@@ -1104,7 +1104,12 @@ void DropboxClient::accountInfoReplyFinished(QNetworkReply *reply)
         QString uid = sc.property("uid").toString();
         QString email = sc.property("email").toString();
 
-        accessTokenPairMap[uid].email = email;
+        if (uid != "" && accessTokenPairMap.contains(uid)) {
+            accessTokenPairMap[uid].email = email;
+            qDebug() << "DropboxClient::accountInfoReplyFinished nonce" << nonce << "uid" << uid << "is updated with email" << email;
+        } else {
+            qDebug() << "DropboxClient::accountInfoReplyFinished nonce" << nonce << "uid" << uid << "is not found. Account is not updated.";
+        }
     }
 
     emit accountInfoReplySignal(nonce, reply->error(), reply->errorString(), replyBody );

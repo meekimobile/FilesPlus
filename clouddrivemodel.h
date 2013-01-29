@@ -136,6 +136,7 @@ public:
     Q_INVOKABLE bool isAuthorized(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE QStringList getStoredUidList();
     Q_INVOKABLE QStringList getStoredUidList(CloudDriveModel::ClientTypes type);
+    Q_INVOKABLE QString getStoredUid(CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE int removeUid(CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE void requestJobQueueStatus();
     Q_INVOKABLE void suspendNextJob(bool abort = false);

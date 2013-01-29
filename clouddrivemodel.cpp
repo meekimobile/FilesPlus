@@ -1366,6 +1366,11 @@ QStringList CloudDriveModel::getStoredUidList(CloudDriveModel::ClientTypes type)
     return getCloudClient(type)->getStoredUidList();
 }
 
+QString CloudDriveModel::getStoredUid(CloudDriveModel::ClientTypes type, QString uid)
+{
+    return getCloudClient(type)->getStoredUid(uid);
+}
+
 int CloudDriveModel::removeUid(CloudDriveModel::ClientTypes type, QString uid)
 {
     return getCloudClient(type)->removeUid(uid);

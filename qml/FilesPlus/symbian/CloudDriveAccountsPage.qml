@@ -7,60 +7,30 @@ Page {
     id: cloudDriveAccountsPage
 
     property string name: "cloudDriveAccountsPage"
-
-    function updateAccountInfoSlot(type, uid, name, email, shared, normal, quota) {
-//        console.debug("cloudDriveAccountsPage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
-        for (var i=0; i<accountListView.model.count; i++) {
-//            console.debug("cloudDriveAccountsPage updateAccountInfoSlot accountModel i " + i + " uid " + accountListView.model.get(i).uid + " type " + accountListView.model.get(i).type);
-            if (accountListView.model.get(i).uid == uid && accountListView.model.get(i).type == type) {
-                console.debug("cloudDriveAccountsPage updateAccountInfoSlot i " + i + " uid " + uid + " type " + type);
-                accountListView.model.set(i, { shared: Number(shared), normal: Number(normal), quota: Number(quota) });
-                if (email) {
-                    accountListView.model.set(i, { name: name, email: email });
-                }
-            }
-        }
-    }
-
-    function refreshCloudDriveAccountsSlot() {
-        accountListView.model = cloudDriveModel.getUidListModel();
-    }
-
-    onStatusChanged: {
-        if (status == PageStatus.Active) {
-            // TODO Should not refresh here.
-//            refreshCloudDriveAccountsSlot();
-        }
-    }
+    property bool inverted: window.platformInverted
 
     tools: toolBarLayout
 
     ToolBarLayout {
         id: toolBarLayout
 
-        ToolButton {
+        ToolBarButton {
             id: backButton
-            iconSource: "toolbar-back"
-            platformInverted: window.platformInverted
-            flat: true
+            buttonIconSource: "toolbar-back"
             onClicked: {
                 pageStack.pop();
             }
         }
-        ToolButton {
+        ToolBarButton {
             id: refreshButton
-            iconSource: "toolbar-refresh"
-            platformInverted: window.platformInverted
-            flat: true
+            buttonIconSource: "toolbar-refresh"
             onClicked: {
-                refreshCloudDriveAccountsSlot();
+                cloudDriveModel.refreshCloudDriveAccounts();
             }
         }
-        ToolButton {
+        ToolBarButton {
             id: addButton
-            iconSource: "toolbar-add"
-            platformInverted: window.platformInverted
-            flat: true
+            buttonIconSource: "toolbar-add"
             onClicked: {
                 cloudTypeSelection.open();
             }
@@ -70,37 +40,6 @@ Page {
     TitlePanel {
         id: titlePanel
         text: appInfo.emptyStr+qsTr("Cloud Drive Accounts")
-    }
-
-    Button {
-        id: popupDeleteButton
-
-        property int index
-
-        iconSource: (!window.platformInverted) ? "delete.svg" : "delete_inverted.svg"
-        platformInverted: window.platformInverted
-        visible: false
-        width: 50
-        height: 50
-        z: 2
-        onClicked: {
-            // Delete selected account.
-            visible = false;
-            removeAccountConfirmation.index = index;
-            removeAccountConfirmation.open();
-        }
-        onVisibleChanged: {
-            if (visible) popupDeleteButtonTimer.restart();
-        }
-
-        Timer {
-            id: popupDeleteButtonTimer
-            interval: 2000
-            running: false
-            onTriggered: {
-                parent.visible = false;
-            }
-        }
     }
 
     SelectionDialog {
@@ -148,7 +87,7 @@ Page {
                     width: parent.width - cloudIcon.width - parent.spacing
                     font.pointSize: 8
                     elide: Text.ElideMiddle
-                    color: (!window.platformInverted) ? "white" : "black"
+                    color: (!inverted) ? "white" : "black"
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
@@ -471,6 +410,7 @@ Page {
         anchors.top: titlePanel.bottom
         delegate: accountDelegate
         clip: true
+        model: cloudDriveAccountsModel
     }
 
     Component {
@@ -483,12 +423,13 @@ Page {
             property int mouseY
 
             Row {
-                anchors.fill: parent.paddingItem
+                anchors.fill: parent
+                anchors.margins: 10
                 spacing: 5
 
                 Image {
                     id: cloudIcon
-                    source: cloudDriveModel.getCloudIcon(type)
+                    source: iconSource
                     width: 48
                     height: 48
                     fillMode: Image.PreserveAspectFit
@@ -496,42 +437,42 @@ Page {
                 }
                 Column {
                     width: parent.width - cloudIcon.width
-                    ListItemText {
+                    spacing: 5
+                    Text {
                         id: titleText
-                        mode: listItem.mode
-                        role: "Title"
                         text: email
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
-                        platformInverted: window.platformInverted
+                        font.pointSize: 6
+                        elide: Text.ElideMiddle
+                        color: (!inverted) ? "white" : "black"
                     }
                     Row {
                         width: parent.width
-                        ListItemText {
-                            mode: listItem.mode
-                            role: "SubTitle"
+                        Text {
                             text: "UID " + uid
                             width: parent.width - (quotaText.visible ? quotaText.width : 0) - (runningIcon.visible ? runningIcon.width : 0)
                             verticalAlignment: Text.AlignVCenter
-                            platformInverted: window.platformInverted
+                            font.pointSize: 6
+                            elide: Text.ElideMiddle
+                            color: "grey"
                         }
-                        ListItemText {
+                        Text {
                             id: quotaText
-                            mode: listItem.mode
-                            role: "Subtitle"
-                            text: Utility.formatFileSize(normal + shared, 1) + " / " + Utility.formatFileSize(quota, 1)
+                            text: Utility.formatFileSize(availableSpace, 1) + " / " + Utility.formatFileSize(totalSpace, 1)
                             width: 120
-                            visible: (quota > 0)
+                            visible: (totalSpace > 0)
                             horizontalAlignment: Text.AlignRight
                             verticalAlignment: Text.AlignVCenter
-                            platformInverted: window.platformInverted
+                            font.pointSize: 6
+                            color: "grey"
                         }
                         Image {
                             id: runningIcon
                             width: 24
                             height: 24
-                            source: (!window.platformInverted ? "refresh.svg" : "refresh_inverted.svg")
-                            visible: (quota <= 0)
+                            source: (!inverted ? "refresh.svg" : "refresh_inverted.svg")
+                            visible: (totalSpace <= 0)
                         }
                     }
                 }
@@ -543,19 +484,12 @@ Page {
             }
 
             onClicked: {
-                if (type == CloudDriveModel.WebDAV || type == CloudDriveModel.Ftp) {
+                if (cloudDriveType == CloudDriveModel.WebDAV || cloudDriveType == CloudDriveModel.Ftp) {
                     var atPos = email.lastIndexOf("@");
                     var host = email.substring(atPos+1);
                     var user = email.substring(0, atPos);
-                    addAccountDialog.show(type, uid, host, user, secret, token);
+                    addAccountDialog.show(cloudDriveType, uid, host, user, secret, token);
                 }
-            }
-
-            Component.onCompleted: {
-                    if (email == "") {
-                        cloudDriveModel.accountInfo(type, uid);
-                    }
-                    cloudDriveModel.quota(type, uid);
             }
         }
     }

@@ -15,6 +15,8 @@ PageStackWindow {
     showStatusBar: true
     showToolBar: true
 
+    property bool inverted: !theme.inverted
+
     state: "ready"
     states: [
         State {
@@ -97,11 +99,11 @@ PageStackWindow {
             case FolderSizeItemListModel.WriteOperation:
                 return "back.svg"
             case FolderSizeItemListModel.SyncOperation:
-                return (theme.inverted) ? "refresh.svg" : "refresh_inverted.svg"
+                return (!inverted) ? "refresh.svg" : "refresh_inverted.svg"
             case FolderSizeItemListModel.UploadOperation:
-                return (theme.inverted) ? "upload.svg" : "upload_inverted.svg"
+                return (!inverted) ? "upload.svg" : "upload_inverted.svg"
             case FolderSizeItemListModel.DownloadOperation:
-                return (theme.inverted) ? "download.svg" : "download_inverted.svg"
+                return (!inverted) ? "download.svg" : "download_inverted.svg"
             default:
                 return ""
             }
@@ -629,9 +631,9 @@ PageStackWindow {
                 if (json) {
                     if (json.type == type && json.uid == uid) {
                         if (json.action == "copy") {
-                            return (theme.inverted) ? "copy.svg" : "copy_inverted.svg";
+                            return (!inverted) ? "copy.svg" : "copy_inverted.svg";
                         } else if (json.action == "cut") {
-                            return (theme.inverted) ? "trim.svg" : "trim_inverted.svg";
+                            return (!inverted) ? "trim.svg" : "trim_inverted.svg";
                         }
                     }
                 }
@@ -1099,6 +1101,72 @@ PageStackWindow {
             }
         }
 
+        ListModel {
+            id: cloudDriveAccountsModel
+
+            function parseCloudDriveAccountsModel(replicatedModel) {
+                // Check if authorized before parsing.
+                if (!cloudDriveModel.isAuthorized()) return;
+
+                // Clear model.
+                cloudDriveAccountsModel.clear();
+
+                // Get uid list.
+                var dbUidList = cloudDriveModel.getStoredUidList();
+
+                for (var i=0; i<dbUidList.length; i++)
+                {
+                    var json = JSON.parse(dbUidList[i]);
+                    var cloudType = cloudDriveModel.getClientType(json.type);
+                    console.debug("window cloudDriveAccountsModel parseCloudDriveAccountsModel type " + json.type + " " + cloudType + " i " + i + " uid " + json.uid + " email " + json.email);
+                    var modelItem = {
+                        logicalDrive: json.email,
+                        availableSpace: 0,
+                        totalSpace: 0,
+                        driveType: 7, // Cloud Drive in driveGrid.
+                        name: "",
+                        cloudDriveType: cloudType,
+                        iconSource: cloudDriveModel.getCloudIcon(cloudType),
+                        uid: json.uid,
+                        email: json.email,
+                        token: json.token,
+                        secret: json.secret,
+                        type: json.type
+                    };
+
+                    cloudDriveAccountsModel.append(modelItem);
+                    if (replicatedModel) {
+                        replicatedModel.append(modelItem);
+                    }
+
+                    // Request quota.
+                    cloudDriveModel.quota(modelItem.cloudDriveType, modelItem.uid);
+                }
+            }
+
+            function updateAccountInfoSlot(type, uid, name, email, shared, normal, quota) {
+        //        console.debug("drivePage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
+                for (var i=0; i<cloudDriveAccountsModel.count; i++) {
+                    var item = cloudDriveAccountsModel.get(i);
+        //            console.debug("drivePage updateAccountInfoSlot item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
+                    if (item.uid == uid && item.driveType == 7 && item.cloudDriveType == type) {
+                        console.debug("window cloudDriveAccountsModel updateAccountInfoSlot found item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
+                        cloudDriveAccountsModel.set(i, { availableSpace: (quota - shared - normal), totalSpace: quota });
+                        if (email) {
+                            cloudDriveAccountsModel.set(i, { logicalDrive: email, email: email });
+                        }
+                        if (name) {
+                            cloudDriveAccountsModel.set(i, { name: name });
+                        }
+                    }
+                }
+            }
+        }
+
+        function refreshCloudDriveAccounts() {
+            cloudDriveAccountsModel.parseCloudDriveAccountsModel();
+        }
+
         function getUidListModel(localPath) {
             console.debug("window cloudDriveModel getUidListModel localPath " + localPath);
 
@@ -1437,6 +1505,16 @@ PageStackWindow {
 
             if (err == 0) {
                 var jsonObj = Utility.createJsonObj(msg);
+
+                // Check if email is included, otherwise get from account.
+                var email = jsonObj.email;
+                if (!email) {
+                    var accountJsonObj = Utility.createJsonObj(cloudDriveModel.getStoredUid(jobJson.type, jobJson.uid));
+                    email = accountJsonObj.email;
+                }
+
+                // Send info to cloudDriveAccountsModel.
+                cloudDriveAccountsModel.updateAccountInfoSlot(jobJson.type, jobJson.uid, jsonObj.name, email, sharedBytes, normalBytes, quotaBytes);
 
                 // Send info to relevant pages.
                 pageStack.find(function (page) {

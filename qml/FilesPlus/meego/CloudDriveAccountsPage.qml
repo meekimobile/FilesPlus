@@ -7,54 +7,30 @@ Page {
     id: cloudDriveAccountsPage
 
     property string name: "cloudDriveAccountsPage"
-
-    function updateAccountInfoSlot(type, uid, name, email, shared, normal, quota) {
-//        console.debug("cloudDriveAccountsPage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
-        for (var i=0; i<accountListView.model.count; i++) {
-//            console.debug("cloudDriveAccountsPage updateAccountInfoSlot accountModel i " + i + " uid " + accountListView.model.get(i).uid + " type " + accountListView.model.get(i).type);
-            if (accountListView.model.get(i).uid == uid && accountListView.model.get(i).type == type) {
-                console.debug("cloudDriveAccountsPage updateAccountInfoSlot i " + i + " uid " + uid + " type " + type);
-                accountListView.model.set(i, { shared: Number(shared), normal: Number(normal), quota: Number(quota) });
-                if (email) {
-                    accountListView.model.set(i, { name: name, email: email });
-                }
-            }
-        }
-    }
-
-    function refreshCloudDriveAccountsSlot() {
-        accountListView.model = cloudDriveModel.getUidListModel();
-    }
-
-    onStatusChanged: {
-        if (status == PageStatus.Active) {
-            // TODO Should not refresh here.
-//            refreshCloudDriveAccountsSlot();
-        }
-    }
+    property bool inverted: !theme.inverted
 
     tools: toolBarLayout
 
     ToolBarLayout {
         id: toolBarLayout
 
-        ToolIcon {
+        ToolBarButton {
             id: backButton
-            iconId: "toolbar-back"
+            buttonIconSource: "toolbar-back"
             onClicked: {
                 pageStack.pop();
             }
         }
-        ToolIcon {
+        ToolBarButton {
             id: refreshButton
-            iconId: "toolbar-refresh"
+            buttonIconSource: "toolbar-refresh"
             onClicked: {
-                refreshCloudDriveAccountsSlot();
+                cloudDriveModel.refreshCloudDriveAccounts();
             }
         }
-        ToolIcon {
+        ToolBarButton {
             id: addButton
-            iconId: "toolbar-add"
+            buttonIconSource: "toolbar-add"
             onClicked: {
                 cloudTypeSelection.open();
             }
@@ -64,36 +40,6 @@ Page {
     TitlePanel {
         id: titlePanel
         text: appInfo.emptyStr+qsTr("Cloud Drive Accounts")
-    }
-
-    Button {
-        id: popupDeleteButton
-
-        property int index
-
-        iconSource: (theme.inverted) ? "delete.svg" : "delete_inverted.svg"
-        visible: false
-        width: 60
-        height: 60
-        z: 2
-        onClicked: {
-            // Delete selected account.
-            visible = false;
-            removeAccountConfirmation.index = index;
-            removeAccountConfirmation.open();
-        }
-        onVisibleChanged: {
-            if (visible) popupDeleteButtonTimer.restart();
-        }
-
-        Timer {
-            id: popupDeleteButtonTimer
-            interval: 2000
-            running: false
-            onTriggered: {
-                parent.visible = false;
-            }
-        }
     }
 
     SelectionDialog {
@@ -142,7 +88,7 @@ Page {
                     width: parent.width - cloudIcon.width - parent.spacing
                     font.pointSize: 18
                     elide: Text.ElideMiddle
-                    color: (theme.inverted) ? "white" : "black"
+                    color: (!inverted) ? "white" : "black"
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
@@ -463,6 +409,7 @@ Page {
         anchors.top: titlePanel.bottom
         delegate: accountDelegate
         clip: true
+        model: cloudDriveAccountsModel
 
         onMovementStarted: {
             if (currentItem) {
@@ -484,7 +431,7 @@ Page {
 
                 Image {
                     id: cloudIcon
-                    source: cloudDriveModel.getCloudIcon(type)
+                    source: iconSource
                     width: 48
                     height: 48
                     fillMode: Image.PreserveAspectFit
@@ -492,6 +439,7 @@ Page {
                 }
                 Column {
                     width: parent.width - cloudIcon.width
+                    spacing: 5
                     Text {
                         id: titleText
                         text: email
@@ -499,7 +447,7 @@ Page {
                         verticalAlignment: Text.AlignVCenter
                         font.pointSize: 18
                         elide: Text.ElideMiddle
-                        color: (theme.inverted) ? "white" : "black"
+                        color: (!inverted) ? "white" : "black"
                     }
                     Row {
                         width: parent.width
@@ -513,9 +461,9 @@ Page {
                         }
                         Text {
                             id: quotaText
-                            text: Utility.formatFileSize(normal + shared, 1) + " / " + Utility.formatFileSize(quota, 1)
+                            text: Utility.formatFileSize(availableSpace, 1) + " / " + Utility.formatFileSize(totalSpace, 1)
                             width: 160
-                            visible: (quota > 0)
+                            visible: (totalSpace > 0)
                             horizontalAlignment: Text.AlignRight
                             verticalAlignment: Text.AlignVCenter
                             font.pointSize: 16
@@ -525,8 +473,8 @@ Page {
                             id: runningIcon
                             width: 24
                             height: 24
-                            source: (theme.inverted ? "refresh.svg" : "refresh_inverted.svg")
-                            visible: (quota <= 0)
+                            source: (!inverted ? "refresh.svg" : "refresh_inverted.svg")
+                            visible: (totalSpace <= 0)
                         }
                     }
                 }
@@ -538,19 +486,12 @@ Page {
             }
 
             onClicked: {
-                if (type == CloudDriveModel.WebDAV || type == CloudDriveModel.Ftp) {
+                if (cloudDriveType == CloudDriveModel.WebDAV || cloudDriveType == CloudDriveModel.Ftp) {
                     var atPos = email.lastIndexOf("@");
                     var host = email.substring(atPos+1);
                     var user = email.substring(0, atPos);
-                    addAccountDialog.show(type, uid, host, user, secret, token);
+                    addAccountDialog.show(cloudDriveType, uid, host, user, secret, token);
                 }
-            }
-
-            Component.onCompleted: {
-                    if (email == "") {
-                        cloudDriveModel.accountInfo(type, uid);
-                    }
-                    cloudDriveModel.quota(type, uid);
             }
         }
     }

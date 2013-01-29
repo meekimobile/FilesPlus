@@ -148,7 +148,7 @@ Rectangle {
                             horizontalAlignment: Text.AlignHCenter
                             style: Text.Outline
                             font.pointSize: 6
-                            text: appInfo.emptyStr+(model.totalSpace < 0 ? qsTr("Not available") : (qsTr("Free") + ": " + Utility.formatFileSize(model.availableSpace, 1) + " / " + appInfo.emptyStr+qsTr("Total") + ": " + Utility.formatFileSize(model.totalSpace, 1)))
+                            text: appInfo.emptyStr+(model.totalSpace <= 0 ? qsTr("Not available") : (qsTr("Free") + ": " + Utility.formatFileSize(model.availableSpace, 1) + " / " + appInfo.emptyStr+qsTr("Total") + ": " + Utility.formatFileSize(model.totalSpace, 1)))
                         }
                     }
                 }

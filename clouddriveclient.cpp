@@ -25,19 +25,24 @@ QStringList CloudDriveClient::getStoredUidList()
 {
     QStringList list;
     foreach (QString s, accessTokenPairMap.keys()) {
-        TokenPair t = accessTokenPairMap[s];
-
-        QString jsonText = "{ ";
-        jsonText.append( QString("\"uid\": \"%1\", ").arg(s) );
-        jsonText.append( QString("\"email\": \"%1\", ").arg(t.email) );
-        jsonText.append( QString("\"token\": \"%1\", ").arg(t.token) );
-        jsonText.append( QString("\"secret\": \"%1\", ").arg(t.secret) );
-        jsonText.append( QString("\"type\": \"%1\"").arg(objectName()) );
-        jsonText.append(" }");
-
-        list.append(jsonText);
+        list.append(getStoredUid(s));
     }
     return list;
+}
+
+QString CloudDriveClient::getStoredUid(QString uid)
+{
+    TokenPair t = accessTokenPairMap[uid];
+
+    QString jsonText = "{ ";
+    jsonText.append( QString("\"uid\": \"%1\", ").arg(uid) );
+    jsonText.append( QString("\"email\": \"%1\", ").arg(t.email) );
+    jsonText.append( QString("\"token\": \"%1\", ").arg(t.token) );
+    jsonText.append( QString("\"secret\": \"%1\", ").arg(t.secret) );
+    jsonText.append( QString("\"type\": \"%1\"").arg(objectName()) );
+    jsonText.append(" }");
+
+    return jsonText;
 }
 
 int CloudDriveClient::removeUid(QString uid)
@@ -83,8 +88,13 @@ void CloudDriveClient::loadAccessPairMap() {
 }
 
 void CloudDriveClient::saveAccessPairMap() {
-    // TODO workaround fix to remove tokenPair with key="".
+    // TODO workaround fix to remove tokenPair with key="" or tokenPair without both email and token.
     accessTokenPairMap.remove("");
+    foreach (QString uid, accessTokenPairMap.keys()) {
+        if (accessTokenPairMap[uid].email == "" && accessTokenPairMap[uid].token == "") {
+            accessTokenPairMap.remove(uid);
+        }
+    }
 
     // TODO To prevent invalid code to save damage data for testing only.
 //    if (accessTokenPairMap.isEmpty()) return;
