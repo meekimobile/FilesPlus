@@ -790,6 +790,17 @@ QString CloudDriveModel::getOperationName(int operation) {
     }
 }
 
+QDateTime CloudDriveModel::parseReplyDateString(CloudDriveModel::ClientTypes type, QString dateString)
+{
+    return getCloudClient(type)->parseReplyDateString(dateString); //.toLocalTime();
+}
+
+QString CloudDriveModel::formatJSONDateString(QDateTime datetime)
+{
+    // Format to JSON which match with javascript, QML format.
+    return datetime.toString("yyyy-MM-ddThh:mm:ss.zzzZ");
+}
+
 bool CloudDriveModel::isRemoteAbsolutePath(CloudDriveModel::ClientTypes type)
 {
     return getCloudClient(type)->isRemoteAbsolutePath();
@@ -1919,6 +1930,9 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
                     hash = sc.property("lastModified").toString();
                     createdRemotePath = sc.property("path").toString();
                     break;
+                case WebDAV:
+                    hash = formatJSONDateString(parseReplyDateString(WebDAV, sc.property("property").property("propstat").property("prop").property("getlastmodified").toString()));
+                    createdRemotePath = sc.property("property").property("href").toString();
                 }
                 addItem(type, uid, localPath, createdRemotePath, hash);
 
@@ -2049,6 +2063,9 @@ QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, Q
             break;
         case Ftp:
             createdRemotePath = sc.property("path").toString();
+            break;
+        case WebDAV:
+            createdRemotePath = sc.property("property").property("href").toString();
             break;
         }
 
@@ -2562,6 +2579,7 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     QScriptEngine engine;
     QScriptValue sc;
+    QString lastModifiedText;
     QString hash;
 
     if (err == 0) {
@@ -2590,8 +2608,9 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
                 break;
             case WebDAV:
                 sc = engine.evaluate("(" + msg + ")");
-                QDateTime lastModified = sc.property("property").property("propstat").property("prop").property("getlastmodified").toDateTime();
-                hash = lastModified.toString(Qt::ISODate);
+                lastModifiedText = sc.property("property").property("propstat").property("prop").property("getlastmodified").toString();
+                hash = formatJSONDateString(parseReplyDateString(WebDAV, lastModifiedText));
+                qDebug() << "CloudDriveModel::fileGetReplyFilter WebDAV lastModifiedText" << lastModifiedText << "hash" << hash;
                 addItem(WebDAV, job.uid, job.localFilePath, job.remoteFilePath, hash);
                 break;
             }
@@ -2620,6 +2639,7 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     QScriptEngine engine;
     QScriptValue sc;
+    QString lastModifiedText;
     QString hash;
     QString remoteFilePath;
 
@@ -2660,8 +2680,8 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
             case WebDAV:
                 sc = engine.evaluate("(" + msg + ")");
                 remoteFilePath = sc.property("property").property("href").toString();
-                QDateTime lastModified = sc.property("property").property("propstat").property("prop").property("getlastmodified").toDateTime();
-                hash = lastModified.toString(Qt::ISODate);
+                lastModifiedText = sc.property("property").property("propstat").property("prop").property("getlastmodified").toString();
+                hash = formatJSONDateString(parseReplyDateString(WebDAV, lastModifiedText));
                 job.newRemoteFilePath = remoteFilePath;
                 addItem(WebDAV, job.uid, job.localFilePath, remoteFilePath, hash);
                 break;
@@ -2691,6 +2711,7 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     QScriptEngine engine;
     QScriptValue sc;
+    QString lastModifiedText;
     QString hash;
     QString remoteFilePath;
 
@@ -2714,6 +2735,11 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
 //            hash = sc.property("property").property("lastModified").toString();
 //            addItem(Ftp, job.uid, job.localFilePath, remoteFilePath, hash);
             break;
+        case WebDAV:
+            sc = engine.evaluate("(" + msg + ")");
+            lastModifiedText = sc.property("property").property("propstat").property("prop").property("getlastmodified").toString();
+            hash = formatJSONDateString(parseReplyDateString(WebDAV, lastModifiedText));
+            qDebug() << "CloudDriveModel::metadataReplyFilter hash" << hash;
         }
     } else if (err == 202) {
         // Issue: handle 202 Nonce already in used.

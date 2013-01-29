@@ -19,6 +19,8 @@ const QString WebDavClient::renameFileURI = "https://%1%2"; // PROPPATCH with ar
 
 const qint64 WebDavClient::ChunkSize = 4194304; // 4194304=4MB, 1048576=1MB  TODO Optimize to have largest chink size which is still valid before token is expired.
 
+const QString WebDavClient::ReplyDateFormat = "ddd, dd MMM yyyy hh:mm:ss";
+
 WebDavClient::WebDavClient(QObject *parent) :
     CloudDriveClient(parent)
 {
@@ -346,6 +348,7 @@ QString WebDavClient::createResponseJson(QString replyBody)
 QString WebDavClient::prepareRemotePath(QString uid, QString remoteFilePath)
 {
     QString path = remoteFilePath;
+    qDebug() << "WebDavClient::prepareRemotePath path" << path;
 
     // Remove prefix remote root path.
     if (uid != "") {
@@ -353,13 +356,16 @@ QString WebDavClient::prepareRemotePath(QString uid, QString remoteFilePath)
             QString hostname = getHostname(accessTokenPairMap[uid].email);
             QString remoteRoot = (hostname.indexOf("/") != -1) ? hostname.mid(hostname.indexOf("/")) : "/";
             path = path.replace(QRegExp("^"+remoteRoot), "/");
+            qDebug() << "WebDavClient::prepareRemotePath remoteRoot" << remoteRoot << "removed. path" << path;
             // TODO Stores remoteRoot in m_remoteRootHash[uid].
         } else {
             path = path.replace(QRegExp("^"+m_remoteRootHash[uid]), "/");
+            qDebug() << "WebDavClient::prepareRemotePath remoteRoot" << m_remoteRootHash[uid] << "removed. path" << path;
         }
     }
     // Replace double slash.
-    path = path.replace("//", "/");
+    path = path.replace(QRegExp("/+"), "/");
+    qDebug() << "WebDavClient::prepareRemotePath double slash removed. path" << path;
 
     return path;
 }
@@ -612,7 +618,7 @@ QString WebDavClient::createFolder(QString nonce, QString uid, QString remotePar
 {
     qDebug() << "----- WebDavClient::createFolder -----" << nonce << uid << remoteParentPath << newRemoteFolderName;
 
-    QString remoteFilePath = remoteParentPath + newRemoteFolderName;
+    QString remoteFilePath = remoteParentPath + "/" + newRemoteFolderName + "/"; // remote folder path needs to have trailing slash.
     QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = createFolderURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
@@ -760,7 +766,7 @@ QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *sour
 {
     qDebug() << "----- WebDavClient::filePut -----" << uid << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
-    QString remoteFilePath = remoteParentPath + remoteFileName;
+    QString remoteFilePath = remoteParentPath + "/" + remoteFileName;
     QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = filePutURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
@@ -986,6 +992,25 @@ bool WebDavClient::isRemoteAbsolutePath()
 bool WebDavClient::isFileGetResumable(qint64 fileSize)
 {
     return (fileSize >= ChunkSize);
+}
+
+QDateTime WebDavClient::parseReplyDateString(QString dateString)
+{
+    /*
+     *Example date string
+     * "Tue, 29 Jan 2013 00:14:31 GMT"  from apache2+mod_dav
+     * "Fri, 25 Jan 2013 10:01:27 GMT" from Yandex.ru
+    */
+
+    QString filteredDateString = dateString;
+    filteredDateString = filteredDateString.replace("GMT","").trimmed();
+    qDebug() << "WebDavClient::parseReplyDateString filter dateString" << dateString << "to filteredDateString" << filteredDateString;
+    QDateTime datetime = QDateTime::fromString(filteredDateString, ReplyDateFormat);
+    qDebug() << "WebDavClient::parseReplyDateString parse filteredDateString" << filteredDateString << "with" << ReplyDateFormat << "to" << datetime;
+    datetime.setTimeSpec(Qt::UTC);
+    qDebug() << "WebDavClient::parseReplyDateString parse datetime.setTimeSpec(Qt::UTC)" << datetime;
+
+    return datetime;
 }
 
 void WebDavClient::accessTokenReplyFinished(QNetworkReply *reply)

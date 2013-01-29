@@ -19,6 +19,8 @@ public:
     QString getStoredUid(QString uid);
     int removeUid(QString uid);
 
+    virtual QDateTime parseReplyDateString(QString dateString);
+
     virtual bool isRemoteAbsolutePath();
     virtual QString getRemoteRoot(QString id);
     virtual bool isFilePutResumable(qint64 fileSize);

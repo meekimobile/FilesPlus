@@ -31,6 +31,8 @@ public:
 
     static const qint64 ChunkSize;
 
+    static const QString ReplyDateFormat;
+
     explicit WebDavClient(QObject *parent = 0);
     ~WebDavClient();
 
@@ -40,6 +42,8 @@ public:
     QString getRemoteRoot(QString uid);
     bool isRemoteAbsolutePath();
     bool isFileGetResumable(qint64 fileSize);
+
+    QDateTime parseReplyDateString(QString dateString);
 
     void authorize(QString nonce, QString hostname = "");
     void accessToken(QString nonce, QString pin = "");

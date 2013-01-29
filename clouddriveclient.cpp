@@ -55,6 +55,11 @@ int CloudDriveClient::removeUid(QString uid)
     return n;
 }
 
+QDateTime CloudDriveClient::parseReplyDateString(QString dateString)
+{
+    return QDateTime::fromString(dateString, Qt::ISODate);
+}
+
 bool CloudDriveClient::isRemoteAbsolutePath()
 {
     return false;

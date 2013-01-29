@@ -159,6 +159,8 @@ public:
     Q_INVOKABLE ClientTypes getClientType(int typeInt);
     Q_INVOKABLE QString getCloudName(int type);
     Q_INVOKABLE QString getOperationName(int operation);
+    Q_INVOKABLE QDateTime parseReplyDateString(CloudDriveModel::ClientTypes type, QString dateString);
+    Q_INVOKABLE QString formatJSONDateString(QDateTime datetime);
 
     // Scheduler.
     Q_INVOKABLE int updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp);
