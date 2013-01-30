@@ -57,19 +57,6 @@ Page {
     TitlePanel {
         id: titlePanel
         text: appInfo.emptyStr+qsTr("Cloud Drive Jobs")
-
-        TextIndicator {
-            id: messageLoggerCounter
-            text: (messageLoggerModel.newMessageCount > 0) ? (appInfo.emptyStr + qsTr("Message") + " " + messageLoggerModel.newMessageCount) : ""
-            height: parent.height - 6
-            anchors.right: parent.right
-            anchors.rightMargin: 3
-            anchors.verticalCenter: parent.verticalCenter
-
-            onClicked: {
-                pageStack.push(Qt.resolvedUrl("MessageLoggerPage.qml"));
-            }
-        }
     }
 
     ListView {
