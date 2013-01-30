@@ -96,6 +96,7 @@ public:
     CloudDriveItem getItem(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     QList<CloudDriveItem> findItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     QList<CloudDriveItem> findItems(CloudDriveModel::ClientTypes type, QString uid);
+    QList<CloudDriveItem> findItemsByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     void cleanItems();
     bool cleanItem(const CloudDriveItem &item);
 
@@ -124,7 +125,8 @@ public:
     Q_INVOKABLE int removeItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     Q_INVOKABLE void updateItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString hash);
     Q_INVOKABLE void updateItems(QString localPath, QString hash);
-    Q_INVOKABLE void updateItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString newLocalPath, QString newRemotePath, QString newChildrenHash = "", QString newHash = "");
+    Q_INVOKABLE void updateItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString newLocalPath, QString newRemotePath, QString newParentHash = "", QString newChildrenHash = "");
+    Q_INVOKABLE void updateItemWithChildrenByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, QString newRemotePath, QString newParentHash = "", QString newHash = "");
     Q_INVOKABLE int getItemCount();
     Q_INVOKABLE QString getItemHash(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE QString getItemRemotePath(QString localPath, CloudDriveModel::ClientTypes type, QString uid);

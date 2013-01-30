@@ -442,6 +442,17 @@ QList<CloudDriveItem> CloudDriveModel::findItems(CloudDriveModel::ClientTypes ty
     return list;
 }
 
+QList<CloudDriveItem> CloudDriveModel::findItemsByRemotePath(ClientTypes type, QString uid, QString remotePath)
+{
+    QSqlQuery qry(m_db);
+    qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":remote_path", remotePath);
+
+    return getItemListFromPS(qry);
+}
+
 QList<CloudDriveItem> CloudDriveModel::getItemList(QString localPath) {
     QList<CloudDriveItem> list;
 
@@ -1077,21 +1088,24 @@ void CloudDriveModel::updateItems(QString localPath, QString hash)
     }
 }
 
-void CloudDriveModel::updateItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString newLocalPath, QString newRemotePath, QString newChildrenHash, QString newHash)
+void CloudDriveModel::updateItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString newLocalPath, QString newRemotePath, QString newParentHash, QString newChildrenHash)
 {
-    qDebug() << "CloudDriveModel::updateItemWithChildren localPath" << localPath << "remotePath" << remotePath << "newLocalPath" << newLocalPath << "newRemotePath" << newRemotePath << "newChildrenHash" << newChildrenHash;
+    qDebug() << "CloudDriveModel::updateItemWithChildren localPath" << localPath << "remotePath" << remotePath << "newLocalPath" << newLocalPath << "newRemotePath" << newRemotePath << "newParentHash" << newParentHash << "newChildrenHash" << newChildrenHash;
 
     int updateCount = 0;
 
     foreach (CloudDriveItem item, findItemWithChildren(type, uid, localPath)) {
         qDebug() << "CloudDriveModel::updateItemWithChildren before item" << item;
-        // Set hash for children only.
-        if (item.localPath != localPath) {
+        if (item.localPath == localPath) {
+            // Set hash for parent.
             // Set hash = DirtyHash to hint syncFromLocal to put files.
             // Set hash = empty to hint metadata to get files, otherwise syncFromLocal to put local files which are remained with empty hash.
+            if (newParentHash != "") {
+                item.hash = newParentHash;
+            }
+        } else if (newChildrenHash != "") {
+            // Set hash for children.
             item.hash = newChildrenHash;
-        } else if (newHash != "") {
-            item.hash = newHash;
         }
 
         item.localPath = item.localPath.replace(QRegExp("^" + localPath), newLocalPath);
@@ -1112,6 +1126,14 @@ void CloudDriveModel::updateItemWithChildren(CloudDriveModel::ClientTypes type, 
     }
 
     qDebug() << "CloudDriveModel::updateItemWithChildren updateCount" << updateCount;
+}
+
+void CloudDriveModel::updateItemWithChildrenByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, QString newRemotePath, QString newParentHash, QString newChildrenHash)
+{
+    foreach (CloudDriveItem item, findItemsByRemotePath(type, uid, remotePath)) {
+        qDebug() << "CloudDriveModel::updateItemWithChildrenByRemotePath item" << item.localPath << "remotePath" << item.remotePath << "newRemotePath" << newRemotePath << "newParentHash" << newParentHash << "newChildrenHash" << newChildrenHash;
+        updateItemWithChildren(type, uid, item.localPath, item.remotePath, item.localPath, newRemotePath, newParentHash, newChildrenHash);
+    }
 }
 
 int CloudDriveModel::updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp)
@@ -2803,26 +2825,46 @@ void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg
     QScriptEngine engine;
     QScriptValue sc;
     QString hash;
-    QString rev;
+    QString newRemotePath;
     bool isDir;
 
     if (err == 0) {
-        if (job.localFilePath != "" && job.newLocalFilePath != "") {
-            // TODO generalize to support other clouds.
-            switch (job.type) {
-            case Dropbox:
-                sc = engine.evaluate("(" + msg + ")");
-                hash = sc.property("hash").toString();
-                rev = sc.property("rev").toString();
-                isDir = sc.property("is_dir").toBool();
-                updateItemWithChildren(Dropbox, job.uid,
+        switch (job.type) {
+        case Dropbox:
+            sc = engine.evaluate("(" + msg + ")");
+            isDir = sc.property("is_dir").toBool();
+            newRemotePath = sc.property("path").toString();
+            hash = (isDir) ? sc.property("hash").toString() : sc.property("rev").toString();
+            break;
+        case Ftp:
+            // TODO
+            break;
+        case WebDAV:
+            // TODO
+            break;
+        }
+
+        // Update connection for client which uses absolute remote path.
+        if (isRemoteAbsolutePath(getClientType(job.type))) {
+            if (job.localFilePath != "" && job.newLocalFilePath != "") {
+                // Local path is specified, it's requested from FolderPage.
+                // Update both new local and remote path for specified local path.
+                updateItemWithChildren(getClientType(job.type), job.uid,
                                        job.localFilePath, job.remoteFilePath,
-                                       job.newLocalFilePath, job.newRemoteFilePath, rev, (isDir ? hash : rev) );
-                removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
-                break;
-            case SkyDrive:
-                // TODO
-                break;
+                                       job.newLocalFilePath, newRemotePath,
+                                       hash);
+                // Remove cloud item and its children with original local path.
+                removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
+            } else {
+                // Local path isn't specified, it's requested from CloudFolderPage.
+                // Update new remote path for all connected local path.
+                foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, job.remoteFilePath)) {
+                    qDebug() << "CloudDriveModel::moveFileReplyFilter item" << item.localPath << "remotePath" << item.remotePath << "newRemotePath" << newRemotePath;
+                    updateItemWithChildren(getClientType(job.type), job.uid,
+                                           item.localPath, item.remotePath,
+                                           item.localPath, newRemotePath,
+                                           hash);
+                }
             }
         }
     }
@@ -2843,18 +2885,36 @@ void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg
     QScriptEngine engine;
     QScriptValue sc;
     QString hash;
+    QString newRemotePath;
+    QString newRemoteParentPath;
+    bool isDir;
 
     if (err == 0) {
-        if (job.localFilePath != "" && job.newLocalFilePath != "") {
-            // TODO generalize to support other clouds.
-            switch (job.type) {
-            case Dropbox:
-                sc = engine.evaluate("(" + msg + ")");
-                hash = sc.property("rev").toString();
-                break;
-            case SkyDrive:
+        switch (job.type) {
+        case Dropbox:
+            sc = engine.evaluate("(" + msg + ")");
+            isDir = sc.property("is_dir").toBool();
+            newRemotePath = sc.property("path").toString();
+            hash = (isDir) ? sc.property("hash").toString() : sc.property("rev").toString();
+            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath);
+            break;
+        case SkyDrive:
+            // TODO
+            break;
+        }
+
+        // Update connection for client which uses absolute remote path.
+        if (isRemoteAbsolutePath(getClientType(job.type))) {
+            if (job.localFilePath != "" && job.newLocalFilePath != "") {
+                // Local path is specified, it's requested from FolderPage.
                 // TODO
-                break;
+            } else {
+                // Local path isn't specified, it's requested from CloudFolderPage.
+                // If newRemotePath's parent is connected, sync its parent to connected local path.
+                if (isRemotePathConnected(getClientType(job.type), job.uid, newRemoteParentPath)) {
+                    qDebug() << "CloudDriveModel::copyFileReplyFilter newRemotePath" << newRemotePath << "is under connected parent remote path. Sync its parent" << newRemoteParentPath;
+                    syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath);
+                }
             }
         }
     }

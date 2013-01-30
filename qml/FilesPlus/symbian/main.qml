@@ -286,6 +286,7 @@ PageStackWindow {
             }
 
             // TODO Connect to cloud if copied/moved file/folder is in connected folder.
+            // TODO Make it configurable.
         }
 
         onDeleteStarted: {
@@ -330,6 +331,7 @@ PageStackWindow {
             }
 
             // Delete file from clouds.
+            // TODO Make it configurable.
             if (err == 0) {
                 if (cloudDriveModel.isConnected(sourcePath)) {
                     var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
@@ -368,6 +370,7 @@ PageStackWindow {
                 }
 
                 // TODO request cloudDriveModel.createFolder
+                // TODO Make it configurable.
             } else {
                 logError(qsTr("Create") + " " + qsTr("error"), msg);
             }
@@ -380,13 +383,14 @@ PageStackWindow {
                 logError(qsTr("Rename") + " " + qsTr("error"), msg);
             }
 
-            // Rename file on clouds.
+            // Rename file on clouds by specify empty newRemoteParentPath to moveFIle method.
+            // TODO Make it configurable.
             if (err == 0 && cloudDriveModel.isConnected(sourcePath)) {
 //                console.debug("fsModel onRenameFinished itemList " + cloudDriveModel.getItemListJson(sourcePath));
                 var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
                 for (var i=0; i<json.length; i++) {
                     console.debug("fsModel onRenameFinished item " + json[i].type + " " + json[i].uid + " " + json[i].local_path + " " + json[i].remote_path);
-                    cloudDriveModel.moveFile(json[i].type, json[i].uid, sourcePath, json[i].remote_path, targetPath, json[i].remote_path, fsModel.getFileName(targetPath));
+                    cloudDriveModel.moveFile(json[i].type, json[i].uid, sourcePath, json[i].remote_path, targetPath, "", fsModel.getFileName(targetPath));
                 }
             }
         }
@@ -1876,17 +1880,21 @@ PageStackWindow {
         onRefreshRequestSignal: {
             console.debug("window cloudDriveModel onRefreshRequestSignal " + nonce);
 
-            var p = findPage("folderPage");
-            if (p) {
-                if (nonce != "") {
-                    var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            if (nonce != "") {
+                // Update item after removing job as isSyncing will check if job exists.
+                var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
-                    // Remove finished job.
-                    cloudDriveModel.removeJob("cloudDriveModel.onRefreshRequestSignal", jobJson.job_id);
+                // Remove finished job.
+                cloudDriveModel.removeJob("cloudDriveModel.onRefreshRequestSignal", jobJson.job_id);
 
-                    // Update item after removing job as isSyncing will check if job exists.
-                    p.updateItemSlot(jobJson);
-                } else {
+                // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
+                pageStack.find(function (page) {
+                    if (page.updateItemSlot) page.updateItemSlot(jobJson);
+                });
+            } else {
+                // For refresh request without specified nonce(jobId), just refresh.
+                var p = findPage("folderPage");
+                if (p) {
                     p.refreshSlot("cloudDriveModel onRefreshRequestSignal");
                 }
             }
@@ -1899,8 +1907,6 @@ PageStackWindow {
 
             if (err == 0) {
                 // Cloud items have been managed by CloudDriveModel::copyFileReplyFilter.
-                // Sync after copy.
-                cloudDriveModel.metadata(jobJson.type, jobJson.uid, jobJson.new_local_file_path, jobJson.new_remote_file_path, jobJson.model_index);
 
                 // Refresh cloudFolderPage.
                 var p = findPage("cloudFolderPage");
@@ -1937,8 +1943,6 @@ PageStackWindow {
 
             if (err == 0) {
                 // Cloud items have been managed by CloudDriveModel::moveFileReplyFilter.
-                // Sync after move.
-                cloudDriveModel.metadata(jobJson.type, jobJson.uid, jobJson.new_local_file_path, jobJson.new_remote_file_path, jobJson.model_index);
 
                 // Refresh cloudFolderPage.
                 var p = findPage("cloudFolderPage");
