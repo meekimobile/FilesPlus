@@ -621,6 +621,9 @@ QString CloudDriveModel::getParentRemotePath(CloudDriveModel::ClientTypes type, 
     if (isRemoteAbsolutePath(type)) {
         QString remoteParentPath = "";
         if (remotePath != "" && remotePath != "/") {
+            // Remove trailing slash from WebDavClient remote folder path.
+            remotePath = remotePath.endsWith("/") ? remotePath.mid(0, remotePath.lastIndexOf("/")) : remotePath;
+            // Remove item name to get parent path.
             remoteParentPath = remotePath.mid(0, remotePath.lastIndexOf("/"));
             remoteParentPath = (remoteParentPath == "") ? "/" : remoteParentPath;
         }
@@ -2837,10 +2840,15 @@ void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg
             hash = (isDir) ? sc.property("hash").toString() : sc.property("rev").toString();
             break;
         case Ftp:
-            // TODO
+            sc = engine.evaluate("(" + msg + ")");
+            newRemotePath = sc.property("path").toString();
+            hash = sc.property("lastModified").toString();
             break;
         case WebDAV:
-            // TODO
+            sc = engine.evaluate("(" + msg + ")");
+            newRemotePath = sc.property("property").property("href").toString();
+            hash = formatJSONDateString(parseReplyDateString(WebDAV, sc.property("property").property("propstat").property("prop").property("getlastmodified").toString()));
+            qDebug() << "CloudDriveModel::moveFileReplyFilter WebDAV hash" << hash;
             break;
         }
 
@@ -2890,33 +2898,60 @@ void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg
     bool isDir;
 
     if (err == 0) {
+        // TODO If it doesn't do here, it will be sync'd with parent folder's metadata request.
         switch (job.type) {
         case Dropbox:
             sc = engine.evaluate("(" + msg + ")");
             isDir = sc.property("is_dir").toBool();
-            newRemotePath = sc.property("path").toString();
             hash = (isDir) ? sc.property("hash").toString() : sc.property("rev").toString();
+            newRemotePath = sc.property("path").toString();
             newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath);
             break;
         case SkyDrive:
-            // TODO
+            sc = engine.evaluate("(" + msg + ")");
+            hash = sc.property("updated_time").toString();
+            newRemotePath = sc.property("id").toString();
+            newRemoteParentPath = sc.property("parent_id").toString();
+            break;
+        case GoogleDrive:
+            sc = engine.evaluate("(" + msg + ")");
+            hash = sc.property("modifiedDate").toString();
+            newRemotePath = sc.property("id").toString();
+            if (sc.property("parents").toVariant().toList().length() > 0) {
+                newRemoteParentPath = sc.property("parents").property(0).property("id").toString();
+            }
+            break;
+        case Ftp:
+            sc = engine.evaluate("(" + msg + ")");
+            newRemotePath = sc.property("path").toString();
+            hash = sc.property("lastModified").toString();
+            newRemotePath = sc.property("path").toString();
+            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath);
+            break;
+        case WebDAV:
+            sc = engine.evaluate("(" + msg + ")");
+            hash = formatJSONDateString(parseReplyDateString(WebDAV, sc.property("property").property("propstat").property("prop").property("getlastmodified").toString()));
+            newRemotePath = sc.property("property").property("href").toString();
+            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath);
             break;
         }
 
-        // Update connection for client which uses absolute remote path.
-        if (isRemoteAbsolutePath(getClientType(job.type))) {
+        // Sync newRemoteParentPath to get newRemotePath sync'd.
+        qDebug() << "CloudDriveModel::copyFileReplyFilter" + getCloudName(job.type) << "hash" << hash << "newRemotePath" << newRemotePath << "newRemoteParentPath" << newRemoteParentPath;
+//        if (isRemoteAbsolutePath(getClientType(job.type))) {
             if (job.localFilePath != "" && job.newLocalFilePath != "") {
                 // Local path is specified, it's requested from FolderPage.
                 // TODO
             } else {
                 // Local path isn't specified, it's requested from CloudFolderPage.
                 // If newRemotePath's parent is connected, sync its parent to connected local path.
+                // TODO Not work for GoogleDrive as parent folder's timestamp doesn't change after add new child item.
                 if (isRemotePathConnected(getClientType(job.type), job.uid, newRemoteParentPath)) {
                     qDebug() << "CloudDriveModel::copyFileReplyFilter newRemotePath" << newRemotePath << "is under connected parent remote path. Sync its parent" << newRemoteParentPath;
                     syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath);
                 }
             }
-        }
+//        }
     }
 
     // Stop running.
