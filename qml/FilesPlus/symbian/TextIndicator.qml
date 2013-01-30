@@ -10,7 +10,23 @@ Rectangle {
     height: size
     radius: size / 2
     visible: (text != "")
-    
+    states: [
+        State {
+            name: "pressed"
+            when: _pressed
+            PropertyChanges {
+                target: textIndicator
+                color: (!inverted) ? pressedColor : pressedColorInverted
+                explicit: true
+            }
+            PropertyChanges {
+                target: textLabel
+                color: (!inverted) ? pressedTextColor : pressedTextColorInverted
+                explicit: true
+            }
+        }
+    ]
+
     property alias text: textLabel.text
     property alias textPointSize: textLabel.font.pointSize
 
@@ -20,6 +36,11 @@ Rectangle {
     property color borderColor: "white"
     property color borderColorInverted: "black"
     property bool inverted: window.platformInverted
+    property bool _pressed: false
+    property color pressedColor: "white"
+    property color pressedColorInverted: "black"
+    property color pressedTextColor: "black"
+    property color pressedTextColorInverted: "white"
 
     signal clicked(variant mouse)
     signal pressAndHold(variant mouse)
@@ -35,6 +56,8 @@ Rectangle {
     MouseArea {
         id: mouseArea
         anchors.fill: parent
+        onPressed: _pressed = true;
+        onReleased: _pressed = false;
         onClicked: textIndicator.clicked(mouse);
         onPressAndHold: textIndicator.pressAndHold(mouse);
     }

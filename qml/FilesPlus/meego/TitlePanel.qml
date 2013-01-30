@@ -48,11 +48,12 @@ Rectangle {
 
     TextIndicator {
         id: messageLoggerCounter
-        text: (messageLoggerModel.newMessageCount > 0) ? (appInfo.emptyStr + qsTr("Message") + " " + messageLoggerModel.newMessageCount) : ""
+        text: (messageLoggerModel.messageCount > 0) ? (appInfo.emptyStr + qsTr("Message") + " " + messageLoggerModel.newMessageCount + "/" + messageLoggerModel.messageCount) : ""
         height: parent.height - 6
         anchors.right: parent.right
         anchors.rightMargin: 3
         anchors.verticalCenter: parent.verticalCenter
+        color: (messageLoggerModel.newMessageCount > 0) ? "#00AAFF" : "transparent"
 
         onClicked: {
             pageStack.push(Qt.resolvedUrl("MessageLoggerPage.qml"));

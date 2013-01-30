@@ -4,6 +4,7 @@ ListModel {
     id: messageLoggerModel
     
     property int newMessageCount: 0
+    property alias messageCount: messageLoggerModel.count
     
     function log(type, titleText, message) {
         var msgObj = { "timestamp": new Date(), "meesageType": type, "isRead": false, "titleText": titleText, "message": message };
