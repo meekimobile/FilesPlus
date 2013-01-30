@@ -483,9 +483,13 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
             uri = sc.property("downloadUrl").toString();
             propertyReply->deleteLater();
         } else {
-            emit fileGetReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));
-            propertyReply->deleteLater();
-            return 0;
+            if (!synchronous) {
+                emit fileGetReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));
+                propertyReply->deleteLater();
+                return 0;
+            } else {
+                return propertyReply;
+            }
         }
     }
     qDebug() << "GCDClient::fileGet uri " << uri;

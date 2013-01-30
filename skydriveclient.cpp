@@ -531,9 +531,13 @@ QIODevice *SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFil
             m_propertyReplyHash->insert(nonce, propertyReply->readAll());
             propertyReply->deleteLater();
         } else {
-            emit fileGetReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));
-            propertyReply->deleteLater();
-            return 0;
+            if (!synchronous) {
+                emit fileGetReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));
+                propertyReply->deleteLater();
+                return 0;
+            } else {
+                return propertyReply;
+            }
         }
     }
 
