@@ -119,7 +119,7 @@ void WebDavClient::quota(QString nonce, QString uid)
 {
     qDebug() << "----- WebDavClient::quota -----" << nonce << uid;
 
-    QString requestBody = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><propfind xmlns=\"DAV:\"><prop><quota-available-bytes/><quota-used-bytes/></prop></propfind>";
+    QString requestBody = "<?xml version=\"1.0\" ?><D:propfind xmlns:D=\"DAV:\"><D:prop><D:quota-available-bytes/><D:quota-used-bytes/></D:prop></D:propfind>";
 
     QNetworkReply *reply = property(nonce, uid, "/", requestBody, 0);
 
@@ -135,8 +135,8 @@ void WebDavClient::quota(QString nonce, QString uid)
         QScriptEngine engine;
         QScriptValue jsonObj = engine.evaluate("(" + replyBody + ")");
         qint64 sharedValue = 0;
-        qint64 normalValue = jsonObj.property("multistatus").property("response").property("propstat").property("prop").property("quota-used-bytes").toInteger();
-        qint64 quotaValue = jsonObj.property("multistatus").property("response").property("propstat").property("prop").property("quota-available-bytes").toInteger();
+        qint64 normalValue = jsonObj.property("response").property("propstat").property("prop").property("quota-used-bytes").toInteger();
+        qint64 quotaValue = jsonObj.property("response").property("propstat").property("prop").property("quota-available-bytes").toInteger();
 
         emit quotaReplySignal(nonce, reply->error(), reply->errorString(), replyBody, normalValue, sharedValue, quotaValue);
     } else {
@@ -203,16 +203,17 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
     qDebug() << "WebDavClient::property authHeader" << authHeader;
 
     QBuffer dataBuf;
-    dataBuf.open(QIODevice::ReadWrite);
+    dataBuf.open(QIODevice::WriteOnly);
     dataBuf.write(requestBody.toUtf8());
+    dataBuf.reset(); // Reset pos for reading while request.
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    req.setHeader(QNetworkRequest::ContentLengthHeader, requestBody.length());
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "text/xml");
+    req.setHeader(QNetworkRequest::ContentLengthHeader, dataBuf.size());
     req.setRawHeader("Authorization", authHeader);
     req.setRawHeader("Accept", QByteArray("*/*"));
     req.setRawHeader("Depth", QString("%1").arg(depth).toAscii());
@@ -222,6 +223,9 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
     }
+
+    dataBuf.close();
+    dataBuf.deleteLater();
 
     return reply;
 }

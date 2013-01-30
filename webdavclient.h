@@ -48,7 +48,7 @@ public:
     void authorize(QString nonce, QString hostname = "");
     void accessToken(QString nonce, QString pin = "");
     void accountInfo(QString nonce, QString uid); // TODO Still not work.
-    void quota(QString nonce, QString uid); // TODO Still not work.
+    void quota(QString nonce, QString uid);
     QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = true);
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
