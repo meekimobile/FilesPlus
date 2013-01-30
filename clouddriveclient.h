@@ -39,9 +39,9 @@ public:
     virtual void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
     virtual void metadata(QString nonce, QString uid, QString remoteFilePath);
     virtual void browse(QString nonce, QString uid, QString remoteFilePath);
-    virtual void createFolder(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFolderName);
-    virtual void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
-    virtual void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
+    virtual void createFolder(QString nonce, QString uid, QString newRemoteParentPath, QString newRemoteFolderName);
+    virtual void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
+    virtual void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     virtual void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     virtual void shareFile(QString nonce, QString uid, QString remoteFilePath);
 
@@ -115,6 +115,7 @@ protected:
     QString createNormalizedQueryString(QMap<QString, QString> sortMap);
     QString encodeURI(const QString uri);
     QString createQueryString(QMap<QString, QString> sortMap);
+    QString removeDoubleSlash(QString remoteFilePath);
 private:
 
 };

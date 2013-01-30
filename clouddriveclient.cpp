@@ -166,6 +166,16 @@ QString CloudDriveClient::createQueryString(QMap<QString, QString> sortMap) {
     return queryString;
 }
 
+QString CloudDriveClient::removeDoubleSlash(QString remoteFilePath)
+{
+    QString path = remoteFilePath;
+
+    // Replace double slash.
+    path = path.replace("//", "/");
+
+    return path;
+}
+
 bool CloudDriveClient::testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname)
 {
     return false;
@@ -278,17 +288,17 @@ void CloudDriveClient::browse(QString nonce, QString uid, QString remoteFilePath
     emit browseReplySignal(nonce, -1, objectName() + " " + tr("Browse"), tr("Service is not implemented."));
 }
 
-void CloudDriveClient::createFolder(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFolderName)
+void CloudDriveClient::createFolder(QString nonce, QString uid, QString newRemoteParentPath, QString newRemoteFolderName)
 {
     emit createFolderReplySignal(nonce, -1, objectName() + " " + tr("Create Folder"), tr("Service is not implemented."));
 }
 
-void CloudDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
+void CloudDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName)
 {
     emit moveFileReplySignal(nonce, -1, objectName() + " " + tr("Move"), tr("Service is not implemented."));
 }
 
-void CloudDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
+void CloudDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName)
 {
     emit copyFileReplySignal(nonce, -1, objectName() + " " + tr("Copy"), tr("Service is not implemented."));
 }

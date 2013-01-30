@@ -9,7 +9,6 @@ class CloudDriveJob
 public:
     CloudDriveJob();
     CloudDriveJob(QString jobId, int operation, int type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
-    CloudDriveJob(QString jobId, int operation, int type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, int modelIndex);
 
     QString jobId;
     int operation;

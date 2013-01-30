@@ -550,18 +550,24 @@ void DropboxClient::browse(QString nonce, QString uid, QString remoteFilePath)
     QNetworkReply *reply = manager->get(req);
 }
 
-void DropboxClient::createFolder(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFolderName)
+void DropboxClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
 {
-    createFolder(nonce, uid, remoteFilePath, newRemoteFolderName, false);
+    createFolder(nonce, uid, remoteParentPath, newRemoteFolderName, false);
 }
 
-void DropboxClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
+void DropboxClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName)
 {
-    qDebug() << "----- DropboxClient::moveFile -----" << uid << remoteFilePath << newRemoteFilePath << newRemoteFileName;
+    qDebug() << "----- DropboxClient::moveFile -----" << uid << remoteFilePath << newRemoteParentPath << newRemoteFileName;
 
-    if (newRemoteFileName != "") {
-        newRemoteFilePath = getParentRemotePath(remoteFilePath) + "/" + newRemoteFileName;
-        qDebug() << "DropboxClient::moveFile remoteFilePath" << remoteFilePath << "newRemoteFilePath" << newRemoteFilePath;
+    QString newRemoteFilePath;
+    if (newRemoteParentPath == "") {
+        // Rename
+        newRemoteFilePath = removeDoubleSlash(getParentRemotePath(remoteFilePath) + "/" + newRemoteFileName);
+        qDebug() << "DropboxClient::moveFile rename remoteFilePath" << remoteFilePath << "newRemoteFilePath" << newRemoteFilePath;
+    } else {
+        // Move
+        newRemoteFilePath = removeDoubleSlash(newRemoteParentPath + "/" + newRemoteFileName);
+        qDebug() << "DropboxClient::moveFile move remoteFilePath" << remoteFilePath << "newRemoteFilePath" << newRemoteFilePath;
     }
 
     QString uri = moveFileURI;
@@ -589,12 +595,15 @@ void DropboxClient::moveFile(QString nonce, QString uid, QString remoteFilePath,
     QNetworkReply *reply = manager->post(req, postData);
 }
 
-void DropboxClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
+void DropboxClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName)
 {
-    qDebug() << "----- DropboxClient::copyFile -----" << uid << remoteFilePath << newRemoteFilePath << newRemoteFileName;
+    qDebug() << "----- DropboxClient::copyFile -----" << uid << remoteFilePath << newRemoteParentPath << newRemoteFileName;
 
     QString uri = copyFileURI;
     qDebug() << "DropboxClient::copyFile uri " << uri;
+
+    QString newRemoteFilePath = removeDoubleSlash(newRemoteParentPath + "/" + newRemoteFileName);
+    qDebug() << "DropboxClient::copyFile remoteFilePath" << remoteFilePath << "newRemoteFilePath" << newRemoteFilePath;
 
     // Construct normalized query string.
     QMap<QString, QString> sortMap;

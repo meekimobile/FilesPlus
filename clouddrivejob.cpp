@@ -26,28 +26,6 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->err = 0;
 }
 
-CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, int modelIndex)
-{
-    this->jobId = jobId;
-    this->operation = operation;
-    this->type = type;
-    this->uid = uid;
-    this->localFilePath = localFilePath;
-    this->remoteFilePath = remoteFilePath;
-    this->newLocalFilePath = newLocalFilePath;
-    this->newRemoteFilePath = newRemoteFilePath;
-    this->newRemoteFileName = "";
-    this->isRunning = false;
-    this->modelIndex = modelIndex;
-    this->bytes = 0;
-    this->bytesTotal = 0;
-    this->targetType = -1;
-    this->createdTime = QDateTime::currentDateTime();
-    this->downloadOffset = 0;
-    this->uploadOffset = 0;
-    this->err = 0;
-}
-
 QString CloudDriveJob::toJsonText()
 {
     QString jsonText;

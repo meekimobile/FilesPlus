@@ -54,8 +54,8 @@ public:
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
     void createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName);
-    void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
-    void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName);
+    void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
+    void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     void shareFile(QString nonce, QString uid, QString remoteFilePath);
 
@@ -90,7 +90,6 @@ private:
     QString createPropertyJson(QString replyBody);
     QString createResponseJson(QString replyBody);
     QString prepareRemotePath(QString uid, QString remoteFilePath);
-    QString removeDoubleSlash(QString remoteFilePath);
     QString getHostname(QString email);
 
     void testSSLConnection(QString hostname);

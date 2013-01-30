@@ -317,7 +317,7 @@ PageStackWindow {
             console.debug("fsModel onDeleteFinished " + fileAction + " sourcePath " + sourcePath);
 
             // Show message if error.
-            if (err < 0) {
+            if (err != 0) {
                 logError(getActionName(fileAction) + " " + qsTr("error"), msg);
 
                 if (deleteProgressDialog.status == DialogStatus.Open) {

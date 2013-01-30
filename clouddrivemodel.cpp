@@ -1090,7 +1090,7 @@ void CloudDriveModel::updateItemWithChildren(CloudDriveModel::ClientTypes type, 
             // Set hash = DirtyHash to hint syncFromLocal to put files.
             // Set hash = empty to hint metadata to get files, otherwise syncFromLocal to put local files which are remained with empty hash.
             item.hash = newChildrenHash;
-        } else if (newHash != ""){
+        } else if (newHash != "") {
             item.hash = newHash;
         }
 
@@ -2365,20 +2365,23 @@ QString CloudDriveModel::thumbnail(CloudDriveModel::ClientTypes type, QString ui
     return client->thumbnail(createNonce(), uid, remoteFilePath, format, size);
 }
 
-void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, QString newRemoteFileName)
+void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteParentPath, QString newRemoteFileName)
 {
     if (remoteFilePath == "") {
         qDebug() << "CloudDriveModel::moveFile remoteFilePath" << remoteFilePath << "is empty. Operation is aborted.";
         return;
     }
 
-    if (newRemoteFilePath == "" && newRemoteFileName == "") {
-        qDebug() << "CloudDriveModel::moveFile newRemoteFilePath" << newRemoteFilePath << "or newRemoteFileName" << newRemoteFileName << "is empty. Operation is aborted.";
+    // NOTE moveFile without newRemoteParentPath means rename.
+    if (newRemoteFileName == "") {
+        qDebug() << "CloudDriveModel::moveFile newRemoteFileName" << newRemoteFileName << "is empty. Operation is aborted.";
         return;
     }
 
     // Enqueue job.
-    CloudDriveJob job(createNonce(), MoveFile, type, uid, localFilePath, remoteFilePath, newLocalFilePath, newRemoteFilePath, -1);
+    CloudDriveJob job(createNonce(), MoveFile, type, uid, localFilePath, remoteFilePath, -1);
+    job.newLocalFilePath = newLocalFilePath;
+    job.newRemoteFilePath = newRemoteParentPath;
     job.newRemoteFileName = newRemoteFileName;
 //    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
@@ -2402,20 +2405,22 @@ void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, Q
     emit proceedNextJobSignal();
 }
 
-void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath, QString newRemoteFileName)
+void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteParentPath, QString newRemoteFileName)
 {
     if (remoteFilePath == "") {
         qDebug() << "CloudDriveModel::copyFile remoteFilePath" << remoteFilePath << "is empty. Operation is aborted.";
         return;
     }
 
-    if (newRemoteFilePath == "") {
-        qDebug() << "CloudDriveModel::copyFile newRemoteFilePath" << newRemoteFilePath << "is empty. Operation is aborted.";
+    if (newRemoteParentPath == "" && newRemoteFileName == "") {
+        qDebug() << "CloudDriveModel::copyFile newRemoteParentPath" << newRemoteParentPath << "or newRemoteFileName" << newRemoteFileName << "is empty. Operation is aborted.";
         return;
     }
 
     // Enqueue job.
-    CloudDriveJob job(createNonce(), CopyFile, type, uid, localFilePath, remoteFilePath, newLocalFilePath, newRemoteFilePath, -1);
+    CloudDriveJob job(createNonce(), CopyFile, type, uid, localFilePath, remoteFilePath, -1);
+    job.newLocalFilePath = newLocalFilePath;
+    job.newRemoteFilePath = newRemoteParentPath;
     job.newRemoteFileName = newRemoteFileName;
 //    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
@@ -2778,56 +2783,9 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
 void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
-    QScriptEngine engine;
-    QScriptValue sc;
-    QString hash;
-    QString createdRemotePath;
-
-//    qDebug() << "CloudDriveModel::createFolderReplyFilter jobJson" << job.toJsonText();
-//    qDebug() << "CloudDriveModel::createFolderReplyFilter msg" << msg;
 
     // Add connection if localFilePath is specified because createFolder was invoked in syncFromLocal.
     // NOTE It's not required to create cloud item for created folder. Because further sync operation will do.
-//    if (err == 0) {
-//        switch (job.type) {
-//        case Dropbox:
-//            sc = engine.evaluate("(" + msg + ")");
-//            hash = sc.property("rev").toString();
-//            if (job.localFilePath != "") {
-//                // Add cloud item if localPath is specified.
-//                addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
-//            }
-//            break;
-//        case SkyDrive:
-//            // REMARK For SkyDrive, job.localFilePath stores newRemoteFolderName. It've never have correct localFilePath. So ignore addItem.
-//            sc = engine.evaluate("(" + msg + ")");
-//            hash = sc.property("updated_time").toString();
-//            createdRemotePath = sc.property("id").toString();
-//            if (job.localFilePath != "") {
-//                // TODO SkyDrive expected to have newRemoteFolderName in job.localFilePath
-//                addItem(SkyDrive, job.uid, job.localFilePath, createdRemotePath, hash);
-//            }
-//            break;
-//        case GoogleDrive:
-//            // REMARK For GoogleDrive, job.localFilePath stores newRemoteFolderName. It've never have correct localFilePath. So ignore addItem.
-//            sc = engine.evaluate("(" + msg + ")");
-//            hash = sc.property("modifiedDate").toString();
-//            createdRemotePath = sc.property("id").toString();
-//            if (job.localFilePath != "") {
-//                // TODO GoogleDrive expected to have newRemoteFolderName in job.localFilePath
-//                addItem(GoogleDrive, job.uid, job.localFilePath, createdRemotePath, hash);
-//            }
-//            break;
-//        case Ftp:
-//            sc = engine.evaluate("(" + msg + ")");
-//            hash = sc.property("lastModified").toString();
-//            if (job.localFilePath != "") {
-//                // Add cloud item if localPath is specified.
-//                addItem(Ftp, job.uid, job.localFilePath, job.remoteFilePath, hash);
-//            }
-//            break;
-//        }
-//    }
 
     // Stop running.
     job.isRunning = false;

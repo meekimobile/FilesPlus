@@ -364,18 +364,8 @@ QString WebDavClient::prepareRemotePath(QString uid, QString remoteFilePath)
         }
     }
     // Replace double slash.
-    path = path.replace(QRegExp("/+"), "/");
+    path = removeDoubleSlash(path);
     qDebug() << "WebDavClient::prepareRemotePath double slash removed. path" << path;
-
-    return path;
-}
-
-QString WebDavClient::removeDoubleSlash(QString remoteFilePath)
-{
-    QString path = remoteFilePath;
-
-    // Replace double slash.
-    path = path.replace("//", "/");
 
     return path;
 }
@@ -420,11 +410,13 @@ void WebDavClient::createFolder(QString nonce, QString uid, QString remoteParent
     createFolder(nonce, uid, remoteParentPath, newRemoteFolderName, false);
 }
 
-void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
+void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName)
 {
-    qDebug() << "----- WebDavClient::moveFile -----" << nonce << uid << remoteFilePath << newRemoteFilePath << newRemoteFileName;
+    qDebug() << "----- WebDavClient::moveFile -----" << nonce << uid << remoteFilePath << newRemoteParentPath << newRemoteFileName;
 
-    if (newRemoteFileName != "" && newRemoteFilePath == "") {
+    QString newRemoteFilePath;
+    if (newRemoteFileName != "" && newRemoteParentPath == "") {
+        // Rename
         if (remoteFilePath.endsWith("/")) {
             // Directory
             newRemoteFilePath = getParentRemotePath(remoteFilePath.mid(0, remoteFilePath.length()-1)) + "/" + newRemoteFileName + "/";
@@ -432,13 +424,17 @@ void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, 
             // File
             newRemoteFilePath = getParentRemotePath(remoteFilePath) + "/" + newRemoteFileName;
         }
-        qDebug() << "WebDavClient::moveFile rename" << uid << remoteFilePath << newRemoteFilePath;
+        qDebug() << "WebDavClient::moveFile rename" << uid << remoteFilePath << "to" << newRemoteFilePath;
     } else {
+        // Move
         if (remoteFilePath.endsWith("/")) {
             // Directory
-            newRemoteFilePath = newRemoteFilePath + "/";
+            newRemoteFilePath = newRemoteParentPath + "/" + newRemoteFileName + "/";
+        } else {
+            // File
+            newRemoteFilePath = newRemoteParentPath + "/" + newRemoteFileName;
         }
-        qDebug() << "WebDavClient::moveFile move" << uid << remoteFilePath << newRemoteFilePath;
+        qDebug() << "WebDavClient::moveFile move" << uid << remoteFilePath << "to" << newRemoteFilePath;
     }
 
     QString hostname = getHostname(accessTokenPairMap[uid].email);
@@ -476,15 +472,19 @@ void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, 
     reply->manager()->deleteLater();
 }
 
-void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
+void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName)
 {
-    qDebug() << "----- WebDavClient::copyFile -----" << uid << remoteFilePath << newRemoteFilePath << newRemoteFileName;
+    qDebug() << "----- WebDavClient::copyFile -----" << uid << remoteFilePath << newRemoteParentPath << newRemoteFileName;
 
+    QString newRemoteFilePath;
     if (remoteFilePath.endsWith("/")) {
         // Directory
-        newRemoteFilePath = newRemoteFilePath + "/";
-        qDebug() << "WebDavClient::copyFile" << uid << remoteFilePath << "prepared newRemoteFilePath" << newRemoteFilePath;
+        newRemoteFilePath = newRemoteParentPath + "/" + newRemoteFileName + "/";
+    } else {
+        // File
+        newRemoteFilePath = newRemoteParentPath + "/" + newRemoteFileName;
     }
+    qDebug() << "WebDavClient::copyFile" << uid << remoteFilePath << "to" << newRemoteFilePath;
 
     QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = copyFileURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
