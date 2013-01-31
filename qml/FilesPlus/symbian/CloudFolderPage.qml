@@ -946,6 +946,8 @@ Page {
 
     onStatusChanged: {
         if (status == PageStatus.Active) {
+            // Request cloud job queue status.
+            cloudDriveModel.requestJobQueueStatus();
         }
     }
 

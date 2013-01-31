@@ -49,6 +49,11 @@ Page {
         }
     }
 
+    function updateJobQueueCount(runningJobCount, jobQueueCount) {
+        // Update (runningJobCount + jobQueueCount) on cloudButton.
+        cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
+    }
+
     ToolBarLayout {
         id: toolBarLayout
 
@@ -59,7 +64,6 @@ Page {
                 window.quitSlot();
             }
         }
-
         ToolBarButton {
             id: refreshButton
             buttonIconSource: "toolbar-refresh"
@@ -71,7 +75,23 @@ Page {
                 refreshSlot("drivePage refreshButton onClicked");
             }
         }
+        ToolBarButton {
+            id: cloudButton
+            buttonIconSource: (!window.platformInverted ? "cloud.svg" : "cloud_inverted.svg")
 
+            TextIndicator {
+                id: cloudButtonIndicator
+                color: "#00AAFF"
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 10
+            }
+
+            onPressAndHold: {
+                pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"));
+            }
+        }
         ToolBarButton {
             id: menuButton
             buttonIconSource: "toolbar-menu"
@@ -208,6 +228,9 @@ Page {
 
             // Stop startup logging.
             appInfo.stopLogging();
+
+            // Request cloud job queue status.
+            cloudDriveModel.requestJobQueueStatus();
 
             // Show notify if logging is enabled.
             console.debug("drivePage onStatusChanged Logging.enabled " + appInfo.getSettingBoolValue("Logging.enabled", false));

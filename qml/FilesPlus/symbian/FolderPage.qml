@@ -37,6 +37,9 @@ Page {
 
     onStatusChanged: {
         if (status == PageStatus.Active) {
+            // Request cloud job queue status.
+            cloudDriveModel.requestJobQueueStatus();
+
             // Ask whether user want to change to have full access to Dropbox.
             if (!appInfo.hasSettingValue("dropbox.fullaccess.enabled")) {
                 if (cloudDriveModel.isAuthorized(CloudDriveModel.Dropbox)) {
