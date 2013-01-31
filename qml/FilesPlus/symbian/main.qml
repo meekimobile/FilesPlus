@@ -1306,6 +1306,7 @@ PageStackWindow {
                 "subDirCount": 0, "subFileCount": 0, "isDirty": false,
                 "lastModified": (new Date()), "size": 0, "isDir": false,
                 "isDeleted": false,
+                "isConnected": false,
                 "hash": "",
                 "children": []
             };
@@ -1420,6 +1421,9 @@ PageStackWindow {
                     }
                 }
             }
+
+            // Get connection status.
+            parsedObj.isConnected = cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, parsedObj.absolutePath);
 
             return parsedObj;
         }
@@ -2158,8 +2162,9 @@ PageStackWindow {
 
             console.debug("window cloudDriveModel onJobEnqueuedSignal " + nonce + " " + cloudDriveModel.getOperationName(jobJson.operation) + " localPath " + localPath);
 
+            // Update cloud list item on relavant pages.
             pageStack.find(function (page) {
-                if (page.updateItemSlot) page.updateItemSlot(jobJson);
+                if (page.updateItemSlot) page.updateItemSlot(jobJson, "cloudDriveModel onJobEnqueuedSignal");
             });
         }
 
@@ -2167,6 +2172,13 @@ PageStackWindow {
             // NOTE It's emitted from updateJob() to update job in job model.
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
             cloudDriveJobsModel.updateJob(jobJson);
+
+            console.debug("window cloudDriveModel onJobUpdatedSignal " + nonce + " " + cloudDriveModel.getOperationName(jobJson.operation));
+
+            // Update cloud list item on relavant pages.
+            pageStack.find(function (page) {
+                if (page.updateItemSlot) page.updateItemSlot(jobJson, "cloudDriveModel onJobUpdatedSignal");
+            });
         }
 
         onJobRemovedSignal: {

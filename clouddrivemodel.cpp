@@ -878,9 +878,7 @@ void CloudDriveModel::updateJob(CloudDriveJob job)
 {
     mutex.lock();
     // Remove cache for furthur refresh.
-    m_isConnectedCache->remove(job.localFilePath);
-    m_isDirtyCache->remove(job.localFilePath);
-    m_isSyncingCache->remove(job.localFilePath);
+    clearConnectedRemoteDirtyCache(job.localFilePath);
 
     if (job.isRunning) {
         job.lastStartedTime = QDateTime::currentDateTime();
@@ -1888,8 +1886,7 @@ void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString u
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show cloud_wait.
-    m_isConnectedCache->remove(localPath);
-    m_isSyncingCache->remove(localPath);
+    clearConnectedRemoteDirtyCache(localPath);
     emit jobEnqueuedSignal(job.jobId, localPath);
 
     emit proceedNextJobSignal();

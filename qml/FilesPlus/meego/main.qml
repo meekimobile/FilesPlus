@@ -1305,6 +1305,7 @@ PageStackWindow {
                 "subDirCount": 0, "subFileCount": 0, "isDirty": false,
                 "lastModified": (new Date()), "size": 0, "isDir": false,
                 "isDeleted": false,
+                "isConnected": false,
                 "hash": "",
                 "children": []
             };
@@ -1419,6 +1420,9 @@ PageStackWindow {
                     }
                 }
             }
+
+            // Get connection status.
+            parsedObj.isConnected = cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, parsedObj.absolutePath);
 
             return parsedObj;
         }
@@ -1684,6 +1688,7 @@ PageStackWindow {
                         }
 
                         // Sync based on remote contents.
+                        // TODO Should it detect jobJson.force_put or jobJson.force_get?
                         if (jsonObj.hash != itemJson.hash) { // Sync all json(remote)'s contents.
                             for(var i=0; i<jsonObj.children.length; i++) {
                                 var item = jsonObj.children[i];
@@ -1691,13 +1696,13 @@ PageStackWindow {
                                 var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
                                 if (item.isDir) {
                                     // This flow will trigger recursive metadata calling.
-                                    cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, item.absolutePath, -1);
+                                    cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, item.absolutePath, -1, jobJson.force_put, jobJson.force_get);
                                 } else {
                                     console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " sync children file remote path " + item.absolutePath + " hash " + item.hash + " local path " + itemLocalPath + " hash " + itemLocalHash);
                                     // TODO Should it just sync a file, then it will be decided operation on its metadata call?
-                                    if (item.hash > itemLocalHash) {
+                                    if (jobJson.forceGet || item.hash > itemLocalHash) {
                                         cloudDriveModel.fileGet(jobJson.type, jobJson.uid, item.absolutePath, item.size, itemLocalPath, -1);
-                                    } else if (item.hash < itemLocalHash) {
+                                    } else if (jobJson.force_put || item.hash < itemLocalHash) {
                                         cloudDriveModel.filePut(jobJson.type, jobJson.uid, itemLocalPath, item.parentPath, item.name, -1);
                                     } else {
                                         cloudDriveModel.addItem(jobJson.type, jobJson.uid, itemLocalPath, item.absolutePath, item.hash);
@@ -1714,10 +1719,10 @@ PageStackWindow {
                     } else { // Sync file.
                         console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " sync file remote path " + jsonObj.absolutePath + " hash " + jsonObj.hash + " local path " + jobJson.local_file_path + " hash " + itemJson.hash);
                         // If (rev is newer or there is no local file), get from remote.
-                        if (jsonObj.hash > itemJson.hash || !cloudDriveModel.isFile(jobJson.local_file_path)) {
+                        if (jobJson.force_get || jsonObj.hash > itemJson.hash || !cloudDriveModel.isFile(jobJson.local_file_path)) {
                             // Download found item to localFilePath.
                             cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jsonObj.absolutePath, jsonObj.size, jobJson.local_file_path, jobJson.modelIndex);
-                        } else if (jsonObj.hash < itemJson.hash) {
+                        } else if (jobJson.force_put || jsonObj.hash < itemJson.hash) {
                             // Upload found item to remoteParentPath with item name.
                             cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jsonObj.parentPath, jsonObj.name, jobJson.modelIndex);
                         } else {
@@ -2156,8 +2161,9 @@ PageStackWindow {
 
             console.debug("window cloudDriveModel onJobEnqueuedSignal " + nonce + " " + cloudDriveModel.getOperationName(jobJson.operation) + " localPath " + localPath);
 
+            // Update cloud list item on relavant pages.
             pageStack.find(function (page) {
-                if (page.updateItemSlot) page.updateItemSlot(jobJson);
+                if (page.updateItemSlot) page.updateItemSlot(jobJson, "cloudDriveModel onJobEnqueuedSignal");
             });
         }
 
@@ -2165,6 +2171,13 @@ PageStackWindow {
             // NOTE It's emitted from updateJob() to update job in job model.
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
             cloudDriveJobsModel.updateJob(jobJson);
+
+            console.debug("window cloudDriveModel onJobUpdatedSignal " + nonce + " " + cloudDriveModel.getOperationName(jobJson.operation));
+
+            // Update cloud list item on relavant pages.
+            pageStack.find(function (page) {
+                if (page.updateItemSlot) page.updateItemSlot(jobJson, "cloudDriveModel onJobUpdatedSignal");
+            });
         }
 
         onJobRemovedSignal: {

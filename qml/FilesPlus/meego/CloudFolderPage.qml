@@ -163,17 +163,17 @@ Page {
         cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
     }
 
-    function updateItemSlot(jobJson) {
+    function updateItemSlot(jobJson, caller) {
         if (!jobJson) return;
-        console.debug("cloudFolderPage updateItemSlot jobJson " + JSON.stringify(jobJson));
+//        console.debug("cloudFolderPage updateItemSlot caller " + caller + " jobJson " + JSON.stringify(jobJson));
 
         if (jobJson.remote_file_path == "") return;
 
         if (jobJson.type == selectedCloudType && jobJson.uid == selectedUid) {
-            console.debug("cloudFolderPage updateItemSlot jobJson " + JSON.stringify(jobJson));
             var i = cloudFolderModel.findIndexByRemotePath(jobJson.remote_file_path);
+            console.debug("cloudFolderPage updateItemSlot caller " + caller + " jobJson " + JSON.stringify(jobJson) + " model index " + i);
             if (i >= 0) {
-                cloudFolderModel.set(i, { isRunning: jobJson.is_running });
+                cloudFolderModel.set(i, { isRunning: jobJson.is_running, isConnected: cloudDriveModel.isRemotePathConnected(jobJson.type, jobJson.uid, jobJson.remote_file_path) });
             }
         }
     }
@@ -688,7 +688,7 @@ Page {
         CloudListItem {
             id: listItem
             listViewState: (cloudFolderView.state ? cloudFolderView.state : "")
-            syncIconVisible: cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, absolutePath)
+            syncIconVisible: isConnected
             syncIconSource: (isRunning) ? "cloud_wait.svg" : "cloud.svg"
             actionIconSource: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath, cloudDriveModel.getCloudName(selectedCloudType), selectedUid) : ""
 
