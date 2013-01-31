@@ -80,6 +80,11 @@ bool CloudDriveClient::isFileGetResumable(qint64 fileSize)
     return false;
 }
 
+bool CloudDriveClient::isDeltaSupported()
+{
+    return false;
+}
+
 void CloudDriveClient::loadAccessPairMap() {
     qDebug() << QTime::currentTime() << objectName() << "::loadAccessPairMap";
 
@@ -174,6 +179,30 @@ QString CloudDriveClient::removeDoubleSlash(QString remoteFilePath)
     path = path.replace("//", "/");
 
     return path;
+}
+
+QString CloudDriveClient::getFileType(QString localPath)
+{
+    int i = localPath.lastIndexOf(".");
+    QString fileType;
+    if (i > -1 && i < localPath.length()) {
+        fileType = localPath.mid(i + 1);
+    } else {
+        fileType = "";
+    }
+
+//    qDebug() << "CloudDriveClient::getFileType" << localPath << "fileType" << fileType;
+    return fileType;
+}
+
+QScriptValue CloudDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj)
+{
+    return QScriptValue();
+}
+
+QString CloudDriveClient::stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj)
+{
+    return engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
 }
 
 bool CloudDriveClient::testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname)
@@ -315,7 +344,10 @@ void CloudDriveClient::shareFile(QString nonce, QString uid, QString remoteFileP
 
 QString CloudDriveClient::delta(QString nonce, QString uid, bool synchronous)
 {
-    emit deltaReplySignal(nonce, -1, objectName() + " " + tr("Delta"), tr("Service is not implemented."));
+    // Emit empty message as default.
+    if (!synchronous) {
+        emit deltaReplySignal(nonce, 0, objectName() + " " + tr("Delta"), "{ }", QScriptValue());
+    }
     return "";
 }
 

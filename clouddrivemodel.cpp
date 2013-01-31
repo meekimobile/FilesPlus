@@ -270,9 +270,9 @@ void CloudDriveModel::connectCloudClientsSignal(CloudDriveClient *client)
     connect(client, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(migrateFilePutReplySignal(QString,int,QString,QString)), SLOT(migrateFilePutFilter(QString,int,QString,QString)) ); // Added because FtpClient doesn't provide QNetworkReply.
-    connect(client, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(fileGetResumeReplySignal(QString,int,QString,QString)), SLOT(fileGetResumeReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(deltaReplySignal(QString,int,QString,QString,QScriptValue)), SLOT(deltaReplyFilter(QString,int,QString,QString,QScriptValue)) );
 }
 
 void CloudDriveModel::initializeDropboxClient() {
@@ -442,10 +442,14 @@ QList<CloudDriveItem> CloudDriveModel::findItems(CloudDriveModel::ClientTypes ty
     return list;
 }
 
-QList<CloudDriveItem> CloudDriveModel::findItemsByRemotePath(ClientTypes type, QString uid, QString remotePath)
+QList<CloudDriveItem> CloudDriveModel::findItemsByRemotePath(ClientTypes type, QString uid, QString remotePath, bool caseInsensitive)
 {
     QSqlQuery qry(m_db);
-    qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
+    if (caseInsensitive) {
+        qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND lower(remote_path) = :remote_path");
+    } else {
+        qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
+    }
     qry.bindValue(":type", type);
     qry.bindValue(":uid", uid);
     qry.bindValue(":remote_path", remotePath);
@@ -732,6 +736,23 @@ CloudDriveModel::ClientTypes CloudDriveModel::getClientType(int typeInt)
     case Ftp:
         return Ftp;
     case WebDAV:
+        return WebDAV;
+    }
+}
+
+CloudDriveModel::ClientTypes CloudDriveModel::getClientType(QString typeText)
+{
+    qDebug() << "CloudDriveModel::getClientType" << typeText;
+
+    if (typeText.indexOf(QRegExp("dropboxclient|dropbox", Qt::CaseInsensitive)) != -1) {
+        return Dropbox;
+    } else if (typeText.indexOf(QRegExp("skydriveclient|skydrive", Qt::CaseInsensitive)) != -1) {
+        return SkyDrive;
+    } else if (typeText.indexOf(QRegExp("gcdclient|googledriveclient|googledrive", Qt::CaseInsensitive)) != -1) {
+        return GoogleDrive;
+    } else if (typeText.indexOf(QRegExp("ftpclient|ftp", Qt::CaseInsensitive)) != -1) {
+        return Ftp;
+    } else if (typeText.indexOf(QRegExp("webdavclient|webdav", Qt::CaseInsensitive)) != -1) {
         return WebDAV;
     }
 }
@@ -1224,16 +1245,8 @@ void CloudDriveModel::syncScheduledItems()
 {
     while (!m_scheduledItems->isEmpty()) {
         CloudDriveItem item = m_scheduledItems->dequeue();
-        switch (item.type) {
-        case Dropbox:
-            qDebug() << "CloudDriveModel::syncScheduledItems dequeue and sync item" << item;
-            metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
-            break;
-        case SkyDrive:
-            qDebug() << "CloudDriveModel::syncScheduledItems dequeue and sync item" << item;
-            metadata(SkyDrive, item.uid, item.localPath, item.remotePath, -1);
-            break;
-        }
+        qDebug() << "CloudDriveModel::syncScheduledItems dequeue and sync item" << item;
+        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
     }
 }
 
@@ -3104,9 +3117,28 @@ void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMs
     emit shareFileReplySignal(nonce, err, errMsg, msg, url, expires);
 }
 
-void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg, QScriptValue parsedObj)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    // TODO Process delta. Move to QML to connect to FolderSizeItemListModel's delete recursive method.
+    for (int i = 0; i < parsedObj.property("children").toVariant().toList().length(); i++) {
+        QScriptValue childObj = parsedObj.property("children").property(i);
+        bool isDeleted = childObj.property("isDeleted").toBool();
+        QString remoteFilePath = childObj.property("absolutePath").toString();
+//        qDebug() << "CloudDriveModel::deltaReplyFilter remoteFilePath" << remoteFilePath << "isDeleted" << isDeleted;
+        // TODO
+        foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemoteAbsolutePath(getClientType(job.type)))) {
+            if (isDeleted) {
+                // TODO delete local file path and cloud item.
+                qDebug() << "CloudDriveModel::deltaReplyFilter deleted remoteFilePath" << remoteFilePath << "cloudItem" << item;
+            } else {
+                // TODO sync item.
+                qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteFilePath" << remoteFilePath << "cloudItem" << item;
+//                metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+            }
+        }
+    }
 
     // Update job running flag.
     job.isRunning = false;
@@ -3289,16 +3321,26 @@ void CloudDriveModel::schedulerTimeoutFilter()
 
     QString cronValue = QDateTime::currentDateTime().toString("m h d M ddd");
 
+    // Sync scheduled items.
     loadScheduledItems(cronValue);
-    suspendNextJob();
-    syncScheduledItems();
+    if (!m_scheduledItems->isEmpty()) {
+        suspendNextJob();
+        syncScheduledItems();
+        resumeNextJob();
+    }
 
     // TODO Request delta.
-//    QScriptEngine engine;
-//    QScriptValue sc = engine.evaluate("(" + dbClient->getStoredUidList().first() + ")");
-//    delta(Dropbox, sc.property("uid").toString());
-
-    resumeNextJob();
+    QString deltaCronExp = "* * * * *"; // TODO Make it configurable.
+    if (matchCronExp(deltaCronExp, cronValue)) {
+        QScriptEngine engine;
+        QScriptValue sc;
+        foreach (QString uidJson, getStoredUidList()) {
+            QScriptValue sc = engine.evaluate("(" + uidJson + ")");
+            if (getCloudClient(getClientType(sc.property("type").toString()))->isDeltaSupported()) {
+                delta(getClientType(sc.property("type").toString()), sc.property("uid").toString());
+            }
+        }
+    }
 
     emit schedulerTimeoutSignal();
 }

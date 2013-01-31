@@ -47,6 +47,7 @@ public:
     bool isRemoteAbsolutePath();
     bool isFilePutResumable(qint64 fileSize);
     bool isFileGetResumable(qint64 fileSize);
+    bool isDeltaSupported();
 
     void requestToken(QString nonce);
     void authorize(QString nonce);
@@ -93,9 +94,12 @@ public slots:
     void copyFileReplyFinished(QNetworkReply *reply);
     void deleteFileReplyFinished(QNetworkReply *reply);
     void shareFileReplyFinished(QNetworkReply *reply);
-    void deltaReplyFinished(QNetworkReply *reply);
     void fileGetResumeReplyFinished(QNetworkReply *reply);
     void filePutResumeReplyFinished(QNetworkReply *reply);
+
+    void deltaReplyFinished(QNetworkReply *reply);
+protected:
+    QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:
     TokenPair requestTokenPair;
     QString localPath;
@@ -121,6 +125,7 @@ private:
     QByteArray createOAuthHeaderForUid(QString nonce, QString uid, QString method, QString uri, QMap<QString, QString> addParamMap = QMap<QString, QString>());
     QString encodeURI(const QString uri);
     QString getParentRemotePath(QString remotePath);
+    QString getRemoteName(QString remotePath);
 };
 
 #endif // DropboxClient_H

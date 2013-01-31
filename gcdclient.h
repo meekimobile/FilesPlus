@@ -35,6 +35,7 @@ public:
     static const QString trashFileURI;
     static const QString startResumableUploadURI;
     static const QString resumeUploadURI;
+    static const QString deltaURI;
 
     static const qint64 ChunkSize;
 
@@ -73,9 +74,12 @@ public:
     QString filePutResumeStatus(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
     QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
 
+    QString delta(QString nonce, QString uid, bool synchronous);
+
     QString getRemoteRoot(QString uid);
     bool isFilePutResumable(qint64 fileSize);
     bool isFileGetResumable(qint64 fileSize);
+    bool isDeltaSupported();
 signals:
 
 public slots:
@@ -102,6 +106,10 @@ public slots:
     void filePutResumeStartReplyFinished(QNetworkReply *reply);
     void filePutResumeUploadReplyFinished(QNetworkReply *reply);
     void filePutResumeStatusReplyFinished(QNetworkReply *reply);
+
+    void deltaReplyFinished(QNetworkReply *reply);
+protected:
+    QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:
     QString localPath;
     QHash<QString, QString> m_contentTypeHash;
@@ -110,6 +118,8 @@ private:
     QString refreshTokenUid;
     QHash<QString, QByteArray> *m_propertyReplyHash;
     QHash<QString, QByteArray> *m_filesReplyHash;
+
+    QSettings m_settings;
 
     QString createTimestamp();
     QString createNormalizedQueryString(QMap<QString, QString> sortMap);

@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QtNetwork>
+#include <QScriptEngine>
 #include "tokenpair.h"
 
 class CloudDriveClient : public QObject
@@ -25,6 +26,7 @@ public:
     virtual QString getRemoteRoot(QString id);
     virtual bool isFilePutResumable(qint64 fileSize);
     virtual bool isFileGetResumable(qint64 fileSize);
+    virtual bool isDeltaSupported();
 
     virtual bool testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname);
     virtual void saveConnection(QString id, QString hostname, QString username, QString password, QString token);
@@ -45,7 +47,6 @@ public:
     virtual void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     virtual void shareFile(QString nonce, QString uid, QString remoteFilePath);
 
-    virtual QString delta(QString nonce, QString uid, bool synchronous = false);
     virtual QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
 
     virtual QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
@@ -78,6 +79,8 @@ public:
     virtual QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
 
     virtual QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size);
+
+    virtual QString delta(QString nonce, QString uid, bool synchronous = false);
 signals:
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
@@ -93,11 +96,11 @@ signals:
     void copyFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void deleteFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void deltaReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void fileGetResumeReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutResumeReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutCommitReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg); // Signal for supporting FTPClient.
+    void deltaReplySignal(QString nonce, int err, QString errMsg, QString msg, QScriptValue parsedObj);
 
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
@@ -116,6 +119,10 @@ protected:
     QString encodeURI(const QString uri);
     QString createQueryString(QMap<QString, QString> sortMap);
     QString removeDoubleSlash(QString remoteFilePath);
+    QString getFileType(QString localPath);
+
+    virtual QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
+    QString stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj);
 private:
 
 };

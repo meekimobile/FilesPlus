@@ -96,7 +96,7 @@ public:
     CloudDriveItem getItem(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     QList<CloudDriveItem> findItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     QList<CloudDriveItem> findItems(CloudDriveModel::ClientTypes type, QString uid);
-    QList<CloudDriveItem> findItemsByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
+    QList<CloudDriveItem> findItemsByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, bool caseInsensitive = false);
     void cleanItems();
     bool cleanItem(const CloudDriveItem &item);
 
@@ -159,7 +159,8 @@ public:
     Q_INVOKABLE bool createDirPath(const QString absPath);
     Q_INVOKABLE QString getFileName(const QString absFilePath);
     Q_INVOKABLE QString getFileType(QString localPath);
-    Q_INVOKABLE ClientTypes getClientType(int typeInt);
+    ClientTypes getClientType(int typeInt);
+    ClientTypes getClientType(QString typeText);
     Q_INVOKABLE QString getCloudName(int type);
     Q_INVOKABLE QString getOperationName(int operation);
     Q_INVOKABLE QDateTime parseReplyDateString(CloudDriveModel::ClientTypes type, QString dateString);
@@ -294,7 +295,7 @@ public slots:
     void copyFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void deleteFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
-    void deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg, QScriptValue parsedObj);
     void migrateFilePutFilter(QString nonce, int err, QString errMsg, QString msg);
     void fileGetResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void filePutResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg);

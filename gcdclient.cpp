@@ -29,6 +29,7 @@ const QString GCDClient::sharesURI = "https://www.googleapis.com/drive/v2/files/
 const QString GCDClient::trashFileURI = "https://www.googleapis.com/drive/v2/files/%1/trash"; // POST
 const QString GCDClient::startResumableUploadURI = "https://www.googleapis.com/upload/drive/v2/files?uploadType=resumable"; // POST with json includes file properties.
 const QString GCDClient::resumeUploadURI = "%1"; // PUT with specified URL.
+const QString GCDClient::deltaURI = "https://www.googleapis.com/drive/v2/changes"; // GET with parameters.
 
 const qint64 GCDClient::ChunkSize = 4194304; // 4194304=4MB, 1048576=1MB  TODO Optimize to have largest chink size which is still valid before token is expired.
 
@@ -201,6 +202,25 @@ QString GCDClient::getContentType(QString fileName) {
     }
 
     return contentType;
+}
+
+QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj)
+{
+    QScriptValue parsedObj = engine.newObject();
+
+    parsedObj.setProperty("name", jsonObj.property("title"));
+    parsedObj.setProperty("absolutePath", jsonObj.property("id"));
+    parsedObj.setProperty("parentPath", jsonObj.property("parents").property(0).property("id"));
+    parsedObj.setProperty("size", jsonObj.property("fileSize"));
+    parsedObj.setProperty("isDeleted", QScriptValue(false));
+    parsedObj.setProperty("isDir", QScriptValue(jsonObj.property("mimeType").toString() == "application/vnd.google-apps.folder"));
+    parsedObj.setProperty("lastModified", jsonObj.property("modifiedDate"));
+    parsedObj.setProperty("hash", jsonObj.property("modifiedDate"));
+    parsedObj.setProperty("source", jsonObj.property("webContentLink"));
+    parsedObj.setProperty("thumbnail", jsonObj.property("thumbnailLink"));
+    parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("title").toString())));
+
+    return parsedObj;
 }
 
 void GCDClient::authorize(QString nonce)
@@ -970,6 +990,55 @@ QString GCDClient::filePutCommit(QString nonce, QString uid, QString remoteFileP
     return "";
 }
 
+QString GCDClient::delta(QString nonce, QString uid, bool synchronous)
+{
+    qDebug() << "----- GCDClient::delta -----" << nonce << uid << synchronous;
+
+    // Construct query string.
+    QMap<QString, QString> sortMap;
+    if (m_settings.value("GCDClient." + uid + ".nextDeltaCursor").isValid()) {
+        sortMap["startChangeId"] = m_settings.value("GCDClient." + uid + ".nextDeltaCursor").toString();
+    }
+    sortMap["maxResults"] = m_settings.value("GCDClient." + uid + ".changesPerPage", QVariant(100)).toString();
+//    sortMap["pageToken"] = ""; // Omits and always use nextDeltaCursor for next delta request?
+    QString queryString = createQueryString(sortMap);
+    qDebug() << "GCDClient::delta queryString" << queryString;
+
+    QString uri = deltaURI + "?" + queryString;
+    qDebug() << "GCDClient::delta uri " << uri;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deltaReplyFinished(QNetworkReply*)));
+    }
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    QNetworkReply *reply = manager->get(req);
+
+    // Return if asynchronous.
+    if (!synchronous) {
+        return "";
+    }
+
+    while (!reply->isFinished()) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    // Emit signal.
+    QString replyString = QString::fromUtf8(reply->readAll());
+    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyString, QScriptValue());
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return replyString;
+}
+
 QString GCDClient::getRemoteRoot(QString uid)
 {
     return RemoteRoot;
@@ -983,6 +1052,11 @@ bool GCDClient::isFilePutResumable(qint64 fileSize)
 bool GCDClient::isFileGetResumable(qint64 fileSize)
 {
     return (fileSize >= ChunkSize);
+}
+
+bool GCDClient::isDeltaSupported()
+{
+    return true;
 }
 
 void GCDClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
@@ -1749,6 +1823,59 @@ void GCDClient::filePutResumeStatusReplyFinished(QNetworkReply *reply)
     }
 
     // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+void GCDClient::deltaReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "GCDClient::deltaReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+
+    QString replyBody = QString::fromUtf8(reply->readAll());
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue sourceObj = engine.evaluate("(" + replyBody + ")");
+
+        // Get entries count.
+        int entriesCount = sourceObj.property("items").toVariant().toList().length();
+        qDebug() << "GCDClient::deltaReplyFinished entriesCount" << entriesCount;
+
+        QScriptValue parsedObj = engine.newObject();
+        parsedObj.setProperty("largestChangeId", sourceObj.property("largestChangeId"));
+
+        QScriptValue lastChangeId;
+        QScriptValue childrenObj = engine.newArray();
+        for (int i = 0; i < entriesCount; i++) {
+            QScriptValue sourceChildObj = sourceObj.property("items").property(i);
+
+            QScriptValue parsedChildObj = engine.newObject();
+            parsedChildObj.setProperty("changeId", sourceChildObj.property("id"));
+            parsedChildObj.setProperty("isDeleted", sourceChildObj.property("deleted"));
+            parsedChildObj.setProperty("absolutePath", sourceChildObj.property("fileId"));
+            if (!sourceChildObj.property("deleted").toBool()) {
+                parsedChildObj.setProperty("property", parseCommonPropertyScriptValue(engine, sourceChildObj.property("file")));
+            }
+            childrenObj.setProperty(i, parsedChildObj);
+
+            // Save lastChangeId.
+            lastChangeId = sourceChildObj.property("id");
+        }
+        parsedObj.setProperty("children", childrenObj);
+        parsedObj.setProperty("nextDeltaCursor", QScriptValue(lastChangeId.toInteger() + 1));
+        // Save nextDeltaCursor
+        m_settings.setValue("GCDClient." + uid + ".nextDeltaCursor", parsedObj.property("nextDeltaCursor").toVariant());
+
+//        qDebug() << "GCDClient::deltaReplyFinished parsedObj" << stringifyScriptValue(engine, parsedObj);
+        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), "", parsedObj);
+    } else {
+        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyBody, QScriptValue());
+    }
+
+    // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }

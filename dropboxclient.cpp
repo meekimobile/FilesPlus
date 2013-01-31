@@ -515,6 +515,11 @@ bool DropboxClient::isFileGetResumable(qint64 fileSize)
     return (fileSize >= ChunkSize);
 }
 
+bool DropboxClient::isDeltaSupported()
+{
+    return true;
+}
+
 void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
     qDebug() << "----- DropboxClient::metadata -----";
 
@@ -686,7 +691,7 @@ QString DropboxClient::delta(QString nonce, QString uid, bool synchronous)
 
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
-    sortMap["cursor"] = m_settings.value("DropboxClient." + uid + ".lastDeltaCursor").toString();
+    sortMap["cursor"] = m_settings.value("DropboxClient." + uid + ".nextDeltaCursor").toString();
     QString queryString = createNormalizedQueryString(sortMap);
     qDebug() << "queryString " << queryString;
 
@@ -717,8 +722,9 @@ QString DropboxClient::delta(QString nonce, QString uid, bool synchronous)
     }
 
     // Emit signal.
+    // TODO Construct common response.
     QString replyString = QString::fromUtf8(reply->readAll());
-    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyString);
+    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyString, QScriptValue());
 
     // Scheduled to delete later.
     reply->deleteLater();
@@ -1329,7 +1335,7 @@ void DropboxClient::shareFileReplyFinished(QNetworkReply *reply)
 
 void DropboxClient::deltaReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::deltaReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::deltaReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
@@ -1338,14 +1344,39 @@ void DropboxClient::deltaReplyFinished(QNetworkReply *reply)
 
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
-        QScriptValue sc;
-        sc = engine.evaluate("(" + replyBody + ")");
-        m_settings.setValue("DropboxClient." + uid + ".lastDeltaCursor", sc.property("cursor").toString());
-        bool isReset = sc.property("reset").toBool();
-        bool hasMore = sc.property("has_more").toBool();
-    }
+        QScriptValue sourceObj = engine.evaluate("(" + replyBody + ")");
+        bool reset = sourceObj.property("reset").toBool();
+        bool hasMore = sourceObj.property("has_more").toBool();
 
-    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+        // Get entries count.
+        int entriesCount = sourceObj.property("entries").toVariant().toList().length();
+        qDebug() << "DropboxClient::deltaReplyFinished entriesCount" << entriesCount;
+
+        QScriptValue parsedObj = engine.newObject();
+
+        QScriptValue childrenObj = engine.newArray();
+        for (int i = 0; i < entriesCount; i++) {
+            QScriptValue sourceChildObj = sourceObj.property("entries").property(i);
+            qDebug() << "DropboxClient::deltaReplyFinished parsedChildObj" <<  sourceChildObj.property(0).toString() << sourceChildObj.property(1).toString();
+
+            QScriptValue parsedChildObj = engine.newObject();
+            parsedChildObj.setProperty("isDeleted", sourceChildObj.property(1).isNull());
+            parsedChildObj.setProperty("absolutePath", sourceChildObj.property(0));
+            if (!sourceChildObj.property(1).isNull()) {
+                parsedChildObj.setProperty("property", parseCommonPropertyScriptValue(engine, sourceChildObj.property(1)));
+            }
+            childrenObj.setProperty(i, parsedChildObj);
+        }
+        parsedObj.setProperty("children", childrenObj);
+        parsedObj.setProperty("nextDeltaCursor", sourceObj.property("cursor"));
+        // Save nextDeltaCursor
+        m_settings.setValue("DropboxClient." + uid + ".nextDeltaCursor", parsedObj.property("nextDeltaCursor").toVariant());
+
+//        qDebug() << "DropboxClient::deltaReplyFinished parsedObj" << stringifyScriptValue(engine, parsedObj);
+        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), "", parsedObj);
+    } else {
+        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyBody, QScriptValue());
+    }
 
     // scheduled to delete later.
     reply->deleteLater();
@@ -1397,4 +1428,31 @@ QString DropboxClient::getParentRemotePath(QString remotePath)
     }
 
     return remoteParentPath;
+}
+
+QString DropboxClient::getRemoteName(QString remotePath) {
+    if (remotePath != "") {
+        return remotePath.mid(remotePath.lastIndexOf("/") + 1);
+    } else {
+        return remotePath;
+    }
+}
+
+QScriptValue DropboxClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj)
+{
+    QScriptValue parsedObj = engine.newObject();
+
+    parsedObj.setProperty("name", QScriptValue(getRemoteName(jsonObj.property("path").toString())));
+    parsedObj.setProperty("absolutePath", jsonObj.property("path"));
+    parsedObj.setProperty("parentPath", QScriptValue(getParentRemotePath(jsonObj.property("path").toString())));
+    parsedObj.setProperty("size", jsonObj.property("bytes"));
+    parsedObj.setProperty("isDeleted", jsonObj.property("is_deleted"));
+    parsedObj.setProperty("isDir", jsonObj.property("is_dir"));
+    parsedObj.setProperty("lastModified", jsonObj.property("modified"));
+    parsedObj.setProperty("hash", jsonObj.property("hash").isValid() ? jsonObj.property("hash") : jsonObj.property("rev"));
+    parsedObj.setProperty("source", QScriptValue());
+    parsedObj.setProperty("thumbnail", QScriptValue());
+    parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("path").toString())));
+
+    return parsedObj;
 }
