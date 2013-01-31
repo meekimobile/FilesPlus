@@ -1675,7 +1675,7 @@ PageStackWindow {
                 } else {
                     // Sync starts from itself.
                     if (jsonObj.isDir) { // Sync folder.
-                        console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " sync folder remote path " + jsonObj.absolutePath + " hash " + jsonObj.hash + " local path " + jobJson.local_file_path + " hash " + itemJson.hash);
+                        console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " sync folder remote path " + jsonObj.absolutePath + " hash " + jsonObj.hash + " local path " + jobJson.local_file_path + " hash " + itemJson.hash + " forcePut " + jobJson.force_put + " forceGet " + jobJson.force_get);
 
                         // If there is no local folder, create it and connect.
                         if (!cloudDriveModel.isDir(jobJson.local_file_path)) {
@@ -1690,7 +1690,7 @@ PageStackWindow {
 
                         // Sync based on remote contents.
                         // TODO Should it detect jobJson.force_put or jobJson.force_get?
-                        if (jsonObj.hash != itemJson.hash) { // Sync all json(remote)'s contents.
+                        if (jobJson.force_get || jsonObj.hash != itemJson.hash) { // Sync all json(remote)'s contents.
                             for(var i=0; i<jsonObj.children.length; i++) {
                                 var item = jsonObj.children[i];
                                 var itemLocalPath = cloudDriveModel.getAbsolutePath(jobJson.local_file_path, item.name);
@@ -1701,7 +1701,7 @@ PageStackWindow {
                                 } else {
                                     console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " sync children file remote path " + item.absolutePath + " hash " + item.hash + " local path " + itemLocalPath + " hash " + itemLocalHash);
                                     // TODO Should it just sync a file, then it will be decided operation on its metadata call?
-                                    if (jobJson.forceGet || item.hash > itemLocalHash) {
+                                    if (jobJson.force_get || item.hash > itemLocalHash) {
                                         cloudDriveModel.fileGet(jobJson.type, jobJson.uid, item.absolutePath, item.size, itemLocalPath, -1);
                                     } else if (jobJson.force_put || item.hash < itemLocalHash) {
                                         cloudDriveModel.filePut(jobJson.type, jobJson.uid, itemLocalPath, item.parentPath, item.name, -1);
@@ -1716,9 +1716,9 @@ PageStackWindow {
                         cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jsonObj.hash);
 
                         // Sync based on local contents.
-                        cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jsonObj.parentPath, jobJson.modelIndex);
+                        cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jsonObj.parentPath, jobJson.modelIndex, jobJson.force_put);
                     } else { // Sync file.
-                        console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " sync file remote path " + jsonObj.absolutePath + " hash " + jsonObj.hash + " local path " + jobJson.local_file_path + " hash " + itemJson.hash);
+                        console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " sync file remote path " + jsonObj.absolutePath + " hash " + jsonObj.hash + " local path " + jobJson.local_file_path + " hash " + itemJson.hash + " forcePut " + jobJson.force_put + " forceGet " + jobJson.force_get);
                         // If (rev is newer or there is no local file), get from remote.
                         if (jobJson.force_get || jsonObj.hash > itemJson.hash || !cloudDriveModel.isFile(jobJson.local_file_path)) {
                             // Download found item to localFilePath.

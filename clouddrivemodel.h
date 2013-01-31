@@ -176,7 +176,7 @@ public:
     Q_INVOKABLE void syncItems(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE void syncItem(const QString localFilePath);
     Q_INVOKABLE void syncItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
-    Q_INVOKABLE bool syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, bool forcePut = false, bool forceGet = false);
+    Q_INVOKABLE bool syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, QString newHash = "", bool forcePut = false, bool forceGet = false);
 
     // Migrate DAT to DB.
     Q_INVOKABLE int getCloudDriveItemsCount();

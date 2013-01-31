@@ -1260,7 +1260,7 @@ Page {
                 if (["copy","cut"].indexOf(action) > -1 && clipboard.get(i).type) {
 //                    actualTargetPath = fsModel.getAbsolutePath(targetPath, clipboard.get(i).sourcePathName);
                     console.debug("folderPage fileActionDialog onConfirm Download type " + clipboard.get(i).type + " uid " + clipboard.get(i).uid + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
-                    cloudDriveModel.metadata(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, actualTargetPath, sourcePath, -1);
+                    cloudDriveModel.metadata(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, actualTargetPath, sourcePath, -1, false, true); // Force get.
                 } else if (action == "copy" && !clipboard.get(i).type) {
                     res = res && fsModel.copy(sourcePath, actualTargetPath);
                 } else if (action == "cut" && !clipboard.get(i).type) {
@@ -1499,7 +1499,7 @@ Page {
                 if (remotePath != "") {
                     var targetLocalPath = fsModel.getAbsolutePath(fsModel.getDirPath(localPath), remotePathName);
                     console.debug("cloudDrivePathDialog proceedOperation FileGet targetLocalPath " + targetLocalPath);
-                    cloudDriveModel.metadata(type, uid, targetLocalPath, remotePath, modelIndex);
+                    cloudDriveModel.metadata(type, uid, targetLocalPath, remotePath, modelIndex, false, true); // Force get.
                 } else {
                     console.debug("cloudDrivePathDialog proceedOperation FileGet ignored remotePath " + remotePath + " remotePathName " + remotePathName + " is empty.");
                 }

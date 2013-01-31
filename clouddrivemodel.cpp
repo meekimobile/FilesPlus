@@ -479,7 +479,7 @@ QList<CloudDriveItem> CloudDriveModel::getItemList(QString localPath) {
 bool CloudDriveModel::isConnected(QString localPath)
 {
     if (m_isConnectedCache->contains(localPath)) {
-        qDebug() << "CloudDriveModel::isConnected cached localPath" << localPath << m_isConnectedCache->value(localPath);
+//        qDebug() << "CloudDriveModel::isConnected cached localPath" << localPath << m_isConnectedCache->value(localPath);
         return m_isConnectedCache->value(localPath);
     }
 
@@ -1558,7 +1558,7 @@ void CloudDriveModel::syncItem(CloudDriveModel::ClientTypes type, QString uid, Q
     }
 }
 
-bool CloudDriveModel::syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, bool forcePut, bool forceGet)
+bool CloudDriveModel::syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, QString newHash, bool forcePut, bool forceGet)
 {
     QSqlQuery qry(m_db);
     qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
@@ -1568,9 +1568,9 @@ bool CloudDriveModel::syncItemByRemotePath(CloudDriveModel::ClientTypes type, QS
 
     bool res = false;
     foreach (CloudDriveItem item, getItemListFromPS(qry)) {
-        if (forcePut || forceGet) {
-            qDebug() << "CloudDriveModel::syncItemByRemotePath forcePut" << forcePut << "forceGet" << forceGet << "dirty item" << item;
-            updateItem(type, uid, item.localPath, DirtyHash);
+        if (newHash != "") {
+            qDebug() << "CloudDriveModel::syncItemByRemotePath updating hash" << newHash << "to item" << item;
+            updateItem(type, uid, item.localPath, newHash);
         }
         metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1, forcePut, forceGet);
         res = true;
@@ -2879,7 +2879,7 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
         // If newRemotePath's parent is connected, sync its parent to connected local path.
         if (isRemotePathConnected(getClientType(job.type), job.uid, newRemoteParentPath)) {
             qDebug() << "CloudDriveModel::createFolderReplyFilter newRemotePath" << newRemotePath << "is under connected parent remote path. Sync its parent" << newRemoteParentPath;
-            syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath, false, true);
+            syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath, DirtyHash);
         }
     }
 
@@ -3018,7 +3018,7 @@ void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg
         // If newRemotePath's parent is connected, sync its parent to connected local path.
         if (isRemotePathConnected(getClientType(job.type), job.uid, newRemoteParentPath)) {
             qDebug() << "CloudDriveModel::copyFileReplyFilter newRemotePath" << newRemotePath << "is under connected parent remote path. Sync its parent" << newRemoteParentPath;
-            syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath, false, true);
+            syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath, DirtyHash);
         }
     }
 
