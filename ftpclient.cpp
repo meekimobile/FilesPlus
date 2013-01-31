@@ -419,7 +419,7 @@ QFtpWrapper *FtpClient::connectToHost(QString nonce, QString uid)
         }
     }
     QString password = accessTokenPairMap[uid].secret;
-    qDebug() << "FtpClient::connectToHost" << hostname << port << username << password;
+    qDebug() << "FtpClient::connectToHost" << hostname << port << username;
 
     QFtpWrapper *m_ftp = new QFtpWrapper(nonce, this);
     m_ftp->m_uid = uid;
