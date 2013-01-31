@@ -108,6 +108,7 @@ public:
     Q_INVOKABLE bool isSyncing(QString localPath);
     Q_INVOKABLE bool isSyncing(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE bool isParentConnected(QString localPath);
+    void clearConnectedRemoteDirtyCache(QString localPath);
     Q_INVOKABLE bool isRemoteRoot(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     Q_INVOKABLE bool canSync(QString localPath);
     Q_INVOKABLE QString getFirstJobJson(QString localPath);
