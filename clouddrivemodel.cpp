@@ -1058,8 +1058,9 @@ int CloudDriveModel::removeItemByRemotePath(CloudDriveModel::ClientTypes type, Q
 void CloudDriveModel::updateItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString hash)
 {
     CloudDriveItem item = getItem(localPath, type, uid);
+    m_cloudDriveItems->remove(item.localPath, item); // Remove found item.
     item.hash = hash;
-    m_cloudDriveItems->replace(item.localPath, item);
+    m_cloudDriveItems->insert(item.localPath, item); // Insert updates item.
     int updateCount = updateItemToDB(item);
 
     // Remove cache for furthur refresh.
@@ -1549,7 +1550,7 @@ void CloudDriveModel::syncItem(CloudDriveModel::ClientTypes type, QString uid, Q
     }
 }
 
-bool CloudDriveModel::syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
+bool CloudDriveModel::syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, bool forcePut, bool forceGet)
 {
     QSqlQuery qry(m_db);
     qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
@@ -1559,7 +1560,11 @@ bool CloudDriveModel::syncItemByRemotePath(CloudDriveModel::ClientTypes type, QS
 
     bool res = false;
     foreach (CloudDriveItem item, getItemListFromPS(qry)) {
-        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+        if (forcePut || forceGet) {
+            qDebug() << "CloudDriveModel::syncItemByRemotePath forcePut" << forcePut << "forceGet" << forceGet << "dirty item" << item;
+            updateItem(type, uid, item.localPath, DirtyHash);
+        }
+        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1, forcePut, forceGet);
         res = true;
     }
 
@@ -1780,7 +1785,7 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
     emit proceedNextJobSignal();
 }
 
-void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex)
+void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex, bool forcePut, bool forceGet)
 {
     if (localFilePath == "") {
         qDebug() << "CloudDriveModel::metadata localFilePath" << localFilePath << " is empty, can't sync.";
@@ -1806,6 +1811,8 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
     // Enqueue job.
     CloudDriveJob job(createNonce(), Metadata, type, uid, localFilePath, remoteFilePath, modelIndex);
 //    job.isRunning = true;
+    job.forcePut = forcePut;
+    job.forceGet = forceGet;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -2909,12 +2916,14 @@ void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg
             break;
         case SkyDrive:
             sc = engine.evaluate("(" + msg + ")");
+            isDir = sc.property("type").toString().indexOf(QRegExp("folder|album")) != -1;
             hash = sc.property("updated_time").toString();
             newRemotePath = sc.property("id").toString();
             newRemoteParentPath = sc.property("parent_id").toString();
             break;
         case GoogleDrive:
             sc = engine.evaluate("(" + msg + ")");
+            isDir = sc.property("mimeType").toString().indexOf(QRegExp("application/vnd.google-apps.folder")) != 1;
             hash = sc.property("modifiedDate").toString();
             newRemotePath = sc.property("id").toString();
             if (sc.property("parents").toVariant().toList().length() > 0) {
@@ -2923,6 +2932,7 @@ void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg
             break;
         case Ftp:
             sc = engine.evaluate("(" + msg + ")");
+            isDir = sc.property("isDir").toBool();
             newRemotePath = sc.property("path").toString();
             hash = sc.property("lastModified").toString();
             newRemotePath = sc.property("path").toString();
@@ -2930,28 +2940,22 @@ void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg
             break;
         case WebDAV:
             sc = engine.evaluate("(" + msg + ")");
+            isDir = sc.property("property").property("href").toString().endsWith("/");
             hash = formatJSONDateString(parseReplyDateString(WebDAV, sc.property("property").property("propstat").property("prop").property("getlastmodified").toString()));
             newRemotePath = sc.property("property").property("href").toString();
             newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath);
             break;
         }
 
-        // Sync newRemoteParentPath to get newRemotePath sync'd.
         qDebug() << "CloudDriveModel::copyFileReplyFilter" + getCloudName(job.type) << "hash" << hash << "newRemotePath" << newRemotePath << "newRemoteParentPath" << newRemoteParentPath;
-//        if (isRemoteAbsolutePath(getClientType(job.type))) {
-            if (job.localFilePath != "" && job.newLocalFilePath != "") {
-                // Local path is specified, it's requested from FolderPage.
-                // TODO
-            } else {
-                // Local path isn't specified, it's requested from CloudFolderPage.
-                // If newRemotePath's parent is connected, sync its parent to connected local path.
-                // TODO Not work for GoogleDrive as parent folder's timestamp doesn't change after add new child item.
-                if (isRemotePathConnected(getClientType(job.type), job.uid, newRemoteParentPath)) {
-                    qDebug() << "CloudDriveModel::copyFileReplyFilter newRemotePath" << newRemotePath << "is under connected parent remote path. Sync its parent" << newRemoteParentPath;
-                    syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath);
-                }
-            }
-//        }
+
+        // Sync newRemoteParentPath (with DirtyHash) to get newRemotePath sync'd.
+        // Local path isn't specified, it's requested from CloudFolderPage.
+        // If newRemotePath's parent is connected, sync its parent to connected local path.
+        if (isRemotePathConnected(getClientType(job.type), job.uid, newRemoteParentPath)) {
+            qDebug() << "CloudDriveModel::copyFileReplyFilter newRemotePath" << newRemotePath << "is under connected parent remote path. Sync its parent" << newRemoteParentPath;
+            syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath, false, true);
+        }
     }
 
     // Stop running.

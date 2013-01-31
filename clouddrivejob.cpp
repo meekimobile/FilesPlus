@@ -46,6 +46,7 @@ QString CloudDriveJob::toJsonText()
     jsonText.append(QString("\"bytes\": %1, ").arg(bytes));
     jsonText.append(QString("\"bytes_total\": %1, ").arg(bytesTotal));
     jsonText.append(QString("\"force_put\": %1, ").arg( (forcePut)?"true":"false" ));
+    jsonText.append(QString("\"force_get\": %1, ").arg( (forceGet)?"true":"false" ));
     jsonText.append(QString("\"download_offset\": %1, ").arg(downloadOffset));
     jsonText.append(QString("\"upload_id\": \"%1\", ").arg(uploadId));
     jsonText.append(QString("\"upload_offset\": %1, ").arg(uploadOffset));

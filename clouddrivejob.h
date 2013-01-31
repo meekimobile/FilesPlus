@@ -27,6 +27,7 @@ public:
     qint64 bytesTotal;
 
     bool forcePut;
+    bool forceGet;
 
     qint64 downloadOffset;
 

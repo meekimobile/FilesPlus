@@ -175,7 +175,7 @@ public:
     Q_INVOKABLE void syncItems(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE void syncItem(const QString localFilePath);
     Q_INVOKABLE void syncItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
-    Q_INVOKABLE bool syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
+    Q_INVOKABLE bool syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, bool forcePut = false, bool forceGet = false);
 
     // Migrate DAT to DB.
     Q_INVOKABLE int getCloudDriveItemsCount();
@@ -200,7 +200,7 @@ public:
     Q_INVOKABLE void quota(CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE void fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, QString localFilePath, int modelIndex);
     Q_INVOKABLE void filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, int modelIndex);
-    Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
+    Q_INVOKABLE void metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex, bool forcePut = false, bool forceGet = false);
     Q_INVOKABLE void browse(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
 
     Q_INVOKABLE void syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false);
