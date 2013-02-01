@@ -352,7 +352,7 @@ QString WebDavClient::createResponseJson(QString replyBody)
 QString WebDavClient::prepareRemotePath(QString uid, QString remoteFilePath)
 {
     QString path = remoteFilePath;
-    qDebug() << "WebDavClient::prepareRemotePath path" << path;
+//    qDebug() << "WebDavClient::prepareRemotePath path" << path;
 
     // Remove prefix remote root path.
     if (uid != "") {
@@ -360,16 +360,16 @@ QString WebDavClient::prepareRemotePath(QString uid, QString remoteFilePath)
             QString hostname = getHostname(accessTokenPairMap[uid].email);
             QString remoteRoot = (hostname.indexOf("/") != -1) ? hostname.mid(hostname.indexOf("/")) : "/";
             path = path.replace(QRegExp("^"+remoteRoot), "/");
-            qDebug() << "WebDavClient::prepareRemotePath remoteRoot" << remoteRoot << "removed. path" << path;
+//            qDebug() << "WebDavClient::prepareRemotePath remoteRoot" << remoteRoot << "removed. path" << path;
             // TODO Stores remoteRoot in m_remoteRootHash[uid].
         } else {
             path = path.replace(QRegExp("^"+m_remoteRootHash[uid]), "/");
-            qDebug() << "WebDavClient::prepareRemotePath remoteRoot" << m_remoteRootHash[uid] << "removed. path" << path;
+//            qDebug() << "WebDavClient::prepareRemotePath remoteRoot" << m_remoteRootHash[uid] << "removed. path" << path;
         }
     }
     // Replace double slash.
     path = removeDoubleSlash(path);
-    qDebug() << "WebDavClient::prepareRemotePath double slash removed. path" << path;
+//    qDebug() << "WebDavClient::prepareRemotePath double slash removed. path" << path;
 
     return path;
 }
@@ -467,9 +467,19 @@ void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, 
         Sleeper::msleep(100);
     }
 
-    QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "WebDavClient::moveFile replyBody" << replyBody;
-    emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+    QString result;
+    if (reply->error() == QNetworkReply::NoError) {
+        reply = property(nonce, uid, prepareRemotePath(uid, newRemoteFilePath));
+        if (reply->error() == QNetworkReply::NoError) {
+            result = createPropertyJson(QString::fromUtf8(reply->readAll()));
+        } else {
+            result = createResponseJson(QString::fromUtf8(reply->readAll()));
+        }
+    } else {
+        result = createResponseJson(QString::fromUtf8(reply->readAll()));
+    }
+
+    emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), result);
 
     // Scheduled to delete later.
     reply->deleteLater();
@@ -517,9 +527,19 @@ void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, 
         Sleeper::msleep(100);
     }
 
-    QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "WebDavClient::copyFile replyBody" << replyBody;
-    emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+    QString result;
+    if (reply->error() == QNetworkReply::NoError) {
+        reply = property(nonce, uid, prepareRemotePath(uid, newRemoteFilePath));
+        if (reply->error() == QNetworkReply::NoError) {
+            result = createPropertyJson(QString::fromUtf8(reply->readAll()));
+        } else {
+            result = createResponseJson(QString::fromUtf8(reply->readAll()));
+        }
+    } else {
+        result = createResponseJson(QString::fromUtf8(reply->readAll()));
+    }
+
+    emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), result);
 
     // Scheduled to delete later.
     reply->deleteLater();
