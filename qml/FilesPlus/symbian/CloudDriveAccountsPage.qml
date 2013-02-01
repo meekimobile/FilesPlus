@@ -187,7 +187,7 @@ Page {
                     Row {
                         width: parent.width
                         Label {
-                            text: qsTr("Name")
+                            text: appInfo.emptyStr+qsTr("Name")
                             width: addAccountDialog.labelWidth
                             color: "white"
                             anchors.verticalCenter: parent.verticalCenter
@@ -195,7 +195,8 @@ Page {
                         TextField {
                             id: connectionName
                             width: parent.width - addAccountDialog.labelWidth
-                            placeholderText: "Input connection name"
+                            placeholderText: appInfo.emptyStr+qsTr("Input connection name")
+                            readOnly: false
                             validator: RegExpValidator {
                                 regExp: /[\w.-]+/
                             }
@@ -204,7 +205,7 @@ Page {
                     Row {
                         width: parent.width
                         Label {
-                            text: qsTr("Host[:port]")
+                            text: appInfo.emptyStr+qsTr("Host[:port]")
                             width: addAccountDialog.labelWidth
                             color: "white"
                             anchors.verticalCenter: parent.verticalCenter
@@ -212,7 +213,8 @@ Page {
                         TextField {
                             id: hostname
                             width: parent.width - addAccountDialog.labelWidth
-                            placeholderText: "Input hostname"
+                            placeholderText: appInfo.emptyStr+qsTr("Input hostname")
+                            readOnly: false
                             validator: RegExpValidator {
                                 regExp: /[\w.-:~]+/
                             }
@@ -222,7 +224,7 @@ Page {
                         width: parent.width
                         visible: basicAuthButton.checked
                         Label {
-                            text: qsTr("Username")
+                            text: appInfo.emptyStr+qsTr("Username")
                             width: addAccountDialog.labelWidth
                             color: "white"
                             anchors.verticalCenter: parent.verticalCenter
@@ -230,7 +232,8 @@ Page {
                         TextField {
                             id: username
                             width: parent.width - addAccountDialog.labelWidth
-                            placeholderText: "Input username"
+                            placeholderText: appInfo.emptyStr+qsTr("Input username")
+                            readOnly: false
                             validator: RegExpValidator {
                                 regExp: /[\w.@]+/
                             }
@@ -240,7 +243,7 @@ Page {
                         width: parent.width
                         visible: basicAuthButton.checked
                         Label {
-                            text: qsTr("Password")
+                            text: appInfo.emptyStr+qsTr("Password")
                             width: addAccountDialog.labelWidth
                             color: "white"
                             anchors.verticalCenter: parent.verticalCenter
@@ -248,7 +251,8 @@ Page {
                         TextField {
                             id: password
                             width: parent.width - addAccountDialog.labelWidth
-                            placeholderText: "Input password"
+                            placeholderText: appInfo.emptyStr+qsTr("Input password")
+                            readOnly: false
                             echoMode: TextInput.Password
                         }
                     }
@@ -256,7 +260,7 @@ Page {
                         width: parent.width
                         visible: tokenAuthButton.checked
                         Label {
-                            text: qsTr("Token")
+                            text: appInfo.emptyStr+qsTr("Token")
                             width: addAccountDialog.labelWidth
                             color: "white"
                             anchors.verticalCenter: parent.verticalCenter
@@ -264,14 +268,15 @@ Page {
                         TextField {
                             id: tokenInput
                             width: parent.width - addAccountDialog.labelWidth
-                            placeholderText: "Input token"
+                            placeholderText: appInfo.emptyStr+qsTr("Input token")
+                            readOnly: false
                         }
                     }
                     Row {
                         width: parent.width
                         visible: tokenAuthButton.checked
                         Label {
-                            text: qsTr("OAuth host")
+                            text: appInfo.emptyStr+qsTr("OAuth host")
                             width: addAccountDialog.labelWidth
                             color: "white"
                             anchors.verticalCenter: parent.verticalCenter
@@ -279,7 +284,8 @@ Page {
                         TextField {
                             id: authHostname
                             width: parent.width - addAccountDialog.labelWidth
-                            placeholderText: "Input auth. hostname"
+                            placeholderText: appInfo.emptyStr+qsTr("Input auth. hostname")
+                            readOnly: false
                         }
                     }
                     Row {
@@ -403,6 +409,24 @@ Page {
         }
     }
 
+    CloudDriveSchedulerDialog {
+        id: deltaSchedulerDialog
+        titleText: appInfo.emptyStr+cloudDriveModel.getCloudName(selectedCloudType)+" "+qsTr("delta schedule")
+        caller: "cloudDriveAccountsPage"
+
+        function show(cloudDriveType, uid) {
+            deltaSchedulerDialog.selectedCloudType = cloudDriveType;
+            deltaSchedulerDialog.selectedUid = uid;
+            deltaSchedulerDialog.localPathCronExp = cloudDriveModel.getDeltaCronExp(cloudDriveType, uid);
+            deltaSchedulerDialog.open();
+        }
+
+        onSelectedCronExp: {
+            console.debug("cloudDriveAccountsPage deltaSchedulerDialog onSelectedCronExp " + cronExp);
+            cloudDriveModel.setDeltaCronExp(selectedCloudType, selectedUid, cronExp);
+        }
+    }
+
     ListView {
         id: accountListView
         width: parent.width
@@ -459,9 +483,9 @@ Page {
                         }
                         Text {
                             id: quotaText
-                            text: Utility.formatFileSize(availableSpace, 1) + " / " + Utility.formatFileSize(totalSpace, 1)
+                            text: appInfo.emptyStr+(totalSpace <= 0 ? qsTr("Not available") : (Utility.formatFileSize(availableSpace, 1) + " / " + Utility.formatFileSize(totalSpace, 1)))
                             width: 120
-                            visible: (totalSpace > 0)
+                            visible: (totalSpace >= 0)
                             horizontalAlignment: Text.AlignRight
                             verticalAlignment: Text.AlignVCenter
                             font.pointSize: 6
@@ -472,7 +496,7 @@ Page {
                             width: 24
                             height: 24
                             source: (!inverted ? "refresh.svg" : "refresh_inverted.svg")
-                            visible: (totalSpace <= 0)
+                            visible: (totalSpace < 0)
                         }
                     }
                 }
@@ -484,11 +508,13 @@ Page {
             }
 
             onClicked: {
-                if (cloudDriveType == CloudDriveModel.WebDAV || cloudDriveType == CloudDriveModel.Ftp) {
+                if (cloudDriveModel.isConfigurable(cloudDriveType)) {
                     var atPos = email.lastIndexOf("@");
                     var host = email.substring(atPos+1);
                     var user = email.substring(0, atPos);
                     addAccountDialog.show(cloudDriveType, uid, host, user, secret, token);
+                } else if (cloudDriveModel.isDeltaSupported(cloudDriveType)) {
+                    deltaSchedulerDialog.show(cloudDriveType, uid);
                 }
             }
         }

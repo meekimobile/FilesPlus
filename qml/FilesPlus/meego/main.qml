@@ -1126,7 +1126,7 @@ PageStackWindow {
                     var modelItem = {
                         logicalDrive: json.email,
                         availableSpace: 0,
-                        totalSpace: 0,
+                        totalSpace: -1,
                         driveType: 7, // Cloud Drive in driveGrid.
                         name: "",
                         cloudDriveType: cloudType,

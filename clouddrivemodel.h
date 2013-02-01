@@ -171,8 +171,15 @@ public:
     // Scheduler.
     Q_INVOKABLE int updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp);
     Q_INVOKABLE QString getItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
-    Q_INVOKABLE void loadScheduledItems(QString cronValue);
-    Q_INVOKABLE void syncScheduledItems();
+    void loadScheduledItems(QString cronValue);
+    void syncScheduledItems();
+
+    // Delta.
+    Q_INVOKABLE bool isDeltaSupported(CloudDriveModel::ClientTypes type);
+    bool isDeltaEnabled(CloudDriveModel::ClientTypes type, QString uid);
+    void scheduleDeltaJobs(QString cronValue);
+    Q_INVOKABLE void setDeltaCronExp(CloudDriveModel::ClientTypes type, QString uid, QString cronExp);
+    Q_INVOKABLE QString getDeltaCronExp(CloudDriveModel::ClientTypes type, QString uid);
 
     // Sync items.
     Q_INVOKABLE void syncItems();
@@ -235,7 +242,6 @@ public:
     Q_INVOKABLE void disconnect(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
 
     Q_INVOKABLE QString thumbnail(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString format, QString size);
-    void scheduleDeltaJobs(QString cronValue);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void initializeDBStarted(QString nonce);

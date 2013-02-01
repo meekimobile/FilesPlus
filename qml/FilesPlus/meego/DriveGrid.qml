@@ -127,7 +127,7 @@ Rectangle {
                         }
 
                         Rectangle {
-                            width: (model.totalSpace - model.availableSpace) / model.totalSpace * parent.width
+                            width: (model.totalSpace < 0) ? 0 : ((model.totalSpace - model.availableSpace) / model.totalSpace * parent.width)
                             height: parent.height
                             gradient: Gradient {
                                 GradientStop {

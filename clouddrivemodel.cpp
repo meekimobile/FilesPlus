@@ -1259,6 +1259,16 @@ void CloudDriveModel::syncScheduledItems()
     }
 }
 
+bool CloudDriveModel::isDeltaSupported(CloudDriveModel::ClientTypes type)
+{
+    return getCloudClient(type)->isDeltaSupported();
+}
+
+bool CloudDriveModel::isDeltaEnabled(CloudDriveModel::ClientTypes type, QString uid)
+{
+    return getCloudClient(type)->isDeltaEnabled(uid);
+}
+
 void CloudDriveModel::scheduleDeltaJobs(QString cronValue)
 {
     QScriptEngine engine;
@@ -1267,13 +1277,25 @@ void CloudDriveModel::scheduleDeltaJobs(QString cronValue)
         QScriptValue sc = engine.evaluate("(" + uidJson + ")");
         QString typeText = sc.property("type").toString();
         QString uid = sc.property("uid").toString();
-        if (getCloudClient(getClientType(typeText))->isDeltaSupported() && getCloudClient(getClientType(typeText))->isDeltaEnabled(uid)) {
-            QString deltaCronExp = m_settings.value(QString("%1.%2.deltaCronExp").arg(getCloudClient(getClientType(typeText))->objectName()).arg(uid), QVariant("* * * * *")).toString();
+        if (isDeltaSupported(getClientType(typeText)) && isDeltaEnabled(getClientType(typeText), uid)) {
+            QString deltaCronExp = getDeltaCronExp(getClientType(typeText), uid);
             if (matchCronExp(deltaCronExp, cronValue)) {
                 delta(getClientType(typeText), uid);
             }
         }
     }
+}
+
+void CloudDriveModel::setDeltaCronExp(CloudDriveModel::ClientTypes type, QString uid, QString cronExp)
+{
+    QString clientObjectName = getCloudClient(type)->objectName();
+    m_settings.setValue(QString("%1.%2.deltaCronExp").arg(clientObjectName).arg(uid), QVariant(cronExp));
+    m_settings.setValue(QString("%1.%2.delta.enabled").arg(clientObjectName).arg(uid), QVariant(cronExp != ""));
+}
+
+QString CloudDriveModel::getDeltaCronExp(CloudDriveModel::ClientTypes type, QString uid)
+{
+    return m_settings.value(QString("%1.%2.deltaCronExp").arg(getCloudClient(type)->objectName()).arg(uid), QVariant("")).toString();
 }
 
 bool CloudDriveModel::matchCronExp(QString cronExp, QString cronValue)
