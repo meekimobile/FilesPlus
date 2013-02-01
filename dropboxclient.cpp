@@ -231,7 +231,7 @@ void DropboxClient::requestToken(QString nonce)
     QNetworkReply *reply = manager->post(req, postData);
 }
 
-void DropboxClient::authorize(QString nonce)
+void DropboxClient::authorize(QString nonce, QString hostname)
 {
     qDebug() << "----- DropboxClient::authorize -----";
 
@@ -243,7 +243,7 @@ void DropboxClient::authorize(QString nonce)
 //    queryString.append("&locale=en");
 
     // Send signal to redirect to URL.
-    emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, this->metaObject()->className());
+    emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, objectName());
 }
 
 void DropboxClient::accessToken(QString nonce, QString pin)

@@ -52,7 +52,7 @@ public:
     bool isDeltaEnabled(QString uid);
 
     void requestToken(QString nonce);
-    void authorize(QString nonce);
+    void authorize(QString nonce, QString hostname);
     void accessToken(QString nonce, QString pin = "");
     void accountInfo(QString nonce, QString uid);
     void quota(QString nonce, QString uid);

@@ -19,6 +19,7 @@ public:
     void saveConnection(QString id, QString hostname, QString username, QString password, QString token);
 
     bool isRemoteAbsolutePath();
+    bool isConfigurable();
 
     void quota(QString nonce, QString uid);
     QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = true);

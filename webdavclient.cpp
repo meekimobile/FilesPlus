@@ -53,7 +53,7 @@ void WebDavClient::authorize(QString nonce, QString hostname)
     qDebug() << "WebDavClient::authorize url" << url;
 
     // Send signal to redirect to URL.
-    emit authorizeRedirectSignal(nonce, url, this->metaObject()->className());
+    emit authorizeRedirectSignal(nonce, url, objectName());
 }
 
 void WebDavClient::accessToken(QString nonce, QString pin)
@@ -1009,6 +1009,11 @@ QString WebDavClient::getRemoteRoot(QString uid)
 }
 
 bool WebDavClient::isRemoteAbsolutePath()
+{
+    return true;
+}
+
+bool WebDavClient::isConfigurable()
 {
     return true;
 }

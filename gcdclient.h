@@ -42,7 +42,7 @@ public:
     explicit GCDClient(QObject *parent = 0);
     ~GCDClient();
 
-    void authorize(QString nonce);
+    void authorize(QString nonce, QString hostname);
     void accessToken(QString nonce, QString pin);
     void refreshToken(QString nonce, QString uid);
     void accountInfo(QString nonce, QString uid);

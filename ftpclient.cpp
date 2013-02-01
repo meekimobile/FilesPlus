@@ -28,7 +28,7 @@ FtpClient::~FtpClient()
 void FtpClient::quota(QString nonce, QString uid)
 {
     // Signal with empty message to get default quota value.
-    emit quotaReplySignal(nonce, 0, "", "{ }", 0, 0, -1);
+    emit quotaReplySignal(nonce, 0, "", "{ }", 0, 0, 0);
 }
 
 QString FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous)
@@ -537,6 +537,11 @@ void FtpClient::saveConnection(QString id, QString hostname, QString username, Q
 }
 
 bool FtpClient::isRemoteAbsolutePath()
+{
+    return true;
+}
+
+bool FtpClient::isConfigurable()
 {
     return true;
 }

@@ -41,11 +41,12 @@ public:
 
     QString getRemoteRoot(QString uid);
     bool isRemoteAbsolutePath();
+    bool isConfigurable();
     bool isFileGetResumable(qint64 fileSize);
 
     QDateTime parseReplyDateString(QString dateString);
 
-    void authorize(QString nonce, QString hostname = "");
+    void authorize(QString nonce, QString hostname);
     void accessToken(QString nonce, QString pin = "");
     void accountInfo(QString nonce, QString uid); // TODO Still not work.
     void quota(QString nonce, QString uid);

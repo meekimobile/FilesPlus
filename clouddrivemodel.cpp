@@ -256,6 +256,7 @@ void CloudDriveModel::connectCloudClientsSignal(CloudDriveClient *client)
 {
     connect(client, SIGNAL(uploadProgress(QString,qint64,qint64)), SLOT(uploadProgressFilter(QString,qint64,qint64)) );
     connect(client, SIGNAL(downloadProgress(QString,qint64,qint64)), SLOT(downloadProgressFilter(QString,qint64,qint64)) );
+    connect(client, SIGNAL(requestTokenReplySignal(QString,int,QString,QString)), SLOT(requestTokenReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(authorizeRedirectSignal(QString,QString,QString)), SLOT(authorizeRedirectFilter(QString,QString,QString)) );
     connect(client, SIGNAL(accessTokenReplySignal(QString,int,QString,QString)), SLOT(accessTokenReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(accountInfoReplySignal(QString,int,QString,QString)), SLOT(accountInfoReplyFilter(QString,int,QString,QString)) );
@@ -854,6 +855,11 @@ bool CloudDriveModel::isRemoteAbsolutePath(CloudDriveModel::ClientTypes type)
 bool CloudDriveModel::isRemotePathCaseInsensitive(CloudDriveModel::ClientTypes type)
 {
     return getCloudClient(type)->isRemotePathCaseInsensitive();
+}
+
+bool CloudDriveModel::isConfigurable(CloudDriveModel::ClientTypes type)
+{
+    return getCloudClient(type)->isConfigurable();
 }
 
 void CloudDriveModel::initScheduler()
@@ -3969,7 +3975,7 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         cloudClient->requestToken(job.jobId);
         break;
     case Authorize:
-        cloudClient->authorize(job.jobId);
+        cloudClient->authorize(job.jobId, "");
         break;
     case AccessToken:
         cloudClient->accessToken(job.jobId, accessTokenPin);

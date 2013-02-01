@@ -223,7 +223,7 @@ QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     return parsedObj;
 }
 
-void GCDClient::authorize(QString nonce)
+void GCDClient::authorize(QString nonce, QString hostname)
 {
     qDebug() << "----- GCDClient::authorize -----";
 
@@ -238,7 +238,7 @@ void GCDClient::authorize(QString nonce)
     qDebug() << "queryString " << queryString;
 
     // Send signal to redirect to URL.
-    emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, "GCDClient");
+    emit authorizeRedirectSignal(nonce, authorizeURI + "?" + queryString, objectName());
 }
 
 void GCDClient::accessToken(QString nonce, QString pin)

@@ -95,6 +95,11 @@ bool CloudDriveClient::isDeltaEnabled(QString uid)
     return false;
 }
 
+bool CloudDriveClient::isConfigurable()
+{
+    return false;
+}
+
 void CloudDriveClient::loadAccessPairMap() {
     qDebug() << QTime::currentTime() << objectName() << "::loadAccessPairMap";
 
@@ -231,6 +236,7 @@ void CloudDriveClient::requestToken(QString nonce)
 
 void CloudDriveClient::authorize(QString nonce, QString hostname)
 {
+    emit authorizeRedirectSignal(nonce, hostname, "");
 }
 
 void CloudDriveClient::accessToken(QString nonce, QString pin)

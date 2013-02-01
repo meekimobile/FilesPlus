@@ -71,7 +71,7 @@ QString SkyDriveClient::encodeURI(const QString uri) {
     return QUrl::toPercentEncoding(uri, ":/");
 }
 
-void SkyDriveClient::authorize(QString nonce)
+void SkyDriveClient::authorize(QString nonce, QString hostname)
 {
     qDebug() << "----- SkyDriveClient::authorize -----";
 

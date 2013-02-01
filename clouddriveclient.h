@@ -29,12 +29,13 @@ public:
     virtual bool isFileGetResumable(qint64 fileSize);
     virtual bool isDeltaSupported();
     virtual bool isDeltaEnabled(QString uid);
+    virtual bool isConfigurable();
 
     virtual bool testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname);
     virtual void saveConnection(QString id, QString hostname, QString username, QString password, QString token);
 
     virtual void requestToken(QString nonce);
-    virtual void authorize(QString nonce, QString hostname = "");
+    virtual void authorize(QString nonce, QString hostname);
     virtual void accessToken(QString nonce, QString pin);
     virtual void refreshToken(QString nonce, QString uid);
     virtual void accountInfo(QString nonce, QString uid);
