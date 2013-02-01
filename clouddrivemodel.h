@@ -339,8 +339,8 @@ private:
     QList<CloudDriveItem> selectItemsByTypeAndUidFromDB(CloudDriveModel::ClientTypes type, QString uid);
     QList<CloudDriveItem> selectChildrenByPrimaryKeyFromDB(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     QList<CloudDriveItem> selectItemsByTypeAndUidAndRemotePathFromDB(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
-    int insertItemToDB(const CloudDriveItem item);
-    int updateItemToDB(const CloudDriveItem item);
+    int insertItemToDB(const CloudDriveItem item, bool suppressMessages = false);
+    int updateItemToDB(const CloudDriveItem item, bool suppressMessages = false);
     int updateItemHashByLocalPathToDB(const QString localPath, const QString hash);
     int deleteItemToDB(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     int countItemDB();

@@ -390,10 +390,10 @@ QList<CloudDriveItem> CloudDriveModel::findItemWithChildren(CloudDriveModel::Cli
     // Find from DAT.
     bool isFound = false;
     foreach (CloudDriveItem item, m_cloudDriveItems->values()) {
-        qDebug() << "CloudDriveModel::findItemWithChildren" << item.localPath << item.type << item.uid;
+//        qDebug() << "CloudDriveModel::findItemWithChildren" << item.localPath << item.type << item.uid;
         if (item.type == type && item.uid == uid) {
             if (item.localPath == localPath || item.localPath.startsWith(localPath + "/")) {
-    //            qDebug() << "CloudDriveModel::findItemWithChildren add" << item;
+                qDebug() << "CloudDriveModel::findItemWithChildren add" << item;
                 list.append(item);
                 isFound = true;
             } else if (isFound) {
@@ -403,7 +403,7 @@ QList<CloudDriveItem> CloudDriveModel::findItemWithChildren(CloudDriveModel::Cli
         }
 
         // TODO (Realtime Migration) Insert to DB.
-        if (insertItemToDB(item) > 0) {
+        if (insertItemToDB(item, true) > 0) {
             m_cloudDriveItems->remove(item.localPath, item);
             qDebug() << "CloudDriveModel::findItemWithChildren migrate" << item << "m_cloudDriveItems count" << m_cloudDriveItems->count();
         }
@@ -2913,6 +2913,8 @@ void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg
     QScriptValue sc;
     QString hash;
     QString newRemotePath;
+    QString newRemoteParentPath;
+    QString oldRemoteParentPath;
     bool isDir;
 
     if (err == 0) {
@@ -2920,19 +2922,24 @@ void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg
         case Dropbox:
             sc = engine.evaluate("(" + msg + ")");
             isDir = sc.property("is_dir").toBool();
-            newRemotePath = sc.property("path").toString();
             hash = (isDir) ? sc.property("hash").toString() : sc.property("rev").toString();
+            newRemotePath = sc.property("path").toString();
+            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath);
+            oldRemoteParentPath = getParentRemotePath(getClientType(job.type), job.remoteFilePath);
             break;
         case Ftp:
             sc = engine.evaluate("(" + msg + ")");
-            newRemotePath = sc.property("path").toString();
             hash = sc.property("lastModified").toString();
+            newRemotePath = sc.property("path").toString();
+            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath);
+            oldRemoteParentPath = getParentRemotePath(getClientType(job.type), job.remoteFilePath);
             break;
         case WebDAV:
             sc = engine.evaluate("(" + msg + ")");
-            newRemotePath = sc.property("property").property("href").toString();
             hash = formatJSONDateString(parseReplyDateString(WebDAV, sc.property("property").property("propstat").property("prop").property("getlastmodified").toString()));
-            qDebug() << "CloudDriveModel::moveFileReplyFilter WebDAV hash" << hash;
+            newRemotePath = sc.property("property").property("href").toString();
+            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath) + "/"; // WebDAV path always end with /
+            oldRemoteParentPath = getParentRemotePath(getClientType(job.type), job.remoteFilePath);
             break;
         }
 
@@ -2951,11 +2958,22 @@ void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg
                 // Local path isn't specified, it's requested from CloudFolderPage.
                 // Update new remote path for all connected local path.
                 foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, job.remoteFilePath)) {
-                    qDebug() << "CloudDriveModel::moveFileReplyFilter item" << item.localPath << "remotePath" << item.remotePath << "newRemotePath" << newRemotePath;
+                    qDebug() << "CloudDriveModel::moveFileReplyFilter updateItemWithChildren item" << item.localPath << "remotePath" << item.remotePath << "newRemotePath" << newRemotePath << "new hash" << hash;
                     updateItemWithChildren(getClientType(job.type), job.uid,
                                            item.localPath, item.remotePath,
                                            item.localPath, newRemotePath,
                                            hash);
+                }
+
+                // Sync both oldRemoteParentPath and newRemoteParentPath (with DirtyHash).
+                // If newRemotePath's parent is connected, sync its parent to connected local path.
+                if (isRemotePathConnected(getClientType(job.type), job.uid, newRemoteParentPath)) {
+                    qDebug() << "CloudDriveModel::moveFileReplyFilter newRemotePath" << newRemotePath << "is under connected parent remote path. Sync its parent" << newRemoteParentPath;
+                    syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath, DirtyHash);
+                }
+                if (oldRemoteParentPath != newRemoteParentPath && isRemotePathConnected(getClientType(job.type), job.uid, oldRemoteParentPath)) {
+                    qDebug() << "CloudDriveModel::moveFileReplyFilter remoteFilePath" << job.remoteFilePath << "is under connected parent remote path. Sync its parent" << oldRemoteParentPath;
+                    syncItemByRemotePath(getClientType(job.type), job.uid, oldRemoteParentPath, DirtyHash);
                 }
             }
         }
@@ -3621,7 +3639,7 @@ QList<CloudDriveItem> CloudDriveModel::selectItemsByTypeAndUidAndRemotePathFromD
     return getItemListFromPS(qry);
 }
 
-int CloudDriveModel::insertItemToDB(const CloudDriveItem item)
+int CloudDriveModel::insertItemToDB(const CloudDriveItem item, bool suppressMessages)
 {
     bool res;
 
@@ -3633,19 +3651,23 @@ int CloudDriveModel::insertItemToDB(const CloudDriveItem item)
     m_insertPS.bindValue(":last_modified", item.lastModified);
     res = m_insertPS.exec();
     if (res) {
-        qDebug() << "CloudDriveModel::insertItemToDB insert done" << item << "res" << res << "numRowsAffected" << m_insertPS.numRowsAffected();
+        if (!suppressMessages) {
+            qDebug() << "CloudDriveModel::insertItemToDB insert done" << item << "res" << res << "numRowsAffected" << m_insertPS.numRowsAffected();
+        }
         m_db.commit();
 
         // Insert item to itemCache.
         m_itemCache->insert(getItemCacheKey(item.type, item.uid, item.localPath), item);
     } else {
-        qDebug() << "CloudDriveModel::insertItemToDB insert failed" << item << "res" << res << m_insertPS.lastError();
+        if (!suppressMessages) {
+            qDebug() << "CloudDriveModel::insertItemToDB insert failed" << item << "res" << res << m_insertPS.lastError();
+        }
     }
 
     return m_insertPS.numRowsAffected();
 }
 
-int CloudDriveModel::updateItemToDB(const CloudDriveItem item)
+int CloudDriveModel::updateItemToDB(const CloudDriveItem item, bool suppressMessages)
 {
     bool res;
 
@@ -3657,13 +3679,17 @@ int CloudDriveModel::updateItemToDB(const CloudDriveItem item)
     m_updatePS.bindValue(":last_modified", item.lastModified);
     res = m_updatePS.exec();
     if (res) {
-        qDebug() << "CloudDriveModel::updateItemToDB update done" << item << "res" << res << "numRowsAffected" << m_updatePS.numRowsAffected();
+        if (!suppressMessages) {
+            qDebug() << "CloudDriveModel::updateItemToDB update done" << item << "res" << res << "numRowsAffected" << m_updatePS.numRowsAffected();
+        }
         m_db.commit();
 
         // Insert item to itemCache.
         m_itemCache->insert(getItemCacheKey(item.type, item.uid, item.localPath), item);
     } else {
-        qDebug() << "CloudDriveModel::updateItemToDB update failed" << item << "res" << res << m_updatePS.lastError();
+        if (!suppressMessages) {
+            qDebug() << "CloudDriveModel::updateItemToDB update failed" << item << "res" << res << m_updatePS.lastError();
+        }
     }
 
     return m_updatePS.numRowsAffected();
