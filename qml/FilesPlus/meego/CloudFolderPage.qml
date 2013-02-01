@@ -171,7 +171,7 @@ Page {
 
         if (jobJson.type == selectedCloudType && jobJson.uid == selectedUid) {
             var i = cloudFolderModel.findIndexByRemotePath(jobJson.remote_file_path);
-            console.debug("cloudFolderPage updateItemSlot caller " + caller + " jobJson " + JSON.stringify(jobJson) + " model index " + i);
+//            console.debug("cloudFolderPage updateItemSlot caller " + caller + " jobJson " + JSON.stringify(jobJson) + " model index " + i);
             if (i >= 0) {
                 cloudFolderModel.set(i, { isRunning: jobJson.is_running, isConnected: cloudDriveModel.isRemotePathConnected(jobJson.type, jobJson.uid, jobJson.remote_file_path) });
             }
