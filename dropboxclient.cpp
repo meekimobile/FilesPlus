@@ -684,20 +684,20 @@ void DropboxClient::shareFile(QString nonce, QString uid, QString remoteFilePath
 
 QString DropboxClient::delta(QString nonce, QString uid, bool synchronous)
 {
-    qDebug() << "----- DropboxClient::delta -----" << uid << synchronous;
+    qDebug() << "----- DropboxClient::delta -----" << nonce << uid << synchronous;
 
     QString uri = deltaURI;
-    qDebug() << "DropboxClient::delta uri " << uri;
+    qDebug() << "DropboxClient::delta uri" << uri;
 
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
     sortMap["cursor"] = m_settings.value("DropboxClient." + uid + ".nextDeltaCursor").toString();
     QString queryString = createNormalizedQueryString(sortMap);
-    qDebug() << "queryString " << queryString;
+    qDebug() << "DropboxClient::delta queryString" << queryString;
 
     QByteArray postData;
     postData.append(queryString);
-    qDebug() << "postData" << postData;
+    qDebug() << "DropboxClient::delta postData" << postData;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
