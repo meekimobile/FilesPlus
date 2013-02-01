@@ -386,7 +386,7 @@ void GCPClient::accountInfo()
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
 }
 
-void GCPClient::search(QString q)
+QNetworkReply * GCPClient::search(QString q)
 {
     // Check if token is changed, then reload.
     if (isParamMapChanged()) loadParamMap();
@@ -414,9 +414,11 @@ void GCPClient::search(QString q)
     QNetworkReply *reply = manager->get(req);
     connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
+
+    return reply;
 }
 
-void GCPClient::submit(QString printerId, QString title, QString capabilities, QString contentPath, QString contentType, QString tag)
+QNetworkReply * GCPClient::submit(QString printerId, QString title, QString capabilities, QString contentPath, QString contentType, QString tag)
 {
     // Check if token is changed, then reload.
     if (isParamMapChanged()) loadParamMap();
@@ -460,20 +462,24 @@ void GCPClient::submit(QString printerId, QString title, QString capabilities, Q
     QNetworkReply *reply = manager->post(req, postData);
     connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SIGNAL(uploadProgress(qint64,qint64)));
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SIGNAL(downloadProgress(qint64,qint64)));
+
+    return reply;
 }
 
-void GCPClient::submit(QString printerId, QString contentPath, QString capabilities)
+QNetworkReply * GCPClient::submit(QString printerId, QString contentPath, QString capabilities)
 {
     QFile file(contentPath);
     QFileInfo fileInfo(file);
     if (file.open(QIODevice::ReadOnly)) {
         QString contentType = getContentType(fileInfo.fileName());
         if (contentType != "") {
-            submit(printerId, fileInfo.fileName(), capabilities, contentPath, contentType, "");
+            return submit(printerId, fileInfo.fileName(), capabilities, contentPath, contentType, "");
         } else {
             qDebug() << "GCPClient::submit file type is not supported. (" << contentPath << ")";
         }
     }
+
+    return 0;
 }
 
 void GCPClient::jobs(QString printerId)
