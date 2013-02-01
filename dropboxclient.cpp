@@ -520,6 +520,11 @@ bool DropboxClient::isDeltaSupported()
     return true;
 }
 
+bool DropboxClient::isDeltaEnabled(QString uid)
+{
+    return m_settings.value(QString("%1.%2.delta.enabled").arg(objectName()).arg(uid), QVariant(false)).toBool();
+}
+
 void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
     qDebug() << "----- DropboxClient::metadata -----";
 
@@ -691,7 +696,7 @@ QString DropboxClient::delta(QString nonce, QString uid, bool synchronous)
 
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
-    sortMap["cursor"] = m_settings.value("DropboxClient." + uid + ".nextDeltaCursor").toString();
+    sortMap["cursor"] = m_settings.value(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid)).toString();
     QString queryString = createNormalizedQueryString(sortMap);
     qDebug() << "DropboxClient::delta queryString" << queryString;
 
@@ -1345,17 +1350,23 @@ void DropboxClient::deltaReplyFinished(QNetworkReply *reply)
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
         QScriptValue sourceObj = engine.evaluate("(" + replyBody + ")");
-        bool reset = sourceObj.property("reset").toBool();
-        bool hasMore = sourceObj.property("has_more").toBool();
+
+        // Check reset state.
+        bool syncOnReset = m_settings.value(QString("%1.%2.syncOnReset").arg(objectName()).arg(uid), QVariant(false)).toBool();
+        bool isReset = sourceObj.property("reset").toBool() || m_settings.value(QString("%1.%2.reset").arg(objectName()).arg(uid), QVariant(false)).toBool();
+        if (isReset) {
+            qDebug() << "DropboxClient::deltaReplyFinished isReset" << isReset << "set to update state only.";
+            m_settings.setValue(QString("%1.%2.reset").arg(objectName()).arg(uid), QVariant(true));
+        }
 
         // Get entries count.
         int entriesCount = sourceObj.property("entries").toVariant().toList().length();
         qDebug() << "DropboxClient::deltaReplyFinished entriesCount" << entriesCount;
 
+        // Process sourceObj.
         QScriptValue parsedObj = engine.newObject();
-
         QScriptValue childrenObj = engine.newArray();
-        for (int i = 0; i < entriesCount; i++) {
+        for (int i = 0; (!isReset || syncOnReset) && i < entriesCount; i++) {
             QScriptValue sourceChildObj = sourceObj.property("entries").property(i);
             qDebug() << "DropboxClient::deltaReplyFinished parsedChildObj" <<  sourceChildObj.property(0).toString() << sourceChildObj.property(1).toString();
 
@@ -1363,14 +1374,29 @@ void DropboxClient::deltaReplyFinished(QNetworkReply *reply)
             parsedChildObj.setProperty("isDeleted", sourceChildObj.property(1).isNull());
             parsedChildObj.setProperty("absolutePath", sourceChildObj.property(0));
             if (!sourceChildObj.property(1).isNull()) {
+                qDebug() << "DropboxClient::deltaReplyFinished sourceChildObj isNull" << sourceChildObj.property(1).isNull() << "update state only.";
                 parsedChildObj.setProperty("property", parseCommonPropertyScriptValue(engine, sourceChildObj.property(1)));
             }
             childrenObj.setProperty(i, parsedChildObj);
         }
         parsedObj.setProperty("children", childrenObj);
         parsedObj.setProperty("nextDeltaCursor", sourceObj.property("cursor"));
+        parsedObj.setProperty("reset", sourceObj.property("reset"));
+
+        // Check hasMore and reset state.
+        bool hasMore = sourceObj.property("has_more").toBool();
+        parsedObj.setProperty("hasMore", QScriptValue(hasMore));
+        if (isReset) {
+            if (hasMore) {
+                qDebug() << "DropboxClient::deltaReplyFinished hasMore" << hasMore << "proceed update state only.";
+            } else {
+                qDebug() << "DropboxClient::deltaReplyFinished hasMore" << hasMore << "reset to normal state.";
+                m_settings.setValue(QString("%1.%2.reset").arg(objectName()).arg(uid), QVariant(false));
+            }
+        }
+
         // Save nextDeltaCursor
-        m_settings.setValue("DropboxClient." + uid + ".nextDeltaCursor", parsedObj.property("nextDeltaCursor").toVariant());
+        m_settings.setValue(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid), parsedObj.property("nextDeltaCursor").toVariant());
 
 //        qDebug() << "DropboxClient::deltaReplyFinished parsedObj" << stringifyScriptValue(engine, parsedObj);
         emit deltaReplySignal(nonce, reply->error(), reply->errorString(), "", parsedObj);

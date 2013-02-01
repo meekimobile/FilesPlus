@@ -80,6 +80,7 @@ public:
     bool isFilePutResumable(qint64 fileSize);
     bool isFileGetResumable(qint64 fileSize);
     bool isDeltaSupported();
+    bool isDeltaEnabled(QString uid);
 signals:
 
 public slots:

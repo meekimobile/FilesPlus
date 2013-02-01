@@ -27,6 +27,7 @@ public:
     virtual bool isFilePutResumable(qint64 fileSize);
     virtual bool isFileGetResumable(qint64 fileSize);
     virtual bool isDeltaSupported();
+    virtual bool isDeltaEnabled(QString uid);
 
     virtual bool testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname);
     virtual void saveConnection(QString id, QString hostname, QString username, QString password, QString token);

@@ -48,6 +48,7 @@ public:
     bool isFilePutResumable(qint64 fileSize);
     bool isFileGetResumable(qint64 fileSize);
     bool isDeltaSupported();
+    bool isDeltaEnabled(QString uid);
 
     void requestToken(QString nonce);
     void authorize(QString nonce);

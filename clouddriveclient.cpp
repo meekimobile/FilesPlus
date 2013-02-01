@@ -85,6 +85,11 @@ bool CloudDriveClient::isDeltaSupported()
     return false;
 }
 
+bool CloudDriveClient::isDeltaEnabled(QString uid)
+{
+    return false;
+}
+
 void CloudDriveClient::loadAccessPairMap() {
     qDebug() << QTime::currentTime() << objectName() << "::loadAccessPairMap";
 

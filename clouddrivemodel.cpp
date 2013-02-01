@@ -742,7 +742,7 @@ CloudDriveModel::ClientTypes CloudDriveModel::getClientType(int typeInt)
 
 CloudDriveModel::ClientTypes CloudDriveModel::getClientType(QString typeText)
 {
-    qDebug() << "CloudDriveModel::getClientType" << typeText;
+//    qDebug() << "CloudDriveModel::getClientType" << typeText;
 
     if (typeText.indexOf(QRegExp("dropboxclient|dropbox", Qt::CaseInsensitive)) != -1) {
         return Dropbox;
@@ -3153,9 +3153,15 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
             } else {
                 // TODO sync item.
                 qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteFilePath" << remoteFilePath << "cloudItem" << item;
-//                metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+                metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
             }
         }
+    }
+
+    // Check if there is more delta.
+    if (parsedObj.property("hasMore").toBool()) {
+        qDebug() << "CloudDriveModel::deltaReplyFilter has more delta. Proceed next delta request.";
+        delta(getClientType(job.type), job.uid);
     }
 
     // Update job running flag.
@@ -3354,7 +3360,9 @@ void CloudDriveModel::schedulerTimeoutFilter()
         QScriptValue sc;
         foreach (QString uidJson, getStoredUidList()) {
             QScriptValue sc = engine.evaluate("(" + uidJson + ")");
-            if (getCloudClient(getClientType(sc.property("type").toString()))->isDeltaSupported()) {
+            QString typeText = sc.property("type").toString();
+            QString uid = sc.property("uid").toString();
+            if (getCloudClient(getClientType(typeText))->isDeltaSupported() && getCloudClient(getClientType(typeText))->isDeltaEnabled(uid)) {
                 delta(getClientType(sc.property("type").toString()), sc.property("uid").toString());
             }
         }

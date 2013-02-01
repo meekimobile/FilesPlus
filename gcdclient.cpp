@@ -996,10 +996,10 @@ QString GCDClient::delta(QString nonce, QString uid, bool synchronous)
 
     // Construct query string.
     QMap<QString, QString> sortMap;
-    if (m_settings.value("GCDClient." + uid + ".nextDeltaCursor").isValid()) {
-        sortMap["startChangeId"] = m_settings.value("GCDClient." + uid + ".nextDeltaCursor").toString();
+    if (m_settings.value(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid)).isValid()) {
+        sortMap["startChangeId"] = m_settings.value(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid)).toString();
     }
-    sortMap["maxResults"] = m_settings.value("GCDClient." + uid + ".changesPerPage", QVariant(100)).toString();
+    sortMap["maxResults"] = m_settings.value(objectName() + "." + uid + ".changesPerPage", QVariant(100)).toString();
 //    sortMap["pageToken"] = ""; // Omits and always use nextDeltaCursor for next delta request?
     QString queryString = createQueryString(sortMap);
     qDebug() << "GCDClient::delta queryString" << queryString;
@@ -1057,6 +1057,11 @@ bool GCDClient::isFileGetResumable(qint64 fileSize)
 bool GCDClient::isDeltaSupported()
 {
     return true;
+}
+
+bool GCDClient::isDeltaEnabled(QString uid)
+{
+    return m_settings.value(QString("%1.%2.delta.enabled").arg(objectName()).arg(uid), QVariant(false)).toBool();
 }
 
 void GCDClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
@@ -1840,16 +1845,22 @@ void GCDClient::deltaReplyFinished(QNetworkReply *reply)
         QScriptEngine engine;
         QScriptValue sourceObj = engine.evaluate("(" + replyBody + ")");
 
+        // Check reset state.
+        bool syncOnReset = m_settings.value(QString("%1.%2.syncOnReset").arg(objectName()).arg(uid), QVariant(false)).toBool();
+        bool isReset = !m_settings.value(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid)).isValid()  || m_settings.value(QString("%1.%2.reset").arg(objectName()).arg(uid), QVariant(false)).toBool();
+        if (isReset) {
+            qDebug() << "GCDClient::deltaReplyFinished isReset" << isReset << "set to update state only.";
+            m_settings.setValue(QString("%1.%2.reset").arg(objectName()).arg(uid), QVariant(true));
+        }
+
         // Get entries count.
         int entriesCount = sourceObj.property("items").toVariant().toList().length();
         qDebug() << "GCDClient::deltaReplyFinished entriesCount" << entriesCount;
 
+        // Process sourceObj.
         QScriptValue parsedObj = engine.newObject();
-        parsedObj.setProperty("largestChangeId", sourceObj.property("largestChangeId"));
-
-        QScriptValue lastChangeId;
         QScriptValue childrenObj = engine.newArray();
-        for (int i = 0; i < entriesCount; i++) {
+        for (int i = 0; (!isReset || syncOnReset) && i < entriesCount; i++) {
             QScriptValue sourceChildObj = sourceObj.property("items").property(i);
 
             QScriptValue parsedChildObj = engine.newObject();
@@ -1860,14 +1871,31 @@ void GCDClient::deltaReplyFinished(QNetworkReply *reply)
                 parsedChildObj.setProperty("property", parseCommonPropertyScriptValue(engine, sourceChildObj.property("file")));
             }
             childrenObj.setProperty(i, parsedChildObj);
-
-            // Save lastChangeId.
-            lastChangeId = sourceChildObj.property("id");
+        }
+        QScriptValue lastChangeId = (entriesCount > 0) ? sourceObj.property("items").property(entriesCount-1).property("id") : sourceObj.property("largestChangeId");
+        // Skip to last if it's in reset state and doesn't opt to process.
+        if (isReset && !syncOnReset) {
+            lastChangeId = sourceObj.property("largestChangeId");
         }
         parsedObj.setProperty("children", childrenObj);
         parsedObj.setProperty("nextDeltaCursor", QScriptValue(lastChangeId.toInteger() + 1));
+        parsedObj.setProperty("latestDeltaCursor", sourceObj.property("largestChangeId"));
+        parsedObj.setProperty("reset", QScriptValue(isReset));
+
+        // Check hasMore and reset state.
+        bool hasMore = (lastChangeId.toInteger() < sourceObj.property("largestChangeId").toInteger());
+        parsedObj.setProperty("hasMore", QScriptValue(hasMore));
+        if (isReset) {
+            if (hasMore) {
+                qDebug() << "GCDClient::deltaReplyFinished hasMore" << hasMore << "proceed update state only.";
+            } else {
+                qDebug() << "GCDClient::deltaReplyFinished hasMore" << hasMore << "reset to normal state.";
+                m_settings.setValue(QString("%1.%2.reset").arg(objectName()).arg(uid), QVariant(false));
+            }
+        }
+
         // Save nextDeltaCursor
-        m_settings.setValue("GCDClient." + uid + ".nextDeltaCursor", parsedObj.property("nextDeltaCursor").toVariant());
+        m_settings.setValue(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid), QVariant(parsedObj.property("nextDeltaCursor").toInteger()));
 
 //        qDebug() << "GCDClient::deltaReplyFinished parsedObj" << stringifyScriptValue(engine, parsedObj);
         emit deltaReplySignal(nonce, reply->error(), reply->errorString(), "", parsedObj);
