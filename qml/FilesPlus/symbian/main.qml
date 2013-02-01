@@ -976,7 +976,7 @@ PageStackWindow {
         }
 
         onSubmitReplySignal: {
-//            console.debug("folderPage gcpClient onSubmitReplySignal " + err + " " + errMsg + " " + msg);
+            console.debug("folderPage gcpClient onSubmitReplySignal " + err + " " + errMsg + " " + msg);
 
             // Notify submit result.
             var jsonObj = Utility.createJsonObj(msg);
@@ -1043,8 +1043,6 @@ PageStackWindow {
 
         onDeletejobReplySignal: {
             console.debug("printJobsPage gcpClient onDeletejobReplySignal " + err + " " + errMsg + " " + msg);
-
-            gcpClient.jobs("");
         }
 
         Component.onCompleted: {

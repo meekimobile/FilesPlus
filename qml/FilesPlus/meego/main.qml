@@ -1042,8 +1042,6 @@ PageStackWindow {
 
         onDeletejobReplySignal: {
             console.debug("printJobsPage gcpClient onDeletejobReplySignal " + err + " " + errMsg + " " + msg);
-
-            gcpClient.jobs("");
         }
 
         Component.onCompleted: {

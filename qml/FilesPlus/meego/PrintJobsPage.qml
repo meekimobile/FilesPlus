@@ -100,10 +100,11 @@ Page {
     }
 
     function deleteAllJobs() {
-        for (var i=0; i<jobModel.count; i++) {
+        var jobCount = jobModel.count;
+        for (var i=0; i<jobCount; i++) {
             var jobId = jobModel.get(i).id;
             jobModel.setProperty(i, "status", appInfo.emptyStr+qsTr("Deleting"));
-            gcpClient.deletejob(jobId);
+            gcpClient.deletejob(jobId, i == (jobCount-1));
         }
     }
 
