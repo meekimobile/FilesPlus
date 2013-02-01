@@ -71,6 +71,8 @@ Rectangle {
 
             Keys.onPressed: {
                 if (requestAsType || event.key == Qt.Key_Return || event.key == Qt.Key_Enter) {
+                    var t = nameFilterInput.text.trim();
+                    nameFilterInput.text = t;
                     next();
                 }
             }
@@ -88,6 +90,8 @@ Rectangle {
                 platformInverted: window.platformInverted
                 onClicked: {
                     focus = true; // Force accept text field for Symbian only.
+                    var t = nameFilterInput.text.trim();
+                    nameFilterInput.text = t;
                     previous();
                 }
             }
@@ -100,6 +104,8 @@ Rectangle {
                 platformInverted: window.platformInverted
                 onClicked: {
                     focus = true; // Force accept text field for Symbian only.
+                    var t = nameFilterInput.text.trim();
+                    nameFilterInput.text = t;
                     next();
                 }
             }

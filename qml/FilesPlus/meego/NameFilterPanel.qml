@@ -70,6 +70,8 @@ Rectangle {
 
             Keys.onPressed: {
                 if (requestAsType || event.key == Qt.Key_Return || event.key == Qt.Key_Enter) {
+                    var t = nameFilterInput.text.trim();
+                    nameFilterInput.text = t;
                     next();
                 }
             }
@@ -85,6 +87,8 @@ Rectangle {
                 height: parent.height
                 iconSource: (theme.inverted) ? "back.svg" : "back_inverted.svg"
                 onClicked: {
+                    var t = nameFilterInput.text.trim();
+                    nameFilterInput.text = t;
                     previous();
                 }
             }
@@ -95,6 +99,8 @@ Rectangle {
                 height: parent.height
                 iconSource: (theme.inverted) ? "next.svg" : "next_inverted.svg"
                 onClicked: {
+                    var t = nameFilterInput.text.trim();
+                    nameFilterInput.text = t;
                     next();
                 }
             }
