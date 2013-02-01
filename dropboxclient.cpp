@@ -505,6 +505,11 @@ bool DropboxClient::isRemoteAbsolutePath()
     return true;
 }
 
+bool DropboxClient::isRemotePathCaseInsensitive()
+{
+    return true;
+}
+
 bool DropboxClient::isFilePutResumable(qint64 fileSize)
 {
     return (fileSize >= ChunkSize);

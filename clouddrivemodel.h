@@ -150,6 +150,7 @@ public:
     Q_INVOKABLE QString getRemoteRoot(CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE QString getParentRemotePath(CloudDriveModel::ClientTypes type, QString remotePath);
     Q_INVOKABLE bool isRemoteAbsolutePath(CloudDriveModel::ClientTypes type);
+    Q_INVOKABLE bool isRemotePathCaseInsensitive(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE QString getRemoteName(CloudDriveModel::ClientTypes type, QString remotePath);
     Q_INVOKABLE QString getRemotePath(CloudDriveModel::ClientTypes type, QString remoteParentPath, QString remotePathName);
     Q_INVOKABLE QString getParentLocalPath(const QString absFilePath);
@@ -233,6 +234,7 @@ public:
     Q_INVOKABLE void disconnect(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
 
     Q_INVOKABLE QString thumbnail(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString format, QString size);
+    void scheduleDeltaJobs(QString cronValue);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void initializeDBStarted(QString nonce);

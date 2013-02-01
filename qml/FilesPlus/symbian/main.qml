@@ -1360,7 +1360,7 @@ PageStackWindow {
                     parsedObj.absolutePath = jsonObj.id;
                     parsedObj.parentPath = (jsonObj.parents && jsonObj.parents.length > 0) ? jsonObj.parents[0].id : "";
                     parsedObj.size = (jsonObj.fileSize) ? jsonObj.fileSize : 0;
-                    parsedObj.isDeleted = false;
+                    parsedObj.isDeleted = jsonObj.explicitlyTrashed || jsonObj.labels.trashed;
                     parsedObj.isDir = (jsonObj.mimeType == "application/vnd.google-apps.folder");
                     parsedObj.lastModified = Utility.parseJSONDate(jsonObj.modifiedDate);
                     parsedObj.hash = jsonObj.modifiedDate;

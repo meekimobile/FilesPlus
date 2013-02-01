@@ -212,7 +212,7 @@ QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     parsedObj.setProperty("absolutePath", jsonObj.property("id"));
     parsedObj.setProperty("parentPath", jsonObj.property("parents").property(0).property("id"));
     parsedObj.setProperty("size", jsonObj.property("fileSize"));
-    parsedObj.setProperty("isDeleted", QScriptValue(false));
+    parsedObj.setProperty("isDeleted", QScriptValue(jsonObj.property("explicitlyTrashed").toBool() || jsonObj.property("labels").property("trashed").toBool()));
     parsedObj.setProperty("isDir", QScriptValue(jsonObj.property("mimeType").toString() == "application/vnd.google-apps.folder"));
     parsedObj.setProperty("lastModified", jsonObj.property("modifiedDate"));
     parsedObj.setProperty("hash", jsonObj.property("modifiedDate"));

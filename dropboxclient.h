@@ -45,6 +45,7 @@ public:
     QString getDefaultRemoteFilePath(const QString &localFilePath);
 
     bool isRemoteAbsolutePath();
+    bool isRemotePathCaseInsensitive();
     bool isFilePutResumable(qint64 fileSize);
     bool isFileGetResumable(qint64 fileSize);
     bool isDeltaSupported();

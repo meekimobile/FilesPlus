@@ -23,6 +23,7 @@ public:
     virtual QDateTime parseReplyDateString(QString dateString);
 
     virtual bool isRemoteAbsolutePath();
+    virtual bool isRemotePathCaseInsensitive();
     virtual QString getRemoteRoot(QString id);
     virtual bool isFilePutResumable(qint64 fileSize);
     virtual bool isFileGetResumable(qint64 fileSize);

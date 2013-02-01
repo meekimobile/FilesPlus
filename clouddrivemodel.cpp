@@ -851,6 +851,11 @@ bool CloudDriveModel::isRemoteAbsolutePath(CloudDriveModel::ClientTypes type)
     return getCloudClient(type)->isRemoteAbsolutePath();
 }
 
+bool CloudDriveModel::isRemotePathCaseInsensitive(CloudDriveModel::ClientTypes type)
+{
+    return getCloudClient(type)->isRemotePathCaseInsensitive();
+}
+
 void CloudDriveModel::initScheduler()
 {
     connect(&m_schedulerTimer, SIGNAL(timeout()), this, SLOT(schedulerTimeoutFilter()) );
@@ -1017,9 +1022,7 @@ void CloudDriveModel::removeItem(CloudDriveModel::ClientTypes type, QString uid,
     int deleteCount = deleteItemToDB(type, uid, localPath);
 
     // Remove cache for furthur refresh.
-    m_isConnectedCache->remove(localPath);
-    m_isDirtyCache->remove(localPath);
-    m_isSyncingCache->remove(localPath);
+    clearConnectedRemoteDirtyCache(localPath);
 
     qDebug() << "CloudDriveModel::removeItem item" << item << "removeCount" << removeCount << "deleteCount" << deleteCount;
 }
@@ -1247,6 +1250,23 @@ void CloudDriveModel::syncScheduledItems()
         CloudDriveItem item = m_scheduledItems->dequeue();
         qDebug() << "CloudDriveModel::syncScheduledItems dequeue and sync item" << item;
         metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+    }
+}
+
+void CloudDriveModel::scheduleDeltaJobs(QString cronValue)
+{
+    QScriptEngine engine;
+    QScriptValue sc;
+    foreach (QString uidJson, getStoredUidList()) {
+        QScriptValue sc = engine.evaluate("(" + uidJson + ")");
+        QString typeText = sc.property("type").toString();
+        QString uid = sc.property("uid").toString();
+        if (getCloudClient(getClientType(typeText))->isDeltaSupported() && getCloudClient(getClientType(typeText))->isDeltaEnabled(uid)) {
+            QString deltaCronExp = m_settings.value(QString("%1.%2.deltaCronExp").arg(getCloudClient(getClientType(typeText))->objectName()).arg(uid), QVariant("* * * * *")).toString();
+            if (matchCronExp(deltaCronExp, cronValue)) {
+                delta(getClientType(typeText), uid);
+            }
+        }
     }
 }
 
@@ -3144,16 +3164,32 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
         QScriptValue childObj = parsedObj.property("children").property(i);
         bool isDeleted = childObj.property("isDeleted").toBool();
         QString remoteFilePath = childObj.property("absolutePath").toString();
-//        qDebug() << "CloudDriveModel::deltaReplyFilter remoteFilePath" << remoteFilePath << "isDeleted" << isDeleted;
-        // TODO
-        foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemoteAbsolutePath(getClientType(job.type)))) {
-            if (isDeleted) {
-                // TODO delete local file path and cloud item.
-                qDebug() << "CloudDriveModel::deltaReplyFilter deleted remoteFilePath" << remoteFilePath << "cloudItem" << item;
+        QString remoteParentPath = childObj.property("property").property("parentPath").toString();
+//        qDebug() << "CloudDriveModel::deltaReplyFilter remoteFilePath" << remoteFilePath << "remoteParentPath" << remoteParentPath << "isDeleted" << isDeleted;
+
+        if (isDeleted) {
+            // TODO delete local file path and cloud item.
+            // NOTE Metadata currently only remove link once file/folder was removed remotely.
+            foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
+                qDebug() << "CloudDriveModel::deltaReplyFilter remove connection to deleted remoteFilePath" << remoteFilePath << "cloudItem" << item;
+                removeItem(getClientType(item.type), item.uid, item.localPath);
+            }
+        } else {
+            QList<CloudDriveItem> itemList = findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)));
+            if (itemList.isEmpty()) {
+                // TODO Sync its connected parents (with DirtyHash) to force sync all its children.
+                qDebug() << "CloudDriveModel::deltaReplyFilter download new item by syncing remoteParentPath" << remoteParentPath;
+                foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteParentPath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
+                    qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteParentPath" << remoteParentPath << "parent cloudItem" << item;
+                    updateItem(getClientType(item.type), item.uid, item.localPath, DirtyHash);
+                    metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+                }
             } else {
-                // TODO sync item.
-                qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteFilePath" << remoteFilePath << "cloudItem" << item;
-                metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+                // TODO Sync existing item.
+                foreach (CloudDriveItem item, itemList) {
+                    qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteFilePath" << remoteFilePath << "cloudItem" << item;
+                    metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+                }
             }
         }
     }
@@ -3353,20 +3389,8 @@ void CloudDriveModel::schedulerTimeoutFilter()
         resumeNextJob();
     }
 
-    // TODO Request delta.
-    QString deltaCronExp = "* * * * *"; // TODO Make it configurable.
-    if (matchCronExp(deltaCronExp, cronValue)) {
-        QScriptEngine engine;
-        QScriptValue sc;
-        foreach (QString uidJson, getStoredUidList()) {
-            QScriptValue sc = engine.evaluate("(" + uidJson + ")");
-            QString typeText = sc.property("type").toString();
-            QString uid = sc.property("uid").toString();
-            if (getCloudClient(getClientType(typeText))->isDeltaSupported() && getCloudClient(getClientType(typeText))->isDeltaEnabled(uid)) {
-                delta(getClientType(sc.property("type").toString()), sc.property("uid").toString());
-            }
-        }
-    }
+    // Request delta.
+    scheduleDeltaJobs(cronValue);
 
     emit schedulerTimeoutSignal();
 }
