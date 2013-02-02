@@ -794,7 +794,7 @@ QString CloudDriveModel::getOperationName(int operation) {
     case RefreshToken:
         return tr("Refresh token");
     case AccountInfo:
-        return tr("Account Info.");
+        return tr("Account Info");
     case Quota:
         return tr("Quota");
     case DeleteFile:
@@ -828,7 +828,7 @@ QString CloudDriveModel::getOperationName(int operation) {
     case FilePutResume:
         return tr("Upload");
     case FilePutCommit:
-        return tr("Upload ");
+        return tr("Commit upload");
     case FileGetResume:
         return tr("Download");
     default:

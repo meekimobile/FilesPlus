@@ -853,16 +853,16 @@ PageStackWindow {
                 console.debug("folderPage printFileSlot File type is not supported. (" + srcFilePath + ")");
 
                 messageDialog.titleText = appInfo.emptyStr+qsTr("Print Error");
-                messageDialog.message = appInfo.emptyStr+qsTr("Can't print %1 \
-    \nFile type is not supported. Only JPEG, PNG, Text and PDF are supported.").arg(srcFilePath);
+                messageDialog.message = appInfo.emptyStr+qsTr("Can't print %1\
+\nFile type is not supported. Only JPEG, PNG, Text and PDF are supported.").arg(srcFilePath);
                 messageDialog.open();
                 return;
             }
 
             if (!gcpClient.isAuthorized()) {
                 messageDialog.message = appInfo.emptyStr+qsTr("FilesPlus prints via Google CloudPrint service.\
-    \nPlease enable printer on your desktop with Chrome or with CloudPrint-ready printer.\
-    \nYou will be redirected to authorization page.");
+\nPlease enable printer on your desktop with Chrome or with CloudPrint-ready printer.\
+\nYou will be redirected to authorization page.");
                 messageDialog.titleText = appInfo.emptyStr+qsTr("Print with CloudPrint");
                 messageDialog.open();
 
@@ -891,8 +891,8 @@ PageStackWindow {
 
             if (!gcpClient.isAuthorized()) {
                 messageDialog.message = appInfo.emptyStr+qsTr("FilesPlus prints via Google CloudPrint service.\
-    \nPlease enable printer on your desktop with Chrome or with CloudPrint-ready printer.\
-    \nYou will be redirected to authorization page.");
+\nPlease enable printer on your desktop with Chrome or with CloudPrint-ready printer.\
+\nYou will be redirected to authorization page.");
                 messageDialog.titleText = appInfo.emptyStr+qsTr("Print with CloudPrint");
                 messageDialog.open();
 
@@ -975,7 +975,7 @@ PageStackWindow {
         }
 
         onSubmitReplySignal: {
-//            console.debug("folderPage gcpClient onSubmitReplySignal " + err + " " + errMsg + " " + msg);
+            console.debug("folderPage gcpClient onSubmitReplySignal " + err + " " + errMsg + " " + msg);
 
             // Notify submit result.
             var jsonObj = Utility.createJsonObj(msg);

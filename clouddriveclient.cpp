@@ -231,7 +231,7 @@ void CloudDriveClient::saveConnection(QString id, QString hostname, QString user
 
 void CloudDriveClient::requestToken(QString nonce)
 {
-    emit requestTokenReplySignal(nonce, -1, objectName() + " " + tr("Request Token"), tr("Service is not implemented."));
+    emit requestTokenReplySignal(nonce, -1, objectName() + " " + "Request Token", "Service is not implemented.");
 }
 
 void CloudDriveClient::authorize(QString nonce, QString hostname)
@@ -241,80 +241,80 @@ void CloudDriveClient::authorize(QString nonce, QString hostname)
 
 void CloudDriveClient::accessToken(QString nonce, QString pin)
 {
-    emit accessTokenReplySignal(nonce, -1, objectName() + " " + tr("Access Token"), tr("Service is not implemented."));
+    emit accessTokenReplySignal(nonce, -1, objectName() + " " + "Access Token", "Service is not implemented.");
 }
 
 void CloudDriveClient::refreshToken(QString nonce, QString uid)
 {
-    emit accessTokenReplySignal(nonce, -1, objectName() + " " + tr("Refresh Token"), tr("Service is not implemented."));
+    emit accessTokenReplySignal(nonce, -1, objectName() + " " + "Refresh Token", "Service is not implemented.");
 }
 
 void CloudDriveClient::accountInfo(QString nonce, QString uid)
 {
-    emit accountInfoReplySignal(nonce, -1, objectName() + " " + tr("Account Info"), tr("Service is not implemented."));
+    emit accountInfoReplySignal(nonce, -1, objectName() + " " + "Account Info", "Service is not implemented.");
 }
 
 void CloudDriveClient::quota(QString nonce, QString uid)
 {
-    emit quotaReplySignal(nonce, -1, objectName() + " " + tr("Quota"), tr("Service is not implemented."), 0, 0, -1);
+    emit quotaReplySignal(nonce, -1, objectName() + " " + "Quota", "Service is not implemented.", 0, 0, -1);
 }
 
 QString CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous)
 {
-    emit fileGetReplySignal(nonce, -1, objectName() + " " + tr("File Get"), tr("Service is not implemented."));
+    emit fileGetReplySignal(nonce, -1, objectName() + " " + "File Get", "Service is not implemented.");
     return "";
 }
 
 QIODevice *CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)
 {
-    emit fileGetReplySignal(nonce, -1, objectName() + " " + tr("File Get"), tr("Service is not implemented."));
+    emit fileGetReplySignal(nonce, -1, objectName() + " " + "File Get", "Service is not implemented.");
     return 0;
 }
 
 void CloudDriveClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName)
 {
-    emit filePutReplySignal(nonce, -1, objectName() + " " + tr("File Put"), tr("Service is not implemented."));
+    emit filePutReplySignal(nonce, -1, objectName() + " " + "File Put", "Service is not implemented.");
 }
 
 QNetworkReply *CloudDriveClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal,  QString remoteParentPath, QString remoteFileName, bool synchronous)
 {
-    emit filePutReplySignal(nonce, -1, objectName() + " " + tr("File Put"), tr("Service is not implemented."));
+    emit filePutReplySignal(nonce, -1, objectName() + " " + "File Put", "Service is not implemented.");
     return 0;
 }
 
 QIODevice *CloudDriveClient::fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset)
 {
-    emit fileGetResumeReplySignal(nonce, -1, objectName() + " " + tr("File Get Resume"), tr("Service is not implemented."));
+    emit fileGetResumeReplySignal(nonce, -1, objectName() + " " + "File Get Resume", "Service is not implemented.");
     return 0;
 }
 
 QNetworkReply *CloudDriveClient::filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, QString uploadId, qint64 offset)
 {
-    emit filePutResumeReplySignal(nonce, -1, objectName() + " " + tr("File Put Resume"), tr("Service is not implemented."));
+    emit filePutResumeReplySignal(nonce, -1, objectName() + " " + "File Put Resume", "Service is not implemented.");
     return 0;
 }
 
 QString CloudDriveClient::filePutResumeStart(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString remoteParentPath, bool synchronous)
 {
-    emit filePutResumeReplySignal(nonce, -1, objectName() + " " + tr("File Put Resume"), tr("Service is not implemented."));
+    emit filePutResumeReplySignal(nonce, -1, objectName() + " " + "File Put Resume", "Service is not implemented.");
     return "";
 }
 
 QString CloudDriveClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *source, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous)
 {
-    emit filePutResumeReplySignal(nonce, -1, objectName() + " " + tr("File Put Resume"), tr("Service is not implemented."));
+    emit filePutResumeReplySignal(nonce, -1, objectName() + " " + "File Put Resume", "Service is not implemented.");
     return "";
 }
 
 QString CloudDriveClient::filePutResumeStatus(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous)
 {
-    emit filePutResumeReplySignal(nonce, -1, objectName() + " " + tr("File Put Resume"), tr("Service is not implemented."));
+    emit filePutResumeReplySignal(nonce, -1, objectName() + " " + "File Put Resume", "Service is not implemented.");
     return "";
 }
 
 QString CloudDriveClient::filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous)
 {
-    emit filePutCommitReplySignal(nonce, -1, objectName() + " " + tr("File Put Commit"), tr("Service is not implemented."));
+    emit filePutCommitReplySignal(nonce, -1, objectName() + " " + "File Put Commit", "Service is not implemented.");
     return "";
 }
 
@@ -325,50 +325,50 @@ QString CloudDriveClient::thumbnail(QString nonce, QString uid, QString remoteFi
 
 void CloudDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 {
-    emit metadataReplySignal(nonce, -1, objectName() + " " + tr("Metadata"), tr("Service is not implemented."));
+    emit metadataReplySignal(nonce, -1, objectName() + " " + "Metadata", "Service is not implemented.");
 }
 
 void CloudDriveClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
-    emit browseReplySignal(nonce, -1, objectName() + " " + tr("Browse"), tr("Service is not implemented."));
+    emit browseReplySignal(nonce, -1, objectName() + " " + "Browse", "Service is not implemented.");
 }
 
 void CloudDriveClient::createFolder(QString nonce, QString uid, QString newRemoteParentPath, QString newRemoteFolderName)
 {
-    emit createFolderReplySignal(nonce, -1, objectName() + " " + tr("Create Folder"), tr("Service is not implemented."));
+    emit createFolderReplySignal(nonce, -1, objectName() + " " + "Create folder", "Service is not implemented.");
 }
 
 void CloudDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName)
 {
-    emit moveFileReplySignal(nonce, -1, objectName() + " " + tr("Move"), tr("Service is not implemented."));
+    emit moveFileReplySignal(nonce, -1, objectName() + " " + "Move", "Service is not implemented.");
 }
 
 void CloudDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName)
 {
-    emit copyFileReplySignal(nonce, -1, objectName() + " " + tr("Copy"), tr("Service is not implemented."));
+    emit copyFileReplySignal(nonce, -1, objectName() + " " + "Copy", "Service is not implemented.");
 }
 
 void CloudDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
 {
-    emit deleteFileReplySignal(nonce, -1, objectName() + " " + tr("Delete"), tr("Service is not implemented."));
+    emit deleteFileReplySignal(nonce, -1, objectName() + " " + "Delete", "Service is not implemented.");
 }
 
 void CloudDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
-    emit shareFileReplySignal(nonce, -1, objectName() + " " + tr("Share Link"), tr("Service is not implemented."));
+    emit shareFileReplySignal(nonce, -1, objectName() + " " + "Share link", "Service is not implemented.");
 }
 
 QString CloudDriveClient::delta(QString nonce, QString uid, bool synchronous)
 {
     // Emit empty message as default.
     if (!synchronous) {
-        emit deltaReplySignal(nonce, 0, objectName() + " " + tr("Delta"), "{ }", QScriptValue());
+        emit deltaReplySignal(nonce, 0, objectName() + " " + "Delta", "{ }", QScriptValue());
     }
     return "";
 }
 
 QString CloudDriveClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
-    emit createFolderReplySignal(nonce, -1, objectName() + " " + tr("Create Folder"), tr("Service is not implemented."));
+    emit createFolderReplySignal(nonce, -1, objectName() + " " + "Create folder", "Service is not implemented.");
     return "";
 }
