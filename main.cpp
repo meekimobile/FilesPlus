@@ -169,6 +169,16 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 #endif
 */
 
+    // For testing only.
+    qDebug() << "main ApplicationsLocation" << QDesktopServices::storageLocation(QDesktopServices::ApplicationsLocation);
+    qDebug() << "main DataLocation" << QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+    qDebug() << "main HomeLocation" << QDesktopServices::storageLocation(QDesktopServices::HomeLocation);
+    qDebug() << "main DocumentsLocation" << QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+    qDebug() << "main DesktopLocation" << QDesktopServices::storageLocation(QDesktopServices::DesktopLocation);
+    qDebug() << "main PicturesLocation" << QDesktopServices::storageLocation(QDesktopServices::PicturesLocation);
+    qDebug() << "main MusicLocation" << QDesktopServices::storageLocation(QDesktopServices::MusicLocation);
+    qDebug() << "main MoviesLocation" << QDesktopServices::storageLocation(QDesktopServices::MoviesLocation);
+
 #ifdef Q_OS_SYMBIAN
     // Default logging is enabled on first startup. It will be uninstalled and disabled once DrivePage is loaded successfully.
     QSettings *m_settings = new QSettings();
