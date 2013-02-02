@@ -7,26 +7,6 @@ AppInfo::AppInfo(QDeclarativeItem *parent) :
     toggleMonitoring();
 }
 
-QString AppInfo::getDomainName() const
-{
-    return m_domainName;
-}
-
-void AppInfo::setDomainName(const QString domainName)
-{
-    m_domainName = domainName;
-}
-
-QString AppInfo::getAppName() const
-{
-    return m_appName;
-}
-
-void AppInfo::setAppName(const QString appName)
-{
-    m_appName = appName;
-}
-
 QString AppInfo::getVersion() const
 {
     qDebug() << "AppInfo::getVersion" << VER;
@@ -210,7 +190,7 @@ void AppInfo::init()
     m_settingsCache = new QHash<QString, QVariant>();
 
     // Check settings if monitoring is enabled.
-    m_settings = new QSettings(m_domainName, m_appName);
+    m_settings = new QSettings();
     qDebug() << "AppInfo m_settings fileName()" << m_settings->fileName();
 
     if (isLogging()) {

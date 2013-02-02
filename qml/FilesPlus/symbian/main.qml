@@ -47,8 +47,6 @@ PageStackWindow {
 
     AppInfo {
         id: appInfo
-        domain: "MeekiMobile"
-        app: "FilesPlus"
 
         onNotifyLoggingSignal: { // Symbian only.
             messageDialog.titleText = appInfo.emptyStr+qsTr("Notify");
