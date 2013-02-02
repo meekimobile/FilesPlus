@@ -50,10 +50,6 @@ PageStackWindow {
         domain: "MeekiMobile"
         app: "FilesPlus"
 
-        Component.onCompleted: {
-            appInfo.startMonitoring();
-        }
-
         onNotifyLoggingSignal: { // Symbian only.
             messageDialog.titleText = appInfo.emptyStr+qsTr("Notify");
             messageDialog.message = appInfo.emptyStr+qsTr("Logging is enabled. Log file is at %1").arg(logFilePath) + "\n" + appInfo.emptyStr+qsTr("You may turn off in Settings.");

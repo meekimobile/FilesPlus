@@ -42,17 +42,17 @@ public:
     Q_INVOKABLE bool isAuthorized();
     Q_INVOKABLE void refreshAccessToken();
     Q_INVOKABLE void accountInfo();
-    Q_INVOKABLE void search(QString q);
+    Q_INVOKABLE QNetworkReply *search(QString q);
     Q_INVOKABLE QString getContentType(QString fileName);
     Q_INVOKABLE QString getPrinterId(int i);
     Q_INVOKABLE int getPrinterIndex(QString printerId);
     Q_INVOKABLE QStringList getStoredPrinterList();
     Q_INVOKABLE QString getPrinterType(int i);
     Q_INVOKABLE QString getPrinterType(QString printerId);
-    Q_INVOKABLE void submit(QString printerId, QString title, QString capabilities, QString contentPath, QString contentType, QString tag);
-    Q_INVOKABLE void submit(QString printerId, QString contentPath, QString capabilities); // Simplify submit method
+    Q_INVOKABLE QNetworkReply *submit(QString printerId, QString title, QString capabilities, QString contentPath, QString contentType, QString tag);
+    Q_INVOKABLE QNetworkReply *submit(QString printerId, QString contentPath, QString capabilities); // Simplify submit method
     Q_INVOKABLE void jobs(QString printerId);
-    Q_INVOKABLE void deletejob(QString jobId);
+    Q_INVOKABLE void deletejob(QString jobId, bool refreshAfterDelete = true);
     Q_INVOKABLE void printer(QString printerId);
 signals:
     void authorizeRedirectSignal(QString url);

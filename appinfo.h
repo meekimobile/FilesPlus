@@ -24,23 +24,30 @@ public:
     void setAppName(const QString appName);
     QString getVersion() const;
 
-    Q_INVOKABLE bool isMonitoring();
-    void setMonitoring(const bool flag);
-    Q_INVOKABLE QString getMonitoringFilePath() const;
     Q_INVOKABLE QVariant getSettingValue(const QString key, const QVariant defaultValue);
     Q_INVOKABLE bool getSettingBoolValue(const QString key, const bool defaultValue);
     Q_INVOKABLE bool setSettingValue(const QString key, const QVariant v, const bool forceUpdate = false);
     Q_INVOKABLE bool hasSettingValue(const QString key);
-    Q_INVOKABLE void startMonitoring();
+
+    // Monitoring for Symbian.
+    Q_INVOKABLE bool isMonitoring();
+    void setMonitoring(const bool flag);
+    Q_INVOKABLE QString getMonitoringFilePath() const;
+    Q_INVOKABLE void toggleMonitoring();
+
+    // Logging.
     Q_INVOKABLE bool isLogging();
     Q_INVOKABLE void stopLogging();
+    Q_INVOKABLE QString getLogPath() const;
 
+    // Locale.
     Q_INVOKABLE QString getSystemLocale() const;
     Q_INVOKABLE QString getLocale();
     Q_INVOKABLE void setLocale(const QString locale);
     QString getEmptyStr();
     QString getEmptySetting();
 
+    // Clipboard.
     Q_INVOKABLE void addToClipboard(const QString text);
     Q_INVOKABLE QString getFromClipboard();
     Q_INVOKABLE void clearClipboard();

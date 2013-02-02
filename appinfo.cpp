@@ -3,6 +3,8 @@
 AppInfo::AppInfo(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
 {
+    // Start monitoring if it's enabled.
+    toggleMonitoring();
 }
 
 QString AppInfo::getDomainName() const
@@ -45,6 +47,15 @@ void AppInfo::stopLogging()
     } else {
         qDebug() << "AppInfo::stopLogging is ignored. Logging is enabled.";
     }
+}
+
+QString AppInfo::getLogPath() const
+{
+#ifdef Q_OS_SYMBIAN
+    return "E:/";
+#elif defined(Q_WS_HARMATTAN)
+    return "/home/user/MyDocs/";
+#endif
 }
 
 QString AppInfo::getSystemLocale() const
@@ -156,9 +167,6 @@ bool AppInfo::setSettingValue(const QString key, const QVariant v, const bool fo
         // Sync to backend.
         m_settings->sync();
 
-        // Call startMonitoring.
-        startMonitoring();
-
         // Emit setting changed.
         emit settingChanged();
 
@@ -175,7 +183,7 @@ bool AppInfo::hasSettingValue(const QString key)
     return res;
 }
 
-void AppInfo::startMonitoring()
+void AppInfo::toggleMonitoring()
 {
 #ifdef Q_OS_SYMBIAN
     qDebug() << "AppInfo m_settings isMonitoring()" << isMonitoring();

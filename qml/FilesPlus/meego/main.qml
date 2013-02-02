@@ -49,9 +49,6 @@ PageStackWindow {
         domain: "MeekiMobile"
         app: "FilesPlus"
 
-        Component.onCompleted: {
-            appInfo.startMonitoring();
-        }
         onLocaleChanged: {
             console.debug("appInfo onLocaleChanged");
             var p = pageStack.find(function (page) { return page.name == "folderPage"; });

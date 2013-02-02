@@ -1,5 +1,5 @@
 filesplus (1.1.2) unstable; urgency=low
-  * Click on splash page's background to close manually.
+  * Fix issue with Google CloudPrint as they changes to support only HTTPS.
 
  -- Taweesak Kittipuree <>  Tue, 27 Nov 2012 09:17:42 +0700
 
