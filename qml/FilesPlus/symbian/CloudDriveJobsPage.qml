@@ -34,7 +34,7 @@ Page {
         }
         ToolBarButton {
             id: cloudButton
-            buttonIconSource: (!window.platformInverted ? "cloud.svg" : "cloud_inverted.svg")
+            buttonIconSource: (!inverted) ? "cloud.svg" : "cloud_inverted.svg"
 
             TextIndicator {
                 id: cloudButtonIndicator

@@ -7,31 +7,32 @@ Page {
     id: printJobsPage
 
     property string name: "printJobsPage"
+    property bool inverted: !theme.inverted
 
     tools: toolBarLayout
 
     ToolBarLayout {
         id: toolBarLayout
 
-        ToolIcon {
+        ToolBarButton {
             id: backButton
-            iconId: "toolbar-back"
+            buttonIconSource: "toolbar-back"
             onClicked: {
                 pageStack.pop();
             }
         }
 
-        ToolIcon {
+        ToolBarButton {
             id: refreshButton
-            iconId: "toolbar-refresh"
+            buttonIconSource: "toolbar-refresh"
             onClicked: {
                 gcpClient.jobs("");
             }
         }
 
-        ToolIcon {
+        ToolBarButton {
             id: deleteButton
-            iconSource: (theme.inverted) ? "delete.svg" : "delete_inverted.svg"
+            buttonIconSource: (!inverted) ? "delete.svg" : "delete_inverted.svg"
             onClicked: {
                 deleteConfirmation.open();
             }
@@ -39,24 +40,23 @@ Page {
     }
 
     ConfirmDialog {
-        id: deleteJobConfirmation
-
-        property string jobId
-        property int jobIndex
-
-        titleText: appInfo.emptyStr+qsTr("Delete")
-        contentText: appInfo.emptyStr+qsTr("Delete %1 ?").arg(jobId);
+        id: deleteConfirmation
+        titleText: appInfo.emptyStr+qsTr("Deleting")
+        contentText: appInfo.emptyStr+qsTr("Delete all print jobs ?")
         onConfirm: {
-            deleteJob(jobId, jobIndex);
+            deleteAllJobs();
         }
     }
 
     ConfirmDialog {
-        id: deleteConfirmation
-        titleText: appInfo.emptyStr+qsTr("Delete print jobs")
-        contentText: appInfo.emptyStr+qsTr("Delete all print jobs ?")
+        id: deleteJobConfirmation
+        titleText: appInfo.emptyStr+qsTr("Deleting")
+        contentText: appInfo.emptyStr+qsTr("Delete print job %1\ntitle %2 ?").arg(jobModel.get(jobListView.currentIndex).id).arg(jobModel.get(jobListView.currentIndex).title)
         onConfirm: {
-            deleteAllJobs();
+            // Delete selected job.
+            var jobId = jobModel.get(jobListView.currentIndex).id;
+            jobModel.setProperty(jobListView.currentIndex, "status", appInfo.emptyStr+qsTr("Deleting"));
+            gcpClient.deletejob(jobId);
         }
     }
 
@@ -108,12 +108,6 @@ Page {
         }
     }
 
-    function deleteJob(jobId, index) {
-        // Delete selected job.
-        jobModel.setProperty(index, "status", appInfo.emptyStr+qsTr("Deleting"));
-        gcpClient.deletejob(jobId);
-    }
-
     TitlePanel {
         id: titlePanel
         text: appInfo.emptyStr+qsTr("Print Jobs")
@@ -121,36 +115,6 @@ Page {
 
     ListModel {
         id: jobModel
-    }
-
-    Button {
-        id: popupDeleteButton
-
-        property string jobId
-
-        iconSource: (theme.inverted) ? "delete.svg" : "delete_inverted.svg"
-        visible: false
-        width: 60
-        height: 60
-        z: 2
-        onClicked: {
-            // Delete selected job.
-            jobModel.setProperty(jobListView.currentIndex, "status", appInfo.emptyStr+qsTr("Deleting"));
-            gcpClient.deletejob(jobId);
-            visible = false;
-        }
-        onVisibleChanged: {
-            if (visible) popupDeleteButtonTimer.restart();
-        }
-
-        Timer {
-            id: popupDeleteButtonTimer
-            interval: 2000
-            running: false
-            onTriggered: {
-                parent.visible = false;
-            }
-        }
     }
 
     ListView {
@@ -190,15 +154,13 @@ Page {
                     Text {
                         text: title
                         width: parent.width
-                        verticalAlignment: Text.AlignVCenter
                         font.pointSize: 18
                         elide: Text.ElideMiddle
-                        color: (theme.inverted) ? "white" : "black"
+                        color: (!inverted) ? "white" : "black"
                     }
                     Text {
                         text: printerName
                         width: parent.width
-                        verticalAlignment: Text.AlignVCenter
                         font.pointSize: 16
                         elide: Text.ElideMiddle
                         color: "grey"
@@ -209,7 +171,6 @@ Page {
                     text: status
                     width: 160
                     horizontalAlignment: Text.AlignRight
-                    verticalAlignment: Text.AlignVCenter
                     font.pointSize: 16
                     elide: Text.ElideMiddle
                     color: "grey"
@@ -217,14 +178,6 @@ Page {
             }
 
             onPressAndHold: {
-//                var panelX = x + mouseX - jobListView.contentX;
-//                var panelY = y + mouseY - jobListView.contentY + jobListView.y;
-//                popupDeleteButton.x = panelX - (popupDeleteButton.width / 2);
-//                popupDeleteButton.y = panelY - (popupDeleteButton.height);
-//                popupDeleteButton.jobId = id;
-//                popupDeleteButton.visible = true;
-                deleteJobConfirmation.jobId = id;
-                deleteJobConfirmation.jobIndex = index;
                 deleteJobConfirmation.open();
             }
         }
