@@ -9,6 +9,14 @@ Page {
     property string name: "cloudDriveAccountsPage"
     property bool inverted: !theme.inverted
 
+    onWidthChanged: {
+        console.debug("cloudDriveAccountsPage onWidthChanged " + width);
+    }
+
+    onHeightChanged: {
+        console.debug("cloudDriveAccountsPage onHeightChanged " + height);
+    }
+
     tools: toolBarLayout
 
     ToolBarLayout {
@@ -144,7 +152,6 @@ Page {
         property alias passwd: password.text
         property alias token: tokenInput.text
         property string originalToken
-        property int labelWidth: 120
 
         function show(type, uid, host, user, passwd, token) {
             addAccountDialog.cloudType = type;
@@ -162,14 +169,15 @@ Page {
         content: Item {
             id: contentItem
 
-            property real maxContentHeight: screen.height - 110 // Title + Buttons height
+            property int labelWidth: width * 0.35
+            property real maxContentHeight: cloudDriveAccountsPage.height - 110 // Title + Buttons height. For Meego only.
 
             onHeightChanged: {
-                console.debug("onHeightChanged " + height + " maxContentHeight " + maxContentHeight + " inputContext.height " + inputContext.height + " screen.height " + screen.height);
+                console.debug("addAccountDialog contentItem onHeightChanged " + height + " maxContentHeight " + maxContentHeight + " cloudDriveAccountsPage.width " + cloudDriveAccountsPage.width + " cloudDriveAccountsPage.height " + cloudDriveAccountsPage.height + " window.inPortrait " + window.inPortrait);
             }
 
-            width: (window.inPortrait) ? (screen.width - 40) : (screen.width - 160)
-            height: (window.inPortrait) ? Math.min(240, maxContentHeight) : Math.min(180, maxContentHeight)
+            width: parent.width // For Meego only.
+            height: (window.inPortrait) ? Math.min(contentColumn.height, maxContentHeight) : Math.min(contentColumn.height, maxContentHeight) // For Meego only.
             anchors.horizontalCenter: parent.horizontalCenter
 
             Flickable {
@@ -189,13 +197,14 @@ Page {
                         width: parent.width
                         Label {
                             text: appInfo.emptyStr+qsTr("Name")
-                            width: addAccountDialog.labelWidth
+                            width: contentItem.labelWidth
                             color: "white"
+                            elide: Text.ElideRight
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         TextField {
                             id: connectionName
-                            width: parent.width - addAccountDialog.labelWidth
+                            width: parent.width - contentItem.labelWidth
                             placeholderText: appInfo.emptyStr+qsTr("Input connection name")
                             readOnly: false
                             validator: RegExpValidator {
@@ -207,13 +216,14 @@ Page {
                         width: parent.width
                         Label {
                             text: appInfo.emptyStr+qsTr("Host[:port]")
-                            width: addAccountDialog.labelWidth
+                            width: contentItem.labelWidth
                             color: "white"
+                            elide: Text.ElideRight
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         TextField {
                             id: hostname
-                            width: parent.width - addAccountDialog.labelWidth
+                            width: parent.width - contentItem.labelWidth
                             placeholderText: appInfo.emptyStr+qsTr("Input hostname")
                             readOnly: false
                             validator: RegExpValidator {
@@ -226,13 +236,14 @@ Page {
                         visible: basicAuthButton.checked
                         Label {
                             text: appInfo.emptyStr+qsTr("Username")
-                            width: addAccountDialog.labelWidth
+                            width: contentItem.labelWidth
                             color: "white"
+                            elide: Text.ElideRight
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         TextField {
                             id: username
-                            width: parent.width - addAccountDialog.labelWidth
+                            width: parent.width - contentItem.labelWidth
                             placeholderText: appInfo.emptyStr+qsTr("Input username")
                             readOnly: false
                             validator: RegExpValidator {
@@ -245,13 +256,14 @@ Page {
                         visible: basicAuthButton.checked
                         Label {
                             text: appInfo.emptyStr+qsTr("Password")
-                            width: addAccountDialog.labelWidth
+                            width: contentItem.labelWidth
                             color: "white"
+                            elide: Text.ElideRight
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         TextField {
                             id: password
-                            width: parent.width - addAccountDialog.labelWidth
+                            width: parent.width - contentItem.labelWidth
                             placeholderText: appInfo.emptyStr+qsTr("Input password")
                             readOnly: false
                             echoMode: TextInput.Password
@@ -262,13 +274,14 @@ Page {
                         visible: tokenAuthButton.checked
                         Label {
                             text: appInfo.emptyStr+qsTr("Token")
-                            width: addAccountDialog.labelWidth
+                            width: contentItem.labelWidth
                             color: "white"
+                            elide: Text.ElideRight
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         TextField {
                             id: tokenInput
-                            width: parent.width - addAccountDialog.labelWidth
+                            width: parent.width - contentItem.labelWidth
                             placeholderText: appInfo.emptyStr+qsTr("Input token")
                             readOnly: false
                         }
@@ -278,13 +291,14 @@ Page {
                         visible: tokenAuthButton.checked
                         Label {
                             text: appInfo.emptyStr+qsTr("OAuth host")
-                            width: addAccountDialog.labelWidth
+                            width: contentItem.labelWidth
                             color: "white"
+                            elide: Text.ElideRight
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         TextField {
                             id: authHostname
-                            width: parent.width - addAccountDialog.labelWidth
+                            width: parent.width - contentItem.labelWidth
                             placeholderText: appInfo.emptyStr+qsTr("Input auth. hostname")
                             readOnly: false
                         }
@@ -347,6 +361,9 @@ Page {
                                         addAccountDialog.close();
                                     }
                                 } else {
+                                    // Set token to Basic if it's empty.
+                                    tokenInput.text = (tokenInput.text == "") ? "Basic" : tokenInput.text;
+
                                     // Test connection.
                                     testConnectionButton.state = "testing";
                                     var res = cloudDriveModel.testConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text, tokenInput.text);
