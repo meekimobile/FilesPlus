@@ -69,9 +69,7 @@ PageStackWindow {
         id: appInfo
 
         onLocaleChanged: {
-            console.debug("appInfo onLocaleChanged");
-            var p = findPage("folderPage");
-            if (p) p.requestJobQueueStatusSlot();
+            console.debug("appInfo onLocaleChanged " + locale);
         }
     }
 
