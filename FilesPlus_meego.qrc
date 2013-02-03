@@ -107,9 +107,6 @@
         <file>qml/FilesPlus/rename_inverted.svg</file>
         <file>qml/FilesPlus/toolbar_extension_inverted.svg</file>
         <file>qml/FilesPlus/trim_inverted.svg</file>
-        <file alias="FilesPlus_ru.qm">i18n/FilesPlus_ru.qm</file>
-        <file alias="FilesPlus_zh.qm">i18n/FilesPlus_zh.qm</file>
-        <file alias="FilesPlus_en.qm">i18n/FilesPlus_en.qm</file>
         <file>qml/FilesPlus/question_inverted.svg</file>
         <file>qml/FilesPlus/question.svg</file>
         <file alias="qml/FilesPlus/BluetoothSelectionDialog.qml">qml/FilesPlus/meego/BluetoothSelectionDialog.qml</file>
@@ -123,8 +120,6 @@
         <file>qml/FilesPlus/lock.svg</file>
         <file alias="qml/FilesPlus/TouchScrollBar.qml">qml/FilesPlus/meego/TouchScrollBar.qml</file>
         <file>qml/FilesPlus/save_inverted.svg</file>
-        <file alias="FilesPlus_it.qm">i18n/FilesPlus_it.qm</file>
-        <file alias="FilesPlus_de.qm">i18n/FilesPlus_de.qm</file>
         <file alias="qml/FilesPlus/CloudDrivePathDialog.qml">qml/FilesPlus/meego/CloudDrivePathDialog.qml</file>
         <file>qml/FilesPlus/cloud_options.svg</file>
         <file>qml/FilesPlus/cloud_options_inverted.svg</file>

@@ -2,9 +2,9 @@
 QT += declarative network script sql xml
 
 # Add more folders to ship with the application, here
-#folder_01.source = qml/FilesPlus
-#folder_01.target = qml
-#DEPLOYMENTFOLDERS = folder_01
+i18n_folder.source = i18n/*.qm
+i18n_folder.target = i18n
+DEPLOYMENTFOLDERS = i18n_folder
 
 # Additional import path used to resolve QML modules in Creator's code model
 QML_IMPORT_PATH =

@@ -69,6 +69,9 @@ void customMessageHandler(QtMsgType type, const char *msg)
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
     qDebug() << QTime::currentTime() << "main started.";
+    for (int i = 0; i < argc; i++) {
+        qDebug() << "main argv i" << i << argv[i];
+    }
 
     qmlRegisterType<PieChart>("Charts", 1, 0, "PieChart");
     qmlRegisterType<FolderSizeItemListModel>("FolderSizeItemListModel", 1, 0, "FolderSizeItemListModel");
@@ -170,7 +173,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 */
 
     // For testing only.
-    qDebug() << "main ApplicationsLocation" << QDesktopServices::storageLocation(QDesktopServices::ApplicationsLocation);
+    qDebug() << "main ApplicationBinaryLocation argv[0]" << argv[0];
+    qDebug() << "main ApplicationsLocation" << QDesktopServices::storageLocation(QDesktopServices::ApplicationsLocation) << "currentDir" << QDir().absolutePath();
     qDebug() << "main DataLocation" << QDesktopServices::storageLocation(QDesktopServices::DataLocation);
     qDebug() << "main HomeLocation" << QDesktopServices::storageLocation(QDesktopServices::HomeLocation);
     qDebug() << "main DocumentsLocation" << QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
@@ -220,7 +224,13 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     // ISSUE: If enable code below, causes unable to remove translator and switch back to english. Requires English translation to make it works.
     // Install default app translator.
     QTranslator myappTranslator;
-    bool res = myappTranslator.load(m_settings->applicationName() + "_" + localeName, ":/");
+    bool res = false;
+//    res = myappTranslator.load(m_settings->applicationName() + "_" + localeName, ":/"); // Load qm file from qrc.
+#ifdef Q_OS_SYMBIAN
+    res = myappTranslator.load(m_settings->applicationName() + "_" + localeName, "i18n"); // Load qm file from application default path.
+#elif defined(Q_WS_HARMATTAN)
+    res = myappTranslator.load(m_settings->applicationName() + "_" + localeName, QDir(app.data()->applicationDirPath()).absoluteFilePath("../i18n") ); // Load qm file from application binary path.
+#endif
     if (res) {
         qDebug() << "main myappTranslation is loaded. isEmpty" << myappTranslator.isEmpty();
         app.data()->installTranslator(&myappTranslator);
