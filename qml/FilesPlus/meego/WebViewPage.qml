@@ -110,10 +110,27 @@ Page {
         }
     }
 
-    TitlePanel {
+    Rectangle {
         id: urlPanel
+        width: parent.width
         height: 60
         z: 2
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: (theme.inverted) ? "#242424" : "#FFFFFF"
+            }
+
+            GradientStop {
+                position: 0.790
+                color: (theme.inverted) ? "#0F0F0F" : "#F0F0F0"
+            }
+
+            GradientStop {
+                position: 1
+                color: (theme.inverted) ? "#000000" : "#DBDBDB"
+            }
+        }
 
         TextField {
             id: urlInput
