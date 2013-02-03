@@ -231,7 +231,7 @@ bool AppInfo::loadTS(const QString localeName)
 
     qApp->removeTranslator(m_ts);
     bool res = false;
-    res = m_ts->load(m_appName + "_" + localeName, ":/");
+    res = m_ts->load(m_settings->applicationName() + "_" + localeName, ":/");
     if (res) {
         qDebug() << "AppInfo::loadTS m_ts is loaded. isEmpty" << m_ts->isEmpty();
         qApp->installTranslator(m_ts);
