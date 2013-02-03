@@ -9,8 +9,6 @@
 class AppInfo : public QDeclarativeItem
 {
     Q_OBJECT
-    Q_PROPERTY(QString domain READ getDomainName WRITE setDomainName)
-    Q_PROPERTY(QString app READ getAppName WRITE setAppName)
     Q_PROPERTY(QString emptyStr READ getEmptyStr NOTIFY localeChanged)
     Q_PROPERTY(QString locale READ getLocale WRITE setLocale NOTIFY localeChanged)
     Q_PROPERTY(QString emptySetting READ getEmptySetting NOTIFY settingChanged)
@@ -18,10 +16,6 @@ class AppInfo : public QDeclarativeItem
 public:
     explicit AppInfo(QDeclarativeItem *parent = 0);
     
-    QString getDomainName() const;
-    void setDomainName(const QString domainName);
-    QString getAppName() const;
-    void setAppName(const QString appName);
     QString getVersion() const;
 
     Q_INVOKABLE QVariant getSettingValue(const QString key, const QVariant defaultValue);

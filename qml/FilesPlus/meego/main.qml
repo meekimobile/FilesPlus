@@ -66,8 +66,6 @@ PageStackWindow {
 
     AppInfo {
         id: appInfo
-        domain: "MeekiMobile"
-        app: "FilesPlus"
 
         onLocaleChanged: {
             console.debug("appInfo onLocaleChanged");
