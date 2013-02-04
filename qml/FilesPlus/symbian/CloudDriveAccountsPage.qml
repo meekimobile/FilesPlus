@@ -166,6 +166,37 @@ Page {
             addAccountDialog.open();
         }
 
+        function validateForm() {
+            if (connectionName.text == "") {
+                connectionName.forceActiveFocus();
+                return false;
+            }
+            if (hostname.text == "") {
+                hostname.forceActiveFocus();
+                return false;
+            }
+
+            if (tokenAuthButton.checked && tokenInput.text == "OAuth") {
+                // Authorize.
+                if (authHostname.text == "") {
+                    // Focus missing auth hostname.
+                    authHostname.forceActiveFocus();
+                    return false;
+                }
+            } else {
+                if (username.text == "") {
+                    username.forceActiveFocus();
+                    return false;
+                }
+                if (password.text == "") {
+                    password.forceActiveFocus();
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         z: 2
         titleText: appInfo.emptyStr+cloudDriveModel.getCloudName(cloudType)+" "+qsTr("account")
         buttonTexts: [appInfo.emptyStr+qsTr("Save"), appInfo.emptyStr+qsTr("Cancel")]
@@ -180,7 +211,7 @@ Page {
             }
 
             width: parent.width - 20 // For Symbian only.
-            height: (window.inPortrait) ? Math.min(240, maxContentHeight) : Math.min(180, maxContentHeight) // For Symbian only.
+            height: (window.inPortrait) ? Math.min(250, maxContentHeight) : Math.min(180, maxContentHeight) // For Symbian only.
             anchors.horizontalCenter: parent.horizontalCenter
 
             Flickable {
@@ -349,20 +380,13 @@ Page {
                                 }
                             ]
                             onClicked: {
-                                if (hostname.text == "" || username.text == "") {
-                                    return;
-                                }
+                                if (!addAccountDialog.validateForm()) return;
 
                                 if (tokenAuthButton.checked && tokenInput.text == "OAuth") {
                                     // Authorize.
-                                    if (authHostname.text == "") {
-                                        // Focus missing auth hostname.
-                                        authHostname.forceActiveFocus();
-                                    } else {
-                                        // Get token by using auth hostname.
-                                        cloudDriveModel.testConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text, tokenInput.text, authHostname.text);
-                                        addAccountDialog.close();
-                                    }
+                                    // Get token by using auth hostname.
+                                    cloudDriveModel.testConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text, tokenInput.text, authHostname.text);
+                                    addAccountDialog.close();
                                 } else {
                                     // Set token to Basic if it's empty.
                                     tokenInput.text = (tokenInput.text == "") ? "Basic" : tokenInput.text;
@@ -419,14 +443,10 @@ Page {
             addAccountDialog.token = "";
         }
         onConfirm: {
-            connectionName.closeSoftwareInputPanel(); // For Symbian only.
-
-            if (connectionName.text == "") {
-                return;
-            }
+            if (!addAccountDialog.validateForm()) return;
 
             cloudDriveModel.saveConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text, tokenInput.text);
-            // TODO Refresh accounts.
+            cloudDriveModel.refreshCloudDriveAccounts();
         }
     }
 
