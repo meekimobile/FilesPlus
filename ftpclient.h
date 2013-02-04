@@ -18,6 +18,7 @@ public:
     bool testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname = "");
     void saveConnection(QString id, QString hostname, QString username, QString password, QString token);
 
+    QString getRemoteRoot(QString uid);
     bool isRemoteAbsolutePath();
     bool isConfigurable();
 
@@ -35,6 +36,7 @@ public:
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
+    QString mergePropertyAndFilesJson(QString propertyJsonText, QString filesJsonText);
 signals:
 
 public slots:
@@ -46,6 +48,7 @@ protected:
 //    QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:
     QHash<QString, QFtpWrapper*> *m_ftpHash;
+    QHash<QString, QString> m_remoteRootHash;
     QHash<QString, QFile*> m_localFileHash;
 
     QFtpWrapper *connectToHost(QString nonce, QString uid);

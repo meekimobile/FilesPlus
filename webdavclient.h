@@ -79,9 +79,11 @@ public slots:
     void fileGetReplyFinished(QNetworkReply *reply);
     void filePutReplyFinished(QNetworkReply *reply);
 
-    void createFolderReplyFinished(QNetworkReply *reply);
+    QString createFolderReplyFinished(QNetworkReply *reply);
 
     void fileGetResumeReplyFinished(QNetworkReply *reply);
+protected:
+    QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:
     QHash<QString, QString> m_remoteRootHash;
     QHash<QString, QFile*> m_localFileHash;

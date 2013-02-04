@@ -1763,17 +1763,6 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 
-    // Add item with dirtyHash to avoid duplicate sync job.
-    // TODO handle other clouds.
-//    switch (job.type) {
-//    case Dropbox:
-//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-//        break;
-//    case SkyDrive:
-//        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-//        break;
-//    }
-
     emit proceedNextJobSignal();
 }
 
@@ -1822,17 +1811,6 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 
-    // Add item with dirtyHash to avoid duplicate sync job.
-    // TODO handle other clouds.
-//    switch (job.type) {
-//    case Dropbox:
-//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-//        break;
-//    case SkyDrive:
-//        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-//        break;
-//    }
-
     emit proceedNextJobSignal();
 }
 
@@ -1870,18 +1848,6 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
     // Emit signal to show cloud_wait.
     clearConnectedRemoteDirtyCache(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
-
-    // Add item with dirtyHash to avoid duplicate sync job.
-    // ISSUE it created cloud icon on selected item even use cancel sync.
-    // TODO handle other clouds.
-//    switch (job.type) {
-//    case Dropbox:
-//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-//        break;
-//    case SkyDrive:
-//        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-//        break;
-//    }
 
     emit proceedNextJobSignal();
 }
@@ -1994,27 +1960,8 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
                     return;
                 }
 
-                switch (type) {
-                case Dropbox:
-                    hash = sc.property("rev").toString();
-                    createdRemotePath = sc.property("path").toString();
-                    break;
-                case SkyDrive:
-                    hash = sc.property("updated_time").toString();
-                    createdRemotePath = sc.property("id").toString();
-                    break;
-                case GoogleDrive:
-                    hash = sc.property("modifiedDate").toString();
-                    createdRemotePath = sc.property("id").toString();
-                    break;
-                case Ftp:
-                    hash = sc.property("lastModified").toString();
-                    createdRemotePath = sc.property("path").toString();
-                    break;
-                case WebDAV:
-                    hash = formatJSONDateString(parseReplyDateString(WebDAV, sc.property("property").property("propstat").property("prop").property("getlastmodified").toString()));
-                    createdRemotePath = sc.property("property").property("href").toString();
-                }
+                hash = sc.property("hash").toString();
+                createdRemotePath = sc.property("absolutePath").toString();
                 addItem(type, uid, localPath, createdRemotePath, hash);
 
                 // Update parentCloudDriveItem.
@@ -2096,14 +2043,6 @@ void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString ui
     // Emit signal to show cloud_wait.
     emit jobEnqueuedSignal(job.jobId, localPath);
 
-//    // Add item with dirtyHash to avoid duplicate sync job.
-//    // TODO handle other clouds.
-//    switch (job.type) {
-//    case Dropbox:
-//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-//        break;
-//    }
-
     emit proceedNextJobSignal();
 }
 
@@ -2131,24 +2070,7 @@ QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, Q
     if (createFolderReplyResult != "") {
         QScriptEngine se;
         QScriptValue sc = se.evaluate("(" + createFolderReplyResult + ")");
-        QString createdRemotePath = "";
-        switch (type) {
-        case Dropbox:
-            createdRemotePath = sc.property("path").toString();
-            break;
-        case SkyDrive:
-            createdRemotePath = sc.property("id").toString();
-            break;
-        case GoogleDrive:
-            createdRemotePath = sc.property("id").toString();
-            break;
-        case Ftp:
-            createdRemotePath = sc.property("path").toString();
-            break;
-        case WebDAV:
-            createdRemotePath = sc.property("property").property("href").toString();
-            break;
-        }
+        QString createdRemotePath = sc.property("absolutePath").toString();
 
         return createdRemotePath;
     }
@@ -2472,17 +2394,6 @@ void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, Q
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 
-//    // Add item with dirtyHash to avoid duplicate sync job.
-//    // TODO handle other clouds.
-//    switch (job.type) {
-//    case Dropbox:
-//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-//        break;
-//    case SkyDrive:
-//        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-//        break;
-//    }
-
     emit proceedNextJobSignal();
 }
 
@@ -2511,17 +2422,6 @@ void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, Q
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 
-//    // Add item with dirtyHash to avoid duplicate sync job.
-//    // TODO handle other clouds.
-//    switch (job.type) {
-//    case Dropbox:
-//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-//        break;
-//    case SkyDrive:
-//        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-//        break;
-//    }
-
     emit proceedNextJobSignal();
 }
 
@@ -2541,17 +2441,6 @@ void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid,
     // Emit signal to show cloud_wait.
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
-
-//    // Add item with dirtyHash to avoid duplicate sync job.
-//    // TODO handle other clouds.
-//    switch (job.type) {
-//    case Dropbox:
-//        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-//        break;
-//    case SkyDrive:
-//        addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-//        break;
-//    }
 
     emit proceedNextJobSignal();
 }
@@ -2665,41 +2554,14 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     QScriptEngine engine;
     QScriptValue sc;
-    QString lastModifiedText;
     QString hash;
 
     if (err == 0) {
         // TODO handle other clouds.
         if (job.localFilePath != "") {
-            switch (job.type) {
-            case Dropbox:
-                sc = engine.evaluate("(" + msg + ")");
-                hash = sc.property("rev").toString();
-                addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
-                break;
-            case SkyDrive:
-                sc = engine.evaluate("(" + msg + ")");
-                hash = sc.property("updated_time").toString();
-                addItem(SkyDrive, job.uid, job.localFilePath, job.remoteFilePath, hash);
-                break;
-            case GoogleDrive:
-                sc = engine.evaluate("(" + msg + ")");
-                hash = sc.property("modifiedDate").toString();
-                addItem(GoogleDrive, job.uid, job.localFilePath, job.remoteFilePath, hash);
-                break;
-            case Ftp:
-                sc = engine.evaluate("(" + msg + ")");
-                hash = sc.property("lastModified").toString();
-                addItem(Ftp, job.uid, job.localFilePath, job.remoteFilePath, hash);
-                break;
-            case WebDAV:
-                sc = engine.evaluate("(" + msg + ")");
-                lastModifiedText = sc.property("property").property("propstat").property("prop").property("getlastmodified").toString();
-                hash = formatJSONDateString(parseReplyDateString(WebDAV, lastModifiedText));
-                qDebug() << "CloudDriveModel::fileGetReplyFilter WebDAV lastModifiedText" << lastModifiedText << "hash" << hash;
-                addItem(WebDAV, job.uid, job.localFilePath, job.remoteFilePath, hash);
-                break;
-            }
+            sc = engine.evaluate("(" + msg + ")");
+            hash = sc.property("hash").toString();
+            addItem(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, hash);
         }
     } else {
         if (job.localFilePath != "") {
@@ -2725,53 +2587,17 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     QScriptEngine engine;
     QScriptValue sc;
-    QString lastModifiedText;
     QString hash;
     QString remoteFilePath;
 
     if (err == 0) {
         // TODO handle other clouds.
         if (job.localFilePath != "") {
-            switch (job.type) {
-            case Dropbox:
-                sc = engine.evaluate("(" + msg + ")");
-                remoteFilePath = sc.property("path").toString();
-                hash = sc.property("rev").toString();
-                job.newRemoteFilePath = remoteFilePath;
-                addItem(Dropbox, job.uid, job.localFilePath, remoteFilePath, hash);
-                break;
-            case SkyDrive:
-                // Parse result and update remote file path to item.
-                sc = engine.evaluate("(" + msg + ")");
-                remoteFilePath = sc.property("id").toString();
-                hash = sc.property("updated_time").toString();
-                job.newRemoteFilePath = remoteFilePath;
-                addItem(SkyDrive, job.uid, job.localFilePath, remoteFilePath, hash);
-                break;
-            case GoogleDrive:
-                sc = engine.evaluate("(" + msg + ")");
-                remoteFilePath = sc.property("id").toString();
-                hash = sc.property("modifiedDate").toString();
-                job.newRemoteFilePath = remoteFilePath;
-                addItem(GoogleDrive, job.uid, job.localFilePath, remoteFilePath, hash);
-                break;
-            case Ftp:
-                // Parse result and update remote file path to item.
-                sc = engine.evaluate("(" + msg + ")");
-                remoteFilePath = sc.property("path").toString();
-                hash = sc.property("lastModified").toString();
-                job.newRemoteFilePath = remoteFilePath;
-                addItem(Ftp, job.uid, job.localFilePath, remoteFilePath, hash);
-                break;
-            case WebDAV:
-                sc = engine.evaluate("(" + msg + ")");
-                remoteFilePath = sc.property("property").property("href").toString();
-                lastModifiedText = sc.property("property").property("propstat").property("prop").property("getlastmodified").toString();
-                hash = formatJSONDateString(parseReplyDateString(WebDAV, lastModifiedText));
-                job.newRemoteFilePath = remoteFilePath;
-                addItem(WebDAV, job.uid, job.localFilePath, remoteFilePath, hash);
-                break;
-            }
+            sc = engine.evaluate("(" + msg + ")");
+            remoteFilePath = sc.property("absolutePath").toString();
+            hash = sc.property("hash").toString();
+            job.newRemoteFilePath = remoteFilePath;
+            addItem(getClientType(job.type), job.uid, job.localFilePath, remoteFilePath, hash);
         }
     } else {
         if (job.localFilePath != "") {
@@ -2795,44 +2621,6 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
 void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
-    QScriptEngine engine;
-    QScriptValue sc;
-    QString lastModifiedText;
-    QString hash;
-    QString remoteFilePath;
-
-    if (err == 0) {
-        // TODO generalize to support other clouds.
-        switch (job.type) {
-        case Dropbox:
-            // Don't update hash to item yet. Hash will be updated by fileGet/filePut.
-            break;
-        case SkyDrive:
-            // TODO Parse result and update remote file path to item.
-//            sc = engine.evaluate("(" + msg + ")");
-//            remoteFilePath = sc.property("property").property("id").toString();
-//            hash = sc.property("property").property("updated_time").toString();
-//            addItem(SkyDrive, job.uid, job.localFilePath, remoteFilePath, hash);
-            break;
-        case Ftp:
-            // TODO Parse result and update remote file path to item.
-//            sc = engine.evaluate("(" + msg + ")");
-//            remoteFilePath = sc.property("property").property("path").toString();
-//            hash = sc.property("property").property("lastModified").toString();
-//            addItem(Ftp, job.uid, job.localFilePath, remoteFilePath, hash);
-            break;
-        case WebDAV:
-            // TODO Parse result and update remote file path to item.
-//            sc = engine.evaluate("(" + msg + ")");
-//            lastModifiedText = sc.property("property").property("propstat").property("prop").property("getlastmodified").toString();
-//            hash = formatJSONDateString(parseReplyDateString(WebDAV, lastModifiedText));
-//            qDebug() << "CloudDriveModel::metadataReplyFilter hash" << hash;
-            break;
-        }
-    } else if (err == 202) {
-        // Issue: handle 202 Nonce already in used.
-        // Solution: let QML handle retry.
-    }
 
     // Update job running flag.
     job.isRunning = false;
@@ -2876,46 +2664,11 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
     if (err == 0) {
         // Add connection if localFilePath is specified because createFolder was invoked in syncFromLocal.
         // NOTE It's not required to create cloud item for created folder. Because further sync operation will do.
-        switch (job.type) {
-        case Dropbox:
-            sc = engine.evaluate("(" + msg + ")");
-            isDir = sc.property("is_dir").toBool();
-            hash = (isDir) ? sc.property("hash").toString() : sc.property("rev").toString();
-            newRemotePath = sc.property("path").toString();
-            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath);
-            break;
-        case SkyDrive:
-            sc = engine.evaluate("(" + msg + ")");
-            isDir = sc.property("type").toString().indexOf(QRegExp("folder|album")) != -1;
-            hash = sc.property("updated_time").toString();
-            newRemotePath = sc.property("id").toString();
-            newRemoteParentPath = sc.property("parent_id").toString();
-            break;
-        case GoogleDrive:
-            sc = engine.evaluate("(" + msg + ")");
-            isDir = sc.property("mimeType").toString().indexOf(QRegExp("application/vnd.google-apps.folder")) != 1;
-            hash = sc.property("modifiedDate").toString();
-            newRemotePath = sc.property("id").toString();
-            if (sc.property("parents").toVariant().toList().length() > 0) {
-                newRemoteParentPath = sc.property("parents").property(0).property("id").toString();
-            }
-            break;
-        case Ftp:
-            sc = engine.evaluate("(" + msg + ")");
-            isDir = sc.property("isDir").toBool();
-            newRemotePath = sc.property("path").toString();
-            hash = sc.property("lastModified").toString();
-            newRemotePath = sc.property("path").toString();
-            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath);
-            break;
-        case WebDAV:
-            sc = engine.evaluate("(" + msg + ")");
-            isDir = sc.property("property").property("href").toString().endsWith("/");
-            hash = formatJSONDateString(parseReplyDateString(WebDAV, sc.property("property").property("propstat").property("prop").property("getlastmodified").toString()));
-            newRemotePath = sc.property("property").property("href").toString();
-            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath) + "/"; // WebDAV path always end with /
-            break;
-        }
+        sc = engine.evaluate("(" + msg + ")");
+        isDir = sc.property("isDir").toBool();
+        hash = sc.property("hash").toString();
+        newRemotePath = sc.property("absolutePath").toString();
+        newRemoteParentPath = sc.property("parentPath").toString();
 
         qDebug() << "CloudDriveModel::createFolderReplyFilter" << getCloudName(job.type) << "hash" << hash << "newRemotePath" << newRemotePath << "newRemoteParentPath" << newRemoteParentPath;
 
@@ -2950,33 +2703,15 @@ void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg
     bool isDir;
 
     if (err == 0) {
-        switch (job.type) {
-        case Dropbox:
-            sc = engine.evaluate("(" + msg + ")");
-            isDir = sc.property("is_dir").toBool();
-            hash = (isDir) ? sc.property("hash").toString() : sc.property("rev").toString();
-            newRemotePath = sc.property("path").toString();
-            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath);
-            oldRemoteParentPath = getParentRemotePath(getClientType(job.type), job.remoteFilePath);
-            break;
-        case Ftp:
-            sc = engine.evaluate("(" + msg + ")");
-            hash = sc.property("lastModified").toString();
-            newRemotePath = sc.property("path").toString();
-            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath);
-            oldRemoteParentPath = getParentRemotePath(getClientType(job.type), job.remoteFilePath);
-            break;
-        case WebDAV:
-            sc = engine.evaluate("(" + msg + ")");
-            hash = formatJSONDateString(parseReplyDateString(WebDAV, sc.property("property").property("propstat").property("prop").property("getlastmodified").toString()));
-            newRemotePath = sc.property("property").property("href").toString();
-            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath) + "/"; // WebDAV path always end with /
-            oldRemoteParentPath = getParentRemotePath(getClientType(job.type), job.remoteFilePath);
-            break;
-        }
-
         // Update connection for client which uses absolute remote path.
         if (isRemoteAbsolutePath(getClientType(job.type))) {
+            sc = engine.evaluate("(" + msg + ")");
+            isDir = sc.property("isDir").toBool();
+            hash = sc.property("hash").toString();
+            newRemotePath = sc.property("absolutePath").toString();
+            newRemoteParentPath = sc.property("parentPath").toString();
+            oldRemoteParentPath = getParentRemotePath(getClientType(job.type), job.remoteFilePath);
+
             if (job.localFilePath != "" && job.newLocalFilePath != "") {
                 // Local path is specified, it's requested from FolderPage.
                 // Update both new local and remote path for specified local path.
@@ -3033,47 +2768,11 @@ void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg
 
     if (err == 0) {
         // TODO If it doesn't do here, it will be sync'd with parent folder's metadata request.
-        switch (job.type) {
-        case Dropbox:
-            sc = engine.evaluate("(" + msg + ")");
-            isDir = sc.property("is_dir").toBool();
-            hash = (isDir) ? sc.property("hash").toString() : sc.property("rev").toString();
-            newRemotePath = sc.property("path").toString();
-            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath);
-            break;
-        case SkyDrive:
-            sc = engine.evaluate("(" + msg + ")");
-            isDir = sc.property("type").toString().indexOf(QRegExp("folder|album")) != -1;
-            hash = sc.property("updated_time").toString();
-            newRemotePath = sc.property("id").toString();
-            newRemoteParentPath = sc.property("parent_id").toString();
-            break;
-        case GoogleDrive:
-            sc = engine.evaluate("(" + msg + ")");
-            isDir = sc.property("mimeType").toString().indexOf(QRegExp("application/vnd.google-apps.folder")) != 1;
-            hash = sc.property("modifiedDate").toString();
-            newRemotePath = sc.property("id").toString();
-            if (sc.property("parents").toVariant().toList().length() > 0) {
-                newRemoteParentPath = sc.property("parents").property(0).property("id").toString();
-            }
-            break;
-        case Ftp:
-            sc = engine.evaluate("(" + msg + ")");
-            isDir = sc.property("isDir").toBool();
-            newRemotePath = sc.property("path").toString();
-            hash = sc.property("lastModified").toString();
-            newRemotePath = sc.property("path").toString();
-            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath);
-            break;
-        case WebDAV:
-            sc = engine.evaluate("(" + msg + ")");
-            isDir = sc.property("property").property("href").toString().endsWith("/");
-            hash = formatJSONDateString(parseReplyDateString(WebDAV, sc.property("property").property("propstat").property("prop").property("getlastmodified").toString()));
-            newRemotePath = sc.property("property").property("href").toString();
-            newRemoteParentPath = getParentRemotePath(getClientType(job.type), newRemotePath) + "/"; // WebDAV path always end with /
-            break;
-        }
-
+        sc = engine.evaluate("(" + msg + ")");
+        isDir = sc.property("isDir").toBool();
+        hash = sc.property("hash").toString();
+        newRemotePath = sc.property("absolutePath").toString();
+        newRemoteParentPath = sc.property("parentPath").toString();
         qDebug() << "CloudDriveModel::copyFileReplyFilter" << getCloudName(job.type) << "hash" << hash << "newRemotePath" << newRemotePath << "newRemoteParentPath" << newRemoteParentPath;
 
         // Sync newRemoteParentPath (with DirtyHash) to get newRemotePath sync'd.

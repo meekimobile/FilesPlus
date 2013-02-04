@@ -731,16 +731,8 @@ QString DropboxClient::delta(QString nonce, QString uid, bool synchronous)
         Sleeper::msleep(100);
     }
 
-    // Emit signal.
-    // TODO Reply common json if no error.
-    QString replyString = QString::fromUtf8(reply->readAll());
-    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyString);
-
-    // Scheduled to delete later.
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-
-    return replyString;
+    // Emit signal and return replyBody.
+    return deltaReplyFinished(reply);
 }
 
 QIODevice *DropboxClient::fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset)
@@ -1035,20 +1027,13 @@ QString DropboxClient::createFolder(QString nonce, QString uid, QString remotePa
         Sleeper::msleep(100);
     }
 
-    // Emit signal.
-    QString replyString = QString::fromUtf8(reply->readAll());
-    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyString);
-
-    // Scheduled to delete later.
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-
-    return replyString;
+    // Emit signal and return replyBody.
+    return createFolderReplyFinished(reply);
 }
 
 void DropboxClient::requestTokenReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::requestTokenReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::requestTokenReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1076,7 +1061,7 @@ void DropboxClient::requestTokenReplyFinished(QNetworkReply *reply)
 
 void DropboxClient::accessTokenReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::accessTokenReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::accessTokenReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1116,7 +1101,7 @@ void DropboxClient::accessTokenReplyFinished(QNetworkReply *reply)
 
 void DropboxClient::accountInfoReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::accountInfoReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::accountInfoReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1146,7 +1131,7 @@ void DropboxClient::accountInfoReplyFinished(QNetworkReply *reply)
 
 void DropboxClient::quotaReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::quotaReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::quotaReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString replyBody = QString::fromUtf8(reply->readAll());
@@ -1174,6 +1159,7 @@ QString DropboxClient::fileGetReplySave(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
+    QString result;
     if (reply->error() == QNetworkReply::NoError) {
         QString metadata;
         metadata.append(reply->rawHeader("x-dropbox-metadata"));
@@ -1209,18 +1195,24 @@ QString DropboxClient::fileGetReplySave(QNetworkReply *reply)
         // Close target file.
         localTargetFile->close();
 
-        return metadata;
+        // Return common json.
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + metadata + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        result = stringifyScriptValue(engine, parsedObj);
     } else {
         qDebug() << "DropboxClient::fileGetReplySave nonce" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
-        return QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
+        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
     }
 
     // Remove once used.
     m_localFileHash.remove(nonce);
+
+    return result;
 }
 
 void DropboxClient::fileGetReplyFinished(QNetworkReply *reply) {
-    qDebug() << "DropboxClient::fileGetReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::fileGetReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1235,7 +1227,7 @@ void DropboxClient::fileGetReplyFinished(QNetworkReply *reply) {
 }
 
 void DropboxClient::filePutReplyFinished(QNetworkReply *reply) {
-    qDebug() << "DropboxClient::filePutReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::filePutReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1246,7 +1238,18 @@ void DropboxClient::filePutReplyFinished(QNetworkReply *reply) {
         m_localFileHash.remove(nonce);
     }
 
-    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    // Parse common property json.
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "DropboxClient::filePutReplyFinished replyBody" << replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        // Return common json.
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        replyBody = stringifyScriptValue(engine, parsedObj);
+    }
+
+    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // scheduled to delete later.
     reply->deleteLater();
@@ -1254,11 +1257,27 @@ void DropboxClient::filePutReplyFinished(QNetworkReply *reply) {
 }
 
 void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
-    qDebug() << "DropboxClient::metadataReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::metadataReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit metadataReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    // Parse common property json.
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "DropboxClient::metadataReplyFinished replyBody" << replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        parsedObj.setProperty("children", engine.newArray());
+        int contentsCount = jsonObj.property("contents").toVariant().toList().length();
+        for (int i = 0; i < contentsCount; i++) {
+            parsedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, jsonObj.property("contents").property(i)));
+        }
+
+        replyBody = stringifyScriptValue(engine, parsedObj);
+    }
+
+    emit metadataReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // scheduled to delete later.
     reply->deleteLater();
@@ -1267,37 +1286,75 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
 
 void DropboxClient::browseReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::browseReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::browseReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit browseReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    // Parse common property json.
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "DropboxClient::browseReplyFinished replyBody" << replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        parsedObj.setProperty("children", engine.newArray());
+        int contentsCount = jsonObj.property("contents").toVariant().toList().length();
+        for (int i = 0; i < contentsCount; i++) {
+            parsedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, jsonObj.property("contents").property(i)));
+        }
+
+        replyBody = stringifyScriptValue(engine, parsedObj);
+    }
+
+    emit browseReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::createFolderReplyFinished(QNetworkReply *reply)
+QString DropboxClient::createFolderReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::createFolderReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::createFolderReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    // Parse common property json.
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "DropboxClient::createFolderReplyFinished replyBody" << replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        replyBody = stringifyScriptValue(engine, parsedObj);
+    }
+
+    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+
+    return replyBody;
 }
 
 void DropboxClient::moveFileReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::moveFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::moveFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    // Parse common property json.
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "DropboxClient::moveFileReplyFinished replyBody" << replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        replyBody = stringifyScriptValue(engine, parsedObj);
+    }
+
+    emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // scheduled to delete later.
     reply->deleteLater();
@@ -1306,11 +1363,21 @@ void DropboxClient::moveFileReplyFinished(QNetworkReply *reply)
 
 void DropboxClient::copyFileReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::copyFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::copyFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    // Parse common property json.
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "DropboxClient::copyFileReplyFinished replyBody" << replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        replyBody = stringifyScriptValue(engine, parsedObj);
+    }
+
+    emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // scheduled to delete later.
     reply->deleteLater();
@@ -1319,11 +1386,21 @@ void DropboxClient::copyFileReplyFinished(QNetworkReply *reply)
 
 void DropboxClient::deleteFileReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::deleteFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::deleteFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    // Parse common property json.
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "DropboxClient::deleteFileReplyFinished replyBody" << replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        replyBody = stringifyScriptValue(engine, parsedObj);
+    }
+
+    emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // scheduled to delete later.
     reply->deleteLater();
@@ -1332,16 +1409,17 @@ void DropboxClient::deleteFileReplyFinished(QNetworkReply *reply)
 
 void DropboxClient::shareFileReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::shareFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::shareFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString replyBody = QString::fromUtf8(reply->readAll());
+    QScriptEngine engine;
     QScriptValue sc;
     QString url = "";
     int expires = 0;
 
     if (reply->error() == QNetworkReply::NoError) {
-        sc = m_engine.evaluate("(" + replyBody + ")");
+        sc = engine.evaluate("(" + replyBody + ")");
         url = sc.property("url").toString();
         expires = -1;
     }
@@ -1353,7 +1431,7 @@ void DropboxClient::shareFileReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::deltaReplyFinished(QNetworkReply *reply)
+QString DropboxClient::deltaReplyFinished(QNetworkReply *reply)
 {
     qDebug() << "DropboxClient::deltaReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
@@ -1361,7 +1439,7 @@ void DropboxClient::deltaReplyFinished(QNetworkReply *reply)
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
 
     QString replyBody = QString::fromUtf8(reply->readAll());
-
+    qDebug() << "DropboxClient::deltaReplyFinished replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
         QScriptValue sourceObj = engine.evaluate("(" + replyBody + ")");
@@ -1414,10 +1492,10 @@ void DropboxClient::deltaReplyFinished(QNetworkReply *reply)
         m_settings.setValue(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid), parsedObj.property("nextDeltaCursor").toVariant());
 
 //        qDebug() << "DropboxClient::deltaReplyFinished parsedObj" << stringifyScriptValue(engine, parsedObj);
-        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), stringifyScriptValue(engine, parsedObj));
-    } else {
-        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+        replyBody = stringifyScriptValue(engine, parsedObj);
     }
+
+    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // scheduled to delete later.
     reply->deleteLater();
@@ -1426,7 +1504,7 @@ void DropboxClient::deltaReplyFinished(QNetworkReply *reply)
 
 void DropboxClient::fileGetResumeReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::fileGetResumeReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::fileGetResumeReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1442,7 +1520,7 @@ void DropboxClient::fileGetResumeReplyFinished(QNetworkReply *reply)
 
 void DropboxClient::filePutResumeReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::filePutResumeReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::filePutResumeReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 

@@ -54,6 +54,7 @@ public:
 
     QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
+    void mergePropertyAndFilesJson(QString nonce, QString callback);
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous = false);
     QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
     void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
@@ -80,7 +81,7 @@ public slots:
     void propertyReplyFinished(QNetworkReply *reply);
     void filesReplyFinished(QNetworkReply *reply);
 
-    void createFolderReplyFinished(QNetworkReply *reply);
+    QString createFolderReplyFinished(QNetworkReply *reply);
     void moveFileReplyFinished(QNetworkReply *reply);
     void copyFileReplyFinished(QNetworkReply *reply);
     void deleteFileReplyFinished(QNetworkReply *reply);

@@ -210,8 +210,8 @@ QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
 
     parsedObj.setProperty("name", jsonObj.property("title"));
     parsedObj.setProperty("absolutePath", jsonObj.property("id"));
-    parsedObj.setProperty("parentPath", jsonObj.property("parents").property(0).property("id"));
-    parsedObj.setProperty("size", jsonObj.property("fileSize"));
+    parsedObj.setProperty("parentPath", jsonObj.property("parents").property(0).isValid() ? jsonObj.property("parents").property(0).property("id") : QScriptValue(""));
+    parsedObj.setProperty("size", jsonObj.property("fileSize").isValid() ? jsonObj.property("fileSize") : QScriptValue(0));
     parsedObj.setProperty("isDeleted", QScriptValue(jsonObj.property("explicitlyTrashed").toBool() || jsonObj.property("labels").property("trashed").toBool()));
     parsedObj.setProperty("isDir", QScriptValue(jsonObj.property("mimeType").toString() == "application/vnd.google-apps.folder"));
     parsedObj.setProperty("lastModified", jsonObj.property("modifiedDate"));
@@ -420,15 +420,8 @@ QString GCDClient::createFolder(QString nonce, QString uid, QString remoteParent
         Sleeper::msleep(100);
     }
 
-    // Emit signal.
-    QString replyString = QString::fromUtf8(reply->readAll());
-    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyString);
-
-    // Scheduled to delete later.
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-
-    return replyString;
+    // Emit signal and return replyBody.
+    return createFolderReplyFinished(reply);
 }
 
 void GCDClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
@@ -545,6 +538,7 @@ QString GCDClient::fileGetReplySave(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
+    QString result;
     if (reply->error() == QNetworkReply::NoError) {
         qDebug() << "GCDClient::fileGetReplySave reply bytesAvailable" << reply->bytesAvailable();
 
@@ -575,15 +569,24 @@ QString GCDClient::fileGetReplySave(QNetworkReply *reply)
         // Close target file.
         localTargetFile->close();
 
-        return QString::fromUtf8(m_propertyReplyHash->value(nonce));
+        QString propertyReplyBody = QString::fromUtf8(m_propertyReplyHash->value(nonce));
+        qDebug() << "GCDClient::fileGetReplySave propertyReplyBody" << propertyReplyBody;
+
+        // Return common json.
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + propertyReplyBody + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        result = stringifyScriptValue(engine, parsedObj);
     } else {
         qDebug() << "GCDClient::fileGetReplySave nonce" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
-        return QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
+        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
     }
 
     // Remove once used.
     m_localFileHash.remove(nonce);
     m_propertyReplyHash->remove(nonce);
+
+    return result;
 }
 
 QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
@@ -1028,16 +1031,8 @@ QString GCDClient::delta(QString nonce, QString uid, bool synchronous)
         Sleeper::msleep(100);
     }
 
-    // Emit signal.
-    // TODO Reply common json if no error.
-    QString replyString = QString::fromUtf8(reply->readAll());
-    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyString);
-
-    // Scheduled to delete later.
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-
-    return replyString;
+    // Emit signal and return replyBody.
+    return deltaReplyFinished(reply);
 }
 
 QString GCDClient::getRemoteRoot(QString uid)
@@ -1306,7 +1301,7 @@ void GCDClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
 
 void GCDClient::accessTokenReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::accessTokenReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::accessTokenReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1353,7 +1348,7 @@ void GCDClient::accessTokenReplyFinished(QNetworkReply *reply)
 
 void GCDClient::accountInfoReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::accountInfoReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::accountInfoReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1438,7 +1433,7 @@ void GCDClient::quotaReplyFinished(QNetworkReply *reply)
  "quotaBytesUsedInTrash": "4679290",
 ... }
  */
-    qDebug() << "GCDClient::quotaReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::quotaReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString replyBody = QString::fromUtf8(reply->readAll());
@@ -1462,7 +1457,7 @@ void GCDClient::quotaReplyFinished(QNetworkReply *reply)
 
 void GCDClient::fileGetReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::fileGetReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::fileGetReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1478,7 +1473,7 @@ void GCDClient::fileGetReplyFinished(QNetworkReply *reply)
 
 void GCDClient::filePutReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::filePutReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::filePutReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
@@ -1492,9 +1487,11 @@ void GCDClient::filePutReplyFinished(QNetworkReply *reply)
         m_localFileHash.remove(nonce);
     }
 
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "GCDClient::filePutReplyFinished replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
-        QScriptValue sc = engine.evaluate("(" + QString::fromUtf8(reply->readAll()) + ")");
+        QScriptValue sc = engine.evaluate("(" + replyBody + ")");
         QString remoteFilePath = sc.property("id").toString();
 
         QByteArray metadata;
@@ -1502,13 +1499,18 @@ void GCDClient::filePutReplyFinished(QNetworkReply *reply)
         metadata.append(" \"title\": \"" + remoteFileName.toUtf8() + "\", ");
         metadata.append(" \"parents\": [{ \"id\": \"" + remoteParentPath.toUtf8() + "\" }] ");
         metadata.append("}");
-        qDebug() << "GCDClient::filePutReplyFinished metadata" << metadata;
 
         reply = patchFile(nonce, uid, remoteFilePath, metadata);
+        replyBody = QString::fromUtf8(reply->readAll());
+        qDebug() << "GCDClient::filePutReplyFinished patchFile replyBody" << replyBody;
+        if (reply->error() == QNetworkReply::NoError) {
+            QScriptValue jsonObj = engine.evaluate("(" + replyBody + ")");
+            QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+            replyBody = stringifyScriptValue(engine, parsedObj);
+        }
     }
 
-    // REMARK Use QString::fromUtf8() to support unicode text.
-    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // Scheduled to delete later.
     reply->deleteLater();
@@ -1517,7 +1519,7 @@ void GCDClient::filePutReplyFinished(QNetworkReply *reply)
 
 void GCDClient::filePutMultipartReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::filePutMultipartReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::filePutMultipartReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1532,8 +1534,16 @@ void GCDClient::filePutMultipartReplyFinished(QNetworkReply *reply)
         m_bufferHash.remove(nonce);
     }
 
-    // REMARK Use QString::fromUtf8() to support unicode text.
-    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "GCDClient::filePutMultipartReplyFinished replyBody" << replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        replyBody = stringifyScriptValue(engine, parsedObj);
+    }
+
+    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // Scheduled to delete later.
     reply->deleteLater();
@@ -1542,7 +1552,7 @@ void GCDClient::filePutMultipartReplyFinished(QNetworkReply *reply)
 
 void GCDClient::metadataReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::metadataReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::metadataReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1555,7 +1565,7 @@ void GCDClient::metadataReplyFinished(QNetworkReply *reply)
 
 void GCDClient::browseReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::browseReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::browseReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1566,9 +1576,44 @@ void GCDClient::browseReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
+void GCDClient::mergePropertyAndFilesJson(QString nonce, QString callback)
+{
+    if (m_propertyReplyHash->contains(nonce) && m_filesReplyHash->contains(nonce)) {
+        QScriptEngine engine;
+        QScriptValue mergedObj;
+        QScriptValue propertyObj;
+        QScriptValue filesObj;
+        qDebug() << "GCDClient::mergePropertyAndFilesJson propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
+        qDebug() << "GCDClient::mergePropertyAndFilesJson filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
+        propertyObj = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
+        filesObj = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
+
+        mergedObj = parseCommonPropertyScriptValue(engine, propertyObj);
+        mergedObj.setProperty("children", engine.newArray());
+        int contentsCount = filesObj.property("items").toVariant().toList().length();
+        for (int i = 0; i < contentsCount; i++) {
+            mergedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, filesObj.property("items").property(i)));
+        }
+
+        QString replyBody = stringifyScriptValue(engine, mergedObj);
+
+        // Remove once used.
+        m_propertyReplyHash->remove(nonce);
+        m_filesReplyHash->remove(nonce);
+
+        if (callback == "browse") {
+            emit browseReplySignal(nonce, QNetworkReply::NoError, "", replyBody);
+        } else if (callback == "metadata") {
+            emit metadataReplySignal(nonce, QNetworkReply::NoError, "", replyBody);
+        } else {
+            qDebug() << "GCDClient::mergePropertyAndFilesJson invalid callback" << callback;
+        }
+    }
+}
+
 void GCDClient::propertyReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::propertyReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::propertyReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString callback = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
@@ -1591,26 +1636,7 @@ void GCDClient::propertyReplyFinished(QNetworkReply *reply)
     }
 
     if (m_propertyReplyHash->contains(nonce) && m_filesReplyHash->contains(nonce)) {
-        QScriptEngine engine;
-        QScriptValue sc;
-        QScriptValue scProperty;
-        QScriptValue scJsonStringify;
-        sc = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
-        scProperty = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
-        sc.setProperty("property", scProperty);
-        scJsonStringify = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << sc);
-
-        // Remove once used.
-        m_propertyReplyHash->remove(nonce);
-        m_filesReplyHash->remove(nonce);
-
-        if (callback == "browse") {
-            emit browseReplySignal(nonce, QNetworkReply::NoError, "", scJsonStringify.toString());
-        } else if (callback == "metadata") {
-            emit metadataReplySignal(nonce, QNetworkReply::NoError, "", scJsonStringify.toString());
-        } else {
-            qDebug() << "GCDClient::propertyReplyFinished invalid callback" << callback;
-        }
+        mergePropertyAndFilesJson(nonce, callback);
     }
 
     // TODO scheduled to delete later.
@@ -1620,7 +1646,7 @@ void GCDClient::propertyReplyFinished(QNetworkReply *reply)
 
 void GCDClient::filesReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::filesReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::filesReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString callback = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
@@ -1628,26 +1654,7 @@ void GCDClient::filesReplyFinished(QNetworkReply *reply)
     m_filesReplyHash->insert(nonce, reply->readAll());
 
     if (m_propertyReplyHash->contains(nonce) && m_filesReplyHash->contains(nonce)) {
-        QScriptEngine engine;
-        QScriptValue sc;
-        QScriptValue scProperty;
-        QScriptValue scJsonStringify;
-        sc = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
-        scProperty = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
-        sc.setProperty("property", scProperty);
-        scJsonStringify = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << sc);
-
-        // Remove once used.
-        m_propertyReplyHash->remove(nonce);
-        m_filesReplyHash->remove(nonce);
-
-        if (callback == "browse") {
-            emit browseReplySignal(nonce, QNetworkReply::NoError, "", scJsonStringify.toString());
-        } else if (callback == "metadata") {
-            emit metadataReplySignal(nonce, QNetworkReply::NoError, "", scJsonStringify.toString());
-        } else {
-            qDebug() << "GCDClient::filesReplyFinished invalid callback" << callback;
-        }
+        mergePropertyAndFilesJson(nonce, callback);
     }
 
     // TODO scheduled to delete later.
@@ -1655,26 +1662,48 @@ void GCDClient::filesReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void GCDClient::createFolderReplyFinished(QNetworkReply *reply)
+QString GCDClient::createFolderReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::createFolderReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::createFolderReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+    // Parse common property json.
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "GCDClient::createFolderReplyFinished replyBody" << replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        replyBody = stringifyScriptValue(engine, parsedObj);
+    }
+
+    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // TODO scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+
+    return replyBody;
 }
 
 void GCDClient::moveFileReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::moveFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::moveFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+    // Parse common property json.
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "GCDClient::moveFileReplyFinished replyBody" << replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        replyBody = stringifyScriptValue(engine, parsedObj);
+    }
+
+    emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // Remove request buffer.
     if (m_bufferHash.contains(nonce)) {
@@ -1689,11 +1718,21 @@ void GCDClient::moveFileReplyFinished(QNetworkReply *reply)
 
 void GCDClient::copyFileReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::copyFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::copyFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+    // Parse common property json.
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "GCDClient::copyFileReplyFinished replyBody" << replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        replyBody = stringifyScriptValue(engine, parsedObj);
+    }
+
+    emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // Remove request buffer.
     m_bufferHash[nonce]->close();
@@ -1706,11 +1745,21 @@ void GCDClient::copyFileReplyFinished(QNetworkReply *reply)
 
 void GCDClient::deleteFileReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::deleteFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::deleteFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+    // Parse common property json.
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "GCDClient::deleteFileReplyFinished replyBody" << replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        replyBody = stringifyScriptValue(engine, parsedObj);
+    }
+
+    emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // TODO scheduled to delete later.
     reply->deleteLater();
@@ -1719,10 +1768,11 @@ void GCDClient::deleteFileReplyFinished(QNetworkReply *reply)
 
 void GCDClient::shareFileReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::shareFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::shareFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString replyBody = QString::fromUtf8(reply->readAll());
+    QScriptEngine engine;
     QScriptValue sc;
     QString url = "";
     int expires = 0;
@@ -1730,7 +1780,7 @@ void GCDClient::shareFileReplyFinished(QNetworkReply *reply)
     if (reply->error() == QNetworkReply::NoError) {
         replyBody = QString::fromUtf8(m_propertyReplyHash->value(nonce));
 
-        sc = m_engine.evaluate("(" + replyBody + ")");
+        sc = engine.evaluate("(" + replyBody + ")");
         if (sc.property("webContentLink").isValid()) {
             // For file.
             url = sc.property("webContentLink").toString();
@@ -1753,7 +1803,7 @@ void GCDClient::shareFileReplyFinished(QNetworkReply *reply)
 
 void GCDClient::fileGetResumeReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::fileGetResumeReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::fileGetResumeReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1851,7 +1901,7 @@ void GCDClient::filePutResumeStatusReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void GCDClient::deltaReplyFinished(QNetworkReply *reply)
+QString GCDClient::deltaReplyFinished(QNetworkReply *reply)
 {
     qDebug() << "GCDClient::deltaReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
@@ -1859,7 +1909,7 @@ void GCDClient::deltaReplyFinished(QNetworkReply *reply)
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
 
     QString replyBody = QString::fromUtf8(reply->readAll());
-
+    qDebug() << "GCDClient::deltaReplyFinished replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
         QScriptValue sourceObj = engine.evaluate("(" + replyBody + ")");
@@ -1917,12 +1967,14 @@ void GCDClient::deltaReplyFinished(QNetworkReply *reply)
         m_settings.setValue(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid), QVariant(parsedObj.property("nextDeltaCursor").toInteger()));
 
 //        qDebug() << "GCDClient::deltaReplyFinished parsedObj" << stringifyScriptValue(engine, parsedObj);
-        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), stringifyScriptValue(engine, parsedObj));
-    } else {
-        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+        replyBody = stringifyScriptValue(engine, parsedObj);
     }
+
+    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+
+    return replyBody;
 }

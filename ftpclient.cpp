@@ -150,6 +150,15 @@ void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
     }
 }
 
+QString FtpClient::mergePropertyAndFilesJson(QString propertyJsonText, QString filesJsonText)
+{
+    QScriptEngine engine;
+    QScriptValue mergedObj = engine.evaluate("(" + propertyJsonText + ")");
+    mergedObj.setProperty("children", engine.evaluate("(" + filesJsonText + ")"));
+
+    return stringifyScriptValue(engine, mergedObj);
+}
+
 QString FtpClient::property(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- FtpClient::property -----" << uid << remoteFilePath;
@@ -213,7 +222,7 @@ void FtpClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 
         QString dataJson = getItemListJson(m_ftp->getCurrentPath(), m_ftp->getItemList());
 
-        emit metadataReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), QString("{ \"data\": %1, \"property\": %2 }").arg(dataJson).arg(propertyJson) );
+        emit metadataReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), mergePropertyAndFilesJson(propertyJson, dataJson) );
     } else {
         // remoteFilePath is file or not found.
         qDebug() << "FtpClient::metadata" << uid << remoteFilePath << "is file or not found. error" << m_ftp->error() << m_ftp->errorString();
@@ -228,7 +237,7 @@ void FtpClient::metadata(QString nonce, QString uid, QString remoteFilePath)
             // remoteFilePath is file.
             QString remoteParentPath = getParentRemotePath(remoteFilePath);
             qDebug() << "FtpClient::metadata" << uid << remoteFilePath << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_ftp->getItemList().first().name();
-            emit metadataReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), QString("{ \"data\": [], \"property\": %1 }").arg(getPropertyJson(remoteParentPath, m_ftp->getItemList().first())) );
+            emit metadataReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), mergePropertyAndFilesJson(getPropertyJson(remoteParentPath, m_ftp->getItemList().first()), "[]") );
         }
     }
 
@@ -249,10 +258,15 @@ void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
     m_ftp->list(remoteFilePath);
     m_ftp->waitForDone();
 
-    QString dataJson = getItemListJson(m_ftp->getCurrentPath(), m_ftp->getItemList());
-    QString propertyJson = QString("{ \"path\": \"%1\", \"isDir\": true }").arg(m_ftp->getCurrentPath());
+    if (remoteFilePath == "") {
+        m_remoteRootHash[uid] = m_ftp->getCurrentPath();
+        qDebug() << "FtpClient::browse nonce" << nonce << "uid" << uid << "remote root" << m_remoteRootHash[uid];
+    }
 
-    emit browseReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), QString("{ \"data\": %1, \"property\": %2 }").arg(dataJson).arg(propertyJson) );
+    QString dataJson = getItemListJson(m_ftp->getCurrentPath(), m_ftp->getItemList());
+    QString propertyJson = property(nonce, uid, m_ftp->getCurrentPath());
+
+    emit browseReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), mergePropertyAndFilesJson(propertyJson, dataJson) );
 
     m_ftp->close();
     m_ftp->deleteLater();
@@ -438,18 +452,25 @@ QFtpWrapper *FtpClient::connectToHost(QString nonce, QString uid)
 
 QString FtpClient::getPropertyJson(const QString parentPath, const QUrlInfo item)
 {
-    QString jsonText;
-
     // TODO handle absolute path in name.
     QString path = (item.name().startsWith("/") ? "" : parentPath + "/") + item.name();
-    jsonText = QString("{ \"name\": \"%1\", \"path\": \"%2\", \"lastModified\": \"%3\", \"size\": %4, \"isDir\": %5 }")
-            .arg(item.name())
-            .arg(path)
-            .arg(item.lastModified().toUTC().toString(Qt::ISODate))
-            .arg(item.size())
-            .arg(item.isDir());
+    uint itemSize = item.size();
 
-    return jsonText;
+    QScriptEngine engine;
+    QScriptValue parsedObj = engine.newObject();
+    parsedObj.setProperty("name", QScriptValue(item.name()));
+    parsedObj.setProperty("absolutePath", QScriptValue(path));
+    parsedObj.setProperty("parentPath", QScriptValue(parentPath));
+    parsedObj.setProperty("size", QScriptValue(itemSize));
+    parsedObj.setProperty("isDeleted", QScriptValue(false));
+    parsedObj.setProperty("isDir", QScriptValue(item.isDir()));
+    parsedObj.setProperty("lastModified", QScriptValue(formatJSONDateString(item.lastModified())));
+    parsedObj.setProperty("hash", QScriptValue(formatJSONDateString(item.lastModified())));
+    parsedObj.setProperty("source", QScriptValue());
+    parsedObj.setProperty("thumbnail", QScriptValue());
+    parsedObj.setProperty("fileType", QScriptValue(getFileType(item.name())));
+
+    return stringifyScriptValue(engine, parsedObj);
 }
 
 QString FtpClient::getItemListJson(const QString parentPath, const QList<QUrlInfo> itemList)
@@ -534,6 +555,11 @@ void FtpClient::saveConnection(QString id, QString hostname, QString username, Q
     }
 
     saveAccessPairMap();
+}
+
+QString FtpClient::getRemoteRoot(QString uid)
+{
+    return m_remoteRootHash[uid];
 }
 
 bool FtpClient::isRemoteAbsolutePath()

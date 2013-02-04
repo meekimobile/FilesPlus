@@ -91,7 +91,7 @@ public slots:
     void filePutReplyFinished(QNetworkReply *reply);
     void metadataReplyFinished(QNetworkReply *reply);
     void browseReplyFinished(QNetworkReply *reply);
-    void createFolderReplyFinished(QNetworkReply *reply);
+    QString createFolderReplyFinished(QNetworkReply *reply);
     void moveFileReplyFinished(QNetworkReply *reply);
     void copyFileReplyFinished(QNetworkReply *reply);
     void deleteFileReplyFinished(QNetworkReply *reply);
@@ -99,7 +99,7 @@ public slots:
     void fileGetResumeReplyFinished(QNetworkReply *reply);
     void filePutResumeReplyFinished(QNetworkReply *reply);
 
-    void deltaReplyFinished(QNetworkReply *reply);
+    QString deltaReplyFinished(QNetworkReply *reply);
 protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:

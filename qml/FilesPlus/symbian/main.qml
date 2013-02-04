@@ -1305,117 +1305,23 @@ PageStackWindow {
                 "children": []
             };
 
-            if (selectedCloudType == CloudDriveModel.Dropbox) {
-                parsedObj.name = cloudDriveModel.getRemoteName(selectedCloudType, jsonObj.path);
-                parsedObj.absolutePath = jsonObj.path;
-                parsedObj.parentPath = cloudDriveModel.getParentRemotePath(selectedCloudType, jsonObj.path);
-                parsedObj.size = jsonObj.bytes;
-                parsedObj.isDeleted = (jsonObj.is_deleted) ? jsonObj.is_deleted : false;
-                parsedObj.isDir = jsonObj.is_dir;
-                parsedObj.lastModified = (new Date(jsonObj.modified));
-                parsedObj.hash = (jsonObj.hash) ? jsonObj.hash : ((jsonObj.rev) ? jsonObj.rev : "");
-                if (jsonObj.contents) {
-                    for(var i=0; i<jsonObj.contents.length; i++) {
-                        var parsedChildObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.contents[i]);
-                        parsedObj.children.push(parsedChildObj);
-                    }
+            parsedObj.name = jsonObj.name;
+            parsedObj.absolutePath = jsonObj.absolutePath;
+            parsedObj.parentPath = jsonObj.parentPath;
+            parsedObj.size = jsonObj.size;
+            parsedObj.isDeleted = jsonObj.isDeleted;
+            parsedObj.isDir = jsonObj.isDir;
+            parsedObj.lastModified = Utility.parseDate(jsonObj.lastModified);
+            parsedObj.hash = jsonObj.hash;
+            parsedObj.source = jsonObj.source;
+            parsedObj.thumbnail = jsonObj.thumbnail;
+            parsedObj.fileType = jsonObj.fileType;
+            if (jsonObj.children) {
+                for(var i=0; i<jsonObj.children.length; i++) {
+                    var parsedChildObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.children[i]);
+                    parsedObj.children.push(parsedChildObj);
                 }
             }
-
-            if (selectedCloudType == CloudDriveModel.SkyDrive) {
-                if (jsonObj.property) {
-                    parsedObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.property);
-                } else {
-                    parsedObj.name = jsonObj.name;
-                    parsedObj.absolutePath = jsonObj.id;
-                    parsedObj.parentPath = (jsonObj.parent_id) ? jsonObj.parent_id : "";
-                    parsedObj.size = (jsonObj.size) ? jsonObj.size : 0;
-                    parsedObj.isDeleted = false;
-                    parsedObj.isDir = (jsonObj.type == "folder" || jsonObj.type == "album");
-                    parsedObj.lastModified = Utility.parseJSONDate(jsonObj.updated_time)
-                    parsedObj.hash = jsonObj.updated_time;
-                    parsedObj.source = (jsonObj.source ? jsonObj.source : "");
-                    parsedObj.thumbnail = (jsonObj.picture ? jsonObj.picture : "");
-                    parsedObj.fileType = cloudDriveModel.getFileType(jsonObj.name);
-                }
-                if (jsonObj.data) {
-                    for(var i=0; i<jsonObj.data.length; i++) {
-                        var parsedChildObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.data[i]);
-                        parsedObj.children.push(parsedChildObj);
-                    }
-                }
-            }
-
-            if (selectedCloudType == CloudDriveModel.GoogleDrive) {
-                if (jsonObj.property) {
-                    parsedObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.property);
-                } else {
-                    parsedObj.name = jsonObj.title;
-                    parsedObj.absolutePath = jsonObj.id;
-                    parsedObj.parentPath = (jsonObj.parents && jsonObj.parents.length > 0) ? jsonObj.parents[0].id : "";
-                    parsedObj.size = (jsonObj.fileSize) ? jsonObj.fileSize : 0;
-                    parsedObj.isDeleted = jsonObj.explicitlyTrashed || jsonObj.labels.trashed;
-                    parsedObj.isDir = (jsonObj.mimeType == "application/vnd.google-apps.folder");
-                    parsedObj.lastModified = Utility.parseJSONDate(jsonObj.modifiedDate);
-                    parsedObj.hash = jsonObj.modifiedDate;
-                    parsedObj.source = (jsonObj.webContentLink ? jsonObj.webContentLink : "");
-                    parsedObj.thumbnail = (jsonObj.thumbnailLink ? jsonObj.thumbnailLink : "");
-                    parsedObj.fileType = cloudDriveModel.getFileType(jsonObj.title);
-                }
-                if (jsonObj.items) {
-                    for(var i=0; i<jsonObj.items.length; i++) {
-                        var parsedChildObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.items[i]);
-                        parsedObj.children.push(parsedChildObj);
-                    }
-                }
-            }
-
-            if (selectedCloudType == CloudDriveModel.Ftp) {
-                if (jsonObj.property) {
-                    parsedObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.property);
-                } else {
-                    parsedObj.name = (jsonObj.name) ? jsonObj.name : cloudDriveModel.getRemoteName(selectedCloudType, jsonObj.path);
-                    parsedObj.absolutePath = jsonObj.path;
-                    parsedObj.parentPath = cloudDriveModel.getParentRemotePath(selectedCloudType, jsonObj.path);
-                    parsedObj.size = (jsonObj.size) ? jsonObj.size : 0;
-                    parsedObj.isDeleted = false;
-                    parsedObj.isDir = jsonObj.isDir;
-                    parsedObj.lastModified = Utility.parseJSONDate(jsonObj.lastModified);
-                    parsedObj.hash = jsonObj.lastModified;
-                    parsedObj.fileType = cloudDriveModel.getFileType(jsonObj.name);
-                }
-                if (jsonObj.data) {
-                    for(var i=0; i<jsonObj.data.length; i++) {
-                        var parsedChildObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.data[i]);
-                        parsedObj.children.push(parsedChildObj);
-                    }
-                }
-            }
-
-            if (selectedCloudType == CloudDriveModel.WebDAV) {
-                if (jsonObj.property) {
-                    parsedObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.property);
-                } else {
-                    var objIsDir = Utility.endWith(jsonObj.href, "/");
-                    var objRemotePath = (objIsDir ? jsonObj.href.substr(0, jsonObj.href.length-1) : jsonObj.href); // Workaround because it ended with /
-                    parsedObj.name = (jsonObj.propstat && jsonObj.propstat.prop && jsonObj.propstat.prop.displayname) ? jsonObj.propstat.prop.displayname : cloudDriveModel.getRemoteName(selectedCloudType, objRemotePath);
-                    parsedObj.absolutePath = jsonObj.href;
-                    parsedObj.parentPath = cloudDriveModel.getParentRemotePath(selectedCloudType, objRemotePath) + "/"; // Directory must end with /
-                    parsedObj.size = (jsonObj.propstat && jsonObj.propstat.prop && jsonObj.propstat.prop.getcontentlength) ? jsonObj.propstat.prop.getcontentlength : 0;
-                    parsedObj.isDeleted = false;
-                    parsedObj.isDir = objIsDir;
-                    parsedObj.lastModified = (jsonObj.propstat && jsonObj.propstat.prop && jsonObj.propstat.prop.getlastmodified) ? Utility.parseDate(jsonObj.propstat.prop.getlastmodified) : undefined;
-                    parsedObj.hash = (parsedObj.lastModified) ? parsedObj.lastModified.toJSON() : cloudDriveModel.dirtyHash; // Uses DirtyHash if last modified doesn't exist.
-                    parsedObj.fileType = cloudDriveModel.getFileType(parsedObj.name);
-                }
-                if (jsonObj.data) {
-                    for(var i=0; i<jsonObj.data.length; i++) {
-                        var parsedChildObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.data[i]);
-                        parsedObj.children.push(parsedChildObj);
-                    }
-                }
-            }
-
             // Get connection status.
             parsedObj.isConnected = cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, parsedObj.absolutePath);
 

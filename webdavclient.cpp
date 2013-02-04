@@ -305,27 +305,27 @@ QScriptValue WebDavClient::createScriptValue(QScriptEngine &engine, QDomNode &n,
 QString WebDavClient::createPropertyJson(QString replyBody)
 {
     QScriptEngine engine;
-    QScriptValue jsonObj = engine.newObject();
+    QScriptValue jsonObj;
+
     QDomDocument doc;
     doc.setContent(replyBody, true);
     QDomElement docElem = doc.documentElement();
     QDomNode n = docElem.firstChild();
     // Populate property from first child.
     if (!n.isNull()) {
-        QScriptValue propertyObj = createScriptValue(engine, n, "browse");
-        jsonObj.setProperty("property", propertyObj);
+        jsonObj = parseCommonPropertyScriptValue(engine, createScriptValue(engine, n, "browse"));
     }
-    // Populate data from remain children.
-    QScriptValue dataArrayObj = engine.newArray();
-    int dataArrayIndex = 0;
+    // Populate children from remain children.
+    QScriptValue childrenArrayObj = engine.newArray();
+    int childrenArrayIndex = 0;
     n = n.nextSibling();
     while(!n.isNull()) {
-        dataArrayObj.setProperty(dataArrayIndex++, createScriptValue(engine, n, "browse"));
+        childrenArrayObj.setProperty(childrenArrayIndex++, parseCommonPropertyScriptValue(engine, createScriptValue(engine, n, "browse")));
         n = n.nextSibling();
     }
-    jsonObj.setProperty("data", dataArrayObj);
+    jsonObj.setProperty("children", childrenArrayObj);
     // Stringify jsonObj.
-    QString jsonText = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
+    QString jsonText = stringifyScriptValue(engine, jsonObj);
 
     return jsonText;
 }
@@ -344,7 +344,7 @@ QString WebDavClient::createResponseJson(QString replyBody)
         n = n.nextSibling();
     }
     // Stringify jsonObj.
-    QString jsonText = engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
+    QString jsonText = stringifyScriptValue(engine, jsonObj);
 
     return jsonText;
 }
@@ -356,12 +356,13 @@ QString WebDavClient::prepareRemotePath(QString uid, QString remoteFilePath)
 
     // Remove prefix remote root path.
     if (uid != "") {
-        if (!m_remoteRootHash.contains(uid)) {
+        if (!m_remoteRootHash.contains(uid) || m_remoteRootHash[uid] == "") {
             QString hostname = getHostname(accessTokenPairMap[uid].email);
             QString remoteRoot = (hostname.indexOf("/") != -1) ? hostname.mid(hostname.indexOf("/")) : "/";
             path = path.replace(QRegExp("^"+remoteRoot), "/");
-//            qDebug() << "WebDavClient::prepareRemotePath remoteRoot" << remoteRoot << "removed. path" << path;
+            qDebug() << "WebDavClient::prepareRemotePath uid" << uid << "remoteRoot" << remoteRoot << "removed. path" << path;
             // TODO Stores remoteRoot in m_remoteRootHash[uid].
+            m_remoteRootHash[uid] = remoteRoot;
         } else {
             path = path.replace(QRegExp("^"+m_remoteRootHash[uid]), "/");
 //            qDebug() << "WebDavClient::prepareRemotePath remoteRoot" << m_remoteRootHash[uid] << "removed. path" << path;
@@ -396,7 +397,7 @@ void WebDavClient::browse(QString nonce, QString uid, QString remoteFilePath)
     QScriptEngine engine;
     QScriptValue sc = engine.evaluate("(" + replyBody + ")");
     if (remoteFilePath == "") {
-        m_remoteRootHash[uid] = sc.property("property").property("href").toString();
+        m_remoteRootHash[uid] = sc.property("absolutePath").toString();
         qDebug() << "WebDavClient::browse nonce" << nonce << "uid" << uid << "remote root" << m_remoteRootHash[uid];
     }
 
@@ -654,36 +655,27 @@ QString WebDavClient::createFolder(QString nonce, QString uid, QString remotePar
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(createFolderReplyFinished(QNetworkReply*)));
+    }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", authHeader);
     req.setRawHeader("Accept", QByteArray("*/*"));
     QNetworkReply *reply = manager->sendCustomRequest(req, "MKCOL");
 
+    // TODO Return if asynchronous.
+    if (!synchronous) {
+        return "";
+    }
+
     while (!reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
     }
 
-    QString result;
-    if (reply->error() == QNetworkReply::NoError) {
-        reply = property(nonce, uid, remoteFilePath);
-        if (reply->error() == QNetworkReply::NoError) {
-            result = createPropertyJson(QString::fromUtf8(reply->readAll()));
-        } else {
-            result = createResponseJson(QString::fromUtf8(reply->readAll()));
-        }
-    } else {
-        result = createResponseJson(QString::fromUtf8(reply->readAll()));
-    }
-
-    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), result);
-
-    // Scheduled to delete later.
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-
-    return result;
+    // Emit signal and return replyBody.
+    return createFolderReplyFinished(reply);
 }
 
 QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)
@@ -736,6 +728,7 @@ QString WebDavClient::fileGetReplySave(QNetworkReply *reply)
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
     QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
 
+    QString result;
     if (reply->error() == QNetworkReply::NoError) {
         qDebug() << "WebDavClient::fileGetReplySave reply bytesAvailable" << reply->bytesAvailable();
 
@@ -767,23 +760,24 @@ QString WebDavClient::fileGetReplySave(QNetworkReply *reply)
         // Close target file.
         localTargetFile->close();
 
-        // Get property.
-        QString result;
+        // Return common json.
+        reply = property(nonce, uid, remoteFilePath);
+        QString propertyReplyBody = QString::fromUtf8(reply->readAll());
+        qDebug() << "WebDavClient::fileGetReplySave propertyReplyBody" << propertyReplyBody;
         if (reply->error() == QNetworkReply::NoError) {
-            reply = property(nonce, uid, remoteFilePath);
-            if (reply->error() == QNetworkReply::NoError) {
-                result = createPropertyJson(QString::fromUtf8(reply->readAll()));
-            }
+            result = createPropertyJson(propertyReplyBody);
+        } else {
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
         }
-
-        return result;
     } else {
         qDebug() << "WebDavClient::fileGetReplySave nonce" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
-        return QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
+        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
     }
 
     // Remove once used.
     m_localFileHash.remove(nonce);
+
+    return result;
 }
 
 QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
@@ -1044,7 +1038,7 @@ QDateTime WebDavClient::parseReplyDateString(QString dateString)
 
 void WebDavClient::accessTokenReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "WebDavClient::accessTokenReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "WebDavClient::accessTokenReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = m_paramMap["authorize_uid"];
@@ -1083,7 +1077,7 @@ void WebDavClient::accessTokenReplyFinished(QNetworkReply *reply)
 
 void WebDavClient::accountInfoReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "WebDavClient::accountInfoReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "WebDavClient::accountInfoReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
@@ -1134,7 +1128,7 @@ void WebDavClient::fileGetReplyFinished(QNetworkReply *reply)
 
 void WebDavClient::filePutReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "WebDavClient::filePutReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "WebDavClient::filePutReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
@@ -1169,15 +1163,16 @@ void WebDavClient::filePutReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void WebDavClient::createFolderReplyFinished(QNetworkReply *reply)
+QString WebDavClient::createFolderReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "WebDavClient::createFolderReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "WebDavClient::createFolderReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
     QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
 
     QString replyBody;
+    qDebug() << "WebDavClient::createFolderReplyFinished replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {
         reply = property(nonce, uid, remoteFilePath);
         if (reply->error() == QNetworkReply::NoError) {
@@ -1194,6 +1189,8 @@ void WebDavClient::createFolderReplyFinished(QNetworkReply *reply)
     // Scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+
+    return replyBody;
 }
 
 void WebDavClient::fileGetResumeReplyFinished(QNetworkReply *reply)
@@ -1213,6 +1210,32 @@ void WebDavClient::fileGetResumeReplyFinished(QNetworkReply *reply)
     // TODO scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+}
+
+QScriptValue WebDavClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj)
+{
+    QScriptValue parsedObj = engine.newObject();
+
+    bool objIsDir = jsonObj.property("href").toString().endsWith("/");
+    QString objRemotePath = objIsDir ? jsonObj.property("href").toString().mid(0, jsonObj.property("href").toString().length()-1) : jsonObj.property("href").toString(); // Workaround because it ended with /
+    QString objRemoteName = jsonObj.property("propstat").property("prop").property("displayname").isValid() ? jsonObj.property("propstat").property("prop").property("displayname").toString() : getRemoteFileName(objRemotePath);
+    uint objRemoteSize = jsonObj.property("propstat").property("prop").property("getcontentlength").isValid() ? jsonObj.property("propstat").property("prop").property("getcontentlength").toInteger() : 0;
+    QDateTime objLastModified = jsonObj.property("propstat").property("prop").property("getlastmodified").isValid() ? parseReplyDateString(jsonObj.property("propstat").property("prop").property("getlastmodified").toString()) : QDateTime::currentDateTime();
+    QString objRemoteHash = jsonObj.property("propstat").property("prop").property("getlastmodified").isValid() ? formatJSONDateString(objLastModified) : "FFFFFFFF"; // Uses DirtyHash if last modified doesn't exist.
+
+    parsedObj.setProperty("name", QScriptValue(objRemoteName));
+    parsedObj.setProperty("absolutePath", jsonObj.property("href"));
+    parsedObj.setProperty("parentPath", QScriptValue(getParentRemotePath(objRemotePath) + "/"));
+    parsedObj.setProperty("size", QScriptValue(objRemoteSize));
+    parsedObj.setProperty("isDeleted", QScriptValue(false));
+    parsedObj.setProperty("isDir", QScriptValue(objIsDir));
+    parsedObj.setProperty("lastModified", QScriptValue(formatJSONDateString(objLastModified)));
+    parsedObj.setProperty("hash",  QScriptValue(objRemoteHash));
+    parsedObj.setProperty("source", QScriptValue());
+    parsedObj.setProperty("thumbnail", QScriptValue());
+    parsedObj.setProperty("fileType", QScriptValue(getFileType(objRemoteName)));
+
+    return parsedObj;
 }
 
 void WebDavClient::sslErrorsReplyFilter(QNetworkReply *reply, QList<QSslError> sslErrors)
