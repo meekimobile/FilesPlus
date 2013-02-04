@@ -191,7 +191,7 @@ QString CloudDriveClient::removeDoubleSlash(QString remoteFilePath)
     QString path = remoteFilePath;
 
     // Replace double slash.
-    path = path.replace("//", "/");
+    path = path.replace(QRegExp("/{2,}"), "/");
 
     return path;
 }
@@ -218,6 +218,12 @@ QScriptValue CloudDriveClient::parseCommonPropertyScriptValue(QScriptEngine &eng
 QString CloudDriveClient::stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj)
 {
     return engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
+}
+
+QString CloudDriveClient::formatJSONDateString(QDateTime datetime)
+{
+    // Format to JSON which match with javascript, QML format.
+    return datetime.toString("yyyy-MM-ddThh:mm:ss.zzzZ");
 }
 
 bool CloudDriveClient::testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname)

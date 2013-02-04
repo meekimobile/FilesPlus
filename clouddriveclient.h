@@ -125,9 +125,9 @@ protected:
     QString removeDoubleSlash(QString remoteFilePath);
     QString getFileType(QString localPath);
 
-    QScriptEngine m_engine;
     virtual QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
     QString stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj);
+    QString formatJSONDateString(QDateTime datetime);
 private:
 
 };
