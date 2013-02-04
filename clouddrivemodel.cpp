@@ -29,21 +29,6 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     // Connect job queue chain.
     connect(this, SIGNAL(proceedNextJobSignal()), SLOT(proceedNextJob()) );
 
-    // Connect with permanent thread.
-//    connect(&m_thread, SIGNAL(finished()), this, SLOT(threadFinishedFilter()) );
-//    connect(&m_thread, SIGNAL(terminated()), this, SLOT(threadFinishedFilter()) );
-//    connect(&m_thread, SIGNAL(loadCloudDriveItemsFinished(QString)), this, SLOT(loadCloudDriveItemsFilter(QString)) );
-//    connect(&m_thread, SIGNAL(uploadProgress(QString,qint64,qint64)), SLOT(uploadProgressFilter(QString,qint64,qint64)) );
-//    connect(&m_thread, SIGNAL(downloadProgress(QString,qint64,qint64)), SLOT(downloadProgressFilter(QString,qint64,qint64)) );
-//    connect(&m_thread, SIGNAL(requestTokenReplySignal(int,QString,QString)), SIGNAL(requestTokenReplySignal(int,QString,QString)) );
-//    connect(&m_thread, SIGNAL(authorizeRedirectSignal(QString,QString)), SIGNAL(authorizeRedirectSignal(QString,QString)) );
-//    connect(&m_thread, SIGNAL(accessTokenReplySignal(int,QString,QString)), SIGNAL(accessTokenReplySignal(int,QString,QString)) );
-//    connect(&m_thread, SIGNAL(accountInfoReplySignal(int,QString,QString)), SIGNAL(accountInfoReplySignal(int,QString,QString)) );
-//    connect(&m_thread, SIGNAL(fileGetReplySignal(QString,int,QString,QString)), SLOT(fileGetReplyFilter(QString,int,QString,QString)) );
-//    connect(&m_thread, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SLOT(filePutReplyFilter(QString,int,QString,QString)) );
-//    connect(&m_thread, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
-//    connect(&m_thread, SIGNAL(createFolderReplySignal(QString,int,QString,QString)), SLOT(createFolderReplyFilter(QString,int,QString,QString)) );
-
     // Fetch first nonce and trash it.
     createNonce();
 
@@ -74,9 +59,6 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     m_isSyncingCache = new QHash<QString, bool>();
 
     // Initialize cloud storage clients.
-//    CloudDriveJob initializeCloudClientsJob(createNonce(), InitializeCloudClients, -1, "", "", "", -1);
-//    m_cloudDriveJobs->insert(initializeCloudClientsJob.jobId, initializeCloudClientsJob);
-//    m_jobQueue->enqueue(initializeCloudClientsJob.jobId);
     initializeCloudClients(createNonce());
 
     // Load saved jobs.
@@ -269,11 +251,11 @@ void CloudDriveModel::connectCloudClientsSignal(CloudDriveClient *client)
     connect(client, SIGNAL(moveFileReplySignal(QString,int,QString,QString)), SLOT(moveFileReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
-    connect(client, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(shareFileReplySignal(QString,int,QString,QString,QString,int)), SLOT(shareFileReplyFilter(QString,int,QString,QString,QString,int)) );
     connect(client, SIGNAL(migrateFilePutReplySignal(QString,int,QString,QString)), SLOT(migrateFilePutFilter(QString,int,QString,QString)) ); // Added because FtpClient doesn't provide QNetworkReply.
     connect(client, SIGNAL(fileGetResumeReplySignal(QString,int,QString,QString)), SLOT(fileGetResumeReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
-    connect(client, SIGNAL(deltaReplySignal(QString,int,QString,QString,QScriptValue)), SLOT(deltaReplyFilter(QString,int,QString,QString,QScriptValue)) );
+    connect(client, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
 }
 
 void CloudDriveModel::initializeDropboxClient() {
@@ -2840,10 +2822,12 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
 //            addItem(Ftp, job.uid, job.localFilePath, remoteFilePath, hash);
             break;
         case WebDAV:
-            sc = engine.evaluate("(" + msg + ")");
-            lastModifiedText = sc.property("property").property("propstat").property("prop").property("getlastmodified").toString();
-            hash = formatJSONDateString(parseReplyDateString(WebDAV, lastModifiedText));
-            qDebug() << "CloudDriveModel::metadataReplyFilter hash" << hash;
+            // TODO Parse result and update remote file path to item.
+//            sc = engine.evaluate("(" + msg + ")");
+//            lastModifiedText = sc.property("property").property("propstat").property("prop").property("getlastmodified").toString();
+//            hash = formatJSONDateString(parseReplyDateString(WebDAV, lastModifiedText));
+//            qDebug() << "CloudDriveModel::metadataReplyFilter hash" << hash;
+            break;
         }
     } else if (err == 202) {
         // Issue: handle 202 Nonce already in used.
@@ -3133,45 +3117,9 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
     emit deleteFileReplySignal(nonce, err, errMsg, msg);
 }
 
-void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg, QString url, int expires)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
-    QScriptEngine engine;
-    QScriptValue sc;
-    QString url = "";
-    QString expires = "";
-
-    if (err == 0) {
-        // TODO generalize to support other clouds.
-        switch (job.type) {
-        case Dropbox:
-            sc = engine.evaluate("(" + msg + ")");
-            url = sc.property("url").toString();
-            expires = sc.property("expires").toString();
-            break;
-        case SkyDrive:
-            sc = engine.evaluate("(" + msg + ")");
-            url = sc.property("link").toString();
-            break;
-        case GoogleDrive:
-            sc = engine.evaluate("(" + msg + ")");
-            if (sc.property("webContentLink").isValid()) {
-                // For file.
-                url = sc.property("webContentLink").toString();
-            } else if (sc.property("webViewLink").isValid()) {
-                // For folder.
-                url = sc.property("webViewLink").toString();
-            }
-            break;
-        case WebDAV:
-            sc = engine.evaluate("(" + msg + ")");
-            url = sc.property("url").toString();
-            break;
-        }
-    } else if (err == 202) {
-        // Issue: handle 202 Nonce already in used.
-        // Solution: let QML handle retry.
-    }
 
     // Stop running.
     job.isRunning = false;
@@ -3183,49 +3131,54 @@ void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMs
     emit shareFileReplySignal(nonce, err, errMsg, msg, url, expires);
 }
 
-void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg, QScriptValue parsedObj)
+void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
-    // TODO Process delta. Move to QML to connect to FolderSizeItemListModel's delete recursive method.
-    for (int i = 0; i < parsedObj.property("children").toVariant().toList().length(); i++) {
-        QScriptValue childObj = parsedObj.property("children").property(i);
-        bool isDeleted = childObj.property("isDeleted").toBool();
-        QString remoteFilePath = childObj.property("absolutePath").toString();
-        QString remoteParentPath = childObj.property("property").property("parentPath").toString();
-//        qDebug() << "CloudDriveModel::deltaReplyFilter remoteFilePath" << remoteFilePath << "remoteParentPath" << remoteParentPath << "isDeleted" << isDeleted;
+    if (err == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue parsedObj = engine.evaluate("(" + msg + ")");
 
-        if (isDeleted) {
-            // TODO delete local file path and cloud item.
-            // NOTE Metadata currently only remove link once file/folder was removed remotely.
-            foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
-                qDebug() << "CloudDriveModel::deltaReplyFilter remove connection to deleted remoteFilePath" << remoteFilePath << "cloudItem" << item;
-                removeItem(getClientType(item.type), item.uid, item.localPath);
-            }
-        } else {
-            QList<CloudDriveItem> itemList = findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)));
-            if (itemList.isEmpty()) {
-                // TODO Sync its connected parents (with DirtyHash) to force sync all its children.
-                qDebug() << "CloudDriveModel::deltaReplyFilter download new item by syncing remoteParentPath" << remoteParentPath;
-                foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteParentPath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
-                    qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteParentPath" << remoteParentPath << "parent cloudItem" << item;
-                    updateItem(getClientType(item.type), item.uid, item.localPath, DirtyHash);
-                    metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+        // TODO Process delta. Move to QML to connect to FolderSizeItemListModel's delete recursive method.
+        for (int i = 0; i < parsedObj.property("children").toVariant().toList().length(); i++) {
+            QScriptValue childObj = parsedObj.property("children").property(i);
+            bool isDeleted = childObj.property("isDeleted").toBool();
+            QString remoteFilePath = childObj.property("absolutePath").toString();
+            QString remoteParentPath = childObj.property("property").property("parentPath").toString();
+            //        qDebug() << "CloudDriveModel::deltaReplyFilter remoteFilePath" << remoteFilePath << "remoteParentPath" << remoteParentPath << "isDeleted" << isDeleted;
+
+            if (isDeleted) {
+                // TODO delete local file path and cloud item.
+                // NOTE Metadata currently only remove link once file/folder was removed remotely.
+                foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
+                    qDebug() << "CloudDriveModel::deltaReplyFilter remove connection to deleted remoteFilePath" << remoteFilePath << "cloudItem" << item;
+                    removeItem(getClientType(item.type), item.uid, item.localPath);
                 }
             } else {
-                // TODO Sync existing item.
-                foreach (CloudDriveItem item, itemList) {
-                    qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteFilePath" << remoteFilePath << "cloudItem" << item;
-                    metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+                QList<CloudDriveItem> itemList = findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)));
+                if (itemList.isEmpty()) {
+                    // TODO Sync its connected parents (with DirtyHash) to force sync all its children.
+                    qDebug() << "CloudDriveModel::deltaReplyFilter download new item by syncing remoteParentPath" << remoteParentPath;
+                    foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteParentPath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
+                        qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteParentPath" << remoteParentPath << "parent cloudItem" << item;
+                        updateItem(getClientType(item.type), item.uid, item.localPath, DirtyHash);
+                        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+                    }
+                } else {
+                    // TODO Sync existing item.
+                    foreach (CloudDriveItem item, itemList) {
+                        qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteFilePath" << remoteFilePath << "cloudItem" << item;
+                        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+                    }
                 }
             }
         }
-    }
 
-    // Check if there is more delta.
-    if (parsedObj.property("hasMore").toBool()) {
-        qDebug() << "CloudDriveModel::deltaReplyFilter has more delta. Proceed next delta request.";
-        delta(getClientType(job.type), job.uid);
+        // Check if there is more delta.
+        if (parsedObj.property("hasMore").toBool()) {
+            qDebug() << "CloudDriveModel::deltaReplyFilter has more delta. Proceed next delta request.";
+            delta(getClientType(job.type), job.uid);
+        }
     }
 
     // Update job running flag.
@@ -3895,9 +3848,11 @@ void CloudDriveModel::proceedNextJob() {
         return;
     }
 
+    // TODO Check retryCount before proceed.
     QString nonce = m_jobQueue->dequeue();
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     job.isRunning = true;
+    job.retryCount++;
     updateJob(job);
     qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "operation" << getOperationName(job.operation);
 
@@ -3906,7 +3861,6 @@ void CloudDriveModel::proceedNextJob() {
     mutex.unlock();
 
     // Dispatch job.
-//    dispatchJob(job);
     CloudDriveModelThread *t = new CloudDriveModelThread(this);
     connect(t, SIGNAL(finished()), t, SLOT(deleteLater()));
     t->setNonce(nonce); // Set job ID to thread. It will invoke parent's dispatchJob later.

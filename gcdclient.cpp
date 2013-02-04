@@ -1029,8 +1029,9 @@ QString GCDClient::delta(QString nonce, QString uid, bool synchronous)
     }
 
     // Emit signal.
+    // TODO Reply common json if no error.
     QString replyString = QString::fromUtf8(reply->readAll());
-    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyString, QScriptValue());
+    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyString);
 
     // Scheduled to delete later.
     reply->deleteLater();
@@ -1145,7 +1146,7 @@ void GCDClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- GCDClient::shareFile -----" << uid << remoteFilePath;
     if (remoteFilePath.isEmpty()) {
-        emit shareFileReplySignal(nonce, -1, "remoteFilePath is empty.", "");
+        emit shareFileReplySignal(nonce, -1, "remoteFilePath is empty.", "", "", 0);
         return;
     }
 
@@ -1155,7 +1156,7 @@ void GCDClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
         m_propertyReplyHash->insert(nonce, propertyReply->readAll());
         propertyReply->deleteLater();
     } else {
-        emit shareFileReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));
+        emit shareFileReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()), "", 0);
         propertyReply->deleteLater();
         return;
     }
@@ -1721,11 +1722,29 @@ void GCDClient::shareFileReplyFinished(QNetworkReply *reply)
     qDebug() << "GCDClient::shareFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    QScriptValue sc;
+    QString url = "";
+    int expires = 0;
 
     if (reply->error() == QNetworkReply::NoError) {
-        emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(m_propertyReplyHash->value(nonce)));
-        m_propertyReplyHash->remove(nonce);
+        replyBody = QString::fromUtf8(m_propertyReplyHash->value(nonce));
+
+        sc = m_engine.evaluate("(" + replyBody + ")");
+        if (sc.property("webContentLink").isValid()) {
+            // For file.
+            url = sc.property("webContentLink").toString();
+        } else if (sc.property("webViewLink").isValid()) {
+            // For folder.
+            url = sc.property("webViewLink").toString();
+        }
+        expires = -1;
     }
+
+    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody, url, expires);
+
+    // Remove temp property.
+    m_propertyReplyHash->remove(nonce);
 
     // TODO scheduled to delete later.
     reply->deleteLater();
@@ -1898,9 +1917,9 @@ void GCDClient::deltaReplyFinished(QNetworkReply *reply)
         m_settings.setValue(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid), QVariant(parsedObj.property("nextDeltaCursor").toInteger()));
 
 //        qDebug() << "GCDClient::deltaReplyFinished parsedObj" << stringifyScriptValue(engine, parsedObj);
-        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), "", parsedObj);
+        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), stringifyScriptValue(engine, parsedObj));
     } else {
-        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyBody, QScriptValue());
+        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
     }
 
     // scheduled to delete later.

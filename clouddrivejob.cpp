@@ -24,6 +24,7 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->downloadOffset = 0;
     this->uploadOffset = 0;
     this->err = 0;
+    this->retryCount = 0;
 }
 
 QString CloudDriveJob::toJsonText()
@@ -56,6 +57,7 @@ QString CloudDriveJob::toJsonText()
     jsonText.append(QString("\"err\": %1, ").arg(err));
     jsonText.append(QString("\"err_string\": \"%1\", ").arg(errString));
     jsonText.append(QString("\"err_message\": \"%1\", ").arg(errMessage));
+    jsonText.append(QString("\"retry_count\": %1, ").arg(retryCount));
     jsonText.append(QString("\"next_job_id\": \"%1\" ").arg(nextJobId));
     jsonText.append(" }");
 

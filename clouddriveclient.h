@@ -90,6 +90,7 @@ signals:
     void accessTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void accountInfoReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void quotaReplySignal(QString nonce, int err, QString errMsg, QString msg, qint64 normalBytes, qint64 sharedBytes, qint64 quotaBytes);
+
     void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplySignal(QString nonce, int err, QString errMsg, QString msg);
@@ -98,12 +99,12 @@ signals:
     void moveFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void copyFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void deleteFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg, QString url, int expires);
     void fileGetResumeReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutResumeReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutCommitReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg); // Signal for supporting FTPClient.
-    void deltaReplySignal(QString nonce, int err, QString errMsg, QString msg, QScriptValue parsedObj);
+    void deltaReplySignal(QString nonce, int err, QString errMsg, QString msg);
 
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
@@ -124,6 +125,7 @@ protected:
     QString removeDoubleSlash(QString remoteFilePath);
     QString getFileType(QString localPath);
 
+    QScriptEngine m_engine;
     virtual QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
     QString stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj);
 private:

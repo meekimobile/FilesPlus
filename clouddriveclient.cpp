@@ -355,14 +355,14 @@ void CloudDriveClient::deleteFile(QString nonce, QString uid, QString remoteFile
 
 void CloudDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
-    emit shareFileReplySignal(nonce, -1, objectName() + " " + "Share link", "Service is not implemented.");
+    emit shareFileReplySignal(nonce, -1, objectName() + " " + "Share link", "Service is not implemented.", "", 0);
 }
 
 QString CloudDriveClient::delta(QString nonce, QString uid, bool synchronous)
 {
     // Emit empty message as default.
     if (!synchronous) {
-        emit deltaReplySignal(nonce, 0, objectName() + " " + "Delta", "{ }", QScriptValue());
+        emit deltaReplySignal(nonce, 0, objectName() + " " + "Delta", "{ }");
     }
     return "";
 }

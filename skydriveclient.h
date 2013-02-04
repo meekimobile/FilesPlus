@@ -87,6 +87,8 @@ public slots:
     void shareFileReplyFinished(QNetworkReply *reply);
 
     void fileGetResumeReplyFinished(QNetworkReply *reply);
+protected:
+    QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:
     QString localPath;
     QHash<QString, QFile*> m_localFileHash;

@@ -621,16 +621,16 @@ void WebDavClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
             QString location = reply->header(QNetworkRequest::LocationHeader).toUrl().toString();
             qDebug() << "WebDavClient::shareFile reply LocationHeader" << location;
             result = QString("{ \"url\": \"%1\" }").arg(location);
-            emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), result);
+            emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), result, location, -1);
         } else {
             // Share link service replies with actual content. Return the URI then abort connection.
             result = QString("{ \"url\": \"%1\" }").arg(uri);
-            emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), result);
+            emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), result, uri, -1);
             reply->abort();
         }
     } else {
         result = QString::fromUtf8(reply->readAll());
-        emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), result);
+        emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), result, "", 0);
     }
 
     // Scheduled to delete later.

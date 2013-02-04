@@ -41,6 +41,8 @@ public:
     QString errString;
     QString errMessage;
 
+    int retryCount;
+
     QString nextJobId;
 
     QString toJsonText();

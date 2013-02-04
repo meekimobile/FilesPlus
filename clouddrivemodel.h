@@ -270,7 +270,7 @@ signals:
     void moveFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void copyFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void deleteFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg, QString url, QString expires);
+    void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg, QString url, int expires);
     void deltaReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void migrateFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
@@ -293,21 +293,23 @@ public slots:
     void accessTokenReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void accountInfoReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void quotaReplyFilter(QString nonce, int err, QString errMsg, QString msg, qint64 normalBytes, qint64 sharedBytes, qint64 quotaBytes);
+
     void fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void metadataReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void browseReplyFilter(QString nonce, int err, QString errMsg, QString msg);
-    void uploadProgressFilter(QString nonce, qint64 bytesSent, qint64 bytesTotal);
-    void downloadProgressFilter(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
     void createFolderReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void moveFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void copyFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void deleteFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
-    void shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
-    void deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg, QScriptValue parsedObj);
+    void shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg, QString url, int expires);
+    void deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void migrateFilePutFilter(QString nonce, int err, QString errMsg, QString msg);
     void fileGetResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void filePutResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+
+    void uploadProgressFilter(QString nonce, qint64 bytesSent, qint64 bytesTotal);
+    void downloadProgressFilter(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
 
     // Refresh request
     void refreshRequestFilter(QString nonce);

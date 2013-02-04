@@ -732,9 +732,9 @@ QString DropboxClient::delta(QString nonce, QString uid, bool synchronous)
     }
 
     // Emit signal.
-    // TODO Construct common response.
+    // TODO Reply common json if no error.
     QString replyString = QString::fromUtf8(reply->readAll());
-    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyString, QScriptValue());
+    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyString);
 
     // Scheduled to delete later.
     reply->deleteLater();
@@ -1335,8 +1335,18 @@ void DropboxClient::shareFileReplyFinished(QNetworkReply *reply)
     qDebug() << "DropboxClient::shareFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    QScriptValue sc;
+    QString url = "";
+    int expires = 0;
 
-    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+    if (reply->error() == QNetworkReply::NoError) {
+        sc = m_engine.evaluate("(" + replyBody + ")");
+        url = sc.property("url").toString();
+        expires = -1;
+    }
+
+    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody, url, expires);
 
     // scheduled to delete later.
     reply->deleteLater();
@@ -1404,9 +1414,9 @@ void DropboxClient::deltaReplyFinished(QNetworkReply *reply)
         m_settings.setValue(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid), parsedObj.property("nextDeltaCursor").toVariant());
 
 //        qDebug() << "DropboxClient::deltaReplyFinished parsedObj" << stringifyScriptValue(engine, parsedObj);
-        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), "", parsedObj);
+        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), stringifyScriptValue(engine, parsedObj));
     } else {
-        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyBody, QScriptValue());
+        emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
     }
 
     // scheduled to delete later.

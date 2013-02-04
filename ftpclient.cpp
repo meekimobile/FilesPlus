@@ -291,7 +291,7 @@ void FtpClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- FtpClient::shareFile -----" << uid << remoteFilePath;
 
-    emit shareFileReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, "FTP doesn't support resource link sharing.", "");
+    emit shareFileReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, "FTP doesn't support resource link sharing.", "", "", 0);
 }
 
 QString FtpClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)

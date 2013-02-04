@@ -1096,8 +1096,18 @@ void SkyDriveClient::shareFileReplyFinished(QNetworkReply *reply)
     qDebug() << "SkyDriveClient::shareFileReplyFinished " << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    QScriptValue sc;
+    QString url = "";
+    int expires = 0;
 
-    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(reply->readAll()));
+    if (reply->error() == QNetworkReply::NoError) {
+        sc = m_engine.evaluate("(" + replyBody + ")");
+        url = sc.property("link").toString();
+        expires = -1;
+    }
+
+    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody, url, expires);
 
     // TODO scheduled to delete later.
     reply->deleteLater();
@@ -1131,4 +1141,23 @@ void SkyDriveClient::fileGetResumeReplyFinished(QNetworkReply *reply)
     // TODO scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+}
+
+QScriptValue SkyDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj)
+{
+    QScriptValue parsedObj = engine.newObject();
+
+    parsedObj.setProperty("name", jsonObj.property("name"));
+    parsedObj.setProperty("absolutePath", jsonObj.property("id"));
+    parsedObj.setProperty("parentPath", jsonObj.property("parent_id"));
+    parsedObj.setProperty("size", jsonObj.property("size"));
+    parsedObj.setProperty("isDeleted", QScriptValue(false));
+    parsedObj.setProperty("isDir", QScriptValue(jsonObj.property("type").toString().indexOf(QRegExp("folder|album")) == 0));
+    parsedObj.setProperty("lastModified", jsonObj.property("updated_time"));
+    parsedObj.setProperty("hash", jsonObj.property("updated_time"));
+    parsedObj.setProperty("source", jsonObj.property("source"));
+    parsedObj.setProperty("thumbnail", jsonObj.property("picture"));
+    parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("name").toString())));
+
+    return parsedObj;
 }
