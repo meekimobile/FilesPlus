@@ -660,6 +660,8 @@ QString WebDavClient::createFolder(QString nonce, QString uid, QString remotePar
     }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
     req.setRawHeader("Authorization", authHeader);
     req.setRawHeader("Accept", QByteArray("*/*"));
     QNetworkReply *reply = manager->sendCustomRequest(req, "MKCOL");
@@ -1174,6 +1176,7 @@ QString WebDavClient::createFolderReplyFinished(QNetworkReply *reply)
     QString replyBody;
     qDebug() << "WebDavClient::createFolderReplyFinished replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {
+        // Get created folder's property.
         reply = property(nonce, uid, remoteFilePath);
         if (reply->error() == QNetworkReply::NoError) {
             replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()));
