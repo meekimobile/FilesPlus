@@ -131,14 +131,18 @@ Page {
         id: removeAccountConfirmation
 
         property int index
+        property int selectedCloudType
+        property string selectedUid
 
         titleText: appInfo.emptyStr+qsTr("Remove cloud drive account")
         onConfirm: {
-            cloudDriveModel.removeUid(accountListView.model.get(index).type, accountListView.model.get(index).uid);
+            cloudDriveModel.removeUid(selectedCloudType, selectedUid);
             accountListView.model.remove(index);
         }
         onOpening: {
-            contentText = appInfo.emptyStr+qsTr("Please confirm to remove ") + cloudDriveModel.getCloudName(accountListView.model.get(index).type) + " UID " + accountListView.model.get(index).uid + " ?";
+            selectedCloudType = accountListView.model.get(index).cloudDriveType;
+            selectedUid = accountListView.model.get(index).uid;
+            contentText = appInfo.emptyStr+qsTr("Please confirm to remove ") + cloudDriveModel.getCloudName(selectedCloudType) + " UID " + selectedUid + " ?";
         }
     }
 
@@ -522,6 +526,7 @@ Page {
             }
 
             onPressAndHold: {
+                console.debug("cloudDriveAccountsPage listItem onPressAndHold index " + index);
                 removeAccountConfirmation.index = index;
                 removeAccountConfirmation.open();
             }
