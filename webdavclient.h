@@ -90,8 +90,8 @@ private:
 
     QByteArray createAuthHeader(QString uid);
     QScriptValue createScriptValue(QScriptEngine &engine, QDomNode &n, QString caller);
-    QString createPropertyJson(QString replyBody);
-    QString createResponseJson(QString replyBody);
+    QString createPropertyJson(QString replyBody, QString caller);
+    QString createResponseJson(QString replyBody, QString caller);
     QString prepareRemotePath(QString uid, QString remoteFilePath);
     QString getHostname(QString email);
 

@@ -127,7 +127,7 @@ void WebDavClient::quota(QString nonce, QString uid)
     qDebug() << "WebDavClient::quota nonce" << nonce << "replyBody" << replyBody;
 
     // Parse XML and convert to JSON.
-    replyBody = createResponseJson(replyBody);
+    replyBody = createResponseJson(replyBody, "quota");
 
     qDebug() << "WebDavClient::quota nonce" << nonce << "JSON replyBody" << replyBody;
 
@@ -237,10 +237,14 @@ void WebDavClient::metadata(QString nonce, QString uid, QString remoteFilePath)
     QNetworkReply *reply = property(nonce, uid, remoteFilePath, "", 1);
 
     QString replyBody = QString::fromUtf8(reply->readAll());
-//    qDebug() << "WebDavClient::metadata nonce" << nonce << "replyBody" << replyBody;
+    qDebug() << "WebDavClient::metadata nonce" << nonce << "replyBody" << replyBody;
 
     // Parse XML and convert to JSON.
-    replyBody = createPropertyJson(replyBody);
+    if (reply->error() == QNetworkReply::NoError) {
+        replyBody = createPropertyJson(replyBody, "metadata");
+    } else {
+        replyBody = createResponseJson(replyBody, "metadata");
+    }
 
 //    qDebug() << "WebDavClient::metadata nonce" << nonce << "JSON replyBody" << replyBody;
 
@@ -249,135 +253,6 @@ void WebDavClient::metadata(QString nonce, QString uid, QString remoteFilePath)
     // Scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
-}
-
-QByteArray WebDavClient::createAuthHeader(QString uid)
-{
-    QByteArray authHeader;
-    if (uid == "") {
-        // After accessToken, then uses temp access token..
-        QString uid = m_paramMap["authorize_uid"];
-        QString accessToken = m_paramMap["access_token"];
-        qDebug() << "WebDavClient::createAuthHeader get uid" << uid << "accessToken" << accessToken << "from m_paramMap.";
-        authHeader.append("OAuth " + accessToken);
-    } else if (accessTokenPairMap.contains(uid)) {
-        if (accessTokenPairMap[uid].token.toLower() == "basic") {
-            QByteArray token;
-            token.append(QString("%1:%2").arg(accessTokenPairMap[uid].email.split("@").at(0)).arg(accessTokenPairMap[uid].secret));
-            authHeader.append("Basic ");
-            authHeader.append(token.toBase64());
-        } else {
-            authHeader.append("OAuth " + accessTokenPairMap[uid].token);
-        }
-    }
-
-    return authHeader;
-}
-
-QScriptValue WebDavClient::createScriptValue(QScriptEngine &engine, QDomNode &n, QString caller)
-{
-//    qDebug() << "WebDavClient::createScriptValue caller" << caller << "nodeName" << n.nodeName() << "localName" << n.localName() << "nodeType" << n.nodeType();
-
-    if (n.isText()) {
-        QString v = QUrl::fromPercentEncoding(n.toText().nodeValue().toAscii());
-        return QScriptValue(v);
-    } else if (n.hasChildNodes()) {
-        if (n.firstChild().isText()) {
-            // Get text node value if there is only 1 text child node.
-            QDomNode textNode = n.firstChild();
-            return createScriptValue(engine, textNode, caller);
-        } else {
-            // Create object from node with children.
-            QScriptValue jsonObj = engine.newObject();
-            for (int i=0; i < n.childNodes().length(); i++) {
-                QDomNode childNode = n.childNodes().at(i);
-//                qDebug() << "WebDavClient::createScriptValue child i" << i << childNode.nodeName() << childNode.localName() << childNode.nodeType();
-                // Drilldown recursively to create JSON object.
-                jsonObj.setProperty(childNode.localName(), createScriptValue(engine, childNode, caller));
-            }
-            return jsonObj;
-        }
-    } else {
-        return QScriptValue();
-    }
-}
-
-QString WebDavClient::createPropertyJson(QString replyBody)
-{
-    QScriptEngine engine;
-    QScriptValue jsonObj;
-
-    QDomDocument doc;
-    doc.setContent(replyBody, true);
-    QDomElement docElem = doc.documentElement();
-    QDomNode n = docElem.firstChild();
-    // Populate property from first child.
-    if (!n.isNull()) {
-        jsonObj = parseCommonPropertyScriptValue(engine, createScriptValue(engine, n, "browse"));
-    }
-    // Populate children from remain children.
-    QScriptValue childrenArrayObj = engine.newArray();
-    int childrenArrayIndex = 0;
-    n = n.nextSibling();
-    while(!n.isNull()) {
-        childrenArrayObj.setProperty(childrenArrayIndex++, parseCommonPropertyScriptValue(engine, createScriptValue(engine, n, "browse")));
-        n = n.nextSibling();
-    }
-    jsonObj.setProperty("children", childrenArrayObj);
-    // Stringify jsonObj.
-    QString jsonText = stringifyScriptValue(engine, jsonObj);
-
-    return jsonText;
-}
-
-QString WebDavClient::createResponseJson(QString replyBody)
-{
-    QScriptEngine engine;
-    QScriptValue jsonObj = engine.newObject();
-    QDomDocument doc;
-    doc.setContent(replyBody, true);
-    QDomElement docElem = doc.documentElement();
-    // Populate jsonObj starts from first child.
-    QDomNode n = docElem.firstChild();
-    while(!n.isNull()) {
-        jsonObj.setProperty(n.localName(), createScriptValue(engine, n, "createResponseJson"));
-        n = n.nextSibling();
-    }
-    // Stringify jsonObj.
-    QString jsonText = stringifyScriptValue(engine, jsonObj);
-
-    return jsonText;
-}
-
-QString WebDavClient::prepareRemotePath(QString uid, QString remoteFilePath)
-{
-    QString path = remoteFilePath;
-//    qDebug() << "WebDavClient::prepareRemotePath path" << path;
-
-    // Remove prefix remote root path.
-    if (uid != "") {
-        if (!m_remoteRootHash.contains(uid) || m_remoteRootHash[uid] == "") {
-            QString hostname = getHostname(accessTokenPairMap[uid].email);
-            QString remoteRoot = (hostname.indexOf("/") != -1) ? hostname.mid(hostname.indexOf("/")) : "/";
-            path = path.replace(QRegExp("^"+remoteRoot), "/");
-            qDebug() << "WebDavClient::prepareRemotePath uid" << uid << "remoteRoot" << remoteRoot << "removed. path" << path;
-            // TODO Stores remoteRoot in m_remoteRootHash[uid].
-            m_remoteRootHash[uid] = remoteRoot;
-        } else {
-            path = path.replace(QRegExp("^"+m_remoteRootHash[uid]), "/");
-//            qDebug() << "WebDavClient::prepareRemotePath remoteRoot" << m_remoteRootHash[uid] << "removed. path" << path;
-        }
-    }
-    // Replace double slash.
-    path = removeDoubleSlash(path);
-//    qDebug() << "WebDavClient::prepareRemotePath double slash removed. path" << path;
-
-    return path;
-}
-
-QString WebDavClient::getHostname(QString email)
-{
-    return email.mid(email.lastIndexOf("@")+1);
 }
 
 void WebDavClient::browse(QString nonce, QString uid, QString remoteFilePath)
@@ -390,16 +265,21 @@ void WebDavClient::browse(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "WebDavClient::browse nonce" << nonce << "replyBody" << replyBody;
 
     // Parse XML and convert to JSON.
-    replyBody = createPropertyJson(replyBody);
+    if (reply->error() == QNetworkReply::NoError) {
+        replyBody = createPropertyJson(replyBody, "browse");
 
-    // TODO Get remote root. It should be gotten while parsing XML in createPropertyJson().
-    // TODO Needs to be UID-safety.
-    QScriptEngine engine;
-    QScriptValue sc = engine.evaluate("(" + replyBody + ")");
-    if (remoteFilePath == "") {
-        m_remoteRootHash[uid] = sc.property("absolutePath").toString();
-        qDebug() << "WebDavClient::browse nonce" << nonce << "uid" << uid << "remote root" << m_remoteRootHash[uid];
+        // Get remote root. It should be gotten while parsing XML in createPropertyJson().
+        // Needs to be UID-safety.
+        QScriptEngine engine;
+        QScriptValue sc = engine.evaluate("(" + replyBody + ")");
+        if (remoteFilePath == "") {
+            m_remoteRootHash[uid] = sc.property("absolutePath").toString();
+            qDebug() << "WebDavClient::browse nonce" << nonce << "uid" << uid << "remote root" << m_remoteRootHash[uid];
+        }
+    } else {
+        replyBody = createResponseJson(replyBody, "browse");
     }
+
 
 //    qDebug() << "WebDavClient::browse nonce" << nonce << "JSON replyBody" << replyBody;
 
@@ -472,12 +352,12 @@ void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, 
     if (reply->error() == QNetworkReply::NoError) {
         reply = property(nonce, uid, prepareRemotePath(uid, newRemoteFilePath));
         if (reply->error() == QNetworkReply::NoError) {
-            result = createPropertyJson(QString::fromUtf8(reply->readAll()));
+            result = createPropertyJson(QString::fromUtf8(reply->readAll()), "moveFile");
         } else {
-            result = createResponseJson(QString::fromUtf8(reply->readAll()));
+            result = createResponseJson(QString::fromUtf8(reply->readAll()), "moveFile");
         }
     } else {
-        result = createResponseJson(QString::fromUtf8(reply->readAll()));
+        result = createResponseJson(QString::fromUtf8(reply->readAll()), "moveFile");
     }
 
     emit moveFileReplySignal(nonce, reply->error(), reply->errorString(), result);
@@ -532,12 +412,12 @@ void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, 
     if (reply->error() == QNetworkReply::NoError) {
         reply = property(nonce, uid, prepareRemotePath(uid, newRemoteFilePath));
         if (reply->error() == QNetworkReply::NoError) {
-            result = createPropertyJson(QString::fromUtf8(reply->readAll()));
+            result = createPropertyJson(QString::fromUtf8(reply->readAll()), "copyFile");
         } else {
-            result = createResponseJson(QString::fromUtf8(reply->readAll()));
+            result = createResponseJson(QString::fromUtf8(reply->readAll()), "copyFile");
         }
     } else {
-        result = createResponseJson(QString::fromUtf8(reply->readAll()));
+        result = createResponseJson(QString::fromUtf8(reply->readAll()), "copyFile");
     }
 
     emit copyFileReplySignal(nonce, reply->error(), reply->errorString(), result);
@@ -767,7 +647,7 @@ QString WebDavClient::fileGetReplySave(QNetworkReply *reply)
         QString propertyReplyBody = QString::fromUtf8(reply->readAll());
         qDebug() << "WebDavClient::fileGetReplySave propertyReplyBody" << propertyReplyBody;
         if (reply->error() == QNetworkReply::NoError) {
-            result = createPropertyJson(propertyReplyBody);
+            result = createPropertyJson(propertyReplyBody, "fileGetReplySave");
         } else {
             result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
         }
@@ -865,6 +745,135 @@ QIODevice *WebDavClient::fileGetResume(QString nonce, QString uid, QString remot
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
     return reply;
+}
+
+QByteArray WebDavClient::createAuthHeader(QString uid)
+{
+    QByteArray authHeader;
+    if (uid == "") {
+        // After accessToken, then uses temp access token..
+        QString uid = m_paramMap["authorize_uid"];
+        QString accessToken = m_paramMap["access_token"];
+        qDebug() << "WebDavClient::createAuthHeader get uid" << uid << "accessToken" << accessToken << "from m_paramMap.";
+        authHeader.append("OAuth " + accessToken);
+    } else if (accessTokenPairMap.contains(uid)) {
+        if (accessTokenPairMap[uid].token.toLower() == "basic") {
+            QByteArray token;
+            token.append(QString("%1:%2").arg(accessTokenPairMap[uid].email.split("@").at(0)).arg(accessTokenPairMap[uid].secret));
+            authHeader.append("Basic ");
+            authHeader.append(token.toBase64());
+        } else {
+            authHeader.append("OAuth " + accessTokenPairMap[uid].token);
+        }
+    }
+
+    return authHeader;
+}
+
+QScriptValue WebDavClient::createScriptValue(QScriptEngine &engine, QDomNode &n, QString caller)
+{
+//    qDebug() << "WebDavClient::createScriptValue caller" << caller << "nodeName" << n.nodeName() << "localName" << n.localName() << "nodeType" << n.nodeType();
+
+    if (n.isText()) {
+        QString v = QUrl::fromPercentEncoding(n.toText().nodeValue().toAscii());
+        return QScriptValue(v);
+    } else if (n.hasChildNodes()) {
+        if (n.firstChild().isText()) {
+            // Get text node value if there is only 1 text child node.
+            QDomNode textNode = n.firstChild();
+            return createScriptValue(engine, textNode, caller);
+        } else {
+            // Create object from node with children.
+            QScriptValue jsonObj = engine.newObject();
+            for (int i=0; i < n.childNodes().length(); i++) {
+                QDomNode childNode = n.childNodes().at(i);
+//                qDebug() << "WebDavClient::createScriptValue child i" << i << childNode.nodeName() << childNode.localName() << childNode.nodeType();
+                // Drilldown recursively to create JSON object.
+                jsonObj.setProperty(childNode.localName(), createScriptValue(engine, childNode, caller));
+            }
+            return jsonObj;
+        }
+    } else {
+        return QScriptValue();
+    }
+}
+
+QString WebDavClient::createPropertyJson(QString replyBody, QString caller)
+{
+    QScriptEngine engine;
+    QScriptValue jsonObj;
+
+    QDomDocument doc;
+    doc.setContent(replyBody, true);
+    QDomElement docElem = doc.documentElement();
+    QDomNode n = docElem.firstChild();
+    // Populate property from first child.
+    if (!n.isNull()) {
+        jsonObj = parseCommonPropertyScriptValue(engine, createScriptValue(engine, n, caller));
+    }
+    // Populate children from remain children.
+    QScriptValue childrenArrayObj = engine.newArray();
+    int childrenArrayIndex = 0;
+    n = n.nextSibling();
+    while(!n.isNull()) {
+        childrenArrayObj.setProperty(childrenArrayIndex++, parseCommonPropertyScriptValue(engine, createScriptValue(engine, n, caller)));
+        n = n.nextSibling();
+    }
+    jsonObj.setProperty("children", childrenArrayObj);
+    // Stringify jsonObj.
+    QString jsonText = stringifyScriptValue(engine, jsonObj);
+
+    return jsonText;
+}
+
+QString WebDavClient::createResponseJson(QString replyBody, QString caller)
+{
+    QScriptEngine engine;
+    QScriptValue jsonObj = engine.newObject();
+    QDomDocument doc;
+    doc.setContent(replyBody, true);
+    QDomElement docElem = doc.documentElement();
+    // Populate jsonObj starts from first child.
+    QDomNode n = docElem.firstChild();
+    while(!n.isNull()) {
+        jsonObj.setProperty(n.localName(), createScriptValue(engine, n, "createResponseJson"));
+        n = n.nextSibling();
+    }
+    // Stringify jsonObj.
+    QString jsonText = stringifyScriptValue(engine, jsonObj);
+
+    return jsonText;
+}
+
+QString WebDavClient::prepareRemotePath(QString uid, QString remoteFilePath)
+{
+    QString path = remoteFilePath;
+//    qDebug() << "WebDavClient::prepareRemotePath path" << path;
+
+    // Remove prefix remote root path.
+    if (uid != "") {
+        if (!m_remoteRootHash.contains(uid) || m_remoteRootHash[uid] == "") {
+            QString hostname = getHostname(accessTokenPairMap[uid].email);
+            QString remoteRoot = (hostname.indexOf("/") != -1) ? hostname.mid(hostname.indexOf("/")) : "/";
+            path = path.replace(QRegExp("^"+remoteRoot), "/");
+            qDebug() << "WebDavClient::prepareRemotePath uid" << uid << "remoteRoot" << remoteRoot << "removed. path" << path;
+            // TODO Stores remoteRoot in m_remoteRootHash[uid].
+            m_remoteRootHash[uid] = remoteRoot;
+        } else {
+            path = path.replace(QRegExp("^"+m_remoteRootHash[uid]), "/");
+//            qDebug() << "WebDavClient::prepareRemotePath remoteRoot" << m_remoteRootHash[uid] << "removed. path" << path;
+        }
+    }
+    // Replace double slash.
+    path = removeDoubleSlash(path);
+//    qDebug() << "WebDavClient::prepareRemotePath double slash removed. path" << path;
+
+    return path;
+}
+
+QString WebDavClient::getHostname(QString email)
+{
+    return email.mid(email.lastIndexOf("@")+1);
 }
 
 QString WebDavClient::getParentRemotePath(QString remotePath)
@@ -1150,12 +1159,12 @@ void WebDavClient::filePutReplyFinished(QNetworkReply *reply)
     if (reply->error() == QNetworkReply::NoError) {
         reply = property(nonce, uid, remoteFilePath);
         if (reply->error() == QNetworkReply::NoError) {
-            replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()));
+            replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()), "filePutReplyFinished");
         } else {
-            replyBody = createResponseJson(QString::fromUtf8(reply->readAll()));
+            replyBody = createResponseJson(QString::fromUtf8(reply->readAll()), "filePutReplyFinished");
         }
     } else {
-        replyBody = createResponseJson(QString::fromUtf8(reply->readAll()));
+        replyBody = createResponseJson(QString::fromUtf8(reply->readAll()), "filePutReplyFinished");
     }
 
     emit filePutReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
@@ -1179,12 +1188,12 @@ QString WebDavClient::createFolderReplyFinished(QNetworkReply *reply)
         // Get created folder's property.
         reply = property(nonce, uid, remoteFilePath);
         if (reply->error() == QNetworkReply::NoError) {
-            replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()));
+            replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()), "createFolderReplyFinished");
         } else {
-            replyBody = createResponseJson(QString::fromUtf8(reply->readAll()));
+            replyBody = createResponseJson(QString::fromUtf8(reply->readAll()), "createFolderReplyFinished");
         }
     } else {
-        replyBody = createResponseJson(QString::fromUtf8(reply->readAll()));
+        replyBody = createResponseJson(QString::fromUtf8(reply->readAll()), "createFolderReplyFinished");
     }
 
     emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
