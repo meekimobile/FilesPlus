@@ -59,7 +59,6 @@
         <file alias="qml/FilesPlus/MenuItemWithIcon.qml">qml/FilesPlus/meego/MenuItemWithIcon.qml</file>
         <file alias="qml/FilesPlus/MessageDialog.qml">qml/FilesPlus/meego/MessageDialog.qml</file>
         <file alias="qml/FilesPlus/MoreApps.qml">qml/FilesPlus/meego/MoreApps.qml</file>
-        <file alias="qml/FilesPlus/SettingMenu.qml">qml/FilesPlus/meego/SettingMenu.qml</file>
         <file alias="qml/FilesPlus/SortByMenu.qml">qml/FilesPlus/meego/SortByMenu.qml</file>
         <file alias="qml/FilesPlus/Splash.qml">qml/FilesPlus/meego/Splash.qml</file>
         <file alias="qml/FilesPlus/MenuWithIcon.qml">qml/FilesPlus/meego/MenuWithIcon.qml</file>

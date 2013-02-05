@@ -8,6 +8,12 @@ Page {
     property string name: "messageLoggerPage"
     property bool inverted: !theme.inverted
 
+    function getMessageTypeColor(messageType) {
+        if (messageType == "error") return "red";
+        else if (messageType == "warn") return "orange";
+        else return "#00AAFF";
+    }
+
     tools: toolBarLayout
 
     ToolBarLayout {
@@ -74,7 +80,7 @@ Page {
                 spacing: 5
                 Rectangle {
                     id: readIndicator
-                    color: (!isRead) ? "#00AAFF" : "transparent"
+                    color: (!isRead) ? getMessageTypeColor(messageType) : "transparent"
                     width: 5
                     height: parent.height
                 }
@@ -88,7 +94,7 @@ Page {
                             id: title
                             text: titleText
                             width: parent.width - logTimeText.width
-                            font.pointSize: 18
+                            font.pointSize: 14
                             elide: Text.ElideMiddle
                             color: (!inverted) ? "white" : "black"
                         }

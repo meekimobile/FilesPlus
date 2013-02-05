@@ -57,7 +57,6 @@
         <file alias="qml/FilesPlus/MainMenu.qml">qml/FilesPlus/symbian/MainMenu.qml</file>
         <file alias="qml/FilesPlus/MessageDialog.qml">qml/FilesPlus/symbian/MessageDialog.qml</file>
         <file alias="qml/FilesPlus/MoreApps.qml">qml/FilesPlus/symbian/MoreApps.qml</file>
-        <file alias="qml/FilesPlus/SettingMenu.qml">qml/FilesPlus/symbian/SettingMenu.qml</file>
         <file alias="qml/FilesPlus/SortByMenu.qml">qml/FilesPlus/symbian/SortByMenu.qml</file>
         <file alias="qml/FilesPlus/Splash.qml">qml/FilesPlus/symbian/Splash.qml</file>
         <file alias="qml/FilesPlus/ImageViewPage.qml">qml/FilesPlus/symbian/ImageViewPage.qml</file>

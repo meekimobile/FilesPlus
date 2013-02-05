@@ -7,7 +7,7 @@ ListModel {
     property alias messageCount: messageLoggerModel.count
     
     function log(type, titleText, message) {
-        var msgObj = { "timestamp": new Date(), "meesageType": type, "isRead": false, "titleText": titleText, "message": message };
+        var msgObj = { "timestamp": new Date(), "messageType": type, "isRead": false, "titleText": titleText, "message": message };
         messageLoggerModel.append(msgObj);
         messageLoggerModel.newMessageCount++;
     }
