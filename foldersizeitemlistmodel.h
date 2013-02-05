@@ -93,7 +93,8 @@ public:
     Q_INVOKABLE void setSortFlag(const int sortFlag, const bool saveSortFlag = true);
     Q_INVOKABLE void revertSortFlag();
     QStringList getNameFilters() const;
-    void setNameFilters(const QStringList nameFilters);
+    void setNameFilters(const QStringList nameFilters);   
+    Q_INVOKABLE QVariant get(const int index);
     Q_INVOKABLE QVariant getProperty(const int index, FolderSizeItemRoles role);
     Q_INVOKABLE void setProperty(const int index, FolderSizeItemRoles role, QVariant value);
     Q_INVOKABLE void setProperty(const QString localPath, FolderSizeItemRoles role, QVariant value);

@@ -150,5 +150,8 @@
         <file>qml/FilesPlus/internet.svg</file>
         <file>qml/FilesPlus/internet_inverted.svg</file>
         <file>qml/FilesPlus/webdav_icon.png</file>
+        <file>qml/FilesPlus/info.svg</file>
+        <file>qml/FilesPlus/info_inverted.svg</file>
+        <file alias="qml/FilesPlus/FilePropertiesDialog.qml">qml/FilesPlus/symbian/FilePropertiesDialog.qml</file>
     </qresource>
 </RCC>

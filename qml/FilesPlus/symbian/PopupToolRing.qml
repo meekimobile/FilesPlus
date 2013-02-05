@@ -94,6 +94,7 @@ Rectangle {
     signal smsFile(string srcFilePath, int srcItemIndex)
     signal bluetoothFile(string srcFilePath, int srcItemIndex)
     signal editFile(string srcFilePath, int srcItemIndex)
+    signal showInfo(string srcFilePath, int srcItemIndex)
 
     function open(panelX, panelY) {
 //        console.debug("popupToolRing open panelX " + panelX + " panelY " + panelY);
@@ -144,7 +145,8 @@ Rectangle {
         ListElement { buttonName: "copy"; icon: "copy.svg" }
         ListElement { buttonName: "paste"; icon: "paste.svg" }
         ListElement { buttonName: "print"; icon: "print.svg" }
-        ListElement { buttonName: "sync"; icon: "cloud.svg" }
+//        ListElement { buttonName: "sync"; icon: "cloud.svg" }
+        ListElement { buttonName: "cloud"; icon: "cloud_options.svg" }
         ListElement { buttonName: "delete"; icon: "delete.svg" }
         ListElement { buttonName: "cut"; icon: "trim.svg" }
     }
@@ -154,7 +156,8 @@ Rectangle {
         ListElement { buttonName: "mark"; icon: "ok.svg" }
         ListElement { buttonName: "newFolder"; icon: "folder_add.svg" }
         ListElement { buttonName: "editFile"; icon: "edit.svg" }
-        ListElement { buttonName: "cloud"; icon: "cloud_options.svg" }
+//        ListElement { buttonName: "cloud"; icon: "cloud_options.svg" }
+        ListElement { buttonName: "info"; icon: "info.svg" }
         ListElement { buttonName: "share"; icon: "share.svg" }
         ListElement { buttonName: "rename"; icon: "rename.svg" }
     }
@@ -171,7 +174,8 @@ Rectangle {
         ListElement { buttonName: "disconnect"; icon: "cloud_disconnect.svg" }
         ListElement { buttonName: "upload"; icon: "upload.svg" }
         ListElement { buttonName: "cloudScheduler"; icon: "cloud_wait.svg" }
-        ListElement { buttonName: "cloudSettings"; icon: "cloud_settings.svg" }
+        ListElement { buttonName: "sync"; icon: "cloud.svg" }
+//        ListElement { buttonName: "cloudSettings"; icon: "cloud_settings.svg" }
         ListElement { buttonName: "unsync"; icon: "cloud_remove.svg" }
         ListElement { buttonName: "download"; icon: "download.svg" }
     }
@@ -269,6 +273,8 @@ Rectangle {
             bluetoothFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "editFile") {
             editFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "info") {
+            showInfo(selectedFilePath, selectedFileIndex);
         }
         popupToolPanel.visible = false;
     }

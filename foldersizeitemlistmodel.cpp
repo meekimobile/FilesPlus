@@ -1,4 +1,5 @@
 #include "foldersizeitemlistmodel.h"
+#include <QScriptEngine>
 
 const int FolderSizeItemListModel::TimerInterval = 100;
 const int FolderSizeItemListModel::MaxRunningJobCount = 1;
@@ -184,6 +185,22 @@ bool FolderSizeItemListModel::isDirSizeCacheExisting()
 bool FolderSizeItemListModel::isReady()
 {
     return !m.isRunning();
+}
+
+QVariant FolderSizeItemListModel::get(const int index)
+{
+    if (index >= 0 && index < rowCount()) {
+        QMap<QString,QVariant> jsonObj;
+        foreach(int role, roleNames().keys()) {
+            QString propertyName = QString(roleNames().value(role));
+            QVariant propertyValue = data(createIndex(index,0), role);
+            jsonObj[propertyName] = propertyValue;
+        }
+//        qDebug() << "FolderSizeItemListModel::get" << QVariant(jsonObj);
+        return QVariant(jsonObj);
+    }
+
+    return QVariant();
 }
 
 QVariant FolderSizeItemListModel::getProperty(const int index, FolderSizeItemListModel::FolderSizeItemRoles role)
