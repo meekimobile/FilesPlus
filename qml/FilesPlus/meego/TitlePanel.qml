@@ -49,14 +49,81 @@ Rectangle {
     TextIndicator {
         id: messageLoggerCounter
         text: (messageLoggerModel.messageCount > 0) ? (appInfo.emptyStr + qsTr("Message") + " " + messageLoggerModel.newMessageCount + "/" + messageLoggerModel.messageCount) : ""
-        height: parent.height - 6
+        height: parent.height
+        radius: 0
         anchors.right: parent.right
-        anchors.rightMargin: 3
         anchors.verticalCenter: parent.verticalCenter
-        color: (messageLoggerModel.newMessageCount > 0) ? "#00AAFF" : "transparent"
+        visible: (messageLoggerModel.messageCount > 0)
+        borderColor: "transparent"
+        borderColorInverted: "transparent"
+        textColor: "white"
+        textColorInverted: (messageLoggerModel.newMessageCount > 0) ? "white" : "black"
+        pressedTextColor: "white"
+        pressedTextColorInverted: "white"
+        gradient: {
+            if (_pressed) {
+                return pressedGradient;
+            } else if (messageLoggerModel.newMessageCount > 0) {
+                return highlightGradient;
+            } else {
+                return transparentGradient;
+            }
+        }
 
         onClicked: {
-            pageStack.push(Qt.resolvedUrl("MessageLoggerPage.qml"));
+//            console.debug("titlePanel onClicked pageStack.depth " + pageStack.depth);
+            if (pageStack.currentPage.name != "messageLoggerPage") {
+                pageStack.push(Qt.resolvedUrl("MessageLoggerPage.qml"));
+            }
+        }
+    }
+
+    Gradient {
+        id: transparentGradient
+        GradientStop {
+            position: 0
+            color: "transparent"
+        }
+
+        GradientStop {
+            position: 1
+            color: "transparent"
+        }
+    }
+
+    Gradient {
+        id: highlightGradient
+        GradientStop {
+            position: 0
+            color: "#0091d9"
+        }
+
+        GradientStop {
+            position: 0.500
+            color: "#00aaff"
+        }
+
+        GradientStop {
+            position: 1
+            color: "#001f3c"
+        }
+    }
+
+    Gradient {
+        id: pressedGradient
+        GradientStop {
+            position: 0
+            color: "#141414"
+        }
+
+        GradientStop {
+            position: 0.500
+            color: "#4d4d4d"
+        }
+
+        GradientStop {
+            position: 1
+            color: "#141414"
         }
     }
 }
