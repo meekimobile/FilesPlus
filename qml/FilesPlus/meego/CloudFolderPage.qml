@@ -496,7 +496,7 @@ Page {
         height: parent.height - currentPath.height - (nameFilterPanel.visible ? nameFilterPanel.height : 0)
         anchors.top: currentPath.bottom
         highlightRangeMode: ListView.NoHighlightRange
-        highlightFollowsCurrentItem: false
+        highlightFollowsCurrentItem: true
         highlightMoveDuration: 1
         highlightMoveSpeed: 4000
         highlight: Rectangle {
@@ -785,14 +785,14 @@ Page {
 
         onOpened: {
 //            console.debug("popupToolRing onOpened");
-            cloudFolderView.highlightFollowsCurrentItem = true;
+//            cloudFolderView.highlightFollowsCurrentItem = true;
         }
 
         onClosed: {
 //            console.debug("popupToolRing onClosed");
-            // Workaround to hide highlight.
-            cloudFolderView.currentIndex = -1;
-            cloudFolderView.highlightFollowsCurrentItem = false;
+//            // Workaround to hide highlight.
+//            cloudFolderView.currentIndex = -1;
+//            cloudFolderView.highlightFollowsCurrentItem = false;
         }
 
         onCutClicked: {
@@ -841,6 +841,10 @@ Page {
 
         onSmsFile: {
             smsFileSlot(srcFilePath, selectedFileName);
+        }
+
+        onShowInfo: {
+            filePropertiesDialog.show();
         }
     }
 
@@ -939,6 +943,35 @@ Page {
             if (nameField.text != "" && nameField.text != sourcePathName) {
                 renameRemotePath(sourcePath, nameField.text);
             }
+        }
+    }
+
+    FilePropertiesDialog {
+        id: filePropertiesDialog
+        selectedIndex: cloudFolderView.currentIndex
+        selectedItem: cloudFolderModel.get(cloudFolderView.currentIndex)
+        isCloudFolder: true
+
+        function show() {
+            populateCloudItemModel();
+            open();
+        }
+
+        function populateCloudItemModel() {
+            cloudItemModel.clear();
+            if (selectedItem) {
+                var cloudItems = Utility.createJsonObj(cloudDriveModel.getItemListJsonByRemotePath(selectedCloudType, selectedUid, selectedItem.absolutePath));
+                for (var i = 0; i < cloudItems.length; i++) {
+                    var cloudItem = cloudItems[i];
+                    var modelItem = { absolutePath: (cloudItem.local_path ? cloudItem.local_path : qsTr("Not available")) };
+                    cloudItemModel.append(modelItem);
+                }
+            }
+        }
+
+        onSyncAll: {
+            cloudDriveModel.syncItemByRemotePath(selectedCloudType, selectedUid, selectedItem.absolutePath);
+            close();
         }
     }
 

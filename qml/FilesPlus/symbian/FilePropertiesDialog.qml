@@ -9,12 +9,12 @@ CommonDialog {
     property int selectedIndex
     property variant selectedItem
     property alias cloudItemModel: cloudItemModel
+    property bool isCloudFolder: false
 
     signal opening()
     signal opened()
     signal closing()
     signal closed()
-    signal sync(int type, string uid, string absolutePath)
     signal syncAll()
 
     onStatusChanged: {
@@ -137,6 +137,7 @@ CommonDialog {
                 }
                 Row {
                     width: parent.width
+                    visible: selectedItem && ((selectedItem.subDirCount + selectedItem.subFileCount) > 0)
                     Text {
                         text: appInfo.emptyStr+qsTr("Contents")
                         font.pointSize: 6
@@ -174,7 +175,9 @@ CommonDialog {
                     }
                     Button {
                         id: syncAllButton
-                        text: appInfo.emptyStr+qsTr("Sync all")
+                        width: 56
+                        height: 56
+                        iconSource: "cloud.svg"
                         anchors.verticalCenter: parent.verticalCenter
                         onClicked: {
                             syncAll();
@@ -203,34 +206,16 @@ CommonDialog {
                 id: cloudIcon
                 anchors.verticalCenter: parent.verticalCenter
                 width: 30
-                height: 30
-                source: cloudDriveModel.getCloudIcon(type)
+                height: isCloudFolder ? 0 : 30
+                source: isCloudFolder ? "" : cloudDriveModel.getCloudIcon(type)
             }
-            Column {
-                width: parent.width - (parent.spacing * 2)- cloudIcon.width - syncButton.width
+            Text {
+                width: parent.width - parent.spacing - cloudIcon.width
                 anchors.verticalCenter: parent.verticalCenter
-                Text {
-                    text: email
-                    font.pointSize: 6
-                    width: parent.width
-                    color: "white"
-                    elide: Text.ElideRight
-                }
-                Text {
-                    text: absolutePath
-                    font.pointSize: 6
-                    width: parent.width
-                    color: "white"
-                    elide: Text.ElideRight
-                }
-            }
-            Button {
-                id: syncButton
-                iconSource: "cloud.svg"
-                anchors.verticalCenter: parent.verticalCenter
-                onClicked: {
-                    sync(type, uid, absolutePath);
-                }
+                text: !isCloudFolder ? (email + "\n" + absolutePath) : absolutePath
+                font.pointSize: 6
+                color: "white"
+                elide: Text.ElideRight
             }
         }
     }

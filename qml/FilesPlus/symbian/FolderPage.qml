@@ -1646,7 +1646,7 @@ Page {
     FilePropertiesDialog {
         id: filePropertiesDialog
         selectedIndex: fsListView.currentIndex
-        selectedItem: fsModel.get(fsListView.currentIndex);
+        selectedItem: fsModel.get(fsListView.currentIndex)
 
         function show() {
             populateCloudItemModel();
@@ -1666,15 +1666,11 @@ Page {
             }
         }
 
-        onSync: {
-            if (cloudDriveModel.canSync(selectedItem.absolutePath)) {
-                cloudDriveModel.syncItem(type, uid, selectedItem.absolutePath);
-            }
-        }
         onSyncAll: {
             if (cloudDriveModel.canSync(selectedItem.absolutePath)) {
                 cloudDriveModel.syncItem(selectedItem.absolutePath);
             }
+            close();
         }
     }
 }

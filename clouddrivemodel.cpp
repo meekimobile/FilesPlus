@@ -1345,6 +1345,17 @@ QString CloudDriveModel::getItemListJson(QString localPath)
     return "[ " + jsonText + " ]";
 }
 
+QString CloudDriveModel::getItemListJsonByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
+{
+    QString jsonText;
+    foreach (CloudDriveItem item, findItemsByRemotePath(type, uid, remotePath)) {
+        if (jsonText != "") jsonText.append(", ");
+        jsonText.append( item.toJsonText() );
+    }
+
+    return "[ " + jsonText + " ]";
+}
+
 QString CloudDriveModel::getItemJson(QString localPath, CloudDriveModel::ClientTypes type, QString uid)
 {
     CloudDriveItem item = getItem(localPath, type, uid);
