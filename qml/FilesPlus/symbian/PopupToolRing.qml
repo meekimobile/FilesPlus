@@ -145,8 +145,7 @@ Rectangle {
         ListElement { buttonName: "copy"; icon: "copy.svg" }
         ListElement { buttonName: "paste"; icon: "paste.svg" }
         ListElement { buttonName: "print"; icon: "print.svg" }
-//        ListElement { buttonName: "sync"; icon: "cloud.svg" }
-        ListElement { buttonName: "cloud"; icon: "cloud_options.svg" }
+        ListElement { buttonName: "info"; icon: "info.svg" }
         ListElement { buttonName: "delete"; icon: "delete.svg" }
         ListElement { buttonName: "cut"; icon: "trim.svg" }
     }
@@ -156,8 +155,7 @@ Rectangle {
         ListElement { buttonName: "mark"; icon: "ok.svg" }
         ListElement { buttonName: "newFolder"; icon: "folder_add.svg" }
         ListElement { buttonName: "editFile"; icon: "edit.svg" }
-//        ListElement { buttonName: "cloud"; icon: "cloud_options.svg" }
-        ListElement { buttonName: "info"; icon: "info.svg" }
+        ListElement { buttonName: "cloud"; icon: "cloud_options.svg" }
         ListElement { buttonName: "share"; icon: "share.svg" }
         ListElement { buttonName: "rename"; icon: "rename.svg" }
     }

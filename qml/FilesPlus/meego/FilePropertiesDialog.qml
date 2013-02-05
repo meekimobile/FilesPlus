@@ -1,10 +1,9 @@
 import QtQuick 1.1
-import com.nokia.symbian 1.1
+import com.nokia.meego 1.0
 
 CommonDialog {
     id: filePropertiesDIalog
     z: 2
-    height: contentItem.height + 130 // Workaround for Symbian only.
 
     property int selectedIndex
     property variant selectedItem
@@ -36,14 +35,14 @@ CommonDialog {
         id: contentItem
 
         property int labelWidth: width * 0.35
-        property real maxContentHeight: screen.height - (inputContext.visible ? inputContext.height : 0) - 130 // Title + Buttons height = 130. For Symbian only.
+        property real maxContentHeight: filePropertiesDIalog.parent.height - 130 // Title + Buttons height = 130. For Meego only.
 
         onHeightChanged: {
-            console.debug("filePropertiesDIalog contentItem onHeightChanged " + height + " maxContentHeight " + maxContentHeight + " inputContext.height " + inputContext.height + " filePropertiesDIalog.width " + filePropertiesDIalog.width + " filePropertiesDIalog.height " + filePropertiesDIalog.height + " window.inPortrait " + window.inPortrait);
+            console.debug("filePropertiesDIalog contentItem onHeightChanged " + height + " maxContentHeight " + maxContentHeight + " filePropertiesDIalog.width " + filePropertiesDIalog.width + " filePropertiesDIalog.height " + filePropertiesDIalog.height + " window.inPortrait " + window.inPortrait);
         }
 
-        width: parent.width - 20 // For Symbian only.
-        height: Math.min(contentColumn.height, maxContentHeight) // For Symbian only.
+        width: parent.width // For Meego only.
+        height: Math.min(contentColumn.height, maxContentHeight) // For Meego only.
         anchors.horizontalCenter: parent.horizontalCenter
 
         Flickable {
@@ -63,7 +62,7 @@ CommonDialog {
                     width: parent.width
                     Text {
                         text: appInfo.emptyStr+qsTr("Name")
-                        font.pointSize: 6
+                        font.pointSize: 16
                         width: contentItem.labelWidth
                         color: "white"
                         elide: Text.ElideRight
@@ -71,7 +70,7 @@ CommonDialog {
                     }
                     Text {
                         text: selectedItem ? selectedItem.name : ""
-                        font.pointSize: 6
+                        font.pointSize: 16
                         width: parent.width - contentItem.labelWidth
                         color: "white"
                         elide: Text.ElideRight
@@ -82,7 +81,7 @@ CommonDialog {
                     width: parent.width
                     Text {
                         text: appInfo.emptyStr+qsTr("Path")
-                        font.pointSize: 6
+                        font.pointSize: 16
                         width: contentItem.labelWidth
                         color: "white"
                         elide: Text.ElideRight
@@ -90,7 +89,7 @@ CommonDialog {
                     }
                     Text {
                         text: selectedItem ? selectedItem.absolutePath : ""
-                        font.pointSize: 6
+                        font.pointSize: 16
                         width: parent.width - contentItem.labelWidth
                         color: "white"
                         elide: Text.ElideRight
@@ -101,7 +100,7 @@ CommonDialog {
                     width: parent.width
                     Text {
                         text: appInfo.emptyStr+qsTr("Size")
-                        font.pointSize: 6
+                        font.pointSize: 16
                         width: contentItem.labelWidth
                         color: "white"
                         elide: Text.ElideRight
@@ -109,7 +108,7 @@ CommonDialog {
                     }
                     Text {
                         text: selectedItem ? selectedItem.size : 0
-                        font.pointSize: 6
+                        font.pointSize: 16
                         width: parent.width - contentItem.labelWidth
                         color: "white"
                         elide: Text.ElideRight
@@ -120,7 +119,7 @@ CommonDialog {
                     width: parent.width
                     Text {
                         text: appInfo.emptyStr+qsTr("Last modified")
-                        font.pointSize: 6
+                        font.pointSize: 16
                         width: contentItem.labelWidth
                         color: "white"
                         elide: Text.ElideRight
@@ -128,7 +127,7 @@ CommonDialog {
                     }
                     Text {
                         text: selectedItem ? Qt.formatDateTime(selectedItem.lastModified, "d MMM yyyy h:mm:ss ap") : ""
-                        font.pointSize: 6
+                        font.pointSize: 16
                         width: parent.width - contentItem.labelWidth
                         color: "white"
                         elide: Text.ElideRight
@@ -139,7 +138,7 @@ CommonDialog {
                     width: parent.width
                     Text {
                         text: appInfo.emptyStr+qsTr("Contents")
-                        font.pointSize: 6
+                        font.pointSize: 16
                         width: contentItem.labelWidth
                         color: "white"
                         elide: Text.ElideRight
@@ -154,7 +153,7 @@ CommonDialog {
                         }
 
                         text: selectedItem ? (appInfo.emptyStr+getText(selectedItem.subDirCount, selectedItem.subFileCount)) : "";
-                        font.pointSize: 6
+                        font.pointSize: 16
                         width: parent.width - contentItem.labelWidth
                         color: "white"
                         elide: Text.ElideRight
@@ -166,7 +165,7 @@ CommonDialog {
                     visible: cloudItemModel.count > 0
                     Text {
                         text: appInfo.emptyStr+qsTr("Connected items")
-                        font.pointSize: 6
+                        font.pointSize: 16
                         width: parent.width - syncAllButton.width
                         color: "white"
                         elide: Text.ElideRight
@@ -211,14 +210,14 @@ CommonDialog {
                 anchors.verticalCenter: parent.verticalCenter
                 Text {
                     text: email
-                    font.pointSize: 6
+                    font.pointSize: 16
                     width: parent.width
                     color: "white"
                     elide: Text.ElideRight
                 }
                 Text {
                     text: absolutePath
-                    font.pointSize: 6
+                    font.pointSize: 16
                     width: parent.width
                     color: "white"
                     elide: Text.ElideRight

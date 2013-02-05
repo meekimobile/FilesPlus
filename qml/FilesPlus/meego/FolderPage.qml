@@ -780,7 +780,7 @@ Page {
         height: parent.height - (nameFilterPanel.visible ? nameFilterPanel.height : 0)
         anchors.top: parent.top
         highlightRangeMode: ListView.NoHighlightRange
-        highlightFollowsCurrentItem: false
+        highlightFollowsCurrentItem: true
         highlightMoveDuration: 1
         highlightMoveSpeed: 4000
         highlight: Rectangle {
@@ -1001,8 +1001,6 @@ Page {
             }
 
             onPressAndHold: {
-                console.debug("folderPage listItem.onPressAndHold size " + size);
-
                 if (fsListView.state != "mark") {
                     fsListView.currentIndex = index;
                     popupToolPanel.selectedFilePath = absolutePath;
@@ -1140,14 +1138,14 @@ Page {
 
         onOpened: {
 //            console.debug("popupToolRing onOpened");
-            fsListView.highlightFollowsCurrentItem = true;
+//            fsListView.highlightFollowsCurrentItem = true;
         }
 
         onClosed: {
 //            console.debug("popupToolRing onClosed");
             // Workaround to hide highlight.
-            fsListView.currentIndex = -1;
-            fsListView.highlightFollowsCurrentItem = false;
+//            fsListView.currentIndex = -1;
+//            fsListView.highlightFollowsCurrentItem = false;
         }
 
         onCutClicked: {
@@ -1239,6 +1237,10 @@ Page {
         onEditFile: {
             pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
                            { filePath: srcFilePath, fileName: fsModel.getFileName(srcFilePath) });
+        }
+
+        onShowInfo: {
+            filePropertiesDialog.show();
         }
     }
 
@@ -1633,6 +1635,41 @@ Page {
         onSelectedCronExp: {
             console.debug("folderPage cloudDriveSchedulerDialog onSelectedCronExp " + cronExp);
             cloudDriveModel.updateItemCronExp(selectedCloudType, selectedUid, localPath, cronExp);
+        }
+    }
+
+    FilePropertiesDialog {
+        id: filePropertiesDialog
+        selectedIndex: fsListView.currentIndex
+        selectedItem: fsModel.get(fsListView.currentIndex);
+
+        function show() {
+            populateCloudItemModel();
+            open();
+        }
+
+        function populateCloudItemModel() {
+            cloudItemModel.clear();
+            if (selectedItem) {
+                var cloudItems = Utility.createJsonObj(cloudDriveModel.getItemListJson(selectedItem.absolutePath));
+                for (var i = 0; i < cloudItems.length; i++) {
+                    var cloudItem = cloudItems[i];
+                    var uidJson = Utility.createJsonObj(cloudDriveModel.getStoredUid(cloudItem.type, cloudItem.uid));
+                    var modelItem = { type: cloudItem.type, uid: cloudItem.uid, email: uidJson.email, absolutePath: (cloudItem.remote_path ? cloudItem.remote_path : qsTr("Not available")) };
+                    cloudItemModel.append(modelItem);
+                }
+            }
+        }
+
+        onSync: {
+            if (cloudDriveModel.canSync(selectedItem.absolutePath)) {
+                cloudDriveModel.syncItem(type, uid, selectedItem.absolutePath);
+            }
+        }
+        onSyncAll: {
+            if (cloudDriveModel.canSync(selectedItem.absolutePath)) {
+                cloudDriveModel.syncItem(selectedItem.absolutePath);
+            }
         }
     }
 }

@@ -1005,8 +1005,6 @@ Page {
             }
 
             onPressAndHold: {
-                console.debug("folderPage listItem.onPressAndHold size " + size);
-
                 if (fsListView.state != "mark") {
                     fsListView.currentIndex = index;
                     popupToolPanel.selectedFilePath = absolutePath;
@@ -1247,7 +1245,7 @@ Page {
         }
 
         onShowInfo: {
-            filePropertiesDialog.open();
+            filePropertiesDialog.show();
         }
     }
 
@@ -1649,5 +1647,34 @@ Page {
         id: filePropertiesDialog
         selectedIndex: fsListView.currentIndex
         selectedItem: fsModel.get(fsListView.currentIndex);
+
+        function show() {
+            populateCloudItemModel();
+            open();
+        }
+
+        function populateCloudItemModel() {
+            cloudItemModel.clear();
+            if (selectedItem) {
+                var cloudItems = Utility.createJsonObj(cloudDriveModel.getItemListJson(selectedItem.absolutePath));
+                for (var i = 0; i < cloudItems.length; i++) {
+                    var cloudItem = cloudItems[i];
+                    var uidJson = Utility.createJsonObj(cloudDriveModel.getStoredUid(cloudItem.type, cloudItem.uid));
+                    var modelItem = { type: cloudItem.type, uid: cloudItem.uid, email: uidJson.email, absolutePath: (cloudItem.remote_path ? cloudItem.remote_path : qsTr("Not available")) };
+                    cloudItemModel.append(modelItem);
+                }
+            }
+        }
+
+        onSync: {
+            if (cloudDriveModel.canSync(selectedItem.absolutePath)) {
+                cloudDriveModel.syncItem(type, uid, selectedItem.absolutePath);
+            }
+        }
+        onSyncAll: {
+            if (cloudDriveModel.canSync(selectedItem.absolutePath)) {
+                cloudDriveModel.syncItem(selectedItem.absolutePath);
+            }
+        }
     }
 }
