@@ -2037,7 +2037,7 @@ PageStackWindow {
                 // Refresh cloudFolderPage.
                 var p = findPage("cloudFolderPage");
                 if (p) {
-                    p.refreshSlot("cloudDriveModel onMigrateFilePutReplySignal");
+                    p.refreshItemAfterFilePutSlot(jobJson);
                 }
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);

@@ -188,6 +188,12 @@ Page {
             } else if (jobJson.remote_file_path == "/" && remoteParentPath == "") {
                 refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot Dropbox");
             }
+        } else if (jobJson.target_type == selectedCloudType && jobJson.target_uid == selectedUid) {
+            if (jobJson.new_remote_file_path == remoteParentPath) {
+                refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot");
+            } else if (jobJson.new_remote_file_path == "/" && remoteParentPath == "") {
+                refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot Dropbox");
+            }
         }
     }
 
