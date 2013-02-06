@@ -29,7 +29,7 @@ Rectangle {
     
     Text {
         id: headerText
-        width: parent.width - 20
+        width: parent.width - 20 - (messageLoggerCounter.visible ? messageLoggerCounter.width : 0)
         height: parent.height
         anchors.left: parent.left
         anchors.leftMargin: textLeftMargin
