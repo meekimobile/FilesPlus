@@ -305,12 +305,12 @@ QByteArray DropboxClient::createOAuthHeaderForUid(QString nonce, QString uid, QS
 //    qDebug() << "baseString " << baseString;
 
     QString signature = createSignature(signatureMethod, consumerSecret, accessTokenPairMap[uid].secret, baseString);
-    qDebug() << "signature" << signatureMethod << signature;
+    qDebug() << "DropboxClient::createOAuthHeaderForUid signature" << signatureMethod << signature;
 
     // Set Authorization header with added signature.
     sortMap["oauth_signature"] = signature;
     QByteArray authHeader = createOAuthHeaderString(sortMap);
-    qDebug() << "authHeader " << authHeader;
+    qDebug() << "DropboxClient::createOAuthHeaderForUid authHeader" << authHeader;
 
     return authHeader;
 }
