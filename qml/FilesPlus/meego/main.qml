@@ -1986,18 +1986,23 @@ PageStackWindow {
                     if (jsonObj.isDir) { // Migrate folder.
                         // Create target folder.
                         var createdRemoteFolderPath = cloudDriveModel.createFolder_Block(jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
+                        if (createdRemoteFolderPath != "") {
+                            for(var i=0; i<jsonObj.children.length; i++) {
+                                var item = jsonObj.children[i];
+                                console.debug("window cloudDriveModel onMigrateFileReplySignal item " + JSON.stringify(item));
 
-                        for(var i=0; i<jsonObj.children.length; i++) {
-                            var item = jsonObj.children[i];
-                            console.debug("window cloudDriveModel onMigrateFileReplySignal item " + JSON.stringify(item));
-
-                            if (item.isDir) {
-                                // This flow will trigger recursive migrateFile calling.
-                                cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, item.absolutePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, item.name);
-                            } else {
-                                // Migrate file.
-                                cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, item.absolutePath, item.size, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, item.name);
+                                if (item.isDir) {
+                                    // This flow will trigger recursive migrateFile calling.
+                                    cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, item.absolutePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, item.name);
+                                } else {
+                                    // Migrate file.
+                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, item.absolutePath, item.size, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, item.name);
+                                }
                             }
+                        } else {
+                            // Failed folder creation.
+                            logError(getCloudName(jobJson.target_type) + " " + qsTr("Migrate"),
+                                     qsTr("Error") + " " + qsTr("Can't create folder. Migration is aborted."));
                         }
                     } else { // Migrate file.
                         cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jobJson.remote_file_path, jsonObj.size, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
@@ -2072,7 +2077,7 @@ PageStackWindow {
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
             cloudDriveJobsModel.updateJob(jobJson);
 
-            console.debug("window cloudDriveModel onJobUpdatedSignal " + nonce + " " + cloudDriveModel.getOperationName(jobJson.operation));
+//            console.debug("window cloudDriveModel onJobUpdatedSignal " + nonce + " " + cloudDriveModel.getOperationName(jobJson.operation));
 
             // Update cloud list item on relavant pages.
             pageStack.find(function (page) {

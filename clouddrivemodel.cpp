@@ -912,6 +912,10 @@ void CloudDriveModel::updateJob(CloudDriveJob job)
 
 void CloudDriveModel::removeJob(QString caller, QString nonce)
 {
+    if (nonce == "") {
+        qDebug() << "CloudDriveModel::removeJob jobId is empty. Operation is aborted.";
+    }
+
     mutex.lock();
     QString localPath = m_cloudDriveJobs->value(nonce).localFilePath;
     m_isSyncingCache->remove(localPath);
@@ -3732,6 +3736,14 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
         cloudClient->filePutCommit(job.jobId, job.uid, job.newRemoteFilePath, job.uploadId);
         break;
     }
+}
+
+void CloudDriveModel::suspendJob(const QString jobId)
+{
+    // Suspend job.
+    CloudDriveJob job = m_cloudDriveJobs->value(jobId);
+    job.isRunning = false;
+    updateJob(job);
 }
 
 void CloudDriveModel::resumeJob(const QString jobId)
