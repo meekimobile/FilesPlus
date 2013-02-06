@@ -1664,13 +1664,13 @@ void GCDClient::filesReplyFinished(QNetworkReply *reply)
 
 QString GCDClient::createFolderReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::createFolderReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    qDebug() << "GCDClient::createFolderReplyFinished" << nonce << reply << QString(" Error=%1").arg(reply->error());
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "GCDClient::createFolderReplyFinished replyBody" << replyBody;
+    qDebug() << "GCDClient::createFolderReplyFinished" << nonce << "replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
         QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");

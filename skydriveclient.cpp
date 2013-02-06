@@ -358,6 +358,9 @@ QString SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteP
     }
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteParentPath));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3), QVariant(newRemoteFolderName));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QNetworkReply *reply = manager->post(req, postData);
@@ -1034,18 +1037,43 @@ void SkyDriveClient::filesReplyFinished(QNetworkReply *reply)
 
 QString SkyDriveClient::createFolderReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "SkyDriveClient::createFolderReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteParentPath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+    QString newRemoteFileName = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3)).toString();
+
+    qDebug() << "SkyDriveClient::createFolderReplyFinished" << nonce << reply << QString(" Error=%1").arg(reply->error());
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "SkyDriveClient::createFolderReplyFinished replyBody" << replyBody;
+    qDebug() << "SkyDriveClient::createFolderReplyFinished" << nonce << "replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
         QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
         QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
         replyBody = stringifyScriptValue(engine, parsedObj);
+    } else if (reply->error() == QNetworkReply::UnknownContentError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
+        if (jsonObj.property("error").property("code").toString() == "resource_already_exists") {
+            // Get existing folder's property.
+            reply = files(nonce, uid, remoteParentPath, true);
+            replyBody = QString::fromUtf8(reply->readAll());
+            qDebug() << "SkyDriveClient::createFolderReplyFinished" << nonce << "files replyBody" << replyBody;
+            if (reply->error() == QNetworkReply::NoError) {
+                QScriptEngine engine;
+                QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
+                int contentsCount = jsonObj.property("data").toVariant().toList().length();
+                for (int i = 0; i < contentsCount; i++) {
+                    QScriptValue item = jsonObj.property("data").property(i);
+                    if (item.property("name").toString() == newRemoteFileName) {
+                        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, item);
+                        replyBody = stringifyScriptValue(engine, parsedObj);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyBody);

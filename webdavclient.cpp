@@ -1176,16 +1176,24 @@ void WebDavClient::filePutReplyFinished(QNetworkReply *reply)
 
 QString WebDavClient::createFolderReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "WebDavClient::createFolderReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
     QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
 
+    qDebug() << "WebDavClient::createFolderReplyFinished" << nonce << reply << QString(" Error=%1").arg(reply->error());
+
     QString replyBody;
-    qDebug() << "WebDavClient::createFolderReplyFinished replyBody" << replyBody;
+    qDebug() << "WebDavClient::createFolderReplyFinished" << nonce << "replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {
         // Get created folder's property.
+        reply = property(nonce, uid, remoteFilePath);
+        if (reply->error() == QNetworkReply::NoError) {
+            replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()), "createFolderReplyFinished");
+        } else {
+            replyBody = createResponseJson(QString::fromUtf8(reply->readAll()), "createFolderReplyFinished");
+        }
+    } else if (reply->error() == QNetworkReply::ContentOperationNotPermittedError) {
+        // Get existing folder's property.
         reply = property(nonce, uid, remoteFilePath);
         if (reply->error() == QNetworkReply::NoError) {
             replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()), "createFolderReplyFinished");
