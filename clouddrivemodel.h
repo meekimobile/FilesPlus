@@ -145,6 +145,7 @@ public:
     Q_INVOKABLE void requestJobQueueStatus();
     Q_INVOKABLE void suspendNextJob(bool abort = false);
     Q_INVOKABLE void resumeNextJob(bool resetAbort = false);
+    Q_INVOKABLE void suspendJob(const QString jobId);
     Q_INVOKABLE void resumeJob(const QString jobId);
 
     // Other.

@@ -93,6 +93,21 @@ Page {
     }
 
     MenuWithIcon {
+        id: jobStopMenu
+
+        content: MenuLayout {
+            MenuItemWithIcon {
+                name: "stop"
+                text: appInfo.emptyStr+qsTr("Stop")
+                onClicked: {
+                    var jobId = jobListView.model.get(jobListView.currentIndex).job_id;
+                    cloudDriveModel.suspendJob(jobId);
+                }
+            }
+        }
+    }
+
+    MenuWithIcon {
         id: jobMenu
 
         content: MenuLayout {
@@ -119,18 +134,6 @@ Page {
             // Hide highlight.
             jobListView.currentIndex = -1;
             jobListView.highlightFollowsCurrentItem = false;
-        }
-    }
-
-    ConfirmDialog {
-        id: resumeJobConfirmation
-
-        property string jobId
-
-        titleText: appInfo.emptyStr+qsTr("Resume job")
-        contentText: appInfo.emptyStr+qsTr("Resume job %1?").arg(jobId);
-        onConfirm: {
-            cloudDriveModel.resumeJob(jobId);
         }
     }
 
@@ -258,11 +261,13 @@ Page {
             onPressAndHold: {
                 console.debug("cloudDriveJobsPage listItem onPressAndHold jobJson " + cloudDriveModel.getJobJson(job_id) );
                 if (!is_running) {
-//                    resumeJobConfirmation.jobId = job_id;
-//                    resumeJobConfirmation.open();
                     jobListView.currentIndex = index;
                     jobListView.highlightFollowsCurrentItem = true;
                     jobMenu.open();
+                } else {
+                    jobListView.currentIndex = index;
+                    jobListView.highlightFollowsCurrentItem = true;
+                    jobStopMenu.open();
                 }
             }
         }
