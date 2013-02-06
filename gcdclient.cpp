@@ -190,10 +190,10 @@ QString GCDClient::getContentType(QString fileName) {
     // Parse fileName with RegExp
     QRegExp rx("(.+)(\\.)(\\w{3,5})$");
     rx.indexIn(fileName);
-    qDebug() << "GCDClient::getContentType fileName=" << fileName << " rx.captureCount()=" << rx.captureCount();
-    for(int i=0; i<=rx.captureCount(); i++) {
-        qDebug() << "GCDClient::getContentType i=" << i << " rx.cap=" << rx.cap(i);
-    }
+//    qDebug() << "GCDClient::getContentType fileName=" << fileName << " rx.captureCount()=" << rx.captureCount();
+//    for(int i=0; i<=rx.captureCount(); i++) {
+//        qDebug() << "GCDClient::getContentType i=" << i << " rx.cap=" << rx.cap(i);
+//    }
     QString fileExt = rx.cap(3).toLower();
 
     QString contentType = m_contentTypeHash[fileExt];
@@ -1042,12 +1042,12 @@ QString GCDClient::getRemoteRoot(QString uid)
 
 bool GCDClient::isFilePutResumable(qint64 fileSize)
 {
-    return (fileSize >= ChunkSize);
+    return (fileSize == -1 || fileSize >= ChunkSize);
 }
 
 bool GCDClient::isFileGetResumable(qint64 fileSize)
 {
-    return (fileSize >= ChunkSize);
+    return (fileSize == -1 || fileSize >= ChunkSize);
 }
 
 bool GCDClient::isDeltaSupported()

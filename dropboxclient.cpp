@@ -512,12 +512,12 @@ bool DropboxClient::isRemotePathCaseInsensitive()
 
 bool DropboxClient::isFilePutResumable(qint64 fileSize)
 {
-    return (fileSize >= ChunkSize);
+    return (fileSize == -1 || fileSize >= ChunkSize);
 }
 
 bool DropboxClient::isFileGetResumable(qint64 fileSize)
 {
-    return (fileSize >= ChunkSize);
+    return (fileSize == -1 || fileSize >= ChunkSize);
 }
 
 bool DropboxClient::isDeltaSupported()

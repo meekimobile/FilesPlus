@@ -110,16 +110,16 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     }
     f_db.close();
 
-    ok = QFile("C:/CloudDriveModel.dat").remove();
-    qDebug() << "main remove C:/CloudDriveModel.dat" << ok;
+    ok = QFile("CloudDriveModel.dat").remove();
+    qDebug() << "main remove CloudDriveModel.dat" << ok;
 
     // For testing existing user case.
-    ok = QFile("C:/CloudDriveModel.dat.bak").copy("C:/CloudDriveModel.dat");
-    qDebug() << "main copy C:/CloudDriveModel.dat.bak to CloudDriveModel.dat" << ok;
+    ok = QFile("CloudDriveModel.dat.bak").copy("CloudDriveModel.dat");
+    qDebug() << "main copy CloudDriveModel.dat.bak to CloudDriveModel.dat" << ok;
 
     // For testing newly user case.
-//    ok = QFile("C:/DropboxClient.dat").remove();
-//    qDebug() << "main remove C:/DropboxClient.dat" << ok;
+//    ok = QFile("DropboxClient.dat").remove();
+//    qDebug() << "main remove DropboxClient.dat" << ok;
 
     QSqlDatabase c_db = QSqlDatabase::addDatabase("QSQLITE", "cloud_drive_model");
     c_db.setDatabaseName("CloudDriveModel.db");
@@ -163,7 +163,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 //    qDebug() << "main remove /home/user/.filesplus/DropboxClient.dat" << ok;
 
     ok = QFile("/home/user/.filesplus/CloudDriveModel.db").remove();
-    qDebug() << "main remove C:/CloudDriveModel.db" << ok;
+    qDebug() << "main remove CloudDriveModel.db" << ok;
 
 //    m_settings->setValue("dropbox.fullaccess.enabled", false);
 //    qDebug() << "main setting dropbox.fullaccess.enabled" << m_settings->value("dropbox.fullaccess.enabled");
@@ -182,6 +182,23 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qDebug() << "main PicturesLocation" << QDesktopServices::storageLocation(QDesktopServices::PicturesLocation);
     qDebug() << "main MusicLocation" << QDesktopServices::storageLocation(QDesktopServices::MusicLocation);
     qDebug() << "main MoviesLocation" << QDesktopServices::storageLocation(QDesktopServices::MoviesLocation);
+
+    // Migrate DAT from C:/ to private folder.
+#ifdef Q_OS_SYMBIAN
+    QDir sourceDir("C:/");
+    foreach (QFileInfo fileInfo, sourceDir.entryInfoList(QStringList("*.dat"))) {
+        QString targetFilePath = QDir(QDesktopServices::storageLocation(QDesktopServices::DataLocation)).absoluteFilePath(fileInfo.fileName());
+        if (QFile::rename(fileInfo.absoluteFilePath(), targetFilePath)) {
+            qDebug() << "main moved" << fileInfo.absoluteFilePath() << "to" << targetFilePath;
+        } else if (QFile::copy(fileInfo.absoluteFilePath(), targetFilePath)) {
+            qDebug() << "main copied" << fileInfo.absoluteFilePath() << "to" << targetFilePath;
+            QFile(fileInfo.absoluteFilePath()).remove();
+            qDebug() << "main removed" << fileInfo.absoluteFilePath();
+        } else {
+            qDebug() << "main moving" << fileInfo.absoluteFilePath() << "to" << targetFilePath << "failed.";
+        }
+    }
+#endif
 
 #ifdef Q_OS_SYMBIAN
     // Default logging is enabled on first startup. It will be uninstalled and disabled once DrivePage is loaded successfully.

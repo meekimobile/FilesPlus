@@ -371,7 +371,7 @@ private:
     FtpClient *ftpClient;
     WebDavClient *webDavClient;
     QString accessTokenPin;
-    CloudDriveModelThread m_thread;
+//    CloudDriveModelThread m_thread;
 
     QMutex mutex;
 
@@ -403,6 +403,8 @@ private:
     bool matchCronExp(QString cronExp, QString cronValue);
 
     QSettings m_settings;
+
+    void createTempPath();
 };
 
 #endif // CLOUDDRIVEMODEL_H

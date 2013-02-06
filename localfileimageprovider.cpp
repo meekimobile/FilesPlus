@@ -5,7 +5,7 @@
 #include <QImageReader>
 
 //const int LocalFileImageProvider::MAX_CACHE_COST = 10;
-//const QString LocalFileImageProvider::DEFAULT_CACHE_PATH = "C:/LocalFileImageProvider";
+//const QString LocalFileImageProvider::DEFAULT_CACHE_PATH = "LocalFileImageProvider";
 
 LocalFileImageProvider::LocalFileImageProvider() : QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
 {

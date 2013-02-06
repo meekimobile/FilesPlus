@@ -4,7 +4,7 @@
 #if defined(Q_WS_HARMATTAN)
 const QString BluetoothClient::DATA_FILE_PATH = "/home/user/.filesplus/BluetoothClient.dat";
 #else
-const QString BluetoothClient::DATA_FILE_PATH = "C:/BluetoothClient.dat";
+const QString BluetoothClient::DATA_FILE_PATH = "BluetoothClient.dat";
 #endif
 const int BluetoothClient::MAX_DISCOVERY_RETRY = 3;
 

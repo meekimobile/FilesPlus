@@ -25,8 +25,8 @@ public:
     virtual bool isRemoteAbsolutePath();
     virtual bool isRemotePathCaseInsensitive();
     virtual QString getRemoteRoot(QString id);
-    virtual bool isFilePutResumable(qint64 fileSize);
-    virtual bool isFileGetResumable(qint64 fileSize);
+    virtual bool isFilePutResumable(qint64 fileSize = -1);
+    virtual bool isFileGetResumable(qint64 fileSize = -1);
     virtual bool isDeltaSupported();
     virtual bool isDeltaEnabled(QString uid);
     virtual bool isConfigurable();

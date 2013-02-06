@@ -4,7 +4,7 @@
 #if defined(Q_WS_HARMATTAN)
 const QString CloudDriveClient::KeyStoreFilePath = "/home/user/.filesplus/%1.dat";
 #else
-const QString CloudDriveClient::KeyStoreFilePath = "C:/%1.dat";
+const QString CloudDriveClient::KeyStoreFilePath = "%1.dat";
 #endif
 
 CloudDriveClient::CloudDriveClient(QObject *parent) :
