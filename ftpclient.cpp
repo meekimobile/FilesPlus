@@ -353,6 +353,11 @@ QString FtpClient::createFolder(QString nonce, QString uid, QString remoteParent
             QString escapedErrorString =  m_ftp->errorString().replace("\n", " ");
             emit createFolderReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, m_ftp->errorString(), QString("{ \"error\": \"%1\", \"path\": \"%2\" }").arg(escapedErrorString).arg(newRemoteFolderPath) );
         }
+    } else {
+        qDebug() << "FtpClient::createFolder" << nonce << "error" << m_ftp->error() << m_ftp->errorString();
+        // NOTE json string doesn't support newline character.
+        QString escapedErrorString =  m_ftp->errorString().replace("\n", " ");
+        emit createFolderReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, m_ftp->errorString(), QString("{ \"error\": \"%1\", \"path\": \"%2\" }").arg(escapedErrorString).arg(newRemoteFolderPath) );
     }
 
     m_ftp->close();
