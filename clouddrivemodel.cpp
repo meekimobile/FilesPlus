@@ -913,7 +913,8 @@ void CloudDriveModel::updateJob(CloudDriveJob job)
 void CloudDriveModel::removeJob(QString caller, QString nonce)
 {
     if (nonce == "") {
-        qDebug() << "CloudDriveModel::removeJob jobId is empty. Operation is aborted.";
+        qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce << "jobId is empty. Operation is aborted";
+        return;
     }
 
     mutex.lock();
@@ -926,7 +927,7 @@ void CloudDriveModel::removeJob(QString caller, QString nonce)
     QString tempFilePath = m_settings.value("temp.path", TEMP_PATH).toString() + "/" + nonce;
     if (QFileInfo(tempFilePath).exists()) {
         QFile(tempFilePath).remove();
-        qDebug() << "CloudDriveModel::removeJob temp file" << tempFilePath << "is removed.";
+        qDebug() << "CloudDriveModel::removeJob caller" << caller << "temp file" << tempFilePath << "is removed";
     }
 
     if (removeCount > 0) {
