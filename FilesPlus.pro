@@ -28,7 +28,8 @@ symbian:TARGET.CAPABILITY += NetworkServices ReadUserData WriteUserData LocalSer
 #symbian:TARGET.EPOCHEAPSIZE = 0x800000 0x2000000
 # Set heap size. min 8M max 64M.
 symbian:TARGET.EPOCHEAPSIZE = 0x800000 0x4000000
-#symbian:TARGET.EPOCSTACKSIZE  0x14000
+symbian:TARGET.EPOCSTACKSIZE = 0x100000 # 1M
+#symbian:TARGET.EPOCSTACKSIZE = 0x14000 # 80K
 
 # If your application uses the Qt Mobility libraries, uncomment the following
 # lines and add the respective components to the MOBILITY variable.
