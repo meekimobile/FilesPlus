@@ -20,6 +20,7 @@ public:
     QString getHashFilePath() const;
     void setHashFilePath(const QString hashFilePath);
     void setNonce(QString nonce);
+    void setDirectInvokation(bool flag);
     void setRunMethod(int method);
     void setCloudDriveItems(QMultiMap<QString, CloudDriveItem> *cloudDriveItems);
 
@@ -34,6 +35,7 @@ private:
 
     int m_runMethod;
     QString m_nonce;
+    bool m_isDirectInvokation;
 
     // Thread runnableMethod.
     void loadCloudDriveItems();

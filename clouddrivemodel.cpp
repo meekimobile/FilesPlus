@@ -5,9 +5,9 @@
 const QString CloudDriveModel::ITEM_DAT_PATH = "/home/user/.filesplus/CloudDriveModel.dat";
 const QString CloudDriveModel::ITEM_DB_PATH = "/home/user/.filesplus/CloudDriveModel.db";
 const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
-const QString CloudDriveModel::TEMP_PATH = "/home/user/MyDocs";
+const QString CloudDriveModel::TEMP_PATH = "/home/user/MyDocs/temp/.filesplus";
 const QString CloudDriveModel::JOB_DAT_PATH = "/home/user/.filesplus/CloudDriveJobs.dat";
-const int CloudDriveModel::MaxRunningJobCount = 3;
+const int CloudDriveModel::MaxRunningJobCount = 2;
 #else
 const QString CloudDriveModel::ITEM_DAT_PATH = "CloudDriveModel.dat";
 const QString CloudDriveModel::ITEM_DB_PATH = "CloudDriveModel.db";
@@ -216,6 +216,9 @@ void CloudDriveModel::saveCloudDriveJobs()
         file.write("[ ");
         int c = 0;
         foreach (CloudDriveJob job, m_cloudDriveJobs->values()) {
+            // TODO Clean up job.
+            if (job.jobId == "") continue;
+
             if (c > 0) file.write(", ");
             file.write(job.toJsonText().toUtf8());
             c++;
@@ -796,6 +799,8 @@ QString CloudDriveModel::getOperationName(int operation) {
         return tr("Browse");
     case LoadCloudDriveItems:
         return tr("LoadCloudDriveItems");
+    case LoadCloudDriveJobs:
+        return tr("LoadCloudDriveJobs");
     case InitializeDB:
         return tr("InitializeDB");
     case InitializeCloudClients:
@@ -1882,6 +1887,7 @@ void CloudDriveModel::browse(CloudDriveModel::ClientTypes type, QString uid, QSt
     CloudDriveModelThread *t = new CloudDriveModelThread(this);
     connect(t, SIGNAL(finished()), t, SLOT(deleteLater()));
     t->setNonce(job.jobId); // Set job ID to thread. It will invoke parent's dispatchJob later.
+    t->setDirectInvokation(false);
     t->start();
 
 //    m_jobQueue->insert(0, job.jobId); // Browse get priority.
@@ -3582,7 +3588,25 @@ void CloudDriveModel::proceedNextJob() {
     // Dispatch job.
     CloudDriveModelThread *t = new CloudDriveModelThread(this);
     connect(t, SIGNAL(finished()), t, SLOT(deleteLater()));
+    connect(t, SIGNAL(terminated()), t, SLOT(deleteLater()));
     t->setNonce(nonce); // Set job ID to thread. It will invoke parent's dispatchJob later.
+    t->setDirectInvokation(false);
+
+    // These are blocking operations.
+    switch (job.operation) {
+    case LoadCloudDriveItems:
+    case LoadCloudDriveJobs:
+    case InitializeDB:
+    case InitializeCloudClients:
+    case Disconnect:
+        t->setDirectInvokation(true);
+        break;
+    }
+    // FTP operations are always blocking.
+    if (job.type == Ftp) {
+        t->setDirectInvokation(true);
+    }
+
     t->start(QThread::LowPriority);
 
     // TODO Put some delay here to slow down.
@@ -3637,11 +3661,12 @@ void CloudDriveModel::dispatchJob(const QString jobId)
 
 void CloudDriveModel::dispatchJob(const CloudDriveJob job)
 {
-    // NOTE This method will be invoke by QThread created by proceedNextJob.
+    // NOTE This method will be queued and invoked by main eventloop because CloudDriveModelThread.run() invoked as queue connection to its parent(CloudDriveModel).
     // Generalize cloud client.
     CloudDriveClient *cloudClient = getCloudClient(job.type);
 
-    qDebug() << "CloudDriveModel::dispatchJob" << job.jobId << job.operation << getOperationName(job.operation) << job.type << (cloudClient == 0 ? "no client" : cloudClient->objectName());
+    qDebug() << "CloudDriveModel::dispatchJob threadPool count" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount();
+    qDebug() << "CloudDriveModel::dispatchJob thread" << QThread::currentThread() << "job" << job.jobId << job.operation << getOperationName(job.operation) << job.type << (cloudClient == 0 ? "no client" : cloudClient->objectName());
 
     switch (job.operation) {
     case LoadCloudDriveItems:
@@ -3862,6 +3887,8 @@ void CloudDriveModel::accountInfoReplyFilter(QString nonce, int err, QString err
 void CloudDriveModel::quotaReplyFilter(QString nonce, int err, QString errMsg, QString msg, qint64 normalBytes, qint64 sharedBytes, qint64 quotaBytes)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    qDebug() << "CloudDriveModel::quotaReplyFilter thread" << QThread::currentThread() << "job" << job.jobId;
 
     job.isRunning = false;
     updateJob(job);
