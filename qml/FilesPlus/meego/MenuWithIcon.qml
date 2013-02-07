@@ -45,17 +45,17 @@ Menu {
 
     function updateBgImageSources() {
         var childrenStartIndex = 0;
-        var childrenEndIndex = menuLayout.children.length - 1;
+        var childrenEndIndex = content[0].children.length - 1;
 
-        for (var i=0; i<menuLayout.children.length; i++) {
-            var menuItem = menuLayout.children[i];
+        for (var i=0; i<content[0].children.length; i++) {
+            var menuItem = content[0].children[i];
             if (menuItem.visible) {
                 childrenStartIndex = i;
                 break;
             }
         }
-        for (var i=menuLayout.children.length-1; i>=0; i--) {
-            var menuItem = menuLayout.children[i];
+        for (var i=content[0].children.length-1; i>=0; i--) {
+            var menuItem = content[0].children[i];
             if (menuItem.visible) {
                 childrenEndIndex = i;
                 break;
@@ -65,8 +65,8 @@ Menu {
         var childrenCount = childrenEndIndex - childrenStartIndex + 1;
 
 //        console.debug("MenuWithIcon updateBgImageSources childrenStartIndex " + childrenStartIndex + " childrenEndIndex " + childrenEndIndex + " childrenCount " + childrenCount);
-        for (var i=0; i<menuLayout.children.length; i++) {
-            var menuItem = menuLayout.children[i];
+        for (var i=0; i<content[0].children.length; i++) {
+            var menuItem = content[0].children[i];
             if (menuItem.visible) {
                 menuItem.updateBgImageSource(childrenStartIndex, childrenEndIndex, childrenCount);
             }
