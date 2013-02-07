@@ -531,7 +531,7 @@ Page {
         var pathList = fsModel.getPathToRoot(jobJson.local_file_path);
         for(var i=0; i<pathList.length; i++) {
             var modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-            console.debug("folderPage updateItemSlot " + pathList[i] + " modelIndex " + modelIndex + " jobJson.is_running " + jobJson.is_running);
+//            console.debug("folderPage updateItemSlot " + pathList[i] + " modelIndex " + modelIndex + " jobJson.is_running " + jobJson.is_running);
             if (modelIndex == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
                 fsModel.clearIndexOnCurrentDir();
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);

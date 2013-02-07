@@ -94,14 +94,14 @@ Page {
                             id: title
                             text: titleText
                             width: parent.width - logTimeText.width
-                            font.pointSize: 14
+                            font.pointSize: 18
                             elide: Text.ElideMiddle
                             color: (!inverted) ? "white" : "black"
                         }
                         Text {
                             id: logTimeText
                             text: Qt.formatDateTime(timestamp, "h:mm:ss ap")
-                            font.pointSize: 14
+                            font.pointSize: 16
                             horizontalAlignment: Text.Right
                             anchors.verticalCenter: parent.verticalCenter
                             color: (!inverted) ? "grey" : "#202020"
@@ -111,7 +111,7 @@ Page {
                         id: subtitle
                         text: message
                         width: parent.width
-                        font.pointSize: 14
+                        font.pointSize: 16
                         elide: Text.ElideRight
                         maximumLineCount: 1
                         color: (!inverted) ? "grey" : "#202020"

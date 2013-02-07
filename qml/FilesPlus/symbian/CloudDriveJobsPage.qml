@@ -67,6 +67,7 @@ Page {
         model: cloudDriveModel.jobsModel
         delegate: jobDelegate
         clip: true
+        pressDelay: 100
         highlightRangeMode: ListView.NoHighlightRange
         highlightFollowsCurrentItem: false
         highlightMoveDuration: 1

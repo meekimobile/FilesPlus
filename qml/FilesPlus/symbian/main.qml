@@ -1057,6 +1057,7 @@ PageStackWindow {
         ListModel {
             id: cloudDriveJobsModel
 
+            // TODO Cache found index.
             function findIndexByJobId(jobId) {
                 for (var i=0; i<cloudDriveJobsModel.count; i++) {
                     if (cloudDriveJobsModel.get(i).job_id == jobId) {
@@ -1078,14 +1079,12 @@ PageStackWindow {
             }
 
             function removeJob(jobId) {
-                for (var i=0; i<cloudDriveJobsModel.count; i++) {
-                    if (cloudDriveJobsModel.get(i).job_id == jobId) {
-                        cloudDriveJobsModel.remove(i);
-                        return i;
-                    }
+                var i = findIndexByJobId(jobId);
+                if (i >= 0) {
+                    cloudDriveJobsModel.remove(i);
                 }
 
-                return -1;
+                return i;
             }
 
             function removeQueuedJobs() {
