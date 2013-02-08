@@ -88,6 +88,8 @@ private:
     QHash<QString, QString> m_remoteRootHash;
     QHash<QString, QFile*> m_localFileHash;
 
+    QSettings m_settings;
+
     QByteArray createAuthHeader(QString uid);
     QScriptValue createScriptValue(QScriptEngine &engine, QDomNode &n, QString caller);
     QString createPropertyJson(QString replyBody, QString caller);

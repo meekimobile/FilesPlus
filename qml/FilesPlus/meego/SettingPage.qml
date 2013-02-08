@@ -211,6 +211,12 @@ Page {
             type: "switch"
             group: "Developer"
         }
+        ListElement {
+            name: "WebDavClient.ignoreSSLSelfSignedCertificateErrors"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
     }
 
     GridView {
@@ -252,6 +258,7 @@ Page {
         else if (name == "Personalization") return qsTr("Personalization") + appInfo.emptyStr;
         else if (name == "Developer") return qsTr("Developer") + appInfo.emptyStr;
         else if (name == "drivepage.systemdrive.enabled") return qsTr("Show system drive on drive page") + appInfo.emptyStr;
+        else if (name == "WebDavClient.ignoreSSLSelfSignedCertificateErrors") return qsTr("Ignore WebDDAV SSL self-signed certificate errors") + appInfo.emptyStr;
         else return qsTr(name) + appInfo.emptyStr;
     }
 

@@ -1260,21 +1260,21 @@ QScriptValue WebDavClient::parseCommonPropertyScriptValue(QScriptEngine &engine,
 
 void WebDavClient::sslErrorsReplyFilter(QNetworkReply *reply, QList<QSslError> sslErrors)
 {
-    qDebug() << "WebDavClient::sslErrorsReplyFilter" << reply << QString(" Error=%1").arg(reply->error()) << "sslErrors" << sslErrors;
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "WebDavClient::sslErrorsReplyFilter nonce" << nonce << "reply" << reply << QString(" Error=%1").arg(reply->error()) << "sslErrors" << sslErrors;
 
-    // TODO Configure to ignore errors for self-signed certificate.
-    QList<QSslError> expectedSslErrors;
-    foreach (QSslError sslError, sslErrors) {
-        qDebug() << "WebDavClient::sslErrorsReplyFilter sslError" << sslError << sslError.certificate();
-        if (sslError.error() == QSslError::SelfSignedCertificate || sslError.error() == QSslError::HostNameMismatch) {
-            expectedSslErrors.append(sslError);
+    // Configure to ignore errors for self-signed certificate.
+    if (m_settings.value(objectName() + ".ignoreSSLSelfSignedCertificateErrors", QVariant(false)).toBool()) {
+        QList<QSslError> expectedSslErrors;
+        foreach (QSslError sslError, sslErrors) {
+            if (sslError.error() == QSslError::SelfSignedCertificate || sslError.error() == QSslError::HostNameMismatch) {
+                expectedSslErrors.append(sslError);
+            }
         }
-    }
 
-    // TODO Make ignore errors configurable.
-    reply->ignoreSslErrors(expectedSslErrors);
+        qDebug() << "WebDavClient::sslErrorsReplyFilter nonce" << nonce << "ignore expectedSslErrors" << expectedSslErrors;
+        reply->ignoreSslErrors(expectedSslErrors);
+    }
 }
 
 void WebDavClient::sslErrorsReplyFilter(QList<QSslError> sslErrors)
