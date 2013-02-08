@@ -248,25 +248,45 @@ void FtpClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 
 void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "----- FtpClient::browse -----" << uid << remoteFilePath;
+    qDebug() << "----- FtpClient::browse -----" << nonce << uid << remoteFilePath;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
 
     // Get item list.
     if (!remoteFilePath.isEmpty()) m_ftp->cd(remoteFilePath);
-    m_ftp->pwd();
-    m_ftp->list(remoteFilePath);
     m_ftp->waitForDone();
 
-    if (remoteFilePath == "") {
-        m_remoteRootHash[uid] = m_ftp->getCurrentPath();
-        qDebug() << "FtpClient::browse nonce" << nonce << "uid" << uid << "remote root" << m_remoteRootHash[uid];
+    if (m_ftp->error() == QFtp::NoError) {
+        // Browse a folder.
+        m_ftp->pwd();
+        m_ftp->list(remoteFilePath);
+        m_ftp->waitForDone();
+
+        if (remoteFilePath == "") {
+            m_remoteRootHash[uid] = m_ftp->getCurrentPath();
+            qDebug() << "FtpClient::browse nonce" << nonce << "uid" << uid << "remote root" << m_remoteRootHash[uid];
+        }
+        QString dataJson = getItemListJson(m_ftp->getCurrentPath(), m_ftp->getItemList());
+        QString propertyJson = property(nonce, uid, m_ftp->getCurrentPath());
+
+        emit browseReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), mergePropertyAndFilesJson(propertyJson, dataJson) );
+    } else {
+        // remoteFilePath is file or not found.
+        qDebug() << "FtpClient::browse nonce" << nonce << "uid" << uid << remoteFilePath << "is file or not found. error" << m_ftp->error() << m_ftp->errorString();
+        m_ftp->list(remoteFilePath);
+        m_ftp->waitForDone();
+
+        if (m_ftp->getItemList().isEmpty()) {
+            // remoteFilePath is not found.
+            qDebug() << "FtpClient::browse nonce" << nonce << "uid" << uid << remoteFilePath << "is not found.";
+            emit browseReplySignal(m_ftp->getNonce(), QNetworkReply::ContentNotFoundError, tr("%1 is not found.").arg(remoteFilePath), "");
+        } else {
+            // remoteFilePath is file.
+            QString remoteParentPath = getParentRemotePath(remoteFilePath);
+            qDebug() << "FtpClient::browse nonce" << nonce << "uid" << uid << remoteFilePath << "is a file. remoteParentPath" << remoteParentPath << "remoteFileName" << m_ftp->getItemList().first().name();
+            emit browseReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), mergePropertyAndFilesJson(getPropertyJson(remoteParentPath, m_ftp->getItemList().first()), "[]") );
+        }
     }
-
-    QString dataJson = getItemListJson(m_ftp->getCurrentPath(), m_ftp->getItemList());
-    QString propertyJson = property(nonce, uid, m_ftp->getCurrentPath());
-
-    emit browseReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), mergePropertyAndFilesJson(propertyJson, dataJson) );
 
     m_ftp->close();
     m_ftp->deleteLater();
