@@ -106,6 +106,12 @@ Page {
                 }
             }
         }
+
+        onClosed: {
+            // Hide highlight.
+            jobListView.currentIndex = -1;
+            jobListView.highlightFollowsCurrentItem = false;
+        }
     }
 
     MenuWithIcon {
