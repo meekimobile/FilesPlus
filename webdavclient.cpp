@@ -165,7 +165,7 @@ void WebDavClient::filePut(QString nonce, QString uid, QString localFilePath, QS
 
 QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remoteFilePath, QString requestBody, int depth, bool synchronous, QString callback)
 {
-    qDebug() << "----- WebDavClient::property -----" << uid << remoteFilePath << requestBody << depth << synchronous << callback;
+    qDebug() << "----- WebDavClient::property -----" << nonce << uid << remoteFilePath << requestBody << depth << synchronous << callback;
 
     // Default to / if remoteFilePath is empty.
     remoteFilePath = (remoteFilePath == "") ? "/" : remoteFilePath;
@@ -173,10 +173,10 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
     QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = propertyURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
-    qDebug() << "WebDavClient::property uri" << uri;
+    qDebug() << "WebDavClient::property nonce" << nonce << "uri" << uri;
 
     QByteArray authHeader = createAuthHeader(uid);
-    qDebug() << "WebDavClient::property authHeader" << authHeader;
+    qDebug() << "WebDavClient::property nonce" << nonce << "authHeader" << authHeader;
 
     // Insert buffer to hash.
     m_bufferHash.insert(nonce, new QBuffer());
@@ -1043,7 +1043,7 @@ void WebDavClient::propertyReplyFinished(QNetworkReply *reply)
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
     QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3)).toString();
 
-    qDebug() << "WebDavClient::propertyReplyFinished" << nonce << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "WebDavClient::propertyReplyFinished" << nonce << callback << uid << remoteFilePath << "reply" << reply << QString(" Error=%1").arg(reply->error());
 
     QString replyBody = QString::fromUtf8(reply->readAll());
     qDebug() << "WebDavClient::propertyReplyFinished nonce" << nonce << "replyBody" << replyBody;
@@ -1057,7 +1057,7 @@ void WebDavClient::propertyReplyFinished(QNetworkReply *reply)
             // Needs to be UID-safety.
             QScriptEngine engine;
             QScriptValue jsonObj = engine.evaluate("(" + replyBody + ")");
-            if (remoteFilePath == "") {
+            if (remoteFilePath == "" || remoteFilePath == "/") {
                 m_remoteRootHash[uid] = jsonObj.property("absolutePath").toString();
                 qDebug() << "WebDavClient::propertyReplyFinished browse nonce" << nonce << "uid" << uid << "remote root" << m_remoteRootHash[uid];
             }
