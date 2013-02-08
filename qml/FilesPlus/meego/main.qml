@@ -114,9 +114,11 @@ PageStackWindow {
                 return FolderSizeItemListModel.DownloadOperation;
             case CloudDriveModel.FilePut:
             case CloudDriveModel.FilePutResume:
-                return FolderSizeItemListModel.UploadOperation;
             case CloudDriveModel.SyncFromLocal:
                 return FolderSizeItemListModel.UploadOperation;
+            case CloudDriveModel.MigrateFile:
+            case CloudDriveModel.MigrateFilePut:
+                return FolderSizeItemListModel.DownloadOperation;
             default:
                 return FolderSizeItemListModel.SyncOperation;
             }
