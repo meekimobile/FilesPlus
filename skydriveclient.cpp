@@ -251,8 +251,6 @@ QNetworkReply * SkyDriveClient::files(QString nonce, QString uid, QString remote
 {
     qDebug() << "----- SkyDriveClient::files -----" << remoteFilePath;
 
-    QApplication::processEvents();
-
     QString uri = filesURI.arg(remoteFilePath);
     uri = encodeURI(uri);
     qDebug() << "SkyDriveClient::files uri " << uri;
@@ -289,8 +287,6 @@ QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString rem
 {
     qDebug() << "----- SkyDriveClient::property -----" << remoteFilePath << callback;
 
-    QApplication::processEvents();
-
     QString uri = propertyURI.arg(remoteFilePath);
     uri = encodeURI(uri);
     qDebug() << "SkyDriveClient::property uri " << uri;
@@ -306,7 +302,7 @@ QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString rem
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
 
-    // TODO Return if asynchronous.
+    // Return if asynchronous.
     if (!synchronous) {
         return reply;
     }
