@@ -896,7 +896,7 @@ QString CloudDriveModel::getJobJson(QString jobId)
     return job.toJsonText();
 }
 
-void CloudDriveModel::updateJob(CloudDriveJob job)
+void CloudDriveModel::updateJob(CloudDriveJob job, bool emitJobUpdatedSignal)
 {
     mutex.lock();
     // Remove cache for furthur refresh.
@@ -910,7 +910,7 @@ void CloudDriveModel::updateJob(CloudDriveJob job)
     m_cloudDriveJobs->insert(job.jobId, job);
     mutex.unlock();
 
-    emit jobUpdatedSignal(job.jobId);
+    if (emitJobUpdatedSignal) emit jobUpdatedSignal(job.jobId);
 
 //    qDebug() << "CloudDriveModel::updateJob job" << job.toJsonText();
 }
@@ -3524,7 +3524,7 @@ int CloudDriveModel::countItemByTypeAndUidAndRemotePathFromDB(CloudDriveModel::C
 void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint64 bytesTotal)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
-//    qDebug() << "CloudDriveModel::uploadProgressFilter" << nonce << bytesSent << bytesTotal << job.downloadOffset;
+//    qDebug() << "CloudDriveModel::uploadProgressFilter" << nonce << getOperationName(job.operation) << bytesSent << bytesTotal << job.uploadOffset;
     job.bytes = job.uploadOffset + bytesSent; // Add job.uploadOffset to support filePutResume.
     updateJob(job);
 
@@ -3534,11 +3534,13 @@ void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint
 void CloudDriveModel::downloadProgressFilter(QString nonce, qint64 bytesReceived, qint64 bytesTotal)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
-//    qDebug() << "CloudDriveModel::downloadProgressFilter" << nonce << bytesReceived << bytesTotal << job.downloadOffset;
+//    qDebug() << "CloudDriveModel::downloadProgressFilter" << nonce << getOperationName(job.operation) << bytesReceived << bytesTotal << job.downloadOffset;
     job.bytes = job.downloadOffset + bytesReceived; // Add job.downloadOffset to support fileGetResume.
     updateJob(job);
 
-    emit downloadProgress(nonce, bytesReceived, bytesTotal);
+    if (job.operation != MigrateFilePut) {
+        emit downloadProgress(nonce, bytesReceived, bytesTotal);
+    }
 }
 
 void CloudDriveModel::jobDone() {
@@ -3602,12 +3604,8 @@ void CloudDriveModel::proceedNextJob() {
         t->setDirectInvokation(true);
         break;
     }
-    // FTP operations are always blocking.
-    if (job.type == Ftp) {
-        t->setDirectInvokation(true);
-    }
 
-    t->start(QThread::LowPriority);
+    t->start(QThread::LowestPriority);
 
     // TODO Put some delay here to slow down.
 
@@ -3665,7 +3663,6 @@ void CloudDriveModel::dispatchJob(const CloudDriveJob job)
     // Generalize cloud client.
     CloudDriveClient *cloudClient = getCloudClient(job.type);
 
-    qDebug() << "CloudDriveModel::dispatchJob threadPool count" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount();
     qDebug() << "CloudDriveModel::dispatchJob thread" << QThread::currentThread() << "job" << job.jobId << job.operation << getOperationName(job.operation) << job.type << (cloudClient == 0 ? "no client" : cloudClient->objectName());
 
     switch (job.operation) {

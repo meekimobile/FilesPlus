@@ -113,7 +113,7 @@ public:
     Q_INVOKABLE bool canSync(QString localPath);
     Q_INVOKABLE QString getFirstJobJson(QString localPath);
     Q_INVOKABLE QString getJobJson(QString jobId);
-    void updateJob(CloudDriveJob job);
+    void updateJob(CloudDriveJob job, bool emitJobUpdatedSignal = true);
     Q_INVOKABLE void removeJob(QString caller, QString nonce);
     Q_INVOKABLE void removeJobs(bool removeAll = false);
     Q_INVOKABLE int getQueuedJobCount() const;

@@ -39,11 +39,12 @@ void CloudDriveModelThread::setCloudDriveItems(QMultiMap<QString, CloudDriveItem
 
 void CloudDriveModelThread::run()
 {
-    qDebug() << "CloudDriveModelThread::run job" << m_nonce << "thread" << currentThread() << "started. Invoking dispatchJob method on parent" << parent();
     if (m_isDirectInvokation) {
+        qDebug() << "CloudDriveModelThread::run job" << m_nonce << "thread" << currentThread() << "started. Invoking dispatchJob method on parent" << parent() << " with direct connection.";
         // Direct invokation to target object's eventloop.
         QMetaObject::invokeMethod(parent(), "dispatchJob", Qt::DirectConnection, Q_ARG(QString, m_nonce));
     } else {
+        qDebug() << "CloudDriveModelThread::run job" << m_nonce << "thread" << currentThread() << "started. Invoking dispatchJob method on parent" << parent() << " with queued connection.";
         // Queue invokation to target object's eventloop.
         QMetaObject::invokeMethod(parent(), "dispatchJob", Qt::QueuedConnection, Q_ARG(QString, m_nonce));
     }
