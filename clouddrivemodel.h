@@ -373,7 +373,6 @@ private:
     FtpClient *ftpClient;
     WebDavClient *webDavClient;
     QString accessTokenPin;
-//    CloudDriveModelThread m_thread;
 
     QMutex mutex;
 

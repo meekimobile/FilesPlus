@@ -66,6 +66,9 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
 
     // Create temp path.
     createTempPath();
+
+    // Set thread pool with MaxRunningJobCount+1 to support browse method.
+    QThreadPool::globalInstance()->setMaxThreadCount(MaxRunningJobCount + 1);
 }
 
 CloudDriveModel::~CloudDriveModel()
@@ -1885,17 +1888,9 @@ void CloudDriveModel::browse(CloudDriveModel::ClientTypes type, QString uid, QSt
 
     // Force start thread.
     CloudDriveModelThread *t = new CloudDriveModelThread(this);
-    connect(t, SIGNAL(finished()), t, SLOT(deleteLater()));
     t->setNonce(job.jobId); // Set job ID to thread. It will invoke parent's dispatchJob later.
     t->setDirectInvokation(false);
-    t->start();
-
-//    m_jobQueue->insert(0, job.jobId); // Browse get priority.
-
-//    // Emit signal to show in job page.
-//    emit jobEnqueuedSignal(job.jobId, "");
-
-//    emit proceedNextJobSignal();
+    QThreadPool::globalInstance()->start(t);
 }
 
 void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut)
@@ -3538,9 +3533,7 @@ void CloudDriveModel::downloadProgressFilter(QString nonce, qint64 bytesReceived
     job.bytes = job.downloadOffset + bytesReceived; // Add job.downloadOffset to support fileGetResume.
     updateJob(job);
 
-    if (job.operation != MigrateFilePut) {
-        emit downloadProgress(nonce, bytesReceived, bytesTotal);
-    }
+    emit downloadProgress(nonce, bytesReceived, bytesTotal);
 }
 
 void CloudDriveModel::jobDone() {
@@ -3555,18 +3548,16 @@ void CloudDriveModel::jobDone() {
 }
 
 void CloudDriveModel::proceedNextJob() {
-//    if (m_thread.isRunning()) return;
-
     // Proceed next job in queue. Any jobs which haven't queued will be ignored.
-    qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count() << "m_isSuspended" << m_isSuspended;
-//    qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->keys();
+    qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count() << "m_isSuspended" << m_isSuspended;
+    qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount();
 
     // Emit status signal.
     emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), getItemCount());
 
     if (runningJobCount >= MaxRunningJobCount || m_jobQueue->count() <= 0 || m_isSuspended || m_isAborted) {
 
-        // TODO Check if there is no running job and is aborted.
+        // Check if there is no running job and is aborted.
         if (runningJobCount <= 0 && m_isAborted) {
             QApplication::quit();
         }
@@ -3580,8 +3571,7 @@ void CloudDriveModel::proceedNextJob() {
     job.isRunning = true;
     job.retryCount++;
     updateJob(job);
-//    qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "operation" << getOperationName(job.operation);
-
+    // Increase runningJobCount.
     mutex.lock();
     runningJobCount++;
     mutex.unlock();
@@ -3589,8 +3579,6 @@ void CloudDriveModel::proceedNextJob() {
 
     // Dispatch job.
     CloudDriveModelThread *t = new CloudDriveModelThread(this);
-    connect(t, SIGNAL(finished()), t, SLOT(deleteLater()));
-    connect(t, SIGNAL(terminated()), t, SLOT(deleteLater()));
     t->setNonce(nonce); // Set job ID to thread. It will invoke parent's dispatchJob later.
     t->setDirectInvokation(false);
 
@@ -3601,11 +3589,13 @@ void CloudDriveModel::proceedNextJob() {
     case InitializeDB:
     case InitializeCloudClients:
     case Disconnect:
+    case MigrateFilePut:
         t->setDirectInvokation(true);
         break;
     }
 
-    t->start(QThread::LowestPriority);
+    QThreadPool::globalInstance()->start(t);
+    qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "started. runningJobCount" << runningJobCount << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount();
 
     // TODO Put some delay here to slow down.
 

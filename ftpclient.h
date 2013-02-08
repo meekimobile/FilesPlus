@@ -40,12 +40,9 @@ public:
 signals:
 
 public slots:
-    void fileGetReplyFinished(QString nonce, bool error);
-    void filePutReplyFinished(QString nonce, bool error);
-    void deleteFileReplyFinished(QString nonce, int error, QString errorString);
+
 protected:
-    // TODO FTP should return common object directly.
-//    QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
+
 private:
     QHash<QString, QFtpWrapper*> *m_ftpHash;
     QHash<QString, QString> m_remoteRootHash;
