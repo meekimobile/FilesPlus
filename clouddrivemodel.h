@@ -406,6 +406,7 @@ private:
 
     QSettings m_settings;
 
+    // Create temp path for storing temporary downloaded file during migration.
     void createTempPath();
 };
 

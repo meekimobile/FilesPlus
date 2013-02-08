@@ -60,7 +60,7 @@ public:
     void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     void shareFile(QString nonce, QString uid, QString remoteFilePath);
 
-    QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, QString requestBody = "", int depth = 0);
+    QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, QString requestBody = "", int depth = 0, bool synchronous = false, QString callback = "");
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
     QString fileGetReplySave(QNetworkReply *reply);
@@ -79,7 +79,13 @@ public slots:
     void fileGetReplyFinished(QNetworkReply *reply);
     void filePutReplyFinished(QNetworkReply *reply);
 
+    void propertyReplyFinished(QNetworkReply *reply); // Includes browse, metadata and quota reply handlers.
+
     QString createFolderReplyFinished(QNetworkReply *reply);
+    void moveFileReplyFinished(QNetworkReply *reply);
+    void copyFileReplyFinished(QNetworkReply *reply);
+    void deleteFileReplyFinished(QNetworkReply *reply);
+    void shareFileReplyFinished(QNetworkReply *reply);
 
     void fileGetResumeReplyFinished(QNetworkReply *reply);
 protected:
@@ -87,6 +93,7 @@ protected:
 private:
     QHash<QString, QString> m_remoteRootHash;
     QHash<QString, QFile*> m_localFileHash;
+    QHash<QString, QBuffer*> m_bufferHash;
 
     QSettings m_settings;
 
