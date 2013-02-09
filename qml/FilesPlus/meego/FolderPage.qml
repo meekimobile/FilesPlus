@@ -1073,13 +1073,13 @@ Page {
 
         onOpened: {
             // Turn highlight on.
-            fsListView.highlightFollowsCurrentItem = true;
+//            fsListView.highlightFollowsCurrentItem = true;
             lastFindIndex = fsListView.currentIndex;
         }
 
         onClosed: {
             // Turn highlight off.
-            fsListView.highlightFollowsCurrentItem = false;
+//            fsListView.highlightFollowsCurrentItem = false;
             fsListView.currentIndex = -1;
         }
     }

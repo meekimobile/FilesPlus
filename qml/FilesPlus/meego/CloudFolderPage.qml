@@ -308,13 +308,13 @@ Page {
 
         onOpened: {
             // Turn highlight on.
-            cloudFolderView.highlightFollowsCurrentItem = true;
+//            cloudFolderView.highlightFollowsCurrentItem = true;
             lastFindIndex = cloudFolderView.currentIndex;
         }
 
         onClosed: {
             // Turn highlight off.
-            cloudFolderView.highlightFollowsCurrentItem = false;
+//            cloudFolderView.highlightFollowsCurrentItem = false;
             cloudFolderView.currentIndex = -1;
         }
     }
