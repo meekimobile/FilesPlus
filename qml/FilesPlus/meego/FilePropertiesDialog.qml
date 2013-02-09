@@ -174,8 +174,8 @@ CommonDialog {
                     }
                     Button {
                         id: syncAllButton
-                        width: 70
-                        height: 70
+                        width: 60
+                        height: 60
                         iconSource: theme.inverted ? "cloud.svg" : "cloud_inverted.svg"
                         anchors.verticalCenter: parent.verticalCenter
                         onClicked: {
