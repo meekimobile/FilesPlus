@@ -105,6 +105,7 @@ private:
     QString getHostname(QString email);
 
     void testSSLConnection(QString hostname);
+    QSslConfiguration getSelfSignedSslConfiguration(QSslConfiguration sslConf);
 
     QString getParentRemotePath(QString remotePath);
     QString getRemoteFileName(QString remotePath);

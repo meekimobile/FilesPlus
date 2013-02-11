@@ -186,11 +186,15 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
+        connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(propertyReplyFinished(QNetworkReply*)) );
     }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    // Configure to ignore errors for self-signed certificate.
+    if (synchronous && m_settings.value(objectName() + ".ignoreSSLSelfSignedCertificateErrors", QVariant(false)).toBool()) {
+        req.setSslConfiguration(getSelfSignedSslConfiguration(req.sslConfiguration()));
+    }
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(callback));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(uid));
@@ -400,11 +404,15 @@ QString WebDavClient::createFolder(QString nonce, QString uid, QString remotePar
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
+        connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(createFolderReplyFinished(QNetworkReply*)));
     }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    // Configure to ignore errors for self-signed certificate.
+    if (synchronous && m_settings.value(objectName() + ".ignoreSSLSelfSignedCertificateErrors", QVariant(false)).toBool()) {
+        req.setSslConfiguration(getSelfSignedSslConfiguration(req.sslConfiguration()));
+    }
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
@@ -440,11 +448,15 @@ QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFileP
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
+        connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetReplyFinished(QNetworkReply*)));
     }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    // Configure to ignore errors for self-signed certificate.
+    if (synchronous && m_settings.value(objectName() + ".ignoreSSLSelfSignedCertificateErrors", QVariant(false)).toBool()) {
+        req.setSslConfiguration(getSelfSignedSslConfiguration(req.sslConfiguration()));
+    }
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
@@ -543,11 +555,15 @@ QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *sour
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
+        connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)));
     }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    // Configure to ignore errors for self-signed certificate.
+    if (synchronous && m_settings.value(objectName() + ".ignoreSSLSelfSignedCertificateErrors", QVariant(false)).toBool()) {
+        req.setSslConfiguration(getSelfSignedSslConfiguration(req.sslConfiguration()));
+    }
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteParentPath));
@@ -810,6 +826,18 @@ void WebDavClient::testSSLConnection(QString hostname)
     }
     socket.disconnectFromHost();
     qDebug() << "WebDavClient::testConnection SSL socket connection closed";
+}
+
+QSslConfiguration WebDavClient::getSelfSignedSslConfiguration(QSslConfiguration sslConf)
+{
+//    QFile serverCertFile("E:/certificates/server.crt");
+//    QFile serverKeyFile("E:/certificates/server.key");
+//    sslConf.setLocalCertificate(QSslCertificate(&serverCertFile, QSsl::Pem));
+//    sslConf.setPrivateKey(QSslKey(&serverKeyFile, QSsl::Rsa));
+    sslConf.setPeerVerifyMode(QSslSocket::VerifyNone);
+
+    qDebug() << "WebDavClient::getSelfSignedSslConfiguration sslConfiguration is modified. sslConf.peerVerifyMode" << sslConf.peerVerifyMode();
+    return sslConf;
 }
 
 bool WebDavClient::testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname)
