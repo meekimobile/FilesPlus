@@ -657,7 +657,7 @@ QScriptValue WebDavClient::createScriptValue(QScriptEngine &engine, QDomNode &n,
 //    qDebug() << "WebDavClient::createScriptValue caller" << caller << "nodeName" << n.nodeName() << "localName" << n.localName() << "nodeType" << n.nodeType();
 
     if (n.isText()) {
-        QString v = QUrl::fromPercentEncoding(n.toText().nodeValue().toAscii());
+        QString v = n.toText().nodeValue();
         return QScriptValue(v);
     } else if (n.hasChildNodes()) {
         if (n.firstChild().isText()) {
@@ -1306,14 +1306,15 @@ QScriptValue WebDavClient::parseCommonPropertyScriptValue(QScriptEngine &engine,
     QScriptValue parsedObj = engine.newObject();
 
     bool objIsDir = jsonObj.property("href").toString().endsWith("/");
-    QString objRemotePath = objIsDir ? jsonObj.property("href").toString().mid(0, jsonObj.property("href").toString().length()-1) : jsonObj.property("href").toString(); // Workaround because it ended with /
+    QString objHref = QUrl::fromPercentEncoding(jsonObj.property("href").toString().toAscii());
+    QString objRemotePath = objIsDir ? objHref.mid(0, objHref.length()-1) : objHref; // Workaround because it ended with /
     QString objRemoteName = jsonObj.property("propstat").property("prop").property("displayname").isValid() ? jsonObj.property("propstat").property("prop").property("displayname").toString() : getRemoteFileName(objRemotePath);
     uint objRemoteSize = jsonObj.property("propstat").property("prop").property("getcontentlength").isValid() ? jsonObj.property("propstat").property("prop").property("getcontentlength").toInteger() : 0;
     QDateTime objLastModified = jsonObj.property("propstat").property("prop").property("getlastmodified").isValid() ? parseReplyDateString(jsonObj.property("propstat").property("prop").property("getlastmodified").toString()) : QDateTime::currentDateTime();
     QString objRemoteHash = jsonObj.property("propstat").property("prop").property("getlastmodified").isValid() ? formatJSONDateString(objLastModified) : "FFFFFFFF"; // Uses DirtyHash if last modified doesn't exist.
 
     parsedObj.setProperty("name", QScriptValue(objRemoteName));
-    parsedObj.setProperty("absolutePath", jsonObj.property("href"));
+    parsedObj.setProperty("absolutePath", QScriptValue(objHref));
     parsedObj.setProperty("parentPath", QScriptValue(getParentRemotePath(objRemotePath) + "/"));
     parsedObj.setProperty("size", QScriptValue(objRemoteSize));
     parsedObj.setProperty("isDeleted", QScriptValue(false));
