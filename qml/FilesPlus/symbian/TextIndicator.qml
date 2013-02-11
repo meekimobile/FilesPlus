@@ -41,6 +41,7 @@ Rectangle {
     property color pressedColorInverted: "black"
     property color pressedTextColor: "black"
     property color pressedTextColorInverted: "white"
+    property bool mouseAreaDisabled: true
 
     signal clicked(variant mouse)
     signal pressAndHold(variant mouse)
@@ -56,6 +57,7 @@ Rectangle {
     MouseArea {
         id: mouseArea
         anchors.fill: parent
+        enabled: !mouseAreaDisabled
         onPressed: _pressed = true;
         onReleased: _pressed = false;
         onClicked: textIndicator.clicked(mouse);

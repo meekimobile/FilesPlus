@@ -60,6 +60,7 @@ Rectangle {
         textColorInverted: (messageLoggerModel.newMessageCount > 0) ? "white" : "black"
         pressedTextColor: "white"
         pressedTextColorInverted: "white"
+        mouseAreaDisabled: false
         gradient: {
             if (_pressed) {
                 return pressedGradient;
