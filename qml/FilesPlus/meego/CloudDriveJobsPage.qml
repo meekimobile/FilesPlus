@@ -257,7 +257,7 @@ Page {
                         text: {
                             if (operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
                                 if (cloudDriveModel.isRemoteAbsolutePath(target_type)) {
-                                    return new_remote_file_path + "/" + new_remote_file_name;
+                                    return cloudDriveModel.getRemotePath(target_type, new_remote_file_path, new_remote_file_name);
                                 } else {
                                     return new_remote_file_path + " > " + new_remote_file_name;
                                 }
