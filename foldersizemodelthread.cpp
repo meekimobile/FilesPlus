@@ -7,7 +7,7 @@
 bool nameLessThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
 {
 //    qDebug() << "nameLessThan" << o1.name << o1.fileType << o2.name << o2.fileType;
-    return o1.name < o2.name;
+    return o1.name.toLower() < o2.name.toLower();
 }
 
 bool timeGreaterThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
@@ -28,11 +28,11 @@ bool typeLessThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
         // If both are file, compare type and name.
         if (o1.isDir && o2.isDir) {
 //            qDebug() << "typeLessThan" << o1.name << o1.fileType << o2.name << o2.fileType;
-            return o1.name < o2.name;
+            return o1.name.toLower() < o2.name.toLower();
         } else {
             if (o1.fileType == o2.fileType) {
-                return o1.name < o2.name;
-            } else if (o1.fileType < o2.fileType) {
+                return o1.name.toLower() < o2.name.toLower();
+            } else if (o1.fileType.toLower() < o2.fileType.toLower()) {
                 return true;
             } else {
                 return false;
