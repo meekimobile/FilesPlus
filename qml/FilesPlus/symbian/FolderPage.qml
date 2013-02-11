@@ -132,13 +132,10 @@ Page {
                 anchors.bottomMargin: 10
             }
 
-            onPressAndHold: {
-                pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"));
-            }
             onClicked: {
                 if (isPressAndHold) return; // Workaround for Symbian only.
 
-                syncConnectedItemsSlot();
+                cloudMenu.open();
             }
         }
 
@@ -166,6 +163,7 @@ Page {
 
     MainMenu {
         id: mainMenu
+        disabledMenus: ["syncConnectedItems","syncFolderMenuItem"]
 
         onPaste: {
             fileActionDialog.targetPath = fsModel.currentDir;
@@ -304,6 +302,29 @@ Page {
         }
         onMarkAllFolders: {
             fsListView.markAllFolders();
+        }
+    }
+
+    CloudMenu {
+        id: cloudMenu
+
+        onSyncConnectedItems: {
+            syncConnectedItemsSlot();
+        }
+        onSyncCurrentFolder: {
+            syncFileSlot(fsModel.currentDir, -1);
+        }
+        onShowCloudDriveJobs: {
+            pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"));
+        }
+
+        function isMenuItemVisible(menuItem) {
+            // Validate each menu logic if it's specified, otherwise it's visible.
+            if (menuItem.name == "syncCurrentFolder") {
+                return !fsModel.isRoot() && cloudDriveModel.canSync(fsModel.currentDir);
+            } else {
+                return true;
+            }
         }
     }
 
@@ -1078,13 +1099,13 @@ Page {
 
         onOpened: {
             // Turn highlight on.
-            fsListView.highlightFollowsCurrentItem = true;
+//            fsListView.highlightFollowsCurrentItem = true;
             lastFindIndex = fsListView.currentIndex;
         }
 
         onClosed: {
             // Turn highlight off.
-            fsListView.highlightFollowsCurrentItem = false;
+//            fsListView.highlightFollowsCurrentItem = false;
             fsListView.currentIndex = -1;
         }
     }

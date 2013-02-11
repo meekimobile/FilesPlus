@@ -153,5 +153,6 @@
         <file>qml/FilesPlus/info.svg</file>
         <file>qml/FilesPlus/info_inverted.svg</file>
         <file alias="qml/FilesPlus/FilePropertiesDialog.qml">qml/FilesPlus/symbian/FilePropertiesDialog.qml</file>
+        <file alias="qml/FilesPlus/CloudMenu.qml">qml/FilesPlus/symbian/CloudMenu.qml</file>
     </qresource>
 </RCC>

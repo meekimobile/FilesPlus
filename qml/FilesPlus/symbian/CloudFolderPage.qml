@@ -240,13 +240,10 @@ Page {
                 anchors.bottomMargin: 10
             }
 
-            onPressAndHold: {
-                pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"));
-            }
             onClicked: {
                 if (isPressAndHold) return; // Workaround for Symbian only.
 
-                syncConnectedItemsSlot();
+                cloudMenu.open();
             }
         }
 
@@ -311,13 +308,13 @@ Page {
 
         onOpened: {
             // Turn highlight on.
-            cloudFolderView.highlightFollowsCurrentItem = true;
+//            cloudFolderView.highlightFollowsCurrentItem = true;
             lastFindIndex = cloudFolderView.currentIndex;
         }
 
         onClosed: {
             // Turn highlight off.
-            cloudFolderView.highlightFollowsCurrentItem = false;
+//            cloudFolderView.highlightFollowsCurrentItem = false;
             cloudFolderView.currentIndex = -1;
         }
     }
@@ -415,6 +412,18 @@ Page {
         onMarkAll: cloudFolderView.markAll()
         onMarkAllFiles: cloudFolderView.markAllFiles()
         onMarkAllFolders: cloudFolderView.markAllFolders();
+    }
+
+    CloudMenu {
+        id: cloudMenu
+        disabledMenus: ["syncCurrentFolder"]
+
+        onSyncConnectedItems: {
+            syncConnectedItemsSlot();
+        }
+        onShowCloudDriveJobs: {
+            pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"));
+        }
     }
 
     ListModel {

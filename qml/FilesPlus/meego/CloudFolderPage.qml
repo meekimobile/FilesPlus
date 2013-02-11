@@ -240,11 +240,8 @@ Page {
                 anchors.bottomMargin: 10
             }
 
-            onPressAndHold: {
-                pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"));
-            }
             onClicked: {
-                syncConnectedItemsSlot();
+                cloudMenu.open();
             }
         }
 
@@ -412,6 +409,18 @@ Page {
         onMarkAll: cloudFolderView.markAll()
         onMarkAllFiles: cloudFolderView.markAllFiles()
         onMarkAllFolders: cloudFolderView.markAllFolders();
+    }
+
+    CloudMenu {
+        id: cloudMenu
+        disabledMenus: ["syncCurrentFolder"]
+
+        onSyncConnectedItems: {
+            syncConnectedItemsSlot();
+        }
+        onShowCloudDriveJobs: {
+            pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"));
+        }
     }
 
     ListModel {
