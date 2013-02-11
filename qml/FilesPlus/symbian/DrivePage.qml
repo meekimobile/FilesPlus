@@ -86,9 +86,10 @@ Page {
                 anchors.rightMargin: 10
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 10
+                mouseAreaDisabled: true
             }
 
-            onPressAndHold: {
+            onClicked: {
                 pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"));
             }
         }
