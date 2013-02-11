@@ -250,7 +250,7 @@ signals:
     void initializeDBStarted(QString nonce);
     void initializeDBFinished(QString nonce);
     void proceedNextJobSignal();
-    void jobQueueStatusSignal(int runningJobCount, int jobQueueCount, int itemCount);
+    void jobQueueStatusSignal(int runningJobCount, int jobQueueCount, int jobCount , int itemCount);
     void localChangedSignal(QString localPath);
     void jobEnqueuedSignal(QString nonce, QString localPath);
     void jobUpdatedSignal(QString nonce);

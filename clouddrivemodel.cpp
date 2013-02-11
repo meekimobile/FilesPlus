@@ -7,14 +7,14 @@ const QString CloudDriveModel::ITEM_DB_PATH = "/home/user/.filesplus/CloudDriveM
 const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
 const QString CloudDriveModel::TEMP_PATH = "/home/user/MyDocs/temp/.filesplus";
 const QString CloudDriveModel::JOB_DAT_PATH = "/home/user/.filesplus/CloudDriveJobs.dat";
-const int CloudDriveModel::MaxRunningJobCount = 2;
+const int CloudDriveModel::MaxRunningJobCount = 1;
 #else
 const QString CloudDriveModel::ITEM_DAT_PATH = "CloudDriveModel.dat";
 const QString CloudDriveModel::ITEM_DB_PATH = "CloudDriveModel.db";
 const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
 const QString CloudDriveModel::TEMP_PATH = "E:/temp/.filesplus";
 const QString CloudDriveModel::JOB_DAT_PATH = "CloudDriveJobs.dat"; // It's in private folder.
-const int CloudDriveModel::MaxRunningJobCount = 2;
+const int CloudDriveModel::MaxRunningJobCount = 1;
 #endif
 const QString CloudDriveModel::DirtyHash = "FFFFFFFF";
 //const QStringList CloudDriveModel::restrictFileTypes = QString("SIS,SISX,DEB").split(",");
@@ -927,7 +927,7 @@ void CloudDriveModel::removeJob(QString caller, QString nonce)
 
     mutex.lock();
     QString localPath = m_cloudDriveJobs->value(nonce).localFilePath;
-    m_isSyncingCache->remove(localPath);
+    clearConnectedRemoteDirtyCache(localPath);
     int removeCount = m_cloudDriveJobs->remove(nonce);
     mutex.unlock();
 
@@ -1493,7 +1493,7 @@ int CloudDriveModel::removeUid(CloudDriveModel::ClientTypes type, QString uid)
 
 void CloudDriveModel::requestJobQueueStatus()
 {
-    emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), getItemCount());
+    emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), m_cloudDriveJobs->count(), getItemCount());
 }
 
 void CloudDriveModel::suspendNextJob(bool abort)
@@ -1936,6 +1936,7 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
         return;
     }
 
+    // TODO Must not be invoked if it's running in main thread.
     QApplication::processEvents();
 
     CloudDriveClient *cloudClient = getCloudClient(type);
@@ -3553,7 +3554,7 @@ void CloudDriveModel::proceedNextJob() {
     qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount();
 
     // Emit status signal.
-    emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), getItemCount());
+    emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), m_cloudDriveJobs->count(), getItemCount());
 
     if (runningJobCount >= MaxRunningJobCount || m_jobQueue->count() <= 0 || m_isSuspended || m_isAborted) {
 
@@ -3589,6 +3590,7 @@ void CloudDriveModel::proceedNextJob() {
     case InitializeDB:
     case InitializeCloudClients:
     case Disconnect:
+    case SyncFromLocal:
     case MigrateFilePut:
         t->setDirectInvokation(true);
         break;
