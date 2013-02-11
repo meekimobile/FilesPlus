@@ -242,10 +242,10 @@ Page {
                         id: targetName
                         text: {
                             if (operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
-                                if (cloudDriveModel.isRemoteAbsolutePath(type)) {
+                                if (cloudDriveModel.isRemoteAbsolutePath(target_type)) {
                                     return new_remote_file_path + "/" + new_remote_file_name;
                                 } else {
-                                    return new_remote_file_path;
+                                    return new_remote_file_path + " > " + new_remote_file_name;
                                 }
                             } else {
                                 return local_file_path;
