@@ -1046,10 +1046,10 @@ void WebDavClient::propertyReplyFinished(QNetworkReply *reply)
     qDebug() << "WebDavClient::propertyReplyFinished" << nonce << callback << uid << remoteFilePath << "reply" << reply << QString(" Error=%1").arg(reply->error());
 
     QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "WebDavClient::propertyReplyFinished nonce" << nonce << "replyBody" << replyBody;
+    qDebug() << "WebDavClient::propertyReplyFinished nonce" << nonce << "replyBody" << replyBody << "contentType" << reply->header(QNetworkRequest::ContentTypeHeader).toString();
 
     // Parse XML and convert to JSON.
-    if (reply->error() == QNetworkReply::NoError) {
+    if (reply->error() == QNetworkReply::NoError && reply->header(QNetworkRequest::ContentTypeHeader).toString().indexOf("xml") != -1) {
         if (callback == "browse") {
             replyBody = createPropertyJson(replyBody, callback);
 
@@ -1081,14 +1081,21 @@ void WebDavClient::propertyReplyFinished(QNetworkReply *reply)
         } else {
             qDebug() << "WebDavClient::propertyReplyFinished nonce" << nonce << "invalid callback" << callback;
         }
-    } else {
-        replyBody = createResponseJson(replyBody, callback);
-
+    } else {       
         if (callback == "browse") {
+            replyBody = createResponseJson(replyBody, callback);
             emit browseReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
         } else if (callback == "metadata") {
-            emit metadataReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+            if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 301) {
+                qDebug() << "WebDavClient::propertyReplyFinished nonce" << nonce << "callback" << callback << "got HTTP response code 301, reply as content not found (error 203).";
+                // Handle response code 301 to support WebDav on apache2.
+                emit metadataReplySignal(nonce, QNetworkReply::ContentNotFoundError, "Content not found", replyBody);
+            } else {
+                replyBody = createResponseJson(replyBody, callback);
+                emit metadataReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+            }
         } else if (callback == "quota") {
+            replyBody = createResponseJson(replyBody, callback);
             emit quotaReplySignal(nonce, reply->error(), reply->errorString(), replyBody, 0, 0, -1);
         } else {
             qDebug() << "WebDavClient::propertyReplyFinished nonce" << nonce << "invalid callback" << callback;
