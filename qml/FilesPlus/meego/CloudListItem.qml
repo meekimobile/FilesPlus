@@ -115,11 +115,10 @@ ListItem {
                     Text {
                         id: listItemSubTitle
                         text: {
-                            var sub = ""
-                            if (subDirCount > 0) sub += appInfo.emptyStr+qsTr("%n dir(s)", "", subDirCount);
-                            if (subFileCount > 0) sub += ((sub == "") ? "" : " ") + appInfo.emptyStr+qsTr("%n file(s)", "", subFileCount);
-                            sub += ((sub == "") ? "" : ", ") + appInfo.emptyStr+qsTr("last modified") + " " + Qt.formatDateTime(lastModified, "d MMM yyyy h:mm:ss ap");
-                            
+                            var sub = appInfo.emptyStr+Qt.formatDateTime(lastModified, "d MMM yyyy h:mm:ss ap");
+                            if (subDirCount > 0) sub += ", "+qsTr("%n dir(s)", "", subDirCount);
+                            if (subFileCount > 0) sub += ", "+qsTr("%n file(s)", "", subFileCount);
+
                             return sub;
                         }
                         width: parent.width
