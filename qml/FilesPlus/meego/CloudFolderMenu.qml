@@ -71,23 +71,23 @@ MenuWithIcon {
             }
         }
 
-        MenuItemWithIcon {
-            id: syncItemsMenuItem
-            name: "syncConnectedItems"
-            text: appInfo.emptyStr+qsTr("Sync connected items")
-            onClicked: {
-                syncConnectedItems();
-            }
-        }
+//        MenuItemWithIcon {
+//            id: syncItemsMenuItem
+//            name: "syncConnectedItems"
+//            text: appInfo.emptyStr+qsTr("Sync connected items")
+//            onClicked: {
+//                syncConnectedItems();
+//            }
+//        }
 
-        MenuItemWithIcon {
-            id: syncFolderMenuItem
-            name: "syncCurrentFolder"
-            text: appInfo.emptyStr+qsTr("Sync current folder")
-            onClicked: {
-                syncCurrentFolder();
-            }
-        }
+//        MenuItemWithIcon {
+//            id: syncFolderMenuItem
+//            name: "syncCurrentFolder"
+//            text: appInfo.emptyStr+qsTr("Sync current folder")
+//            onClicked: {
+//                syncCurrentFolder();
+//            }
+//        }
 
         MenuItemWithIcon {
             id: filterMenuItem

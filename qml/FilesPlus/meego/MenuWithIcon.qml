@@ -26,6 +26,7 @@ Menu {
     function toggleMenuItems() {
 //        console.debug("MenuWithIcon toggleMenuItems content[0] " + content[0]);
 //        console.debug("MenuWithIcon toggleMenuItems content[0].children.length " + content[0].children.length);
+        var actualMenuItemCount = 0;
         for (var i=0; i<content[0].children.length; i++) {
             var menuItem = content[0].children[i];
             if (!isEnabled(menuItem.name) || isDisabled(menuItem.name)) {
@@ -35,6 +36,7 @@ Menu {
 //                console.debug("MenuWithIcon toggleMenuItems menuItem i " + i + " " + menuItem.toString() + " " + menuItem.name + " is shown.");
                 menuItem.visible = isMenuItemVisible(menuItem);
             }
+            if (menuItem.visible) actualMenuItemCount++;
         }
     }
 
