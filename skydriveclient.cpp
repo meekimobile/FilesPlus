@@ -717,7 +717,7 @@ QString SkyDriveClient::getRemoteRoot(QString uid)
 
 bool SkyDriveClient::isFileGetResumable(qint64 fileSize)
 {
-    return (fileSize >= ChunkSize);
+    return (fileSize == -1 || fileSize >= ChunkSize);
 }
 
 void SkyDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)

@@ -919,7 +919,7 @@ bool WebDavClient::isConfigurable()
 
 bool WebDavClient::isFileGetResumable(qint64 fileSize)
 {
-    return (fileSize >= ChunkSize);
+    return (fileSize == -1 || fileSize >= ChunkSize);
 }
 
 QDateTime WebDavClient::parseReplyDateString(QString dateString)
