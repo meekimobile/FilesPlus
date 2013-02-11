@@ -262,7 +262,11 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     // *** So I decide to implement PieChart with QDeclarativeItem.
 
     QDeclarativeEngine *engine = viewer.engine();
-    engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider());
+#ifdef Q_OS_SYMBIAN
+    engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider("E:/temp/.fileplus"));
+#elif defined(Q_WS_HARMATTAN)
+    engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider("/home/user/MyDocs/temp/.filesplus"));
+#endif
 
 #ifdef Q_OS_SYMBIAN
     // Add custom NAMF to change User-Agent to fix problem with Dropbox login page.

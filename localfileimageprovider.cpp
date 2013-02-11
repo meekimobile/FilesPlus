@@ -7,8 +7,9 @@
 //const int LocalFileImageProvider::MAX_CACHE_COST = 10;
 //const QString LocalFileImageProvider::DEFAULT_CACHE_PATH = "LocalFileImageProvider";
 
-LocalFileImageProvider::LocalFileImageProvider() : QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
+LocalFileImageProvider::LocalFileImageProvider(QString cachePath) : QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
 {
+    m_cachePath = cachePath;
 }
 
 QString LocalFileImageProvider::getFileFormat(const QString &fileName) {
@@ -21,6 +22,14 @@ QString LocalFileImageProvider::getFileFormat(const QString &fileName) {
 
     QString format = rx.cap(3).toUpper();
     return format;
+}
+
+QString LocalFileImageProvider::getCachedPath(const QString &id, const QSize &requestedSize)
+{
+    QFileInfo fi(id);
+    QString cachedImagePath = QString("%1/%2_%3_%4x%5.png").arg(m_cachePath).arg(fi.baseName()).arg(fi.completeSuffix()).arg(requestedSize.width()).arg(requestedSize.height());
+
+    return cachedImagePath;
 }
 
 QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
@@ -40,9 +49,18 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
         return QImage();
     }
 
+    // Check if cached image is available.
+    QImage image;
+    QFileInfo cachedFileInfo(getCachedPath(id, requestedSize));
+    if (cachedFileInfo.exists()
+            && cachedFileInfo.created().secsTo(QDateTime::currentDateTime()) < m_setting.value("LocalFileImageProvider.cache.retention.seconds", QVariant(86400)).toInt() // 86400 secs = 1 day
+            && image.load(cachedFileInfo.absoluteFilePath())) {
+        qDebug() << "LocalFileImageProvider::requestImage return cached id" << id << "cached image path" << cachedFileInfo.absoluteFilePath();
+        return image;
+    }
+
     QFile file(id);
     QByteArray format = getFileFormat(id).toLatin1();
-    QImage image;
     QImageReader ir(&file, format);
     ir.setAutoDetectImageFormat(false);
 
@@ -64,6 +82,11 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
 
         if (ir.error() != 0) {
             qDebug() << "LocalFileImageProvider::requestImage read err " << ir.error() << " " << ir.errorString();
+        } else {
+            // Save cached image.
+            QString cachedImagePath = getCachedPath(id, requestedSize);
+            image.save(cachedImagePath);
+            qDebug() << "LocalFileImageProvider::requestImage save id" << id << cachedImagePath;
         }
     } else {
         qDebug() << "LocalFileImageProvider::requestImage can't read from file. Invalid file content.";
@@ -73,5 +96,7 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
              << " size " << size->width() << "," << size->height()
              << " requestedSize " << requestedSize
              << " image size " << image.size();
+
+
     return image;
 }

@@ -7,11 +7,14 @@
 class LocalFileImageProvider : public QDeclarativeImageProvider
 {
 public:
-    LocalFileImageProvider();
+    LocalFileImageProvider(QString cachePath);
 
     QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize);
     QString getFileFormat(const QString &fileName);
+    QString getCachedPath(const QString &id, const QSize &requestedSize);
 private:
+    QString m_cachePath;
+    QSettings m_setting;
 };
 
 #endif // LOCALFILEIMAGEPROVIDER_H
