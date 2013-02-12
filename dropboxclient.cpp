@@ -484,7 +484,7 @@ QString DropboxClient::thumbnail(QString nonce, QString uid, QString remoteFileP
     // Set Authorization header with added signature.
     sortMap["oauth_signature"] = signature;
 
-    QString url = uri + "?" + createNormalizedQueryString(sortMap);
+    QString url = encodedURI + "?" + createNormalizedQueryString(sortMap);
 
     qDebug() << "DropboxClient::thumbnail url" << url;
     return url;
