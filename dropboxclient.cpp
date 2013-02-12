@@ -1684,7 +1684,7 @@ QScriptValue DropboxClient::parseCommonPropertyScriptValue(QScriptEngine &engine
     QString nonce = engine.globalObject().property("nonce").toString();
     QString uid = engine.globalObject().property("uid").toString();
 
-    QString thumbnailUrl = jsonObj.property("thumb_exists").toBool() ? thumbnail(nonce, uid, jsonObj.property("path").toString()) : "";
+    QString thumbnailUrl = jsonObj.property("thumb_exists").toBool() ? thumbnail(nonce, uid, jsonObj.property("path").toString(), "png", "s") : "";
 
     parsedObj.setProperty("name", QScriptValue(getRemoteName(jsonObj.property("path").toString())));
     parsedObj.setProperty("absolutePath", jsonObj.property("path"));
