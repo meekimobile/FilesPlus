@@ -14,7 +14,7 @@ public:
     QString getCachedPath(const QString &id, const QSize &requestedSize);
 private:
     QString m_cachePath;
-    QSettings m_setting;
+    QSettings m_settings;
 };
 
 #endif // REMOTEIMAGEPROVIDER_H

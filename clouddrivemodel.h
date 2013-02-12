@@ -245,6 +245,7 @@ public:
     Q_INVOKABLE void disconnect(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
 
     Q_INVOKABLE QString thumbnail(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString format, QString size);
+    Q_INVOKABLE void cacheImage(QString url, int w, int h);
     Q_INVOKABLE QString media(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
@@ -408,6 +409,7 @@ private:
 
     // Create temp path for storing temporary downloaded file during migration.
     void createTempPath();
+    QString getCachedPath(const QString &id, const QSize &requestedSize);
 };
 
 #endif // CLOUDDRIVEMODEL_H

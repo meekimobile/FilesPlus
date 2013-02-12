@@ -38,7 +38,7 @@ QImage RemoteImageProvider::requestImage(const QString &id, QSize *size, const Q
     QImage image;
     QFileInfo cachedFileInfo(getCachedPath(id, requestedSize));
     if (cachedFileInfo.exists()
-            && cachedFileInfo.created().secsTo(QDateTime::currentDateTime()) < m_setting.value("RemoteImageProvider.cache.retention.seconds", QVariant(86400)).toInt() // 86400 secs = 1 day
+            && cachedFileInfo.created().secsTo(QDateTime::currentDateTime()) < m_settings.value("image.cache.retention.seconds", QVariant(86400)).toInt() // 86400 secs = 1 day
             && image.load(cachedFileInfo.absoluteFilePath())) {
         qDebug() << "RemoteImageProvider::requestImage return cached id" << id << "cached image path" << cachedFileInfo.absoluteFilePath();
         return image;

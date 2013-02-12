@@ -2389,6 +2389,50 @@ QString CloudDriveModel::thumbnail(CloudDriveModel::ClientTypes type, QString ui
     return client->thumbnail(createNonce(), uid, remoteFilePath, format, size);
 }
 
+void CloudDriveModel::cacheImage(QString url, int w, int h)
+{
+    qDebug() << "CloudDriveModel::cacheImage url" << url;
+
+    if (url == "") {
+        qDebug() << "CloudDriveModel::cacheImage url is empty.";
+        return;
+    }
+
+    // Check if cached image is available.
+    // 86400 secs = 1 day
+    QFileInfo cachedFileInfo(getCachedPath(url, QSize(w, h)));
+    if (cachedFileInfo.exists()
+            && cachedFileInfo.created().secsTo(QDateTime::currentDateTime()) < m_settings.value("image.cache.retention.seconds", QVariant(86400)).toInt()) {
+        qDebug() << "CloudDriveModel::cacheImage cache exists" << cachedFileInfo.absoluteFilePath();
+        return;
+    }
+
+    QNetworkAccessManager *qnam = new QNetworkAccessManager();
+    QNetworkRequest req(QUrl::fromEncoded(url.toAscii()));
+    QNetworkReply *reply = qnam->get(req);
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    if (reply->error() == QNetworkReply::NoError) {
+        qDebug() << "CloudDriveModel::cacheImage reply->bytesAvailable()" << reply->bytesAvailable();
+        QFile cacheFile(cachedFileInfo.absoluteFilePath());
+        if (cacheFile.open(QFile::WriteOnly)) {
+            cacheFile.write(reply->readAll());
+            qDebug() << "CloudDriveModel::cacheImage save to" << cachedFileInfo.absoluteFilePath() << "size" << cachedFileInfo.size();
+        } else {
+            qDebug() << "CloudDriveModel::cacheImage can't save to" << cachedFileInfo.absoluteFilePath();
+        }
+    } else {
+        qDebug() << "CloudDriveModel::cacheImage can't download error" << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
+    }
+
+    // Clean up.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
 QString CloudDriveModel::media(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath)
 {
     CloudDriveClient *client = getCloudClient(getClientType(type));
@@ -3907,3 +3951,14 @@ void CloudDriveModel::createTempPath()
         }
     }
 }
+
+QString CloudDriveModel::getCachedPath(const QString &id, const QSize &requestedSize)
+{
+    QUrl url(id);
+    QString cachePath = m_settings.value("temp.path", TEMP_PATH).toString();
+    QByteArray hash = QCryptographicHash::hash(url.host().append(url.path()).toUtf8(), QCryptographicHash::Md5).toHex();
+    QString cachedImagePath = QString("%1/%2_%3x%4.png").arg(cachePath).arg(QString(hash)).arg(requestedSize.width()).arg(requestedSize.height());
+
+    return cachedImagePath;
+}
+
