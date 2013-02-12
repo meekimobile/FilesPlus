@@ -34,7 +34,6 @@ QString LocalFileImageProvider::getCachedPath(const QString &id, const QSize &re
 
 QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
 {
-    // No cache. Let QML(UI) grid manage image cache.
     qDebug() << "LocalFileImageProvider::requestImage request id " << id
              << " size " << size->width() << "," << size->height()
              << " requestedSize " << requestedSize;
@@ -49,8 +48,15 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
         return QImage();
     }
 
-    // Check if cached image is available.
+    // Check if id is cached image path.
     QImage image;
+    if (id.startsWith(m_cachePath)) {
+        image.load(id);
+        qDebug() << "LocalFileImageProvider::requestImage return id" << id << "It's cached image.";
+        return image;
+    }
+
+    // Check if cached image is available.
     QFileInfo cachedFileInfo(getCachedPath(id, requestedSize));
     if (cachedFileInfo.exists()
             && cachedFileInfo.created().secsTo(QDateTime::currentDateTime()) < m_setting.value("LocalFileImageProvider.cache.retention.seconds", QVariant(86400)).toInt() // 86400 secs = 1 day
@@ -84,6 +90,10 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
             qDebug() << "LocalFileImageProvider::requestImage read err " << ir.error() << " " << ir.errorString();
         } else {
             // Save cached image.
+            QDir cachePath(m_cachePath);
+            if (!cachePath.exists()) {
+                cachePath.mkpath(m_cachePath);
+            }
             QString cachedImagePath = getCachedPath(id, requestedSize);
             image.save(cachedImagePath);
             qDebug() << "LocalFileImageProvider::requestImage save id" << id << cachedImagePath;
@@ -96,7 +106,6 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
              << " size " << size->width() << "," << size->height()
              << " requestedSize " << requestedSize
              << " image size " << image.size();
-
 
     return image;
 }

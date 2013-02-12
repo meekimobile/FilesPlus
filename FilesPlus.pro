@@ -74,6 +74,7 @@ SOURCES += main.cpp \
     clouddrivejob.cpp \
     qnetworkreplywrapper.cpp \
     localfileimageprovider.cpp \
+    remoteimageprovider.cpp \
     clouddrivemodelthread.cpp \
     foldersizemodelthread.cpp \
     monitoring.cpp \
@@ -111,6 +112,7 @@ HEADERS += \
     clouddrivejob.h \
     qnetworkreplywrapper.h \
     localfileimageprovider.h \
+    remoteimageprovider.h \
     clouddrivemodelthread.h \
     foldersizemodelthread.h \
     monitoring.h \

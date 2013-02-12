@@ -601,6 +601,8 @@ void DropboxClient::browse(QString nonce, QString uid, QString remoteFilePath)
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(browseReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
     QNetworkReply *reply = manager->get(req);
 }
@@ -1330,12 +1332,16 @@ void DropboxClient::browseReplyFinished(QNetworkReply *reply)
     qDebug() << "DropboxClient::browseReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
     qDebug() << "DropboxClient::browseReplyFinished replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
+        engine.globalObject().setProperty("nonce", QScriptValue(nonce));
+        engine.globalObject().setProperty("uid", QScriptValue(uid));
         QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
         QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
         parsedObj.setProperty("children", engine.newArray());
@@ -1615,6 +1621,11 @@ QScriptValue DropboxClient::parseCommonPropertyScriptValue(QScriptEngine &engine
 {
     QScriptValue parsedObj = engine.newObject();
 
+    QString nonce = engine.globalObject().property("nonce").toString();
+    QString uid = engine.globalObject().property("uid").toString();
+
+    QString thumbnailUrl = jsonObj.property("thumb_exists").toBool() ? thumbnail(nonce, uid, jsonObj.property("path").toString()) : "";
+
     parsedObj.setProperty("name", QScriptValue(getRemoteName(jsonObj.property("path").toString())));
     parsedObj.setProperty("absolutePath", jsonObj.property("path"));
     parsedObj.setProperty("parentPath", QScriptValue(getParentRemotePath(jsonObj.property("path").toString())));
@@ -1624,7 +1635,7 @@ QScriptValue DropboxClient::parseCommonPropertyScriptValue(QScriptEngine &engine
     parsedObj.setProperty("lastModified", jsonObj.property("modified"));
     parsedObj.setProperty("hash", jsonObj.property("hash").isValid() ? jsonObj.property("hash") : jsonObj.property("rev"));
     parsedObj.setProperty("source", QScriptValue());
-    parsedObj.setProperty("thumbnail", QScriptValue());
+    parsedObj.setProperty("thumbnail", QScriptValue(thumbnailUrl));
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("path").toString())));
 
     return parsedObj;
