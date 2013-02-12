@@ -9,6 +9,7 @@ ListItem {
     property string filePath: absolutePath
     property string listViewState: ""
     property alias listItemIconSource: listItemIcon.source
+    property alias listItemIconAsynchronous: listItemIcon.asynchronous
     property alias actionIconSource: cutCopyIcon.source
     property alias runningIconSource: runningIcon.source
     property alias syncIconSource: syncIcon.source
