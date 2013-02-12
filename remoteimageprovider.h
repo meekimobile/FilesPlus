@@ -15,7 +15,6 @@ public:
 private:
     QString m_cachePath;
     QSettings m_setting;
-    QNetworkAccessManager *m_qnam;
 };
 
 #endif // REMOTEIMAGEPROVIDER_H

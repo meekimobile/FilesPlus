@@ -9,7 +9,6 @@
 RemoteImageProvider::RemoteImageProvider(QString cachePath) : QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
 {
     m_cachePath = cachePath;
-    m_qnam = new QNetworkAccessManager();
 }
 
 QString RemoteImageProvider::getCachedPath(const QString &id, const QSize &requestedSize)
@@ -23,7 +22,7 @@ QString RemoteImageProvider::getCachedPath(const QString &id, const QSize &reque
 
 QImage RemoteImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
 {
-    qDebug() << "RemoteImageProvider::requestImage request id" << id << " size " << size << " requestedSize " << requestedSize;
+    qDebug() << "RemoteImageProvider::requestImage request id" << id << "size" << size << "requestedSize" << requestedSize;
 
     if (id == "") {
         qDebug() << "RemoteImageProvider::requestImage id is empty.";
@@ -45,31 +44,19 @@ QImage RemoteImageProvider::requestImage(const QString &id, QSize *size, const Q
         return image;
     }
 
-    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(id.toAscii())); // id is encoded url.
-    QNetworkReply *reply = m_qnam->get(req);
+    QNetworkAccessManager *qnam = new QNetworkAccessManager();
+    QNetworkRequest req(QUrl::fromEncoded(id.toAscii())); // id is encoded url.
+    QNetworkReply *reply = qnam->get(req);
     while (!reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
     }
 
     if (reply->error() == QNetworkReply::NoError) {
-        QImageReader ir(reply);
-
-        // Calculate new thumbnail size with KeepAspectRatio.
-        if (ir.size().width() > requestedSize.width() || ir.size().height() > requestedSize.height()) {
-            QSize newSize = ir.size();
-            newSize.scale(requestedSize, Qt::KeepAspectRatio);
-            qDebug() << "RemoteImageProvider::requestImage scale requestedSize" << requestedSize << "newSize" << newSize;
-            ir.setScaledSize(newSize);
-        }
-
+        qDebug() << "RemoteImageProvider::requestImage reply->bytesAvailable()" << reply->bytesAvailable();
+        QImageReader ir(reply, QImageReader::imageFormat(reply));
         image = ir.read();
-        if (ir.error() != 0) {
-            qDebug() << "RemoteImageProvider::requestImage can't read image error" << ir.error() << ir.errorString();
-        } else {
-            qDebug() << "RemoteImageProvider::requestImage read image format" << image.format() << "size" << image.size();
-
-            // Return scaled size as requested.
+        if (ir.error() == 0) {
             size->setWidth(image.size().width());
             size->setHeight(image.size().height());
 
@@ -78,18 +65,21 @@ QImage RemoteImageProvider::requestImage(const QString &id, QSize *size, const Q
             } else {
                 qDebug() << "RemoteImageProvider::requestImage can't save" << cachedFileInfo.absoluteFilePath();
             }
+        } else {
+            qDebug() << "RemoteImageProvider::requestImage can't read image error" << ir.error() << ir.errorString();
         }
     } else {
-        qDebug() << "RemoteImageProvider::requestImage can't download error" << reply->error() << QString::fromUtf8(reply->readAll());
+        qDebug() << "RemoteImageProvider::requestImage can't download error" << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
     }
 
     qDebug() << "RemoteImageProvider::requestImage reply id" << id
-             << " size " << size->width() << "," << size->height()
-             << " requestedSize " << requestedSize
-             << " image size " << image.size();
+             << "size" << size->width() << "," << size->height()
+             << "requestedSize" << requestedSize
+             << "image size" << image.size();
 
     // Clean up.
-    if (reply != 0) reply->deleteLater();
+    reply->deleteLater();
+    reply->manager()->deleteLater();
 
     return image;
 }
