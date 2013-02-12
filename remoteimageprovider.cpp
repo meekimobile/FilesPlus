@@ -1,9 +1,7 @@
 #include "remoteimageprovider.h"
 #include <QDir>
 #include <QDebug>
-#include <QRegExp>
 #include <QImageReader>
-#include <QtNetwork>
 #include <QApplication>
 #include <QCryptographicHash>
 #include "sleeper.h"
@@ -11,18 +9,7 @@
 RemoteImageProvider::RemoteImageProvider(QString cachePath) : QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
 {
     m_cachePath = cachePath;
-}
-
-QString RemoteImageProvider::getFileFormat(const QString &fileName) {
-    // Parse fileName with RegExp
-    QRegExp rx("(.+)(\\.)(\\w{3,4})$");
-    rx.indexIn(fileName);
-//    for(int i=0; i<=rx.captureCount(); i++) {
-//        qDebug() << "i=" << i << " rx.cap=" << rx.cap(i);
-//    }
-
-    QString format = rx.cap(3).toUpper();
-    return format;
+    m_qnam = new QNetworkAccessManager();
 }
 
 QString RemoteImageProvider::getCachedPath(const QString &id, const QSize &requestedSize)
@@ -36,9 +23,7 @@ QString RemoteImageProvider::getCachedPath(const QString &id, const QSize &reque
 
 QImage RemoteImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
 {
-    qDebug() << "RemoteImageProvider::requestImage request id " << id
-             << " size " << size->width() << "," << size->height()
-             << " requestedSize " << requestedSize;
+    qDebug() << "RemoteImageProvider::requestImage request id" << id << " size " << size << " requestedSize " << requestedSize;
 
     if (id == "") {
         qDebug() << "RemoteImageProvider::requestImage id is empty.";
@@ -46,7 +31,7 @@ QImage RemoteImageProvider::requestImage(const QString &id, QSize *size, const Q
     }
 
     if (requestedSize.width() <= 0 || requestedSize.height() <= 0) {
-        qDebug() << "RemoteImageProvider::requestImage requestSize is invalid. " << requestedSize;
+        qDebug() << "RemoteImageProvider::requestImage requestSize is invalid." << requestedSize;
         return QImage();
     }
 
@@ -60,9 +45,8 @@ QImage RemoteImageProvider::requestImage(const QString &id, QSize *size, const Q
         return image;
     }
 
-    QNetworkAccessManager *manager = new QNetworkAccessManager();
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(id.toAscii())); // id is encoded url.
-    QNetworkReply *reply = manager->get(req);
+    QNetworkReply *reply = m_qnam->get(req);
     while (!reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
@@ -104,8 +88,8 @@ QImage RemoteImageProvider::requestImage(const QString &id, QSize *size, const Q
              << " requestedSize " << requestedSize
              << " image size " << image.size();
 
-    reply->deleteLater();
-    reply->manager()->deleteLater();
+    // Clean up.
+    if (reply != 0) reply->deleteLater();
 
     return image;
 }
