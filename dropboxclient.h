@@ -66,6 +66,8 @@ public:
     void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     void shareFile(QString nonce, QString uid, QString remoteFilePath);
     QString delta(QString nonce, QString uid, bool synchronous = false);
+    QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format = "jpeg", QString size = "s"); // format = {jpeg|png}, size = {xs|s|m|l|xl}
+    QString media(QString nonce, QString uid, QString remoteFilePath);
 
     QNetworkReply *property(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
@@ -79,8 +81,6 @@ public:
     QString filePutResumeUpload(QString nonce, QString uid, QIODevice * source, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
     QString filePutResumeStatus(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
     QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
-
-    QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format = "jpeg", QString size = "s"); // format = {jpeg|png}, size = {xs|s|m|l|xl}
 signals:
 
 public slots:
@@ -101,6 +101,7 @@ public slots:
     void filePutResumeReplyFinished(QNetworkReply *reply);
 
     QString deltaReplyFinished(QNetworkReply *reply);
+    QString mediaReplyFinished(QNetworkReply *reply);
 protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:

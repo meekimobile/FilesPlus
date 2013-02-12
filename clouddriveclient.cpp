@@ -329,6 +329,11 @@ QString CloudDriveClient::thumbnail(QString nonce, QString uid, QString remoteFi
     return "";
 }
 
+QString CloudDriveClient::media(QString nonce, QString uid, QString remoteFilePath)
+{
+    return "";
+}
+
 void CloudDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 {
     emit metadataReplySignal(nonce, -1, objectName() + " " + "Metadata", "Service is not implemented.");

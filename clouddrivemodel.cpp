@@ -2389,6 +2389,14 @@ QString CloudDriveModel::thumbnail(CloudDriveModel::ClientTypes type, QString ui
     return client->thumbnail(createNonce(), uid, remoteFilePath, format, size);
 }
 
+QString CloudDriveModel::media(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath)
+{
+    CloudDriveClient *client = getCloudClient(getClientType(type));
+    if (client == 0) return "";
+
+    return client->media(createNonce(), uid, remoteFilePath);
+}
+
 void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteParentPath, QString newRemoteFileName)
 {
     if (remoteFilePath == "") {
@@ -2475,7 +2483,7 @@ void CloudDriveModel::shareFile(CloudDriveModel::ClientTypes type, QString uid, 
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show cloud_wait.
-    m_isSyncingCache->remove(localFilePath);
+    clearConnectedRemoteDirtyCache(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 
     emit proceedNextJobSignal();

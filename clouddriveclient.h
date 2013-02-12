@@ -49,6 +49,9 @@ public:
     virtual void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     virtual void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     virtual void shareFile(QString nonce, QString uid, QString remoteFilePath);
+    virtual QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size);
+    virtual QString media(QString nonce, QString uid, QString remoteFilePath);
+    virtual QString delta(QString nonce, QString uid, bool synchronous = false);
 
     virtual QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
 
@@ -80,10 +83,6 @@ public:
      */
     virtual QString filePutResumeStatus(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
     virtual QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
-
-    virtual QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size);
-
-    virtual QString delta(QString nonce, QString uid, bool synchronous = false);
 signals:
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);

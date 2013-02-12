@@ -27,7 +27,7 @@ const QString DropboxClient::moveFileURI = "https://api.dropbox.com/1/fileops/mo
 const QString DropboxClient::copyFileURI = "https://api.dropbox.com/1/fileops/copy";
 const QString DropboxClient::deleteFileURI = "https://api.dropbox.com/1/fileops/delete";
 const QString DropboxClient::sharesURI = "https://api.dropbox.com/1/shares/%1%2";
-const QString DropboxClient::mediaURI = "https://api.dropbox.com/1/media/%1%2";
+const QString DropboxClient::mediaURI = "https://api.dropbox.com/1/media/%1%2"; // POST
 const QString DropboxClient::thumbnailURI = "https://api-content.dropbox.com/1/thumbnails/%1%2"; // GET with format and size.
 const QString DropboxClient::deltaURI = "https://api.dropbox.com/1/delta"; // POST
 const QString DropboxClient::chunkedUploadURI = "https://api-content.dropbox.com/1/chunked_upload"; // PUT with upload_id and offset.
@@ -490,6 +490,38 @@ QString DropboxClient::thumbnail(QString nonce, QString uid, QString remoteFileP
     return url;
 }
 
+QString DropboxClient::media(QString nonce, QString uid, QString remoteFilePath)
+{
+    qDebug() << "----- DropboxClient::media -----" << nonce << uid << remoteFilePath;
+
+    if (remoteFilePath.isEmpty()) {
+        qDebug() << "DropboxClient::media" << nonce << uid << "remoteFilePath is empty. Operation is aborted.";
+        return "";
+    }
+
+    QString uri = mediaURI.arg(dropboxRoot, remoteFilePath);
+//    uri = encodeURI(uri);
+    qDebug() << "DropboxClient::media uri " << uri;
+
+    QByteArray postData;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "POST", uri));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    QNetworkReply *reply = manager->post(req, postData);
+
+    while (!reply->isFinished()) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    // Emit signal and return replyBody.
+    return mediaReplyFinished(reply);
+}
+
 QString DropboxClient::getDefaultRemoteFilePath(const QString &localFilePath)
 {
     QRegExp rx("^([C-F])(:)(/.+)$");
@@ -714,7 +746,12 @@ void DropboxClient::deleteFile(QString nonce, QString uid, QString remoteFilePat
 
 void DropboxClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "----- DropboxClient::shareFile -----";
+    qDebug() << "----- DropboxClient::shareFile -----" << nonce << uid << remoteFilePath;
+
+    if (remoteFilePath.isEmpty()) {
+        emit shareFileReplySignal(nonce, -1, "remoteFilePath is empty.", "", "", 0);
+        return;
+    }
 
     // root dropbox(Full access) or sandbox(App folder access)
     QString uri = sharesURI.arg(dropboxRoot).arg(remoteFilePath);
@@ -722,7 +759,6 @@ void DropboxClient::shareFile(QString nonce, QString uid, QString remoteFilePath
     qDebug() << "DropboxClient::shareFile uri " << uri;
 
     QByteArray postData;
-    qDebug() << "postData" << postData;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -1560,6 +1596,30 @@ QString DropboxClient::deltaReplyFinished(QNetworkReply *reply)
     // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+}
+
+QString DropboxClient::mediaReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "DropboxClient::mediaReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    QScriptEngine engine;
+    QScriptValue sc;
+    QString url = "";
+    int expires = 0;
+
+    if (reply->error() == QNetworkReply::NoError) {
+        sc = engine.evaluate("(" + replyBody + ")");
+        url = sc.property("url").toString();
+        expires = -1;
+    }
+
+    // scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return url;
 }
 
 void DropboxClient::fileGetResumeReplyFinished(QNetworkReply *reply)
