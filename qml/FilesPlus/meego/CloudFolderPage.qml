@@ -528,7 +528,7 @@ Page {
         }
         clip: true
         focus: true
-        pressDelay: 100
+        pressDelay: 200
         model: cloudFolderModel
         delegate: cloudItemDelegate
         state: ""
@@ -715,7 +715,11 @@ Page {
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                     var showThumbnail = appInfo.getSettingBoolValue("CloudFolderPage.thumbnail.enabled", false);
                     if (showThumbnail && thumbnail && thumbnail != "") {
-                        return thumbnail;
+                        if (selectedCloudType == CloudDriveModel.Dropbox) {
+                            return "image://remote/" + thumbnail;
+                        } else {
+                            return thumbnail;
+                        }
                     } else {
                         return "photos_list.svg";
                     }

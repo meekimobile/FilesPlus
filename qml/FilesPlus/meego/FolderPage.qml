@@ -810,7 +810,7 @@ Page {
         }
         clip: true
         focus: true
-        pressDelay: 100
+        pressDelay: 200
         model: fsModel
         delegate: listItemDelegate
         state: ""
