@@ -719,7 +719,12 @@ Page {
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                     var showThumbnail = appInfo.getSettingBoolValue("CloudFolderPage.thumbnail.enabled", false);
                     if (showThumbnail && thumbnail && thumbnail != "") {
-                        return thumbnail;
+                        if (selectedCloudType == CloudDriveModel.Dropbox) {
+                            // TODO Dropbox's thumbnail url can't open with Image directly. Need to use RemoteImageProvider to download.
+                            return "image://remote/" + thumbnail;
+                        } else {
+                            return thumbnail;
+                        }
                     } else {
                         return "photos_list.svg";
                     }
@@ -760,6 +765,10 @@ Page {
                             } else {
                                 Qt.openUrlExternally(source);
                             }
+                        } else if (selectedCloudType == CloudDriveModel.Dropbox) {
+                            // TODO Request media to get and open URL.
+                            var url = cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
+                            Qt.openUrlExternally(url);
                         }
                     }
                 }

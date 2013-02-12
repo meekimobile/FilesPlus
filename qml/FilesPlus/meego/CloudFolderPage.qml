@@ -716,6 +716,7 @@ Page {
                     var showThumbnail = appInfo.getSettingBoolValue("CloudFolderPage.thumbnail.enabled", false);
                     if (showThumbnail && thumbnail && thumbnail != "") {
                         if (selectedCloudType == CloudDriveModel.Dropbox) {
+                            // TODO Dropbox's thumbnail url can't open with Image directly. Need to use RemoteImageProvider to download.
                             return "image://remote/" + thumbnail;
                         } else {
                             return thumbnail;
@@ -760,6 +761,10 @@ Page {
                             } else {
                                 Qt.openUrlExternally(source);
                             }
+                        } else if (selectedCloudType == CloudDriveModel.Dropbox) {
+                            // TODO Request media to get and open URL.
+                            var url = cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
+                            Qt.openUrlExternally(url);
                         }
                     }
                 }
