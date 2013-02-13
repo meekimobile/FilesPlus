@@ -264,8 +264,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 
     QDeclarativeEngine *engine = viewer.engine();
 #ifdef Q_OS_SYMBIAN
-    engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider("E:/temp/.fileplus"));
-    engine->addImageProvider(QLatin1String("remote"), new RemoteImageProvider("E:/temp/.fileplus"));
+    engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider("E:/temp/.filesplus"));
+    engine->addImageProvider(QLatin1String("remote"), new RemoteImageProvider("E:/temp/.filesplus"));
 #elif defined(Q_WS_HARMATTAN)
     engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider("/home/user/MyDocs/temp/.filesplus"));
     engine->addImageProvider(QLatin1String("remote"), new RemoteImageProvider("/home/user/MyDocs/temp/.filesplus"));
