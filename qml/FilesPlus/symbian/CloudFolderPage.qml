@@ -197,6 +197,15 @@ Page {
         }
     }
 
+    function refreshItem(remotePath) {
+        var i = cloudFolderModel.findIndexByRemotePath(remotePath);
+        console.debug("cloudFolderPage refreshItem i " + i);
+        if (i >= 0) {
+            var refreshFlag = cloudFolderModel.get(i).refreshFlag;
+            cloudFolderModel.setProperty(i, "refreshFlag", !refreshFlag);
+        }
+    }
+
     tools: ToolBarLayout {
         id: toolBarLayout
 
@@ -710,7 +719,7 @@ Page {
             actionIconSource: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath, cloudDriveModel.getCloudName(selectedCloudType), selectedUid) : ""
 
             // Override to support cloud items.
-            function getIconSource() {
+            function getIconSource(refreshFlag) {
                 var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
                 var viewableTextFileTypes = ["TXT", "HTML"];
 
@@ -719,9 +728,9 @@ Page {
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                     var showThumbnail = appInfo.getSettingBoolValue("CloudFolderPage.thumbnail.enabled", false);
                     if (showThumbnail && thumbnail && thumbnail != "") {
+                        // Dropbox's thumbnail url can't open with Image directly. Need to invoke cacheImage() or use RemoteImageProvider to download.
                         if (selectedCloudType == CloudDriveModel.Dropbox) {
-                            // TODO Dropbox's thumbnail url can't open with Image directly. Need to use RemoteImageProvider to download.
-                            return "image://remote/" + thumbnail;
+                            return "image://remote/" + thumbnail + "&t=" + (new Date()).getTime();
                         } else {
                             return thumbnail;
                         }
@@ -771,6 +780,12 @@ Page {
                             Qt.openUrlExternally(url);
                         }
                     }
+                }
+            }
+
+            onListItemIconError: {
+                if (selectedCloudType == CloudDriveModel.Dropbox) {
+                    cloudDriveModel.cacheImage(absolutePath, thumbnail, 48, 48);
                 }
             }
         }

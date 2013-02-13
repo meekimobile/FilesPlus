@@ -1302,6 +1302,7 @@ PageStackWindow {
                 "lastModified": (new Date()), "size": 0, "isDir": false,
                 "isDeleted": false,
                 "isConnected": false,
+                "refreshFlag": false,
                 "hash": "",
                 "children": []
             };
@@ -2096,6 +2097,17 @@ PageStackWindow {
             var p = findPage("folderPage");
             if (p) {
                 p.updateMigrationProgressSlot(type, uid, localFilePath, remoteFilePath, count, total);
+            }
+        }
+
+        onCacheImageFinished: {
+            console.debug("window cloudDriveModel onCacheImageFinished " + remoteFilePath + " " + err + " " + errMsg);
+            // Refresh item only if there is no error.
+            if (err == 0) {
+                var p = findPage("cloudFolderPage");
+                if (p) {
+                    p.refreshItem(remoteFilePath);
+                }
             }
         }
 

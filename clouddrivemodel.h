@@ -24,6 +24,7 @@
 #include "skydriveclient.h"
 #include "ftpclient.h"
 #include "webdavclient.h"
+#include "cacheimageworker.h"
 
 class CloudDriveModel : public QDeclarativeItem
 {
@@ -244,8 +245,8 @@ public:
 
     Q_INVOKABLE void disconnect(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
 
-    Q_INVOKABLE QString thumbnail(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString format, QString size);
-    Q_INVOKABLE void cacheImage(QString url, int w, int h);
+    Q_INVOKABLE QString thumbnail(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString format, QString size); // Never been used because DropboxClient already populated thumbnail URL internally.
+    Q_INVOKABLE void cacheImage(QString remoteFilePath, QString url, int w, int h);
     Q_INVOKABLE QString media(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
@@ -258,6 +259,7 @@ signals:
     void jobUpdatedSignal(QString nonce);
     void jobRemovedSignal(QString nonce);
     void refreshRequestSignal(QString nonce);
+    void cacheImageFinished(QString remoteFilePath, int err, QString errMsg);
 
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
@@ -409,7 +411,6 @@ private:
 
     // Create temp path for storing temporary downloaded file during migration.
     void createTempPath();
-    QString getCachedPath(const QString &id, const QSize &requestedSize);
 };
 
 #endif // CLOUDDRIVEMODEL_H

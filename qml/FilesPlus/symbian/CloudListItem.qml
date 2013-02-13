@@ -15,13 +15,16 @@ ListItem {
     property string listViewState: ""
     property alias listItemIconSource: listItemIcon.source
     property alias listItemIconAsynchronous: listItemIcon.asynchronous
+    property bool listItemIconBusyVisible: false
     property alias actionIconSource: cutCopyIcon.source
     property alias runningIconSource: runningIcon.source
     property alias syncIconSource: syncIcon.source
     property alias syncIconVisible: syncIcon.visible
     property bool inverted: window.platformInverted
 
-    function getIconSource() {
+    signal listItemIconError()
+
+    function getIconSource(refreshFlag) {
         var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
         var viewableTextFileTypes = ["TXT", "HTML"];
         
@@ -77,7 +80,21 @@ ListItem {
                 height: 48
                 fillMode: Image.PreserveAspectFit
                 anchors.centerIn: parent
-                source: appInfo.emptySetting+listItem.getIconSource()
+                source: appInfo.emptySetting+listItem.getIconSource(refreshFlag)
+
+                BusyIndicator {
+                    visible: listItemIconBusyVisible && (parent.status == Image.Loading || parent.status == Image.Error)
+                    running: visible
+                    width: parent.width
+                    height: parent.height
+                    anchors.centerIn: parent
+                }
+
+                onStatusChanged: {
+                    if (status == Image.Error) {
+                        listItemIconError();
+                    }
+                }
             }
         }
         Column {

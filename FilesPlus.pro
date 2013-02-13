@@ -90,7 +90,8 @@ SOURCES += main.cpp \
     sleeper.cpp \
     qftpwrapper.cpp \
     clouddriveclient.cpp \
-    webdavclient.cpp
+    webdavclient.cpp \
+    cacheimageworker.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -128,7 +129,8 @@ HEADERS += \
     sleeper.h \
     qftpwrapper.h \
     clouddriveclient.h \
-    webdavclient.h
+    webdavclient.h \
+    cacheimageworker.h
 
 OTHER_FILES += \
     qtc_packaging/debian_harmattan/rules \

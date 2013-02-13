@@ -12,6 +12,7 @@ public:
 
     QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize);
     QString getCachedPath(const QString &id, const QSize &requestedSize);
+    QImage getCachedImage(const QString &id, const QSize &requestedSize);
 private:
     QString m_cachePath;
     QSettings m_settings;
