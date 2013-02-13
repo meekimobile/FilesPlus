@@ -45,7 +45,7 @@ Page {
             id: openButton
             iconSource: (theme.inverted) ? "internet.svg" : "internet_inverted.svg"
             onClicked: {
-                Qt.openUrlExternally(url);
+                Qt.openUrlExternally(urlInput.text);
             }
         }
 
