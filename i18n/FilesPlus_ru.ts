@@ -2752,7 +2752,8 @@ FilesPlus сейчас закроется.
         <location line="+8"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+8"/>
         <source>Ignore WebDAV SSL self-signed certificate errors</source>
-        <translation>Игнорировать WebDAV SSL самозаверяющего ошибки сертификатов</translation>
+        <translatorcomment>Ignore WebDAV SSL certificate errors</translatorcomment>
+        <translation>Игнорировать WebDAV SSL ошибки сертификатов</translation>
     </message>
     <message>
         <source>Show thumbnail</source>
