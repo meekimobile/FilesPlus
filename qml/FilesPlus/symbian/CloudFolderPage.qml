@@ -767,8 +767,8 @@ Page {
                         // If file is running, disable preview.
                         if (isRunning) return;
 
+                        var viewableFileTypes = ["JPG", "PNG", "GIF", "SVG", "TXT", "TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
                         if (source && source != "") {
-                            var viewableFileTypes = ["JPG", "PNG", "GIF", "SVG", "TXT", "TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
                             if (viewableFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                                 appInfo.addToClipboard(source);
                                 pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
@@ -776,9 +776,14 @@ Page {
                                 Qt.openUrlExternally(source);
                             }
                         } else if (selectedCloudType == CloudDriveModel.Dropbox) {
-                            // TODO Request media to get and open URL.
+                            // Request media to get and open URL.
                             var url = cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
-                            Qt.openUrlExternally(url);
+                            if (viewableFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                                appInfo.addToClipboard(url);
+                                pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
+                            } else {
+                                Qt.openUrlExternally(url);
+                            }
                         }
                     }
                 }
