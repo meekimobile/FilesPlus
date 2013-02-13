@@ -4,7 +4,8 @@ import "Utility.js" as Utility
 
 ListItem {
     id: listItem
-    
+    height: appInfo.emptySetting+(appInfo.getSettingBoolValue("listItem.compact.enabled", false) ? 60 : 80)
+
     property string fileName: name
     property string filePath: absolutePath
     property string listViewState: ""

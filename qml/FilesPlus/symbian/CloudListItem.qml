@@ -4,7 +4,7 @@ import "Utility.js" as Utility
 
 ListItem {
     id: listItem
-    height: 70
+    height: appInfo.emptySetting+(appInfo.getSettingBoolValue("listItem.compact.enabled", false) ? 60 : 70)
 
     property int mouseX
     property int mouseY

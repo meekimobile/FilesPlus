@@ -758,8 +758,8 @@ Bitte klicken Sie auf &apos;OK&apos;, um fortzufahren.</translation>
         <translation>_Kopie</translation>
     </message>
     <message>
-        <location line="+465"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+466"/>
+        <location line="+466"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+467"/>
         <source>New folder</source>
         <translation>Neuer Ordner</translation>
     </message>
@@ -779,7 +779,7 @@ Bitte klicken Sie auf &apos;OK&apos;, um fortzufahren.</translation>
 <context>
     <name>CloudListItem</name>
     <message numerus="yes">
-        <location filename="../qml/FilesPlus/meego/CloudListItem.qml" line="+135"/>
+        <location filename="../qml/FilesPlus/meego/CloudListItem.qml" line="+136"/>
         <location filename="../qml/FilesPlus/symbian/CloudListItem.qml" line="+139"/>
         <source>%n dir(s)</source>
         <translation>
@@ -2507,8 +2507,8 @@ Link wird entfernt.</translation>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+242"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+249"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+248"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+255"/>
         <source>Cancel queued jobs</source>
         <translation>Abbrechen Aktivitäten in der Warteschlange</translation>
     </message>
@@ -2519,22 +2519,22 @@ Link wird entfernt.</translation>
         <translation>Synchronisieren Sie alle angeschlossenen Elemente</translation>
     </message>
     <message>
-        <location line="-194"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-200"/>
+        <location line="-200"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-206"/>
         <source>Settings</source>
         <translation>Einstellungen</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+200"/>
+        <location line="+207"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <location line="+206"/>
+        <location line="+213"/>
         <source>Logging (Debug)</source>
         <translation>Holzfällen (debuggen)</translation>
     </message>
     <message>
-        <location line="-199"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-205"/>
+        <location line="-206"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-212"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -2545,8 +2545,8 @@ FilesPlus ist nun beende.
 Bitte bestätigen Sie.</translation>
     </message>
     <message>
-        <location line="+182"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+188"/>
+        <location line="+188"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+194"/>
         <source>Show cloud print jobs</source>
         <translation>Zeige Wolke Druckaufträge</translation>
     </message>
@@ -2609,6 +2609,12 @@ Bitte bestätigen Sie.</translation>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Popup interval</source>
         <translation>Popup-Intervall</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Compact list item</source>
+        <translation>Compact Listenelement</translation>
     </message>
     <message>
         <location line="+2"/>

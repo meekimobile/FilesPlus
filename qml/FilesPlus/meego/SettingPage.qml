@@ -176,6 +176,12 @@ Page {
             group: "Personalization"
         }
         ListElement {
+            name: "listItem.compact.enabled"
+            title: ""
+            type: "switch"
+            group: "Personalization"
+        }
+        ListElement {
             name: "thumbnail.enabled"
             title: ""
             type: "switch"
@@ -248,6 +254,7 @@ Page {
         else if (name == "resetCache") return qsTr("Reset current folder cache") + appInfo.emptyStr;
         else if (name == "Theme.inverted") return qsTr("Theme") + appInfo.emptyStr;
         else if (name == "popup.timer.interval") return qsTr("Popup interval") + appInfo.emptyStr;
+        else if (name == "listItem.compact.enabled") return qsTr("Compact list item") + appInfo.emptyStr;
         else if (name == "locale") return languageModel.getLanguage(appInfo.getLocale(), appInfo.getSystemLocale()) + appInfo.emptyStr;
         else if (name == "thumbnail.enabled") return qsTr("Show thumbnail on local drive") + appInfo.emptyStr;
         else if (name == "CloudFolderPage.thumbnail.enabled") return qsTr("Show thumbnail on cloud drive") + appInfo.emptyStr;
