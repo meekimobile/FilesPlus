@@ -318,8 +318,14 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         <translation>Операции в облаке</translation>
     </message>
     <message>
-        <location line="+53"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveJobsPage.qml" line="+42"/>
+        <location line="+54"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveJobsPage.qml" line="+43"/>
+        <source>Stop</source>
+        <translation>Остановить</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveJobsPage.qml" line="+21"/>
         <source>Resume</source>
         <translation>Продолжать</translation>
     </message>
@@ -330,20 +336,16 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         <translation>Удалить</translation>
     </message>
     <message>
-        <location line="+20"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveJobsPage.qml" line="+20"/>
         <source>Resume job</source>
-        <translation>Продолжить заказ</translation>
+        <translation type="obsolete">Продолжить заказ</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveJobsPage.qml" line="+1"/>
         <source>Resume job %1?</source>
-        <translation>Продолжить заказ %1?</translation>
+        <translation type="obsolete">Продолжить заказ %1?</translation>
     </message>
     <message>
-        <location line="+53"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveJobsPage.qml" line="+55"/>
+        <location line="+62"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveJobsPage.qml" line="+64"/>
         <source>Error %1 %2</source>
         <translation>Ошибка %1 %2</translation>
     </message>
@@ -359,19 +361,19 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
 <context>
     <name>CloudDriveModel</name>
     <message>
-        <location filename="../clouddrivemodel.cpp" line="+763"/>
-        <location line="+52"/>
+        <location filename="../clouddrivemodel.cpp" line="+772"/>
+        <location line="+54"/>
         <source>Download</source>
         <translation>Скачать</translation>
     </message>
     <message>
-        <location line="-50"/>
-        <location line="+46"/>
+        <location line="-52"/>
+        <location line="+48"/>
         <source>Upload</source>
         <translation>Загрузить</translation>
     </message>
     <message>
-        <location line="-44"/>
+        <location line="-46"/>
         <source>Sync</source>
         <translation>Синхронизируйте</translation>
     </message>
@@ -448,6 +450,11 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
     </message>
     <message>
         <location line="+2"/>
+        <source>LoadCloudDriveJobs</source>
+        <translation>LoadCloudDriveJobs</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>InitializeDB</source>
         <translation>InitializeDB</translation>
     </message>
@@ -493,7 +500,7 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         <translation>Неверная операция</translation>
     </message>
     <message>
-        <location line="+1454"/>
+        <location line="+1453"/>
         <source>Service is not implemented.</source>
         <translation>Обслуживание не реализован.</translation>
     </message>
@@ -700,20 +707,16 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         <translation>Новая папка</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderMenu.qml" line="+9"/>
         <source>Sync connected items</source>
-        <translation>Синхр. выделен. элем.</translation>
+        <translation type="obsolete">Синхр. выделен. элем.</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderMenu.qml" line="+9"/>
         <source>Sync current folder</source>
-        <translation>Синхр. текущую папку</translation>
+        <translation type="obsolete">Синхр. текущую папку</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderMenu.qml" line="+9"/>
+        <location line="+27"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderMenu.qml" line="+27"/>
         <source>Set name filter</source>
         <translation>Фильтр по названию</translation>
     </message>
@@ -751,12 +754,12 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
 <context>
     <name>CloudFolderPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+469"/>
+        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+491"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
         <location line="+3"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+470"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+494"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
@@ -765,8 +768,8 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         <translation>_Копирование</translation>
     </message>
     <message>
-        <location line="+450"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+451"/>
+        <location line="+465"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+466"/>
         <source>New folder</source>
         <translation>Новая папка</translation>
     </message>
@@ -786,8 +789,8 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
 <context>
     <name>CloudListItem</name>
     <message numerus="yes">
-        <location filename="../qml/FilesPlus/meego/CloudListItem.qml" line="+119"/>
-        <location filename="../qml/FilesPlus/symbian/CloudListItem.qml" line="+121"/>
+        <location filename="../qml/FilesPlus/meego/CloudListItem.qml" line="+135"/>
+        <location filename="../qml/FilesPlus/symbian/CloudListItem.qml" line="+139"/>
         <source>%n dir(s)</source>
         <translation>
             <numerusform>%n папка</numerusform>
@@ -806,10 +809,29 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         </translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location filename="../qml/FilesPlus/symbian/CloudListItem.qml" line="+1"/>
         <source>last modified</source>
-        <translation>время даты</translation>
+        <translation type="obsolete">время даты</translation>
+    </message>
+</context>
+<context>
+    <name>CloudMenu</name>
+    <message>
+        <location filename="../qml/FilesPlus/meego/CloudMenu.qml" line="+20"/>
+        <location filename="../qml/FilesPlus/symbian/CloudMenu.qml" line="+15"/>
+        <source>Sync connected items</source>
+        <translation>Синхр. выделен. элем.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <location filename="../qml/FilesPlus/symbian/CloudMenu.qml" line="+8"/>
+        <source>Sync current folder</source>
+        <translation>Синхр. текущую папку</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <location filename="../qml/FilesPlus/symbian/CloudMenu.qml" line="+8"/>
+        <source>Show cloud drive jobs</source>
+        <translation>Показать заказы в CloudDrive</translation>
     </message>
 </context>
 <context>
@@ -952,8 +974,8 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
 <context>
     <name>DrivePage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/DrivePage.qml" line="+221"/>
-        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+221"/>
+        <location filename="../qml/FilesPlus/meego/DrivePage.qml" line="+222"/>
+        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+222"/>
         <source>Drives</source>
         <translation>Диски</translation>
     </message>
@@ -1321,10 +1343,10 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
     </message>
     <message>
         <location filename="../qml/FilesPlus/meego/FolderPage.qml" line="+35"/>
-        <location line="+736"/>
+        <location line="+757"/>
         <location line="+197"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+35"/>
-        <location line="+740"/>
+        <location line="+761"/>
         <location line="+197"/>
         <source>%1 is loaded.</source>
         <translation>%1 загружается.</translation>
@@ -1998,14 +2020,16 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>FtpClient</name>
     <message>
-        <location filename="../ftpclient.cpp" line="+66"/>
-        <location line="+140"/>
+        <location filename="../ftpclient.cpp" line="+60"/>
+        <location line="+102"/>
+        <location line="+81"/>
         <location line="+29"/>
+        <location line="+47"/>
         <source>%1 is not found.</source>
         <translation>%1 не найден.</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+21"/>
         <source>FTP doesn&apos;t support move command.</source>
         <translation>FTP не поддерживает MOVE запросу.</translation>
     </message>
@@ -2015,20 +2039,18 @@ And present in Pie view for easy understanding at glance.</source>
         <translation>FTP не поддерживает COPY запросу.</translation>
     </message>
     <message>
-        <location line="+114"/>
-        <location line="+314"/>
-        <location line="+6"/>
+        <location line="-182"/>
+        <location line="+305"/>
         <source>Can&apos;t put %1</source>
         <translation>Не удается загрузить %1</translation>
     </message>
     <message>
-        <location line="-144"/>
+        <location line="+176"/>
         <source>Specified remote path is empty.</source>
         <translation>Указанный путь пустой.</translation>
     </message>
     <message>
-        <location line="+99"/>
-        <location line="+6"/>
+        <location line="-583"/>
         <source>Can&apos;t get %1</source>
         <translation>Не удается скачать %1</translation>
     </message>
@@ -2064,20 +2086,16 @@ And present in Pie view for easy understanding at glance.</source>
         <translation>Новая папка / файл</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+9"/>
         <source>Sync connected items</source>
-        <translation>Синхр. выделен. элем.</translation>
+        <translation type="obsolete">Синхр. выделен. элем.</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+9"/>
         <source>Sync current folder</source>
-        <translation>Синхронизировать текущую папку</translation>
+        <translation type="obsolete">Синхронизировать текущую папку</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+9"/>
+        <location line="+27"/>
+        <location filename="../qml/FilesPlus/symbian/MainMenu.qml" line="+27"/>
         <source>Set name filter</source>
         <translation>Фильтр по названию</translation>
     </message>
@@ -2615,8 +2633,8 @@ Link will be removed.</source>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+236"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+243"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+242"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+249"/>
         <source>Cancel queued jobs</source>
         <translation>Отменить все заказы на печать</translation>
     </message>
@@ -2627,22 +2645,22 @@ Link will be removed.</source>
         <translation>Синхрон. всех выбр. элем</translation>
     </message>
     <message>
-        <location line="-188"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-194"/>
+        <location line="-194"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-200"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+194"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
         <location line="+200"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
+        <location line="+206"/>
         <source>Logging (Debug)</source>
         <translation>Сохранять данные в лог файл (Debug)</translation>
     </message>
     <message>
-        <location line="-193"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-199"/>
+        <location line="-199"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-205"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -2653,8 +2671,8 @@ FilesPlus сейчас закроется.
 Пожалуйста, согласитесь с закрытием.</translation>
     </message>
     <message>
-        <location line="+176"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+182"/>
+        <location line="+182"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+188"/>
         <source>Show cloud print jobs</source>
         <translation>Показать заказы CloudPrint</translation>
     </message>
@@ -2731,12 +2749,18 @@ FilesPlus сейчас закроется.
         <translation>Показать миниатюры на облачное хранилище</translation>
     </message>
     <message>
+        <location line="+8"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+8"/>
+        <source>Ignore WebDAV SSL self-signed certificate errors</source>
+        <translation>Игнорировать WebDAV SSL самозаверяющего ошибки сертификатов</translation>
+    </message>
+    <message>
         <source>Show thumbnail</source>
         <translation type="obsolete">Показать миниатюры</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <location line="-7"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-7"/>
         <source>Keep bluetooth off</source>
         <translatorcomment>Always turn off bluetooth</translatorcomment>
         <translation>Всегда выключайте Bluetooth</translation>
@@ -2772,8 +2796,8 @@ FilesPlus сейчас закроется.
         <translation>Показывает системного диска на диск страницы</translation>
     </message>
     <message>
-        <location line="+32"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+32"/>
+        <location line="+33"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+33"/>
         <source>Monitoring</source>
         <translation>Наблюдение</translation>
     </message>
@@ -2931,25 +2955,25 @@ FilesPlus сейчас закроется.
     <name>main</name>
     <message>
         <location filename="../qml/FilesPlus/meego/main.qml" line="+83"/>
-        <location line="+1741"/>
+        <location line="+1743"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+84"/>
-        <location line="+1741"/>
+        <location line="+1743"/>
         <source>Copy</source>
         <translation>Скопируйте</translation>
     </message>
     <message>
-        <location line="-1739"/>
-        <location line="+1775"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1739"/>
-        <location line="+1775"/>
+        <location line="-1741"/>
+        <location line="+1777"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1741"/>
+        <location line="+1777"/>
         <source>Move</source>
         <translation>Переместить</translation>
     </message>
     <message>
-        <location line="-1773"/>
-        <location line="+1807"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1773"/>
-        <location line="+1807"/>
+        <location line="-1775"/>
+        <location line="+1809"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1775"/>
+        <location line="+1809"/>
         <source>Delete</source>
         <translation>Удалить</translation>
     </message>
@@ -3007,19 +3031,19 @@ FilesPlus сейчас закроется.
         <location line="+311"/>
         <location line="+68"/>
         <location line="+257"/>
-        <location line="+1052"/>
+        <location line="+1068"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+31"/>
         <location line="+311"/>
         <location line="+68"/>
         <location line="+257"/>
-        <location line="+1052"/>
+        <location line="+1068"/>
         <source>%1 is loaded.</source>
         <translation>%1 загружается.</translation>
     </message>
     <message>
-        <location line="-1679"/>
+        <location line="-1695"/>
         <location line="+18"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1679"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1695"/>
         <location line="+18"/>
         <source>Quit</source>
         <translation>Выход</translation>
@@ -3268,8 +3292,8 @@ You will be redirected to authorization page.</source>
     <message>
         <location line="-413"/>
         <location line="+30"/>
-        <location line="+270"/>
-        <location line="+89"/>
+        <location line="+269"/>
+        <location line="+90"/>
         <location line="+44"/>
         <location line="+19"/>
         <location line="+36"/>
@@ -3285,12 +3309,13 @@ You will be redirected to authorization page.</source>
         <location line="+34"/>
         <location line="+39"/>
         <location line="+24"/>
-        <location line="+56"/>
+        <location line="+47"/>
+        <location line="+14"/>
         <location line="+28"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="-413"/>
         <location line="+30"/>
-        <location line="+270"/>
-        <location line="+89"/>
+        <location line="+269"/>
+        <location line="+90"/>
         <location line="+44"/>
         <location line="+19"/>
         <location line="+36"/>
@@ -3306,40 +3331,41 @@ You will be redirected to authorization page.</source>
         <location line="+34"/>
         <location line="+39"/>
         <location line="+24"/>
-        <location line="+56"/>
+        <location line="+47"/>
+        <location line="+14"/>
         <location line="+28"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location line="-1056"/>
-        <location line="+1192"/>
+        <location line="-1061"/>
+        <location line="+1208"/>
         <location line="+8"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1056"/>
-        <location line="+1192"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1061"/>
+        <location line="+1208"/>
         <location line="+8"/>
         <source>Printing</source>
         <translation>Печать</translation>
     </message>
     <message>
-        <location line="-937"/>
-        <location line="+120"/>
+        <location line="-954"/>
+        <location line="+121"/>
         <location line="+13"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-937"/>
-        <location line="+120"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-954"/>
+        <location line="+121"/>
         <location line="+13"/>
         <source>Access Token</source>
         <translation>Ключ доступа</translation>
     </message>
     <message>
-        <location line="-132"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-132"/>
+        <location line="-133"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-133"/>
         <source>PIN code is not found.</source>
         <translation>PIN-код не найден.</translation>
     </message>
     <message>
-        <location line="+88"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+88"/>
+        <location line="+89"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+89"/>
         <source>Request Token</source>
         <translation>Запрашиваем ключ доступа</translation>
     </message>
@@ -3435,16 +3461,24 @@ Link will be removed.</source>
         <translation>Изменений</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+47"/>
+        <location line="+14"/>
         <location line="+28"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+56"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+47"/>
+        <location line="+14"/>
         <location line="+28"/>
         <source>Migrate</source>
         <translation>Копировать</translation>
     </message>
     <message>
-        <location line="+200"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+200"/>
+        <location line="-41"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-41"/>
+        <source>Can&apos;t create folder. Migration is aborted.</source>
+        <translation>Невозможно создать папку. Копирование отменяется.</translation>
+    </message>
+    <message>
+        <location line="+252"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+252"/>
         <source>Share file on %1</source>
         <translation>Поделиться файлом через %1</translation>
     </message>
