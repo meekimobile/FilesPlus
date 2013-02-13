@@ -77,7 +77,7 @@ ListItem {
                 height: 48
                 fillMode: Image.PreserveAspectFit
                 anchors.centerIn: parent
-                source: appInfo.emptySetting+listItem.getIconSource(refreshFlag)
+                source: appInfo.emptySetting+listItem.getIconSource(false)
 
                 BusyIndicator {
                     visible: listItemIconBusyVisible && (parent.status == Image.Loading || parent.status == Image.Error)
