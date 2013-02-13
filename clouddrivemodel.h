@@ -291,7 +291,7 @@ signals:
 public slots:
     void proceedNextJob();
     void dispatchJob(const QString jobId);
-    void dispatchJob(const CloudDriveJob job);
+    void dispatchJob(CloudDriveJob job);
 
 //    void threadFinishedFilter();
 //    void loadCloudDriveItemsFilter(QString nonce);

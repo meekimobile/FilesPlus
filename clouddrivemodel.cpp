@@ -3584,7 +3584,7 @@ void CloudDriveModel::proceedNextJob() {
     // TODO Check retryCount before proceed.
     QString nonce = m_jobQueue->dequeue();
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
-    job.isRunning = true;
+//    job.isRunning = true; // It will be set by dispatchJob() invoked by thread.
     job.retryCount++;
     updateJob(job);
     // Increase runningJobCount.
@@ -3664,13 +3664,17 @@ void CloudDriveModel::dispatchJob(const QString jobId)
     dispatchJob(m_cloudDriveJobs->value(jobId));
 }
 
-void CloudDriveModel::dispatchJob(const CloudDriveJob job)
+void CloudDriveModel::dispatchJob(CloudDriveJob job)
 {
     // NOTE This method will be queued and invoked by main eventloop because CloudDriveModelThread.run() invoked as queue connection to its parent(CloudDriveModel).
     // Generalize cloud client.
     CloudDriveClient *cloudClient = getCloudClient(job.type);
 
     qDebug() << "CloudDriveModel::dispatchJob thread" << QThread::currentThread() << "job" << job.jobId << job.operation << getOperationName(job.operation) << job.type << (cloudClient == 0 ? "no client" : cloudClient->objectName());
+
+    // Update job status and emit signal to update UI.
+    job.isRunning = true;
+    updateJob(job);
 
     switch (job.operation) {
     case LoadCloudDriveItems:
