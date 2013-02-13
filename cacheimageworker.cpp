@@ -41,6 +41,10 @@ void CacheImageWorker::cacheImage(const QString &url, const QSize &requestedSize
     // Check if cached image is available.
     // 86400 secs = 1 day
     QFileInfo cachedFileInfo(getCachedPath(url, requestedSize));
+    // Create directory path if it's not exist.
+    if (!cachedFileInfo.dir().exists()) {
+        cachedFileInfo.dir().mkpath(cachedFileInfo.absolutePath());
+    }
     if (cachedFileInfo.exists()
             && cachedFileInfo.created().secsTo(QDateTime::currentDateTime()) < m_settings.value("image.cache.retention.seconds", QVariant(86400)).toInt()) {
         qDebug() << "CacheImageWorker::cacheImage cache exists" << cachedFileInfo.absoluteFilePath() << "size" << cachedFileInfo.size();

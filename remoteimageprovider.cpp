@@ -24,6 +24,10 @@ QImage RemoteImageProvider::getCachedImage(const QString &id, const QSize &reque
 {
     QImage image;
     QFileInfo cachedFileInfo(getCachedPath(id, requestedSize));
+    // Create directory path if it's not exist.
+    if (!cachedFileInfo.dir().exists()) {
+        cachedFileInfo.dir().mkpath(cachedFileInfo.absolutePath());
+    }
 
     QNetworkAccessManager *qnam = new QNetworkAccessManager();
     QNetworkRequest req(QUrl::fromEncoded(id.toAscii())); // id is encoded url.
