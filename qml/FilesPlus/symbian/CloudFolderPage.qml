@@ -767,6 +767,8 @@ Page {
                         // If file is running, disable preview.
                         if (isRunning) return;
 
+                        isBusy = true;
+
                         var viewableFileTypes = ["JPG", "PNG", "GIF", "SVG", "TXT", "TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
                         if (source && source != "") {
                             if (viewableFileTypes.indexOf(fileType.toUpperCase()) != -1) {
@@ -785,6 +787,8 @@ Page {
                                 Qt.openUrlExternally(url);
                             }
                         }
+
+                        isBusy = false;
                     }
                 }
             }
@@ -866,6 +870,8 @@ Page {
         }
 
         onPrintFile: {
+            isBusy = true;
+
             if (selectedCloudType == CloudDriveModel.Dropbox) {
                 // Request media to get and print URL.
                 var url = cloudDriveModel.media(selectedCloudType, selectedUid, srcFilePath);
@@ -873,6 +879,8 @@ Page {
             } else {
                 gcpClient.printURLSlot(srcFilePath);
             }
+
+            isBusy = false;
         }
 
         onSyncFile: {
