@@ -1609,6 +1609,7 @@ QString DropboxClient::mediaReplyFinished(QNetworkReply *reply)
     QString url = "";
     int expires = 0;
 
+    qDebug() << "DropboxClient::mediaReplyFinished nonce" << nonce << "replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {
         sc = engine.evaluate("(" + replyBody + ")");
         url = sc.property("url").toString();

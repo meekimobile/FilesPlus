@@ -872,12 +872,16 @@ Page {
         onPrintFile: {
             isBusy = true;
 
+            var url;
             if (selectedCloudType == CloudDriveModel.Dropbox) {
-                // Request media to get and print URL.
-                var url = cloudDriveModel.media(selectedCloudType, selectedUid, srcFilePath);
-                gcpClient.printURLSlot(url);
+                // Request media to get URL.
+                url = cloudDriveModel.media(selectedCloudType, selectedUid, srcFilePath);
             } else {
-                gcpClient.printURLSlot(srcFilePath);
+                // Get media URL.
+                url = cloudFolderModel.get(srcItemIndex).source;
+            }
+            if (url && url != "") {
+                gcpClient.printURLSlot(url);
             }
 
             isBusy = false;

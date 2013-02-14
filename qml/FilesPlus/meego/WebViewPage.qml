@@ -6,7 +6,7 @@ import "Utility.js" as Utility
 Page {
     id: webViewPage
 
-    property alias url: webView.url
+    property alias url: urlInput.text
 
     function pasteURL() {
         urlInput.text = appInfo.getFromClipboard();
@@ -15,7 +15,7 @@ Page {
             messageDialog.message = appInfo.emptyStr+qsTr("There is no URL in clipboard. Please copy a URL with web browser.");
             messageDialog.open();
         } else {
-            webView.url = urlInput.text;
+            webView.url = decodeURI(urlInput.text);
         }
     }
 
@@ -69,7 +69,7 @@ Page {
             iconSource: (theme.inverted) ? "print.svg" : "print_inverted.svg"
 
             onClicked: {
-                gcpClient.printURLSlot(webView.url);
+                gcpClient.printURLSlot(url);
 
                 // Clear clipboard.
                 appInfo.addToClipboard("");
@@ -134,14 +134,13 @@ Page {
 
         TextField {
             id: urlInput
-            text: webView.url
             anchors.fill: parent
             anchors.margins: 5
             Keys.onPressed: {
                 // console.debug("urlInput Keys.onPressed " + event.key + " Return " + Qt.Key_Return + " Enter " + Qt.Key_Enter);
                 if (event.key == Qt.Key_Return || event.key == Qt.Key_Enter) {
                     console.debug("urlInput Keys.onPressed text " + urlInput.text);
-                    webView.url = urlInput.text;
+                    webView.url = decodeURI(urlInput.text);
                     webView.focus = true;
                 }
             }
@@ -200,11 +199,12 @@ Page {
                 settings.javaEnabled: false
                 settings.javascriptEnabled: false
                 settings.pluginsEnabled: false
+                pressGrabTime: 500
 
-                onContentsSizeChanged: {
-                    console.debug("onContentsSizeChanged webView.contentsScale " + webView.contentsScale + " webView.contentsSize width height " + webView.contentsSize.width + " " + webView.contentsSize.height);
-                    height = Math.max(flickable.height, contentsSize.height);
-                }
+//                onContentsSizeChanged: {
+//                    console.debug("onContentsSizeChanged webView.contentsScale " + webView.contentsScale + " webView.contentsSize width height " + webView.contentsSize.width + " " + webView.contentsSize.height);
+//                    height = Math.max(flickable.height, contentsSize.height);
+//                }
 
                 onDoubleClick: {
                     console.debug("webViewPage webView onDoubleClick contentsScale " + contentsScale + " contentsSize " + contentsSize.width + "," + contentsSize.height);
