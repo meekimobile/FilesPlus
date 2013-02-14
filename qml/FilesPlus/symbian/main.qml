@@ -719,7 +719,7 @@ PageStackWindow {
         }
 
         Component.onCompleted: {
-            console.debug(Utility.nowText() + " folderPage favContactModel onCompleted");
+            console.debug(Utility.nowText() + " window favContactModel onCompleted");
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("ContactModel"), 0.1);
         }
     }
@@ -787,7 +787,7 @@ PageStackWindow {
         }
 
         Component.onCompleted: {
-            console.debug(Utility.nowText() + " folderPage btClient onCompleted");
+            console.debug(Utility.nowText() + " window btClient onCompleted");
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("BTClient"), 0.1);
 
             // Workaround for meego to initialize SelectionDialog height.
@@ -849,7 +849,7 @@ PageStackWindow {
             if (srcFilePath == "") return;
 
             if (gcpClient.getContentType(srcFilePath) == "") {
-                console.debug("folderPage printFileSlot File type is not supported. (" + srcFilePath + ")");
+                console.debug("window printFileSlot File type is not supported. (" + srcFilePath + ")");
 
                 messageDialog.titleText = appInfo.emptyStr+qsTr("Print Error");
                 messageDialog.message = appInfo.emptyStr+qsTr("Can't print %1\
@@ -868,7 +868,7 @@ PageStackWindow {
                 gcpClient.authorize();
             } else {
                 var printerListModel = gcpClient.getPrinterListModel();
-                console.debug("folderPage printFileSlot printerListModel.count=" + printerListModel.count);
+                console.debug("window printFileSlot printerListModel.count=" + printerListModel.count);
                 if (printerListModel.count > 0) {
                     showPrinterSelectionDialog(srcFilePath, "");
                 } else {
@@ -898,7 +898,7 @@ PageStackWindow {
                 gcpClient.authorize();
             } else {
                 var printerListModel = gcpClient.getPrinterListModel();
-                console.debug("folderPage printFileSlot printerListModel.count=" + printerListModel.count);
+                console.debug("gcpClient printFileSlot printerListModel.count=" + printerListModel.count);
                 if (printerListModel.count > 0) {
                     showPrinterSelectionDialog("", url);
                 } else {
@@ -918,12 +918,12 @@ PageStackWindow {
         }
 
         onAuthorizeRedirectSignal: {
-            console.debug("folderPage gcpClient onAuthorizeRedirectSignal " + url);
+            console.debug("window gcpClient onAuthorizeRedirectSignal " + url);
             pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: "GCPClient" }, true);
         }
 
         onAccessTokenReplySignal: {
-            console.debug("folderPage gcpClient onAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
+            console.debug("window gcpClient onAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
                 // Resume printing
@@ -934,7 +934,7 @@ PageStackWindow {
         }
 
         onRefreshAccessTokenReplySignal: {
-            console.debug("folderPage gcpClient onRefreshAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
+            console.debug("window gcpClient onRefreshAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
                 // Resume printing if selectedFilePath exists.
@@ -955,14 +955,14 @@ PageStackWindow {
         }
 
         onAccountInfoReplySignal: {
-            console.debug("folderPage gcpClient onAccountInfoReplySignal " + err + " " + errMsg + " " + msg);
+            console.debug("window gcpClient onAccountInfoReplySignal " + err + " " + errMsg + " " + msg);
 
             var jsonObj = Utility.createJsonObj(msg);
             console.debug("jsonObj.email " + jsonObj.email);
         }
 
         onSearchReplySignal: {
-            console.debug("folderPage gcpClient onSearchReplySignal " + err + " " + errMsg + " " + msg);
+            console.debug("window gcpClient onSearchReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
                 // Once search done, open printerSelectionDialog
@@ -974,7 +974,7 @@ PageStackWindow {
         }
 
         onSubmitReplySignal: {
-            console.debug("folderPage gcpClient onSubmitReplySignal " + err + " " + errMsg + " " + msg);
+            console.debug("window gcpClient onSubmitReplySignal " + err + " " + errMsg + " " + msg);
 
             // Notify submit result.
             var jsonObj = Utility.createJsonObj(msg);
@@ -1044,7 +1044,7 @@ PageStackWindow {
         }
 
         Component.onCompleted: {
-            console.debug(Utility.nowText() + " folderPage gcpClient onCompleted");
+            console.debug(Utility.nowText() + " window gcpClient onCompleted");
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("GCPClient"), 0.1);
         }
     }
@@ -1245,7 +1245,7 @@ PageStackWindow {
         }
 
         function accessTokenSlot(clientTypeName, pin) {
-            console.debug("folderPage accessTokenSlot clientTypeName " + clientTypeName + " pin " + pin);
+            console.debug("window accessTokenSlot clientTypeName " + clientTypeName + " pin " + pin);
             var clientType = getClientType(clientTypeName);
             if (pin == "" || pin == "PinNotFound") {
                 messageDialog.titleText =  appInfo.emptyStr+getCloudName(clientType)+" "+qsTr("Access Token");

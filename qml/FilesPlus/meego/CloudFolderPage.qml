@@ -814,13 +814,15 @@ Page {
         ringRadius: 80
         buttonRadius: 35
         timeout: appInfo.emptySetting+appInfo.getSettingValue("popup.timer.interval", 2) * 1000
-        disabledButtons: ["print","editFile","cloud","bluetooth"]
+        disabledButtons: ["editFile","cloud","bluetooth"]
 
         function isButtonVisibleCallback(buttonName) {
             if (buttonName === "sync") {
                 return cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, selectedFilePath);
             } else if (buttonName === "paste") {
                 return (clipboard.count > 0);
+            } else if (buttonName == "print") {
+                return !popupToolPanel.isDir;
             }
 
             return true;
@@ -857,6 +859,16 @@ Page {
             clipboard.clear();
             clipboard.addItem({ "action": "delete", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": sourcePath, "sourcePathName": selectedFileName });
             fileActionDialog.open();
+        }
+
+        onPrintFile: {
+            if (selectedCloudType == CloudDriveModel.Dropbox) {
+                // Request media to get and print URL.
+                var url = cloudDriveModel.media(selectedCloudType, selectedUid, srcFilePath);
+                gcpClient.printURLSlot(url);
+            } else {
+                gcpClient.printURLSlot(srcFilePath);
+            }
         }
 
         onSyncFile: {

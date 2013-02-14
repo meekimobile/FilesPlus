@@ -1152,6 +1152,8 @@ Page {
                 return fsModel.isFile(selectedFilePath);
             } else if (buttonName == "editFile") {
                 return fsModel.isFile(selectedFilePath);
+            } else if (buttonName == "print") {
+                return fsModel.isFile(selectedFilePath);
             }
 
             return true;
