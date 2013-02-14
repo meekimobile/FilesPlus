@@ -978,7 +978,11 @@ PageStackWindow {
             // Notify submit result.
             var jsonObj = Utility.createJsonObj(msg);
             var message = "";
-            if (err != 0) {
+            if (err == 0) {
+                // Do nothing.
+            } else if (err == 202) {
+                gcpClient.refreshAccessToken();
+            } else {
                 message = qsTr("Error") + " " + err + " " + errMsg + "\n";
             }
             message += jsonObj.message;
