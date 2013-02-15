@@ -1,7 +1,6 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
-import FolderSizeItemListModel 1.0
-import SystemInfoHelper 1.0
+import CloudDriveModel 1.0
 import "Utility.js" as Utility
 
 Page {
@@ -9,23 +8,30 @@ Page {
     tools: null
 
     property string name: "imageViewPage"
-    property alias model: imageGrid.model
+    property variant model
     property string fileName
+    property int selectedCloudType: -1
+    property string selectedUid: ""
+    property string selectedRemotePath: ""
+    property int selectedModelIndex: -1
     property bool showGrid: true
+    property bool inverted: !theme.inverted
+    property bool showTools: true
+    property real maxZoomFactor: 2
+    property variant viewableImageFileTypes: ["JPG", "PNG", "GIF", "SVG"];
 
     state: "grid"
     states: [
         State {
             name: "grid"
             PropertyChanges { target: imageViewPage; showGrid: true }
+            PropertyChanges { target: imageViewPage; showTools: true }
             PropertyChanges { target: imageGrid; visible: true }
             PropertyChanges { target: imageFlickView
                 fillMode: Image.PreserveAspectFit
                 source: ""
             }
-            PropertyChanges { target: imageFlick
-                visible: false
-            }
+            PropertyChanges { target: imageFlick; visible: false }
         },
         State {
             name: "flick"
@@ -37,27 +43,9 @@ Page {
                 height: imageFlick.height
                 sourceSize.width: 1280  // Requested size for LocalFileImageProvider
                 sourceSize.height: 1280  // Requested size for LocalFileImageProvider
-                source: "image://local/" + imageGrid.getViewFilePath()
+                source: imageGridModel.get(imageGrid.currentIndex).sourceUrl
             }
-            PropertyChanges { target: imageFlick;
-                visible: true
-            }
-        },
-        State {
-            name: "actual"
-            PropertyChanges { target: imageViewPage; showGrid: false }
-            PropertyChanges { target: imageGrid; visible: false }
-            PropertyChanges { target: imageFlickView
-                fillMode: Image.PreserveAspectFit
-                width: 1280
-                height: 1280
-                sourceSize.width: 1280  // Requested size for LocalFileImageProvider
-                sourceSize.height: 1280  // Requested size for LocalFileImageProvider
-                source: "image://local/" + imageGrid.getViewFilePath()
-            }
-            PropertyChanges { target: imageFlick;
-                visible: true
-            }
+            PropertyChanges { target: imageFlick; visible: true }
         }
     ]
 
@@ -66,29 +54,43 @@ Page {
         anchors.bottom: parent.bottom
         opacity: 0.5
         z: 2
-        visible: false
+        visible: showTools
         tools: ToolBarLayout {
-            ToolIcon {
+            ToolBarButton {
                 id: backButton
-                iconId: "toolbar-back"
+                buttonIconSource: "toolbar-back"
                 onClicked: {
                     pageStack.pop();
                 }
             }
 
-            ToolIcon {
+            ToolBarButton {
                 id: openButton
-                iconSource: (theme.inverted) ? "photos.svg" : "photos_inverted.svg"
+                buttonIconSource: (!inverted) ? "photos.svg" : "photos_inverted.svg"
                 onClicked: {
-                    Qt.openUrlExternally(helper.getUrl(imageGrid.getViewFilePath()));
+                    var imageSource = imageGrid.getViewFilePath();
+                    if (selectedCloudType != -1) {
+                        imageSource = imageGridModel.get(imageGrid.currentIndex).sourceUrl;
+                        Qt.openUrlExternally(imageSource);
+                    } else {
+                        imageSource = "file://" + imageGrid.getViewFilePath();
+                        Qt.openUrlExternally(imageSource);
+                    }
                 }
             }
 
-            ToolIcon {
+            ToolBarButton {
                 id: printButton
-                iconSource: (theme.inverted) ? "print.svg" : "print_inverted.svg"
+                buttonIconSource: (!inverted) ? "print.svg" : "print_inverted.svg"
                 onClicked: {
-                    gcpClient.printFileSlot(imageGrid.getViewFilePath(), -1);
+                    var imageSource;
+                    if (selectedCloudType != -1) {
+                        imageSource = imageGridModel.get(imageGrid.currentIndex).sourceUrl;
+                        gcpClient.printURLSlot(imageSource);
+                    } else {
+                        imageSource = imageGrid.getViewFilePath();
+                        gcpClient.printFileSlot(imageSource, -1);
+                    }
                 }
             }
         }
@@ -99,12 +101,11 @@ Page {
     }
 
     onStatusChanged: {
-        if (status == PageStatus.Active) {
-            fsModel.nameFilters = ["*.jpg", "*.png", "*.svg"];
-            fsModel.refreshDir("imageViewPage onStatusChanged", false);
-        } else if (status == PageStatus.Inactive) {
-            fsModel.nameFilters = [];
-            fsModel.refreshDir("imageViewPage onStatusChanged", false);
+        if (status == PageStatus.Active && imageGridModel.count <= 0) {
+            parseImageGridModel(model);
+            imageGrid.currentIndex = (selectedModelIndex < 0) ? 0 : selectedModelIndex;
+            imageLabelText.text = imageGridModel.get(imageGrid.currentIndex).name;
+            imageGrid.positionViewAtIndex(imageGrid.currentIndex, GridView.Contain);
         }
     }
 
@@ -117,8 +118,55 @@ Page {
         imageGrid.positionViewAtIndex(imageGrid.currentIndex, GridView.Contain);
     }
 
-    SystemInfoHelper {
-        id: helper
+    function parseImageGridModel(model) {
+        imageGridModel.clear();
+
+        var timestamp = (new Date()).getTime();
+
+        for (var i = 0; i < model.count; i++) {
+            var modelItem = model.get(i);
+            modelItem.timestamp = timestamp;
+            if (viewableImageFileTypes.indexOf(modelItem.fileType.toUpperCase()) != -1) {
+                if (modelItem.source) {
+                    // Remote image with source link.
+                    modelItem.sourceUrl = modelItem.source;
+                    modelItem.previewUrl = modelItem.preview;
+                } else if (modelItem.preview) {
+                    // TODO Figure out how to detect if it's cloud item.
+                    // NOTE Must not modify otiginal source, to keep original state.
+                    // Request media to get URL.
+                    modelItem.sourceUrl = cloudDriveModel.media(selectedCloudType, selectedUid, modelItem.absolutePath);
+                    modelItem.previewUrl = "image://remote/" + modelItem.preview;
+                } else if (modelItem.fileType.toUpperCase() == "SVG") {
+                    // Local SVG image.
+                    modelItem.sourceUrl = "file://" + modelItem.absolutePath;
+                    modelItem.previewUrl = "file://" + modelItem.absolutePath;
+                } else {
+                    // Local image.
+                    modelItem.sourceUrl = "image://local/" + modelItem.absolutePath;
+                    modelItem.previewUrl = "image://local/" + modelItem.absolutePath;
+                }
+                imageGridModel.append(modelItem);
+
+                // Find select index.
+                if (modelItem.absolutePath == selectedRemotePath) {
+                    selectedModelIndex = (imageGridModel.count - 1);
+                }
+            }
+        }
+    }
+
+    function isSupportedImageFormat(fileType) {
+        return (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1);
+    }
+
+    function refreshItem(absolutePath) {
+        var timestamp = (new Date()).getTime();
+        var i = imageGridModel.findIndexByAbsolutePath(absolutePath);
+        console.debug("imageViewPage refreshItem i " + i);
+        if (i >= 0) {
+            imageGridModel.setProperty(i, "timestamp", timestamp);
+        }
     }
 
     Rectangle {
@@ -129,7 +177,7 @@ Page {
         z: 2
         color: "black"
         opacity: 0.5
-        visible: false
+        visible: showTools
 
         Text {
             id: imageLabelText
@@ -143,14 +191,19 @@ Page {
         }
     }
 
-//    Timer {
-//        id: clickDelayTimer
-//        interval: 300
-//        running: false
-//        onTriggered: {
-//            imageLabel.visible = !imageLabel.visible;
-//        }
-//    }
+    ListModel {
+        id: imageGridModel
+
+        function findIndexByAbsolutePath(absolutePath) {
+            for (var i=0; i<imageGridModel.count; i++) {
+                if (imageGridModel.get(i).absolutePath == absolutePath) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+    }
 
     GridView {
         id: imageGrid
@@ -160,7 +213,7 @@ Page {
         cacheBuffer: cellWidth * 3
         flow: GridView.TopToBottom
         snapMode: GridView.SnapOneRow
-        model: fsModel
+        model: imageGridModel
         delegate: imageViewDelegate
         pressDelay: 200
 
@@ -176,7 +229,7 @@ Page {
         function getViewFilePath() {
             var i = imageGrid.getViewIndex();
             if (i > -1) {
-                return imageGrid.model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole);
+                return imageGrid.model.get(i).absolutePath;
             }
             return "";
         }
@@ -184,79 +237,49 @@ Page {
         function getViewFileName() {
             var i = imageGrid.getViewIndex();
             if (i > -1) {
-                return imageGrid.model.getProperty(i, FolderSizeItemListModel.NameRole);
+                return imageGrid.model.get(i).name;
             }
             return "";
-        }
-
-        function isSupportedImageFormat(fileType) {
-            var supportedFileType = ["JPG", "PNG", "SVG"];
-            return (supportedFileType.indexOf(fileType.toUpperCase()) != -1);
         }
 
         function getImageModelIndex(fileName) {
             // Model is set before it can finish filter only images. Find selected image position needs to be done with full list.
             var imageIndex = 0;
-            for (var i=0; i<imageGrid.model.count; i++) {
-                var isDir = imageGrid.model.getProperty(i, FolderSizeItemListModel.IsDirRole);
-                var fileType = imageGrid.model.getProperty(i, FolderSizeItemListModel.FileTypeRole);
-                var name = imageGrid.model.getProperty(i, FolderSizeItemListModel.NameRole);
-//                console.debug("ImageViewPage imageGrid getImageModelIndex " + i + " name " + name + " isDir " + isDir + " fileType " + fileType)
+            for (var i=0; i<model.count; i++) {
+                var modelItem = model.get(i);
 
                 // If item is dir or is not image, skip.
-                if (isDir || !isSupportedImageFormat(fileType.toUpperCase())) {
+                if (modelItem.isDir || !isSupportedImageFormat(modelItem.fileType.toUpperCase())) {
                     continue;
                 }
 
-                if (name == fileName) {
-                    console.debug("ImageViewPage imageGrid getImageModelIndex found " + i + " name " + name)
+                if (modelItem.name == fileName) {
+                    console.debug("imageViewPage imageGrid getImageModelIndex found " + i + " name " + modelItem.name)
                     return imageIndex;
                 }
 
                 imageIndex++;
             }
-//            console.debug("getImageModelIndex model.count " + model.count);
-//            console.debug("getImageModelIndex found index " + i);
+//            console.debug("imageViewPage getImageModelIndex model.count " + model.count);
+//            console.debug("imageViewPage getImageModelIndex found index " + i);
             return -1;
         }
 
-        Component.onCompleted: {
-            console.debug("imageGrid onCompleted");
-            // Model is not set, positionViewAtIndex() won't work.
-        }
-
-        onModelChanged: {
-            console.debug("imageGrid onModelChanged count " + model.count + " imageViewPage.fileName " + imageViewPage.fileName);
-            // GridView item is not set, positionViewAtIndex() won't work.
-            selectedIndex = getImageModelIndex(imageViewPage.fileName);
-            console.debug("imageGrid onModelChanged selectedIndex " + selectedIndex);
-        }
-
-        onWidthChanged: {
-//            console.debug("imageGrid onWidthChanged width " + width);
-//            console.debug("imageGrid onWidthChanged cellWidth " + cellWidth);
-        }
-
-        onHeightChanged: {
-//            console.debug("imageGrid onHeightChanged height " + height);
-//            console.debug("imageGrid onHeightChanged cellHeight " + cellHeight);
-        }
-
         onMovementEnded: {
-            imageGrid.currentIndex = viewIndex;
-//            console.debug("imageGrid onMovementEnded viewIndex " + viewIndex);
-//            console.debug("imageGrid onMovementEnded currentIndex " + currentIndex);
-//            console.debug("imageGrid onMovementEnded currentItem.width " + currentItem.width + " currentItem.height " + currentItem.height);
-//            console.debug("imageGrid onMovementEnded currentItem.sourceSize.width " + currentItem.sourceSize.width + " currentItem.sourceSize.height " + currentItem.sourceSize.height);
+            currentIndex = viewIndex;
+//            console.debug("imageViewPage imageGrid onMovementEnded viewIndex " + viewIndex);
+//            console.debug("imageViewPage imageGrid onMovementEnded currentIndex " + currentIndex);
+//            console.debug("imageViewPage imageGrid onMovementEnded currentItem.width " + currentItem.width + " currentItem.height " + currentItem.height);
+//            console.debug("imageViewPage imageGrid onMovementEnded currentItem.sourceSize.width " + currentItem.sourceSize.width + " currentItem.sourceSize.height " + currentItem.sourceSize.height);
             imageLabelText.text = getViewFileName();
         }
 
         onFlickEnded: {
-            imageGrid.currentIndex = viewIndex;
-//            console.debug("imageGrid onFlickEnded viewIndex " + viewIndex);
-//            console.debug("imageGrid onFlickEnded currentIndex " + currentIndex);
-//            console.debug("imageGrid onFlickEnded currentItem.width " + currentItem.width + " currentItem.height " + currentItem.height);
-//            console.debug("imageGrid onFlickEnded currentItem.sourceSize.width " + currentItem.sourceSize.width + " currentItem.sourceSize.height " + currentItem.sourceSize.height);
+            currentIndex = viewIndex;
+//            console.debug("imageViewPage imageGrid onFlickEnded viewIndex " + viewIndex);
+//            console.debug("imageViewPage imageGrid onFlickEnded currentIndex " + currentIndex);
+//            console.debug("imageViewPage imageGrid onFlickEnded currentItem.width " + currentItem.width + " currentItem.height " + currentItem.height);
+//            console.debug("imageViewPage imageGrid onFlickEnded currentItem.sourceSize.width " + currentItem.sourceSize.width + " currentItem.sourceSize.height " + currentItem.sourceSize.height);
             imageLabelText.text = getViewFileName();
         }
     }
@@ -266,26 +289,20 @@ Page {
 
         Image {
             id: imageView
-
-            property bool isImage: imageGrid.isSupportedImageFormat(fileType)
-
-            source: getImageSource()
+            source: getImageSource(previewUrl, timestamp) // NOTE It's populated while opening the page. Timestamp is used for force refreshing.
             asynchronous: true
+            cache: false
             sourceSize.width: (fileType.toUpperCase() == "SVG") ? undefined : imageGrid.cellWidth
             sourceSize.height: (fileType.toUpperCase() == "SVG") ? undefined : imageGrid.cellHeight
             width: imageGrid.cellWidth
             height: imageGrid.cellHeight
             fillMode: Image.PreserveAspectFit
 
-            function getImageSource() {
-                if (imageViewPage.status == PageStatus.Active && isImage) {
-                    if (fileType.toUpperCase() == "SVG") {
-                        return absolutePath;
-                    } else {
-                        return "image://local/" + absolutePath;
-                    }
+            function getImageSource(url, timestamp) {
+                if (url.indexOf("http") == 0) {
+                    return url + "#t=" + timestamp;
                 } else {
-                    return "";
+                    return url;
                 }
             }
 
@@ -295,92 +312,91 @@ Page {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
                 visible: (parent.progress < 1 && parent.status == Image.Loading)
-                running: visible
+                running: visible               
+            }
+
+            Text {
+                text: Math.floor(imageView.progress * 100) + "%"
+                font.pointSize: 16
+                color: "white"
+                anchors.centerIn: parent
+                visible: imageViewBusy.visible
             }
 
             onStatusChanged: {
                 if (status == Image.Null) {
-//                    console.debug("imageView onStatusChanged index " + index + " status " + status + " absolutePath " + absolutePath);
-//                    console.debug("imageView onStatusChanged imageGrid.currentIndex " + imageGrid.currentIndex);
-//                    console.debug("imageView onStatusChanged imageGrid.selectedIndex " + imageGrid.selectedIndex);
+//                    console.debug("imageViewPage imageView onStatusChanged index " + index + " status " + status + " absolutePath " + absolutePath);
+//                    console.debug("imageViewPage imageView onStatusChanged imageGrid.currentIndex " + imageGrid.currentIndex);
+//                    console.debug("imageViewPage imageView onStatusChanged imageViewPage.selectedModelIndex " + imageViewPage.selectedModelIndex);
                     // Issue: Position at index still not work if selected index is not covered by cache.
 
                     // Set currentIndex to skip image loading to selected image.
-                    if (imageGrid.currentIndex != imageGrid.selectedIndex) {
-                        imageGrid.currentIndex = imageGrid.selectedIndex;
-                        console.debug("imageView onStatusChanged set imageGrid.currentIndex " + imageGrid.currentIndex);
-                    }
-                }
-
-                if (status == Image.Ready) {
-//                    console.debug("imageView onStatusChanged index " + index + " status " + status + " absolutePath " + absolutePath);
-//                    console.debug("imageView onStatusChanged imageGrid.currentIndex " + imageGrid.currentIndex);
-//                    console.debug("imageView onStatusChanged imageGrid.selectedIndex " + imageGrid.selectedIndex);
-//                    console.debug("imageView onStatusChanged width " + width + " height " + height);
-//                    console.debug("imageView onStatusChanged sourceSize.width " + sourceSize.width + " sourceSize.height " + sourceSize.height);
-//                    console.debug("imageView onStatusChanged paintedWidth " + paintedWidth + " paintedHeight " + paintedHeight);
+//                    if (imageGrid.currentIndex != imageViewPage.selectedModelIndex) {
+//                        imageGrid.currentIndex = imageViewPage.selectedModelIndex;
+//                        console.debug("imageViewPage imageView onStatusChanged set imageGrid.currentIndex " + imageGrid.currentIndex);
+//                    }
+                } else if (status == Image.Ready) {
+//                    console.debug("imageViewPage imageView onStatusChanged index " + index + " status " + status + " absolutePath " + absolutePath);
+//                    console.debug("imageViewPage imageView onStatusChanged imageGrid.currentIndex " + imageGrid.currentIndex);
+//                    console.debug("imageViewPage imageView onStatusChanged imageViewPage.selectedModelIndex " + imageViewPage.selectedModelIndex);
+//                    console.debug("imageViewPage imageView onStatusChanged width " + width + " height " + height);
+//                    console.debug("imageViewPage imageView onStatusChanged sourceSize.width " + sourceSize.width + " sourceSize.height " + sourceSize.height);
+//                    console.debug("imageViewPage imageView onStatusChanged paintedWidth " + paintedWidth + " paintedHeight " + paintedHeight);
 
                     // Position selected image.
-                    if (index == imageGrid.currentIndex) {
-                        imageGrid.positionViewAtIndex(index, GridView.Contain);
-                        imageLabelText.text = name;
-                        console.debug("imageView onStatusChanged positionViewAtIndex index " + index);
-                    }
-
-                    // Show toolbar and label.
-                    if (!toolBar.visible) {
-                        toolBar.visible = true;
-                        imageLabel.visible = true;
+//                    if (index == imageGrid.currentIndex) {
+//                        imageGrid.positionViewAtIndex(index, GridView.Contain);
+//                        imageLabelText.text = name;
+//                        console.debug("imageViewPage imageView onStatusChanged positionViewAtIndex index " + index);
+//                    }
+                } else if (status == Image.Error) {
+                    var imageSource = imageView.source + "";
+                    if (imageSource.indexOf("image://remote/") == 0) {
+                        cloudDriveModel.cacheImage(absolutePath, preview, -1, -1, imageViewPage.name); // Use default preview size.
                     }
                 }
             }
 
-//            PinchArea {
-//                anchors.fill: parent
-//                pinch.dragAxis: Pinch.XandYAxis
+            function startFlickMode(centerX, centerY) {
+                // Send center, painted size to flick.
+                var left = (imageView.width / 2) - (imageView.paintedWidth / 2);
+                var right = (imageView.width / 2) + (imageView.paintedWidth / 2);
+                var top = (imageView.height / 2) - (imageView.paintedHeight / 2);
+                var bottom = (imageView.height / 2) + (imageView.paintedHeight / 2);
+                imageFlick.gridMouseX = centerX - left;
+                imageFlick.gridMouseY = centerY - top;
+                imageFlick.gridPaintedWidth = imageView.paintedWidth;
+                imageFlick.gridPaintedHeight = imageView.paintedHeight;
+                imageViewPage.state = "flick";
+            }
 
-//                onPinchStarted: {
-//                    console.debug("imageView onPinchStarted imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
+            PinchArea {
+                anchors.fill: parent
+                pinch.dragAxis: Pinch.XandYAxis
 
-//                    // TODO pinch cell image until finish, then show flick.
+                onPinchStarted: {
+                    console.debug("imageViewPage imageView onPinchStarted imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
 
-//                    // Send center, painted size to flick.
-//                    var left = (imageView.width / 2) - (imageView.paintedWidth / 2);
-//                    var right = (imageView.width / 2) + (imageView.paintedWidth / 2);
-//                    var top = (imageView.height / 2) - (imageView.paintedHeight / 2);
-//                    var bottom = (imageView.height / 2) + (imageView.paintedHeight / 2);
-//                    imageFlick.gridMouseX = (imageView.width / 2) - left;
-//                    imageFlick.gridMouseY = (imageView.height / 2) - top;
-//                    imageFlick.gridPaintedWidth = imageView.paintedWidth;
-//                    imageFlick.gridPaintedHeight = imageView.paintedHeight;
-//                    imageViewPage.state = "flick";
-//                }
+                    // TODO pinch cell image until finish, then show flick.
+                    // Send center, painted size to flick.
+                    startFlickMode(imageView.width / 2, imageView.height / 2);
+                }
 
-//                MouseArea {
-//                    anchors.fill: parent
+                MouseArea {
+                    anchors.fill: parent
 
-////                    onClicked: {
-////                        console.debug("imageView onClicked mouseX " + mouseX + " mouseY " + mouseY)
-////                        clickDelayTimer.restart();
-////                    }
+                    onClicked: {
+                        showTools = !showTools;
+                    }
 
-//                    onDoubleClicked: {
-//                        console.debug("imageView onDoubleClicked mouseX " + mouseX + " mouseY " + mouseY)
-//                        clickDelayTimer.stop();
+                    onDoubleClicked: {
+                        console.debug("imageViewPage imageView onDoubleClicked mouseX " + mouseX + " mouseY " + mouseY)
 
-//                        // TODO Send relative mouseX, mouseY, painted size to flick.
-//                        var left = (imageView.width / 2) - (imageView.paintedWidth / 2);
-//                        var right = (imageView.width / 2) + (imageView.paintedWidth / 2);
-//                        var top = (imageView.height / 2) - (imageView.paintedHeight / 2);
-//                        var bottom = (imageView.height / 2) + (imageView.paintedHeight / 2);
-//                        imageFlick.gridMouseX = mouseX - left;
-//                        imageFlick.gridMouseY = mouseY - top;
-//                        imageFlick.gridPaintedWidth = imageView.paintedWidth;
-//                        imageFlick.gridPaintedHeight = imageView.paintedHeight;
-//                        imageViewPage.state = "actual";
-//                    }
-//                }
-//            }
+                        // Send relative mouseX, mouseY, painted size to flick.
+                        startFlickMode(mouseX, mouseY);
+                    }
+                }
+            }
         }
     }
 
@@ -391,6 +407,7 @@ Page {
         height: parent.height
         contentWidth: imageFlickView.width
         contentHeight: imageFlickView.height
+        anchors.verticalCenter: parent.verticalCenter
 
         property int gridMouseX
         property int gridMouseY
@@ -403,19 +420,6 @@ Page {
         property int startWidth
         property int startHeight
 
-//        onVisibleChanged: {
-//            if (visible) {
-//                console.debug("-------------------onVisibleChanged---------------------");
-//                console.debug("imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
-//                console.debug("imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
-//                console.debug("imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
-//                console.debug("imageFlickView.fillMode " + imageFlickView.fillMode);
-//                console.debug("imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
-//                console.debug("imageFlickView.sourceSize.width " + imageFlickView.sourceSize.width + " imageFlickView.sourceSize.height " + imageFlickView.sourceSize.height);
-//                console.debug("imageFlickView.paintedWidth " + imageFlickView.paintedWidth + " imageFlickView.paintedHeight " + imageFlickView.paintedHeight);
-//            }
-//        }
-
         BusyIndicator {
             id: imageViewBusy
             style: BusyIndicatorStyle { size: "large" }
@@ -425,9 +429,28 @@ Page {
             running: visible
         }
 
+        Text {
+            text: Math.floor(imageFlickView.progress * 100) + "%"
+            font.pointSize: 16
+            color: "white"
+            anchors.centerIn: parent
+            visible: imageViewBusy.visible
+        }
+
         Image {
             id: imageFlickView
+            source: (imageGrid.currentIndex >= 0)
+                    ? getImageSource(imageGridModel.get(imageGrid.currentIndex).sourceUrl, imageGridModel.get(imageGrid.currentIndex).timestamp)
+                    : ""
             fillMode: Image.PreserveAspectFit
+
+            function getImageSource(url, timestamp) {
+                if (url.indexOf("http") == 0) {
+                    return url + "#t=" + timestamp;
+                } else {
+                    return url;
+                }
+            }
 
             onStatusChanged: {
                 if (status == Image.Ready && source != "") {
@@ -442,23 +465,29 @@ Page {
                     imageFlickView.width = imageFlickView.paintedWidth;
                     imageFlickView.height = imageFlickView.paintedHeight;
 
-                    console.debug("------------------onStatusChanged status " + status + " source " + source);
-                    console.debug("imageFlick.gridMouseX " + imageFlick.gridMouseX + " imageFlick.gridMouseY " + imageFlick.gridMouseY);
-                    console.debug("imageFlick.gridPaintedWidth " + imageFlick.gridPaintedWidth + " imageFlick.gridPaintedHeight " + imageFlick.gridPaintedHeight);
-                    console.debug("imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
-                    console.debug("imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
-                    console.debug("imageFlickView.fillMode " + imageFlickView.fillMode);
-                    console.debug("imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
-                    console.debug("imageFlickView.sourceSize.width " + imageFlickView.sourceSize.width + " imageFlickView.sourceSize.height " + imageFlickView.sourceSize.height);
-                    console.debug("imageFlickView.paintedWidth " + imageFlickView.paintedWidth + " imageFlickView.paintedHeight " + imageFlickView.paintedHeight);
+                    console.debug("imageViewPage ------------------onStatusChanged status " + status + " source " + source);
+                    console.debug("imageViewPage imageFlick.gridMouseX " + imageFlick.gridMouseX + " imageFlick.gridMouseY " + imageFlick.gridMouseY);
+                    console.debug("imageViewPage imageFlick.gridPaintedWidth " + imageFlick.gridPaintedWidth + " imageFlick.gridPaintedHeight " + imageFlick.gridPaintedHeight);
+                    console.debug("imageViewPage imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
+                    console.debug("imageViewPage imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
+                    console.debug("imageViewPage imageFlickView.fillMode " + imageFlickView.fillMode);
+                    console.debug("imageViewPage imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
+                    console.debug("imageViewPage imageFlickView.sourceSize.width " + imageFlickView.sourceSize.width + " imageFlickView.sourceSize.height " + imageFlickView.sourceSize.height);
+                    console.debug("imageViewPage imageFlickView.paintedWidth " + imageFlickView.paintedWidth + " imageFlickView.paintedHeight " + imageFlickView.paintedHeight);
 
                     // Set center from dblclick zoom.
                     var actualCenterX = imageFlick.gridMouseX * (imageFlick.contentWidth / imageFlick.gridPaintedWidth);
                     var actualCenterY = imageFlick.gridMouseY * (imageFlick.contentHeight / imageFlick.gridPaintedHeight);
-                    console.debug("imageFlickView onStatusChanged actualCenterX " + actualCenterX + " actualCenterY " + actualCenterY);
+                    console.debug("imageViewPage imageFlickView onStatusChanged actualCenterX " + actualCenterX + " actualCenterY " + actualCenterY);
                     imageFlick.contentX = actualCenterX - (imageFlick.width / 2);
                     imageFlick.contentY = actualCenterY - (imageFlick.height / 2);
-                    console.debug("imageFlickView onStatusChanged imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
+                    console.debug("imageViewPage imageFlickView onStatusChanged imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
+                } else if (status == Image.Error) {
+                    var imageSource = imageFlickView.source + "";
+                    if (imageSource.indexOf("image://remote/") == 0) {
+                        var currentItem = imageGridModel.get(imageGrid.currentIndex);
+                        cloudDriveModel.cacheImage(currentItem.absolutePath, currentItem.source, -1, -1, imageViewPage.name); // Use original size.
+                    }
                 }
             }
 
@@ -468,39 +497,39 @@ Page {
                 pinch.dragAxis: Pinch.XandYAxis
 
                 onPinchStarted: {
-                    console.debug("imagePinchArea onPinchStarted");
-                    console.debug("imagePinchArea onPinchStarted imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
+                    console.debug("imageViewPage imagePinchArea onPinchStarted");
+                    console.debug("imageViewPage imagePinchArea onPinchStarted imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
                     imageViewPage.state = "flick";
                     imageFlick.startWidth = imageFlickView.width;
                     imageFlick.startHeight = imageFlickView.height;
                     imageFlick.startX = imageFlick.contentX + (imageFlick.width / 2);
                     imageFlick.startY = imageFlick.contentY + (imageFlick.height / 2);
-                    console.debug("imagePinchArea onPinchStarted imageFlick.startWidth " + imageFlick.startWidth + " imageFlick.startHeight " + imageFlick.startHeight);
-                    console.debug("imagePinchArea onPinchStarted imageFlick.startX " + imageFlick.startX + " imageFlick.startY " + imageFlick.startY);
+                    console.debug("imageViewPage imagePinchArea onPinchStarted imageFlick.startWidth " + imageFlick.startWidth + " imageFlick.startHeight " + imageFlick.startHeight);
+                    console.debug("imageViewPage imagePinchArea onPinchStarted imageFlick.startX " + imageFlick.startX + " imageFlick.startY " + imageFlick.startY);
                 }
                 onPinchFinished: {
-                    console.debug("imagePinchArea onPinchFinished");
-                    console.debug("imagePinchArea onPinchFinished imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
-                    console.debug("imagePinchArea onPinchFinished imageFlickView.sourceSize.width " + imageFlickView.sourceSize.width + " imageFlickView.sourceSize.height " + imageFlickView.sourceSize.height);
-                    console.debug("imagePinchArea onPinchFinished imageFlickView.paintedWidth " + imageFlickView.paintedWidth + " imageFlickView.paintedHeight " + imageFlickView.paintedHeight);
-                    console.debug("imagePinchArea onPinchFinished imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
-                    console.debug("imagePinchArea onPinchFinished imageFlick.gridPaintedWidth " + imageFlick.gridPaintedWidth + " imageFlick.gridPaintedHeight " + imageFlick.gridPaintedHeight);
-                    console.debug("imagePinchArea onPinchFinished imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
+                    console.debug("imageViewPage imagePinchArea onPinchFinished");
+                    console.debug("imageViewPage imagePinchArea onPinchFinished imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
+                    console.debug("imageViewPage imagePinchArea onPinchFinished imageFlickView.sourceSize.width " + imageFlickView.sourceSize.width + " imageFlickView.sourceSize.height " + imageFlickView.sourceSize.height);
+                    console.debug("imageViewPage imagePinchArea onPinchFinished imageFlickView.paintedWidth " + imageFlickView.paintedWidth + " imageFlickView.paintedHeight " + imageFlickView.paintedHeight);
+                    console.debug("imageViewPage imagePinchArea onPinchFinished imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
+                    console.debug("imageViewPage imagePinchArea onPinchFinished imageFlick.gridPaintedWidth " + imageFlick.gridPaintedWidth + " imageFlick.gridPaintedHeight " + imageFlick.gridPaintedHeight);
+                    console.debug("imageViewPage imagePinchArea onPinchFinished imageFlick.width " + imageFlick.width + " imageFlick.height " + imageFlick.height);
 
                     // Adjust size.
                     if (imageFlickView.width < imageFlick.gridPaintedWidth || imageFlickView.height < imageFlick.gridPaintedHeight) {
                         // Issue: gridW,H should keep original grid size.
                         imageFlickView.width = imageFlick.gridPaintedWidth;
                         imageFlickView.height = imageFlick.gridPaintedHeight
-                    } else if (imageFlickView.width > imageFlickView.sourceSize.width || imageFlickView.height > imageFlickView.sourceSize.height) {
-                        imageFlickView.width = imageFlickView.sourceSize.width;
-                        imageFlickView.height = imageFlickView.sourceSize.height;
+                    } else if (imageFlickView.width > imageFlickView.sourceSize.width * maxZoomFactor || imageFlickView.height > imageFlickView.sourceSize.height * maxZoomFactor) {
+                        imageFlickView.width = imageFlickView.sourceSize.width * maxZoomFactor;
+                        imageFlickView.height = imageFlickView.sourceSize.height * maxZoomFactor;
                     }
 
                     imageFlick.contentWidth = imageFlickView.width;
                     imageFlick.contentHeight = imageFlickView.height;
-                    console.debug("imagePinchArea onPinchFinished after imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
-                    console.debug("imagePinchArea onPinchFinished after imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
+                    console.debug("imageViewPage imagePinchArea onPinchFinished after imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
+                    console.debug("imageViewPage imagePinchArea onPinchFinished after imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
 
                     // Show grid if width or height of image fit to flick view.
                     if (imageFlickView.width == imageFlick.width || imageFlickView.height == imageFlick.height) {
@@ -510,15 +539,15 @@ Page {
                     // Set center.
                     var actualCenterX = imageFlick.startX * (imageFlickView.width / imageFlick.startWidth);
                     var actualCenterY = imageFlick.startY * (imageFlickView.height / imageFlick.startHeight);
-                    console.debug("imagePinchArea onPinchFinished imageFlick.startX " + imageFlick.startX + " imageFlick.startY " + imageFlick.startY);
-                    console.debug("imagePinchArea onPinchFinished actualCenterX " + actualCenterX + " actualCenterY " + actualCenterY);
+                    console.debug("imageViewPage imagePinchArea onPinchFinished imageFlick.startX " + imageFlick.startX + " imageFlick.startY " + imageFlick.startY);
+                    console.debug("imageViewPage imagePinchArea onPinchFinished actualCenterX " + actualCenterX + " actualCenterY " + actualCenterY);
 
                     imageFlick.contentX = actualCenterX - (imageFlick.width / 2);
                     imageFlick.contentY = actualCenterY - (imageFlick.height / 2);
-                    console.debug("imagePinchArea onPinchFinished imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
+                    console.debug("imageViewPage imagePinchArea onPinchFinished imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
                 }
                 onPinchUpdated: {
-                    console.debug("imagePinchArea onPinchUpdated pinch.scale " + pinch.scale);
+                    console.debug("imageViewPage imagePinchArea onPinchUpdated pinch.scale " + pinch.scale);
 
                     // Image can be shrink to smaller than fit size. it will be enlarged back to fit.
                     // Image can be enlarged to larger than actual size. it will be shrink back to actual.
@@ -529,31 +558,29 @@ Page {
 
                     imageFlick.contentWidth = imageFlickView.width;
                     imageFlick.contentHeight = imageFlickView.height;
-                    console.debug("imagePinchArea onPinchUpdated imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
-                    console.debug("imagePinchArea onPinchUpdated imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
+                    console.debug("imageViewPage imagePinchArea onPinchUpdated imageFlickView.width " + imageFlickView.width + " imageFlickView.height " + imageFlickView.height);
+                    console.debug("imageViewPage imagePinchArea onPinchUpdated imageFlick.contentWidth " + imageFlick.contentWidth + " imageFlick.contentHeight " + imageFlick.contentHeight);
 
                     // Set center.
                     var actualCenterX = imageFlick.startX * (imageFlickView.width / imageFlick.startWidth);
                     var actualCenterY = imageFlick.startY * (imageFlickView.height / imageFlick.startHeight);
-                    console.debug("imagePinchArea onPinchUpdated imageFlick.startX " + imageFlick.startX + " imageFlick.startY " + imageFlick.startY);
-                    console.debug("imagePinchArea onPinchUpdated actualCenterX " + actualCenterX + " actualCenterY " + actualCenterY);
+                    console.debug("imageViewPage imagePinchArea onPinchUpdated imageFlick.startX " + imageFlick.startX + " imageFlick.startY " + imageFlick.startY);
+                    console.debug("imageViewPage imagePinchArea onPinchUpdated actualCenterX " + actualCenterX + " actualCenterY " + actualCenterY);
 
                     imageFlick.contentX = actualCenterX - (imageFlick.width / 2);
                     imageFlick.contentY = actualCenterY - (imageFlick.height / 2);
-                    console.debug("imagePinchArea onPinchUpdated imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
+                    console.debug("imageViewPage imagePinchArea onPinchUpdated imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
                 }
 
                 MouseArea {
                     anchors.fill: parent
 
-//                    onClicked: {
-//                        console.debug("imageFlick onClicked");
-//                        clickDelayTimer.restart();
-//                    }
+                    onClicked: {
+                        showTools = !showTools;
+                    }
 
                     onDoubleClicked: {
-                        console.debug("imageFlick onDoubleClicked");
-                        clickDelayTimer.stop();
+                        console.debug("imageViewPage imageFlick onDoubleClicked");
                         imageViewPage.state = "grid";
                     }
                 }

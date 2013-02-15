@@ -152,9 +152,18 @@ Page {
         width: parent.width
         height: parent.height - urlPanel.height
         contentWidth: webView.width
-        contentHeight: webView.implicitHeight
+        contentHeight: webView.height
         anchors.top: urlPanel.bottom
         pressDelay: 200
+        boundsBehavior: Flickable.StopAtBounds
+
+//        onContentXChanged: {
+//            console.debug("webViewPage flickable onContentXChanged " + contentX);
+//        }
+
+//        onContentYChanged: {
+//            console.debug("webViewPage flickable onContentYChanged " + contentY);
+//        }
 
         PinchArea {
             id: webPinchArea
@@ -162,21 +171,47 @@ Page {
             anchors.fill: parent
             pinch.dragAxis: Pinch.NoDrag
 
+            property real startContentX
+            property real startContentY
+            property real deltaCenterX
+            property real deltaCenterY
+
             onPinchStarted: {
-                console.debug("webPinchArea onPinchStarted webView.contentsScale " + webView.contentsScale + " center " + pinch.center.x + "," + pinch.center.y);
+                console.debug("webPinchArea onPinchStarted webView.contentsScale " + webView.contentsScale +
+                              " webView.contentsSize " + webView.contentsSize.width + "," + webView.contentsSize.height);
+                startContentX = flickable.contentX;
+                startContentY = flickable.contentY;
+                deltaCenterX = pinch.startCenter.x - (webView.contentsSize.width / 2);
+                deltaCenterY = pinch.startCenter.y - (webView.contentsSize.height / 2);
             }
             onPinchUpdated: {
                 // Update scale.
                 var deltaScale = (pinch.scale - pinch.previousScale);
-                console.debug("webPinchArea onPinchUpdated webView.contentsScale " + webView.contentsScale + " pinch.scale " + pinch.scale + " prev " + pinch.previousScale + " delta " + deltaScale);
                 webView.contentsScale += deltaScale;
+                console.debug("webPinchArea onPinchUpdated webView.contentsScale " + webView.contentsScale +
+                              " pinch.scale " + pinch.scale + " pinch.previousScale " + pinch.previousScale + " deltaScale " + deltaScale +
+                              " webView.contentsSize " + webView.contentsSize.width + "," + webView.contentsSize.height +
+                              " center " + pinch.center.x + "," + pinch.center.y +
+                              " previousCenter " + pinch.previousCenter.x + "," + pinch.previousCenter.y +
+                              " startCenter " + pinch.startCenter.x + "," + pinch.startCenter.y);
                 // Center pinch.
-                console.debug("webPinchArea onPinchUpdated webView.contentsScale " + webView.contentsScale + " webView.contentsSize " + webView.contentsSize.width + "," + webView.contentsSize.height + " center " + pinch.center.x + "," + pinch.center.y + " startCenter " + pinch.startCenter.x + "," + pinch.startCenter.y);
-                var dx = (webView.contentsSize.width / webView.contentsScale) * deltaScale / 2;
-                var dy = (webView.contentsSize.height / webView.contentsScale) * deltaScale / 2;
-                console.debug("webPinchArea onPinchFinished dScale " + deltaScale + " dx,dy " + dx + "," + dy);
-                flickable.contentX += dx;
-                flickable.contentY += dy;
+//                var dx = (webView.contentsSize.width / webView.contentsScale) * deltaScale / 2;
+//                var dy = (webView.contentsSize.height / webView.contentsScale) * deltaScale / 2;
+//                var dx = deltaCenterX * pinch.scale - deltaCenterX * pinch.previousScale;
+//                var dy = deltaCenterY * pinch.scale - deltaCenterY * pinch.previousScale;
+//                console.debug("webPinchArea onPinchUpdated dx,dy " + dx + "," + dy);
+//                // TODO Calculate content X,Y.
+//                flickable.contentX -= dx;
+//                flickable.contentY -= dy;
+//                flickable.contentX = startContentX - dx;
+//                flickable.contentY = startContentY - dy;
+//                flickable.contentX += pinch.center.x - pinch.previousCenter.x; // NOTE center always get updated once flickable.contentX,Y changed.
+//                flickable.contentY += pinch.center.y - pinch.previousCenter.y; // NOTE center always get updated once flickable.contentX,Y changed.
+//                flickable.contentX = pinch.center.x - deltaStartCenterX;
+//                flickable.contentY = pinch.center.y - deltaStartCenterY;
+//                flickable.contentX = startContentX + (pinch.center.x - pinch.startCenter.x); // NOTE center always get updated once flickable.contentX,Y changed.
+//                flickable.contentY = startContentY + (pinch.center.y - pinch.startCenter.y); // NOTE center always get updated once flickable.contentX,Y changed.
+                console.debug("webPinchArea onPinchUpdated flickable.contentX " + flickable.contentX + " flickable.contentY " + flickable.contentY);
             }
             onPinchFinished: {
                 var fitZoom = flickable.width / (webView.contentsSize.width / webView.contentsScale);
@@ -185,9 +220,9 @@ Page {
                     // Scale too small back to fit page width.
                     webView.contentsScale = fitZoom;
                     console.debug("webPinchArea onPinchFinished scale to fit. webView.contentsScale " + webView.contentsScale);
-                    // Reset to origin if it's less.
-                    flickable.contentX = Math.max(0, flickable.contentX);
-                    flickable.contentY = Math.max(0, flickable.contentY);
+                    // Reset to origin.
+                    flickable.contentX = 0;
+                    flickable.contentY = 0;
                 }
             }
 
@@ -201,23 +236,18 @@ Page {
                 settings.pluginsEnabled: false
                 pressGrabTime: 500
 
-//                onContentsSizeChanged: {
-//                    console.debug("onContentsSizeChanged webView.contentsScale " + webView.contentsScale + " webView.contentsSize width height " + webView.contentsSize.width + " " + webView.contentsSize.height);
-//                    height = Math.max(flickable.height, contentsSize.height);
-//                }
-
                 onDoubleClick: {
                     console.debug("webViewPage webView onDoubleClick contentsScale " + contentsScale + " contentsSize " + contentsSize.width + "," + contentsSize.height);
-                    var zoom = flickable.width / contentsSize.width;
-                    console.debug("webViewPage webView onDoubleClick zoom " + zoom);
+                    var fitZoom = flickable.width / (webView.contentsSize.width / webView.contentsScale);
+                    console.debug("webViewPage webView onDoubleClick fitZoom " + fitZoom);
                     var r = heuristicZoom(clickX, clickY, 2.5);
                     console.debug("webViewPage webView onDoubleClick heuristicZoom " + r);
                     if (contentsScale >= 1) {
-                        contentsScale = zoom * contentsScale;
+                        contentsScale = fitZoom * contentsScale;
                     } else {
                         contentsScale = 1;
                     }
-                    console.debug("webViewPage webView onDoubleClick done contentsScale " + contentsScale + " contentsSize " + contentsSize.width + "," + contentsSize.height);
+                    console.debug("webViewPage webView onDoubleClick done contentsScale " + contentsScale + " contentsSize " + contentsSize.width + "," + contentsSize.height + " width,height " + width + "," + height);
                 }
 
                 onLoadStarted: {

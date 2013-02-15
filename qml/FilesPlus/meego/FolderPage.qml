@@ -1050,8 +1050,9 @@ Page {
                         var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
                         var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
                         if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                            // TODO Populate ImageViewModel with mediaUrl = image://local/...
                             pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
-                                           { fileName: name });
+                                           { fileName: name, model: fsModel });
                         } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
                                            { filePath: absolutePath, fileName: name });

@@ -9,16 +9,17 @@ class CacheImageWorker : public QObject, public QRunnable
 {
     Q_OBJECT
 public:
-    CacheImageWorker(const QString remoteFilePath, const QString url, const QSize &requestedSize, const QString cachePath);
+    CacheImageWorker(const QString remoteFilePath, const QString url, const QSize &requestedSize, const QString cachePath, const QString caller);
 
     void run();
 signals:
-    void cacheImageFinished(QString remoteFilePath, int err, QString errMsg);
+    void cacheImageFinished(QString remoteFilePath, int err, QString errMsg, QString caller);
 private:
     QString m_remoteFilePath;
     QString m_url;
     QSize m_requestedSize;
     QString m_cachePath;
+    QString m_caller;
     QSettings m_settings;
 
     QString getCachedPath(const QString &id, const QSize &requestedSize);

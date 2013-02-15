@@ -22,7 +22,7 @@ ListItem {
     signal clicked()
     signal listItemIconError()
 
-    function getIconSource(refreshFlag) {
+    function getIconSource(timestamp) {
         var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
         var viewableTextFileTypes = ["TXT", "HTML"];
         
@@ -78,7 +78,7 @@ ListItem {
                 height: 48
                 fillMode: Image.PreserveAspectFit
                 anchors.centerIn: parent
-                source: appInfo.emptySetting+listItem.getIconSource(false)
+                source: appInfo.emptySetting+listItem.getIconSource((new Date()).getTime())
 
                 BusyIndicator {
                     visible: listItemIconBusyVisible && (parent.status == Image.Loading || parent.status == Image.Error)

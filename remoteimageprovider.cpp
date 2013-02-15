@@ -15,7 +15,12 @@ QString RemoteImageProvider::getCachedPath(const QString &id, const QSize &reque
 {
     QUrl url(id);
     QByteArray hash = QCryptographicHash::hash(url.host().append(url.path()).toUtf8(), QCryptographicHash::Md5).toHex();
-    QString cachedImagePath = QString("%1/%2_%3x%4.png").arg(m_cachePath).arg(QString(hash)).arg(requestedSize.width()).arg(requestedSize.height());
+    QString cachedImagePath;
+    if (requestedSize.isValid()) {
+        cachedImagePath = QString("%1/%2_%3x%4.png").arg(m_cachePath).arg(QString(hash)).arg(requestedSize.width()).arg(requestedSize.height());
+    } else {
+        cachedImagePath = QString("%1/%2.png").arg(m_cachePath).arg(QString(hash));
+    }
 
     return cachedImagePath;
 }
@@ -70,10 +75,10 @@ QImage RemoteImageProvider::requestImage(const QString &id, QSize *size, const Q
         return QImage();
     }
 
-    if (requestedSize.width() <= 0 || requestedSize.height() <= 0) {
-        qDebug() << "RemoteImageProvider::requestImage requestSize is invalid." << requestedSize;
-        return QImage();
-    }
+//    if (requestedSize.width() <= 0 || requestedSize.height() <= 0) {
+//        qDebug() << "RemoteImageProvider::requestImage requestSize is invalid." << requestedSize;
+//        return QImage();
+//    }
 
     // Check if cached image is available.
     // 86400 secs = 1 day
@@ -85,13 +90,32 @@ QImage RemoteImageProvider::requestImage(const QString &id, QSize *size, const Q
         QImageReader ir(cachedFileInfo.absoluteFilePath());
         image = ir.read();
         if (ir.error() == 0) {
-            qDebug() << "RemoteImageProvider::requestImage return cached image" << cachedFileInfo.absoluteFilePath();
+            qDebug() << "RemoteImageProvider::requestImage return cached image" << cachedFileInfo.absoluteFilePath() << "size" << image.size();
+            size->setWidth(image.size().width());
+            size->setHeight(image.size().height());
             return image;
         } else {
             qDebug() << "RemoteImageProvider::requestImage can't load cached image path" << cachedFileInfo.absoluteFilePath() << "error" << ir.error() << ir.errorString();
         }
     } else {
         qDebug() << "RemoteImageProvider::requestImage not found or expired cache image path" << cachedFileInfo.absoluteFilePath();
+
+        // Try generic cached image.
+        QFileInfo genericCachedFileInfo(getCachedPath(id, QSize(-1,-1)));
+        if (genericCachedFileInfo.exists()
+                && genericCachedFileInfo.created().secsTo(QDateTime::currentDateTime()) < m_settings.value("image.cache.retention.seconds", QVariant(86400)).toInt()) {
+            qDebug() << "RemoteImageProvider::requestImage generic cache exists" << genericCachedFileInfo.absoluteFilePath() << "size" << genericCachedFileInfo.size();
+            QImageReader ir(genericCachedFileInfo.absoluteFilePath());
+            image = ir.read();
+            if (ir.error() == 0) {
+                qDebug() << "RemoteImageProvider::requestImage return generic cached image" << genericCachedFileInfo.absoluteFilePath() << "size" << image.size();
+                size->setWidth(image.size().width());
+                size->setHeight(image.size().height());
+                return image;
+            } else {
+                qDebug() << "RemoteImageProvider::requestImage can't load generic cached image path" << genericCachedFileInfo.absoluteFilePath() << "error" << ir.error() << ir.errorString();
+            }
+        }
     }
 
     if (m_settings.value("RemoteImageProvider.getCachedImage.enabled", QVariant(false)).toBool()) {

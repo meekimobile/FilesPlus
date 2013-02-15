@@ -1300,12 +1300,13 @@ PageStackWindow {
             // Parse common JSON object from cloud drive specific JSON object.
             var parsedObj = {
                 "name": "", "absolutePath": "", "parentPath": "",
-                "isChecked": false, "source": "", "thumbnail": "", "fileType": "", "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
+                "isChecked": false, "source": "", "thumbnail": "", "preview": "", "alternative": "",
+                "fileType": "", "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
                 "subDirCount": 0, "subFileCount": 0, "isDirty": false,
                 "lastModified": (new Date()), "size": 0, "isDir": false,
                 "isDeleted": false,
                 "isConnected": false,
-                "refreshFlag": false,
+                "timestamp": 0,
                 "hash": "",
                 "children": []
             };
@@ -1319,7 +1320,9 @@ PageStackWindow {
             parsedObj.lastModified = Utility.parseDate(jsonObj.lastModified);
             parsedObj.hash = jsonObj.hash;
             parsedObj.source = jsonObj.source;
+            parsedObj.alternative = jsonObj.alternative;
             parsedObj.thumbnail = jsonObj.thumbnail;
+            parsedObj.preview = jsonObj.preview;
             parsedObj.fileType = jsonObj.fileType;
             if (jsonObj.children) {
                 for(var i=0; i<jsonObj.children.length; i++) {
@@ -2104,11 +2107,11 @@ PageStackWindow {
         }
 
         onCacheImageFinished: {
-            console.debug("window cloudDriveModel onCacheImageFinished " + remoteFilePath + " " + err + " " + errMsg);
+            console.debug("window cloudDriveModel onCacheImageFinished " + remoteFilePath + " " + err + " " + errMsg + " caller " + caller);
             // Refresh item only if there is no error.
             if (err == 0) {
-                var p = findPage("cloudFolderPage");
-                if (p) {
+                var p = findPage(caller);
+                if (p && p.refreshItem) {
                     p.refreshItem(remoteFilePath);
                 }
             }

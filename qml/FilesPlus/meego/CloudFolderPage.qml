@@ -198,11 +198,11 @@ Page {
     }
 
     function refreshItem(remotePath) {
+        var timestamp = (new Date()).getTime();
         var i = cloudFolderModel.findIndexByRemotePath(remotePath);
         console.debug("cloudFolderPage refreshItem i " + i);
         if (i >= 0) {
-            var refreshFlag = cloudFolderModel.get(i).refreshFlag;
-            cloudFolderModel.setProperty(i, "refreshFlag", !refreshFlag);
+            cloudFolderModel.setProperty(i, "timestamp", timestamp);
         }
     }
 
@@ -713,10 +713,10 @@ Page {
             syncIconVisible: isConnected
             syncIconSource: (isRunning) ? "cloud_wait.svg" : "cloud.svg"
             actionIconSource: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath, cloudDriveModel.getCloudName(selectedCloudType), selectedUid) : ""
-            listItemIconSource: appInfo.emptySetting+listItem.getIconSource(refreshFlag)
+            listItemIconSource: appInfo.emptySetting+listItem.getIconSource(timestamp)
 
             // Override to support cloud items.
-            function getIconSource(refreshFlag) {
+            function getIconSource(timestamp) {
                 var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
                 var viewableTextFileTypes = ["TXT", "HTML"];
 
@@ -727,7 +727,7 @@ Page {
                     if (showThumbnail && thumbnail && thumbnail != "") {
                         // Dropbox's thumbnail url can't open with Image directly. Need to invoke cacheImage() or use RemoteImageProvider to download.
                         if (selectedCloudType == CloudDriveModel.Dropbox) {
-                            return "image://remote/" + thumbnail + "&t=" + (new Date()).getTime();
+                            return "image://remote/" + thumbnail + "#t=" + timestamp;
                         } else {
                             return thumbnail;
                         }
@@ -765,23 +765,30 @@ Page {
 
                         isBusy = true;
 
-                        var viewableFileTypes = ["JPG", "PNG", "GIF", "SVG", "TXT", "TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
-                        if (source && source != "") {
-                            if (viewableFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                                appInfo.addToClipboard(source);
-                                pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
-                            } else {
-                                Qt.openUrlExternally(source);
-                            }
-                        } else if (selectedCloudType == CloudDriveModel.Dropbox) {
+                        var viewableImageFileTypes = ["JPG", "PNG", "GIF", "SVG"];
+                        var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
+                        var url;
+                        if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                            // NOTE ImageViewPage will populate ImageViewModel with mediaUrl.
+                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
+                                           { fileName: name, model: cloudFolderModel, selectedCloudType: selectedCloudType, selectedUid: selectedUid, selectedRemotePath: absolutePath });
+                        } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             // Request media to get and open URL.
-                            var url = cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
-                            if (viewableFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                                appInfo.addToClipboard(url);
-                                pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
+                            if (selectedCloudType == CloudDriveModel.Dropbox) {
+                                url = cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
                             } else {
-                                Qt.openUrlExternally(url);
+                                url = source
                             }
+                            appInfo.addToClipboard(url);
+                            pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
+                        } else {
+                            // Request media to get and open URL.
+                            if (selectedCloudType == CloudDriveModel.Dropbox) {
+                                url = cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
+                            } else {
+                                url = source
+                            }
+                            Qt.openUrlExternally(url);
                         }
 
                         isBusy = false;
@@ -791,7 +798,7 @@ Page {
 
             onListItemIconError: {
                 if (selectedCloudType == CloudDriveModel.Dropbox) {
-                    cloudDriveModel.cacheImage(absolutePath, thumbnail, 48, 48);
+                    cloudDriveModel.cacheImage(absolutePath, thumbnail, 48, 48, cloudFolderPage.name); // Use default icon size.
                 }
             }
         }

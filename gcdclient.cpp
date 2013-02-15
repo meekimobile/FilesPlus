@@ -204,6 +204,26 @@ QString GCDClient::getContentType(QString fileName) {
     return contentType;
 }
 
+QString GCDClient::getRedirectedUrl(QString url)
+{
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl(url));
+    QNetworkReply *reply = manager->get(req);
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    // Detect redirectedUrl.
+    QString redirectedUrl = "";
+    if (reply->error() == QNetworkReply::NoError) {
+        redirectedUrl = reply->header(QNetworkRequest::LocationHeader).toString();
+    }
+
+    return redirectedUrl;
+}
+
 QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj)
 {
     QScriptValue parsedObj = engine.newObject();
@@ -216,8 +236,12 @@ QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     parsedObj.setProperty("isDir", QScriptValue(jsonObj.property("mimeType").toString() == "application/vnd.google-apps.folder"));
     parsedObj.setProperty("lastModified", jsonObj.property("modifiedDate"));
     parsedObj.setProperty("hash", jsonObj.property("modifiedDate"));
-    parsedObj.setProperty("source", jsonObj.property("webContentLink"));
+    parsedObj.setProperty("source", QScriptValue());
+    parsedObj.setProperty("downloadUrl", jsonObj.property("downloadUrl"));
+    parsedObj.setProperty("webContentLink", jsonObj.property("webContentLink"));
+    parsedObj.setProperty("alternate", jsonObj.property("alternateLink"));
     parsedObj.setProperty("thumbnail", jsonObj.property("thumbnailLink"));
+    parsedObj.setProperty("preview", jsonObj.property("thumbnailLink")); // NOTE Use same URL as thumbnail as it return 2xx x 1xx picture.
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("title").toString())));
 
     return parsedObj;
@@ -1033,6 +1057,28 @@ QString GCDClient::delta(QString nonce, QString uid, bool synchronous)
 
     // Emit signal and return replyBody.
     return deltaReplyFinished(reply);
+}
+
+QString GCDClient::media(QString nonce, QString uid, QString remoteFilePath)
+{
+    qDebug() << "----- GCDClient::media -----" << nonce << uid << remoteFilePath;
+
+    QString uri = remoteFilePath;
+    // TODO It should be downloadUrl because it will not be able to create connection in CloudDriveModel.fileGetReplyFilter.
+    if (!remoteFilePath.startsWith("http")) {
+        // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
+        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "media");
+        if (propertyReply->error() == QNetworkReply::NoError) {
+            QScriptEngine engine;
+            QScriptValue sc = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
+            uri = sc.property("downloadUrl").toString();
+            propertyReply->deleteLater();
+        }
+    }
+    uri += "&access_token=" + accessTokenPairMap[uid].token;
+    qDebug() << "GCDClient::media uri " << uri;
+
+    return uri;
 }
 
 QString GCDClient::getRemoteRoot(QString uid)

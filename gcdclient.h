@@ -76,6 +76,7 @@ public:
     QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
 
     QString delta(QString nonce, QString uid, bool synchronous);
+    QString media(QString nonce, QString uid, QString remoteFilePath);
 
     QString getRemoteRoot(QString uid);
     bool isFilePutResumable(qint64 fileSize);
@@ -132,6 +133,7 @@ private:
     QHash<QString, QString> createHashFromJson(QString jsonText);
     QByteArray encodeMultiPart(QString boundary, QMap<QString, QString> paramMap, QString fileParameter, QString fileName, QByteArray fileData, QString contentType);
     QString getContentType(QString fileName);
+    QString getRedirectedUrl(QString url);
 };
 
 #endif // GCDClient_H

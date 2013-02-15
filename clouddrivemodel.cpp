@@ -2389,10 +2389,10 @@ QString CloudDriveModel::thumbnail(CloudDriveModel::ClientTypes type, QString ui
     return client->thumbnail(createNonce(), uid, remoteFilePath, format, size);
 }
 
-void CloudDriveModel::cacheImage(QString remoteFilePath, QString url, int w, int h)
+void CloudDriveModel::cacheImage(QString remoteFilePath, QString url, int w, int h, QString caller)
 {
-    CacheImageWorker *worker = new CacheImageWorker(remoteFilePath, url, QSize(w,h), TEMP_PATH);
-    connect(worker, SIGNAL(cacheImageFinished(QString,int,QString)), SIGNAL(cacheImageFinished(QString,int,QString)));
+    CacheImageWorker *worker = new CacheImageWorker(remoteFilePath, url, QSize(w,h), TEMP_PATH, caller);
+    connect(worker, SIGNAL(cacheImageFinished(QString,int,QString,QString)), SIGNAL(cacheImageFinished(QString,int,QString,QString)));
     QThreadPool::globalInstance()->start(worker);
 }
 

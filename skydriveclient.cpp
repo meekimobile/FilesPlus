@@ -1227,6 +1227,7 @@ QScriptValue SkyDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engin
     parsedObj.setProperty("hash", jsonObj.property("updated_time"));
     parsedObj.setProperty("source", jsonObj.property("source"));
     parsedObj.setProperty("thumbnail", jsonObj.property("picture"));
+    parsedObj.setProperty("preview", jsonObj.property("images").property(0).property("source"));
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("name").toString())));
 
     return parsedObj;
