@@ -31,7 +31,11 @@ ListItem {
         } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
             var showThumbnail = appInfo.getSettingBoolValue("thumbnail.enabled", false);
             if (showThumbnail) {
-                return "image://local/" + absolutePath;
+                if (fileType.toUpperCase() == "SVG") {
+                    return "file://" + absolutePath
+                } else {
+                    return "image://local/" + absolutePath;
+                }
             } else {
                 return "photos_list.svg";
             }
