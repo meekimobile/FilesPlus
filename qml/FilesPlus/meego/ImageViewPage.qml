@@ -43,7 +43,7 @@ Page {
                 height: imageFlick.height
                 sourceSize.width: 1280  // Requested size for LocalFileImageProvider
                 sourceSize.height: 1280  // Requested size for LocalFileImageProvider
-                source: fetchCurrentPendingSourceUrl() + "#" + imageGridModel.get(imageGrid.currentIndex).timestamp
+                source: fetchCurrentPendingSourceUrl()
             }
             PropertyChanges { target: imageFlick; visible: true }
         }
