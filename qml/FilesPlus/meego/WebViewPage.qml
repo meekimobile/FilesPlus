@@ -171,18 +171,18 @@ Page {
             anchors.fill: parent
             pinch.dragAxis: Pinch.NoDrag
 
-            property real startContentX
-            property real startContentY
-            property real deltaCenterX
-            property real deltaCenterY
+            property real startX
+            property real startY
+            property real startWidth
+            property real startHeight
 
             onPinchStarted: {
                 console.debug("webPinchArea onPinchStarted webView.contentsScale " + webView.contentsScale +
                               " webView.contentsSize " + webView.contentsSize.width + "," + webView.contentsSize.height);
-                startContentX = flickable.contentX;
-                startContentY = flickable.contentY;
-                deltaCenterX = pinch.startCenter.x - (webView.contentsSize.width / 2);
-                deltaCenterY = pinch.startCenter.y - (webView.contentsSize.height / 2);
+                startX = flickable.contentX + (flickable.width / 2);
+                startY = flickable.contentY + (flickable.height / 2);
+                startWidth = webView.contentsSize.width;
+                startHeight = webView.contentsSize.height;
             }
             onPinchUpdated: {
                 // Update scale.
@@ -195,22 +195,10 @@ Page {
                               " previousCenter " + pinch.previousCenter.x + "," + pinch.previousCenter.y +
                               " startCenter " + pinch.startCenter.x + "," + pinch.startCenter.y);
                 // Center pinch.
-//                var dx = (webView.contentsSize.width / webView.contentsScale) * deltaScale / 2;
-//                var dy = (webView.contentsSize.height / webView.contentsScale) * deltaScale / 2;
-//                var dx = deltaCenterX * pinch.scale - deltaCenterX * pinch.previousScale;
-//                var dy = deltaCenterY * pinch.scale - deltaCenterY * pinch.previousScale;
-//                console.debug("webPinchArea onPinchUpdated dx,dy " + dx + "," + dy);
-//                // TODO Calculate content X,Y.
-//                flickable.contentX -= dx;
-//                flickable.contentY -= dy;
-//                flickable.contentX = startContentX - dx;
-//                flickable.contentY = startContentY - dy;
-//                flickable.contentX += pinch.center.x - pinch.previousCenter.x; // NOTE center always get updated once flickable.contentX,Y changed.
-//                flickable.contentY += pinch.center.y - pinch.previousCenter.y; // NOTE center always get updated once flickable.contentX,Y changed.
-//                flickable.contentX = pinch.center.x - deltaStartCenterX;
-//                flickable.contentY = pinch.center.y - deltaStartCenterY;
-//                flickable.contentX = startContentX + (pinch.center.x - pinch.startCenter.x); // NOTE center always get updated once flickable.contentX,Y changed.
-//                flickable.contentY = startContentY + (pinch.center.y - pinch.startCenter.y); // NOTE center always get updated once flickable.contentX,Y changed.
+                var actualCenterX = startX * (webView.contentsSize.width / startWidth);
+                var actualCenterY = startY * (webView.contentsSize.height / startHeight);
+                flickable.contentX = actualCenterX - (flickable.width / 2);
+                flickable.contentY = actualCenterY - (flickable.height / 2);
                 console.debug("webPinchArea onPinchUpdated flickable.contentX " + flickable.contentX + " flickable.contentY " + flickable.contentY);
             }
             onPinchFinished: {
