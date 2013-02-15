@@ -43,7 +43,7 @@ Page {
                 height: imageFlick.height
                 sourceSize.width: 1280  // Requested size for LocalFileImageProvider
                 sourceSize.height: 1280  // Requested size for LocalFileImageProvider
-                source: imageGridModel.get(imageGrid.currentIndex).sourceUrl
+                source: fetchCurrentPendingSourceUrl()
             }
             PropertyChanges { target: imageFlick; visible: true }
         }
@@ -68,9 +68,9 @@ Page {
                 id: openButton
                 buttonIconSource: (!inverted) ? "photos.svg" : "photos_inverted.svg"
                 onClicked: {
-                    var imageSource = imageGrid.getViewFilePath();
+                    var imageSource;
                     if (selectedCloudType != -1) {
-                        imageSource = imageGridModel.get(imageGrid.currentIndex).sourceUrl;
+                        imageSource = fetchCurrentPendingSourceUrl();
                         Qt.openUrlExternally(imageSource);
                     } else {
                         imageSource = "file://" + imageGrid.getViewFilePath();
@@ -85,7 +85,7 @@ Page {
                 onClicked: {
                     var imageSource;
                     if (selectedCloudType != -1) {
-                        imageSource = imageGridModel.get(imageGrid.currentIndex).sourceUrl;
+                        imageSource = fetchCurrentPendingSourceUrl();
                         gcpClient.printURLSlot(imageSource);
                     } else {
                         imageSource = imageGrid.getViewFilePath();
@@ -106,6 +106,8 @@ Page {
             imageGrid.currentIndex = (selectedModelIndex < 0) ? 0 : selectedModelIndex;
             imageLabelText.text = imageGridModel.get(imageGrid.currentIndex).name;
             imageGrid.positionViewAtIndex(imageGrid.currentIndex, GridView.Contain);
+            // Fetch current item's media URL.
+            fetchCurrentPendingSourceUrl();
         }
     }
 
@@ -135,7 +137,7 @@ Page {
                     // TODO Figure out how to detect if it's cloud item.
                     // NOTE Must not modify otiginal source, to keep original state.
                     // Request media to get URL.
-                    modelItem.sourceUrl = cloudDriveModel.media(selectedCloudType, selectedUid, modelItem.absolutePath);
+                    modelItem.sourceUrl = ""; // Pending get media URL once pinch zoom, open URL or print URL.
                     modelItem.previewUrl = "image://remote/" + modelItem.preview;
                 } else if (modelItem.fileType.toUpperCase() == "SVG") {
                     // Local SVG image.
@@ -154,6 +156,16 @@ Page {
                 }
             }
         }
+    }
+
+    function fetchCurrentPendingSourceUrl() {
+        // Fetch media URL.
+        var imageSource = imageGridModel.get(imageGrid.currentIndex).sourceUrl;
+        if (imageSource == "") {
+            imageSource = cloudDriveModel.media(selectedCloudType, selectedUid, imageGridModel.get(imageGrid.currentIndex).absolutePath)
+            imageGridModel.setProperty(imageGrid.currentIndex, "sourceUrl", imageSource);
+        }
+        return imageSource;
     }
 
     function isSupportedImageFormat(fileType) {
@@ -439,9 +451,9 @@ Page {
 
         Image {
             id: imageFlickView
-            source: (imageGrid.currentIndex >= 0)
-                    ? getImageSource(imageGridModel.get(imageGrid.currentIndex).sourceUrl, imageGridModel.get(imageGrid.currentIndex).timestamp)
-                    : ""
+//            source: (imageGrid.currentIndex >= 0)
+//                    ? getImageSource(imageGridModel.get(imageGrid.currentIndex).sourceUrl, imageGridModel.get(imageGrid.currentIndex).timestamp)
+//                    : ""
             fillMode: Image.PreserveAspectFit
 
             function getImageSource(url, timestamp) {
