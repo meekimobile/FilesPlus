@@ -43,7 +43,7 @@ Page {
                 height: imageFlick.height
                 sourceSize.width: 1280  // Requested size for LocalFileImageProvider
                 sourceSize.height: 1280  // Requested size for LocalFileImageProvider
-                source: fetchCurrentPendingSourceUrl()
+                source: fetchCurrentPendingSourceUrl() + "#" + imageGridModel.get(imageGrid.currentIndex).timestamp
             }
             PropertyChanges { target: imageFlick; visible: true }
         }
@@ -311,7 +311,7 @@ Page {
             fillMode: Image.PreserveAspectFit
 
             function getImageSource(url, timestamp) {
-                if (url.indexOf("http") == 0) {
+                if (selectedCloudType != -1) {
                     return url + "#t=" + timestamp;
                 } else {
                     return url;
@@ -451,13 +451,10 @@ Page {
 
         Image {
             id: imageFlickView
-//            source: (imageGrid.currentIndex >= 0)
-//                    ? getImageSource(imageGridModel.get(imageGrid.currentIndex).sourceUrl, imageGridModel.get(imageGrid.currentIndex).timestamp)
-//                    : ""
             fillMode: Image.PreserveAspectFit
 
             function getImageSource(url, timestamp) {
-                if (url.indexOf("http") == 0) {
+                if (selectedCloudType != -1) {
                     return url + "#t=" + timestamp;
                 } else {
                     return url;
