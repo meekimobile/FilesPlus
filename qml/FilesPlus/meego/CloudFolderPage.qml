@@ -774,7 +774,7 @@ Page {
                         if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             // NOTE ImageViewPage will populate ImageViewModel with mediaUrl.
                             pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
-                                           { fileName: name, model: cloudFolderModel, selectedCloudType: selectedCloudType, selectedUid: selectedUid, selectedRemotePath: absolutePath });
+                                           { model: cloudFolderModel, selectedCloudType: selectedCloudType, selectedUid: selectedUid, selectedFilePath: absolutePath });
                         } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             // Request media to get and open URL.
                             if (source) {

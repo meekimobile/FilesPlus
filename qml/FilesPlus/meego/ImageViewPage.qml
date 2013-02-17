@@ -9,10 +9,9 @@ Page {
 
     property string name: "imageViewPage"
     property variant model
-    property string fileName
     property int selectedCloudType: -1
     property string selectedUid: ""
-    property string selectedRemotePath: ""
+    property string selectedFilePath: ""
     property int selectedModelIndex: -1
     property bool showGrid: true
     property bool inverted: !theme.inverted
@@ -96,10 +95,6 @@ Page {
         }
     }
 
-    Component.onCompleted: {
-        console.debug("imageViewPage onCompleted imageGrid.currentIndex " + imageGrid.currentIndex);
-    }
-
     onStatusChanged: {
         if (status == PageStatus.Active && imageGridModel.count <= 0) {
             parseImageGridModel(model);
@@ -109,10 +104,6 @@ Page {
             // Fetch current item's media URL.
             fetchCurrentPendingSourceUrl();
         }
-    }
-
-    onFileNameChanged: {
-        console.debug("imageViewPage onFileNameChanged fileName " + fileName);
     }
 
     function orientationChangeSlot() {
@@ -151,7 +142,7 @@ Page {
                 imageGridModel.append(modelItem);
 
                 // Find select index.
-                if (modelItem.absolutePath == selectedRemotePath) {
+                if (modelItem.absolutePath == selectedFilePath) {
                     selectedModelIndex = (imageGridModel.count - 1);
                 }
             }
@@ -252,29 +243,6 @@ Page {
                 return imageGrid.model.get(i).name;
             }
             return "";
-        }
-
-        function getImageModelIndex(fileName) {
-            // Model is set before it can finish filter only images. Find selected image position needs to be done with full list.
-            var imageIndex = 0;
-            for (var i=0; i<model.count; i++) {
-                var modelItem = model.get(i);
-
-                // If item is dir or is not image, skip.
-                if (modelItem.isDir || !isSupportedImageFormat(modelItem.fileType.toUpperCase())) {
-                    continue;
-                }
-
-                if (modelItem.name == fileName) {
-                    console.debug("imageViewPage imageGrid getImageModelIndex found " + i + " name " + modelItem.name)
-                    return imageIndex;
-                }
-
-                imageIndex++;
-            }
-//            console.debug("imageViewPage getImageModelIndex model.count " + model.count);
-//            console.debug("imageViewPage getImageModelIndex found index " + i);
-            return -1;
         }
 
         onMovementEnded: {

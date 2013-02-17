@@ -1052,7 +1052,7 @@ Page {
                         if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             // TODO Populate ImageViewModel with mediaUrl = image://local/...
                             pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
-                                           { fileName: name, model: fsModel });
+                                           { model: fsModel, selectedFilePath: absolutePath });
                         } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
                                            { filePath: absolutePath, fileName: name });
