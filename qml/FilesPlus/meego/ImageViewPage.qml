@@ -120,16 +120,23 @@ Page {
             var modelItem = model.get(i);
             modelItem.timestamp = timestamp;
             if (viewableImageFileTypes.indexOf(modelItem.fileType.toUpperCase()) != -1) {
-                if (modelItem.source) {
-                    // Remote image with source link.
-                    modelItem.sourceUrl = modelItem.source;
-                    modelItem.previewUrl = modelItem.preview;
-                } else if (modelItem.preview) {
-                    // TODO Figure out how to detect if it's cloud item.
-                    // NOTE Must not modify otiginal source, to keep original state.
-                    // Request media to get URL.
-                    modelItem.sourceUrl = ""; // Pending get media URL once pinch zoom, open URL or print URL.
-                    modelItem.previewUrl = modelItem.preview;
+                if (selectedCloudType != -1) {
+                    // Cloud image.
+                    if (modelItem.source) {
+                        // Remote image with source link.
+                        modelItem.sourceUrl = modelItem.source;
+                        modelItem.previewUrl = modelItem.preview;
+                    } else if (modelItem.preview) {
+                        // Remote image with preview link but without source link.
+                        // NOTE Must not modify otiginal source, to keep original state.
+                        // Request media to get URL.
+                        modelItem.sourceUrl = ""; // Pending get media URL once pinch zoom, open URL or print URL.
+                        modelItem.previewUrl = modelItem.preview;
+                    } else {
+                        // Remote image without preview link and source link. Ex. SVG image.
+                        modelItem.sourceUrl = cloudDriveModel.media(selectedCloudType, selectedUid, modelItem.absolutePath);
+                        modelItem.previewUrl = modelItem.sourceUrl;
+                    }
                 } else if (modelItem.fileType.toUpperCase() == "SVG") {
                     // Local SVG image.
                     modelItem.sourceUrl = "file://" + modelItem.absolutePath;
@@ -279,7 +286,9 @@ Page {
             fillMode: Image.PreserveAspectFit
 
             function getImageSource(url, timestamp) {
-                if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
+                if (selectedCloudType != -1 && cloudDriveModel.isImageUrlCachable(selectedCloudType)
+                        && (fileType.toUpperCase() != "SVG")) {
+                    // Cache only cloud, cachable and not-SVG image.
                     return "image://remote/" + url + "#t=" + timestamp;
                 } else {
                     return url;
@@ -331,7 +340,7 @@ Page {
 //                    }
                 } else if (status == Image.Error) {
                     if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
-                        cloudDriveModel.cacheImage(absolutePath, preview, -1, -1, imageViewPage.name); // Use default preview size.
+                        cloudDriveModel.cacheImage(absolutePath, previewUrl, -1, -1, imageViewPage.name); // Use default preview size.
                     }
                 }
             }

@@ -727,7 +727,7 @@ Page {
                     if (showThumbnail && thumbnail && thumbnail != "") {
                         // Dropbox's thumbnail url can't open with Image directly. Need to invoke cacheImage() or use RemoteImageProvider to download.
                         // Always cache thumbnail by using RemoteImageProvider.
-                        if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
+                        if (cloudDriveModel.isImageUrlCachable(selectedCloudType) && fileType.toUpperCase() != "SVG") {
                             return "image://remote/" + thumbnail + "#t=" + timestamp;
                         } else {
                             return thumbnail;
