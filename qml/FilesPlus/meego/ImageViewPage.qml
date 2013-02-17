@@ -79,6 +79,14 @@ Page {
             }
 
             ToolBarButton {
+                id: deleteButton
+                buttonIconSource: (!inverted) ? "delete.svg" : "delete_inverted.svg"
+                onClicked: {
+                    deleteItemConfirmation.open();
+                }
+            }
+
+            ToolBarButton {
                 id: printButton
                 buttonIconSource: (!inverted) ? "print.svg" : "print_inverted.svg"
                 onClicked: {
@@ -98,8 +106,8 @@ Page {
     onStatusChanged: {
         if (status == PageStatus.Active && imageGridModel.count <= 0) {
             parseImageGridModel(model);
+            // Position at selected image.
             imageGrid.currentIndex = (selectedModelIndex < 0) ? 0 : selectedModelIndex;
-            imageLabelText.text = imageGridModel.get(imageGrid.currentIndex).name;
             imageGrid.positionViewAtIndex(imageGrid.currentIndex, GridView.Contain);
             // Fetch current item's media URL.
             fetchCurrentPendingSourceUrl();
@@ -191,6 +199,7 @@ Page {
 
         Text {
             id: imageLabelText
+            text: (imageGrid.currentIndex >= 0) ? imageGridModel.get(imageGrid.currentIndex).name : "";
             anchors.fill: parent
             anchors.margins: 5
             horizontalAlignment: Text.AlignHCenter
@@ -228,7 +237,6 @@ Page {
         pressDelay: 200
 
         property int viewIndex: getViewIndex()
-        property int selectedIndex: -1
 
         function getViewIndex() {
             var cx = contentX + parent.width / 2;
@@ -254,20 +262,10 @@ Page {
 
         onMovementEnded: {
             currentIndex = viewIndex;
-//            console.debug("imageViewPage imageGrid onMovementEnded viewIndex " + viewIndex);
-//            console.debug("imageViewPage imageGrid onMovementEnded currentIndex " + currentIndex);
-//            console.debug("imageViewPage imageGrid onMovementEnded currentItem.width " + currentItem.width + " currentItem.height " + currentItem.height);
-//            console.debug("imageViewPage imageGrid onMovementEnded currentItem.sourceSize.width " + currentItem.sourceSize.width + " currentItem.sourceSize.height " + currentItem.sourceSize.height);
-            imageLabelText.text = getViewFileName();
         }
 
         onFlickEnded: {
             currentIndex = viewIndex;
-//            console.debug("imageViewPage imageGrid onFlickEnded viewIndex " + viewIndex);
-//            console.debug("imageViewPage imageGrid onFlickEnded currentIndex " + currentIndex);
-//            console.debug("imageViewPage imageGrid onFlickEnded currentItem.width " + currentItem.width + " currentItem.height " + currentItem.height);
-//            console.debug("imageViewPage imageGrid onFlickEnded currentItem.sourceSize.width " + currentItem.sourceSize.width + " currentItem.sourceSize.height " + currentItem.sourceSize.height);
-            imageLabelText.text = getViewFileName();
         }
     }
 
@@ -569,6 +567,27 @@ Page {
                         imageViewPage.state = "grid";
                     }
                 }
+            }
+        }
+    }
+
+    ConfirmDialog {
+        id: deleteItemConfirmation
+        titleText: appInfo.emptyStr+qsTr("Delete")
+        contentText: appInfo.emptyStr+((imageGrid.currentIndex >= 0) ? qsTr("Delete %1 ?").arg(imageGridModel.get(imageGrid.currentIndex).name) : "")
+        onConfirm: {
+            var imageFilePath = imageGridModel.get(imageGrid.currentIndex).absolutePath;
+            if (selectedCloudType != -1) {
+                cloudDriveModel.deleteFile(selectedCloudType, selectedUid, "", imageFilePath);
+            } else {
+                deleteProgressDialog.autoClose = true;
+                fsModel.deleteFile(imageFilePath);
+            }
+            imageGridModel.remove(imageGrid.currentIndex);
+            if (imageGrid.currentIndex < imageGridModel.count) {
+                imageGrid.positionViewAtIndex(imageGrid.currentIndex, GridView.Contain);
+            } else {
+                imageGrid.positionViewAtEnd();
             }
         }
     }
