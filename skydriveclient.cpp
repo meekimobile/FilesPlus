@@ -722,7 +722,7 @@ bool SkyDriveClient::isFileGetResumable(qint64 fileSize)
 
 bool SkyDriveClient::isViewable()
 {
-    return false;
+    return true;
 }
 
 void SkyDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
