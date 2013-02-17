@@ -774,19 +774,19 @@ Page {
                                            { fileName: name, model: cloudFolderModel, selectedCloudType: selectedCloudType, selectedUid: selectedUid, selectedRemotePath: absolutePath });
                         } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             // Request media to get and open URL.
-                            if (selectedCloudType == CloudDriveModel.Dropbox) {
-                                url = cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
+                            if (source) {
+                                url = source;
                             } else {
-                                url = source
+                                url = cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
                             }
                             appInfo.addToClipboard(url);
                             pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
                         } else {
                             // Request media to get and open URL.
-                            if (selectedCloudType == CloudDriveModel.Dropbox) {
-                                url = cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
+                            if (source) {
+                                url = source;
                             } else {
-                                url = source
+                                url = cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
                             }
                             Qt.openUrlExternally(url);
                         }
