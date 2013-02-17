@@ -836,7 +836,7 @@ Page {
             } else if (buttonName === "paste") {
                 return (clipboard.count > 0);
             } else if (buttonName == "print") {
-                return !popupToolPanel.isDir;
+                return !popupToolPanel.isDir && cloudDriveModel.isViewable(selectedCloudType);
             }
 
             return true;
@@ -876,10 +876,13 @@ Page {
         }
 
         onPrintFile: {
+            // Check if it's viewable.
+            if (!cloudDriveModel.isViewable(selectedCloudType)) return;
+
             isBusy = true;
 
             var url;
-            if (selectedCloudType == CloudDriveModel.Dropbox) {
+            if (!cloudFolderModel.get(srcItemIndex).source) {
                 // Request media to get URL.
                 url = cloudDriveModel.media(selectedCloudType, selectedUid, srcFilePath);
             } else {
