@@ -30,6 +30,7 @@ public:
     virtual bool isDeltaSupported();
     virtual bool isDeltaEnabled(QString uid);
     virtual bool isConfigurable();
+    virtual bool isViewable();
 
     virtual bool testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname);
     virtual void saveConnection(QString id, QString hostname, QString username, QString password, QString token);

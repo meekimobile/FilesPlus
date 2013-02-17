@@ -720,6 +720,11 @@ bool SkyDriveClient::isFileGetResumable(qint64 fileSize)
     return (fileSize == -1 || fileSize >= ChunkSize);
 }
 
+bool SkyDriveClient::isViewable()
+{
+    return false;
+}
+
 void SkyDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- SkyDriveClient::shareFile -----" << remoteFilePath;

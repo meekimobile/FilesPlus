@@ -66,6 +66,7 @@ public:
 
     QString getRemoteRoot(QString uid);
     bool isFileGetResumable(qint64 fileSize);
+    bool isViewable();
 signals:
 
 public slots:

@@ -763,6 +763,9 @@ Page {
                         // If file is running, disable preview.
                         if (isRunning) return;
 
+                        // Check if it's viewable.
+                        if (!cloudDriveModel.isViewable(selectedCloudType)) return;
+
                         isBusy = true;
 
                         var viewableImageFileTypes = ["JPG", "PNG", "GIF", "SVG"];

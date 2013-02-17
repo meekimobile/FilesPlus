@@ -1106,6 +1106,11 @@ bool GCDClient::isDeltaEnabled(QString uid)
     return m_settings.value(QString("%1.%2.delta.enabled").arg(objectName()).arg(uid), QVariant(false)).toBool();
 }
 
+bool GCDClient::isViewable()
+{
+    return true;
+}
+
 void GCDClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
 {
     qDebug() << "----- GCDClient::copyFile -----" << uid << remoteFilePath << targetRemoteParentPath;

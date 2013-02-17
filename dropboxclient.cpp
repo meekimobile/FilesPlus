@@ -562,6 +562,11 @@ bool DropboxClient::isDeltaEnabled(QString uid)
     return m_settings.value(QString("%1.%2.delta.enabled").arg(objectName()).arg(uid), QVariant(false)).toBool();
 }
 
+bool DropboxClient::isViewable()
+{
+    return true;
+}
+
 QNetworkReply * DropboxClient::property(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
 {
     qDebug() << "----- DropboxClient::property -----" << nonce << uid << remoteFilePath << synchronous;

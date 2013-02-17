@@ -855,6 +855,11 @@ bool CloudDriveModel::isConfigurable(CloudDriveModel::ClientTypes type)
     return getCloudClient(type)->isConfigurable();
 }
 
+bool CloudDriveModel::isViewable(CloudDriveModel::ClientTypes type)
+{
+    return getCloudClient(type)->isViewable();
+}
+
 void CloudDriveModel::initScheduler()
 {
     connect(&m_schedulerTimer, SIGNAL(timeout()), this, SLOT(schedulerTimeoutFilter()) );

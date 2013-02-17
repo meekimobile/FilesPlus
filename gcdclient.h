@@ -83,6 +83,7 @@ public:
     bool isFileGetResumable(qint64 fileSize);
     bool isDeltaSupported();
     bool isDeltaEnabled(QString uid);
+    bool isViewable();
 signals:
 
 public slots:

@@ -100,6 +100,11 @@ bool CloudDriveClient::isConfigurable()
     return false;
 }
 
+bool CloudDriveClient::isViewable()
+{
+    return false;
+}
+
 void CloudDriveClient::loadAccessPairMap() {
     qDebug() << QTime::currentTime() << objectName() << "::loadAccessPairMap";
 
