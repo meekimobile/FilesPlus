@@ -726,7 +726,8 @@ Page {
                     var showThumbnail = appInfo.getSettingBoolValue("CloudFolderPage.thumbnail.enabled", false);
                     if (showThumbnail && thumbnail && thumbnail != "") {
                         // Dropbox's thumbnail url can't open with Image directly. Need to invoke cacheImage() or use RemoteImageProvider to download.
-                        if (selectedCloudType == CloudDriveModel.Dropbox) {
+                        // Always cache thumbnail by using RemoteImageProvider.
+                        if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
                             return "image://remote/" + thumbnail + "#t=" + timestamp;
                         } else {
                             return thumbnail;
@@ -800,7 +801,7 @@ Page {
             }
 
             onListItemIconError: {
-                if (selectedCloudType == CloudDriveModel.Dropbox) {
+                if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
                     cloudDriveModel.cacheImage(absolutePath, thumbnail, 48, 48, cloudFolderPage.name); // Use default icon size.
                 }
             }

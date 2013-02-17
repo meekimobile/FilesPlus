@@ -156,6 +156,7 @@ public:
     Q_INVOKABLE bool isRemotePathCaseInsensitive(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE bool isConfigurable(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE bool isViewable(CloudDriveModel::ClientTypes type);
+    Q_INVOKABLE bool isImageUrlCachable(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE QString getRemoteName(CloudDriveModel::ClientTypes type, QString remotePath);
     Q_INVOKABLE QString getRemotePath(CloudDriveModel::ClientTypes type, QString remoteParentPath, QString remotePathName);
     Q_INVOKABLE QString getParentLocalPath(const QString absFilePath);

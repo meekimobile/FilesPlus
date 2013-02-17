@@ -105,6 +105,11 @@ bool CloudDriveClient::isViewable()
     return false;
 }
 
+bool CloudDriveClient::isImageUrlCachable()
+{
+    return false;
+}
+
 void CloudDriveClient::loadAccessPairMap() {
     qDebug() << QTime::currentTime() << objectName() << "::loadAccessPairMap";
 

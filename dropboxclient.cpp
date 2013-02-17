@@ -567,6 +567,11 @@ bool DropboxClient::isViewable()
     return true;
 }
 
+bool DropboxClient::isImageUrlCachable()
+{
+    return true;
+}
+
 QNetworkReply * DropboxClient::property(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
 {
     qDebug() << "----- DropboxClient::property -----" << nonce << uid << remoteFilePath << synchronous;

@@ -129,7 +129,7 @@ Page {
                     // NOTE Must not modify otiginal source, to keep original state.
                     // Request media to get URL.
                     modelItem.sourceUrl = ""; // Pending get media URL once pinch zoom, open URL or print URL.
-                    modelItem.previewUrl = "image://remote/" + modelItem.preview;
+                    modelItem.previewUrl = modelItem.preview;
                 } else if (modelItem.fileType.toUpperCase() == "SVG") {
                     // Local SVG image.
                     modelItem.sourceUrl = "file://" + modelItem.absolutePath;
@@ -279,8 +279,8 @@ Page {
             fillMode: Image.PreserveAspectFit
 
             function getImageSource(url, timestamp) {
-                if (selectedCloudType != -1) {
-                    return url + "#t=" + timestamp;
+                if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
+                    return "image://remote/" + url + "#t=" + timestamp;
                 } else {
                     return url;
                 }
@@ -330,8 +330,7 @@ Page {
 //                        console.debug("imageViewPage imageView onStatusChanged positionViewAtIndex index " + index);
 //                    }
                 } else if (status == Image.Error) {
-                    var imageSource = imageView.source + "";
-                    if (imageSource.indexOf("image://remote/") == 0) {
+                    if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
                         cloudDriveModel.cacheImage(absolutePath, preview, -1, -1, imageViewPage.name); // Use default preview size.
                     }
                 }

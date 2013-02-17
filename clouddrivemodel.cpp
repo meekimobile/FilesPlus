@@ -860,6 +860,11 @@ bool CloudDriveModel::isViewable(CloudDriveModel::ClientTypes type)
     return getCloudClient(type)->isViewable();
 }
 
+bool CloudDriveModel::isImageUrlCachable(CloudDriveModel::ClientTypes type)
+{
+    return getCloudClient(type)->isImageUrlCachable();
+}
+
 void CloudDriveModel::initScheduler()
 {
     connect(&m_schedulerTimer, SIGNAL(timeout()), this, SLOT(schedulerTimeoutFilter()) );

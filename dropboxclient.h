@@ -51,6 +51,7 @@ public:
     bool isDeltaSupported();
     bool isDeltaEnabled(QString uid);
     bool isViewable();
+    bool isImageUrlCachable();
 
     void requestToken(QString nonce);
     void authorize(QString nonce, QString hostname);
