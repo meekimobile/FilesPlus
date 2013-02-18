@@ -1073,11 +1073,15 @@ QString GCDClient::media(QString nonce, QString uid, QString remoteFilePath)
             QScriptValue sc = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
             uri = sc.property("downloadUrl").toString();
             propertyReply->deleteLater();
+
+            uri += "&access_token=" + accessTokenPairMap[uid].token;
+        } else {
+            qDebug() << "GCDClient::media" << nonce << "propertyReply" << propertyReply->error() << propertyReply->errorString() << QString::fromUtf8(propertyReply->readAll());
+            uri = "";
         }
     }
-    uri += "&access_token=" + accessTokenPairMap[uid].token;
-    qDebug() << "GCDClient::media uri " << uri;
 
+    qDebug() << "GCDClient::media" << nonce << "uri" << uri;
     return uri;
 }
 
@@ -1276,8 +1280,6 @@ QNetworkReply * GCDClient::files(QString nonce, QString uid, QString remoteFileP
 QNetworkReply * GCDClient::property(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
 {
     qDebug() << "----- GCDClient::property -----" << remoteFilePath << callback;
-
-    QApplication::processEvents();
 
     QString uri = propertyURI.arg((remoteFilePath == "") ? RemoteRoot : remoteFilePath);
     uri = encodeURI(uri);
