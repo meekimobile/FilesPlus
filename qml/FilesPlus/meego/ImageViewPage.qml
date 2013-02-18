@@ -344,7 +344,7 @@ Page {
                     Image {
                         id: imageFlickView
                         source: getImageSource(previewUrl, timestamp) // NOTE It's populated while opening the page. Timestamp is used for force refreshing.
-                        fillMode: Image.PreserveAspectFit
+//                        fillMode: Image.PreserveAspectFit
 //                        width: imageGrid.cellWidth // Undefine to get actual width.
 //                        height: imageGrid.cellHeight // Undefine to get actual height.
 //                        sourceSize.width: (selectedCloudType == -1 && fileType.toUpperCase() != "SVG") ? imageGrid.cellWidth : undefined // Requires for showing preview cache on local drive.
