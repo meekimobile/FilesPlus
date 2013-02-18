@@ -123,12 +123,12 @@ QImage RemoteImageProvider::requestImage(const QString &id, QSize *size, const Q
         image = getCachedImage(id, requestedSize);
         size->setWidth(image.size().width());
         size->setHeight(image.size().height());
-    }
 
-    qDebug() << "RemoteImageProvider::requestImage reply id" << id
-             << "size" << size->width() << "," << size->height()
-             << "requestedSize" << requestedSize
-             << "image size" << image.size();
+        qDebug() << "RemoteImageProvider::requestImage return cached image"
+                 << "size" << size->width() << "," << size->height()
+                 << "requestedSize" << requestedSize
+                 << "image size" << image.size();
+    }
 
     return image;
 }
