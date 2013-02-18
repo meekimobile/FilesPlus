@@ -352,6 +352,7 @@ Page {
 
                         property real minPaintedWidth
                         property real minPaintedHeight
+                        property bool inPortrait: (imageGrid.cellWidth < imageGrid.cellHeight)
 
                         function getImageSource(url, timestamp) {
                             if (selectedCloudType != -1) {
@@ -366,21 +367,29 @@ Page {
                             }
                         }
 
+                        function scaleTo(w, h) {
+                            var wScale = w / width;
+                            var hScale = h / height;
+                            var scale = Math.min(wScale, hScale);
+                            width = width * scale;
+                            height = height * scale;
+                        }
+
+                        onInPortraitChanged: {
+                            console.debug("imageViewPage imageFlickView onInPortraitChanged");
+                            scaleTo(imageGrid.cellWidth, imageGrid.cellHeight);
+                        }
+
                         onStatusChanged: {
                             if (status == Image.Ready && source != "") {
+                                console.debug("imageViewPage imageFlickView onStatusChanged ready source " + source);
+                                console.debug("imageViewPage imageFlickView onStatusChanged ready width " + width + " height " + height);
                                 if (showGrid) {
-                                    if (width > imageGrid.cellWidth) {
-                                        width = imageGrid.cellWidth;
-                                        height = height * (imageGrid.cellWidth / width);
-                                    } else if (height > imageGrid.cellHeight) {
-                                        width = width * (imageGrid.cellHeight / height);
-                                        height = imageGrid.cellHeight;
-                                    }
+                                    scaleTo(imageGrid.cellWidth, imageGrid.cellHeight);
                                     minPaintedWidth = width;
                                     minPaintedHeight = height;
                                 }
-                                console.debug("imageViewPage imageFlickView onStatusChanged ready source " + source);
-                                console.debug("imageViewPage imageFlickView onStatusChanged ready width " + width + " height " + height);
+                                console.debug("imageViewPage imageFlickView onStatusChanged ready after width " + width + " height " + height);
                                 console.debug("imageViewPage imageFlickView onStatusChanged ready paintedWidth " + paintedWidth + " paintedHeight " + paintedHeight);
                                 console.debug("imageViewPage imageFlickView onStatusChanged ready minPaintedWidth " + minPaintedWidth + " minPaintedHeight " + minPaintedHeight);
                                 console.debug("imageViewPage imageFlickView onStatusChanged ready sourceSize.width " + sourceSize.width + " sourceSize.height " + sourceSize.height);
