@@ -18,6 +18,7 @@ Page {
     property bool showTools: true
     property real maxZoomFactor: 3
     property variant viewableImageFileTypes: ["JPG", "PNG", "GIF", "SVG"];
+    property bool inPortrait
 
     state: "grid"
     states: [
@@ -27,7 +28,7 @@ Page {
         },
         State {
             name: "flick"
-            PropertyChanges { target: imageViewPage; showGrid: false }
+            PropertyChanges { target: imageViewPage; explicit: true; showGrid: false }
         }
     ]
 
@@ -88,6 +89,9 @@ Page {
 
     onStatusChanged: {
         if (status == PageStatus.Active && imageGridModel.count <= 0) {
+            // Set once orientation changes is done.
+            inPortrait = window.inPortrait;
+            // Parse model.
             parseImageGridModel(model);
             // Position at selected image.
             imageGrid.currentIndex = (selectedModelIndex < 0) ? 0 : selectedModelIndex;
@@ -100,6 +104,8 @@ Page {
     function orientationChangeSlot() {
         // Signal from main.qml
         imageGrid.positionViewAtIndex(imageGrid.currentIndex, GridView.Contain);
+        // Set once orientation changes is done.
+        inPortrait = window.inPortrait;
     }
 
     function parseImageGridModel(model) {
@@ -352,7 +358,7 @@ Page {
 
                         property real minPaintedWidth
                         property real minPaintedHeight
-                        property bool inPortrait: (imageGrid.cellWidth < imageGrid.cellHeight)
+                        property bool inPortrait: imageViewPage.inPortrait
 
                         function getImageSource(url, timestamp) {
                             if (selectedCloudType != -1) {
@@ -370,14 +376,19 @@ Page {
                         function scaleTo(w, h) {
                             var wScale = w / width;
                             var hScale = h / height;
+                            console.debug("imageViewPage imageFlickView scaleTo w,h " + w + "," + h + " scale w,h " + wScale + "," + hScale);
                             var scale = Math.min(wScale, hScale);
                             width = width * scale;
                             height = height * scale;
                         }
 
                         onInPortraitChanged: {
-                            console.debug("imageViewPage imageFlickView onInPortraitChanged");
-                            scaleTo(imageGrid.cellWidth, imageGrid.cellHeight);
+                            console.debug("imageViewPage imageFlickView onInPortraitChanged name " + name + " inPortrait " + inPortrait);
+                            // Scale to fit page. As cell size's updating is not done yet.
+                            scaleTo(imageViewPage.width, imageViewPage.height);
+                            // Save minimum size in cell.
+                            minPaintedWidth = width;
+                            minPaintedHeight = height;
                         }
 
                         onStatusChanged: {
@@ -385,7 +396,9 @@ Page {
                                 console.debug("imageViewPage imageFlickView onStatusChanged ready source " + source);
                                 console.debug("imageViewPage imageFlickView onStatusChanged ready width " + width + " height " + height);
                                 if (showGrid) {
+                                    // Scale to fit cell.
                                     scaleTo(imageGrid.cellWidth, imageGrid.cellHeight);
+                                    // Save minimum size in cell.
                                     minPaintedWidth = width;
                                     minPaintedHeight = height;
                                 }
