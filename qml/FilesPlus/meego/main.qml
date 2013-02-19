@@ -799,7 +799,6 @@ PageStackWindow {
 
         property string selectedFilePath
         property string selectedURL
-        property alias printerModel: gcpPrinterModel
 
         ListModel {
             id: gcpPrinterModel
@@ -814,18 +813,18 @@ PageStackWindow {
 
         function getPrinterListModel() {
             var printerList = gcpClient.getStoredPrinterList();
-            console.debug("gcpClient.getPrinterListModel() " + printerList);
+            console.debug("gcpClient.getPrinterListModel() printerList " + printerList);
 
-            gcpPrinterModel.clear();
-            for (var i=0; i<printerList.length; i++)
-            {
-                gcpPrinterModel.append({
-                                 name: printerList[i]
-                             });
+            // Construct model.
+            var model = Qt.createQmlObject('import QtQuick 1.1; ListModel {}', gcpClient);
+
+            model.clear();
+            for (var i=0; i<printerList.length; i++) {
+                model.append({ name: printerList[i] });
             }
 
-            console.debug("gcpClient.getPrinterListModel() gcpPrinterModel.count " + gcpPrinterModel.count);
-            return gcpPrinterModel;
+            console.debug("gcpClient.getPrinterListModel() model.count " + model.count);
+            return model;
         }
 
         function resumePrinting() {
@@ -866,17 +865,7 @@ PageStackWindow {
 
                 gcpClient.authorize();
             } else {
-                var printerListModel = gcpClient.getPrinterListModel();
-                console.debug("window printFileSlot printerListModel.count=" + printerListModel.count);
-                if (printerListModel.count > 0) {
-                    showPrinterSelectionDialog(srcFilePath, "");
-                } else {
-                    // TODO Open progress dialog.
-                    downloadProgressDialog.titleText = appInfo.emptyStr+qsTr("Search for printers");
-                    downloadProgressDialog.indeterminate = true;
-                    downloadProgressDialog.open();
-                    gcpClient.search("");
-                }
+                showPrinterSelectionDialog(srcFilePath, "");
             }
         }
 
@@ -896,17 +885,7 @@ PageStackWindow {
 
                 gcpClient.authorize();
             } else {
-                var printerListModel = gcpClient.getPrinterListModel();
-                console.debug("gcpClient printFileSlot printerListModel.count=" + printerListModel.count);
-                if (printerListModel.count > 0) {
-                    showPrinterSelectionDialog("", url);
-                } else {
-                    // TODO Open progress dialog.
-                    downloadProgressDialog.titleText = appInfo.emptyStr+qsTr("Search for printers");
-                    downloadProgressDialog.indeterminate = true;
-                    downloadProgressDialog.open();
-                    gcpClient.search("");
-                }
+                showPrinterSelectionDialog("", url);
             }
         }
 
@@ -925,8 +904,8 @@ PageStackWindow {
             console.debug("window gcpClient onAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
-                // Resume printing
-                resumePrinting();
+                // Search for printers.
+                gcpClient.search("");
             } else {
                 gcpClient.refreshAccessToken();
             }
@@ -936,20 +915,13 @@ PageStackWindow {
             console.debug("window gcpClient onRefreshAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
-                // Resume printing if selectedFilePath exists.
-                if (resumePrinting()) {
-                    // Do nothing if printing is resumed.
-                } else {
-                    messageDialog.titleText = appInfo.emptyStr+qsTr("Reset CloudPrint");
-                    messageDialog.message = appInfo.emptyStr+qsTr("Resetting is done.");
-                    messageDialog.open();
-
-                    gcpClient.jobs("");
-                }
+                // Notify successful refreshAccessToken.
+                logInfo("CloudPrint " + qsTr("Refresh Token"), qsTr("Resetting is done."), 2000);
+                // Search for printers.
+                gcpClient.search("");
             } else {
                 // Notify failed refreshAccessToken.
-                logError("CloudPrint " + qsTr("Refresh Token"),
-                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                logError("CloudPrint " + qsTr("Refresh Token"), qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
         }
 
@@ -964,8 +936,12 @@ PageStackWindow {
             console.debug("window gcpClient onSearchReplySignal " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
-                // Once search done, open printerSelectionDialog
-                // TODO any case that error=0 but no printers returned.
+                // Update printer model.
+                if (printerSelectionDialog.model) {
+                    printerSelectionDialog.model.destroy();
+                }
+                printerSelectionDialog.model = getPrinterListModel();
+                // Once search done, resume printing.
                 resumePrinting();
             } else {
                 gcpClient.refreshAccessToken();
@@ -1004,13 +980,6 @@ PageStackWindow {
 
         onDownloadProgress: {
 //            console.debug("sandBox gcpClient onDownloadProgress " + bytesReceived + " / " + bytesTotal);
-
-            // Shows in progress bar.
-//            if (downloadProgressDialog.status != DialogStatus.Open) {
-//                downloadProgressDialog.titleText = qsTr("Searching for printers"
-//                downloadProgressDialog.indeterminate = false;
-//                downloadProgressDialog.open();
-//            }
             downloadProgressDialog.min = 0;
             downloadProgressDialog.max = bytesTotal;
             downloadProgressDialog.value = bytesReceived;
@@ -1049,6 +1018,10 @@ PageStackWindow {
         Component.onCompleted: {
             console.debug(Utility.nowText() + " window gcpClient onCompleted");
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("GCPClient"), 0.1);
+
+            if (gcpClient.isAuthorized()) {
+                gcpClient.search("");
+            }
         }
     }
 
@@ -2178,7 +2151,6 @@ PageStackWindow {
 
     PrinterSelectionDialog {
         id: printerSelectionDialog
-        model: gcpClient.printerModel
         onAccepted: {
             // Print on selected printer index.
             var pid = gcpClient.getPrinterId(printerSelectionDialog.selectedIndex);
@@ -2217,9 +2189,8 @@ PageStackWindow {
             }
         }
         onRejected: {
-//            // Reset popupToolPanel.
-//            popupToolPanel.selectedFilePath = "";
-//            popupToolPanel.selectedFileIndex = -1;
+            gcpClient.selectedFilePath = "";
+            gcpClient.selectedURL = "";
         }
     }
 

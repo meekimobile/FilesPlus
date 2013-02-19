@@ -12,7 +12,6 @@ SelectionDialog {
     titleText: (srcFilePath != "")
                ? appInfo.emptyStr+qsTr("Print %1 to").arg(fsModel.getFileName(srcFilePath))
                : appInfo.emptyStr+qsTr("Print URL to")
-//    titleIcon: "FilesPlusIcon.svg"
 
     onStatusChanged: {
 //        console.debug("PrinterSelectionDialog onStatusChanged " + status + " model.count " + model.count);
