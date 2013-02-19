@@ -24,7 +24,7 @@ ListItem {
 
     signal listItemIconError()
 
-    function getIconSource(refreshFlag) {
+    function getIconSource(timestamp) {
         var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
         var viewableTextFileTypes = ["TXT", "HTML"];
         
@@ -33,7 +33,11 @@ ListItem {
         } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
             var showThumbnail = appInfo.getSettingBoolValue("thumbnail.enabled", false);
             if (showThumbnail) {
-                return "image://local/" + absolutePath;
+                if (fileType.toUpperCase() == "SVG") {
+                    return "file://" + absolutePath
+                } else {
+                    return "image://local/" + absolutePath;
+                }
             } else {
                 return "photos_list.svg";
             }
@@ -80,7 +84,7 @@ ListItem {
                 height: 48
                 fillMode: Image.PreserveAspectFit
                 anchors.centerIn: parent
-                source: appInfo.emptySetting+listItem.getIconSource(false)
+                source: appInfo.emptySetting+listItem.getIconSource((new Date()).getTime())
 
                 BusyIndicator {
                     visible: listItemIconBusyVisible && (parent.status == Image.Loading || parent.status == Image.Error)
