@@ -801,10 +801,6 @@ PageStackWindow {
         property string selectedFilePath
         property string selectedURL
 
-        ListModel {
-            id: gcpPrinterModel
-        }
-
         function setGCPClientAuthCode(code) {
             var res = gcpClient.parseAuthorizationCode(code);
             if (res) {
