@@ -1,5 +1,57 @@
 #include "clouddrivemodel.h"
 
+bool nameLessThan(const QScriptValue &o1, const QScriptValue &o2)
+{
+//    qDebug() << "nameLessThan" << o1.property("name").toString().toLower() << o2.property("name").toString().toLower();
+    return o1.property("name").toString().toLower() < o2.property("name").toString().toLower();
+}
+
+bool timeGreaterThan(const QScriptValue &o1, const QScriptValue &o2)
+{
+    qDebug() << "timeGreaterThan" << o1.property("lastModified").toString() << o2.property("lastModified").toString();
+    return o1.property("lastModified").toString()  > o2.property("lastModified").toString();
+}
+
+bool typeLessThan(const QScriptValue &o1, const QScriptValue &o2)
+{
+    if (o1.property("isDir").toBool() && !o2.property("isDir").toBool()) {
+        // If dir before file, return true.
+        return true;
+    } else if (!o1.property("isDir").toBool() && o2.property("isDir").toBool()) {
+        // If file before dir, return false;
+        return false;
+    } else {
+        // If both are dir, compare name.
+        // If both are file, compare type and name.
+        if (o1.property("isDir").toBool() && o2.property("isDir").toBool()) {
+//            qDebug() << "typeLessThan" << o1.name << o1.fileType << o2.name << o2.fileType;
+            return o1.property("name").toString().toLower() < o2.property("name").toString().toLower();
+        } else {
+            if (o1.property("fileType").toString().toLower() == o2.property("fileType").toString().toLower()) {
+                return o1.property("name").toString().toLower() < o2.property("name").toString().toLower();
+            } else if (o1.property("fileType").toString().toLower() < o2.property("fileType").toString().toLower()) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+}
+
+bool sizeGreaterThan(const QScriptValue &o1, const QScriptValue &o2)
+{
+    if (o1.property("isDir").toBool() && !o2.property("isDir").toBool()) {
+        // If dir before file, return true.
+        return true;
+    } else if (!o1.property("isDir").toBool() && o2.property("isDir").toBool()) {
+        // If file before dir, return false;
+        return false;
+    } else {
+        // If both the same, compare size.
+        return o1.property("size").toInteger() > o2.property("size").toInteger();
+    }
+}
+
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
 const QString CloudDriveModel::ITEM_DAT_PATH = "/home/user/.filesplus/CloudDriveModel.dat";
@@ -2693,7 +2745,12 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
     if (job.operation == MigrateFile) {
         emit migrateFileReplySignal(nonce, err, errMsg, msg);
     } else {
-        emit browseReplySignal(nonce, err, errMsg, msg);
+        if (err == 0) {
+            m_cachedJsonText = sortJsonText(msg, m_sortFlag);
+            emit browseReplySignal(nonce, err, errMsg, m_cachedJsonText);
+        } else {
+            emit browseReplySignal(nonce, err, errMsg, msg);
+        }
     }
 }
 
@@ -3929,3 +3986,70 @@ void CloudDriveModel::createTempPath()
     }
 }
 
+int CloudDriveModel::getSortFlag()
+{
+    return m_sortFlag;
+}
+
+void CloudDriveModel::setSortFlag(int sortFlag)
+{
+    m_sortFlag = sortFlag;
+
+    // Sorting.
+    QString msg = sortJsonText(m_cachedJsonText, m_sortFlag);
+
+    emit browseReplySignal(createNonce(), 0, "Set sort flag", msg);
+}
+
+QString CloudDriveModel::sortJsonText(QString &jsonText, int sortFlag)
+{
+    QScriptEngine engine;
+    QScriptValue parsedJsonObj = engine.evaluate("(" + jsonText + ")");
+
+    qDebug() << "CloudDriveModel::sortJsonText parsedJsonObj.children.length" << parsedJsonObj.property("children").property("length").toInteger();
+
+    QList<QScriptValue> itemList;
+    for (int i = 0; i < parsedJsonObj.property("children").property("length").toInteger(); i++) {
+        itemList.append(parsedJsonObj.property("children").property(i));
+    }
+
+    sortItemList(itemList, sortFlag);
+
+    QScriptValue sortedChildren = engine.newArray();
+    for (int i = 0; i < itemList.count(); i++) {
+        sortedChildren.setProperty(i, itemList.at(i));
+    }
+    parsedJsonObj.setProperty("children", sortedChildren);
+    qDebug() << "CloudDriveModel::sortJsonText sorted parsedJsonObj.children.length" << parsedJsonObj.property("children").property("length").toInteger();
+
+    return stringifyScriptValue(engine, parsedJsonObj);
+}
+
+void CloudDriveModel::sortItemList(QList<QScriptValue> &itemList, int sortFlag)
+{
+    QDateTime start = QDateTime::currentDateTime();
+    qDebug() << start.toString(Qt::ISODate) << "CloudDriveModel::sortItemList sortFlag" << sortFlag << "itemList.length()" << itemList.length();
+
+    switch (sortFlag) {
+    case SortByName:
+        qSort(itemList.begin(), itemList.end(), nameLessThan);
+        break;
+    case SortByTime:
+        qSort(itemList.begin(), itemList.end(), timeGreaterThan);
+        break;
+    case SortByType:
+        qSort(itemList.begin(), itemList.end(), typeLessThan);
+        break;
+    case SortBySize:
+        qSort(itemList.begin(), itemList.end(), sizeGreaterThan);
+        break;
+    }
+
+    QDateTime end = QDateTime::currentDateTime();
+    qDebug() << end.toString(Qt::ISODate) << "CloudDriveModel::sortItemList done elapse" << start.msecsTo(end) << "ms. itemList.length()" << itemList.length();
+}
+
+QString CloudDriveModel::stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj)
+{
+    return engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
+}

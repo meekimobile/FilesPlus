@@ -30,7 +30,7 @@ bool typeLessThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
 //            qDebug() << "typeLessThan" << o1.name << o1.fileType << o2.name << o2.fileType;
             return o1.name.toLower() < o2.name.toLower();
         } else {
-            if (o1.fileType == o2.fileType) {
+            if (o1.fileType.toLower() == o2.fileType.toLower()) {
                 return o1.name.toLower() < o2.name.toLower();
             } else if (o1.fileType.toLower() < o2.fileType.toLower()) {
                 return true;

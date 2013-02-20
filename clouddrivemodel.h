@@ -30,9 +30,11 @@ class CloudDriveModel : public QDeclarativeItem
 {
     Q_OBJECT
     Q_ENUMS(ClientTypes)
+    Q_ENUMS(SortFlags)
     Q_ENUMS(Operations)
     Q_PROPERTY(QString dirtyHash READ dirtyHash CONSTANT)
     Q_PROPERTY(bool dropboxFullAccess READ getDropboxFullAccess WRITE setDropboxFullAccess)
+    Q_PROPERTY(int sortFlag READ getSortFlag WRITE setSortFlag)
 public:
     static const QString ITEM_DAT_PATH;
     static const QString ITEM_DB_PATH;
@@ -51,6 +53,13 @@ public:
         SkyDrive,
         Ftp,
         WebDAV
+    };
+
+    enum SortFlags {
+        SortByName,
+        SortByTime,
+        SortBySize,
+        SortByType
     };
 
     enum Operations {
@@ -250,6 +259,9 @@ public:
     Q_INVOKABLE QString thumbnail(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString format, QString size); // Used by DropboxClient and ImageViewPage.qml.
     Q_INVOKABLE void cacheImage(QString remoteFilePath, QString url, int w, int h, QString caller);
     Q_INVOKABLE QString media(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);    
+
+    Q_INVOKABLE int getSortFlag();
+    Q_INVOKABLE void setSortFlag(int sortFlag);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void initializeDBStarted(QString nonce);
@@ -413,6 +425,13 @@ private:
 
     // Create temp path for storing temporary downloaded file during migration.
     void createTempPath();
+
+    // Sorting.
+    int m_sortFlag;
+    QString m_cachedJsonText;
+    QString sortJsonText(QString &jsonText, int sortFlag);
+    void sortItemList(QList<QScriptValue> &itemList, int sortFlag);
+    QString stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj);
 };
 
 #endif // CLOUDDRIVEMODEL_H
