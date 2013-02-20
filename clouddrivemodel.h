@@ -261,7 +261,7 @@ signals:
     void jobUpdatedSignal(QString nonce);
     void jobRemovedSignal(QString nonce);
     void refreshRequestSignal(QString nonce);
-    void cacheImageFinished(QString remoteFilePath, int err, QString errMsg, QString caller);
+    void cacheImageFinished(QString absoluteFilePath, int err, QString errMsg, QString caller);
 
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);

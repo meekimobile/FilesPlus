@@ -2076,12 +2076,12 @@ PageStackWindow {
         }
 
         onCacheImageFinished: {
-            console.debug("window cloudDriveModel onCacheImageFinished " + remoteFilePath + " " + err + " " + errMsg + " caller " + caller);
+            console.debug("window cloudDriveModel onCacheImageFinished " + absoluteFilePath + " " + err + " " + errMsg + " caller " + caller);
             // Refresh item only if there is no error.
             if (err == 0) {
                 var p = findPage(caller);
                 if (p && p.refreshItem) {
-                    p.refreshItem(remoteFilePath);
+                    p.refreshItem(absoluteFilePath);
                 }
             }
         }

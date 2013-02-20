@@ -7,6 +7,8 @@
 class LocalFileImageProvider : public QDeclarativeImageProvider
 {
 public:
+    static const int DEFAULT_CACHE_IMAGE_SIZE;
+
     LocalFileImageProvider(QString cachePath);
 
     QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize);

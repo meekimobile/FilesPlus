@@ -141,8 +141,8 @@ Page {
                 } else {
                     // Local image.
                     modelItem.sourceUrl = "file://" + modelItem.absolutePath;
-//                    modelItem.previewUrl = "image://local/" + modelItem.absolutePath; // Cache local image.
-                    modelItem.previewUrl = "file://" + modelItem.absolutePath; // No cache as file are local.
+//                    modelItem.previewUrl = "file://" + modelItem.absolutePath; // No cache as file are local.
+                    modelItem.previewUrl = "image://local/" + modelItem.absolutePath; // Cache local image.
                 }
                 imageGridModel.append(modelItem);
 
@@ -285,6 +285,9 @@ Page {
                     console.debug("imageViewPage imageFlickPinchArea onPinchStarted imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
                     console.debug("imageViewPage imageFlickPinchArea onPinchStarted imageFlickPinchArea.startWidth " + imageFlickPinchArea.startWidth + " imageFlickPinchArea.startHeight " + imageFlickPinchArea.startHeight);
                     console.debug("imageViewPage imageFlickPinchArea onPinchStarted imageFlickPinchArea.startX " + imageFlickPinchArea.startX + " imageFlickPinchArea.startY " + imageFlickPinchArea.startY);
+
+                    // Switch to flick mode.
+                    imageViewPage.state = "flick";
                 }
                 onPinchUpdated: {
                     console.debug("imageViewPage imageFlickPinchArea onPinchUpdated pinch.scale " + pinch.scale);
@@ -369,11 +372,17 @@ Page {
                                     return url + "#t=" + timestamp;
                                 }
                             } else {
-                                return url;
+                                // Local image.
+                                return url + "#t=" + timestamp;
                             }
                         }
 
                         function scaleTo(w, h) {
+                            if (width == 0 || height == 0) {
+                                console.debug("imageViewPage imageFlickView can't scale. width,height " + width + "," + height);
+                                return;
+                            }
+
                             var wScale = w / width;
                             var hScale = h / height;
                             console.debug("imageViewPage imageFlickView scaleTo w,h " + w + "," + h + " scale w,h " + wScale + "," + hScale);
@@ -413,6 +422,9 @@ Page {
                                 if (imageSource.indexOf("image://remote/") == 0) {
                                     // Cache preview image.
                                     cloudDriveModel.cacheImage(absolutePath, preview, -1, -1, imageViewPage.name); // Use original size because previewUrl is already specified with size.
+                                } else if (imageSource.indexOf("image://local/") == 0) {
+                                    // Cache preview image.
+                                    cloudDriveModel.cacheImage(absolutePath, absolutePath, -1, -1, imageViewPage.name); // Use original file path to generate cached image.
                                 }
                             }
                         }
