@@ -16,6 +16,7 @@ public:
     
     Q_INVOKABLE int getDriveTypeInt(const QString &drive);
     Q_INVOKABLE QStringList getDriveList();
+    Q_INVOKABLE QString getPrivateDrive();
 
     Q_INVOKABLE QString getFileContent(const QString &localPath);
     Q_INVOKABLE int saveFileContent(const QString &localPath, const QString &text);

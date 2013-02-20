@@ -81,6 +81,16 @@ QStringList SystemInfoHelper::getDriveList() {
     return driveList;
 }
 
+QString SystemInfoHelper::getPrivateDrive()
+{
+#if defined(Q_OS_SYMBIAN)
+    return QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+#else
+    return "";
+#endif
+
+}
+
 QString SystemInfoHelper::getFileContent(const QString &localPath)
 {
     qDebug() << "SystemInfoHelper::getFileContent localPath " << localPath;

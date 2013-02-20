@@ -157,6 +157,22 @@ Page {
                 });
             }
         }
+
+        // Add private folder.
+        var privateDrive = systemInfoHelper.getPrivateDrive();
+        if (privateDrive != "") {
+            model.append({
+                             logicalDrive: privateDrive,
+                             availableSpace: 0,
+                             totalSpace: -1,
+                             driveType: 1, // Internal drive.
+                             email: "",
+                             uid: "",
+                             name: "",
+                             cloudDriveType: -1,
+                             iconSource: ""
+            });
+        }
     }
 
     function refreshSlot(caller) {
