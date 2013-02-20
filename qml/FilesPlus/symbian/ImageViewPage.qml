@@ -317,7 +317,6 @@ Page {
                     // Adjust size.
                     if (imageFlickView.width <= imageFlickView.minPaintedWidth && imageFlickView.height <= imageFlickView.minPaintedHeight) {
                         // Return to original cell size if scaled size is smaller than cell size.
-                        // Issue: gridW,H should keep original grid size.
                         imageFlickView.width = imageFlickView.minPaintedWidth;
                         imageFlickView.height = imageFlickView.minPaintedHeight;
 
@@ -439,7 +438,18 @@ Page {
 
                             onDoubleClicked: {
                                 console.debug("imageViewPage imageFlick onDoubleClicked");
-                                imageViewPage.state = "grid";
+                                if (!showGrid) {
+                                    // Return to original cell size if scaled size is smaller than cell size.
+                                    imageFlickView.width = imageFlickView.minPaintedWidth;
+                                    imageFlickView.height = imageFlickView.minPaintedHeight;
+
+                                    // Reset center.
+                                    imageFlick.contentX = 0;
+                                    imageFlick.contentY = 0;
+
+                                    // Switch to flick mode.
+                                    imageViewPage.state = "grid";
+                                }
                             }
                         }
 
