@@ -1246,7 +1246,6 @@ PageStackWindow {
             remoteParentPath = parsedObj.absolutePath;
             remoteParentPathName = cloudDriveModel.isRemoteAbsolutePath(selectedCloudType) ? parsedObj.absolutePath : parsedObj.name;
             remoteParentParentPath = parsedObj.parentPath;
-            // TODO Sort children.
             for (var i=0; i < parsedObj.children.length; i++) {
                 var modelItem = parsedObj.children[i];
                 model.append(modelItem);

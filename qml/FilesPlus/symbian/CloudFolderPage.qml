@@ -330,7 +330,7 @@ Page {
 
     CloudFolderMenu {
         id: mainMenu
-        disabledMenus: ["syncConnectedItems","syncCurrentFolder","sortByMenu"]
+        disabledMenus: ["syncConnectedItems","syncCurrentFolder"]
 
         onPaste: {
             fileActionDialog.targetPath = remoteParentPath;
@@ -351,6 +351,9 @@ Page {
         }
         onDrives: {
             pageStack.pop(cloudFolderPage);
+        }
+        onOpenSortByMenu: {
+            sortByMenu.open();
         }
         onOpenSettings: {
             pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
@@ -373,6 +376,22 @@ Page {
             }
 
             return true;
+        }
+    }
+
+    SortByMenu {
+        id: sortByMenu
+
+        onSelectSort: {
+            console.debug("sortByMenu setSortFlag flag=" + flag);
+            cloudDriveModel.sortFlag = flag;
+        }
+
+        onStatusChanged: {
+            if (status == DialogStatus.Open) {
+                // TODO set sortFlag before status=Open
+                sortFlag = cloudDriveModel.sortFlag;
+            }
         }
     }
 
