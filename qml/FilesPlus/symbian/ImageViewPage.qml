@@ -328,6 +328,7 @@ Page {
                         imageViewPage.state = "grid";
                     } else {
                         // Switch to actual image.
+                        imageFlickView.source = "";
                         imageFlickView.sourceSize.width = 1024; // Requires to limit cached image size for Symbian only.
                         imageFlickView.sourceSize.height = 1024; // Requires to limit cached image size for Symbian only.
                         imageFlickView.source = fetchCurrentPendingSourceUrl();

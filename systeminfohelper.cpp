@@ -1,6 +1,7 @@
 #include <QDir>
-#include "systeminfohelper.h"
 #include <QDebug>
+#include <QDesktopServices>
+#include "systeminfohelper.h"
 
 SystemInfoHelper::SystemInfoHelper(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
