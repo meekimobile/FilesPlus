@@ -419,6 +419,9 @@ bool FolderSizeItemListModel::isRoot(const QString absPath)
     QDir dir(absPath);
 
     QStringList driveList = getLogicalDriveList();
+#if defined(Q_OS_SYMBIAN)
+    driveList.append(QDesktopServices::storageLocation(QDesktopServices::DataLocation));
+#endif
     bool isRootLogicalDrive = driveList.contains(absPath);
 //    qDebug() << "FolderSizeItemListModel::isRoot path" << absPath << "dir.isRoot()" << dir.isRoot() << "driveList" << driveList << "isRootLogicalDrive" << isRootLogicalDrive;
 
