@@ -7,9 +7,9 @@
 #include <QImageReader>
 
 #if defined(Q_WS_HARMATTAN)
-const int CacheImageWorker::DEFAULT_CACHE_IMAGE_SIZE = 480;
+const int CacheImageWorker::DEFAULT_CACHE_IMAGE_SIZE = 854;
 #else
-const int CacheImageWorker::DEFAULT_CACHE_IMAGE_SIZE = 360;
+const int CacheImageWorker::DEFAULT_CACHE_IMAGE_SIZE = 640;
 #endif
 
 CacheImageWorker::CacheImageWorker(const QString absoluteFilePath, const QString url, const QSize &requestedSize, const QString cachePath, const QString caller)

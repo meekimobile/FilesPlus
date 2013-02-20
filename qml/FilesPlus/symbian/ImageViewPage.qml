@@ -141,8 +141,9 @@ Page {
                     modelItem.previewUrl = helper.getUrl(modelItem.absolutePath);
                 } else {
                     // Local image.
-                    modelItem.sourceUrl = "image://local/" + modelItem.absolutePath; // Cache local image. For Symbian only.
-                    modelItem.previewUrl = "image://local/" + modelItem.absolutePath; // Cache local image. For Symbian only.
+                    modelItem.sourceUrl = helper.getUrl(modelItem.absolutePath);
+//                    modelItem.previewUrl = helper.getUrl(modelItem.absolutePath); // No cache as file are local.
+                    modelItem.previewUrl = "image://local/" + modelItem.absolutePath; // Cache local image.
                 }
                 imageGridModel.append(modelItem);
 
@@ -278,9 +279,6 @@ Page {
                 }
 
                 onPinchStarted: {
-                    // Switch to flick mode.
-                    imageViewPage.state = "flick";
-
                     imageFlickPinchArea.startWidth = imageFlickView.width;
                     imageFlickPinchArea.startHeight = imageFlickView.height;
                     imageFlickPinchArea.startX = imageFlick.contentX + (imageFlick.width / 2);
@@ -288,6 +286,9 @@ Page {
                     console.debug("imageViewPage imageFlickPinchArea onPinchStarted imageFlick.contentX " + imageFlick.contentX + " imageFlick.contentY " + imageFlick.contentY);
                     console.debug("imageViewPage imageFlickPinchArea onPinchStarted imageFlickPinchArea.startWidth " + imageFlickPinchArea.startWidth + " imageFlickPinchArea.startHeight " + imageFlickPinchArea.startHeight);
                     console.debug("imageViewPage imageFlickPinchArea onPinchStarted imageFlickPinchArea.startX " + imageFlickPinchArea.startX + " imageFlickPinchArea.startY " + imageFlickPinchArea.startY);
+
+                    // Switch to flick mode.
+                    imageViewPage.state = "flick";
                 }
                 onPinchUpdated: {
                     console.debug("imageViewPage imageFlickPinchArea onPinchUpdated pinch.scale " + pinch.scale);
@@ -328,9 +329,9 @@ Page {
                         imageViewPage.state = "grid";
                     } else {
                         // Switch to actual image.
+                        imageFlickView.sourceSize.width = 1024; // Requires to limit cached image size for Symbian only.
+                        imageFlickView.sourceSize.height = 1024; // Requires to limit cached image size for Symbian only.
                         imageFlickView.source = fetchCurrentPendingSourceUrl();
-//                        imageFlickView.sourceSize.width = imageFlickView.width; // Requires to show proper cached image size.
-//                        imageFlickView.sourceSize.height = imageFlickView.height; // Requires to show proper cached image size.
                         console.debug("imageViewPage imageFlickPinchArea onPinchFinished after imageFlickView.source " + imageFlickView.source);
 
                         // Set center.
@@ -348,7 +349,7 @@ Page {
                     contentWidth: imageFlickView.width
                     contentHeight: imageFlickView.height
                     anchors.centerIn: parent
-                    interactive: !showGrid
+//                    interactive: !showGrid
 
                     Image {
                         id: imageFlickView
@@ -356,8 +357,8 @@ Page {
 //                        fillMode: Image.PreserveAspectFit
 //                        width: imageGrid.cellWidth // Undefine to get actual width.
 //                        height: imageGrid.cellHeight // Undefine to get actual height.
-                        sourceSize.width: (selectedCloudType == -1 && fileType.toUpperCase() != "SVG") ? (showGrid ? 360 : 1024) : undefined // Requires for showing preview on Symbian's local drive.
-                        sourceSize.height: (selectedCloudType == -1 && fileType.toUpperCase() != "SVG") ? (showGrid ? 360 : 1024) : undefined // Requires for showing preview on Symbian's local drive.
+//                        sourceSize.width: (selectedCloudType == -1 && fileType.toUpperCase() != "SVG") ? imageGrid.cellWidth : undefined // Requires for showing preview cache on local drive.
+//                        sourceSize.height: (selectedCloudType == -1 && fileType.toUpperCase() != "SVG") ? imageGrid.cellHeight : undefined // Requires for showing preview cache on local drive.
 
                         property real minPaintedWidth
                         property real minPaintedHeight
@@ -372,11 +373,17 @@ Page {
                                     return url + "#t=" + timestamp;
                                 }
                             } else {
-                                return url;
+                                // Local image.
+                                return url + "#t=" + timestamp;
                             }
                         }
 
                         function scaleTo(w, h) {
+                            if (width == 0 || height == 0) {
+                                console.debug("imageViewPage imageFlickView can't scale. width,height " + width + "," + height);
+                                return;
+                            }
+
                             var wScale = w / width;
                             var hScale = h / height;
                             console.debug("imageViewPage imageFlickView scaleTo w,h " + w + "," + h + " scale w,h " + wScale + "," + hScale);
@@ -400,7 +407,7 @@ Page {
                                 console.debug("imageViewPage imageFlickView onStatusChanged ready width " + width + " height " + height);
                                 if (showGrid) {
                                     // Scale to fit cell.
-                                    scaleTo(imageGrid.cellWidth, imageGrid.cellHeight);
+                                    scaleTo(imageViewPage.width, imageViewPage.height);
                                     // Save minimum size in cell.
                                     minPaintedWidth = width;
                                     minPaintedHeight = height;
@@ -417,8 +424,8 @@ Page {
                                     // Cache preview image.
                                     cloudDriveModel.cacheImage(absolutePath, preview, -1, -1, imageViewPage.name); // Use original size because previewUrl is already specified with size.
                                 } else if (imageSource.indexOf("image://local/") == 0) {
-                                    // TODO Cache preview image.
-//                                    cloudDriveModel.cacheImage(absolutePath, preview, -1, -1, imageViewPage.name); // Use original size because previewUrl is already specified with size.
+                                    // Cache preview image.
+                                    cloudDriveModel.cacheImage(absolutePath, absolutePath, -1, -1, imageViewPage.name); // Use original file path to generate cached image.
                                 }
                             }
                         }

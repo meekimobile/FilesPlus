@@ -329,8 +329,6 @@ Page {
                     } else {
                         // Switch to actual image.
                         imageFlickView.source = fetchCurrentPendingSourceUrl();
-//                        imageFlickView.sourceSize.width = imageFlickView.width; // Requires to show proper cached image size.
-//                        imageFlickView.sourceSize.height = imageFlickView.height; // Requires to show proper cached image size.
                         console.debug("imageViewPage imageFlickPinchArea onPinchFinished after imageFlickView.source " + imageFlickView.source);
 
                         // Set center.
@@ -348,7 +346,7 @@ Page {
                     contentWidth: imageFlickView.width
                     contentHeight: imageFlickView.height
                     anchors.centerIn: parent
-                    interactive: !showGrid
+//                    interactive: !showGrid
 
                     Image {
                         id: imageFlickView
@@ -406,7 +404,7 @@ Page {
                                 console.debug("imageViewPage imageFlickView onStatusChanged ready width " + width + " height " + height);
                                 if (showGrid) {
                                     // Scale to fit cell.
-                                    scaleTo(imageGrid.cellWidth, imageGrid.cellHeight);
+                                    scaleTo(imageViewPage.width, imageViewPage.height);
                                     // Save minimum size in cell.
                                     minPaintedWidth = width;
                                     minPaintedHeight = height;
