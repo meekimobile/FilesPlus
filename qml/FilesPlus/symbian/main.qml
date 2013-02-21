@@ -1758,6 +1758,11 @@ PageStackWindow {
 //            }
         }
 
+        onRefreshFolderCacheSignal: {
+            // TODO Remove folder cache.
+            fsModel.removeCache(localPath);
+        }
+
         onJobQueueStatusSignal: {
             if (pageStack) {
                 var p = findPage("settingPage");

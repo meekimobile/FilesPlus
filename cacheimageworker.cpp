@@ -126,6 +126,7 @@ void CacheImageWorker::cacheRemoteImage(const QString &url, const QSize &request
                 cachedFileInfo.refresh();
                 qDebug() << "CacheImageWorker::cacheRemoteImage save image to" << cachedFileInfo.absoluteFilePath() << "size" << cachedFileInfo.size();
                 emit cacheImageFinished(m_absoluteFilePath, 0, "Image was saved.", m_caller);
+                emit refreshFolderCacheSignal(cachedFileInfo.absoluteFilePath());
             } else {
                 qDebug() << "CacheImageWorker::cacheRemoteImage can't save image to" << cachedFileInfo.absoluteFilePath();
                 emit cacheImageFinished(m_absoluteFilePath, -1, "Can't save image.", m_caller);
@@ -198,6 +199,7 @@ void CacheImageWorker::cacheLocalImage(const QString &filePath, const QSize &req
                 cachedFileInfo.refresh();
                 qDebug() << "CacheImageWorker::cacheLocalImage save image to" << cachedFileInfo.absoluteFilePath() << "size" << cachedFileInfo.size();
                 emit cacheImageFinished(m_absoluteFilePath, 0, "Image was saved.", m_caller);
+                emit refreshFolderCacheSignal(cachedFileInfo.absoluteFilePath());
             } else {
                 qDebug() << "CacheImageWorker::cacheLocalImage can't save image to" << cachedFileInfo.absoluteFilePath();
                 emit cacheImageFinished(m_absoluteFilePath, -1, "Can't save image.", m_caller);

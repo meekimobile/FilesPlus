@@ -270,6 +270,7 @@ signals:
     void proceedNextJobSignal();
     void jobQueueStatusSignal(int runningJobCount, int jobQueueCount, int jobCount , int itemCount);
     void localChangedSignal(QString localPath);
+    void refreshFolderCacheSignal(QString localPath);
     void jobEnqueuedSignal(QString nonce, QString localPath);
     void jobUpdatedSignal(QString nonce);
     void jobRemovedSignal(QString nonce);

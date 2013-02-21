@@ -336,11 +336,14 @@ void FolderSizeItemListModel::fsWatcherDirectoryChangedSlot(const QString &entry
 {
     qDebug() << "FolderSizeItemListModel::fsWatcherDirectoryChangedSlot changed entry" << entry << "m_fsWatcher->directories()" << m_fsWatcher->directories();
 
-    // Enqueue job.
-    FolderSizeJob job(createNonce(), FolderSizeModelThread::FetchDirSize, entry, "", true);
-    m_jobQueue.enqueue(job);
+    // Remove folder cache to force refresh.
+    removeCache(entry);
 
-    emit proceedNextJobSignal();
+//    // Enqueue job.
+//    FolderSizeJob job(createNonce(), FolderSizeModelThread::FetchDirSize, entry, "", true);
+//    m_jobQueue.enqueue(job);
+
+//    emit proceedNextJobSignal();
 }
 
 void FolderSizeItemListModel::changeDir(const QString &name, const int sortFlag)
@@ -788,10 +791,15 @@ void FolderSizeItemListModel::initializeFSWatcher()
 #ifdef Q_OS_SYMBIAN
 //    m_fsWatcher->addPath( QDesktopServices::storageLocation( QDesktopServices::DocumentsLocation ) ); // It's E:/ on Symbian which is too wide scope.
     m_fsWatcher->addPath( "E:/DCIM" ); // Captured images location for Symbian.
+    m_fsWatcher->addPath( "E:/temp" ); // Temp location for Symbian.
 #elif defined(Q_WS_HARMATTAN)
     m_fsWatcher->addPath( QDesktopServices::storageLocation( QDesktopServices::DocumentsLocation ) );
     m_fsWatcher->addPath( "/home/user/MyDocs/DCIM" ); // Captured images location for Meego.
+    m_fsWatcher->addPath( "/home/user/MyDocs/temp" ); // Temp location for Meego.
 #endif
+
+    qDebug() << "FolderSizeItemListModel::initializeFSWatcher watched directories" << m_fsWatcher->directories();
+
     connect(m_fsWatcher, SIGNAL(directoryChanged(QString)), SLOT(fsWatcherDirectoryChangedSlot(QString)) );
 }
 

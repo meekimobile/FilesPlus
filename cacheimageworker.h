@@ -16,6 +16,7 @@ public:
     void run();
 signals:
     void cacheImageFinished(QString absoluteFilePath, int err, QString errMsg, QString caller);
+    void refreshFolderCacheSignal(QString absoluteCacheFilePath);
 private:
     QString m_absoluteFilePath;
     QString m_url;

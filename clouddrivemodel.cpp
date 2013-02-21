@@ -2460,6 +2460,7 @@ void CloudDriveModel::cacheImage(QString remoteFilePath, QString url, int w, int
 {
     CacheImageWorker *worker = new CacheImageWorker(remoteFilePath, url, QSize(w,h), TEMP_PATH, caller);
     connect(worker, SIGNAL(cacheImageFinished(QString,int,QString,QString)), SIGNAL(cacheImageFinished(QString,int,QString,QString)));
+    connect(worker, SIGNAL(refreshFolderCacheSignal(QString)), SIGNAL(refreshFolderCacheSignal(QString)));
     QThreadPool::globalInstance()->start(worker);
 }
 
