@@ -59,7 +59,7 @@ Please click &apos;OK&apos; to continue.</translatorcomment>
 <context>
     <name>BluetoothSelectionDialog</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/BluetoothSelectionDialog.qml" line="+21"/>
+        <location filename="../qml/FilesPlus/meego/BluetoothSelectionDialog.qml" line="+20"/>
         <location filename="../qml/FilesPlus/symbian/BluetoothSelectionDialog.qml" line="+20"/>
         <source>Scanning...</source>
         <translation>搜寻蓝牙设备 ...</translation>
@@ -962,8 +962,14 @@ Please click &apos;OK&apos; to continue.</translatorcomment>
 <context>
     <name>DrivePage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/DrivePage.qml" line="+238"/>
-        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+238"/>
+        <location filename="../qml/FilesPlus/meego/DrivePage.qml" line="+172"/>
+        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+172"/>
+        <source>Private drive</source>
+        <translation>秘密存储</translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+68"/>
         <source>Drives</source>
         <translation>数据存储</translation>
     </message>
@@ -2534,7 +2540,7 @@ Reset current folder&apos;s cache</translatorcomment>
     <name>SettingPage</name>
     <message>
         <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+248"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+255"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+261"/>
         <source>Cancel queued jobs</source>
         <translatorcomment>[Edited text copy]
 Cancel queued activities</translatorcomment>
@@ -2548,7 +2554,7 @@ Cancel queued activities</translatorcomment>
     </message>
     <message>
         <location line="-200"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-206"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-212"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
@@ -2556,13 +2562,13 @@ Cancel queued activities</translatorcomment>
         <location line="+6"/>
         <location line="+207"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <location line="+213"/>
+        <location line="+219"/>
         <source>Logging (Debug)</source>
         <translation>日志（调试）</translation>
     </message>
     <message>
         <location line="-206"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-212"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-218"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -2579,7 +2585,7 @@ FilesPlus 现在正在退出。
     </message>
     <message>
         <location line="+188"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+194"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+200"/>
         <source>Show cloud print jobs</source>
         <translatorcomment>[Edited text copy]
 Shows CloudPrint jobs</translatorcomment>
@@ -2669,7 +2675,7 @@ Shows CloudDrive accounts</translatorcomment>
     </message>
     <message>
         <location line="+8"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+8"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+9"/>
         <source>Ignore WebDAV SSL self-signed certificate errors</source>
         <translation>忽略WebDAV的SSL自签名证书错误</translation>
     </message>
@@ -2679,7 +2685,7 @@ Shows CloudDrive accounts</translatorcomment>
     </message>
     <message>
         <location line="-7"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-7"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-8"/>
         <source>Keep bluetooth off</source>
         <translatorcomment>After use, turn off Bluetooth</translatorcomment>
         <translation>使用后关闭蓝牙</translation>
@@ -2716,7 +2722,7 @@ Shows CloudDrive accounts</translatorcomment>
     </message>
     <message>
         <location line="+33"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+33"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+34"/>
         <source>Monitoring</source>
         <translation>监控</translation>
     </message>
@@ -2728,7 +2734,7 @@ Shows CloudDrive accounts</translatorcomment>
     </message>
     <message numerus="yes">
         <location line="+138"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+139"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+142"/>
         <source>%n sec.</source>
         <translation>
             <numerusform>%n 秒</numerusform>
@@ -2773,6 +2779,11 @@ Shows CloudDrive accounts</translatorcomment>
     <message>
         <source>Locale</source>
         <translation type="obsolete">语言环境</translation>
+    </message>
+    <message>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-274"/>
+        <source>Show private drive on drive page</source>
+        <translation>显示秘密存储在数据存储</translation>
     </message>
 </context>
 <context>
@@ -2872,30 +2883,30 @@ Shows CloudDrive accounts</translatorcomment>
     <name>main</name>
     <message>
         <location filename="../qml/FilesPlus/meego/main.qml" line="+83"/>
-        <location line="+1719"/>
+        <location line="+1734"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+84"/>
         <location line="+1719"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location line="-1717"/>
-        <location line="+1753"/>
+        <location line="-1732"/>
+        <location line="+1768"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="-1717"/>
         <location line="+1753"/>
         <source>Move</source>
         <translation>移动</translation>
     </message>
     <message>
-        <location line="-1751"/>
-        <location line="+1785"/>
+        <location line="-1766"/>
+        <location line="+1800"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="-1751"/>
         <location line="+1785"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="-1676"/>
+        <location line="-1691"/>
         <location line="+99"/>
         <location line="+314"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="-1676"/>
@@ -2945,7 +2956,7 @@ Shows CloudDrive accounts</translatorcomment>
     <message>
         <location line="+31"/>
         <location line="+311"/>
-        <location line="+68"/>
+        <location line="+83"/>
         <location line="+226"/>
         <location line="+1075"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+31"/>
@@ -2957,7 +2968,7 @@ Shows CloudDrive accounts</translatorcomment>
         <translation>%1 被加载。</translation>
     </message>
     <message>
-        <location line="-1671"/>
+        <location line="-1686"/>
         <location line="+18"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="-1671"/>
         <location line="+18"/>
@@ -3135,7 +3146,7 @@ Please re-authorize your accounts before proceed your actions.</source>
         <translation>其他收件人</translation>
     </message>
     <message>
-        <location line="+137"/>
+        <location line="+152"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+137"/>
         <source>Print Error</source>
         <translation>打印错误</translation>
@@ -3417,7 +3428,7 @@ Please click &apos;OK&apos; to turn Bluetooth on.</source>
 请点击&apos;好&apos;，打开蓝牙。</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+65"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+78"/>
         <source>Please wait while loading.</source>
         <translation>而载入，请稍候。</translation>
