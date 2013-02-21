@@ -102,7 +102,7 @@ Rectangle {
                         font.pointSize: 6
                         verticalAlignment: Text.AlignVCenter
                         elide: Text.ElideRight
-                        text: model.logicalDrive + "  (" + driveTypeTexts[model.driveType] + ")"
+                        text: ((model.name != "") ? model.name : model.logicalDrive) + "  (" + driveTypeTexts[model.driveType] + ")"
                     }
 
                     Rectangle {

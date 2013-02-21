@@ -159,19 +159,21 @@ Page {
         }
 
         // Add private folder.
-        var privateDrive = systemInfoHelper.getPrivateDrive();
-        if (privateDrive != "") {
-            model.append({
-                             logicalDrive: privateDrive,
-                             availableSpace: 0,
-                             totalSpace: -1,
-                             driveType: 1, // Internal drive.
-                             email: "",
-                             uid: "",
-                             name: "",
-                             cloudDriveType: -1,
-                             iconSource: ""
-            });
+        if (appInfo.getSettingBoolValue("drivepage.privatedrive.enabled", false)) {
+            var privateDrive = systemInfoHelper.getPrivateDrive();
+            if (privateDrive != "") {
+                model.append({
+                                 logicalDrive: privateDrive,
+                                 availableSpace: 0,
+                                 totalSpace: -1,
+                                 driveType: 1, // Internal drive.
+                                 email: "",
+                                 uid: "",
+                                 name: qsTr("Private drive"),
+                                 cloudDriveType: -1,
+                                 iconSource: ""
+                             });
+            }
         }
     }
 

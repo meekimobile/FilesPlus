@@ -225,6 +225,12 @@ Page {
             group: "Developer"
         }
         ListElement {
+            name: "drivepage.privatedrive.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
+        ListElement {
             name: "WebDavClient.ignoreSSLSelfSignedCertificateErrors"
             title: ""
             type: "switch"
@@ -272,6 +278,7 @@ Page {
         else if (name == "Personalization") return qsTr("Personalization") + appInfo.emptyStr;
         else if (name == "Developer") return qsTr("Developer") + appInfo.emptyStr;
         else if (name == "drivepage.systemdrive.enabled") return qsTr("Show system drive on drive page") + appInfo.emptyStr;
+        else if (name == "drivepage.privatedrive.enabled") return qsTr("Show private drive on drive page") + appInfo.emptyStr;
         else if (name == "WebDavClient.ignoreSSLSelfSignedCertificateErrors") return qsTr("Ignore WebDAV SSL self-signed certificate errors") + appInfo.emptyStr;
         else return qsTr(name) + appInfo.emptyStr;
     }
@@ -315,6 +322,9 @@ Page {
         } else if (name == "drivepage.systemdrive.enabled") {
             var p = window.findPage("drivePage");
             if (p) p.refreshSlot("settingPage buttonClickedHandler drivepage.systemdrive.enabled");
+        } else if (name == "drivepage.privatedrive.enabled") {
+            var p = window.findPage("drivePage");
+            if (p) p.refreshSlot("settingPage buttonClickedHandler drivepage.privatedrive.enabled");
         }
     }
 
