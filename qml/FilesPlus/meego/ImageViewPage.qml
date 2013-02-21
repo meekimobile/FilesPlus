@@ -256,6 +256,7 @@ Page {
                 id: imageFlickPinchArea
                 anchors.fill: parent
                 pinch.dragAxis: Pinch.XandYAxis
+                enabled: !imageGrid.moving // To avoid pinching while grid is moving.
 
                 property real pinchScaleFactor: 1.0
                 property int startX
