@@ -92,7 +92,7 @@ MenuWithIcon {
         MenuItemWithIcon {
             id: filterMenuItem
             name: "setNameFilter"
-            text: appInfo.emptyStr+qsTr("Set name filter")
+            text: appInfo.emptyStr+qsTr("Find name")
             onClicked: {
                 setNameFilter();
             }
