@@ -730,6 +730,21 @@ PageStackWindow {
 
     BluetoothClient {
         id: btClient
+        property alias deviceModel: btDeviceModel
+
+        ListModel {
+            id: btDeviceModel
+
+            function findDeviceAddress(deviceAddress) {
+                for (var i=0; i<btDeviceModel.count; i++) {
+                    var existingDeviceAddress = btDeviceModel.get(i).deviceAddress;
+                    if (existingDeviceAddress === deviceAddress) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+        }
 
         onHostModeStateChanged: {
             if (hostMode != BluetoothClient.HostPoweredOff) {
@@ -742,7 +757,7 @@ PageStackWindow {
         }
 
         onServiceDiscovered: {
-            var i = btSelectionModel.findDeviceAddress(deviceAddress);
+            var i = btDeviceModel.findDeviceAddress(deviceAddress);
             console.debug("btClient.onServiceDiscovered " + deviceName + " " + deviceAddress + " " + isTrusted + " " + isPaired + " i " + i);
             var jsonObj = {
                 "deviceName": deviceName,
@@ -751,9 +766,9 @@ PageStackWindow {
                 "isPaired": isPaired
             };
             if (i === -1) {
-                btSelectionModel.append(jsonObj);
+                btDeviceModel.append(jsonObj);
             } else {
-                btSelectionModel.set(i, jsonObj);
+                btDeviceModel.set(i, jsonObj);
             }
         }
 
@@ -789,9 +804,6 @@ PageStackWindow {
         Component.onCompleted: {
             console.debug(Utility.nowText() + " window btClient onCompleted");
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("BTClient"), 0.1);
-
-            // Workaround for meego to initialize SelectionDialog height.
-            btClient.requestDiscoveredDevices();
         }
     }
 
@@ -2264,18 +2276,7 @@ PageStackWindow {
 
     BluetoothSelectionDialog {
         id: btSelectionDialog
-        model: ListModel {
-            id: btSelectionModel
-            function findDeviceAddress(deviceAddress) {
-                for (var i=0; i<btSelectionModel.count; i++) {
-                    var existingDeviceAddress = btSelectionModel.get(i).deviceAddress;
-                    if (existingDeviceAddress === deviceAddress) {
-                        return i;
-                    }
-                }
-                return -1;
-            }
-        }
+        model: btClient.deviceModel
         discovery: btClient.discovery
         onSelected: {
             btClient.sendFile(localPath, deviceAddress);

@@ -4,8 +4,7 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: btSelectionDialog
-    height: 70 * 3 + 70 // 3 records + header
-    style: SelectionDialogStyle { dim: 0.9; pressDelay: 100 }
+    style: SelectionDialogStyle { dim: 0.9; pressDelay: 100; itemHeight: 70 }
 
     property string srcFilePath
     property bool discovery
@@ -30,6 +29,13 @@ SelectionDialog {
             }
         }
     ]
+
+    onStatusChanged: {
+        if (status == DialogStatus.Opening) {
+            // NOTE Force content height for Meego only.
+            content[0].height = 280;
+        }
+    }
 
     delegate: btItemDelegate
     Component {
@@ -60,11 +66,11 @@ SelectionDialog {
                 }
             }
             onClicked: {
-                // TODO invoke push on BluetoothClient.
+                // Invoke push on BluetoothClient.
                 console.debug("btSelectionDialog btItem onClicked " + deviceName + " " + deviceAddress);
                 if (srcFilePath != "") {
                     selected(srcFilePath, deviceAddress);
-                    btSelectionDialog.close();
+                    accept();
                 }
             }
         }

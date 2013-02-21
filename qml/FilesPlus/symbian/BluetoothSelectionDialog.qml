@@ -4,7 +4,6 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: btSelectionDialog
-    height: 60 * 3 + 70 // 3 records + header
 
     property string srcFilePath
     property bool discovery
@@ -59,11 +58,11 @@ SelectionDialog {
                 }
             }
             onClicked: {
-                // TODO invoke push on BluetoothClient.
+                // Invoke push on BluetoothClient.
                 console.debug("btSelectionDialog btItem onClicked " + deviceName + " " + deviceAddress);
                 if (srcFilePath != "") {
                     selected(srcFilePath, deviceAddress);
-                    btSelectionDialog.close();
+                    accept();
                 }
             }
         }

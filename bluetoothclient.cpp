@@ -164,6 +164,22 @@ bool BluetoothClient::isPaired(const QString deviceAddressStr)
     return (m_localDevice == 0) ? false : (m_localDevice->pairingStatus(QBluetoothAddress(deviceAddressStr)) != QBluetoothLocalDevice::Unpaired);
 }
 
+QVariant BluetoothClient::getStoredDeviceList()
+{
+    QList<QVariant> deviceList;
+    foreach (QString addr, m_btServiceHash.keys()) {
+        QMap<QString, QVariant> deviceMap;
+        deviceMap["deviceAddress"] = addr;
+        deviceMap["deviceName"] = m_btServiceHash.value(addr);
+        deviceMap["isTrusted"] = isTrusted(addr);
+        deviceMap["isPaired"] = isPaired(addr);
+        deviceMap["isNear"] = false;
+        deviceList.append(QVariant(deviceMap));
+    }
+
+    return QVariant(deviceList);
+}
+
 bool BluetoothClient::isTrusted(const QString deviceAddressStr)
 {
     return (m_localDevice == 0) ? false : (m_localDevice->pairingStatus(QBluetoothAddress(deviceAddressStr)) == QBluetoothLocalDevice::AuthorizedPaired);
