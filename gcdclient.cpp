@@ -239,6 +239,7 @@ QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     parsedObj.setProperty("source", QScriptValue());
     parsedObj.setProperty("downloadUrl", jsonObj.property("downloadUrl"));
     parsedObj.setProperty("webContentLink", jsonObj.property("webContentLink"));
+    parsedObj.setProperty("embedLink", jsonObj.property("embedLink"));
     parsedObj.setProperty("alternate", jsonObj.property("alternateLink"));
     parsedObj.setProperty("thumbnail", jsonObj.property("thumbnailLink"));
     parsedObj.setProperty("preview", jsonObj.property("thumbnailLink")); // NOTE Use same URL as thumbnail as it return 2xx x 1xx picture.
