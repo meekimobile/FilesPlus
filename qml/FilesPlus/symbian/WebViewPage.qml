@@ -1,20 +1,23 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
 import QtWebKit 1.0
+import SystemInfoHelper 1.0
 import "Utility.js" as Utility
 
 Page {
     id: webViewPage
 
     property alias url: urlInput.text
+    property bool inverted: window.platformInverted
 
     function pasteURL() {
-        urlInput.text = appInfo.getFromClipboard();
-        if (urlInput.text.trim() == "") {
+        var clippedUrl = appInfo.getFromClipboard();
+        if (clippedUrl.trim() == "") {
             messageDialog.titleText = appInfo.emptyStr+"CloudPrint "+qsTr("Notify");
             messageDialog.message = appInfo.emptyStr+qsTr("There is no URL in clipboard. Please copy a URL with web browser.");
             messageDialog.open();
         } else {
+            urlInput.text = clippedUrl.trim();
             webView.url = decodeURI(urlInput.text);
         }
     }
@@ -23,40 +26,39 @@ Page {
         id: toolBarLayout
         x: 0
 
-        ToolButton {
+        ToolBarButton {
             id: backButton
-            iconSource: "toolbar-back"
-            platformInverted: window.platformInverted
+            buttonIconSource: "toolbar-back"
 
             onClicked: {
                 pageStack.pop();
             }
         }
 
-        ToolButton {
+        ToolBarButton {
             id: pasteButton
-            iconSource: (!window.platformInverted) ? "paste.svg" : "paste_inverted.svg"
-            platformInverted: window.platformInverted
+            buttonIconSource: (!inverted) ? "paste.svg" : "paste_inverted.svg"
+
             onClicked: {
                 pasteURL();
             }
         }
 
-        ToolButton {
+        ToolBarButton {
             id: openButton
-            iconSource: (!window.platformInverted) ? "internet.svg" : "internet_inverted.svg"
-            platformInverted: window.platformInverted
+            buttonIconSource: (!inverted) ? "internet.svg" : "internet_inverted.svg"
+
             onClicked: {
                 Qt.openUrlExternally(urlInput.text);
             }
         }
 
-        ToolButton {
+        ToolBarButton {
             id: actionButton
-            iconSource: (webViewBusy.visible)
-                        ? ((!window.platformInverted) ? "close_stop.svg" : "close_stop_inverted.svg")
+            buttonIconSource: (webViewBusy.visible)
+                        ? ((!inverted) ? "close_stop.svg" : "close_stop_inverted.svg")
                         : "toolbar-refresh"
-            platformInverted: window.platformInverted
+
             onClicked: {
                 if (webViewBusy.visible) {
                     webView.stop.trigger();
@@ -66,10 +68,10 @@ Page {
             }
         }
 
-        ToolButton {
+        ToolBarButton {
             id: printButton
-            iconSource: (!window.platformInverted) ? "print.svg" : "print_inverted.svg"
-            platformInverted: window.platformInverted
+            buttonIconSource: (!inverted) ? "print.svg" : "print_inverted.svg"
+
             onClicked: {
                 gcpClient.printURLSlot(url);
 
@@ -83,6 +85,10 @@ Page {
         if (status == PageStatus.Active) {
             pasteURL();
         }
+    }
+
+    SystemInfoHelper {
+        id: helper
     }
 
     Rectangle {
@@ -121,22 +127,24 @@ Page {
         gradient: Gradient {
             GradientStop {
                 position: 0
-                color: (!window.platformInverted) ? "#242424" : "#FFFFFF"
+                color: (!inverted) ? "#242424" : "#FFFFFF"
             }
 
             GradientStop {
                 position: 0.790
-                color: (!window.platformInverted) ? "#0F0F0F" : "#F0F0F0"
+                color: (!inverted) ? "#0F0F0F" : "#F0F0F0"
             }
 
             GradientStop {
                 position: 1
-                color: (!window.platformInverted) ? "#000000" : "#DBDBDB"
+                color: (!inverted) ? "#000000" : "#DBDBDB"
             }
         }
 
         TextField {
             id: urlInput
+            platformStyle: TextFieldStyle { paddingRight: deleteUserInputButton.width }
+            inputMethodHints: Qt.ImhUrlCharactersOnly // This property setting also disable preedit.
             anchors.fill: parent
             anchors.margins: 5
             Keys.onPressed: {
@@ -144,8 +152,36 @@ Page {
                 if (event.key == Qt.Key_Return || event.key == Qt.Key_Enter) {
                     console.debug("urlInput Keys.onPressed text " + urlInput.text);
                     urlInput.closeSoftwareInputPanel(); // Symbian only.
-                    webView.url = decodeURI(urlInput.text);
+                    // Add .com if it's only 1 word without . (dot)
+                    var completedUrl = (urlInput.text.indexOf(".") == -1) ? (urlInput.text.trim() + ".com") : urlInput.text.trim();
+                    // Complete URL.
+                    completedUrl = helper.getCompletedUrl(completedUrl);
+                    urlInput.text = completedUrl;
+                    console.debug("urlInput Keys.onPressed completed text " + urlInput.text);
+                    // Decode URI and show on view.
+                    webView.url = decodeURI(urlInput.text.trim());
                     webView.focus = true;
+                }
+            }
+
+            Item {
+                id: deleteUserInputButton
+                width: parent.height
+                height: width
+                visible: parent.activeFocus
+                anchors.right: parent.right
+
+                Image {
+                    source: "close_stop_inverted.svg"
+                    anchors.centerIn: parent
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        console.debug("webViewPage deleteUserInputButton onClicked");
+                        urlInput.text = "";
+                    }
                 }
             }
         }
@@ -257,6 +293,10 @@ Page {
                     webView.evaluateJavaScript("if (!document.body.style.backgroundColor) document.body.style.backgroundColor='white';");
 
                     webViewBusy.visible = false;
+                }
+
+                onUrlChanged: {
+                    urlInput.text = url;
                 }
             }
         }

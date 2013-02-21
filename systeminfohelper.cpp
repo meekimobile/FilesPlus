@@ -148,3 +148,8 @@ QString SystemInfoHelper::getUrl(const QString absPath)
     return QUrl::fromLocalFile(absPath).toString();
 }
 
+QString SystemInfoHelper::getCompletedUrl(const QString userInputLocation)
+{
+    return QUrl::fromUserInput(userInputLocation).toString();
+}
+

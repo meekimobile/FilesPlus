@@ -24,6 +24,7 @@ public:
     Q_INVOKABLE QVariant getFileAttribute(const QString &localPath, const QString &attributeName);
 
     Q_INVOKABLE QString getUrl(const QString absPath);
+    Q_INVOKABLE QString getCompletedUrl(const QString userInputLocation);
 signals:
     
 public slots:
