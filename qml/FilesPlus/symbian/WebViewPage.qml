@@ -143,7 +143,7 @@ Page {
 
         TextField {
             id: urlInput
-            platformStyle: TextFieldStyle { paddingRight: deleteUserInputButton.width }
+            platformRightMargin: deleteUserInputButton.width
             inputMethodHints: Qt.ImhUrlCharactersOnly // This property setting also disable preedit.
             anchors.fill: parent
             anchors.margins: 5
