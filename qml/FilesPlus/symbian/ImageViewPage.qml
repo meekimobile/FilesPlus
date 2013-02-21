@@ -459,7 +459,7 @@ Page {
                             id: imageViewBusy
                             width: 100; height: width
                             anchors.centerIn: parent
-                            visible: (parent.progress < 1 && parent.status == Image.Loading)
+                            visible: (parent.progress < 1 && parent.status == Image.Loading) || parent.status == Image.Error
                             running: visible
 
                             Text {
@@ -467,7 +467,7 @@ Page {
                                 font.pointSize: 6
                                 color: "white"
                                 anchors.centerIn: parent
-                                visible: parent.visible
+                                visible: parent.visible && imageFlickView.status == Image.Loading
                             }
                         }
                     } // imageFlickView
