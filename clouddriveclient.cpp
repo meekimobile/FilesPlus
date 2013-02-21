@@ -110,6 +110,11 @@ bool CloudDriveClient::isImageUrlCachable()
     return false;
 }
 
+bool CloudDriveClient::isUnicodeSupported()
+{
+    return true;
+}
+
 void CloudDriveClient::loadAccessPairMap() {
     qDebug() << QTime::currentTime() << objectName() << "::loadAccessPairMap";
 

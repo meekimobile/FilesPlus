@@ -917,6 +917,11 @@ bool CloudDriveModel::isImageUrlCachable(CloudDriveModel::ClientTypes type)
     return getCloudClient(type)->isImageUrlCachable();
 }
 
+bool CloudDriveModel::isUnicodeSupported(CloudDriveModel::ClientTypes type)
+{
+    return getCloudClient(type)->isUnicodeSupported();
+}
+
 void CloudDriveModel::initScheduler()
 {
     connect(&m_schedulerTimer, SIGNAL(timeout()), this, SLOT(schedulerTimeoutFilter()) );

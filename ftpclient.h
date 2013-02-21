@@ -21,6 +21,7 @@ public:
     QString getRemoteRoot(QString uid);
     bool isRemoteAbsolutePath();
     bool isConfigurable();
+    bool isUnicodeSupported();
 
     void quota(QString nonce, QString uid);
     QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = true);

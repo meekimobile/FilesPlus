@@ -638,6 +638,11 @@ bool FtpClient::isConfigurable()
     return true;
 }
 
+bool FtpClient::isUnicodeSupported()
+{
+    return false;
+}
+
 bool FtpClient::deleteRecursive(QFtpWrapper *m_ftp, QString remoteFilePath)
 {
     if (remoteFilePath == "") {
