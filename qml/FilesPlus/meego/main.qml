@@ -912,7 +912,7 @@ PageStackWindow {
 
             if (err == 0) {
                 // Notify successful refreshAccessToken.
-                logWarn("CloudPrint " + qsTr("Refresh Token"), qsTr("Resetting is done."), 2000);
+                logWarn("CloudPrint " + qsTr("Refresh Token"), qsTr("Token was refreshed."), 2000);
                 // Search for printers.
                 gcpClient.search("");
             } else {
