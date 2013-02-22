@@ -516,8 +516,8 @@ Page {
                         }
                         Image {
                             id: schedulerIcon
-                            width: 30
-                            height: 30
+                            width: 24
+                            height: 24
                             source: (!inverted ? "cloud_wait.svg" : "cloud_wait_inverted.svg")
                             visible: cloudDriveModel.isDeltaSupported(cloudDriveType)
                         }
