@@ -3622,15 +3622,16 @@ void CloudDriveModel::jobDone() {
 
 void CloudDriveModel::proceedNextJob() {
     // Proceed next job in queue. Any jobs which haven't queued will be ignored.
-    qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount
-             << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount()
-             << "m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count() << "m_isSuspended" << m_isSuspended;
+    if (runningJobCount > 0) {
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount
+                 << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount()
+                 << "m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count() << "m_isSuspended" << m_isSuspended;
+    }
 
     // Emit status signal.
     emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), m_cloudDriveJobs->count(), getItemCount());
 
     if (runningJobCount >= MaxRunningJobCount || m_jobQueue->count() <= 0 || m_isSuspended || m_isAborted) {
-
         // Check if there is no running job and is aborted.
         if (runningJobCount <= 0 && m_isAborted) {
             QApplication::quit();
@@ -3665,7 +3666,6 @@ void CloudDriveModel::proceedNextJob() {
     case Disconnect:
     case SyncFromLocal:
     case MigrateFilePut:
-    case Delta:
         t->setDirectInvokation(true);
         break;
     }
@@ -3790,7 +3790,7 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
         cloudClient->shareFile(job.jobId, job.uid, job.remoteFilePath);
         break;
     case Delta:
-        cloudClient->delta(job.jobId, job.uid, true);
+        cloudClient->delta(job.jobId, job.uid, false);
         break;
     case MigrateFile:
         cloudClient->browse(job.jobId, job.uid, job.remoteFilePath);

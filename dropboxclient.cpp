@@ -1608,6 +1608,8 @@ QString DropboxClient::deltaReplyFinished(QNetworkReply *reply)
     // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+
+    return replyBody;
 }
 
 QString DropboxClient::mediaReplyFinished(QNetworkReply *reply)
