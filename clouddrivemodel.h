@@ -267,7 +267,6 @@ signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void initializeDBStarted(QString nonce);
     void initializeDBFinished(QString nonce);
-    void proceedNextJobSignal();
     void jobQueueStatusSignal(int runningJobCount, int jobQueueCount, int jobCount , int itemCount);
     void localChangedSignal(QString localPath);
     void refreshFolderCacheSignal(QString localPath);
@@ -347,6 +346,10 @@ private:
     int runningJobCount;
     bool m_isSuspended;
     bool m_isAborted;
+
+    // Job queue processor.
+    QTimer m_jobQueueTimer;
+    void initJobQueueTimer();
 
     QSqlDatabase m_db;
     QSqlQuery m_selectByPrimaryKeyPS;
