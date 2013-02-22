@@ -5,7 +5,7 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: uidDialog
-    style: SelectionDialogStyle { dim: 0.9; pressDelay: 100; itemHeight: 80 }
+    style: SelectionDialogStyle { dim: 0.9; pressDelay: 100; itemHeight: 70 }
 
     property string caller
     property int operation
@@ -58,7 +58,7 @@ SelectionDialog {
 
     delegate: ListItem {
         id: uidDialogListViewItem
-        height: 80
+        height: 70
         showUnderline: false
         Row {
             anchors.fill: parent
