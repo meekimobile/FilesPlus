@@ -15,6 +15,7 @@ CommonDialog {
     signal closing()
     signal closed()
     signal syncAll()
+    signal syncAdd()
 
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
@@ -163,14 +164,26 @@ CommonDialog {
                 }
                 Row {
                     width: parent.width
-                    visible: cloudItemModel.count > 0
+                    spacing: 5
+                    visible: cloudItemModel.count > 0 || !isCloudFolder
                     Text {
                         text: appInfo.emptyStr+qsTr("Connected items")
                         font.pointSize: 16
-                        width: parent.width - syncAllButton.width
+                        width: parent.width - (syncAllButton.visible ? (syncAllButton.width + parent.spacing) : 0) - (syncAddButton.visible ? (syncAddButton.width + parent.spacing) : 0)
                         color: "white"
                         elide: Text.ElideRight
                         anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Button {
+                        id: syncAddButton
+                        width: 60
+                        height: 60
+                        iconSource: theme.inverted ? "cloud_add.svg" : "cloud_add_inverted.svg"
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: !isCloudFolder
+                        onClicked: {
+                            syncAdd();
+                        }
                     }
                     Button {
                         id: syncAllButton
@@ -178,6 +191,7 @@ CommonDialog {
                         height: 60
                         iconSource: theme.inverted ? "cloud.svg" : "cloud_inverted.svg"
                         anchors.verticalCenter: parent.verticalCenter
+                        visible: cloudItemModel.count > 0
                         onClicked: {
                             syncAll();
                         }

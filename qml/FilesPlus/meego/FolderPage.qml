@@ -1691,5 +1691,9 @@ Page {
             }
             close();
         }
+        onSyncAdd: {
+            syncFileSlot(selectedItem.absolutePath, selectedIndex);
+            close();
+        }
     }
 }

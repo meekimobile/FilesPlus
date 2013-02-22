@@ -465,7 +465,7 @@ Page {
                             Text {
                                 text: Math.floor(parent.parent.progress * 100) + "%"
                                 font.pointSize: 6
-                                color: "white"
+                                color: (!inverted) ? "white" : "black"
                                 anchors.centerIn: parent
                                 visible: parent.visible && imageFlickView.status == Image.Loading
                             }
