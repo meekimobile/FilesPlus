@@ -334,6 +334,11 @@ void DropboxClient::quota(QString nonce, QString uid)
 {
     qDebug() << "----- DropboxClient::quota ----- uid" << uid;
 
+    if (uid == "") {
+        emit quotaReplySignal(nonce, -1, "uid is empty", "", 0, 0, -1);
+        return;
+    }
+
     QString uri = accountInfoURI;
 
     // Send request.
