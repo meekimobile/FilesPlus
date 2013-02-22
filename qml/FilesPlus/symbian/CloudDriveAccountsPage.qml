@@ -503,14 +503,24 @@ Page {
                 Column {
                     width: parent.width - cloudIcon.width
                     spacing: 5
-                    Text {
-                        id: titleText
-                        text: email
+                    Row {
                         width: parent.width
-                        verticalAlignment: Text.AlignVCenter
-                        font.pointSize: 6
-                        elide: Text.ElideMiddle
-                        color: (!inverted) ? "white" : "black"
+                        Text {
+                            id: titleText
+                            text: email
+                            width: parent.width - (schedulerIcon.visible ? schedulerIcon.width : 0)
+                            verticalAlignment: Text.AlignVCenter
+                            font.pointSize: 6
+                            elide: Text.ElideMiddle
+                            color: (!inverted) ? "white" : "black"
+                        }
+                        Image {
+                            id: schedulerIcon
+                            width: 30
+                            height: 30
+                            source: (!inverted ? "cloud_wait.svg" : "cloud_wait_inverted.svg")
+                            visible: cloudDriveModel.isDeltaSupported(cloudDriveType)
+                        }
                     }
                     Row {
                         width: parent.width
