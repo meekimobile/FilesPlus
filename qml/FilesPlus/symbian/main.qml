@@ -418,6 +418,17 @@ PageStackWindow {
             }
         }
 
+        onDirectoryChanged: {
+            console.debug("window fsModel onDirectoryChanged " + dirPath);
+
+            // Check if dirPath is connected, then trigger synchronization.
+            if (cloudDriveModel.isConnected(dirPath)) {
+                // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
+                cloudDriveModel.updateItems(dirPath, cloudDriveModel.dirtyHash);
+                cloudDriveModel.syncItem(dirPath);
+            }
+        }
+
         Component.onCompleted: {
             console.debug(Utility.nowText() + " window fsModel onCompleted");
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("FolderModel"), 0.1);

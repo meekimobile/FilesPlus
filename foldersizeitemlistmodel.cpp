@@ -334,16 +334,13 @@ void FolderSizeItemListModel::jobDone()
 
 void FolderSizeItemListModel::fsWatcherDirectoryChangedSlot(const QString &entry)
 {
-    qDebug() << "FolderSizeItemListModel::fsWatcherDirectoryChangedSlot changed entry" << entry << "m_fsWatcher->directories()" << m_fsWatcher->directories();
+    qDebug() << "FolderSizeItemListModel::fsWatcherDirectoryChangedSlot changed entry" << entry;
 
     // Remove folder cache to force refresh.
     removeCache(entry);
 
-//    // Enqueue job.
-//    FolderSizeJob job(createNonce(), FolderSizeModelThread::FetchDirSize, entry, "", true);
-//    m_jobQueue.enqueue(job);
-
-//    emit proceedNextJobSignal();
+    // Emit directory changed.
+    emit directoryChanged(entry);
 }
 
 void FolderSizeItemListModel::changeDir(const QString &name, const int sortFlag)
@@ -781,6 +778,20 @@ QStringList FolderSizeItemListModel::splitFileName(const QString fileName)
     return caps;
 }
 
+QStringList FolderSizeItemListModel::findSubDirList(QString dirPath)
+{
+    QStringList subDirList;
+    subDirList.append(dirPath);
+
+    QDir dir(dirPath);
+    dir.setFilter(QDir::Dirs | QDir::NoSymLinks | QDir::NoDotAndDotDot);
+    foreach (QFileInfo subDirInfo, dir.entryInfoList()) {
+        subDirList.append(findSubDirList(subDirInfo.absoluteFilePath()));
+    }
+    qDebug() << "FolderSizeItemListModel::findSubDirList dirPath" << dirPath << "subDirList" << subDirList;
+    return subDirList;
+}
+
 void FolderSizeItemListModel::initializeFSWatcher()
 {
     // TODO Make watched paths configurable.
@@ -790,12 +801,12 @@ void FolderSizeItemListModel::initializeFSWatcher()
     m_fsWatcher->addPath( QDesktopServices::storageLocation( QDesktopServices::MoviesLocation ) );
 #ifdef Q_OS_SYMBIAN
 //    m_fsWatcher->addPath( QDesktopServices::storageLocation( QDesktopServices::DocumentsLocation ) ); // It's E:/ on Symbian which is too wide scope.
-    m_fsWatcher->addPath( "E:/DCIM" ); // Captured images location for Symbian.
-    m_fsWatcher->addPath( "E:/temp" ); // Temp location for Symbian.
+    m_fsWatcher->addPaths(findSubDirList("E:/DCIM")); // Captured images location for Symbian.
+    m_fsWatcher->addPaths(findSubDirList("E:/temp")); // Temp location for Symbian.
 #elif defined(Q_WS_HARMATTAN)
     m_fsWatcher->addPath( QDesktopServices::storageLocation( QDesktopServices::DocumentsLocation ) );
-    m_fsWatcher->addPath( "/home/user/MyDocs/DCIM" ); // Captured images location for Meego.
-    m_fsWatcher->addPath( "/home/user/MyDocs/temp" ); // Temp location for Meego.
+    m_fsWatcher->addPaths(findSubDirList("/home/user/MyDocs/DCIM")); // Captured images location for Meego.
+    m_fsWatcher->addPaths(findSubDirList("/home/user/MyDocs/temp")); // Temp location for Meego.
 #endif
 
     qDebug() << "FolderSizeItemListModel::initializeFSWatcher watched directories" << m_fsWatcher->directories();

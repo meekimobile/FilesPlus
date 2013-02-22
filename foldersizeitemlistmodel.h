@@ -178,6 +178,7 @@ private:
 
     QFileSystemWatcher *m_fsWatcher;
     void initializeFSWatcher();
+    QStringList findSubDirList(QString dirPath);
 public slots:
     void loadDirSizeCacheFinishedFilter();
     void fetchDirSizeFinishedFilter();
@@ -207,6 +208,7 @@ Q_SIGNALS:
     void fetchDirSizeFinished();
     void fetchDirSizeUpdated(QString dirPath);
     void proceedNextJobSignal();
+    void directoryChanged(QString dirPath);
 };
 
 #endif // FOLDERSIZEITEMLISTMODEL_H
