@@ -284,6 +284,17 @@ PageStackWindow {
 
             // TODO Connect to cloud if copied/moved file/folder is in connected folder.
             // TODO Make it configurable.
+            if (err == 0) {
+                if (cloudDriveModel.isParentConnected(targetPath)) {
+                    // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
+                    var paths = fsModel.getPathToRoot(targetPath);
+                    if (paths.length > 1) {
+//                        console.debug("fsModel onCopyFinished updateItems paths[1] " + paths[1]);
+                        cloudDriveModel.updateItems(paths[1], cloudDriveModel.dirtyHash);
+                        cloudDriveModel.syncItem(paths[1]);
+                    }
+                }
+            }
         }
 
         onDeleteStarted: {
