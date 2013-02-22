@@ -698,6 +698,10 @@ Page {
         popupToolPanel.pastePath = "";
     }
 
+    function refreshItem(remotePath) {
+        cloudDrivePathDialog.refreshItem(remotePath);
+    }
+
     Flipable {
         id: flipable1
         width: parent.width

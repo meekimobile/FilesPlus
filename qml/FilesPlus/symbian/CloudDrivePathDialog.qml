@@ -104,6 +104,29 @@ ConfirmDialog {
         return selectedRemotePath;
     }
 
+    function refreshItem(remotePath) {
+        var timestamp = (new Date()).getTime();
+        var i = cloudDrivePathListModel.findIndexByRemotePath(remotePath);
+        console.debug("cloudDrivePathDialog refreshItem i " + i);
+        if (i >= 0) {
+            cloudDrivePathListModel.setProperty(i, "timestamp", timestamp);
+        }
+    }
+
+    ListModel {
+        id: cloudDrivePathListModel
+
+        function findIndexByRemotePath(remotePath) {
+            for (var i=0; i<cloudDrivePathListModel.count; i++) {
+                if (cloudDrivePathListModel.get(i).absolutePath == remotePath) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+    }
+
     titleText: appInfo.emptyStr+getTitleText(localPath, selectedRemotePathName, remoteParentPathName)
     content: Item {
         width: parent.width
@@ -293,22 +316,29 @@ ConfirmDialog {
         CloudListItem {
             id: listItem
             listViewState: (cloudDrivePathListView.state ? cloudDrivePathListView.state : "")
-            syncIconVisible: cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, absolutePath)
+            syncIconVisible: isConnected
             syncIconSource: "cloud.svg"
             actionIconSource: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath, cloudDriveModel.getCloudName(selectedCloudType), selectedUid) : ""
+            listItemIconSource: appInfo.emptySetting+listItem.getIconSource(timestamp)
             inverted: false
 
             // Override to support cloud items.
-            function getIconSource() {
+            function getIconSource(timestamp) {
                 var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
                 var viewableTextFileTypes = ["TXT", "HTML"];
 
                 if (isDir) {
                     return "folder_list.svg";
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                    var showThumbnail = appInfo.getSettingBoolValue("thumbnail.enabled", false);
+                    var showThumbnail = appInfo.getSettingBoolValue("CloudFolderPage.thumbnail.enabled", false);
                     if (showThumbnail && thumbnail && thumbnail != "") {
-                        return thumbnail;
+                        // Dropbox's thumbnail url can't open with Image directly. Need to invoke cacheImage() or use RemoteImageProvider to download.
+                        // Always cache thumbnail by using RemoteImageProvider.
+                        if (cloudDriveModel.isImageUrlCachable(selectedCloudType) && fileType.toUpperCase() != "SVG") {
+                            return "image://remote/" + thumbnail + "#t=" + timestamp;
+                        } else {
+                            return thumbnail;
+                        }
                     } else {
                         return "photos_list.svg";
                     }
@@ -352,6 +382,12 @@ ConfirmDialog {
                     deleteCloudItemConfirmation.remotePath = absolutePath;
                     deleteCloudItemConfirmation.remotePathName = name;
                     deleteCloudItemConfirmation.open();
+                }
+            }
+
+            onListItemIconError: {
+                if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
+                    cloudDriveModel.cacheImage(absolutePath, thumbnail, 48, 48, "folderPage"); // Use default icon size.
                 }
             }
         }
