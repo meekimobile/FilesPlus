@@ -2666,6 +2666,9 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
             sc = engine.evaluate("(" + msg + ")");
             hash = sc.property("hash").toString();
             addItem(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, hash);
+
+            // Emit signal to refresh its parent folder cache.
+            emit refreshFolderCacheSignal(job.localFilePath);
         }
     } else {
         if (job.localFilePath != "") {
