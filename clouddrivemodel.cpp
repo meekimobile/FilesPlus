@@ -1935,7 +1935,19 @@ void CloudDriveModel::browse(CloudDriveModel::ClientTypes type, QString uid, QSt
     QThreadPool::globalInstance()->start(t);
 }
 
-void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut)
+QStringList CloudDriveModel::getLocalPathList(QString localParentPath)
+{
+    QStringList localPathList;
+    QDir dir(localParentPath);
+    dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
+    foreach (QFileInfo item, dir.entryInfoList()) {
+        localPathList.append(item.absoluteFilePath());
+    }
+
+    return localPathList;
+}
+
+void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut, QString data)
 {
     qDebug() << "----- CloudDriveModel::syncFromLocal -----" << type << uid << localPath << "remoteParentPath" << remoteParentPath << "forcePut" << forcePut;
 
@@ -1952,6 +1964,7 @@ void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString u
     // Enqueue job.
     CloudDriveJob job(createNonce(), SyncFromLocal, type, uid, localPath, remoteParentPath, modelIndex);
     job.forcePut = forcePut;
+    job.data = data;
 //    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
@@ -1961,7 +1974,7 @@ void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString u
     emit jobEnqueuedSignal(job.jobId, localPath);
 }
 
-void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut, bool isRootLocalPath)
+void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut, bool isRootLocalPath, QString data)
 {
     // This method is invoked from dir only as file which is not found will be put right away.
     qDebug() << "----- CloudDriveModel::syncFromLocal_Block -----" << type << uid << localPath << remoteParentPath << modelIndex << "forcePut" << forcePut;
@@ -1983,6 +1996,9 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
     if (cloudClient == 0) {
         return;
     }
+
+    QStringList remotePathList = data.split(",");
+    qDebug() << "CloudDriveModel::syncFromLocal_Block remotePathList" << remotePathList;
 
     QFileInfo info(localPath);
     if (info.isDir()) {
@@ -2052,6 +2068,8 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
             QString localFilePath = item.absoluteFilePath();
             CloudDriveItem cloudDriveItem = getItem(localFilePath, type, uid);
             bool isNewItem = !isSyncing(type, uid, localFilePath) && (cloudDriveItem.hash == "" || cloudDriveItem.remotePath == "");
+            bool isDeletedItem = cloudDriveItem.remotePath != "" && remotePathList.indexOf(cloudDriveItem.remotePath) == -1;
+//            qDebug() << "CloudDriveModel::syncFromLocal_Block item" << cloudDriveItem.toJsonText() << "index in remotePathList" << remotePathList.indexOf(cloudDriveItem.remotePath);
 //            qDebug() << "CloudDriveModel::syncFromLocal_Block item" << type << uid << localFilePath << cloudDriveItem.hash << isSyncing(localFilePath);
 
             // If dir/file don't have localHash which means it's not synced, put it right away.
@@ -2067,6 +2085,11 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
                     // Put file to remote parent path.
                     filePut(type, uid, localFilePath, parentCloudDriveItem.remotePath, getFileName(localFilePath), -1);
                 }
+            } else if (isDeletedItem) {
+                // Remove link.
+                // TODO Configurable file removing.
+                qDebug() << "CloudDriveModel::syncFromLocal_Block remove link to existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isDeletedItem" << isDeletedItem;
+                removeItemWithChildren(type, uid, localFilePath);
             } else {
                 // Skip any items that already have CloudDriveItem and has localHash.
                 qDebug() << "CloudDriveModel::syncFromLocal_Block skip existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isNewItem" << isNewItem;
@@ -3786,7 +3809,7 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
         refreshRequestFilter(job.jobId);
         break;
     case SyncFromLocal:
-        syncFromLocal_Block(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, job.modelIndex, job.forcePut);
+        syncFromLocal_Block(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, job.modelIndex, job.forcePut, true, job.data);
         refreshRequestFilter(job.jobId);
         break;
     case FileGetResume:

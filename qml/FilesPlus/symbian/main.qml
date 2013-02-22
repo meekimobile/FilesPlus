@@ -1556,6 +1556,7 @@ PageStackWindow {
 
                 if (jsonObj.isDeleted) {
                     // If dir, should remove all sub items.
+                    // TODO Configurable file removing.
                     cloudDriveModel.removeItemWithChildren(jobJson.type, jobJson.uid, jobJson.local_file_path);
 
                     // Notify removed link.
@@ -1580,11 +1581,13 @@ PageStackWindow {
 
                         // Sync based on remote contents.
                         // TODO Should it detect jobJson.force_put or jobJson.force_get?
+                        var remotePathList = "";
                         if (jobJson.force_get || jsonObj.hash != itemJson.hash) { // Sync all json(remote)'s contents.
                             for(var i=0; i<jsonObj.children.length; i++) {
                                 var item = jsonObj.children[i];
                                 var itemLocalPath = cloudDriveModel.getAbsolutePath(jobJson.local_file_path, item.name);
                                 var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
+                                remotePathList = remotePathList + (remotePathList != "" ? "," : "") + item.absolutePath;
                                 if (item.isDir) {
                                     // This flow will trigger recursive metadata calling.
                                     cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, item.absolutePath, -1, jobJson.force_put, jobJson.force_get);
@@ -1606,7 +1609,9 @@ PageStackWindow {
                         cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jsonObj.hash);
 
                         // Sync based on local contents.
-                        cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jsonObj.parentPath, jobJson.modelIndex, jobJson.force_put);
+                        // TODO Issue: syncFromLocal can't detect deleted remote file before it still has connection, then syncFromLocal will skip it.
+                        console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " remotePathList " + remotePathList);
+                        cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jsonObj.parentPath, jobJson.modelIndex, jobJson.force_put, remotePathList);
                     } else { // Sync file.
                         console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " sync file remote path " + jsonObj.absolutePath + " hash " + jsonObj.hash + " local path " + jobJson.local_file_path + " hash " + itemJson.hash + " forcePut " + jobJson.force_put + " forceGet " + jobJson.force_get);
                         // If (rev is newer or there is no local file), get from remote.

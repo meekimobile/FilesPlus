@@ -45,6 +45,8 @@ public:
 
     QString nextJobId;
 
+    QString data;
+
     QString toJsonText();
 };
 
