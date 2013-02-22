@@ -14,20 +14,20 @@ MenuWithIcon {
         
         // TODO Alias for fixing incorrect children.
         default property alias children: menuLayout.menuChildren
-        
-        MenuItemWithIcon {
-            name: "syncConnectedItems"
-            text: appInfo.emptyStr+qsTr("Sync connected items")
-            onClicked: {
-                syncConnectedItems();
-            }
-        }
 
         MenuItemWithIcon {
             name: "syncCurrentFolder"
             text: appInfo.emptyStr+qsTr("Sync current folder")
             onClicked: {
                 syncCurrentFolder();
+            }
+        }
+
+        MenuItemWithIcon {
+            name: "syncConnectedItems"
+            text: appInfo.emptyStr+qsTr("Sync connected items")
+            onClicked: {
+                syncConnectedItems();
             }
         }
 
