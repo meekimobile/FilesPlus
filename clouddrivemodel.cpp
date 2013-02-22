@@ -89,6 +89,12 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     m_cloudDriveJobs = new QHash<QString, CloudDriveJob>();
     m_jobQueue = new QQueue<QString>();
 
+    // Create temp path.
+    createTempPath();
+
+    // Set thread pool with MaxRunningJobCount+1 to support browse method.
+    QThreadPool::globalInstance()->setMaxThreadCount(MaxRunningJobCount + 1);
+
     // Initialize scheduler queue.
     initScheduler();
     m_scheduledItems = new QQueue<CloudDriveItem>();
@@ -112,15 +118,6 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
 
     // Initialize cloud storage clients.
     initializeCloudClients(createNonce());
-
-    // Load saved jobs.
-    loadCloudDriveJobs(createNonce());
-
-    // Create temp path.
-    createTempPath();
-
-    // Set thread pool with MaxRunningJobCount+1 to support browse method.
-    QThreadPool::globalInstance()->setMaxThreadCount(MaxRunningJobCount + 1);
 }
 
 CloudDriveModel::~CloudDriveModel()
@@ -490,7 +487,7 @@ QList<CloudDriveItem> CloudDriveModel::findItemsByRemotePath(ClientTypes type, Q
 {
     QSqlQuery qry(m_db);
     if (caseInsensitive) {
-        qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND lower(remote_path) = :remote_path");
+        qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND lower(remote_path) = lower(:remote_path)");
     } else {
         qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
     }
@@ -1337,7 +1334,6 @@ bool CloudDriveModel::isDeltaEnabled(CloudDriveModel::ClientTypes type, QString 
 void CloudDriveModel::scheduleDeltaJobs(QString cronValue)
 {
     QScriptEngine engine;
-    QScriptValue sc;
     foreach (QString uidJson, getStoredUidList()) {
         QScriptValue sc = engine.evaluate("(" + uidJson + ")");
         QString typeText = sc.property("type").toString();
@@ -1582,7 +1578,7 @@ void CloudDriveModel::resumeNextJob(bool resetAbort)
         m_isAborted = false;
     }
 
-    proceedNextJob();
+    emit proceedNextJobSignal();
 }
 
 void CloudDriveModel::cleanItems()
@@ -2969,7 +2965,7 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
                 QList<CloudDriveItem> itemList = findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)));
                 if (itemList.isEmpty()) {
                     // TODO Sync its connected parents (with DirtyHash) to force sync all its children.
-                    qDebug() << "CloudDriveModel::deltaReplyFilter download new item by syncing remoteParentPath" << remoteParentPath;
+                    qDebug() << "CloudDriveModel::deltaReplyFilter download new item by syncing remoteParentPath" << remoteParentPath << "isRemotePathCaseInsensitive" << isRemotePathCaseInsensitive(getClientType(job.type));
                     foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteParentPath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
                         qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteParentPath" << remoteParentPath << "parent cloudItem" << item;
                         updateItem(getClientType(item.type), item.uid, item.localPath, DirtyHash);
@@ -3641,8 +3637,9 @@ void CloudDriveModel::jobDone() {
 
 void CloudDriveModel::proceedNextJob() {
     // Proceed next job in queue. Any jobs which haven't queued will be ignored.
-    qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count() << "m_isSuspended" << m_isSuspended;
-    qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount();
+    qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount
+             << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount()
+             << "m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count() << "m_isSuspended" << m_isSuspended;
 
     // Emit status signal.
     emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), m_cloudDriveJobs->count(), getItemCount());
@@ -3683,6 +3680,7 @@ void CloudDriveModel::proceedNextJob() {
     case Disconnect:
     case SyncFromLocal:
     case MigrateFilePut:
+    case Delta:
         t->setDirectInvokation(true);
         break;
     }
@@ -3811,7 +3809,7 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
         cloudClient->shareFile(job.jobId, job.uid, job.remoteFilePath);
         break;
     case Delta:
-        cloudClient->delta(job.jobId, job.uid);
+        cloudClient->delta(job.jobId, job.uid, true);
         break;
     case MigrateFile:
         cloudClient->browse(job.jobId, job.uid, job.remoteFilePath);
