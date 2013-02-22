@@ -1564,21 +1564,23 @@ QString DropboxClient::deltaReplyFinished(QNetworkReply *reply)
 
         // Process sourceObj.
         QScriptValue parsedObj = engine.newObject();
-        QScriptValue childrenObj = engine.newArray();
-        for (int i = 0; (!isReset || syncOnReset) && i < entriesCount; i++) {
-            QScriptValue sourceChildObj = sourceObj.property("entries").property(i);
-            qDebug() << "DropboxClient::deltaReplyFinished parsedChildObj" <<  sourceChildObj.property(0).toString() << sourceChildObj.property(1).toString();
+        if (entriesCount > 0) {
+            QScriptValue childrenObj = engine.newArray();
+            for (int i = 0; (!isReset || syncOnReset) && i < entriesCount; i++) {
+                QScriptValue sourceChildObj = sourceObj.property("entries").property(i);
+                qDebug() << "DropboxClient::deltaReplyFinished parsedChildObj" <<  sourceChildObj.property(0).toString() << sourceChildObj.property(1).toString();
 
-            QScriptValue parsedChildObj = engine.newObject();
-            parsedChildObj.setProperty("isDeleted", sourceChildObj.property(1).isNull());
-            parsedChildObj.setProperty("absolutePath", sourceChildObj.property(0));
-            if (!sourceChildObj.property(1).isNull()) {
-                qDebug() << "DropboxClient::deltaReplyFinished sourceChildObj isNull" << sourceChildObj.property(1).isNull() << "update state only.";
-                parsedChildObj.setProperty("property", parseCommonPropertyScriptValue(engine, sourceChildObj.property(1)));
+                QScriptValue parsedChildObj = engine.newObject();
+                parsedChildObj.setProperty("isDeleted", sourceChildObj.property(1).isNull());
+                parsedChildObj.setProperty("absolutePath", sourceChildObj.property(0));
+                if (!sourceChildObj.property(1).isNull()) {
+                    qDebug() << "DropboxClient::deltaReplyFinished sourceChildObj isNull" << sourceChildObj.property(1).isNull() << "update state only.";
+                    parsedChildObj.setProperty("property", parseCommonPropertyScriptValue(engine, sourceChildObj.property(1)));
+                }
+                childrenObj.setProperty(i, parsedChildObj);
             }
-            childrenObj.setProperty(i, parsedChildObj);
+            parsedObj.setProperty("children", childrenObj);
         }
-        parsedObj.setProperty("children", childrenObj);
         parsedObj.setProperty("nextDeltaCursor", sourceObj.property("cursor"));
         parsedObj.setProperty("reset", sourceObj.property("reset"));
 
