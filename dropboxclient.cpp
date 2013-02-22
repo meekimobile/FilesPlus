@@ -33,7 +33,7 @@ const QString DropboxClient::deltaURI = "https://api.dropbox.com/1/delta"; // PO
 const QString DropboxClient::chunkedUploadURI = "https://api-content.dropbox.com/1/chunked_upload"; // PUT with upload_id and offset.
 const QString DropboxClient::commitChunkedUploadURI = "https://api-content.dropbox.com/1/commit_chunked_upload/%1%2"; // POST with upload_id.
 
-const qint64 DropboxClient::ChunkSize = 4194304; // 4MB
+const qint64 DropboxClient::DefaultChunkSize = 4194304; // 4MB
 
 DropboxClient::DropboxClient(QObject *parent, bool fullAccess) :
     CloudDriveClient(parent)
@@ -384,7 +384,8 @@ QIODevice *DropboxClient::fileGet(QString nonce, QString uid, QString remoteFile
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
     if (offset >= 0) {
-        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+ChunkSize-1);
+
+        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1);
         qDebug() << "DropboxClient::fileGet rangeHeader" << rangeHeader;
         req.setRawHeader("Range", rangeHeader.toAscii() );
     }
@@ -544,12 +545,12 @@ bool DropboxClient::isRemotePathCaseInsensitive()
 
 bool DropboxClient::isFilePutResumable(qint64 fileSize)
 {
-    return (fileSize == -1 || fileSize >= ChunkSize);
+    return (fileSize == -1 || fileSize >= getChunkSize());
 }
 
 bool DropboxClient::isFileGetResumable(qint64 fileSize)
 {
-    return (fileSize == -1 || fileSize >= ChunkSize);
+    return (fileSize == -1 || fileSize >= getChunkSize());
 }
 
 bool DropboxClient::isDeltaSupported()
@@ -841,7 +842,7 @@ QIODevice *DropboxClient::fileGetResume(QString nonce, QString uid, QString remo
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
     if (offset >= 0) {
-        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+ChunkSize-1);
+        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1);
         qDebug() << "DropboxClient::fileGetResume rangeHeader" << rangeHeader;
         req.setRawHeader("Range", rangeHeader.toAscii() );
     }
@@ -900,7 +901,7 @@ QString DropboxClient::filePutResumeUpload(QString nonce, QString uid, QIODevice
     QUrl url = QUrl(uri + "?" + queryString);
     qDebug() << "DropboxClient::filePutResumeUpload url " << url;
 
-    qint64 chunkSize = qMin(bytesTotal-offset, ChunkSize);
+    qint64 chunkSize = qMin(bytesTotal-offset, getChunkSize());
     qDebug() << "DropboxClient::filePutResumeUpload source->size()" << source->size() << "bytesTotal" << bytesTotal << "offset" << offset << "chunkSize" << chunkSize;
 
     // Send request.
@@ -1716,4 +1717,9 @@ QScriptValue DropboxClient::parseCommonPropertyScriptValue(QScriptEngine &engine
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("path").toString())));
 
     return parsedObj;
+}
+
+qint64 DropboxClient::getChunkSize()
+{
+    return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();
 }

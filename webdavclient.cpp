@@ -17,7 +17,7 @@ const QString WebDavClient::filePutURI = "https://%1%2"; // PUT with arguments (
 const QString WebDavClient::sharesURI = "https://%1%2"; // POST with arguments (hostname, path) and ?publish
 const QString WebDavClient::renameFileURI = "https://%1%2"; // PROPPATCH with arguments (hostname, path)
 
-const qint64 WebDavClient::ChunkSize = 4194304; // 4194304=4MB, 1048576=1MB  TODO Optimize to have largest chink size which is still valid before token is expired.
+const qint64 WebDavClient::DefaultChunkSize = 4194304; // 4194304=4MB, 1048576=1MB  TODO Optimize to have largest chink size which is still valid before token is expired.
 
 const QString WebDavClient::ReplyDateFormat = "ddd, dd MMM yyyy hh:mm:ss";
 
@@ -463,7 +463,7 @@ QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFileP
     req.setRawHeader("Authorization", authHeader);
     req.setRawHeader("Accept", QByteArray("*/*"));
     if (offset >= 0) {
-        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+ChunkSize-1);
+        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1);
         qDebug() << "WebDavClient::fileGet rangeHeader" << rangeHeader;
         req.setRawHeader("Range", rangeHeader.toAscii() );
     }
@@ -617,7 +617,7 @@ QIODevice *WebDavClient::fileGetResume(QString nonce, QString uid, QString remot
     req.setRawHeader("Authorization", authHeader);
     req.setRawHeader("Accept", QByteArray("*/*"));
     if (offset >= 0) {
-        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+ChunkSize-1);
+        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1);
         qDebug() << "WebDavClient::fileGetResume rangeHeader" << rangeHeader;
         req.setRawHeader("Range", rangeHeader.toAscii() );
     }
@@ -919,7 +919,7 @@ bool WebDavClient::isConfigurable()
 
 bool WebDavClient::isFileGetResumable(qint64 fileSize)
 {
-    return (fileSize == -1 || fileSize >= ChunkSize);
+    return (fileSize == -1 || fileSize >= getChunkSize());
 }
 
 QDateTime WebDavClient::parseReplyDateString(QString dateString)
@@ -1352,4 +1352,9 @@ void WebDavClient::sslErrorsReplyFilter(QList<QSslError> sslErrors)
     foreach (QSslError sslError, sslErrors) {
         qDebug() << "WebDavClient::sslErrorsReplyFilter sslError" << sslError << sslError.certificate();
     }
+}
+
+qint64 WebDavClient::getChunkSize()
+{
+    return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();
 }

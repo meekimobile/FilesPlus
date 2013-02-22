@@ -29,7 +29,7 @@ public:
     static const QString propertyURI;
     static const QString renameFileURI;
 
-    static const qint64 ChunkSize;
+    static const qint64 DefaultChunkSize;
 
     static const QString ReplyDateFormat;
 
@@ -43,6 +43,7 @@ public:
     bool isRemoteAbsolutePath();
     bool isConfigurable();
     bool isFileGetResumable(qint64 fileSize);
+    qint64 getChunkSize();
 
     QDateTime parseReplyDateString(QString dateString);
 

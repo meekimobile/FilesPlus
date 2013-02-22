@@ -32,7 +32,7 @@ public:
     static const QString renameFileURI;
     static const QString sharesURI;
 
-    static const qint64 ChunkSize;
+    static const qint64 DefaultChunkSize;
 
     explicit SkyDriveClient(QObject *parent = 0);
     ~SkyDriveClient();
@@ -67,6 +67,7 @@ public:
     QString getRemoteRoot(QString uid);
     bool isFileGetResumable(qint64 fileSize);
     bool isViewable();
+    qint64 getChunkSize();
 signals:
 
 public slots:
@@ -98,6 +99,8 @@ private:
     QString refreshTokenUid;
     QHash<QString, QByteArray> *m_propertyReplyHash;
     QHash<QString, QByteArray> *m_filesReplyHash;
+
+    QSettings m_settings;
 
     QString createTimestamp();
     QString createNormalizedQueryString(QMap<QString, QString> sortMap);

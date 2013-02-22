@@ -31,7 +31,7 @@ const QString GCDClient::startResumableUploadURI = "https://www.googleapis.com/u
 const QString GCDClient::resumeUploadURI = "%1"; // PUT with specified URL.
 const QString GCDClient::deltaURI = "https://www.googleapis.com/drive/v2/changes"; // GET with parameters.
 
-const qint64 GCDClient::ChunkSize = 4194304; // 4194304=4MB, 1048576=1MB  TODO Optimize to have largest chink size which is still valid before token is expired.
+const qint64 GCDClient::DefaultChunkSize = 4194304; // 4194304=4MB, 1048576=1MB  TODO Optimize to have largest chink size which is still valid before token is expired.
 
 GCDClient::GCDClient(QObject *parent) :
     CloudDriveClient(parent)
@@ -541,7 +541,7 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     if (offset >= 0) {
-        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+ChunkSize-1);
+        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1);
         qDebug() << "GCDClient::fileGet rangeHeader" << rangeHeader;
         req.setRawHeader("Range", rangeHeader.toAscii() );
     }
@@ -778,7 +778,7 @@ QIODevice *GCDClient::fileGetResume(QString nonce, QString uid, QString remoteFi
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     if (offset >= 0) {
-        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+ChunkSize-1);
+        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1);
         qDebug() << "GCDClient::fileGetResume rangeHeader" << rangeHeader;
         req.setRawHeader("Range", rangeHeader.toAscii() );
     }
@@ -914,7 +914,7 @@ QString GCDClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *so
     QUrl url(uri);
     qDebug() << "GCDClient::filePutResumeUpload url " << url;
 
-    qint64 chunkSize = qMin(bytesTotal-offset, ChunkSize);
+    qint64 chunkSize = qMin(bytesTotal-offset, getChunkSize());
     QString contentRange = QString("bytes %1-%2/%3").arg(offset).arg(offset+chunkSize-1).arg(bytesTotal);
     qDebug() << "GCDClient::filePutResumeUpload source->size()" << source->size() << "bytesTotal" << bytesTotal << "offset" << offset << "chunkSize" << chunkSize << "contentRange" << contentRange;
 
@@ -1093,12 +1093,12 @@ QString GCDClient::getRemoteRoot(QString uid)
 
 bool GCDClient::isFilePutResumable(qint64 fileSize)
 {
-    return (fileSize == -1 || fileSize >= ChunkSize);
+    return (fileSize == -1 || fileSize >= getChunkSize());
 }
 
 bool GCDClient::isFileGetResumable(qint64 fileSize)
 {
-    return (fileSize == -1 || fileSize >= ChunkSize);
+    return (fileSize == -1 || fileSize >= getChunkSize());
 }
 
 bool GCDClient::isDeltaSupported()
@@ -2031,4 +2031,9 @@ QString GCDClient::deltaReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 
     return replyBody;
+}
+
+qint64 GCDClient::getChunkSize()
+{
+    return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();
 }

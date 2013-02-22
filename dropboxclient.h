@@ -36,7 +36,7 @@ public:
     static const QString chunkedUploadURI;
     static const QString commitChunkedUploadURI;
 
-    static const qint64 ChunkSize;
+    static const qint64 DefaultChunkSize;
 
     explicit DropboxClient(QObject *parent = 0, bool fullAccess = false);
     ~DropboxClient();
@@ -52,6 +52,7 @@ public:
     bool isDeltaEnabled(QString uid);
     bool isViewable();
     bool isImageUrlCachable();
+    qint64 getChunkSize();
 
     void requestToken(QString nonce);
     void authorize(QString nonce, QString hostname);

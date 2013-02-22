@@ -37,7 +37,7 @@ public:
     static const QString resumeUploadURI;
     static const QString deltaURI;
 
-    static const qint64 ChunkSize;
+    static const qint64 DefaultChunkSize;
 
     explicit GCDClient(QObject *parent = 0);
     ~GCDClient();
@@ -84,6 +84,7 @@ public:
     bool isDeltaSupported();
     bool isDeltaEnabled(QString uid);
     bool isViewable();
+    qint64 getChunkSize();
 signals:
 
 public slots:

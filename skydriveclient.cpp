@@ -25,7 +25,7 @@ const QString SkyDriveClient::deleteFileURI = "https://apis.live.net/v5.0/%1"; /
 const QString SkyDriveClient::renameFileURI = "https://apis.live.net/v5.0/%1"; // PUT with json with name = new folder name.
 const QString SkyDriveClient::sharesURI = "https://apis.live.net/v5.0/%1/shared_read_link";
 
-const qint64 SkyDriveClient::ChunkSize = 4194304; // 4MB
+const qint64 SkyDriveClient::DefaultChunkSize = 4194304; // 4MB
 
 SkyDriveClient::SkyDriveClient(QObject *parent) :
     CloudDriveClient(parent)
@@ -546,7 +546,7 @@ QIODevice *SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFil
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     if (offset >= 0) {
-        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+ChunkSize-1);
+        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1);
         qDebug() << "SkyDriveClient::fileGet rangeHeader" << rangeHeader;
         req.setRawHeader("Range", rangeHeader.toAscii() );
     }
@@ -699,7 +699,7 @@ QIODevice *SkyDriveClient::fileGetResume(QString nonce, QString uid, QString rem
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     if (offset >= 0) {
-        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+ChunkSize-1);
+        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1);
         qDebug() << "SkyDriveClient::fileGetResume rangeHeader" << rangeHeader;
         req.setRawHeader("Range", rangeHeader.toAscii() );
     }
@@ -717,7 +717,7 @@ QString SkyDriveClient::getRemoteRoot(QString uid)
 
 bool SkyDriveClient::isFileGetResumable(qint64 fileSize)
 {
-    return (fileSize == -1 || fileSize >= ChunkSize);
+    return (fileSize == -1 || fileSize >= getChunkSize());
 }
 
 bool SkyDriveClient::isViewable()
@@ -1237,4 +1237,9 @@ QScriptValue SkyDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engin
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("name").toString())));
 
     return parsedObj;
+}
+
+qint64 SkyDriveClient::getChunkSize()
+{
+    return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();
 }
