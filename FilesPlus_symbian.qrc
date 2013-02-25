@@ -156,5 +156,6 @@
         <file alias="qml/FilesPlus/CloudMenu.qml">qml/FilesPlus/symbian/CloudMenu.qml</file>
         <file>qml/FilesPlus/cloud_add.svg</file>
         <file>qml/FilesPlus/cloud_add_inverted.svg</file>
+        <file>qml/FilesPlus/splash_360x640.png</file>
     </qresource>
 </RCC>

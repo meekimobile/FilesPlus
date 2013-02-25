@@ -230,6 +230,15 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 
     QScopedPointer<QApplication> app(createApplication(argc, argv));
 
+#ifdef Q_OS_SYMBIAN
+    QPixmap splashPixmap(":/qml/FilesPlus/splash_360x640.png");
+#elif defined(Q_WS_HARMATTAN)
+    QPixmap splashPixmap(":/qml/FilesPlus/splash_480x854.png");
+#endif
+    QSplashScreen splash(splashPixmap);
+    splash.showFullScreen();
+    splash.showMessage("Loading", Qt::AlignCenter, Qt::white);
+
     // Get defined locale in settings or system locale if it's not defined.
     QString localeName = m_settings->value("locale", QLocale::system().name()).toString();
     qDebug() << "main localeName" << localeName << "translationPath" << QLibraryInfo::location(QLibraryInfo::TranslationsPath);
@@ -261,6 +270,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     viewer.showExpanded();
     // *** viewer.rootContext() can't support setContextProperty in Qt Creator
     // *** So I decide to implement PieChart with QDeclarativeItem.
+    splash.finish(&viewer);
 
     QDeclarativeEngine *engine = viewer.engine();
 #ifdef Q_OS_SYMBIAN
