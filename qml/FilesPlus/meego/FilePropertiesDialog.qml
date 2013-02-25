@@ -137,7 +137,13 @@ CommonDialog {
                 }
                 Row {
                     width: parent.width
-                    visible: selectedItem && ((selectedItem.subDirCount + selectedItem.subFileCount) > 0)
+                    visible: {
+                        if (selectedItem) {
+                            return (selectedItem.subDirCount + selectedItem.subFileCount) > 0;
+                        } else {
+                            return false;
+                        }
+                    }
                     Text {
                         text: appInfo.emptyStr+qsTr("Contents")
                         font.pointSize: 16
