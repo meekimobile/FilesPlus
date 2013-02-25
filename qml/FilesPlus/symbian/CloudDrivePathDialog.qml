@@ -246,9 +246,7 @@ ConfirmDialog {
             id: cloudDrivePathListView
             width: parent.width
             height: (window.inPortrait ? 300 : 180)
-            model: ListModel {
-                id: cloudDrivePathListModel
-            }
+            model: cloudDrivePathListModel
             delegate: cloudDrivePathItemDelegate
             highlight: Rectangle {
                 width: cloudDrivePathListView.width
