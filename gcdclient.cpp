@@ -46,12 +46,18 @@ GCDClient::GCDClient(QObject *parent) :
     m_filesReplyHash = new QHash<QString, QByteArray>;
 
     // Populate contentTypeHash.
+    // TODO Make it configurable. It could be parsed from apache server's mime.types.
     m_contentTypeHash["jpg"] = "image/jpeg";
     m_contentTypeHash["png"] = "image/png";
     m_contentTypeHash["pdf"] = "application/pdf";
     m_contentTypeHash["txt"] = "text/plain";
     m_contentTypeHash["patch"] = "text/plain";
     m_contentTypeHash["log"] = "text/plain";
+    m_contentTypeHash["avi"] = "video/x-msvideo";
+    m_contentTypeHash["mp3"] = "audio/mpeg3";
+    m_contentTypeHash["mp4"] = "video/mp4";
+    m_contentTypeHash["mov"] = "video/quicktime";
+    m_contentTypeHash["flv"] = "video/x-flv";
 }
 
 GCDClient::~GCDClient()
