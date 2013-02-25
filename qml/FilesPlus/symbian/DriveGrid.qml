@@ -89,6 +89,7 @@ Rectangle {
                     source: (iconSource != "") ? iconSource : driveIcons[model.driveType]
                     anchors.verticalCenter: parent.verticalCenter
                     fillMode: Image.PreserveAspectFit
+                    smooth: true
                 }
 
                 Column {
