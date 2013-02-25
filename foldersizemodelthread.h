@@ -61,7 +61,7 @@ public:
     void getDirContent(const QString dirPath, QList<FolderSizeItem> &itemList);
     void sortItemList(QList<FolderSizeItem> &itemList, bool sortAll = true);
     bool isDirSizeCacheExisting();
-    void removeDirSizeCache(const QString key);
+    int removeDirSizeCache(const QString key);
     bool changeDir(const QString dirName, const int sortFlag = -1);
     FolderSizeItem getItem(const QFileInfo fileInfo);
 

@@ -763,20 +763,24 @@ bool FolderSizeModelThread::isDirSizeCacheExisting()
     return ( (isRunning() && m_runMethod == LoadDirSizeCache) || dirSizeCache->count() > 0 || countDirSizeCacheDB() > 0);
 }
 
-void FolderSizeModelThread::removeDirSizeCache(const QString key)
+int FolderSizeModelThread::removeDirSizeCache(const QString key)
 {
     //    qDebug() << "FolderSizeModelThread::removeDirSizeCache started from" << key;
 
+    int res = 0;
+
     // Remove only specified key.
-    dirSizeCache->remove(key);
+    res = dirSizeCache->remove(key);
 
     // Dirty cache.
     FolderSizeItem item = selectDirSizeCacheFromDB(key);
-    if (item.absolutePath == key) {
+    if (item.absolutePath == key && item.lastModified != QDateTime::fromMSecsSinceEpoch(0)) {
         item.isDir = true;
         item.lastModified = QDateTime::fromMSecsSinceEpoch(0);
-        updateDirSizeCacheToDB(item);
+        res += updateDirSizeCacheToDB(item);
     }
+
+    return res;
 }
 
 FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bool clearCache) {

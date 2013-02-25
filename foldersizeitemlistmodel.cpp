@@ -884,7 +884,10 @@ void FolderSizeItemListModel::removeCache(const QString absPath)
 {
     // Remove cache up to root by utilizing cache in getPathToRoot().
     foreach (QString path, getPathToRoot(absPath)) {
-        m.removeDirSizeCache(path);
+        if (m.removeDirSizeCache(path) == 0) {
+            qDebug() << "FolderSizeItemListModel::removeCache cache of" << path << "is already removed. Operation is ignored.";
+            break;
+        }
     }
 }
 
