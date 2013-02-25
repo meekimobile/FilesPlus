@@ -759,6 +759,14 @@ Page {
                 }
             }
 
+            function getMediaSource(source, remoteFilePath) {
+                if (source) {
+                    return source;
+                } else {
+                    return cloudDriveModel.media(selectedCloudType, selectedUid, remoteFilePath);
+                }
+            }
+
             onPressAndHold: {
                 if (cloudFolderView.state != "mark") {
                     cloudFolderView.currentIndex = index;
@@ -783,35 +791,36 @@ Page {
                         // If file is running, disable preview.
                         if (isRunning) return;
 
-                        // Check if it's viewable.
-                        if (!cloudDriveModel.isViewable(selectedCloudType)) return;
-
                         isBusy = true;
 
-                        var viewableImageFileTypes = ["JPG", "PNG", "GIF", "SVG"];
-                        var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
+                        // Check if it's viewable.
                         var url;
-                        if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                            // NOTE ImageViewPage will populate ImageViewModel with mediaUrl.
-                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
-                                           { model: cloudFolderModel, selectedCloudType: selectedCloudType, selectedUid: selectedUid, selectedFilePath: absolutePath });
-                        } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                            // Request media to get and open URL.
-                            if (source) {
-                                url = source;
+                        if (cloudDriveModel.isViewable(selectedCloudType)) {
+                            var viewableImageFileTypes = ["JPG", "PNG", "GIF", "SVG"];
+                            var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
+                            if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                                // NOTE ImageViewPage will populate ImageViewModel with mediaUrl.
+                                pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
+                                               { model: cloudFolderModel, selectedCloudType: selectedCloudType, selectedUid: selectedUid, selectedFilePath: absolutePath });
+                            } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                                // View with internal web viewer.
+                                url = getMediaSource(source, absolutePath);
+                                appInfo.addToClipboard(url);
+                                pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
                             } else {
-                                url = cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
+                                // Open with system web browser.
+                                url = getMediaSource(source, absolutePath);
+                                if (url != "") {
+                                    Qt.openUrlExternally(url);
+                                }
                             }
-                            appInfo.addToClipboard(url);
-                            pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
                         } else {
-                            // Request media to get and open URL.
-                            if (source) {
-                                url = source;
-                            } else {
-                                url = cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
+                            // File is not viewable but may be browsable.
+                            // TODO Provide alternate link.
+                            url = getMediaSource(source, absolutePath);
+                            if (url != "") {
+                                Qt.openUrlExternally(url);
                             }
-                            Qt.openUrlExternally(url);
                         }
 
                         isBusy = false;

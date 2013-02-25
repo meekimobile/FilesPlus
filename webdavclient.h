@@ -60,6 +60,7 @@ public:
     void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     void deleteFile(QString nonce, QString uid, QString remoteFilePath);
     void shareFile(QString nonce, QString uid, QString remoteFilePath);
+    QString media(QString nonce, QString uid, QString remoteFilePath);
 
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, QString requestBody = "", int depth = 0, bool synchronous = true, QString callback = "");
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
