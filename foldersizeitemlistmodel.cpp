@@ -16,6 +16,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     roles[IsDirRole] = "isDir";
     roles[SubDirCountRole] = "subDirCount";
     roles[SubFileCountRole] = "subFileCount";
+    roles[BaseNameRole] = "baseName";
     roles[FileTypeRole] = "fileType";
     roles[IsRunningRole] = "isRunning";
     roles[RunningOperationRole] = "runningOperation";
@@ -95,6 +96,8 @@ QVariant FolderSizeItemListModel::data(const QModelIndex & index, int role) cons
         return item.subDirCount;
     else if (role == SubFileCountRole)
         return item.subFileCount;
+    else if (role == BaseNameRole)
+        return item.name.mid(0, item.name.lastIndexOf("."));
     else if (role == FileTypeRole)
         return item.fileType;
     else if (role == IsRunningRole)

@@ -57,6 +57,7 @@ public:
         IsDirRole,
         SubDirCountRole,
         SubFileCountRole,
+        BaseNameRole,
         FileTypeRole,
         IsRunningRole,
         RunningOperationRole,
