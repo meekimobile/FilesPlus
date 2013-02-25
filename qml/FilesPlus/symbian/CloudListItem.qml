@@ -108,9 +108,10 @@ ListItem {
             Row {
                 width: parent.width
                 height: parent.height / 2
+                spacing: 2
                 Text {
                     text: name
-                    width: parent.width - sizeText.width
+                    width: parent.width - sizeText.width - parent.spacing
                     height: parent.height
                     font.pointSize: 8
                     elide: Text.ElideMiddle
@@ -120,7 +121,6 @@ ListItem {
                 Text {
                     id: sizeText
                     text: Utility.formatFileSize(size, 1)
-                    width: 85
                     height: parent.height
                     font.pointSize: 6
                     horizontalAlignment: Text.AlignRight
