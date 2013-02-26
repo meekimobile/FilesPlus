@@ -1,5 +1,7 @@
 filesplus (1.2.0) unstable; urgency=low
-  * <Add change description here>
+  * Add more cloud storage connectors. Cloud storage can be used as a drive.
+  * Add pinch-zooming to image viewer.
+  * Improve startup time.
 
  -- Taweesak Kittipuree <>  Mon, 03 Dec 2012 16:22:25 +0700
 
