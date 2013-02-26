@@ -30,7 +30,7 @@ Rectangle {
             }
             PropertyChanges {
                 target: toolButton
-                iconSource: (!window.platformInverted) ? "toolbar_extension.svg" : "toolbar_extension_inverted.svg"
+                iconSource: (!window.platformInverted) ? "back.svg" : "back_inverted.svg"
             }
         },
         State {
