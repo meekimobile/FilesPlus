@@ -231,7 +231,12 @@ bool AppInfo::loadTS(const QString localeName)
 
     qApp->removeTranslator(m_ts);
     bool res = false;
-    res = m_ts->load(m_appName + "_" + localeName, ":/");
+//    res = m_ts->load(m_settings->applicationName() + "_" + localeName, ":/"); // Load qm file from qrc.
+#ifdef Q_OS_SYMBIAN
+    res = m_ts->load(m_settings->applicationName() + "_" + localeName, "i18n"); // Load qm file from application default path.
+#elif defined(Q_WS_HARMATTAN)
+    res = m_ts->load(m_settings->applicationName() + "_" + localeName, QDir(QApplication::applicationDirPath()).absoluteFilePath("../i18n") ); // Load qm file from application binary path.
+#endif
     if (res) {
         qDebug() << "AppInfo::loadTS m_ts is loaded. isEmpty" << m_ts->isEmpty();
         qApp->installTranslator(m_ts);

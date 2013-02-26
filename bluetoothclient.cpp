@@ -4,7 +4,7 @@
 #if defined(Q_WS_HARMATTAN)
 const QString BluetoothClient::DATA_FILE_PATH = "/home/user/.filesplus/BluetoothClient.dat";
 #else
-const QString BluetoothClient::DATA_FILE_PATH = "C:/BluetoothClient.dat";
+const QString BluetoothClient::DATA_FILE_PATH = "BluetoothClient.dat";
 #endif
 const int BluetoothClient::MAX_DISCOVERY_RETRY = 3;
 
@@ -12,6 +12,9 @@ BluetoothClient::BluetoothClient(QDeclarativeItem *parent) :
     QDeclarativeItem(parent), m_localDevice(new QBluetoothLocalDevice(this)), m_serviceDiscoveryAgent(new QBluetoothServiceDiscoveryAgent(this))
 {
     loadBtServiceHash();
+
+    // Populates uuiudFilterList.
+    m_uuidFilterList.append(QBluetoothUuid(QBluetoothUuid::ObexObjectPush));
 
     connect(m_localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)), this, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)) );
     connect(m_serviceDiscoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)), this, SLOT(serviceDiscoveredFilter(QBluetoothServiceInfo)) );
@@ -86,7 +89,7 @@ void BluetoothClient::requestDiscoveredDevices()
         QString deviceName = m_btServiceHash.value(addr);
         bool trusted = isTrusted(addr);
         bool paired = isPaired(addr);
-        qDebug() << "BluetoothClient::requestDiscoveredDevices" << addr << deviceName << trusted << paired;
+        qDebug() << "BluetoothClient::requestDiscoveredDevices" << addr << deviceName << "trusted" << trusted << "paired" << paired;
         if (paired) {
             emit serviceDiscovered(deviceName, addr, trusted, paired, false);
         }
@@ -107,12 +110,12 @@ void BluetoothClient::startDiscovery(bool full, bool clear)
     if (m_discoveryRetry <= 0) return;
 
     qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "BluetoothClient::startDiscovery retry remain" << m_discoveryRetry << "full" << full << "clear" << clear
-             << "discoveredServices" << m_serviceDiscoveryAgent->discoveredServices().count() << "uuidFilter" << QBluetoothUuid(QBluetoothUuid::ObexObjectPush).toString();
+             << "discoveredServices" << m_serviceDiscoveryAgent->discoveredServices().count() << "m_uuidFilterList" << m_uuidFilterList;
 
     if (clear) {
         m_serviceDiscoveryAgent->clear();
     }
-    m_serviceDiscoveryAgent->setUuidFilter(QBluetoothUuid(QBluetoothUuid::ObexObjectPush));
+    m_serviceDiscoveryAgent->setUuidFilter(m_uuidFilterList);
     m_serviceDiscoveryAgent->start( (full ? QBluetoothServiceDiscoveryAgent::FullDiscovery : QBluetoothServiceDiscoveryAgent::MinimalDiscovery) );
 
     emit discoveryChanged();
@@ -159,6 +162,22 @@ bool BluetoothClient::isRunning()
 bool BluetoothClient::isPaired(const QString deviceAddressStr)
 {
     return (m_localDevice == 0) ? false : (m_localDevice->pairingStatus(QBluetoothAddress(deviceAddressStr)) != QBluetoothLocalDevice::Unpaired);
+}
+
+QVariant BluetoothClient::getStoredDeviceList()
+{
+    QList<QVariant> deviceList;
+    foreach (QString addr, m_btServiceHash.keys()) {
+        QMap<QString, QVariant> deviceMap;
+        deviceMap["deviceAddress"] = addr;
+        deviceMap["deviceName"] = m_btServiceHash.value(addr);
+        deviceMap["isTrusted"] = isTrusted(addr);
+        deviceMap["isPaired"] = isPaired(addr);
+        deviceMap["isNear"] = false;
+        deviceList.append(QVariant(deviceMap));
+    }
+
+    return QVariant(deviceList);
 }
 
 bool BluetoothClient::isTrusted(const QString deviceAddressStr)

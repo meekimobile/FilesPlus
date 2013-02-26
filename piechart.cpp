@@ -275,6 +275,7 @@ void PieChart::createItemFromModel()
     int isDirRole = getRole(model(), "isDir");
     int subDirCountRole = getRole(model(), "subDirCount");
     int subFileCountRole = getRole(model(), "subFileCount");
+    int lastModifiedRole = getRole(model(), "lastModified");
 
     double totalSize = 0;
     int i = 0;
@@ -294,6 +295,7 @@ void PieChart::createItemFromModel()
         bool isDir = (model()->data(model()->index(i,0), isDirRole)).toBool();
         double subDirCount = (model()->data(model()->index(i,0), subDirCountRole)).toDouble();
         double subFileCount = (model()->data(model()->index(i,0), subFileCountRole)).toDouble();
+        QDateTime lastModified = (model()->data(model()->index(i,0), lastModifiedRole)).toDateTime();
 
         if (!isDir) break;
 
@@ -311,7 +313,8 @@ void PieChart::createItemFromModel()
         slice->setSubText(formatFileSize(size, 1));
         QString oText = "";
         if (subDirCount > 0) oText += tr("%n dir(s)", "", subDirCount);
-        if (subFileCount > 0) oText += ((oText == "") ? "" : "\n") + tr("%n file(s)", "", subFileCount);
+        if (subFileCount > 0) oText += ((oText == "") ? "" : " ") + tr("%n file(s)", "", subFileCount);
+        oText += ((oText == "") ? "" : "<br>") + lastModified.toString("d MMM yyyy h:mm:ss ap");
         slice->setOptionalText(oText);
         slice->setFromAngle(int(currentAngle));
         slice->setAngleSpan(int(currentAngleSpan));

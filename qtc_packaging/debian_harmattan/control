@@ -12,7 +12,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: FilesPlus - file manager with cloud integration.
  FilesPlus provides extended functions beyond files manager.
  \n+ Print with Google Cloud Print.
- \n+ Sync files with multiple Dropbox(s).
+ \n+ Sync files with multiple cloud storages.
  \n+ File management with cut/copy/paste.
  \n+ Preview images in your folders.
  \n+ Preview and edit text files with pinch-zoom.

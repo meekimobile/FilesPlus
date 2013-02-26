@@ -40,8 +40,7 @@ Page {
             id: printButton
             iconSource: (theme.inverted) ? "print.svg" : "print_inverted.svg"
             onClicked: {
-                var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-                if (p) p.printFileSlot(textViewPage.filePath, -1);
+                gcpClient.printFileSlot(textViewPage.filePath, -1);
             }
         }
     }

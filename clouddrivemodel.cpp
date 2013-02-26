@@ -1,16 +1,72 @@
 #include "clouddrivemodel.h"
 
+bool nameLessThan(const QScriptValue &o1, const QScriptValue &o2)
+{
+//    qDebug() << "nameLessThan" << o1.property("name").toString().toLower() << o2.property("name").toString().toLower();
+    return o1.property("name").toString().toLower() < o2.property("name").toString().toLower();
+}
+
+bool timeGreaterThan(const QScriptValue &o1, const QScriptValue &o2)
+{
+    qDebug() << "timeGreaterThan" << o1.property("lastModified").toString() << o2.property("lastModified").toString();
+    return o1.property("lastModified").toString()  > o2.property("lastModified").toString();
+}
+
+bool typeLessThan(const QScriptValue &o1, const QScriptValue &o2)
+{
+    if (o1.property("isDir").toBool() && !o2.property("isDir").toBool()) {
+        // If dir before file, return true.
+        return true;
+    } else if (!o1.property("isDir").toBool() && o2.property("isDir").toBool()) {
+        // If file before dir, return false;
+        return false;
+    } else {
+        // If both are dir, compare name.
+        // If both are file, compare type and name.
+        if (o1.property("isDir").toBool() && o2.property("isDir").toBool()) {
+//            qDebug() << "typeLessThan" << o1.name << o1.fileType << o2.name << o2.fileType;
+            return o1.property("name").toString().toLower() < o2.property("name").toString().toLower();
+        } else {
+            if (o1.property("fileType").toString().toLower() == o2.property("fileType").toString().toLower()) {
+                return o1.property("name").toString().toLower() < o2.property("name").toString().toLower();
+            } else if (o1.property("fileType").toString().toLower() < o2.property("fileType").toString().toLower()) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+}
+
+bool sizeGreaterThan(const QScriptValue &o1, const QScriptValue &o2)
+{
+    if (o1.property("isDir").toBool() && !o2.property("isDir").toBool()) {
+        // If dir before file, return true.
+        return true;
+    } else if (!o1.property("isDir").toBool() && o2.property("isDir").toBool()) {
+        // If file before dir, return false;
+        return false;
+    } else {
+        // If both the same, compare size.
+        return o1.property("size").toInteger() > o2.property("size").toInteger();
+    }
+}
+
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
 const QString CloudDriveModel::ITEM_DAT_PATH = "/home/user/.filesplus/CloudDriveModel.dat";
 const QString CloudDriveModel::ITEM_DB_PATH = "/home/user/.filesplus/CloudDriveModel.db";
 const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
-const int CloudDriveModel::MaxRunningJobCount = 3;
+const QString CloudDriveModel::TEMP_PATH = "/home/user/MyDocs/temp/.filesplus";
+const QString CloudDriveModel::JOB_DAT_PATH = "/home/user/.filesplus/CloudDriveJobs.dat";
+const int CloudDriveModel::MaxRunningJobCount = 1;
 #else
-const QString CloudDriveModel::ITEM_DAT_PATH = "C:/CloudDriveModel.dat";
+const QString CloudDriveModel::ITEM_DAT_PATH = "CloudDriveModel.dat";
 const QString CloudDriveModel::ITEM_DB_PATH = "CloudDriveModel.db";
 const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
-const int CloudDriveModel::MaxRunningJobCount = 2;
+const QString CloudDriveModel::TEMP_PATH = "E:/temp/.filesplus";
+const QString CloudDriveModel::JOB_DAT_PATH = "CloudDriveJobs.dat"; // It's in private folder.
+const int CloudDriveModel::MaxRunningJobCount = 1;
 #endif
 const QString CloudDriveModel::DirtyHash = "FFFFFFFF";
 //const QStringList CloudDriveModel::restrictFileTypes = QString("SIS,SISX,DEB").split(",");
@@ -22,31 +78,16 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     // Issue: Qt on Belle doesn't support QtConcurrent and QFuture.
     // Example code: QFuture<void> loadDataFuture = QtConcurrent::run(this, &CloudDriveModel::loadCloudDriveItems);
 
-    // Connect job queue chain.
-    connect(this, SIGNAL(proceedNextJobSignal()), SLOT(proceedNextJob()) );
-
-    // Connect with permanent thread.
-    connect(&m_thread, SIGNAL(finished()), this, SLOT(threadFinishedFilter()) );
-    connect(&m_thread, SIGNAL(terminated()), this, SLOT(threadFinishedFilter()) );
-    connect(&m_thread, SIGNAL(loadCloudDriveItemsFinished(QString)), this, SLOT(loadCloudDriveItemsFilter(QString)) );
-//    connect(&m_thread, SIGNAL(uploadProgress(QString,qint64,qint64)), SLOT(uploadProgressFilter(QString,qint64,qint64)) );
-//    connect(&m_thread, SIGNAL(downloadProgress(QString,qint64,qint64)), SLOT(downloadProgressFilter(QString,qint64,qint64)) );
-//    connect(&m_thread, SIGNAL(requestTokenReplySignal(int,QString,QString)), SIGNAL(requestTokenReplySignal(int,QString,QString)) );
-//    connect(&m_thread, SIGNAL(authorizeRedirectSignal(QString,QString)), SIGNAL(authorizeRedirectSignal(QString,QString)) );
-//    connect(&m_thread, SIGNAL(accessTokenReplySignal(int,QString,QString)), SIGNAL(accessTokenReplySignal(int,QString,QString)) );
-//    connect(&m_thread, SIGNAL(accountInfoReplySignal(int,QString,QString)), SIGNAL(accountInfoReplySignal(int,QString,QString)) );
-//    connect(&m_thread, SIGNAL(fileGetReplySignal(QString,int,QString,QString)), SLOT(fileGetReplyFilter(QString,int,QString,QString)) );
-//    connect(&m_thread, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SLOT(filePutReplyFilter(QString,int,QString,QString)) );
-//    connect(&m_thread, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
-//    connect(&m_thread, SIGNAL(createFolderReplySignal(QString,int,QString,QString)), SLOT(createFolderReplyFilter(QString,int,QString,QString)) );
-
-    // Fetch first nonce and trash it.
-    createNonce();
-
     // Initialize DAT and jobQueue.
     m_cloudDriveItems = new QMultiMap<QString, CloudDriveItem>();
     m_cloudDriveJobs = new QHash<QString, CloudDriveJob>();
     m_jobQueue = new QQueue<QString>();
+
+    // Create temp path.
+    createTempPath();
+
+    // Set thread pool with MaxRunningJobCount+1 to support browse method.
+    QThreadPool::globalInstance()->setMaxThreadCount(MaxRunningJobCount + 1);
 
     // Initialize scheduler queue.
     initScheduler();
@@ -56,6 +97,9 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     CloudDriveJob loadCloudDriveItemsJob(createNonce(), LoadCloudDriveItems, -1, "", "", "", -1);
     m_cloudDriveJobs->insert(loadCloudDriveItemsJob.jobId, loadCloudDriveItemsJob);
     m_jobQueue->enqueue(loadCloudDriveItemsJob.jobId);
+    CloudDriveJob loadCloudDriveJobsJob(createNonce(), LoadCloudDriveJobs, -1, "", "", "", -1);
+    m_cloudDriveJobs->insert(loadCloudDriveJobsJob.jobId, loadCloudDriveJobsJob);
+    m_jobQueue->enqueue(loadCloudDriveJobsJob.jobId);
     CloudDriveJob initializeDBJob(createNonce(), InitializeDB, -1, "", "", "", -1);
     m_cloudDriveJobs->insert(initializeDBJob.jobId, initializeDBJob);
     m_jobQueue->enqueue(initializeDBJob.jobId);
@@ -66,14 +110,20 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     m_isDirtyCache = new QHash<QString, bool>();
     m_isSyncingCache = new QHash<QString, bool>();
 
-    // Initialize DropboxClient
-    initializeDropboxClient();
+    // Initialize cloud storage clients.
+    initializeCloudClients(createNonce());
+
+    // Initialize job queue timer.
+    initJobQueueTimer();
 }
 
 CloudDriveModel::~CloudDriveModel()
 {
     // TODO Migrate DAT to DB.
     saveCloudDriveItems();
+
+    // Save current jobs.
+    saveCloudDriveJobs();
 
     // Close DB.
     cleanDB();
@@ -98,6 +148,24 @@ void CloudDriveModel::setDropboxFullAccess(bool flag)
         // Re-initialize DropboxClient.
         initializeDropboxClient();
     }
+}
+
+void CloudDriveModel::loadCloudDriveItems(QString nonce) {
+    QFile file(ITEM_DAT_PATH);
+    if (file.open(QIODevice::ReadOnly)) {
+        QDataStream in(&file);    // read the data serialized from the file
+        in >> *m_cloudDriveItems;
+    }
+
+    qDebug() << QTime::currentTime() << "CloudDriveModel::loadCloudDriveItems " << m_cloudDriveItems->size();
+
+    // Notify job done.
+    jobDone();
+
+    // RemoveJob
+    removeJob("CloudDriveModel::loadCloudDriveItems", nonce);
+
+    emit loadCloudDriveItemsFinished(nonce);
 }
 
 void CloudDriveModel::saveCloudDriveItems() {
@@ -126,6 +194,125 @@ void CloudDriveModel::saveCloudDriveItems() {
     qDebug() << "CloudDriveModel::saveCloudDriveItems" << m_cloudDriveItems->size();
 }
 
+void CloudDriveModel::loadCloudDriveJobs(QString nonce)
+{
+    QScriptEngine engine;
+    QScriptValue sc;
+    int i = 0;
+
+    QFile file(JOB_DAT_PATH);
+    if (file.open(QIODevice::ReadOnly)) {
+        sc = engine.evaluate(QString::fromUtf8(file.readAll()));
+        if (sc.isArray()) {
+            int len = sc.toVariant().toList().length();
+            for (i = 0; i < len; i++) {
+                QScriptValue item = sc.property(i);
+                CloudDriveJob job(item.property("job_id").toString(),
+                                  item.property("operation").toInt32(),
+                                  item.property("type").toInt32(),
+                                  item.property("uid").toString(),
+                                  item.property("local_file_path").toString(),
+                                  item.property("remote_file_path").toString(), -1);
+                job.newLocalFilePath = item.property("new_local_file_path").toString();
+                job.newRemoteFilePath = item.property("new_remote_file_path").toString();
+                job.newRemoteFileName = item.property("new_remote_file_name").toString();
+                job.targetUid = item.property("target_uid").toString();
+                job.targetType = item.property("target_type").toInt32();
+                job.bytes = item.property("bytes").toInt32();
+                job.bytesTotal = item.property("bytes_total").toInt32();
+                job.forcePut = item.property("force_put").toBool();
+                job.downloadOffset = item.property("download_offset").toInt32();
+                job.uploadId = item.property("upload_id").toString();
+                job.uploadOffset = item.property("upload_offset").toInt32();
+                job.createdTime = item.property("created_time").toDateTime();
+                job.lastStartedTime = item.property("last_started_time").toDateTime();
+                job.lastStoppedTime = item.property("last_stopped_time").toDateTime();
+                job.err = item.property("err").toInt32();
+                job.errString = item.property("err_string").toString();
+                job.errMessage = item.property("err_message").toString();
+                job.nextJobId = item.property("next_job_id").toString();
+                m_cloudDriveJobs->insert(job.jobId, job);
+
+                // Add job to jobModel for displaying on job page.
+                emit jobEnqueuedSignal(job.jobId, job.localFilePath);
+            }
+        }
+    }
+
+    qDebug() << "CloudDriveModel::loadCloudDriveJobs " << i;
+
+    // Notify job done.
+    jobDone();
+
+    // RemoveJob
+    removeJob("CloudDriveModel::loadCloudDriveJobs", nonce);
+}
+
+void CloudDriveModel::saveCloudDriveJobs()
+{
+    QFile file(JOB_DAT_PATH);
+    QFileInfo info(file);
+    if (!info.absoluteDir().exists()) {
+        qDebug() << "CloudDriveModel::saveCloudDriveJobs dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
+        bool res = QDir::home().mkpath(info.absolutePath());
+        if (!res) {
+            qDebug() << "CloudDriveModel::saveCloudDriveJobs can't make dir" << info.absolutePath();
+        } else {
+            qDebug() << "CloudDriveModel::saveCloudDriveJobs make dir" << info.absolutePath();
+        }
+    }
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write("[ ");
+        int c = 0;
+        foreach (CloudDriveJob job, m_cloudDriveJobs->values()) {
+            // TODO Clean up job.
+            if (job.jobId == "") continue;
+
+            if (c > 0) file.write(", ");
+            file.write(job.toJsonText().toUtf8());
+            c++;
+        }
+        file.write(" ]");
+    }
+    file.close();
+
+    qDebug() << "CloudDriveModel::saveCloudDriveJobs" << m_cloudDriveJobs->size() << "fileSize" << file.size();
+}
+
+void CloudDriveModel::initializeCloudClients(QString nonce)
+{
+    // TODO Generalize to support plugable client.
+    initializeDropboxClient();
+    initializeSkyDriveClient();
+    initializeGoogleDriveClient();
+    initializeFtpClient();
+    initializeWebDAVClient();
+}
+
+void CloudDriveModel::connectCloudClientsSignal(CloudDriveClient *client)
+{
+    connect(client, SIGNAL(uploadProgress(QString,qint64,qint64)), SLOT(uploadProgressFilter(QString,qint64,qint64)) );
+    connect(client, SIGNAL(downloadProgress(QString,qint64,qint64)), SLOT(downloadProgressFilter(QString,qint64,qint64)) );
+    connect(client, SIGNAL(requestTokenReplySignal(QString,int,QString,QString)), SLOT(requestTokenReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(authorizeRedirectSignal(QString,QString,QString)), SLOT(authorizeRedirectFilter(QString,QString,QString)) );
+    connect(client, SIGNAL(accessTokenReplySignal(QString,int,QString,QString)), SLOT(accessTokenReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(accountInfoReplySignal(QString,int,QString,QString)), SLOT(accountInfoReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(quotaReplySignal(QString,int,QString,QString,qint64,qint64,qint64)), SLOT(quotaReplyFilter(QString,int,QString,QString,qint64,qint64,qint64)) );
+    connect(client, SIGNAL(fileGetReplySignal(QString,int,QString,QString)), SLOT(fileGetReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SLOT(filePutReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(browseReplySignal(QString,int,QString,QString)), SLOT(browseReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(createFolderReplySignal(QString,int,QString,QString)), SLOT(createFolderReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(moveFileReplySignal(QString,int,QString,QString)), SLOT(moveFileReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(shareFileReplySignal(QString,int,QString,QString,QString,int)), SLOT(shareFileReplyFilter(QString,int,QString,QString,QString,int)) );
+    connect(client, SIGNAL(migrateFilePutReplySignal(QString,int,QString,QString)), SLOT(migrateFilePutFilter(QString,int,QString,QString)) ); // Added because FtpClient doesn't provide QNetworkReply.
+    connect(client, SIGNAL(fileGetResumeReplySignal(QString,int,QString,QString)), SLOT(fileGetResumeReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
+}
+
 void CloudDriveModel::initializeDropboxClient() {
     qDebug() << "CloudDriveModel::initializeDropboxClient" << m_dropboxFullAccess;
 
@@ -134,34 +321,57 @@ void CloudDriveModel::initializeDropboxClient() {
     }
 
     dbClient = new DropboxClient(this, m_dropboxFullAccess);
-    connect(dbClient, SIGNAL(uploadProgress(QString,qint64,qint64)), SLOT(uploadProgressFilter(QString,qint64,qint64)) );
-    connect(dbClient, SIGNAL(downloadProgress(QString,qint64,qint64)), SLOT(downloadProgressFilter(QString,qint64,qint64)) );
-    connect(dbClient, SIGNAL(requestTokenReplySignal(QString,int,QString,QString)), SLOT(requestTokenReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(authorizeRedirectSignal(QString,QString,QString)), SLOT(authorizeRedirectFilter(QString,QString,QString)) );
-    connect(dbClient, SIGNAL(accessTokenReplySignal(QString,int,QString,QString)), SLOT(accessTokenReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(accountInfoReplySignal(QString,int,QString,QString)), SLOT(accountInfoReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(fileGetReplySignal(QString,int,QString,QString)), SLOT(fileGetReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(filePutReplySignal(QString,int,QString,QString)), SLOT(filePutReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(metadataReplySignal(QString,int,QString,QString)), SLOT(metadataReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(browseReplySignal(QString,int,QString,QString)), SLOT(browseReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(createFolderReplySignal(QString,int,QString,QString)), SLOT(createFolderReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(moveFileReplySignal(QString,int,QString,QString)), SLOT(moveFileReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
-    connect(dbClient, SIGNAL(shareFileReplySignal(QString,int,QString,QString)), SLOT(shareFileReplyFilter(QString,int,QString,QString)) );
+    connectCloudClientsSignal(dbClient);
 }
 
-//void CloudDriveModel::initializeGCDClient() {
-//    gcdClient = new GCDClient(this);
-////    connect(gcdClient, SIGNAL(uploadProgress(qint64,qint64)), SIGNAL(uploadProgress(qint64,qint64)) );
-////    connect(gcdClient, SIGNAL(downloadProgress(qint64,qint64)), SIGNAL(downloadProgress(qint64,qint64)) );
-//    connect(gcdClient, SIGNAL(authorizeRedirectSignal(QString,QString)), SIGNAL(authorizeRedirectSignal(QString,QString)) );
-//    connect(gcdClient, SIGNAL(accessTokenReplySignal(int,QString,QString)), SIGNAL(accessTokenReplySignal(int,QString,QString)) );
-//    connect(gcdClient, SIGNAL(accountInfoReplySignal(int,QString,QString)), SIGNAL(accountInfoReplySignal(int,QString,QString)) );
-//    connect(gcdClient, SIGNAL(fileGetReplySignal(int,QString,QString)), SIGNAL(fileGetReplySignal(int,QString,QString)) );
-//    connect(gcdClient, SIGNAL(filePutReplySignal(int,QString,QString)), SIGNAL(filePutReplySignal(int,QString,QString)) );
-//    connect(gcdClient, SIGNAL(metadataReplySignal(int,QString,QString)), SIGNAL(metadataReplySignal(int,QString,QString)) );
-//}
+void CloudDriveModel::initializeSkyDriveClient()
+{
+    qDebug() << "CloudDriveModel::initializeSkyDriveClient";
+
+    if (skdClient != 0) {
+        skdClient->deleteLater();
+    }
+
+    skdClient = new SkyDriveClient(this);
+    connectCloudClientsSignal(skdClient);
+}
+
+void CloudDriveModel::initializeGoogleDriveClient()
+{
+    qDebug() << "CloudDriveModel::initializeGoogleDriveClient";
+
+    if (gcdClient != 0) {
+        gcdClient->deleteLater();
+    }
+
+    gcdClient = new GCDClient(this);
+    connectCloudClientsSignal(gcdClient);
+}
+
+void CloudDriveModel::initializeFtpClient()
+{
+    qDebug() << "CloudDriveModel::initializeFtpClient";
+
+    if (ftpClient != 0) {
+        ftpClient->deleteLater();
+    }
+
+    ftpClient = new FtpClient(this);
+    connectCloudClientsSignal(ftpClient);
+}
+
+void CloudDriveModel::initializeWebDAVClient()
+{
+    // TODO Generalize initialization.
+    qDebug() << "CloudDriveModel::initializeWebDAVClient";
+
+    if (webDavClient != 0) {
+        webDavClient->deleteLater();
+    }
+
+    webDavClient = new WebDavClient(this);
+    connectCloudClientsSignal(webDavClient);
+}
 
 QString CloudDriveModel::createNonce() {
     QString ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -218,10 +428,10 @@ QList<CloudDriveItem> CloudDriveModel::findItemWithChildren(CloudDriveModel::Cli
     // Find from DAT.
     bool isFound = false;
     foreach (CloudDriveItem item, m_cloudDriveItems->values()) {
-        qDebug() << "CloudDriveModel::findItemWithChildren" << item.localPath << item.type << item.uid;
+//        qDebug() << "CloudDriveModel::findItemWithChildren" << item.localPath << item.type << item.uid;
         if (item.type == type && item.uid == uid) {
             if (item.localPath == localPath || item.localPath.startsWith(localPath + "/")) {
-    //            qDebug() << "CloudDriveModel::findItemWithChildren add" << item;
+                qDebug() << "CloudDriveModel::findItemWithChildren add" << item;
                 list.append(item);
                 isFound = true;
             } else if (isFound) {
@@ -231,7 +441,7 @@ QList<CloudDriveItem> CloudDriveModel::findItemWithChildren(CloudDriveModel::Cli
         }
 
         // TODO (Realtime Migration) Insert to DB.
-        if (insertItemToDB(item) > 0) {
+        if (insertItemToDB(item, true) > 0) {
             m_cloudDriveItems->remove(item.localPath, item);
             qDebug() << "CloudDriveModel::findItemWithChildren migrate" << item << "m_cloudDriveItems count" << m_cloudDriveItems->count();
         }
@@ -270,6 +480,21 @@ QList<CloudDriveItem> CloudDriveModel::findItems(CloudDriveModel::ClientTypes ty
     return list;
 }
 
+QList<CloudDriveItem> CloudDriveModel::findItemsByRemotePath(ClientTypes type, QString uid, QString remotePath, bool caseInsensitive)
+{
+    QSqlQuery qry(m_db);
+    if (caseInsensitive) {
+        qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND lower(remote_path) = lower(:remote_path)");
+    } else {
+        qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
+    }
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":remote_path", remotePath);
+
+    return getItemListFromPS(qry);
+}
+
 QList<CloudDriveItem> CloudDriveModel::getItemList(QString localPath) {
     QList<CloudDriveItem> list;
 
@@ -296,6 +521,7 @@ QList<CloudDriveItem> CloudDriveModel::getItemList(QString localPath) {
 bool CloudDriveModel::isConnected(QString localPath)
 {
     if (m_isConnectedCache->contains(localPath)) {
+//        qDebug() << "CloudDriveModel::isConnected cached localPath" << localPath << m_isConnectedCache->value(localPath);
         return m_isConnectedCache->value(localPath);
     }
 
@@ -318,8 +544,24 @@ bool CloudDriveModel::isConnected(CloudDriveModel::ClientTypes type, QString uid
     return (item.localPath == localPath);
 }
 
-bool CloudDriveModel::isRemotePathConnected(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
+bool CloudDriveModel::isRemotePathConnected(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, bool showDebug)
 {
+    // Show connections.
+    if (showDebug) {
+        QSqlQuery qry(m_db);
+        qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
+        qry.bindValue(":type", type);
+        qry.bindValue(":uid", uid);
+        qry.bindValue(":remote_path", remotePath);
+        bool res = qry.exec();
+        if (res) {
+            while (qry.next()) {
+                QString localPath = qry.value(qry.record().indexOf("local_path")).toString();
+                qDebug() << "CloudDriveModel::isRemotePathConnected" << type << uid << remotePath << "localPath" << localPath;
+            }
+        }
+    }
+
     int c = countItemByTypeAndUidAndRemotePathFromDB(type, uid, remotePath);
 //    qDebug() << "CloudDriveModel::isRemotePathConnected" << type << uid << remotePath << c;
     return (c > 0);
@@ -373,6 +615,18 @@ bool CloudDriveModel::isSyncing(QString localPath)
     return res;
 }
 
+bool CloudDriveModel::isSyncing(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
+{
+    bool res = false;
+    foreach (CloudDriveJob job, m_cloudDriveJobs->values()) {
+        if (job.localFilePath == localPath && getClientType(job.type) == type && job.uid == uid) {
+            res = true;
+        }
+    }
+
+    return res;
+}
+
 bool CloudDriveModel::isParentConnected(QString localPath)
 {
     // TODO
@@ -385,21 +639,111 @@ bool CloudDriveModel::isParentConnected(QString localPath)
     return false;
 }
 
-QString CloudDriveModel::getParentLocalPath(QString localPath)
+void CloudDriveModel::clearConnectedRemoteDirtyCache(QString localPath)
 {
-    QString parentPath = "";
-    if (localPath != "") {
-        parentPath = localPath.mid(0, localPath.lastIndexOf("/"));
-    }
-
-    return parentPath;
+    m_isConnectedCache->remove(localPath);
+    m_isDirtyCache->remove(localPath);
+    m_isSyncingCache->remove(localPath);
 }
 
-void CloudDriveModel::initScheduler()
+bool CloudDriveModel::isRemoteRoot(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
 {
-    connect(&m_schedulerTimer, SIGNAL(timeout()), this, SLOT(schedulerTimeoutFilter()) );
-    m_schedulerTimer.setInterval(60000);
-    m_schedulerTimer.start();
+    CloudDriveClient *client = getCloudClient(type);
+    if (client == 0) {
+        return false;
+    } else {
+        return (client->getRemoteRoot(uid) == remotePath || remotePath == "" || remotePath == "/");
+    }
+}
+
+QString CloudDriveModel::getRemoteRoot(CloudDriveModel::ClientTypes type, QString uid)
+{
+    CloudDriveClient *client = getCloudClient(type);
+    if (client == 0) {
+        return "";
+    } else {
+        return client->getRemoteRoot(uid);
+    }
+}
+
+QString CloudDriveModel::getParentRemotePath(CloudDriveModel::ClientTypes type, QString remotePath)
+{
+    if (isRemoteAbsolutePath(type)) {
+        QString remoteParentPath = "";
+        if (remotePath != "" && remotePath != "/") {
+            // Remove trailing slash from WebDavClient remote folder path.
+            remotePath = remotePath.endsWith("/") ? remotePath.mid(0, remotePath.lastIndexOf("/")) : remotePath;
+            // Remove item name to get parent path.
+            remoteParentPath = remotePath.mid(0, remotePath.lastIndexOf("/"));
+            remoteParentPath = (remoteParentPath == "") ? "/" : remoteParentPath;
+        }
+        return remoteParentPath;
+    } else {
+        return "";
+    }
+}
+
+QString CloudDriveModel::getRemoteName(CloudDriveModel::ClientTypes type, QString remotePath) {
+    if (isRemoteAbsolutePath(type) && remotePath != "") {
+        return remotePath.mid(remotePath.lastIndexOf("/") + 1);
+    } else {
+        return remotePath;
+    }
+}
+
+QString CloudDriveModel::getRemotePath(CloudDriveModel::ClientTypes type, QString remoteParentPath, QString remotePathName) {
+    if (isRemoteAbsolutePath(type)) {
+        return (remoteParentPath == "/" ? "" : remoteParentPath) + "/" + remotePathName;
+    } else {
+        return remoteParentPath;
+    }
+}
+
+QString CloudDriveModel::getParentLocalPath(const QString absFilePath)
+{
+    QFileInfo fileInfo(absFilePath);
+
+    return fileInfo.absolutePath();
+}
+
+bool CloudDriveModel::isDir(const QString absFilePath)
+{
+    QFileInfo fileInfo(absFilePath);
+
+    return fileInfo.isDir();
+}
+
+bool CloudDriveModel::isFile(const QString absFilePath)
+{
+    QFileInfo fileInfo(absFilePath);
+
+    return fileInfo.isFile();
+}
+
+QString CloudDriveModel::getAbsolutePath(const QString dirPath, const QString fileName)
+{
+    QDir dir(dirPath);
+
+    return dir.absoluteFilePath(fileName);
+}
+
+bool CloudDriveModel::createDirPath(const QString absPath)
+{
+    qDebug() << "CloudDriveModel::createDirPath" << absPath;
+
+    if (absPath.trimmed().isEmpty()) return false;
+
+    QDir dir(getParentLocalPath(absPath));
+    bool res = dir.mkdir(getFileName(absPath));
+
+    return res;
+}
+
+QString CloudDriveModel::getFileName(const QString absFilePath)
+{
+    QFileInfo fileInfo(absFilePath);
+
+    return fileInfo.fileName();
 }
 
 QString CloudDriveModel::getFileType(QString localPath)
@@ -416,6 +760,169 @@ QString CloudDriveModel::getFileType(QString localPath)
     return fileType;
 }
 
+CloudDriveModel::ClientTypes CloudDriveModel::getClientType(int typeInt)
+{
+//    qDebug() << "CloudDriveModel::getClientType" << typeInt;
+
+    switch (typeInt) {
+    case Dropbox:
+        return Dropbox;
+    case SkyDrive:
+        return SkyDrive;
+    case GoogleDrive:
+        return GoogleDrive;
+    case Ftp:
+        return Ftp;
+    case WebDAV:
+        return WebDAV;
+    }
+}
+
+CloudDriveModel::ClientTypes CloudDriveModel::getClientType(QString typeText)
+{
+//    qDebug() << "CloudDriveModel::getClientType" << typeText;
+
+    if (typeText.indexOf(QRegExp("dropboxclient|dropbox", Qt::CaseInsensitive)) != -1) {
+        return Dropbox;
+    } else if (typeText.indexOf(QRegExp("skydriveclient|skydrive", Qt::CaseInsensitive)) != -1) {
+        return SkyDrive;
+    } else if (typeText.indexOf(QRegExp("gcdclient|googledriveclient|googledrive", Qt::CaseInsensitive)) != -1) {
+        return GoogleDrive;
+    } else if (typeText.indexOf(QRegExp("ftpclient|ftp", Qt::CaseInsensitive)) != -1) {
+        return Ftp;
+    } else if (typeText.indexOf(QRegExp("webdavclient|webdav", Qt::CaseInsensitive)) != -1) {
+        return WebDAV;
+    }
+}
+
+QString CloudDriveModel::getCloudName(int type) {
+    switch (type) {
+    case Dropbox:
+        return "Dropbox";
+    case GoogleDrive:
+        return "GoogleDrive";
+    case SkyDrive:
+        return "SkyDrive";
+    case Ftp:
+        return "FTP";
+    case WebDAV:
+        return "WebDAV";
+    default:
+        return QString("Invalid type(%1)").arg(type);
+    }
+}
+
+QString CloudDriveModel::getOperationName(int operation) {
+    switch (operation) {
+    case FileGet:
+        return tr("Download");
+    case FilePut:
+        return tr("Upload");
+    case Metadata:
+        return tr("Sync");
+    case CreateFolder:
+        return tr("Create folder");
+    case RequestToken:
+        return tr("Request token");
+    case Authorize:
+        return tr("Authorize");
+    case AccessToken:
+        return tr("Access token");
+    case RefreshToken:
+        return tr("Refresh token");
+    case AccountInfo:
+        return tr("Account Info");
+    case Quota:
+        return tr("Quota");
+    case DeleteFile:
+        return tr("Delete");
+    case MoveFile:
+        return tr("Move");
+    case CopyFile:
+        return tr("Copy");
+    case ShareFile:
+        return tr("Share link");
+    case Delta:
+        return tr("Delta");
+    case Browse:
+        return tr("Browse");
+    case LoadCloudDriveItems:
+        return tr("LoadCloudDriveItems");
+    case LoadCloudDriveJobs:
+        return tr("LoadCloudDriveJobs");
+    case InitializeDB:
+        return tr("InitializeDB");
+    case InitializeCloudClients:
+        return tr("InitializeCloudClients");
+    case Disconnect:
+        return tr("Disconnect");
+    case ScheduleSync:
+        return tr("ScheduleSync");
+    case MigrateFile:
+        return tr("Migrate");
+    case MigrateFilePut:
+        return tr("Migrate file");
+    case SyncFromLocal:
+        return tr("Sync from local");
+    case FilePutResume:
+        return tr("Upload");
+    case FilePutCommit:
+        return tr("Commit upload");
+    case FileGetResume:
+        return tr("Download");
+    default:
+        return tr("Invalid operation");
+    }
+}
+
+QDateTime CloudDriveModel::parseReplyDateString(CloudDriveModel::ClientTypes type, QString dateString)
+{
+    return getCloudClient(type)->parseReplyDateString(dateString); //.toLocalTime();
+}
+
+QString CloudDriveModel::formatJSONDateString(QDateTime datetime)
+{
+    // Format to JSON which match with javascript, QML format.
+    return datetime.toString("yyyy-MM-ddThh:mm:ss.zzzZ");
+}
+
+bool CloudDriveModel::isRemoteAbsolutePath(CloudDriveModel::ClientTypes type)
+{
+    return getCloudClient(type)->isRemoteAbsolutePath();
+}
+
+bool CloudDriveModel::isRemotePathCaseInsensitive(CloudDriveModel::ClientTypes type)
+{
+    return getCloudClient(type)->isRemotePathCaseInsensitive();
+}
+
+bool CloudDriveModel::isConfigurable(CloudDriveModel::ClientTypes type)
+{
+    return getCloudClient(type)->isConfigurable();
+}
+
+bool CloudDriveModel::isViewable(CloudDriveModel::ClientTypes type)
+{
+    return getCloudClient(type)->isViewable();
+}
+
+bool CloudDriveModel::isImageUrlCachable(CloudDriveModel::ClientTypes type)
+{
+    return getCloudClient(type)->isImageUrlCachable();
+}
+
+bool CloudDriveModel::isUnicodeSupported(CloudDriveModel::ClientTypes type)
+{
+    return getCloudClient(type)->isUnicodeSupported();
+}
+
+void CloudDriveModel::initScheduler()
+{
+    connect(&m_schedulerTimer, SIGNAL(timeout()), this, SLOT(schedulerTimeoutFilter()) );
+    m_schedulerTimer.setInterval(60000);
+    m_schedulerTimer.start();
+}
+
 bool CloudDriveModel::canSync(QString localPath)
 {
     if (localPath == "") return false;
@@ -428,7 +935,7 @@ bool CloudDriveModel::canSync(QString localPath)
     }
 
     QString remotePath = getDefaultRemoteFilePath(localPath);
-    qDebug() << "CloudDriveModel::canSync valid" << (remotePath != "") << "localPath" << localPath;
+//    qDebug() << "CloudDriveModel::canSync valid" << (remotePath != "") << "localPath" << localPath;
 
     return remotePath != "";
 }
@@ -453,15 +960,50 @@ QString CloudDriveModel::getJobJson(QString jobId)
     return job.toJsonText();
 }
 
-void CloudDriveModel::removeJob(QString nonce)
+void CloudDriveModel::updateJob(CloudDriveJob job, bool emitJobUpdatedSignal)
 {
     mutex.lock();
+    // Remove cache for furthur refresh.
+    clearConnectedRemoteDirtyCache(job.localFilePath);
+
+    if (job.isRunning) {
+        job.lastStartedTime = QDateTime::currentDateTime();
+    } else {
+        job.lastStoppedTime = QDateTime::currentDateTime();
+    }
+    m_cloudDriveJobs->insert(job.jobId, job);
+    mutex.unlock();
+
+    if (emitJobUpdatedSignal) emit jobUpdatedSignal(job.jobId);
+
+//    qDebug() << "CloudDriveModel::updateJob job" << job.toJsonText();
+}
+
+void CloudDriveModel::removeJob(QString caller, QString nonce)
+{
+    if (nonce == "") {
+        qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce << "jobId is empty. Operation is aborted";
+        return;
+    }
+
+    mutex.lock();
     QString localPath = m_cloudDriveJobs->value(nonce).localFilePath;
-    m_isSyncingCache->remove(localPath);
+    clearConnectedRemoteDirtyCache(localPath);
     int removeCount = m_cloudDriveJobs->remove(nonce);
     mutex.unlock();
 
-    qDebug() << "CloudDriveModel::removeJob nonce" << nonce << "removeCount" << removeCount << "m_cloudDriveJobs->count()" << m_cloudDriveJobs->count();
+    // Remove temp file if it exists.
+    QString tempFilePath = m_settings.value("temp.path", TEMP_PATH).toString() + "/" + nonce;
+    if (QFileInfo(tempFilePath).exists()) {
+        QFile(tempFilePath).remove();
+        qDebug() << "CloudDriveModel::removeJob caller" << caller << "temp file" << tempFilePath << "is removed";
+    }
+
+    if (removeCount > 0) {
+        emit jobRemovedSignal(nonce);
+    }
+
+    qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce << "removeCount" << removeCount << "m_cloudDriveJobs->count()" << m_cloudDriveJobs->count();
 }
 
 int CloudDriveModel::getQueuedJobCount() const
@@ -469,13 +1011,31 @@ int CloudDriveModel::getQueuedJobCount() const
     return m_jobQueue->count();
 }
 
+int CloudDriveModel::getRunningJobCount() const
+{
+    return runningJobCount;
+}
+
 void CloudDriveModel::cancelQueuedJobs()
 {
-    m_jobQueue->clear();
-    // TODO Should it also clear jobs? Some QNAM requests may need it after this method call.
-    m_cloudDriveJobs->clear();
+    while (!m_jobQueue->isEmpty()) {
+        CloudDriveJob job = m_cloudDriveJobs->value(m_jobQueue->dequeue());
+        if (!job.isRunning) {
+            removeJob("CloudDriveModel::cancelQueuedJobs", job.jobId);
+        }
+    }
 
     qDebug() << "CloudDriveModel::cancelQueuedJobs done m_jobQueue->count()" << m_jobQueue->count() << "m_cloudDriveJobs->count()" << m_cloudDriveJobs->count();
+}
+
+void CloudDriveModel::removeJobs(bool removeAll)
+{
+    // Remove unqueued jobs.
+    foreach (CloudDriveJob job, m_cloudDriveJobs->values()) {
+        if (removeAll || !job.isRunning) {
+            removeJob("CloudDriveModel::removeJobs", job.jobId);
+        }
+    }
 }
 
 void CloudDriveModel::addItem(QString localPath, CloudDriveItem item)
@@ -527,9 +1087,7 @@ void CloudDriveModel::removeItem(CloudDriveModel::ClientTypes type, QString uid,
     int deleteCount = deleteItemToDB(type, uid, localPath);
 
     // Remove cache for furthur refresh.
-    m_isConnectedCache->remove(localPath);
-    m_isDirtyCache->remove(localPath);
-    m_isSyncingCache->remove(localPath);
+    clearConnectedRemoteDirtyCache(localPath);
 
     qDebug() << "CloudDriveModel::removeItem item" << item << "removeCount" << removeCount << "deleteCount" << deleteCount;
 }
@@ -543,6 +1101,9 @@ void CloudDriveModel::removeItemWithChildren(CloudDriveModel::ClientTypes type, 
 
     foreach (CloudDriveItem item, findItemWithChildren(type, uid, localPath)) {
 //        qDebug() << "CloudDriveModel::removeItemWithChildren item" << item;
+
+        // Process events to avoid freezing UI.
+        QApplication::processEvents(QEventLoop::AllEvents, 50);
 
         // TODO Remove only localPath's children which have specified type and uid.
         removeCount += m_cloudDriveItems->remove(item.localPath, item);
@@ -574,11 +1135,29 @@ void CloudDriveModel::removeItems(QString localPath)
     }
 }
 
+int CloudDriveModel::removeItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
+{
+    QSqlQuery qry(m_db);
+    qry.prepare("DELETE FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":remote_path", remotePath);
+    bool res = qry.exec();
+    if (res) {
+        qDebug() << "CloudDriveModel::removeItemByRemotePath" << type << uid << remotePath << "success numRowsAffected" << qry.numRowsAffected();
+        return qry.numRowsAffected();
+    } else {
+        qDebug() << "CloudDriveModel::removeItemByRemotePath" << type << uid << remotePath << "failed" << qry.lastError() << "lastQuery" << qry.lastQuery();
+        return -1;
+    }
+}
+
 void CloudDriveModel::updateItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString hash)
 {
     CloudDriveItem item = getItem(localPath, type, uid);
+    m_cloudDriveItems->remove(item.localPath, item); // Remove found item.
     item.hash = hash;
-    m_cloudDriveItems->replace(item.localPath, item);
+    m_cloudDriveItems->insert(item.localPath, item); // Insert updates item.
     int updateCount = updateItemToDB(item);
 
     // Remove cache for furthur refresh.
@@ -610,21 +1189,24 @@ void CloudDriveModel::updateItems(QString localPath, QString hash)
     }
 }
 
-void CloudDriveModel::updateItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString newLocalPath, QString newRemotePath, QString newChildrenHash, QString newHash)
+void CloudDriveModel::updateItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString newLocalPath, QString newRemotePath, QString newParentHash, QString newChildrenHash)
 {
-    qDebug() << "CloudDriveModel::updateItemWithChildren localPath" << localPath << "remotePath" << remotePath << "newLocalPath" << newLocalPath << "newRemotePath" << newRemotePath << "newChildrenHash" << newChildrenHash;
+    qDebug() << "CloudDriveModel::updateItemWithChildren localPath" << localPath << "remotePath" << remotePath << "newLocalPath" << newLocalPath << "newRemotePath" << newRemotePath << "newParentHash" << newParentHash << "newChildrenHash" << newChildrenHash;
 
     int updateCount = 0;
 
     foreach (CloudDriveItem item, findItemWithChildren(type, uid, localPath)) {
         qDebug() << "CloudDriveModel::updateItemWithChildren before item" << item;
-        // Set hash for children only.
-        if (item.localPath != localPath) {
+        if (item.localPath == localPath) {
+            // Set hash for parent.
             // Set hash = DirtyHash to hint syncFromLocal to put files.
             // Set hash = empty to hint metadata to get files, otherwise syncFromLocal to put local files which are remained with empty hash.
+            if (newParentHash != "") {
+                item.hash = newParentHash;
+            }
+        } else if (newChildrenHash != "") {
+            // Set hash for children.
             item.hash = newChildrenHash;
-        } else if (newHash != ""){
-            item.hash = newHash;
         }
 
         item.localPath = item.localPath.replace(QRegExp("^" + localPath), newLocalPath);
@@ -645,6 +1227,14 @@ void CloudDriveModel::updateItemWithChildren(CloudDriveModel::ClientTypes type, 
     }
 
     qDebug() << "CloudDriveModel::updateItemWithChildren updateCount" << updateCount;
+}
+
+void CloudDriveModel::updateItemWithChildrenByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, QString newRemotePath, QString newParentHash, QString newChildrenHash)
+{
+    foreach (CloudDriveItem item, findItemsByRemotePath(type, uid, remotePath)) {
+        qDebug() << "CloudDriveModel::updateItemWithChildrenByRemotePath item" << item.localPath << "remotePath" << item.remotePath << "newRemotePath" << newRemotePath << "newParentHash" << newParentHash << "newChildrenHash" << newChildrenHash;
+        updateItemWithChildren(type, uid, item.localPath, item.remotePath, item.localPath, newRemotePath, newParentHash, newChildrenHash);
+    }
 }
 
 int CloudDriveModel::updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp)
@@ -723,13 +1313,47 @@ void CloudDriveModel::syncScheduledItems()
 {
     while (!m_scheduledItems->isEmpty()) {
         CloudDriveItem item = m_scheduledItems->dequeue();
-        switch (item.type) {
-        case Dropbox:
-            qDebug() << "CloudDriveModel::syncScheduledItems dequeue and sync item" << item;
-            metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
-            break;
+        qDebug() << "CloudDriveModel::syncScheduledItems dequeue and sync item" << item;
+        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+    }
+}
+
+bool CloudDriveModel::isDeltaSupported(CloudDriveModel::ClientTypes type)
+{
+    return getCloudClient(type)->isDeltaSupported();
+}
+
+bool CloudDriveModel::isDeltaEnabled(CloudDriveModel::ClientTypes type, QString uid)
+{
+    return getCloudClient(type)->isDeltaEnabled(uid);
+}
+
+void CloudDriveModel::scheduleDeltaJobs(QString cronValue)
+{
+    QScriptEngine engine;
+    foreach (QString uidJson, getStoredUidList()) {
+        QScriptValue sc = engine.evaluate("(" + uidJson + ")");
+        QString typeText = sc.property("type").toString();
+        QString uid = sc.property("uid").toString();
+        if (isDeltaSupported(getClientType(typeText)) && isDeltaEnabled(getClientType(typeText), uid)) {
+            QString deltaCronExp = getDeltaCronExp(getClientType(typeText), uid);
+            if (matchCronExp(deltaCronExp, cronValue)) {
+                delta(getClientType(typeText), uid);
+            }
         }
     }
+}
+
+void CloudDriveModel::setDeltaCronExp(CloudDriveModel::ClientTypes type, QString uid, QString cronExp)
+{
+    QString clientObjectName = getCloudClient(type)->objectName();
+    m_settings.setValue(QString("%1.%2.deltaCronExp").arg(clientObjectName).arg(uid), QVariant(cronExp));
+    m_settings.setValue(QString("%1.%2.delta.enabled").arg(clientObjectName).arg(uid), QVariant(cronExp != ""));
+}
+
+QString CloudDriveModel::getDeltaCronExp(CloudDriveModel::ClientTypes type, QString uid)
+{
+    return m_settings.value(QString("%1.%2.deltaCronExp").arg(getCloudClient(type)->objectName()).arg(uid), QVariant("")).toString();
 }
 
 bool CloudDriveModel::matchCronExp(QString cronExp, QString cronValue)
@@ -780,7 +1404,7 @@ int CloudDriveModel::getItemCount()
     // Get count from DB and DAT.
     int dbCount = countItemDB();
     int datCount = m_cloudDriveItems->count();
-    qDebug() << "CloudDriveModel::getItemCount db" << dbCount << "dat" << datCount << "total" << (dbCount + datCount);
+//    qDebug() << "CloudDriveModel::getItemCount db" << dbCount << "dat" << datCount << "total" << (dbCount + datCount);
     return (dbCount + datCount);
 }
 
@@ -795,6 +1419,23 @@ QString CloudDriveModel::getItemListJson(QString localPath)
     }
 
     return "[ " + jsonText + " ]";
+}
+
+QString CloudDriveModel::getItemListJsonByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
+{
+    QString jsonText;
+    foreach (CloudDriveItem item, findItemsByRemotePath(type, uid, remotePath)) {
+        if (jsonText != "") jsonText.append(", ");
+        jsonText.append( item.toJsonText() );
+    }
+
+    return "[ " + jsonText + " ]";
+}
+
+QString CloudDriveModel::getItemJson(QString localPath, CloudDriveModel::ClientTypes type, QString uid)
+{
+    CloudDriveItem item = getItem(localPath, type, uid);
+    return item.toJsonText();
 }
 
 QString CloudDriveModel::getItemRemotePath(QString localPath, CloudDriveModel::ClientTypes type, QString uid)
@@ -871,78 +1512,68 @@ QString CloudDriveModel::getDefaultRemoteFilePath(const QString &localFilePath)
     return "";
 }
 
-//CloudDriveModelThread::ClientTypes CloudDriveModel::mapToThreadClientTypes(CloudDriveModel::ClientTypes type) {
-//    switch (type) {
-//    case Dropbox:
-//        return CloudDriveModelThread::Dropbox;
-//    case GoogleDrive:
-//        return CloudDriveModelThread::GoogleDrive;
-//    }
-//}
-
-//CloudDriveModelThread::ClientTypes CloudDriveModel::mapToThreadClientTypes(int type)
-//{
-//    switch (type) {
-//    case Dropbox:
-//        return CloudDriveModelThread::Dropbox;
-//    case GoogleDrive:
-//        return CloudDriveModelThread::GoogleDrive;
-//    }
-//}
-
 bool CloudDriveModel::isAuthorized()
 {
     // TODO check if any cloud drive is authorized.
-    return dbClient->isAuthorized();
+    return dbClient->isAuthorized() || skdClient->isAuthorized() || gcdClient->isAuthorized() || ftpClient->isAuthorized();
 }
 
 bool CloudDriveModel::isAuthorized(CloudDriveModel::ClientTypes type)
 {
-    switch (type) {
-    case Dropbox:
-        return dbClient->isAuthorized();
-//    case GoogleDrive:
-//        return gcdClient->isAuthorized();
-    }
+    return getCloudClient(type)->isAuthorized();
+}
 
-    return false;
+QStringList CloudDriveModel::getStoredUidList()
+{
+    QStringList uidList;
+
+    uidList.append(dbClient->getStoredUidList());
+    uidList.append(gcdClient->getStoredUidList());
+    uidList.append(skdClient->getStoredUidList());
+    uidList.append(ftpClient->getStoredUidList());
+    uidList.append(webDavClient->getStoredUidList());
+
+    return uidList;
 }
 
 QStringList CloudDriveModel::getStoredUidList(CloudDriveModel::ClientTypes type)
 {
-    switch (type) {
-    case Dropbox:
-        return dbClient->getStoredUidList();
-//    case GoogleDrive:
-//        return gcdClient->getStoredUidList();
-    }
+    return getCloudClient(type)->getStoredUidList();
+}
 
-    return QStringList();
+QString CloudDriveModel::getStoredUid(CloudDriveModel::ClientTypes type, QString uid)
+{
+    return getCloudClient(type)->getStoredUid(uid);
 }
 
 int CloudDriveModel::removeUid(CloudDriveModel::ClientTypes type, QString uid)
 {
-    switch (type) {
-    case Dropbox:
-        return dbClient->removeUid(uid);
-    }
-
-    return -1;
+    return getCloudClient(type)->removeUid(uid);
 }
 
 void CloudDriveModel::requestJobQueueStatus()
 {
-    emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), getItemCount());
+    emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), m_cloudDriveJobs->count(), getItemCount());
 }
 
-void CloudDriveModel::suspendNextJob()
+void CloudDriveModel::suspendNextJob(bool abort)
 {
+    qDebug() << "CloudDriveModel::suspendNextJob abort" << abort;
+
     m_isSuspended = true;
+    if (abort) {
+        m_isAborted = true;
+    }
 }
 
-void CloudDriveModel::resumeNextJob()
+void CloudDriveModel::resumeNextJob(bool resetAbort)
 {
+    qDebug() << "CloudDriveModel::resumeNextJob resetAbort" << resetAbort;
+
     m_isSuspended = false;
+    if (resetAbort) {
+        m_isAborted = false;
+    }
 
     proceedNextJob();
 }
@@ -994,6 +1625,8 @@ void CloudDriveModel::syncItems()
     // TODO Refactor to support others cloud storage.
     syncItems(Dropbox);
 //    syncItems(GoogleDrive);
+    syncItems(SkyDrive);
+    syncItems(Ftp);
 
     // Resume proceedNextJob().
     resumeNextJob();
@@ -1043,12 +1676,7 @@ void CloudDriveModel::syncItem(const QString localFilePath)
     // Queue localFilePath's items for metadata requesting.
     foreach (CloudDriveItem item, getItemList(localFilePath)) {
         qDebug() << "CloudDriveModel::syncItem item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
-
-        switch (item.type) {
-        case Dropbox:
-            metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
-            break;
-        }
+        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
     }
 }
 
@@ -1056,12 +1684,29 @@ void CloudDriveModel::syncItem(CloudDriveModel::ClientTypes type, QString uid, Q
 {
     CloudDriveItem item = getItem(localPath, type, uid);
     if (item.localPath == localPath) {
-        switch (item.type) {
-        case Dropbox:
-            metadata(Dropbox, item.uid, item.localPath, item.remotePath, -1);
-            break;
-        }
+        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
     }
+}
+
+bool CloudDriveModel::syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, QString newHash, bool forcePut, bool forceGet)
+{
+    QSqlQuery qry(m_db);
+    qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":remote_path", remotePath);
+
+    bool res = false;
+    foreach (CloudDriveItem item, getItemListFromPS(qry)) {
+        if (newHash != "") {
+            qDebug() << "CloudDriveModel::syncItemByRemotePath updating hash" << newHash << "to item" << item;
+            updateItem(type, uid, item.localPath, newHash);
+        }
+        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1, forcePut, forceGet);
+        res = true;
+    }
+
+    return res;
 }
 
 int CloudDriveModel::getCloudDriveItemsCount()
@@ -1102,8 +1747,6 @@ void CloudDriveModel::requestToken(CloudDriveModel::ClientTypes type)
     CloudDriveJob job(createNonce(), RequestToken, type, "", "", "", -1);
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
-
-    emit proceedNextJobSignal();
 }
 
 void CloudDriveModel::authorize(CloudDriveModel::ClientTypes type)
@@ -1112,8 +1755,6 @@ void CloudDriveModel::authorize(CloudDriveModel::ClientTypes type)
     CloudDriveJob job(createNonce(), Authorize, type, "", "", "", -1);
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
-
-    emit proceedNextJobSignal();
 }
 
 bool CloudDriveModel::parseAuthorizationCode(CloudDriveModel::ClientTypes type, QString text)
@@ -1126,14 +1767,26 @@ bool CloudDriveModel::parseAuthorizationCode(CloudDriveModel::ClientTypes type, 
     return false;
 }
 
-void CloudDriveModel::accessToken(CloudDriveModel::ClientTypes type)
+void CloudDriveModel::accessToken(CloudDriveModel::ClientTypes type, QString pin)
 {
+    // TODO Validate type.
+
+    // Store access token pin temporarily.
+    accessTokenPin = pin;
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), AccessToken, type, "", "", "", -1);
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
+}
 
-    emit proceedNextJobSignal();
+void CloudDriveModel::refreshToken(CloudDriveModel::ClientTypes type, QString uid, QString nextNonce)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), RefreshToken, type, uid, "", "", -1);
+    job.nextJobId = nextNonce;
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->insert(0, job.jobId);
 }
 
 void CloudDriveModel::accountInfo(CloudDriveModel::ClientTypes type, QString uid)
@@ -1142,15 +1795,41 @@ void CloudDriveModel::accountInfo(CloudDriveModel::ClientTypes type, QString uid
     CloudDriveJob job(createNonce(), AccountInfo, type, uid, "", "", -1);
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
-
-    emit proceedNextJobSignal();
 }
 
-void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString localFilePath, int modelIndex)
+void CloudDriveModel::quota(CloudDriveModel::ClientTypes type, QString uid)
 {
     // Enqueue job.
+    CloudDriveJob job(createNonce(), Quota, type, uid, "", "", -1);
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+}
+
+void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, QString localFilePath, int modelIndex)
+{
+    if (localFilePath == "") {
+        qDebug() << "CloudDriveModel::fileGet localFilePath" << localFilePath << " is empty, can't sync.";
+        return;
+    }
+
+    if (remoteFilePath == "") {
+        qDebug() << "CloudDriveModel::fileGet remoteFilePath" << remoteFilePath << " is empty, can't sync.";
+        return;
+    }
+
+    // Redirect to filePutResume for large file.
+    qDebug() << "CloudDriveModel::fileGet" << remoteFilePath << "size" << remoteFileSize;
+    if (getCloudClient(type)->isFileGetResumable(remoteFileSize)) {
+        qDebug() << "CloudDriveModel::fileGet" << remoteFilePath << "size" << remoteFileSize << ", request is redirected to fileGetResume.";
+        fileGetResume(type, uid, remoteFilePath, remoteFileSize, localFilePath);
+        return;
+    }
+
+    // Enqueue job.
     CloudDriveJob job(createNonce(), FileGet, type, uid, localFilePath, remoteFilePath, modelIndex);
-    job.isRunning = true;
+//    job.isRunning = true;
+    job.downloadOffset = 0;
+    job.bytesTotal = remoteFileSize;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -1158,27 +1837,45 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
     m_isConnectedCache->remove(localFilePath);
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
-
-    // Add item with dirtyHash to avoid duplicate sync job.
-    // TODO handle other clouds.
-    if (job.type == Dropbox) {
-        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-    }
-
-    emit proceedNextJobSignal();
 }
 
-void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex)
+void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, int modelIndex)
 {
-    // TODO Restrict file types.
+    if (localFilePath == "") {
+        qDebug() << "CloudDriveModel::filePut localFilePath" << localFilePath << " is empty, can't sync.";
+        return;
+    }
+
+    if (remoteParentPath == "") {
+        qDebug() << "CloudDriveModel::filePut remoteParentPath" << remoteParentPath << " is empty, can't sync.";
+        return;
+    }
+
+    if (remoteFileName == "") {
+        qDebug() << "CloudDriveModel::filePut remoteFileName" << remoteFileName << " is empty, can't sync.";
+        return;
+    }
+
+    // Restrict file types.
     if (!canSync(localFilePath)) {
         qDebug() << "CloudDriveModel::filePut localFilePath" << localFilePath << " is restricted, can't upload.";
         return;
     }
 
+    // Redirect to filePutResume for large file.
+    qint64 localFileSize = QFileInfo(localFilePath).size();
+    if (getCloudClient(type)->isFilePutResumable(localFileSize)) {
+        qDebug() << "CloudDriveModel::filePut" << localFilePath << "size" << localFileSize << ", request is redirected to filePutResume.";
+        filePutResume(type, uid, localFilePath, remoteParentPath, remoteFileName);
+        return;
+    }
+
     // Enqueue job.
-    CloudDriveJob job(createNonce(), FilePut, type, uid, localFilePath, remoteFilePath, modelIndex);
-    job.isRunning = true;
+    CloudDriveJob job(createNonce(), FilePut, type, uid, localFilePath, remoteParentPath, modelIndex);
+//    job.isRunning = true;
+    job.newRemoteFileName = remoteFileName;
+    job.uploadOffset = 0;
+    job.bytesTotal = QFileInfo(localFilePath).size();
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
@@ -1186,18 +1883,25 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
     m_isConnectedCache->remove(localFilePath);
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
-
-    // Add item with dirtyHash to avoid duplicate sync job.
-    // TODO handle other clouds.
-    if (job.type == Dropbox) {
-        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-    }
-
-    emit proceedNextJobSignal();
 }
 
-void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex)
+void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex, bool forcePut, bool forceGet)
 {
+    if (localFilePath == "") {
+        qDebug() << "CloudDriveModel::metadata localFilePath" << localFilePath << " is empty, can't sync.";
+        return;
+    }
+
+    if (remoteFilePath == "") {
+        qDebug() << "CloudDriveModel::metadata remoteFilePath" << remoteFilePath << " is empty, can't sync.";
+        return;
+    }
+
+    if (isRemoteRoot(type, uid, remoteFilePath) || remoteFilePath == "/") {
+        qDebug() << "CloudDriveModel::metadata remoteFilePath" << remoteFilePath << " is root, can't sync.";
+        return;
+    }
+
     // TODO Restrict file types.
     if (!canSync(localFilePath)) {
         qDebug() << "CloudDriveModel::metadata localFilePath" << localFilePath << " is restricted, can't sync.";
@@ -1206,22 +1910,15 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), Metadata, type, uid, localFilePath, remoteFilePath, modelIndex);
-    job.isRunning = true;
+//    job.isRunning = true;
+    job.forcePut = forcePut;
+    job.forceGet = forceGet;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show cloud_wait.
-    m_isConnectedCache->remove(localFilePath);
-    m_isSyncingCache->remove(localFilePath);
+    clearConnectedRemoteDirtyCache(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
-
-    // Add item with dirtyHash to avoid duplicate sync job.
-    // TODO handle other clouds.
-    if (job.type == Dropbox) {
-        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-    }
-
-    emit proceedNextJobSignal();
 }
 
 void CloudDriveModel::browse(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath)
@@ -1230,30 +1927,136 @@ void CloudDriveModel::browse(CloudDriveModel::ClientTypes type, QString uid, QSt
     CloudDriveJob job(createNonce(), Browse, type, uid, "", remoteFilePath, -1);
     job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
-//    m_jobQueue->enqueue(job.jobId);
-    m_jobQueue->insert(0, job.jobId); // Browse get priority.
 
-    emit proceedNextJobSignal();
+    // Force start thread.
+    CloudDriveModelThread *t = new CloudDriveModelThread(this);
+    t->setNonce(job.jobId); // Set job ID to thread. It will invoke parent's dispatchJob later.
+    t->setDirectInvokation(false);
+    QThreadPool::globalInstance()->start(t);
 }
 
-void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex, bool forcePut)
+QStringList CloudDriveModel::getLocalPathList(QString localParentPath)
+{
+    QStringList localPathList;
+    QDir dir(localParentPath);
+    dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
+    foreach (QFileInfo item, dir.entryInfoList()) {
+        localPathList.append(item.absoluteFilePath());
+    }
+
+    return localPathList;
+}
+
+void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut, QString data)
+{
+    qDebug() << "----- CloudDriveModel::syncFromLocal -----" << type << uid << localPath << "remoteParentPath" << remoteParentPath << "forcePut" << forcePut;
+
+    if (localPath == "") {
+        qDebug() << "CloudDriveModel::syncFromLocal localPath" << localPath << "is empty. Operation is aborted.";
+        return;
+    }
+
+    if (remoteParentPath == "") {
+        qDebug() << "CloudDriveModel::syncFromLocal remoteParentPath" << remoteParentPath << "is empty. Operation is aborted.";
+        return;
+    }
+
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), SyncFromLocal, type, uid, localPath, remoteParentPath, modelIndex);
+    job.forcePut = forcePut;
+    job.data = data;
+//    job.isRunning = true;
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show cloud_wait.
+    clearConnectedRemoteDirtyCache(localPath);
+    emit jobEnqueuedSignal(job.jobId, localPath);
+}
+
+void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut, bool isRootLocalPath, QString data)
 {
     // This method is invoked from dir only as file which is not found will be put right away.
-    qDebug() << "CloudDriveModel::syncFromLocal" << type << uid << localPath << remotePath << modelIndex << "forcePut" << forcePut;
+    qDebug() << "----- CloudDriveModel::syncFromLocal_Block -----" << type << uid << localPath << remoteParentPath << modelIndex << "forcePut" << forcePut;
 
-    if (localPath == "" || remotePath == "") return;
+    if (localPath == "") {
+        qDebug() << "CloudDriveModel::syncFromLocal_Block localPath" << localPath << "is empty. Operation is aborted.";
+        return;
+    }
+
+    if (remoteParentPath == "") {
+        qDebug() << "CloudDriveModel::syncFromLocal_Block remoteParentPath" << remoteParentPath << "is empty. Operation is aborted.";
+        return;
+    }
+
+    // TODO Must not be invoked if it's running in main thread.
+    QApplication::processEvents();
+
+    CloudDriveClient *cloudClient = getCloudClient(type);
+    if (cloudClient == 0) {
+        return;
+    }
+
+    QStringList remotePathList = data.split(",");
+    qDebug() << "CloudDriveModel::syncFromLocal_Block remotePathList" << remotePathList;
 
     QFileInfo info(localPath);
     if (info.isDir()) {
         // Sync based on local contents.
 
         // TODO create remote directory if no content or pending refresh metadata.
-        CloudDriveItem cloudItem = getItem(localPath, type, uid);
-        if (cloudItem.localPath == "" || cloudItem.hash == CloudDriveModel::DirtyHash) {
-            qDebug() << "CloudDriveModel::syncFromLocal not found cloudItem. Invoke creatFolder.";
-            createFolder(type, uid, localPath, remotePath, modelIndex);
+        CloudDriveItem parentCloudDriveItem = getItem(localPath, type, uid);
+        if (parentCloudDriveItem.localPath == "" || parentCloudDriveItem.hash == CloudDriveModel::DirtyHash) {
+            qDebug() << "CloudDriveModel::syncFromLocal_Block not found parentCloudDriveItem. Invoke creatFolder.";
+            // Get remoteParentPath from localParentPath's cloudDriveItem if it's not specified.
+            remoteParentPath = (remoteParentPath == "") ? getItemRemotePath(info.absolutePath(), type, uid) : remoteParentPath;
+            qDebug() << "CloudDriveModel::syncFromLocal_Block remoteParentPath" << remoteParentPath;
+
+            // Request SkyDriveClient's createFolder synchronously.
+            // NOTE Insert dummy job to support QML CloudDriveModel.onCreateFolderReplySignal. It will be removed there.
+            CloudDriveJob job(createNonce(), CreateFolder, type, uid, localPath, remoteParentPath, modelIndex);
+            job.newRemoteFileName = info.fileName();
+            m_cloudDriveJobs->insert(job.jobId, job);
+
+            QString createFolderReplyResult = cloudClient->createFolder(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFileName, true);
+//            qDebug() << "CloudDriveModel::syncFromLocal_Block createFolderReplyResult" << createFolderReplyResult;
+            if (createFolderReplyResult != "") {
+                QScriptEngine engine;
+                QScriptValue sc = engine.evaluate("(" + createFolderReplyResult + ")");
+                QString hash = "";
+                QString createdRemotePath = "";
+
+                /* Handle error result.
+                 *Dropbox {"error": " at path 'The folder 'C' already exists.'"}
+                 *SkyDrive {   "error": {      "code": "resource_already_exists",       "message": "The resource couldn't be created because a resource named 'C' already exists."   }}
+                 *GoogleDrive supports duplicated folder's name.
+                 *Ftp { "error": "Creating directory failed: /Users/test/D: File exists.", "path": "/Users/test/D" }
+                 */
+                if (sc.property("error").isValid()) {
+                    qDebug() << "CloudDriveModel::syncFromLocal_Block createFolder error localPath" << localPath << "remoteParentPath" << remoteParentPath << "createFolderReplyResult" << createFolderReplyResult;
+                    return;
+                }
+
+                hash = sc.property("hash").toString();
+                createdRemotePath = sc.property("absolutePath").toString();
+                addItem(type, uid, localPath, createdRemotePath, hash);
+
+                // Update parentCloudDriveItem.
+                parentCloudDriveItem = getItem(localPath, type, uid);
+                qDebug() << "CloudDriveModel::syncFromLocal_Block createFolder success parentCloudDriveItem" << parentCloudDriveItem;
+            } else {
+                // Insert dummy job and invoke slot to emit signal to front-end.
+                // TODO Suppress signal if newRemoteFolder is not requested path.
+                qDebug() << "CloudDriveModel::syncFromLocal_Block createFolder failed localPath" << localPath << "remoteParentPath" << remoteParentPath << "createFolderReplyResult" << createFolderReplyResult;
+                return;
+            }
         } else {
-            qDebug() << "CloudDriveModel::syncFromLocal found cloudItem" << cloudItem;
+            qDebug() << "CloudDriveModel::syncFromLocal_Block found parentCloudDriveItem" << parentCloudDriveItem;
+        }
+
+        // TODO Abort operation if remotePath is not specified.
+        if (parentCloudDriveItem.remotePath == "") {
+            qDebug() << "CloudDriveModel::syncFromLocal_Block remotePath is not specified. Operation is aborted. parentCloudDriveItem" << parentCloudDriveItem;
         }
 
         QDir dir(info.absoluteFilePath());
@@ -1263,156 +2066,596 @@ void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString u
             QApplication::processEvents();
 
             QString localFilePath = item.absoluteFilePath();
-            QString localHash = getItemHash(localFilePath, type, uid);
-//            qDebug() << "CloudDriveModel::syncFromLocal item" << type << uid << localFilePath << localHash;
+            CloudDriveItem cloudDriveItem = getItem(localFilePath, type, uid);
+            bool isNewItem = !isSyncing(type, uid, localFilePath) && (cloudDriveItem.hash == "" || cloudDriveItem.remotePath == "");
+            bool isDeletedItem = cloudDriveItem.remotePath != "" && remotePathList.indexOf(cloudDriveItem.remotePath) == -1;
+//            qDebug() << "CloudDriveModel::syncFromLocal_Block item" << cloudDriveItem.toJsonText() << "index in remotePathList" << remotePathList.indexOf(cloudDriveItem.remotePath);
+//            qDebug() << "CloudDriveModel::syncFromLocal_Block item" << type << uid << localFilePath << cloudDriveItem.hash << isSyncing(localFilePath);
 
             // If dir/file don't have localHash which means it's not synced, put it right away.
             // If forcePut, put it right away.
-            if (forcePut || localHash == "") {
-                QString remoteFilePath = remotePath + "/" + item.fileName();
+            if (forcePut || isNewItem) {
                 // Sync dir/file then it will decide whether get/put/do nothing by metadataReply.
-                qDebug() << "CloudDriveModel::syncFromLocal new local item" << type << uid << localFilePath << remoteFilePath << localHash;
+                qDebug() << "CloudDriveModel::syncFromLocal_Block new local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "parentCloudDriveItem.remotePath" << parentCloudDriveItem.remotePath << "isNewItem" << isNewItem;
 
-                if (forcePut) {
-                    if (item.isDir()) {
-                        // Drilldown local dir recursively.
-                        syncFromLocal(type, uid, localFilePath, remoteFilePath, -1, forcePut);
-                    } else {
-                        filePut(type, uid, localFilePath, remoteFilePath, -1);
-                    }
+                if (item.isDir()) {
+                    // Drilldown local dir recursively.
+                    syncFromLocal_Block(type, uid, localFilePath, parentCloudDriveItem.remotePath, -1, forcePut, false);
                 } else {
-                    metadata(type, uid, localFilePath, remoteFilePath, -1);
+                    // Put file to remote parent path.
+                    filePut(type, uid, localFilePath, parentCloudDriveItem.remotePath, getFileName(localFilePath), -1);
                 }
+            } else if (isDeletedItem) {
+                // Remove link.
+                // TODO Configurable file removing.
+                qDebug() << "CloudDriveModel::syncFromLocal_Block remove link to existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isDeletedItem" << isDeletedItem;
+                removeItemWithChildren(type, uid, localFilePath);
             } else {
-                // Skip any items that already have CloudDriveItem and 's localHash.
+                // Skip any items that already have CloudDriveItem and has localHash.
+                qDebug() << "CloudDriveModel::syncFromLocal_Block skip existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isNewItem" << isNewItem;
             }
         }
 
         // TODO avoid having below line. It caused infinite loop.
         // Update hash for itself will be requested from QML externally.
     } else {
-        qDebug() << "CloudDriveModel::syncFromLocal file is not supported." << type << uid << localPath << remotePath << modelIndex << "forcePut" << forcePut;
+        qDebug() << "CloudDriveModel::syncFromLocal_Block file is not supported." << type << uid << localPath << remoteParentPath << modelIndex << "forcePut" << forcePut;
     }
 }
 
-void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, int modelIndex)
+void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, QString newRemoteFolderName)
 {
+    if (newRemoteFolderName == "") {
+        qDebug() << "CloudDriveModel::createFolder newRemoteFolderName" << newRemoteFolderName << "is empty. Operation is aborted.";
+        return;
+    }
+
+    if (remoteParentPath == "") {
+        qDebug() << "CloudDriveModel::createFolder remoteParentPath" << remoteParentPath << "is empty. Operation is aborted.";
+        return;
+    }
+
     // Enqueue job.
-    CloudDriveJob job(createNonce(), CreateFolder, type, uid, localPath, remotePath, modelIndex);
-    job.isRunning = true;
+    CloudDriveJob job(createNonce(), CreateFolder, type, uid, localPath, remoteParentPath, -1);
+    job.newRemoteFileName = newRemoteFolderName;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
-    // Emit signal to show cloud_wait.
+    // TODO Does it need?
     m_isSyncingCache->remove(localPath);
+    // Emit signal to show cloud_wait.
     emit jobEnqueuedSignal(job.jobId, localPath);
-
-    // Add item with dirtyHash to avoid duplicate sync job.
-    // TODO handle other clouds.
-    if (job.type == Dropbox) {
-        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-    }
-
-    emit proceedNextJobSignal();
 }
 
-void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath)
+QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, QString uid, QString remoteParentPath, QString newRemoteFolderName)
+{
+    if (newRemoteFolderName == "") {
+        qDebug() << "CloudDriveModel::createFolder_Block newRemoteFolderName" << newRemoteFolderName << "is empty. Operation is aborted.";
+        return "";
+    }
+
+    if (remoteParentPath == "") {
+        qDebug() << "CloudDriveModel::createFolder_Block remoteParentPath" << remoteParentPath << "is empty. Operation is aborted.";
+        return "";
+    }
+
+    CloudDriveClient *cloudClient = getCloudClient(type);
+    if (cloudClient == 0) {
+        return "";
+    }
+
+    // Request cloudClient's createFolder synchronously.
+    QString createFolderReplyResult = cloudClient->createFolder(createNonce(), uid, remoteParentPath, newRemoteFolderName, true);
+    qDebug() << "CloudDriveModel::createFolder_Block createFolder createFolderReplyResult" << createFolderReplyResult;
+
+    if (createFolderReplyResult != "") {
+        QScriptEngine se;
+        QScriptValue sc = se.evaluate("(" + createFolderReplyResult + ")");
+        QString createdRemotePath = sc.property("absolutePath").toString();
+
+        return createdRemotePath;
+    }
+
+    return "";
+}
+
+void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
+{
+    qDebug() << "CloudDriveModel::migrateFile_Block" << nonce << type << uid << remoteFilePath << remoteFileSize << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
+
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    CloudDriveClient *sourceClient = getCloudClient(type);
+    CloudDriveClient *targetClient = getCloudClient(targetType);
+    QString tempFilePath = m_settings.value("temp.path", TEMP_PATH).toString() + "/" + nonce;
+
+    // Migrates using synchronous methods.
+    // TODO Limit migration size to fit in RAM. Larger file needs to be downloaded to local before proceed uploading.
+    if (sourceClient->isFileGetResumable(remoteFileSize)) {
+        // Get each chunk to file.
+        while (job.downloadOffset < remoteFileSize && !m_isAborted) {
+            QIODevice *source = sourceClient->fileGet(nonce, uid, remoteFilePath, job.downloadOffset, true);
+            if (source == 0) {
+                migrateFilePutFilter(nonce, -1, "Service is not implemented.", "{ }");
+                return;
+            }
+            // Handle error.
+            // TODO Check type before cast.
+            QNetworkReply *sourceReply = dynamic_cast<QNetworkReply *>(source);
+            if (sourceReply->error() != QNetworkReply::NoError) {
+                migrateFilePutFilter(nonce, sourceReply->error(), sourceReply->errorString(), sourceReply->readAll());
+                return;
+            }
+            qDebug() << "CloudDriveModel::migrateFile_Block chunk is downloaded. size" << source->size() << "bytesAvailable" << source->bytesAvailable() << "job" << job.toJsonText();
+
+            // Stream source to a file on localPath.
+            qDebug() << "CloudDriveModel::migrateFile_Block tempFilePath" << tempFilePath;
+            qint64 totalBytes = 0;
+            char buf[1024];
+            QFile *localTargetFile = new QFile(tempFilePath);
+            if (localTargetFile->open(QIODevice::Append)) {
+                qint64 c = source->read(buf, sizeof(buf));
+                while (c > 0) {
+                    localTargetFile->write(buf, c);
+                    totalBytes += c;
+
+                    // Tell event loop to process event before it will process time consuming task.
+                    QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+
+                    // Read next buffer.
+                    c = source->read(buf, sizeof(buf));
+                }
+                qDebug() << "CloudDriveModel::migrateFile_Block chunk is written at offset" << job.downloadOffset << "totalBytes"  << totalBytes << "to" << tempFilePath;
+            } else {
+                qDebug() << "CloudDriveModel::migrateFile_Block can't open tempFilePath" << tempFilePath;
+                migrateFilePutFilter(nonce, -1, QString("Can't open temp file %1").arg(tempFilePath), "{ }");
+                return;
+            }
+
+            // Close target file.
+            localTargetFile->close();
+            localTargetFile->deleteLater();
+
+            // Close source.
+            source->close();
+            source->deleteLater();
+
+            job.downloadOffset += totalBytes;
+            updateJob(job);
+        }
+    } else {
+        // Get whole data to file with synchronous method.
+        sourceClient->fileGet(nonce, uid, remoteFilePath, tempFilePath, true);
+        job.downloadOffset = QFileInfo(tempFilePath).size();
+        updateJob(job);
+    }
+    qDebug() << "CloudDriveModel::migrateFile_Block source is downloaded to temp file. tempFilePath" << tempFilePath << "size" << job.downloadOffset << "remoteFileSize" << remoteFileSize;
+
+    // Check isAborted.
+    if (m_isAborted) {
+        migrateFilePutFilter(nonce, -1, "job is aborted.","");
+        return;
+    }
+
+    // Put from file.
+    QFile *localSourceFile = new QFile(tempFilePath);
+    if (localSourceFile->open(QFile::ReadOnly)) {
+        QNetworkReply *targetReply = targetClient->filePut(nonce, targetUid, localSourceFile, remoteFileSize, targetRemoteParentPath, targetRemoteFileName, true);
+        if (targetReply == 0) {
+            // FtpClient doens't provide QNetworkReply. It emits migrateFilePutReplySignal internally.
+            job.uploadOffset = remoteFileSize;
+            updateJob(job);
+        } else {
+            if (targetReply->error() == QNetworkReply::NoError){
+                job.uploadOffset = remoteFileSize;
+                // Invoke slot to reset running and emit signal.
+                migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(),targetReply->readAll());
+            } else {
+                // Invoke slot to reset running and emit signal.
+                // TODO How to shows if error occurs from target?
+                migrateFilePutFilter(nonce, targetReply->error(), getCloudName(job.targetType) + " " + targetReply->errorString(), getCloudName(job.targetType).append(" ").append(targetReply->readAll()) );
+            }
+
+            // Scheduled to delete later.
+            targetReply->deleteLater();
+            targetReply->manager()->deleteLater();
+        }
+    }
+    localSourceFile->close();
+    localSourceFile->deleteLater();
+
+    // Delete temp file.
+    // TODO Temp file should also be removed if job is removed manually.
+    if (job.uploadOffset == job.downloadOffset) {
+        QFile(tempFilePath).remove();
+        qDebug() << "CloudDriveModel::migrateFile_Block job" << nonce << "done." << tempFilePath << "is removed.";
+    }
+}
+
+void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
+{
+    qDebug() << "CloudDriveModel::migrateFileResume_Block" << nonce << type << uid << remoteFilePath << remoteFileSize << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
+
+    // Migrates using resumable methods.
+    // TODO Source and target chunk size may not be the same.
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    CloudDriveClient *sourceClient = getCloudClient(type);
+    CloudDriveClient *targetClient = getCloudClient(targetType);
+    QScriptEngine engine;
+    QScriptValue sc;
+    qDebug() << "CloudDriveModel::migrateFileResume_Block job" << job.toJsonText();
+
+    // Start uploading session and get upload_id.
+    if (job.uploadId == "") {
+        QString startResult = targetClient->filePutResumeStart(nonce, targetUid, targetRemoteFileName, remoteFileSize, targetRemoteParentPath, true);
+        if (startResult != "") {
+            qDebug() << "CloudDriveModel::migrateFileResume_Block startResult" << startResult;
+            sc = engine.evaluate("(" + startResult + ")");
+
+            if (sc.property("upload_id").isValid()) {
+                job.uploadId = sc.property("upload_id").toString();
+                m_cloudDriveJobs->insert(job.jobId, job);
+            }
+            if (sc.property("error").isValid()) {
+                int err = sc.property("error").toInt32();
+                QString errString = sc.property("error_string").toString();
+                migrateFilePutFilter(job.jobId, err, errString, "");
+                return;
+            }
+        }
+    } else if (job.uploadOffset < 0) {
+        // Check uploading status.
+        QString statusResult = targetClient->filePutResumeStatus(nonce, targetUid, targetRemoteFileName, remoteFileSize, job.uploadId, job.uploadOffset, true);
+        if (statusResult != "") {
+            // TODO Get range and check if resume upload is required.
+            qDebug() << "CloudDriveModel::migrateFileResume_Block statusResult" << statusResult;
+            sc = engine.evaluate("(" + statusResult + ")");
+
+            if (sc.property("offset").isValid()) {
+                job.uploadOffset = sc.property("offset").toUInt32();
+                m_cloudDriveJobs->insert(job.jobId, job);
+            }
+            if (sc.property("error").isValid()) {
+                int err = sc.property("error").toInt32();
+                QString errString = sc.property("error_string").toString();
+                migrateFilePutFilter(job.jobId, err, errString, "");
+                return;
+            }
+        }
+    }
+
+    // Adjust downloadOffset to follow uploadOffset.
+    job.uploadOffset = (job.uploadOffset < 0) ? 0 : job.uploadOffset;
+    job.downloadOffset = job.uploadOffset;
+    m_cloudDriveJobs->insert(job.jobId, job);
+
+    // Check isAborted.
+    if (m_isAborted) {
+        migrateFilePutFilter(nonce, -1, "job is aborted.","");
+        return;
+    }
+
+    // Download chunk.
+    QIODevice *source = sourceClient->fileGet(nonce, uid, remoteFilePath, job.downloadOffset, true);
+    if (source == 0) {
+        // Error occurs in fileGet method.
+        migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
+        return;
+    } else {
+        qDebug() << "CloudDriveModel::migrateFileResume_Block chunk is downloaded. source->metaObject()->className()" << source->metaObject()->className() << "size" << source->size() << "bytesAvailable" << source->bytesAvailable() << "job" << job.toJsonText();
+        // TODO Handle source error.
+        if (QNetworkReply *sourceReply = dynamic_cast<QNetworkReply*>(source)) {
+            if (sourceReply->error() != QNetworkReply::NoError) {
+                migrateFilePutFilter(job.jobId, sourceReply->error(), sourceReply->errorString(), QString::fromUtf8(sourceReply->readAll()));
+                return;
+            }
+        }
+        job.downloadOffset += source->size();
+        m_cloudDriveJobs->insert(job.jobId, job);
+    }
+
+    // Check isAborted.
+    // Reset downloadOffset as migrateFileResume_Block never store downloaded chunk.
+    if (m_isAborted) {
+        job.downloadOffset = 0;
+        m_cloudDriveJobs->insert(job.jobId, job);
+        migrateFilePutFilter(nonce, -1, "job is aborted.","");
+        return;
+    }
+
+    // Upload chunk and get offset (and upload_id if exists).
+    QString uploadResult = targetClient->filePutResumeUpload(nonce, targetUid, source, targetRemoteFileName, remoteFileSize, job.uploadId, job.uploadOffset, true);
+    // Default target remote path for client with remote absolute path. (Ex. Dropbox, FTP)
+    QString targetRemoteFilePath = (targetClient->isRemoteAbsolutePath()) ? (targetRemoteParentPath + "/" + targetRemoteFileName) : "";
+    if (uploadResult != "") {
+        // TODO Get range and check if resume upload is required.
+        qDebug() << "CloudDriveModel::migrateFileResume_Block uploadResult" << uploadResult;
+        sc = engine.evaluate("(" + uploadResult + ")");
+
+        if (sc.property("upload_id").isValid()) {
+            job.uploadId = sc.property("upload_id").toString();
+        }
+        if (sc.property("offset").isValid()) {
+            job.uploadOffset = sc.property("offset").toUInt32();
+        }
+        if (sc.property("id").isValid()) { // Find targetRemoteFilePath from GoogleDrive reply.
+            targetRemoteFilePath = sc.property("id").toString();
+            job.uploadOffset = sc.property("fileSize").toUInt32(); // Get fileSize to uploadOffset.
+            qDebug() << "CloudDriveModel::migrateFileResume_Block uploaded file with targetRemoteFilePath" << targetRemoteFilePath;
+        }
+        // Update changed job.
+        m_cloudDriveJobs->insert(job.jobId, job);
+
+        if (sc.property("error").isValid()) {
+            int err = sc.property("error").toInt32();
+            QString errString = sc.property("error_string").toString();
+            job.uploadOffset = -1; // Failed upload needs to get status on resume.
+            migrateFilePutFilter(job.jobId, err, errString, "");
+            return;
+        }
+    } else {
+        migrateFilePutFilter(job.jobId, -1, "Unexpected error.", "Unexpected upload result is empty.");
+        return;
+    }
+    // Check whether resume or commit.
+    if (job.uploadOffset < job.bytesTotal) {
+        // Enqueue and resume job.
+        qDebug() << "CloudDriveModel::migrateFileResume_Block resume uploading job" << job.toJsonText();
+        m_jobQueue->enqueue(job.jobId);
+        updateJob(job);
+        jobDone();
+        return;
+    } else {
+        // Invoke to handle successful uploading.
+        qDebug() << "CloudDriveModel::migrateFileResume_Block commit uploading job" << job.toJsonText();
+        QString commitResult = targetClient->filePutCommit(nonce, targetUid, targetRemoteFilePath, job.uploadId, true);
+        if (commitResult != "") {
+            qDebug() << "GCDClient::migrateFileResume_Block commitResult" << commitResult;
+            sc = engine.evaluate("(" + commitResult + ")");
+
+            if (sc.property("error").isValid()) {
+                int err = sc.property("error").toInt32();
+                QString errString = sc.property("error_string").toString();
+                migrateFilePutFilter(job.jobId, err, errString, "");
+                return;
+            }
+            // Proceed filter with commit result and job done.
+            migrateFilePutFilter(job.jobId, QNetworkReply::NoError, "", commitResult);
+        } else {
+            // Proceed filter with last upload result and job done.
+            migrateFilePutFilter(job.jobId, QNetworkReply::NoError, "", uploadResult);
+        }
+    }
+}
+
+void CloudDriveModel::disconnect(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
 {
     // Enqueue job.
-    CloudDriveJob job(createNonce(), MoveFile, type, uid, localFilePath, remoteFilePath, newLocalFilePath, newRemoteFilePath, -1);
-    job.isRunning = true;
+    CloudDriveJob job(createNonce(), Disconnect, type, uid, localPath, "", -1);
+//    job.isRunning = true;
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show in job page.
+    emit jobEnqueuedSignal(job.jobId, job.localFilePath);
+}
+
+QString CloudDriveModel::thumbnail(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString format, QString size)
+{
+    CloudDriveClient *client = getCloudClient(getClientType(type));
+    if (client == 0) return "";
+
+    return client->thumbnail(createNonce(), uid, remoteFilePath, format, size);
+}
+
+void CloudDriveModel::cacheImage(QString remoteFilePath, QString url, int w, int h, QString caller)
+{
+    CacheImageWorker *worker = new CacheImageWorker(remoteFilePath, url, QSize(w,h), TEMP_PATH, caller);
+    connect(worker, SIGNAL(cacheImageFinished(QString,int,QString,QString)), SIGNAL(cacheImageFinished(QString,int,QString,QString)));
+    connect(worker, SIGNAL(refreshFolderCacheSignal(QString)), SIGNAL(refreshFolderCacheSignal(QString)));
+    QThreadPool::globalInstance()->start(worker);
+}
+
+QString CloudDriveModel::media(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath)
+{
+    CloudDriveClient *client = getCloudClient(getClientType(type));
+    if (client == 0) return "";
+
+    return client->media(createNonce(), uid, remoteFilePath);
+}
+
+void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteParentPath, QString newRemoteFileName)
+{
+    if (remoteFilePath == "") {
+        qDebug() << "CloudDriveModel::moveFile remoteFilePath" << remoteFilePath << "is empty. Operation is aborted.";
+        return;
+    }
+
+    // NOTE moveFile without newRemoteParentPath means rename.
+    if (newRemoteFileName == "") {
+        qDebug() << "CloudDriveModel::moveFile newRemoteFileName" << newRemoteFileName << "is empty. Operation is aborted.";
+        return;
+    }
+
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), MoveFile, type, uid, localFilePath, remoteFilePath, -1);
+    job.newLocalFilePath = newLocalFilePath;
+    job.newRemoteFilePath = newRemoteParentPath;
+    job.newRemoteFileName = newRemoteFileName;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show cloud_wait.
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
-
-    // Add item with dirtyHash to avoid duplicate sync job.
-    // TODO handle other clouds.
-    if (job.type == Dropbox) {
-        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-    }
-
-    emit proceedNextJobSignal();
 }
 
-void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteFilePath)
+void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteParentPath, QString newRemoteFileName)
 {
+    if (remoteFilePath == "") {
+        qDebug() << "CloudDriveModel::copyFile remoteFilePath" << remoteFilePath << "is empty. Operation is aborted.";
+        return;
+    }
+
+    if (newRemoteParentPath == "" && newRemoteFileName == "") {
+        qDebug() << "CloudDriveModel::copyFile newRemoteParentPath" << newRemoteParentPath << "or newRemoteFileName" << newRemoteFileName << "is empty. Operation is aborted.";
+        return;
+    }
+
     // Enqueue job.
-    CloudDriveJob job(createNonce(), CopyFile, type, uid, localFilePath, remoteFilePath, newLocalFilePath, newRemoteFilePath, -1);
-    job.isRunning = true;
+    CloudDriveJob job(createNonce(), CopyFile, type, uid, localFilePath, remoteFilePath, -1);
+    job.newLocalFilePath = newLocalFilePath;
+    job.newRemoteFilePath = newRemoteParentPath;
+    job.newRemoteFileName = newRemoteFileName;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show cloud_wait.
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
-
-    // Add item with dirtyHash to avoid duplicate sync job.
-    // TODO handle other clouds.
-    if (job.type == Dropbox) {
-        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-    }
-
-    emit proceedNextJobSignal();
 }
 
 void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath)
 {
+    if (remoteFilePath == "") {
+        qDebug() << "CloudDriveModel::deleteFile remoteFilePath" << remoteFilePath << "is empty. Operation is aborted.";
+        return;
+    }
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), DeleteFile, type, uid, localFilePath, remoteFilePath, -1);
-    job.isRunning = true;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show cloud_wait.
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
-
-    // Add item with dirtyHash to avoid duplicate sync job.
-    // TODO handle other clouds.
-    if (job.type == Dropbox) {
-        addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, CloudDriveModel::DirtyHash, true);
-    }
-
-    emit proceedNextJobSignal();
 }
 
 void CloudDriveModel::shareFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath)
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), ShareFile, type, uid, localFilePath, remoteFilePath, -1);
-    job.isRunning = true;
+//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show cloud_wait.
+    clearConnectedRemoteDirtyCache(localFilePath);
+    emit jobEnqueuedSignal(job.jobId, localFilePath);
+}
+
+void CloudDriveModel::delta(CloudDriveModel::ClientTypes type, QString uid)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), Delta, type, uid, "", "", -1);
+//    job.isRunning = true;
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show in job page.
+    emit jobEnqueuedSignal(job.jobId, "");
+}
+
+void CloudDriveModel::filePutResume(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, QString uploadId, qint64 offset)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), FilePutResume, type, uid, localFilePath, remoteParentPath, -1);
+    job.newRemoteFileName = remoteFileName;
+    job.uploadId = uploadId;
+    job.uploadOffset = offset;
+    job.bytesTotal = QFileInfo(localFilePath).size();
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show cloud_wait.
+    m_isConnectedCache->remove(localFilePath);
     m_isSyncingCache->remove(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
+}
 
-    emit proceedNextJobSignal();
+void CloudDriveModel::fileGetResume(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFIleSize, QString localFilePath, qint64 offset)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), FileGetResume, type, uid, localFilePath, remoteFilePath, -1);
+    job.downloadOffset = offset;
+    job.bytesTotal = remoteFIleSize;
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show cloud_wait.
+    m_isConnectedCache->remove(localFilePath);
+    m_isSyncingCache->remove(localFilePath);
+    emit jobEnqueuedSignal(job.jobId, localFilePath);
+}
+
+void CloudDriveModel::migrateFile(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), MigrateFile, type, uid, "", remoteFilePath, -1);
+    job.targetType = targetType;
+    job.targetUid = targetUid;
+    job.newRemoteFilePath = targetRemoteParentPath;
+    job.newRemoteFileName = targetRemoteFileName;
+//    job.isRunning = true;
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show cloud_wait.
+    emit jobEnqueuedSignal(job.jobId, "");
+}
+
+void CloudDriveModel::migrateFilePut(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 bytesTotal, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
+{
+    qDebug() << "CloudDriveModel::migrateFilePut" << type << uid << remoteFilePath << bytesTotal << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
+
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), MigrateFilePut, type, uid, "", remoteFilePath, -1);
+    job.bytesTotal = bytesTotal;
+    job.targetType = targetType;
+    job.targetUid = targetUid;
+    job.newRemoteFilePath = targetRemoteParentPath;
+    job.newRemoteFileName = targetRemoteFileName;
+//    job.isRunning = true;
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show cloud_wait.
+    emit jobEnqueuedSignal(job.jobId, "");
 }
 
 void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    QScriptEngine engine;
+    QScriptValue sc;
+    QString hash;
 
     if (err == 0) {
-        // TODO generalize to support other clouds.
-        QScriptEngine engine;
-        QScriptValue sc;
-        sc = engine.evaluate("(" + msg + ")");
-        QString hash = sc.property("rev").toString();
-
         // TODO handle other clouds.
-        if (job.type == Dropbox) {
-            addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
-        }
+        if (job.localFilePath != "") {
+            sc = engine.evaluate("(" + msg + ")");
+            hash = sc.property("hash").toString();
+            addItem(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, hash);
 
-        job.isRunning = false;
-        m_cloudDriveJobs->insert(nonce, job);
+            // Emit signal to refresh its parent folder cache.
+            emit refreshFolderCacheSignal(job.localFilePath);
+        }
+    } else {
+        if (job.localFilePath != "") {
+            removeItem(getClientType(job.type), job.uid, job.localFilePath);
+        }
     }
+
+    // Update job running flag.
+    job.err = err;
+    job.errString = errMsg;
+//    job.errMessage = msg.replace(QRegExp("\""), "\\\""); // TODO encode to ?
+    job.isRunning = false;
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -1423,27 +2666,32 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
 void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    QScriptEngine engine;
+    QScriptValue sc;
+    QString hash;
+    QString remoteFilePath;
 
     if (err == 0) {
-        // TODO generalize to support other clouds.
-        QScriptEngine engine;
-        QScriptValue sc;
-        sc = engine.evaluate("(" + msg + ")");
-        QString hash = sc.property("rev").toString();
-
         // TODO handle other clouds.
-        if (job.type == Dropbox) {
-            addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
+        if (job.localFilePath != "") {
+            sc = engine.evaluate("(" + msg + ")");
+            remoteFilePath = sc.property("absolutePath").toString();
+            hash = sc.property("hash").toString();
+            job.newRemoteFilePath = remoteFilePath;
+            addItem(getClientType(job.type), job.uid, job.localFilePath, remoteFilePath, hash);
         }
-
-        job.isRunning = false;
-        m_cloudDriveJobs->insert(nonce, job);
-    } else if (err == -1) {
-        // Remove failed item.
-        if (job.type == Dropbox) {
-            removeItem(Dropbox, job.uid, job.localFilePath);
+    } else {
+        if (job.localFilePath != "") {
+            removeItem(getClientType(job.type), job.uid, job.localFilePath);
         }
     }
+
+    // Update job running flag.
+    job.err = err;
+    job.errString = errMsg;
+//    job.errMessage = msg.replace(QRegExp("\""), "\\\""); // TODO encode to ?
+    job.isRunning = false;
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -1455,21 +2703,9 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
-    if (err == 0) {
-        // TODO generalize to support other clouds.
-        QScriptEngine engine;
-        QScriptValue sc;
-        sc = engine.evaluate("(" + msg + ")");
-        QString hash = sc.property("rev").toString();
-
-        // Don't update hash to item yet. Hash will be updated by fileGet/filePut.
-
-        job.isRunning = false;
-        m_cloudDriveJobs->insert(nonce, job);
-    } else if (err == 202) {
-        // Issue: handle 202 Nonce already in used.
-        // Solution: let QML handle retry.
-    }
+    // Update job running flag.
+    job.isRunning = false;
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -1481,52 +2717,59 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
-    if (err == 0) {
-        // TODO generalize to support other clouds.
-        job.isRunning = false;
-        m_cloudDriveJobs->insert(nonce, job);
-    }
+    // Update job running flag.
+    job.isRunning = false;
+    updateJob(job);
 
     // Notify job done.
     jobDone();
 
-    emit browseReplySignal(nonce, err, errMsg, msg);
+    // Route signal to caller.
+    if (job.operation == MigrateFile) {
+        emit migrateFileReplySignal(nonce, err, errMsg, msg);
+    } else {
+        if (err == 0) {
+            m_cachedJsonText = sortJsonText(msg, m_sortFlag);
+            emit browseReplySignal(nonce, err, errMsg, m_cachedJsonText);
+        } else {
+            emit browseReplySignal(nonce, err, errMsg, msg);
+        }
+    }
 }
 
 void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    QScriptEngine engine;
+    QScriptValue sc;
+    QString hash;
+    QString newRemotePath;
+    QString newRemoteParentPath;
+    bool isDir;
 
     if (err == 0) {
-        // TODO generalize to support other clouds.
-        QScriptEngine engine;
-        QScriptValue sc;
+        // Add connection if localFilePath is specified because createFolder was invoked in syncFromLocal.
+        // NOTE It's not required to create cloud item for created folder. Because further sync operation will do.
         sc = engine.evaluate("(" + msg + ")");
-        QString hash = sc.property("rev").toString();
+        isDir = sc.property("isDir").toBool();
+        hash = sc.property("hash").toString();
+        newRemotePath = sc.property("absolutePath").toString();
+        newRemoteParentPath = sc.property("parentPath").toString();
 
-        // Add cloud item if localPath is specified.
-        if (job.localFilePath != "") {
-            // TODO handle other clouds.
-            if (job.type == Dropbox) {
-                addItem(Dropbox, job.uid, job.localFilePath, job.remoteFilePath, hash);
-            }
-        }
-    } else if (err == 202) {
-        // Forbidden {"error": " at path 'The folder '???' already exists.'"}
-        // Do nothing.
-    } else {
-        // Remove failed item if localPath is specified.
-        if (job.localFilePath != "") {
-            // TODO handle other clouds.
-            if (job.type == Dropbox) {
-                removeItem(Dropbox, job.uid, job.localFilePath);
-            }
+        qDebug() << "CloudDriveModel::createFolderReplyFilter" << getCloudName(job.type) << "hash" << hash << "newRemotePath" << newRemotePath << "newRemoteParentPath" << newRemoteParentPath;
+
+        // Sync newRemoteParentPath (with DirtyHash) to get newRemotePath sync'd.
+        // Local path isn't specified, it's requested from CloudFolderPage.
+        // If newRemotePath's parent is connected, sync its parent to connected local path.
+        if (isRemotePathConnected(getClientType(job.type), job.uid, newRemoteParentPath)) {
+            qDebug() << "CloudDriveModel::createFolderReplyFilter newRemotePath" << newRemotePath << "is under connected parent remote path. Sync its parent" << newRemoteParentPath;
+            syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath, DirtyHash);
         }
     }
 
     // Stop running.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -1537,27 +2780,61 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
 void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    QScriptEngine engine;
+    QScriptValue sc;
+    QString hash;
+    QString newRemotePath;
+    QString newRemoteParentPath;
+    QString oldRemoteParentPath;
+    bool isDir;
 
     if (err == 0) {
-        // TODO generalize to support other clouds.
-        QScriptEngine engine;
-        QScriptValue sc;
-        sc = engine.evaluate("(" + msg + ")");
-        QString hash = sc.property("hash").toString();
-        QString rev = sc.property("rev").toString();
-        bool isDir = sc.property("is_dir").toBool();
+        // Update connection for client which uses absolute remote path.
+        if (isRemoteAbsolutePath(getClientType(job.type))) {
+            sc = engine.evaluate("(" + msg + ")");
+            isDir = sc.property("isDir").toBool();
+            hash = sc.property("hash").toString();
+            newRemotePath = sc.property("absolutePath").toString();
+            newRemoteParentPath = sc.property("parentPath").toString();
+            oldRemoteParentPath = getParentRemotePath(getClientType(job.type), job.remoteFilePath);
 
-        if (job.type == Dropbox) {
-            updateItemWithChildren(Dropbox, job.uid,
-                                   job.localFilePath, job.remoteFilePath,
-                                   job.newLocalFilePath, job.newRemoteFilePath, rev, (isDir ? hash : rev) );
-            removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
+            if (job.localFilePath != "" && job.newLocalFilePath != "") {
+                // Local path is specified, it's requested from FolderPage.
+                // Update both new local and remote path for specified local path.
+                updateItemWithChildren(getClientType(job.type), job.uid,
+                                       job.localFilePath, job.remoteFilePath,
+                                       job.newLocalFilePath, newRemotePath,
+                                       hash);
+                // Remove cloud item and its children with original local path.
+                removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
+            } else {
+                // Local path isn't specified, it's requested from CloudFolderPage.
+                // Update new remote path for all connected local path.
+                foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, job.remoteFilePath)) {
+                    qDebug() << "CloudDriveModel::moveFileReplyFilter updateItemWithChildren item" << item.localPath << "remotePath" << item.remotePath << "newRemotePath" << newRemotePath << "new hash" << hash;
+                    updateItemWithChildren(getClientType(job.type), job.uid,
+                                           item.localPath, item.remotePath,
+                                           item.localPath, newRemotePath,
+                                           hash);
+                }
+
+                // Sync both oldRemoteParentPath and newRemoteParentPath (with DirtyHash).
+                // If newRemotePath's parent is connected, sync its parent to connected local path.
+                if (isRemotePathConnected(getClientType(job.type), job.uid, newRemoteParentPath)) {
+                    qDebug() << "CloudDriveModel::moveFileReplyFilter newRemotePath" << newRemotePath << "is under connected parent remote path. Sync its parent" << newRemoteParentPath;
+                    syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath, DirtyHash);
+                }
+                if (oldRemoteParentPath != newRemoteParentPath && isRemotePathConnected(getClientType(job.type), job.uid, oldRemoteParentPath)) {
+                    qDebug() << "CloudDriveModel::moveFileReplyFilter remoteFilePath" << job.remoteFilePath << "is under connected parent remote path. Sync its parent" << oldRemoteParentPath;
+                    syncItemByRemotePath(getClientType(job.type), job.uid, oldRemoteParentPath, DirtyHash);
+                }
+            }
         }
     }
 
     // Stop running.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -1568,20 +2845,34 @@ void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg
 void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    QScriptEngine engine;
+    QScriptValue sc;
+    QString hash;
+    QString newRemotePath;
+    QString newRemoteParentPath;
+    bool isDir;
 
     if (err == 0) {
-        // TODO generalize to support other clouds.
-        QScriptEngine engine;
-        QScriptValue sc;
+        // TODO If it doesn't do here, it will be sync'd with parent folder's metadata request.
         sc = engine.evaluate("(" + msg + ")");
-        QString hash = sc.property("rev").toString();
+        isDir = sc.property("isDir").toBool();
+        hash = sc.property("hash").toString();
+        newRemotePath = sc.property("absolutePath").toString();
+        newRemoteParentPath = sc.property("parentPath").toString();
+        qDebug() << "CloudDriveModel::copyFileReplyFilter" << getCloudName(job.type) << "hash" << hash << "newRemotePath" << newRemotePath << "newRemoteParentPath" << newRemoteParentPath;
 
-        // TODO To be implemented.
+        // Sync newRemoteParentPath (with DirtyHash) to get newRemotePath sync'd.
+        // Local path isn't specified, it's requested from CloudFolderPage.
+        // If newRemotePath's parent is connected, sync its parent to connected local path.
+        if (isRemotePathConnected(getClientType(job.type), job.uid, newRemoteParentPath)) {
+            qDebug() << "CloudDriveModel::copyFileReplyFilter newRemotePath" << newRemotePath << "is under connected parent remote path. Sync its parent" << newRemoteParentPath;
+            syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath, DirtyHash);
+        }
     }
 
     // Stop running.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -1593,31 +2884,17 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
-    if (err == 0) {
-        // TODO handle other clouds.
-        // Disconnect deleted local path.
-        if (job.type == Dropbox) {
-            // TODO Remove local cloudDriveItems with it children.
-            if (job.localFilePath != "") {
-                removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
-            }
-        }
-    } else if (err == 203) {
-        // Not Found {"error": "Path '???' not found"}
-
-        // TODO handle other clouds.
-        // Disconnect deleted local path.
-        if (job.type == Dropbox) {
-            // TODO Remove local cloudDriveItems with it children.
-            if (job.localFilePath != "") {
-                removeItemWithChildren(Dropbox, job.uid, job.localFilePath);
-            }
-        }
+    // Disconnect deleted local path.
+    if (job.localFilePath != "") {
+        removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
+    }
+    if (job.remoteFilePath != "") {
+        removeItemByRemotePath(getClientType(job.type), job.uid, job.remoteFilePath);
     }
 
     // Stop running.
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -1625,26 +2902,13 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
     emit deleteFileReplySignal(nonce, err, errMsg, msg);
 }
 
-void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg, QString url, int expires)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
-    QString url = "";
-    QString expires = "";
-    if (err == 0) {
-        // TODO generalize to support other clouds.
-        QScriptEngine engine;
-        QScriptValue sc;
-        sc = engine.evaluate("(" + msg + ")");
-        url = sc.property("url").toString();
-        expires = sc.property("expires").toString();
-
-        job.isRunning = false;
-        m_cloudDriveJobs->insert(nonce, job);
-    } else if (err == 202) {
-        // Issue: handle 202 Nonce already in used.
-        // Solution: let QML handle retry.
-    }
+    // Stop running.
+    job.isRunning = false;
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -1652,18 +2916,258 @@ void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMs
     emit shareFileReplySignal(nonce, err, errMsg, msg, url, expires);
 }
 
+void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    if (err == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue parsedObj = engine.evaluate("(" + msg + ")");
+
+        // TODO Process delta. Move to QML to connect to FolderSizeItemListModel's delete recursive method.
+        if (parsedObj.property("children").isValid()) {
+            for (int i = 0; i < parsedObj.property("children").toVariant().toList().length(); i++) {
+                QScriptValue childObj = parsedObj.property("children").property(i);
+                bool isDeleted = childObj.property("isDeleted").toBool();
+                QString remoteFilePath = childObj.property("absolutePath").toString();
+                QString remoteParentPath = childObj.property("property").property("parentPath").toString();
+                //        qDebug() << "CloudDriveModel::deltaReplyFilter remoteFilePath" << remoteFilePath << "remoteParentPath" << remoteParentPath << "isDeleted" << isDeleted;
+
+                if (isDeleted) {
+                    // TODO delete local file path and cloud item.
+                    // NOTE Metadata currently only remove link once file/folder was removed remotely.
+                    foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
+                        qDebug() << "CloudDriveModel::deltaReplyFilter remove connection to deleted remoteFilePath" << remoteFilePath << "cloudItem" << item;
+                        removeItem(getClientType(item.type), item.uid, item.localPath);
+                    }
+                } else {
+                    QList<CloudDriveItem> itemList = findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)));
+                    if (itemList.isEmpty()) {
+                        // TODO Sync its connected parents (with DirtyHash) to force sync all its children.
+                        qDebug() << "CloudDriveModel::deltaReplyFilter download new item by syncing remoteParentPath" << remoteParentPath << "isRemotePathCaseInsensitive" << isRemotePathCaseInsensitive(getClientType(job.type));
+                        foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteParentPath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
+                            qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteParentPath" << remoteParentPath << "parent cloudItem" << item;
+                            updateItem(getClientType(item.type), item.uid, item.localPath, DirtyHash);
+                            metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+                        }
+                    } else {
+                        // TODO Sync existing item.
+                        foreach (CloudDriveItem item, itemList) {
+                            qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteFilePath" << remoteFilePath << "cloudItem" << item;
+                            metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check if there is more delta.
+        if (parsedObj.property("hasMore").toBool()) {
+            qDebug() << "CloudDriveModel::deltaReplyFilter has more delta. Proceed next delta request.";
+            delta(getClientType(job.type), job.uid);
+        }
+    }
+
+    // Update job running flag.
+    job.isRunning = false;
+    updateJob(job);
+
+    // Notify job done.
+    jobDone();
+
+    emit deltaReplySignal(nonce, err, errMsg, msg);
+}
+
+void CloudDriveModel::migrateFilePutFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    // Update job running flag.
+    job.err = err;
+    job.errString = errMsg;
+//    job.errMessage = msg.replace(QRegExp("\""), "\\\""); // TODO encode to ?
+    job.isRunning = false;
+    updateJob(job);
+
+    // Notify job done.
+    jobDone();
+
+    emit migrateFilePutReplySignal(nonce, err, errMsg, msg);
+}
+
+void CloudDriveModel::fileGetResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    qDebug() << "CloudDriveModel::fileGetResumeReplyFilter" << nonce << err << errMsg << msg;
+
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    if (err == 0) {
+        if (job.localFilePath != "") {
+            // TODO Get next offset from metadata. But it will require type switch because each client has its response format.
+            job.downloadOffset = job.bytes;
+
+            // Enqueue and resume job.
+            if (job.downloadOffset < job.bytesTotal) {
+                qDebug() << "CloudDriveModel::fileGetResumeReplyFilter resume downloading job" << job.toJsonText();
+                m_jobQueue->enqueue(job.jobId);
+            } else {
+                qDebug() << "CloudDriveModel::fileGetResumeReplyFilter commit downloading job" << job.toJsonText();
+                fileGetReplyFilter(job.jobId, err, errMsg, msg);
+                return;
+            }
+        }
+    } else if (err == QNetworkReply::AuthenticationRequiredError) {
+        // Emit signal to refresh token and resume.
+        m_cloudDriveJobs->insert(job.jobId, job);
+        fileGetReplyFilter(job.jobId, err, errMsg, msg);
+        return;
+    } else if (err == 503) { // 503 Service Unavailable.
+        // Emit signal to refresh token and resume.
+        m_cloudDriveJobs->insert(job.jobId, job);
+        fileGetReplyFilter(job.jobId, err, errMsg, msg);
+        return;
+    } else {
+        qDebug() << "CloudDriveModel::fileGetResumeReplyFilter failed. Operation is aborted. jobId" << nonce << "error" << err << errMsg << msg;
+        fileGetReplyFilter(job.jobId, err, errMsg, msg);
+        return;
+    }
+
+    // Update job.
+    updateJob(job);
+
+    // Notify job done.
+    jobDone();
+}
+
+void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    qDebug() << "CloudDriveModel::filePutResumeReplyFilter" << nonce << err << errMsg << msg;
+
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+    QScriptEngine engine;
+    QScriptValue sc;
+
+    if (err == 0) {
+        if (job.localFilePath != "") {
+            switch (job.type) {
+            case Dropbox:
+                sc = engine.evaluate("(" + msg + ")");
+                if (sc.property("upload_id").isValid()) {
+                    job.uploadId = sc.property("upload_id").toString();
+                }
+                if (sc.property("offset").isValid()) {
+                    job.uploadOffset = sc.property("offset").toUInt32(); // NOTE It's actually the offset for resume uploading.
+                }
+
+                // Enqueue and resume job.
+                if (job.uploadOffset < job.bytesTotal) {
+                    qDebug() << "CloudDriveModel::filePutResumeReplyFilter resume uploading job" << job.toJsonText();
+                    m_jobQueue->enqueue(job.jobId);
+                } else {
+                    qDebug() << "CloudDriveModel::filePutResumeReplyFilter commit uploading job" << job.toJsonText();
+                    // Get uploaded path.
+                    job.newRemoteFilePath = getRemotePath(getClientType(job.type), job.remoteFilePath, job.newRemoteFileName);
+                    job.operation = FilePutCommit;
+                    m_jobQueue->enqueue(job.jobId);
+                }
+                break;
+            case GoogleDrive:
+                sc = engine.evaluate("(" + msg + ")");
+                if (sc.property("upload_id").isValid()) {
+                    job.uploadId = sc.property("upload_id").toString();
+                    job.uploadOffset = -1; // TODO Force request status. Is it required?
+                }
+                if (sc.property("offset").isValid()) {
+                    job.uploadOffset = sc.property("offset").toUInt32(); // NOTE offset got from (maxRange+1) returned from status request. It's actually the offset for resume uploading.
+                }
+                if (sc.property("id").isValid()) {
+                    job.uploadOffset = sc.property("fileSize").toUInt32(); // NOTE fileSize got from upload request is actually the offset for resume uploading.
+                }
+
+                // Check whether resume or commit.
+                if (job.uploadOffset < job.bytesTotal) {
+                    // Enqueue and resume job.
+                    qDebug() << "CloudDriveModel::filePutResumeReplyFilter resume uploading job" << job.toJsonText();
+                    m_jobQueue->enqueue(job.jobId);
+                } else {
+                    // Invoke to handle successful uploading.
+                    qDebug() << "CloudDriveModel::filePutResumeReplyFilter commit uploading job" << job.toJsonText();
+                    // Get uploaded path.
+                    if (sc.property("id").isValid()) {
+                        job.newRemoteFilePath = sc.property("id").toString();
+                    }
+                    filePutReplyFilter(job.jobId, err, errMsg, msg);
+                    return;
+                }
+                break;
+            }
+        }
+    } else if (err == QNetworkReply::AuthenticationRequiredError && job.type == GoogleDrive) {
+        // TODO For GoogleDrive only.
+        // Emit signal with offset=-1 to request status.
+        job.uploadOffset = -1; // Force filePutResumeStatus.
+        m_cloudDriveJobs->insert(job.jobId, job);
+        filePutReplyFilter(job.jobId, err, errMsg, msg);
+        return;
+    } else if (err == 503 && job.type == GoogleDrive) { // 503 Service Unavailable.
+        // TODO For GoogleDrive only.
+        // Emit signal with offset=-1 to request status.
+        job.uploadOffset = -1; // Force filePutResumeStatus.
+        m_cloudDriveJobs->insert(job.jobId, job);
+        filePutReplyFilter(job.jobId, err, errMsg, msg);
+        return;
+    } else {
+        qDebug() << "CloudDriveModel::filePutResumeReplyFilter failed. Operation is aborted. jobId" << nonce << "error" << err << errMsg << msg;
+        filePutReplyFilter(job.jobId, err, errMsg, msg);
+        return;
+    }
+
+    // Update job.
+    updateJob(job);
+
+    // Notify job done.
+    jobDone();
+}
+
+void CloudDriveModel::refreshRequestFilter(QString nonce)
+{
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    // Update job running flag.
+    job.isRunning = false;
+    updateJob(job);
+
+    // Notify job done.
+    jobDone();
+
+    emit refreshRequestSignal(nonce);
+}
+
 void CloudDriveModel::schedulerTimeoutFilter()
 {
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter" << QDateTime::currentDateTime().toString("d/M/yyyy hh:mm:ss.zzz");
+//    qDebug() << "CloudDriveModel::schedulerTimeoutFilter" << QDateTime::currentDateTime().toString("d/M/yyyy hh:mm:ss.zzz");
 
     QString cronValue = QDateTime::currentDateTime().toString("m h d M ddd");
 
+    // Sync scheduled items.
     loadScheduledItems(cronValue);
-    suspendNextJob();
-    syncScheduledItems();
-    resumeNextJob();
+    if (!m_scheduledItems->isEmpty()) {
+        suspendNextJob();
+        syncScheduledItems();
+        resumeNextJob();
+    }
+
+    // Request delta.
+    scheduleDeltaJobs(cronValue);
 
     emit schedulerTimeoutSignal();
+}
+
+void CloudDriveModel::initJobQueueTimer()
+{
+    connect(&m_jobQueueTimer, SIGNAL(timeout()), this, SLOT(proceedNextJob()) );
+    m_jobQueueTimer.setInterval(2000);
+    m_jobQueueTimer.start();
 }
 
 void CloudDriveModel::initializeDB(QString nonce)
@@ -1757,7 +3261,7 @@ void CloudDriveModel::initializeDB(QString nonce)
     jobDone();
 
     // RemoveJob
-    removeJob(nonce);
+    removeJob("CloudDriveModel::initializeDB", nonce);
 
     emit initializeDBFinished(nonce);
 }
@@ -1797,6 +3301,16 @@ bool CloudDriveModel::updateDropboxPrefix(bool fullAccess)
     }
 
     return res;
+}
+
+bool CloudDriveModel::testConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token, QString authHostname)
+{
+    return getCloudClient(type)->testConnection(uid, hostname, username, password, token, authHostname);
+}
+
+void CloudDriveModel::saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token)
+{
+    getCloudClient(type)->saveConnection(uid, hostname, username, password, token);
 }
 
 QString CloudDriveModel::getItemCacheKey(int type, QString uid, QString localPath)
@@ -1870,9 +3384,9 @@ CloudDriveItem CloudDriveModel::selectItemByPrimaryKeyFromDB(CloudDriveModel::Cl
     QList<CloudDriveItem> itemList = getItemListFromPS(m_selectByPrimaryKeyPS);
     if (itemList.count() > 0) {
         item = itemList.at(0);
-        qDebug() << "CloudDriveModel::selectItemByPrimaryKeyFromDB found. key" << itemCacheKey << "item" << item;
+//        qDebug() << "CloudDriveModel::selectItemByPrimaryKeyFromDB found. key" << itemCacheKey << "item" << item;
     } else {
-        qDebug() << "CloudDriveModel::selectItemByPrimaryKeyFromDB record not found. key" << itemCacheKey;
+//        qDebug() << "CloudDriveModel::selectItemByPrimaryKeyFromDB record not found. key" << itemCacheKey;
     }
 
     return item;
@@ -1932,7 +3446,7 @@ QList<CloudDriveItem> CloudDriveModel::selectItemsByTypeAndUidAndRemotePathFromD
     return getItemListFromPS(qry);
 }
 
-int CloudDriveModel::insertItemToDB(const CloudDriveItem item)
+int CloudDriveModel::insertItemToDB(const CloudDriveItem item, bool suppressMessages)
 {
     bool res;
 
@@ -1944,19 +3458,23 @@ int CloudDriveModel::insertItemToDB(const CloudDriveItem item)
     m_insertPS.bindValue(":last_modified", item.lastModified);
     res = m_insertPS.exec();
     if (res) {
-        qDebug() << "CloudDriveModel::insertItemToDB insert done" << item << "res" << res << "numRowsAffected" << m_insertPS.numRowsAffected();
+        if (!suppressMessages) {
+            qDebug() << "CloudDriveModel::insertItemToDB insert done" << item << "res" << res << "numRowsAffected" << m_insertPS.numRowsAffected();
+        }
         m_db.commit();
 
         // Insert item to itemCache.
         m_itemCache->insert(getItemCacheKey(item.type, item.uid, item.localPath), item);
     } else {
-        qDebug() << "CloudDriveModel::insertItemToDB insert failed" << item << "res" << res << m_insertPS.lastError();
+        if (!suppressMessages) {
+            qDebug() << "CloudDriveModel::insertItemToDB insert failed" << item << "res" << res << m_insertPS.lastError();
+        }
     }
 
     return m_insertPS.numRowsAffected();
 }
 
-int CloudDriveModel::updateItemToDB(const CloudDriveItem item)
+int CloudDriveModel::updateItemToDB(const CloudDriveItem item, bool suppressMessages)
 {
     bool res;
 
@@ -1968,13 +3486,17 @@ int CloudDriveModel::updateItemToDB(const CloudDriveItem item)
     m_updatePS.bindValue(":last_modified", item.lastModified);
     res = m_updatePS.exec();
     if (res) {
-        qDebug() << "CloudDriveModel::updateItemToDB update done" << item << "res" << res << "numRowsAffected" << m_updatePS.numRowsAffected();
+        if (!suppressMessages) {
+            qDebug() << "CloudDriveModel::updateItemToDB update done" << item << "res" << res << "numRowsAffected" << m_updatePS.numRowsAffected();
+        }
         m_db.commit();
 
         // Insert item to itemCache.
         m_itemCache->insert(getItemCacheKey(item.type, item.uid, item.localPath), item);
     } else {
-        qDebug() << "CloudDriveModel::updateItemToDB update failed" << item << "res" << res << m_updatePS.lastError();
+        if (!suppressMessages) {
+            qDebug() << "CloudDriveModel::updateItemToDB update failed" << item << "res" << res << m_updatePS.lastError();
+        }
     }
 
     return m_updatePS.numRowsAffected();
@@ -2072,9 +3594,9 @@ int CloudDriveModel::countItemByTypeAndUidAndRemotePathFromDB(CloudDriveModel::C
 void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint64 bytesTotal)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
-    job.bytes = bytesSent;
-    job.bytesTotal = bytesTotal;
-    m_cloudDriveJobs->insert(nonce, job);
+//    qDebug() << "CloudDriveModel::uploadProgressFilter" << nonce << getOperationName(job.operation) << bytesSent << bytesTotal << job.uploadOffset;
+    job.bytes = job.uploadOffset + bytesSent; // Add job.uploadOffset to support filePutResume.
+    updateJob(job);
 
     emit uploadProgress(nonce, bytesSent, bytesTotal);
 }
@@ -2082,9 +3604,9 @@ void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint
 void CloudDriveModel::downloadProgressFilter(QString nonce, qint64 bytesReceived, qint64 bytesTotal)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
-    job.bytes = bytesReceived;
-    job.bytesTotal = bytesTotal;
-    m_cloudDriveJobs->insert(nonce, job);
+//    qDebug() << "CloudDriveModel::downloadProgressFilter" << nonce << getOperationName(job.operation) << bytesReceived << bytesTotal << job.downloadOffset;
+    job.bytes = job.downloadOffset + bytesReceived; // Add job.downloadOffset to support fileGetResume.
+    updateJob(job);
 
     emit downloadProgress(nonce, bytesReceived, bytesTotal);
 }
@@ -2092,153 +3614,237 @@ void CloudDriveModel::downloadProgressFilter(QString nonce, qint64 bytesReceived
 void CloudDriveModel::jobDone() {
     mutex.lock();
     runningJobCount--;
+    runningJobCount = (runningJobCount < 0) ? 0 : runningJobCount;
     mutex.unlock();
 
     qDebug() << "CloudDriveModel::jobDone runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count();
-
-    // Refresh if no more running jobs and jobs in queue.
-    if (runningJobCount <= 0 && m_jobQueue->count() <= 0) {
-        emit refreshRequestSignal();
-    }
-
-    emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), getItemCount());
-    emit proceedNextJobSignal();
 }
 
 void CloudDriveModel::proceedNextJob() {
-    // TODO delay start by process events.
-    QApplication::processEvents();
-
-    if (m_thread.isRunning()) return;
-
     // Proceed next job in queue. Any jobs which haven't queued will be ignored.
-    qDebug() << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count();
-    if (runningJobCount >= MaxRunningJobCount || m_jobQueue->count() <= 0 || m_isSuspended) {
+    if (runningJobCount > 0) {
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount
+                 << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount()
+                 << "m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count() << "m_isSuspended" << m_isSuspended;
+    }
+
+    // Emit status signal.
+    emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), m_cloudDriveJobs->count(), getItemCount());
+
+    if (runningJobCount >= MaxRunningJobCount || m_jobQueue->count() <= 0 || m_isSuspended || m_isAborted) {
+        // Check if there is no running job and is aborted.
+        if (runningJobCount <= 0 && m_isAborted) {
+            QApplication::quit();
+        }
+
         return;
     }
 
+    // TODO Check retryCount before proceed.
     QString nonce = m_jobQueue->dequeue();
-    qDebug() << "CloudDriveModel::proceedNextJob jobId " << nonce;
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
-
+//    job.isRunning = true; // It will be set by dispatchJob() invoked by thread.
+    job.retryCount++;
+    updateJob(job);
+    // Increase runningJobCount.
     mutex.lock();
     runningJobCount++;
     mutex.unlock();
+    qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "operation" << getOperationName(job.operation) << "runningJobCount" << runningJobCount;
 
-    // TODO
-    // If job.type==Dropbox, call DropboxClient.run() directly.
-    // If job.type==Any, start thread.
+    // Dispatch job.
+    CloudDriveModelThread *t = new CloudDriveModelThread(this);
+    t->setNonce(nonce); // Set job ID to thread. It will invoke parent's dispatchJob later.
+    t->setDirectInvokation(false);
 
+    // These are blocking operations.
     switch (job.operation) {
     case LoadCloudDriveItems:
-        // Execute logic asynchronously.
-        // Configure thread.
-        m_thread.setHashFilePath(ITEM_DAT_PATH);
-        m_thread.setNonce(job.jobId);
-        m_thread.setRunMethod(job.operation);
-        m_thread.setCloudDriveItems(m_cloudDriveItems);
-        m_thread.start();
-        break;
+    case LoadCloudDriveJobs:
     case InitializeDB:
-        // Execute initialize locally.
-        initializeDB(job.jobId);
-        break;
-    case FileGet:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->fileGet(job.jobId, job.uid, job.remoteFilePath, job.localFilePath);
-            break;
-        }
-        break;
-    case FilePut:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->filePut(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
-            break;
-        }
-        break;
-    case Metadata:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->metadata(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        }
-        break;
-    case Browse:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->browse(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        }
-        break;
-    case RequestToken:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->requestToken(job.jobId);
-            break;
-        }
-        break;
-    case Authorize:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->authorize(job.jobId);
-            break;
-        }
-        break;
-    case AccessToken:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->accessToken(job.jobId);
-            break;
-        }
-        break;
-    case AccountInfo:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->accountInfo(job.jobId, job.uid);
-            break;
-        }
-        break;
-    case CreateFolder:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->createFolder(job.jobId, job.uid, job.localFilePath, job.remoteFilePath);
-            break;
-        }
-        break;
-    case MoveFile:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->moveFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
-            break;
-        }
-        break;
-    case CopyFile:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->copyFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath);
-            break;
-        }
-        break;
-    case DeleteFile:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->deleteFile(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        }
-        break;
-    case ShareFile:
-        switch (job.type) {
-        case Dropbox:
-            dbClient->shareFile(job.jobId, job.uid, job.remoteFilePath);
-            break;
-        }
+    case InitializeCloudClients:
+    case Disconnect:
+    case SyncFromLocal:
+    case MigrateFilePut:
+        t->setDirectInvokation(true);
         break;
     }
 
-    emit proceedNextJobSignal();
+    QThreadPool::globalInstance()->start(t);
+    qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "started. runningJobCount" << runningJobCount << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount();
 }
 
+CloudDriveClient * CloudDriveModel::getCloudClient(ClientTypes type)
+{
+    switch (type) {
+    case Dropbox:
+        return dbClient;
+    case SkyDrive:
+        return skdClient;
+    case GoogleDrive:
+        return gcdClient;
+    case Ftp:
+        return ftpClient;
+    case WebDAV:
+        return webDavClient;
+    default:
+        qDebug() << "CloudDriveModel::getCloudClient type" << type << "is not implemented yet.";
+    }
+
+    return 0;
+}
+
+CloudDriveClient * CloudDriveModel::getCloudClient(const int type)
+{
+    switch (type) {
+    case Dropbox:
+        return dbClient;
+    case SkyDrive:
+        return skdClient;
+    case GoogleDrive:
+        return gcdClient;
+    case Ftp:
+        return ftpClient;
+    case WebDAV:
+        return webDavClient;
+    default:
+        qDebug() << "CloudDriveModel::getCloudClient type" << type << "is not implemented yet.";
+    }
+
+    return 0;
+}
+
+void CloudDriveModel::dispatchJob(const QString jobId)
+{
+    dispatchJob(m_cloudDriveJobs->value(jobId));
+}
+
+void CloudDriveModel::dispatchJob(CloudDriveJob job)
+{
+    // NOTE This method will be queued and invoked by main eventloop because CloudDriveModelThread.run() invoked as queue connection to its parent(CloudDriveModel).
+    // Generalize cloud client.
+    CloudDriveClient *cloudClient = getCloudClient(job.type);
+
+    qDebug() << "CloudDriveModel::dispatchJob thread" << QThread::currentThread() << "job" << job.jobId << job.operation << getOperationName(job.operation) << job.type << (cloudClient == 0 ? "no client" : cloudClient->objectName());
+
+    // Update job status and emit signal to update UI.
+    job.isRunning = true;
+    updateJob(job);
+
+    switch (job.operation) {
+    case LoadCloudDriveItems:
+        loadCloudDriveItems(job.jobId);
+        break;
+    case LoadCloudDriveJobs:
+        loadCloudDriveJobs(job.jobId);
+        break;
+    case InitializeDB:
+        initializeDB(job.jobId);
+        break;
+    case InitializeCloudClients:
+        initializeCloudClients(job.jobId);
+        break;
+    case FileGet:
+        cloudClient->fileGet(job.jobId, job.uid, job.remoteFilePath, job.localFilePath);
+        break;
+    case FilePut:
+        cloudClient->filePut(job.jobId, job.uid, job.localFilePath, job.remoteFilePath, job.newRemoteFileName);
+        break;
+    case Metadata:
+        cloudClient->metadata(job.jobId, job.uid, job.remoteFilePath);
+        break;
+    case Browse:
+        cloudClient->browse(job.jobId, job.uid, job.remoteFilePath);
+        break;
+    case RequestToken:
+        cloudClient->requestToken(job.jobId);
+        break;
+    case Authorize:
+        cloudClient->authorize(job.jobId, "");
+        break;
+    case AccessToken:
+        cloudClient->accessToken(job.jobId, accessTokenPin);
+        break;
+    case RefreshToken:
+        cloudClient->refreshToken(job.jobId, job.uid);
+        break;
+    case AccountInfo:
+        cloudClient->accountInfo(job.jobId, job.uid);
+        break;
+    case Quota:
+        cloudClient->quota(job.jobId, job.uid);
+        break;
+    case CreateFolder:
+        cloudClient->createFolder(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFileName);
+        break;
+    case MoveFile:
+        cloudClient->moveFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath, job.newRemoteFileName);
+        break;
+    case CopyFile:
+        cloudClient->copyFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath, job.newRemoteFileName);
+        break;
+    case DeleteFile:
+        cloudClient->deleteFile(job.jobId, job.uid, job.remoteFilePath);
+        break;
+    case ShareFile:
+        cloudClient->shareFile(job.jobId, job.uid, job.remoteFilePath);
+        break;
+    case Delta:
+        cloudClient->delta(job.jobId, job.uid, false);
+        break;
+    case MigrateFile:
+        cloudClient->browse(job.jobId, job.uid, job.remoteFilePath);
+        break;
+    case MigrateFilePut:
+        // TODO Notify user before start migration.
+        // Check if it's resumable for any file size.
+        if (cloudClient->isFileGetResumable() && getCloudClient(job.targetType)->isFilePutResumable()) {
+            migrateFileResume_Block(job.jobId, getClientType(job.type), job.uid, job.remoteFilePath, job.bytesTotal, getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
+        } else {
+            migrateFile_Block(job.jobId, getClientType(job.type), job.uid, job.remoteFilePath, job.bytesTotal, getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
+        }
+        break;
+    case Disconnect:
+        removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
+        refreshRequestFilter(job.jobId);
+        break;
+    case SyncFromLocal:
+        syncFromLocal_Block(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, job.modelIndex, job.forcePut, true, job.data);
+        refreshRequestFilter(job.jobId);
+        break;
+    case FileGetResume:
+        cloudClient->fileGetResume(job.jobId, job.uid, job.remoteFilePath, job.localFilePath, job.downloadOffset);
+        break;
+    case FileGetCommit:
+        // TODO
+        break;
+    case FilePutResume:
+        cloudClient->filePutResume(job.jobId, job.uid, job.localFilePath, job.remoteFilePath, job.newRemoteFileName, job.uploadId, job.uploadOffset);
+        break;
+    case FilePutCommit:
+        cloudClient->filePutCommit(job.jobId, job.uid, job.newRemoteFilePath, job.uploadId);
+        break;
+    }
+}
+
+void CloudDriveModel::suspendJob(const QString jobId)
+{
+    // Suspend job.
+    CloudDriveJob job = m_cloudDriveJobs->value(jobId);
+    job.isRunning = false;
+    updateJob(job);
+}
+
+void CloudDriveModel::resumeJob(const QString jobId)
+{
+    // Enqueue job.
+    CloudDriveJob job = m_cloudDriveJobs->value(jobId);
+    if (!job.isRunning) {
+        m_jobQueue->enqueue(jobId);
+    }
+}
+
+/*
 void CloudDriveModel::threadFinishedFilter()
 {
     // Notify job done.
@@ -2258,13 +3864,14 @@ void CloudDriveModel::loadCloudDriveItemsFilter(QString nonce)
 
     emit loadCloudDriveItemsFinished(nonce);
 }
+*/
 
 void CloudDriveModel::requestTokenReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -2277,7 +3884,7 @@ void CloudDriveModel::authorizeRedirectFilter(QString nonce, QString url, QStrin
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
@@ -2290,30 +3897,37 @@ void CloudDriveModel::accessTokenReplyFilter(QString nonce, int err, QString err
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
+
+    if (err == QNetworkReply::NoError) {
+        // Check if job.nextJobId is specified. (From quota request)
+        if (job.nextJobId != "") {
+            // Insert job.nextJobId to first in queue.
+            qDebug() << "CloudDriveModel::accessTokenReplyFilter insert job.nextJobId" << job.nextJobId;
+            m_jobQueue->insert(0, job.nextJobId);
+        } else {
+            QHash<QString, QString> m_paramMap;
+
+            // Proceed to accountInfo for authorization's accessToken.
+            switch (job.type) {
+            case Dropbox:
+                // Dropbox provides uid but no email yet. Get email from accountInfo.
+                foreach (QString s, msg.split('&')) {
+                    QStringList c = s.split('=');
+                    m_paramMap[c.at(0)] = c.at(1);
+                }
+//                qDebug() << "CloudDriveModel::accessTokenReplyFilter Dropbox uid" << m_paramMap["uid"];
+
+                accountInfo(Dropbox, m_paramMap["uid"]);
+                break;
+            default:
+                accountInfo(getClientType(job.type), job.uid);
+            }
+        }
+    }
 
     // Notify job done.
     jobDone();
-
-    // Get accountInfo.
-    if (err == QNetworkReply::NoError) {
-        QHash<QString, QString> m_paramMap;
-        foreach (QString s, msg.split('&')) {
-            QStringList c = s.split('=');
-            m_paramMap[c.at(0)] = c.at(1);
-        }
-
-        QString uid = m_paramMap["uid"];
-
-        qDebug() << "CloudDriveModel::accessTokenReplyFilter uid" << uid;
-
-        // Get email from accountInfo
-        switch (job.type) {
-        case Dropbox:
-            accountInfo(Dropbox, uid);
-            break;
-        }
-    }
 
     emit accessTokenReplySignal(nonce, err, errMsg, msg);
 }
@@ -2323,10 +3937,105 @@ void CloudDriveModel::accountInfoReplyFilter(QString nonce, int err, QString err
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
     job.isRunning = false;
-    m_cloudDriveJobs->insert(nonce, job);
+    updateJob(job);
 
     // Notify job done.
     jobDone();
 
     emit accountInfoReplySignal(nonce, err, errMsg, msg);
+}
+
+void CloudDriveModel::quotaReplyFilter(QString nonce, int err, QString errMsg, QString msg, qint64 normalBytes, qint64 sharedBytes, qint64 quotaBytes)
+{
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    qDebug() << "CloudDriveModel::quotaReplyFilter thread" << QThread::currentThread() << "job" << job.jobId;
+
+    job.isRunning = false;
+    updateJob(job);
+
+    // Notify job done.
+    jobDone();
+
+    emit quotaReplySignal(nonce, err, errMsg, msg, normalBytes, sharedBytes, quotaBytes);
+}
+
+void CloudDriveModel::createTempPath()
+{
+    QFileInfo tempPathInfo(m_settings.value("temp.path", TEMP_PATH).toString());
+    if (!tempPathInfo.isDir()) {
+        if (QDir::home().mkpath(tempPathInfo.absoluteFilePath())) {
+            qDebug() << "CloudDriveModel::createTempPath" << tempPathInfo.absoluteFilePath() << "done";
+        } else {
+            qDebug() << "CloudDriveModel::createTempPath" << tempPathInfo.absoluteFilePath() << "failed";
+        }
+    }
+}
+
+int CloudDriveModel::getSortFlag()
+{
+    return m_sortFlag;
+}
+
+void CloudDriveModel::setSortFlag(int sortFlag)
+{
+    m_sortFlag = sortFlag;
+
+    // Sorting.
+    QString msg = sortJsonText(m_cachedJsonText, m_sortFlag);
+
+    emit browseReplySignal(createNonce(), 0, "Set sort flag", msg);
+}
+
+QString CloudDriveModel::sortJsonText(QString &jsonText, int sortFlag)
+{
+    QScriptEngine engine;
+    QScriptValue parsedJsonObj = engine.evaluate("(" + jsonText + ")");
+
+    qDebug() << "CloudDriveModel::sortJsonText parsedJsonObj.children.length" << parsedJsonObj.property("children").property("length").toInteger();
+
+    QList<QScriptValue> itemList;
+    for (int i = 0; i < parsedJsonObj.property("children").property("length").toInteger(); i++) {
+        itemList.append(parsedJsonObj.property("children").property(i));
+    }
+
+    sortItemList(itemList, sortFlag);
+
+    QScriptValue sortedChildren = engine.newArray();
+    for (int i = 0; i < itemList.count(); i++) {
+        sortedChildren.setProperty(i, itemList.at(i));
+    }
+    parsedJsonObj.setProperty("children", sortedChildren);
+    qDebug() << "CloudDriveModel::sortJsonText sorted parsedJsonObj.children.length" << parsedJsonObj.property("children").property("length").toInteger();
+
+    return stringifyScriptValue(engine, parsedJsonObj);
+}
+
+void CloudDriveModel::sortItemList(QList<QScriptValue> &itemList, int sortFlag)
+{
+    QDateTime start = QDateTime::currentDateTime();
+    qDebug() << start.toString(Qt::ISODate) << "CloudDriveModel::sortItemList sortFlag" << sortFlag << "itemList.length()" << itemList.length();
+
+    switch (sortFlag) {
+    case SortByName:
+        qSort(itemList.begin(), itemList.end(), nameLessThan);
+        break;
+    case SortByTime:
+        qSort(itemList.begin(), itemList.end(), timeGreaterThan);
+        break;
+    case SortByType:
+        qSort(itemList.begin(), itemList.end(), typeLessThan);
+        break;
+    case SortBySize:
+        qSort(itemList.begin(), itemList.end(), sizeGreaterThan);
+        break;
+    }
+
+    QDateTime end = QDateTime::currentDateTime();
+    qDebug() << end.toString(Qt::ISODate) << "CloudDriveModel::sortItemList done elapse" << start.msecsTo(end) << "ms. itemList.length()" << itemList.length();
+}
+
+QString CloudDriveModel::stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj)
+{
+    return engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
 }

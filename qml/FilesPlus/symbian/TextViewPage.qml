@@ -44,8 +44,7 @@ Page {
             iconSource: (!window.platformInverted) ? "print.svg" : "print_inverted.svg"
             platformInverted: window.platformInverted
             onClicked: {
-                var p = pageStack.find(function (page) { return page.name == "folderPage"; });
-                if (p) p.printFileSlot(textViewPage.filePath, -1);
+                gcpClient.printFileSlot(textViewPage.filePath, -1);
             }
         }
     }

@@ -60,9 +60,9 @@ void Monitoring::log()
 
 void Monitoring::start()
 {
-    filePath = QString("E:/FilesPlus_Heap_%1.csv").arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
+    filePath = QString("E:/FilesPlus_Heap_%1.csv").arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
     monitorFile = new QFile(filePath);
-    if (monitorFile->open(QFile::WriteOnly | QIODevice::Text)) {
+    if (monitorFile->open(QFile::Append | QIODevice::Text)) {
         qDebug() << "Monitoring::Monitoring open file" << monitorFile->fileName();
         out.setDevice(monitorFile);
         out << "Time,UserCountAllocCells,FreeCells,UserHeapCount,UserHeapSize,UserHeapMaxLength,UserAvailable,CpuDelta\n";

@@ -15,7 +15,7 @@ public:
 //    "mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody
 //    "sms:" + selectedNumber + "?body=" + messageBody
 
-    Q_INVOKABLE bool sendEmail(const QString &recipientEmail, const QString &subject, const QString &body, const QString localFilePath);
+    Q_INVOKABLE bool sendEmail(const QString &recipientEmail, const QString &subject, const QString &body, const QString localFilePath = "");
     Q_INVOKABLE bool sendSMS(const QString &recipientNumber, const QString &body);
 signals:
     

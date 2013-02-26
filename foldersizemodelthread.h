@@ -61,7 +61,7 @@ public:
     void getDirContent(const QString dirPath, QList<FolderSizeItem> &itemList);
     void sortItemList(QList<FolderSizeItem> &itemList, bool sortAll = true);
     bool isDirSizeCacheExisting();
-    void removeDirSizeCache(const QString key);
+    int removeDirSizeCache(const QString key);
     bool changeDir(const QString dirName, const int sortFlag = -1);
     FolderSizeItem getItem(const QFileInfo fileInfo);
 
@@ -107,7 +107,7 @@ private:
 
     // Thread methods.
     void loadDirSizeCache();
-    void fetchDirSize(const bool clearCache = false);
+    void fetchDirSize(const QString startPath, const bool clearCache = false);
     bool move(const QString sourcePath, const QString targetPath);
     bool copy(int method, const QString sourcePath, const QString targetPath);
     bool copyFile(int method, const QString sourcePath, const QString targetPath);

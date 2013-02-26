@@ -1,71 +1,68 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
 
-Menu {
+MenuWithIcon {
     id: markMenu
     z: 2
 
     property variant disabledMenus: []
+    property bool isMarkAll: true
+
+    signal markAll()
+    signal copyMarkedItems()
+    signal cutMarkedItems()
+    signal deleteMarkedItems()
+    signal syncMarkedItems()
 
     content: MenuLayout {
         id: menuLayout
 
-        MenuItem {
-            id: markAll
+        // TODO Alias for fixing incorrect children.
+        default property alias children: menuLayout.menuChildren
 
-            property bool isMarkAll: true
-
+        MenuItemWithIcon {
+            id: toggleMarkAll
+            name: "toggleMarkAll"
             text: (isMarkAll) ? appInfo.emptyStr+qsTr("Mark all") : appInfo.emptyStr+qsTr("Unmark all")
             onClicked: {
-                if (isMarkAll) {
-                    fsListView.markAll();
-                } else {
-                    fsListView.unmarkAll();
-                }
-                isMarkAll = !isMarkAll;
+                markAll();
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: copyMarked
+            name: "copyMarked"
             text: appInfo.emptyStr+qsTr("Copy marked items")
             onClicked: {
-                fsListView.copyMarkedItems();
-                fsListView.state = "";
+                copyMarkedItems();
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: cutMarked
+            name: "cutMarked"
             text: appInfo.emptyStr+qsTr("Cut marked items")
             onClicked: {
-                fsListView.cutMarkedItems();
-                fsListView.state = "";
+                cutMarkedItems();
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: deleteMarked
+            name: "deleteMarked"
             text: appInfo.emptyStr+qsTr("Delete marked items")
             onClicked: {
-                fsListView.deleteMarkedItems();
-                fsListView.state = "";
+                deleteMarkedItems();
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: syncMarked
+            name: "syncMarked"
             text: appInfo.emptyStr+qsTr("Sync marked items")
             onClicked: {
-                fsListView.syncMarkedItems();
-                fsListView.state = "";
+                syncMarkedItems();
             }
-        }
-    }
-
-    onStatusChanged: {
-        if (status == DialogStatus.Opening) {
-            markAll.isMarkAll = !fsListView.areAllItemChecked();
         }
     }
 }

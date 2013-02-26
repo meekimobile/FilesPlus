@@ -23,8 +23,9 @@ Dialog {
     buttons: Row {
         id: buttonRow
         width: parent.width - 20
-        anchors.horizontalCenter: parent.horizontalCenter
+        height: 80
         spacing: 5
+        anchors.horizontalCenter: parent.horizontalCenter
 
         property int buttonWidth: (width / buttonTexts.length) - spacing
 
@@ -33,6 +34,7 @@ Dialog {
             Button {
                 text: modelData
                 width: buttonRow.buttonWidth
+                anchors.verticalCenter: parent.verticalCenter
                 onClicked: {
                     buttonClicked(index);
                     close();
@@ -41,24 +43,25 @@ Dialog {
         }
     }
 
-    title: Row {
+    title: Item {
         id: titleRow
-        width: parent.width - 20
-        height: implicitHeight
-        anchors.horizontalCenter: parent.horizontalCenter
+        width: parent.width
+        height: 60
         Text {
             id: title
             color: "white"
             font.pointSize: 20
-            wrapMode: Text.Wrap
             elide: Text.ElideRight
             width: parent.width - titleIcon.width
             height: implicitHeight
+            anchors.verticalCenter: parent.verticalCenter
         }
         Image {
             id: titleIcon
             width: 48
             height: 48
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
         }
 
         MouseArea {
@@ -98,6 +101,7 @@ Dialog {
         }
     }
     
+    // REMARK Avoid override to prevent click outside as reject.
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
             opening();

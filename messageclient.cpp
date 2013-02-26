@@ -10,7 +10,7 @@ bool MessageClient::sendEmail(const QString &recipientEmail, const QString &subj
     QMessage msg;
     msg.setType(QMessage::Email);
     msg.setParentAccountId(QMessageAccount::defaultAccount(msg.type()));
-    msg.setTo(QMessageAddress(QMessageAddress::Email, recipientEmail));
+    if (recipientEmail != "") msg.setTo(QMessageAddress(QMessageAddress::Email, recipientEmail));
     msg.setSubject(subject);
     msg.setBody(body);
 
@@ -22,7 +22,7 @@ bool MessageClient::sendSMS(const QString &recipientNumber, const QString &body)
     QMessage msg;
     msg.setType(QMessage::Sms);
     msg.setParentAccountId(QMessageAccount::defaultAccount(msg.type()));
-    msg.setTo(QMessageAddress(QMessageAddress::Phone, recipientNumber));
+    if (recipientNumber != "") msg.setTo(QMessageAddress(QMessageAddress::Phone, recipientNumber));
     msg.setBody(body);
 
     m_msgService->compose(msg);

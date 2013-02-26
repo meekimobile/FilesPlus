@@ -4,7 +4,7 @@ import "Utility.js" as Utility
 Item {
     id: listItem
     width: parent.width
-    height: 70
+    height: 80
     
     property int mouseX
     property int mouseY

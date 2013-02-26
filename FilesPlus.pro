@@ -1,10 +1,10 @@
-# Add network, script
-QT += declarative network script sql
+# Add modules
+QT += declarative network script sql xml
 
 # Add more folders to ship with the application, here
-#folder_01.source = qml/FilesPlus
-#folder_01.target = qml
-#DEPLOYMENTFOLDERS = folder_01
+i18n_folder.source = i18n/*.qm
+i18n_folder.target = i18n
+DEPLOYMENTFOLDERS = i18n_folder
 
 # Additional import path used to resolve QML modules in Creator's code model
 QML_IMPORT_PATH =
@@ -13,7 +13,7 @@ QML_IMPORT_PATH =
 #symbian:TARGET.UID3 = 0xE11DCC9D
 symbian:TARGET.UID3 = 0x20064E45
 
-VERSION = 1.1.2
+VERSION = 1.2.0
 
 # Smart Installer package's UID
 # This UID is from the protected range and therefore the package will
@@ -28,7 +28,8 @@ symbian:TARGET.CAPABILITY += NetworkServices ReadUserData WriteUserData LocalSer
 #symbian:TARGET.EPOCHEAPSIZE = 0x800000 0x2000000
 # Set heap size. min 8M max 64M.
 symbian:TARGET.EPOCHEAPSIZE = 0x800000 0x4000000
-#symbian:TARGET.EPOCSTACKSIZE  0x14000
+symbian:TARGET.EPOCSTACKSIZE = 0x100000 # 1M
+#symbian:TARGET.EPOCSTACKSIZE = 0x14000 # 80K
 
 # If your application uses the Qt Mobility libraries, uncomment the following
 # lines and add the respective components to the MOBILITY variable.
@@ -73,6 +74,7 @@ SOURCES += main.cpp \
     clouddrivejob.cpp \
     qnetworkreplywrapper.cpp \
     localfileimageprovider.cpp \
+    remoteimageprovider.cpp \
     clouddrivemodelthread.cpp \
     foldersizemodelthread.cpp \
     monitoring.cpp \
@@ -82,7 +84,14 @@ SOURCES += main.cpp \
     messageclient.cpp \
     clipboardmodel.cpp \
     customqnetworkaccessmanagerfactory.cpp \
-    customqnetworkaccessmanager.cpp
+    customqnetworkaccessmanager.cpp \
+    ftpclient.cpp \
+    skydriveclient.cpp \
+    sleeper.cpp \
+    qftpwrapper.cpp \
+    clouddriveclient.cpp \
+    webdavclient.cpp \
+    cacheimageworker.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -104,6 +113,7 @@ HEADERS += \
     clouddrivejob.h \
     qnetworkreplywrapper.h \
     localfileimageprovider.h \
+    remoteimageprovider.h \
     clouddrivemodelthread.h \
     foldersizemodelthread.h \
     monitoring.h \
@@ -113,7 +123,14 @@ HEADERS += \
     messageclient.h \
     clipboardmodel.h \
     customqnetworkaccessmanagerfactory.h \
-    customqnetworkaccessmanager.h
+    customqnetworkaccessmanager.h \
+    ftpclient.h \
+    skydriveclient.h \
+    sleeper.h \
+    qftpwrapper.h \
+    clouddriveclient.h \
+    webdavclient.h \
+    cacheimageworker.h
 
 OTHER_FILES += \
     qtc_packaging/debian_harmattan/rules \

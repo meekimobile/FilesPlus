@@ -55,10 +55,8 @@
         <file alias="qml/FilesPlus/FolderPieInfo.qml">qml/FilesPlus/symbian/FolderPieInfo.qml</file>
         <file alias="qml/FilesPlus/main.qml">qml/FilesPlus/symbian/main.qml</file>
         <file alias="qml/FilesPlus/MainMenu.qml">qml/FilesPlus/symbian/MainMenu.qml</file>
-        <file alias="qml/FilesPlus/MenuItemWithCheck.qml">qml/FilesPlus/symbian/MenuItemWithCheck.qml</file>
         <file alias="qml/FilesPlus/MessageDialog.qml">qml/FilesPlus/symbian/MessageDialog.qml</file>
         <file alias="qml/FilesPlus/MoreApps.qml">qml/FilesPlus/symbian/MoreApps.qml</file>
-        <file alias="qml/FilesPlus/SettingMenu.qml">qml/FilesPlus/symbian/SettingMenu.qml</file>
         <file alias="qml/FilesPlus/SortByMenu.qml">qml/FilesPlus/symbian/SortByMenu.qml</file>
         <file alias="qml/FilesPlus/Splash.qml">qml/FilesPlus/symbian/Splash.qml</file>
         <file alias="qml/FilesPlus/ImageViewPage.qml">qml/FilesPlus/symbian/ImageViewPage.qml</file>
@@ -77,6 +75,8 @@
         <file alias="qml/FilesPlus/AuthPage.qml">qml/FilesPlus/symbian/AuthPage.qml</file>
         <file alias="qml/FilesPlus/PrinterSelectionDialog.qml">qml/FilesPlus/symbian/PrinterSelectionDialog.qml</file>
         <file alias="qml/FilesPlus/MarkAllMenu.qml">qml/FilesPlus/symbian/MarkAllMenu.qml</file>
+        <file alias="qml/FilesPlus/MenuWithIcon.qml">qml/FilesPlus/symbian/MenuWithIcon.qml</file>
+        <file alias="qml/FilesPlus/MenuItemWithIcon.qml">qml/FilesPlus/symbian/MenuItemWithIcon.qml</file>
         <file>qml/FilesPlus/folder_list.svg</file>
         <file>qml/FilesPlus/notes_list.svg</file>
         <file>qml/FilesPlus/photos_list.svg</file>
@@ -102,9 +102,6 @@
         <file>qml/FilesPlus/rename_inverted.svg</file>
         <file>qml/FilesPlus/toolbar_extension_inverted.svg</file>
         <file>qml/FilesPlus/trim_inverted.svg</file>
-        <file alias="FilesPlus_ru.qm">i18n/FilesPlus_ru.qm</file>
-        <file alias="FilesPlus_zh.qm">i18n/FilesPlus_zh.qm</file>
-        <file alias="FilesPlus_en.qm">i18n/FilesPlus_en.qm</file>
         <file>qml/FilesPlus/question_inverted.svg</file>
         <file>qml/FilesPlus/question.svg</file>
         <file alias="qml/FilesPlus/BluetoothSelectionDialog.qml">qml/FilesPlus/symbian/BluetoothSelectionDialog.qml</file>
@@ -118,8 +115,6 @@
         <file>qml/FilesPlus/lock.svg</file>
         <file alias="qml/FilesPlus/TouchScrollBar.qml">qml/FilesPlus/symbian/TouchScrollBar.qml</file>
         <file>qml/FilesPlus/save_inverted.svg</file>
-        <file alias="FilesPlus_it.qm">i18n/FilesPlus_it.qm</file>
-        <file alias="FilesPlus_de.qm">i18n/FilesPlus_de.qm</file>
         <file alias="qml/FilesPlus/CloudDrivePathDialog.qml">qml/FilesPlus/symbian/CloudDrivePathDialog.qml</file>
         <file>qml/FilesPlus/cloud_options.svg</file>
         <file>qml/FilesPlus/cloud_options_inverted.svg</file>
@@ -136,5 +131,31 @@
         <file>qml/FilesPlus/search_inverted.svg</file>
         <file>qml/FilesPlus/search.svg</file>
         <file alias="qml/FilesPlus/NameFilterPanel.qml">qml/FilesPlus/symbian/NameFilterPanel.qml</file>
+        <file>qml/FilesPlus/skydrive_icon.png</file>
+        <file>qml/FilesPlus/ftp_icon.png</file>
+        <file alias="qml/FilesPlus/CloudFolderPage.qml">qml/FilesPlus/symbian/CloudFolderPage.qml</file>
+        <file alias="qml/FilesPlus/CloudListItem.qml">qml/FilesPlus/symbian/CloudListItem.qml</file>
+        <file alias="qml/FilesPlus/CloudFolderMenu.qml">qml/FilesPlus/symbian/CloudFolderMenu.qml</file>
+        <file alias="qml/FilesPlus/DriveMenu.qml">qml/FilesPlus/symbian/DriveMenu.qml</file>
+        <file alias="qml/FilesPlus/ChartMenu.qml">qml/FilesPlus/symbian/ChartMenu.qml</file>
+        <file alias="qml/FilesPlus/ToolBarButton.qml">qml/FilesPlus/symbian/ToolBarButton.qml</file>
+        <file>qml/FilesPlus/next_inverted.svg</file>
+        <file>qml/FilesPlus/bluetooth_paired.svg</file>
+        <file>qml/FilesPlus/bluetooth_paired_inverted.svg</file>
+        <file alias="qml/FilesPlus/RenameDialog.qml">qml/FilesPlus/symbian/RenameDialog.qml</file>
+        <file alias="qml/FilesPlus/NewFolderDialog.qml">qml/FilesPlus/symbian/NewFolderDialog.qml</file>
+        <file alias="qml/FilesPlus/MessageLoggerPage.qml">qml/FilesPlus/symbian/MessageLoggerPage.qml</file>
+        <file alias="qml/FilesPlus/MessageLoggerModel.qml">qml/FilesPlus/symbian/MessageLoggerModel.qml</file>
+        <file alias="qml/FilesPlus/FileActionDialog.qml">qml/FilesPlus/symbian/FileActionDialog.qml</file>
+        <file>qml/FilesPlus/internet.svg</file>
+        <file>qml/FilesPlus/internet_inverted.svg</file>
+        <file>qml/FilesPlus/webdav_icon.png</file>
+        <file>qml/FilesPlus/info.svg</file>
+        <file>qml/FilesPlus/info_inverted.svg</file>
+        <file alias="qml/FilesPlus/FilePropertiesDialog.qml">qml/FilesPlus/symbian/FilePropertiesDialog.qml</file>
+        <file alias="qml/FilesPlus/CloudMenu.qml">qml/FilesPlus/symbian/CloudMenu.qml</file>
+        <file>qml/FilesPlus/cloud_add.svg</file>
+        <file>qml/FilesPlus/cloud_add_inverted.svg</file>
+        <file>qml/FilesPlus/splash_360x640.png</file>
     </qresource>
 </RCC>

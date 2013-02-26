@@ -5,6 +5,11 @@ MenuWithIcon {
     id: driveMenu
     z: 2
 
+    signal openSettings()
+    signal openMoreApps()
+    signal openAbout()
+    signal quit()
+
     content: MenuLayout {
         id: menuLayout
 
@@ -12,34 +17,32 @@ MenuWithIcon {
         default property alias children: menuLayout.menuChildren
 
         MenuItemWithIcon {
+            name: "settings"
             text: appInfo.emptyStr+qsTr("Settings")
             platformSubItemIndicator: true
             onClicked: {
-//                settingMenu.open();
-                pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
-                pageStack.find(function (page) {
-                    if (page.name == "folderPage") {
-                        page.requestJobQueueStatusSlot();
-                    }
-                });
+                openSettings();
             }
         }
 
         MenuItemWithIcon {
+            name: "about"
             text: appInfo.emptyStr+qsTr("About")
             onClicked: {
-                pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
+                openAbout();
             }
         }
-                
+
 //        MenuItemWithIcon {
+//            name: "moreApps"
 //            text: appInfo.emptyStr+qsTr("More Apps")
 //            onClicked: {
-//                Qt.openUrlExternally("http://www.meeki.mobi/");
+//                openMoreApps();
 //            }
 //        }
-        
+
         MenuItemWithIcon {
+            name: "exit"
             text: appInfo.emptyStr+qsTr("Exit")
             onClicked: {
                 quit();

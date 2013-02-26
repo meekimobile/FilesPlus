@@ -1,5 +1,5 @@
-// import QtQuick 1.0 // to target S60 5th Edition or Maemo 5
 import QtQuick 1.1
+import com.nokia.meego 1.0
 import "Utility.js" as Utility
 
 Rectangle {
@@ -12,6 +12,7 @@ Rectangle {
     property variant driveTypeTexts: [appInfo.emptyStr+qsTr("No Drive"), appInfo.emptyStr+qsTr("Internal Drive"), appInfo.emptyStr+qsTr("Removable Drive"), appInfo.emptyStr+qsTr("Remote Drive"), appInfo.emptyStr+qsTr("Cdrom Drive"), appInfo.emptyStr+qsTr("Internal Flash Drive"), appInfo.emptyStr+qsTr("Ram Drive"), appInfo.emptyStr+qsTr("Cloud Drive")]
     property variant driveIcons:     ["", "device.svg", "memory_card.svg", "", "music_player_update.svg", "memory_card.svg", "device.svg", ""]
     property int currentIndex: driveGrid.currentIndex
+    property bool busy: false
 
     GridView {
         id: driveGrid
@@ -30,8 +31,16 @@ Rectangle {
         property string currentDriveName: ""
 
         onMovementStarted: {
-            if (currentItem) currentItem.state = "normal";
+            if (currentItem) {
+                busy = false;
+                currentItem.state = "normal";
+            }
         }
+    }
+
+    ScrollDecorator {
+        id: scrollbar
+        flickableItem: driveGrid
     }
 
     Gradient {
@@ -80,6 +89,7 @@ Rectangle {
                     source: (iconSource != "") ? iconSource : driveIcons[model.driveType]
                     anchors.verticalCenter: parent.verticalCenter
                     fillMode: Image.PreserveAspectFit
+                    smooth: true
                 }
 
                 Column {
@@ -93,7 +103,7 @@ Rectangle {
                         font.pointSize: 18
                         verticalAlignment: Text.AlignVCenter
                         elide: Text.ElideRight
-                        text: model.logicalDrive + "  (" + driveTypeTexts[model.driveType] + ")"
+                        text: ((model.name != "") ? model.name : model.logicalDrive) + "  (" + driveTypeTexts[model.driveType] + ")"
                     }
 
                     Rectangle {
@@ -117,7 +127,7 @@ Rectangle {
                         }
 
                         Rectangle {
-                            width: (model.totalSpace - model.availableSpace) / model.totalSpace * parent.width
+                            width: (model.totalSpace < 0) ? 0 : ((model.totalSpace - model.availableSpace) / model.totalSpace * parent.width)
                             height: parent.height
                             gradient: Gradient {
                                 GradientStop {
@@ -144,8 +154,7 @@ Rectangle {
                             horizontalAlignment: Text.AlignHCenter
                             style: Text.Outline
                             font.pointSize: 16
-                            text: appInfo.emptyStr+qsTr("Free") + ": " + Utility.formatFileSize(model.availableSpace, 1)
-                                  + " / " + appInfo.emptyStr+qsTr("Total") + ": " + Utility.formatFileSize(model.totalSpace, 1)
+                            text: appInfo.emptyStr+(model.totalSpace <= 0 ? qsTr("Not available") : (qsTr("Free") + ": " + Utility.formatFileSize(model.availableSpace, 1) + " / " + appInfo.emptyStr+qsTr("Total") + ": " + Utility.formatFileSize(model.totalSpace, 1)))
                         }
                     }
                 }
@@ -163,8 +172,13 @@ Rectangle {
                 acceptedButtons: Qt.LeftButton
 
                 onPressed: {
-                    driveCellItem.state = "highlight";
-                    driveGrid.currentIndex = index;
+                    if (!busy) {
+                        busy = true;
+                        driveCellItem.state = "highlight";
+                        driveGrid.currentIndex = index;
+                    } else {
+                        mouse.accepted = false;
+                    }
                 }
 
                 onClicked: {

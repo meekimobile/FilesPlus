@@ -16,6 +16,7 @@ public:
     
     Q_INVOKABLE int getDriveTypeInt(const QString &drive);
     Q_INVOKABLE QStringList getDriveList();
+    Q_INVOKABLE QString getPrivateDrive();
 
     Q_INVOKABLE QString getFileContent(const QString &localPath);
     Q_INVOKABLE int saveFileContent(const QString &localPath, const QString &text);
@@ -23,6 +24,7 @@ public:
     Q_INVOKABLE QVariant getFileAttribute(const QString &localPath, const QString &attributeName);
 
     Q_INVOKABLE QString getUrl(const QString absPath);
+    Q_INVOKABLE QString getCompletedUrl(const QString userInputLocation);
 signals:
     
 public slots:

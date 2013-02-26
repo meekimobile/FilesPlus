@@ -87,6 +87,6 @@ Rectangle {
     }
 
     Component.onDestruction: {
-        screen.allowedOrientations = Screen.All;
+        screen.allowedOrientations = (Screen.Portrait || Screen.Landscape); // Reset to default.
     }
 }

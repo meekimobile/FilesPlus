@@ -1,6 +1,7 @@
 #include <QDir>
-#include "systeminfohelper.h"
 #include <QDebug>
+#include <QDesktopServices>
+#include "systeminfohelper.h"
 
 SystemInfoHelper::SystemInfoHelper(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
@@ -81,6 +82,16 @@ QStringList SystemInfoHelper::getDriveList() {
     return driveList;
 }
 
+QString SystemInfoHelper::getPrivateDrive()
+{
+#if defined(Q_OS_SYMBIAN)
+    return QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+#else
+    return "";
+#endif
+
+}
+
 QString SystemInfoHelper::getFileContent(const QString &localPath)
 {
     qDebug() << "SystemInfoHelper::getFileContent localPath " << localPath;
@@ -135,5 +146,10 @@ QVariant SystemInfoHelper::getFileAttribute(const QString &localPath, const QStr
 QString SystemInfoHelper::getUrl(const QString absPath)
 {
     return QUrl::fromLocalFile(absPath).toString();
+}
+
+QString SystemInfoHelper::getCompletedUrl(const QString userInputLocation)
+{
+    return QUrl::fromUserInput(userInputLocation).toString();
 }
 

@@ -25,60 +25,89 @@ Rectangle {
     z: 1
     visible: false
     
-    property alias nameFilters: nameFilterInput.text
+    property bool requestAsType: false
+    property int lastFindIndex: -1
+    property alias nameFilter: nameFilterInput.text
 
-    signal requestRefresh(string caller);
+    signal previous()
+    signal next()
+    signal opened()
+    signal closed()
 
     function open() {
-        nameFilterInput.text = "";
-        searchButton.focus = true;
+        lastFindIndex = -1;
+        nameFilterInput.focus = true;
         visible = true;
+        opened();
     }
     
     function close() {
-        nameFilterInput.text = "";
         closeButton.focus = true;
         visible = false;
+        closed();
     }
     
     Row {
         anchors.fill: parent
         anchors.margins: 5
         spacing: 5
-        
-        TextField {
-            id: nameFilterInput
-            width: parent.width - (2*parent.spacing) - closeButton.width - searchButton.width
-            height: parent.height
-            placeholderText: appInfo.emptyStr+qsTr("Please input name filter.")
 
-            Keys.onPressed: {
-                if (event.key == Qt.Key_Return || event.key == Qt.Key_Enter) {
-                    requestRefresh("nameFilterPanel nameFilterInput Keys.onPressed");
-                }
-            }
-        }
-        
         Button {
             id: closeButton
             width: parent.height
             height: parent.height
             iconSource: (!window.platformInverted) ? "close_stop.svg" : "close_stop_inverted.svg"
             platformInverted: window.platformInverted
-            onClicked: {
+            onClicked: {                
                 nameFilterPanel.close();
-                requestRefresh("nameFilterPanel closeButton");
+            }
+        }
+
+        TextField {
+            id: nameFilterInput
+            width: parent.width - (2*parent.spacing) - closeButton.width - buttons.width
+            height: parent.height
+            placeholderText: appInfo.emptyStr+qsTr("Please input name filter.")
+
+            Keys.onPressed: {
+                if (requestAsType || event.key == Qt.Key_Return || event.key == Qt.Key_Enter) {
+                    var t = nameFilterInput.text.trim();
+                    nameFilterInput.text = t;
+                    next();
+                }
             }
         }
         
-        Button {
-            id: searchButton
-            width: parent.height
+        ButtonRow {
+            id: buttons
+            width: parent.height * 2
             height: parent.height
-            iconSource: (!window.platformInverted) ? "search.svg" : "search_inverted.svg"
-            platformInverted: window.platformInverted
-            onClicked: {
-                requestRefresh("nameFilterPanel searchButton");
+            Button {
+                id: prevButton
+                width: parent.height
+                height: parent.height
+                iconSource: (!window.platformInverted) ? "back.svg" : "back_inverted.svg"
+                platformInverted: window.platformInverted
+                onClicked: {
+                    focus = true; // Force accept text field for Symbian only.
+                    var t = nameFilterInput.text.trim();
+                    nameFilterInput.text = t;
+                    previous();
+                }
+            }
+
+            Button {
+                id: nextButton
+                width: parent.height
+                height: parent.height
+                iconSource: (!window.platformInverted) ? "next.svg" : "next_inverted.svg"
+                platformInverted: window.platformInverted
+                onClicked: {
+                    focus = true; // Force accept text field for Symbian only.
+                    var t = nameFilterInput.text.trim();
+                    nameFilterInput.text = t;
+                    next();
+                }
             }
         }
     }

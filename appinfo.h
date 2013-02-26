@@ -57,8 +57,6 @@ signals:
 public slots:
 
 private:
-    QString m_domainName;
-    QString m_appName;
     QSettings *m_settings;
     Monitoring *mon;
     QTranslator *m_ts;

@@ -62,6 +62,8 @@ public:
     bool isRunning();
     Q_INVOKABLE bool isTrusted(const QString deviceAddressStr);
     Q_INVOKABLE bool isPaired(const QString deviceAddressStr);
+
+    Q_INVOKABLE QVariant getStoredDeviceList();
 signals:
     void uploadStarted(const QString localPath, const QString deviceAddressStr);
     void uploadProgress(const QString localPath, const QString deviceAddressStr, qint64 bytesSent, qint64 bytesTotal);
@@ -88,6 +90,7 @@ private:
     QString m_deviceAddressStr;
     qint64 m_lastBytesSent;
     QBluetoothTransferReply *m_reply;
+    QList<QBluetoothUuid> m_uuidFilterList;
 
     void loadBtServiceHash();
     void saveBtServiceHash();

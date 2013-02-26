@@ -1,122 +1,62 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
+import CloudDriveModel 1.0
 import "Utility.js" as Utility
 
 Page {
     id: cloudDriveJobsPage
 
     property string name: "cloudDriveJobsPage"
-    property alias jobModel: jobListView.model
+    property bool inverted: window.platformInverted
+
+    function updateJobQueueCount(runningJobCount, jobQueueCount) {
+        // Update (runningJobCount + jobQueueCount) on cloudButton.
+        cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
+    }
+
+    onStatusChanged: {
+        if (status == PageStatus.Active) {
+            cloudDriveModel.requestJobQueueStatus();
+        }
+    }
 
     tools: toolBarLayout
 
     ToolBarLayout {
         id: toolBarLayout
 
-        ToolButton {
+        ToolBarButton {
             id: backButton
-            iconSource: "toolbar-back"
-            platformInverted: window.platformInverted
-            flat: true
+            buttonIconSource: "toolbar-back"
             onClicked: {
                 pageStack.pop();
             }
         }
+        ToolBarButton {
+            id: cloudButton
+            buttonIconSource: (!inverted) ? "cloud.svg" : "cloud_inverted.svg"
 
-        ToolButton {
-            id: refreshButton
-            iconSource: "toolbar-refresh"
-            platformInverted: window.platformInverted
-            flat: true
-            onClicked: {
+            TextIndicator {
+                id: cloudButtonIndicator
+                color: "#00AAFF"
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 10
             }
         }
-
-        ToolButton {
-            id: menuButton
-            iconSource: "toolbar-menu"
-            platformInverted: window.platformInverted
-            flat: true
+        ToolBarButton {
+            id: deleteAllButton
+            buttonIconSource: (!inverted) ? "delete.svg" : "delete_inverted.svg"
             onClicked: {
+                cancelQueuedCloudDriveJobsConfirmation.open();
             }
         }
     }
-
-//    function addJobsFromJson(msg) {
-//        jobModel.clear();
-
-//        var jsonObj = Utility.createJsonObj(msg);
-//        console.debug("jsonObj.jobs " + jsonObj.jobs + " " + jsonObj.jobs.length);
-//        for (var i=0; i<jsonObj.jobs.length; i++)
-//        {
-//            var job = jsonObj.jobs[i];
-//            jobModel.append({
-//                                id: job.id,
-//                                printerid: job.printerid,
-//                                printerName: job.printerName,
-//                                title: job.title,
-//                                contentType: job.contentType,
-//                                fileUrl: job.fileUrl,
-//                                ticketUrl: job.ticketUrl,
-//                                createTime: job.createTime,
-//                                updateTime: job.updateTime,
-//                                status: job.status,
-//                                errorCode: job.errorCode,
-//                                message: job.message,
-//                                tags: job.tags
-//                            });
-//        }
-
-//        jobListView.model = jobModel;
-//    }
-
-//    function deleteAllDoneJobs() {
-//        for (var i=0; i<jobModel.count; i++) {
-//            var jobId = jobModel.get(i).id;
-//            var status = jobModel.get(i).status;
-//            if (status == "DONE") {
-//                gcpClient.deletejob(jobId);
-//            }
-//        }
-//    }
 
     TitlePanel {
         id: titlePanel
         text: appInfo.emptyStr+qsTr("Cloud Drive Jobs")
-    }
-
-    ListModel {
-        id: jobModel
-    }
-
-    Button {
-        id: popupDeleteButton
-
-        property string jobId
-
-        iconSource: (!window.platformInverted) ? "delete.svg" : "delete_inverted.svg"
-        visible: false
-        width: 50
-        height: 50
-        z: 2
-        onClicked: {
-            // TODO delete selected job.
-            jobModel.setProperty(jobListView.currentIndex, "status", "Deleting");
-            gcpClient.deletejob(jobId);
-            visible = false;
-        }
-        onVisibleChanged: {
-            if (visible) popupDeleteButtonTimer.restart();
-        }
-
-        Timer {
-            id: popupDeleteButtonTimer
-            interval: 2000
-            running: false
-            onTriggered: {
-                parent.visible = false;
-            }
-        }
     }
 
     ListView {
@@ -124,7 +64,84 @@ Page {
         width: parent.width
         height: parent.height - titlePanel.height
         anchors.top: titlePanel.bottom
+        model: cloudDriveModel.jobsModel
         delegate: jobDelegate
+        clip: true
+        pressDelay: 100
+        highlightRangeMode: ListView.NoHighlightRange
+        highlightFollowsCurrentItem: false
+        highlightMoveDuration: 1
+        highlightMoveSpeed: 4000
+        highlight: Rectangle {
+            width: jobListView.width
+            gradient: Gradient {
+                GradientStop {
+                    position: 0
+                    color: "#0080D0"
+                }
+
+                GradientStop {
+                    position: 1
+                    color: "#53A3E6"
+                }
+            }
+        }
+    }
+
+    ScrollDecorator {
+        id: scrollbar
+        flickableItem: jobListView
+    }
+
+    MenuWithIcon {
+        id: jobStopMenu
+
+        content: MenuLayout {
+            MenuItemWithIcon {
+                name: "stop"
+                text: appInfo.emptyStr+qsTr("Stop")
+                onClicked: {
+                    var jobId = jobListView.model.get(jobListView.currentIndex).job_id;
+                    cloudDriveModel.suspendJob(jobId);
+                }
+            }
+        }
+
+        onClosed: {
+            // Hide highlight.
+            jobListView.currentIndex = -1;
+            jobListView.highlightFollowsCurrentItem = false;
+        }
+    }
+
+    MenuWithIcon {
+        id: jobMenu
+
+        content: MenuLayout {
+            MenuItemWithIcon {
+                name: "resume"
+                text: appInfo.emptyStr+qsTr("Resume")
+                onClicked: {
+                    var jobId = jobListView.model.get(jobListView.currentIndex).job_id;
+                    cloudDriveModel.resumeJob(jobId);
+                }
+            }
+
+            MenuItemWithIcon {
+                name: "remove"
+                text: appInfo.emptyStr+qsTr("Remove")
+                onClicked: {
+                    var jobId = jobListView.model.get(jobListView.currentIndex).job_id;
+                    cloudDriveModel.removeJob("cloudDriveJobsPage jobMenu", jobId);
+                }
+            }
+        }
+
+        onClosed: {
+            // Hide highlight.
+            jobListView.currentIndex = -1;
+            jobListView.highlightFollowsCurrentItem = false;
+        }
     }
 
     Component {
@@ -135,62 +152,131 @@ Page {
 
             property int mouseX
             property int mouseY
+            property bool showBytes: false
 
-            Row {
-                anchors.fill: parent.paddingItem
-                spacing: 5
-
-                Column {
-                    width: parent.width - statusText.width - parent.spacing
-                    ListItemText {
-                        mode: listItem.mode
-                        role: "Title"
-                        text: jobId + " " + operation + " " + type + " " + uid
-                        width: parent.width
-                        verticalAlignment: Text.AlignVCenter
-                        platformInverted: window.platformInverted
+            Column {
+                width: parent.width
+                anchors.centerIn: parent
+                Row {
+                    width: parent.width
+                    Image {
+                        id: runningIcon
+                        width: 22
+                        height: 22
+                        source: fsModel.getRunningOperationIconSource(fsModel.mapToFolderSizeListModelOperation(operation))
                     }
-                    ListItemText {
-                        mode: listItem.mode
-                        role: "SubTitle"
-                        text: localFilePath
-                        width: parent.width
-                        verticalAlignment: Text.AlignVCenter
-                        platformInverted: window.platformInverted
+                    Text {
+                        text: cloudDriveModel.getOperationName(operation)
+                        width: parent.width - runningIcon.width - syncProgressBar.width
+                        anchors.verticalCenter: parent.verticalCenter
+                        font.pointSize: 6
+                        elide: Text.ElideRight
+                        color: (!inverted) ? "white" : "black"
+                    }
+                    Column {
+                        width: parent.width / 2
+                        anchors.verticalCenter: parent.verticalCenter
+                        ProgressBar {
+                            id: syncProgressBar
+                            width: parent.width
+                            visible: is_running && !listItem.showBytes
+                            value: bytes
+                            minimumValue: 0
+                            maximumValue: bytes_total
+                        }
+                        Text {
+                            text: appInfo.emptyStr+Utility.formatFileSize(bytes, 1)+" / "+Utility.formatFileSize(bytes_total, 1)
+                            width: parent.width
+                            horizontalAlignment: Text.AlignRight
+                            visible: listItem.showBytes
+                            font.pointSize: 6
+                            color: (!inverted) ? "white" : "black"
+                        }
+                        Text {
+                            text: appInfo.emptyStr+(err != 0 ? qsTr("Error %1 %2").arg(err).arg(err_string) : "")
+                            width: parent.width
+                            visible: !is_running && !listItem.showBytes
+                            font.pointSize: 6
+                            elide: Text.ElideRight
+                            color: (!inverted) ? "white" : "black"
+                        }
                     }
                 }
-                ListItemText {
-                    id: statusText
-                    mode: listItem.mode
-                    role: "Subtitle"
-                    text: appInfo.emptyStr+(isRunning)?qsTr("Running"):qsTr("Queued")
-                    width: 120
-                    horizontalAlignment: Text.AlignRight
-                    verticalAlignment: Text.AlignVCenter
-                    platformInverted: window.platformInverted
+                Row {
+                    width: parent.width
+                    Image {
+                        id: sourceCloudIcon
+                        source: cloudDriveModel.getCloudIcon(type)
+                        width: 22
+                        height: 22
+                        fillMode: Image.PreserveAspectFit
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Text {
+                        id: sourceName
+                        text: remote_file_path
+                        width: parent.width - sourceCloudIcon.width
+                        font.pointSize: 6
+                        elide: Text.ElideMiddle
+                        color: (!inverted) ? "white" : "black"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
+                Row {
+                    width: parent.width
+                    Image {
+                        id: targetCloudIcon
+                        source: {
+                            if (operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
+                                return cloudDriveModel.getCloudIcon(target_type)
+                            } else {
+                                return "";
+                            }
+                        }
+                        width: 22
+                        height: 22
+                        fillMode: Image.PreserveAspectFit
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Text {
+                        id: targetName
+                        text: {
+                            if (operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
+                                if (cloudDriveModel.isRemoteAbsolutePath(target_type)) {
+                                    return cloudDriveModel.getRemotePath(target_type, new_remote_file_path, new_remote_file_name);
+                                } else {
+                                    return new_remote_file_path + " > " + new_remote_file_name;
+                                }
+                            } else {
+                                return local_file_path;
+                            }
+                        }
+                        width: parent.width - targetCloudIcon.width
+                        font.pointSize: 6
+                        elide: Text.ElideMiddle
+                        color: (!inverted) ? "white" : "black"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+            }
+
+            onClicked: {
+                console.debug("cloudDriveJobsPage listItem onClicked jobJson " + cloudDriveModel.getJobJson(job_id) );
+                showBytes = !showBytes;
             }
 
             onPressAndHold: {
-                var panelX = x + mouseX - jobListView.contentX;
-                var panelY = y + mouseY - jobListView.contentY + jobListView.y;
-                popupDeleteButton.x = panelX - (popupDeleteButton.width / 2);
-                popupDeleteButton.y = panelY - (popupDeleteButton.height);
-                popupDeleteButton.jobId = id;
-                popupDeleteButton.visible = true;
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onPressed: {
-                    parent.mouseX = mouseX;
-                    parent.mouseY = mouseY;
-                    mouse.accepted = false;
+                console.debug("cloudDriveJobsPage listItem onPressAndHold jobJson " + cloudDriveModel.getJobJson(job_id) );
+                if (!is_running) {
+                    jobListView.currentIndex = index;
+                    jobListView.highlightFollowsCurrentItem = true;
+                    jobMenu.open();
+                } else {
+                    jobListView.currentIndex = index;
+                    jobListView.highlightFollowsCurrentItem = true;
+                    jobStopMenu.open();
                 }
             }
         }
-    }
-
-    Component.onCompleted: {
     }
 }

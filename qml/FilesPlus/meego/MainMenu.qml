@@ -1,12 +1,23 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
-import CloudDriveModel 1.0
 
 MenuWithIcon {
     id: mainMenu
     z: 2
 
     signal paste()
+    signal openMarkMenu()
+    signal clearClipboard()
+    signal newFolder()
+    signal syncConnectedItems()
+    signal syncCurrentFolder()
+    signal setNameFilter()
+    signal drives()
+    signal openSortByMenu()
+    signal openSettings()
+    signal openMoreApps()
+    signal openAbout()
+    signal quit()
 
     content: MenuLayout {
         id: menuLayout
@@ -16,6 +27,7 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: pasteMenuItem
+            name: "paste"
             text: appInfo.emptyStr+qsTr("Paste")
             onClicked: {
                 paste();
@@ -24,112 +36,117 @@ MenuWithIcon {
 
         MenuItemWithIcon {
             id: markMenuItem
+            name: "markMenu"
             text: appInfo.emptyStr+qsTr("Mark multiple items")
             onClicked: {
-                fsListView.state = "mark";
+                openMarkMenu();
             }
         }
 
         MenuItemWithIcon {
             id: clearClipboardMenuItem
+            name: "clearClipboard"
             text: appInfo.emptyStr+qsTr("Clear clipboard")
             onClicked: {
-                clipboard.clear();
+                clearClipboard();
+            }
+
+            TextIndicator {
+                id: clipboardIndicator
+                color: "#00AAFF"
+                anchors.right: parent.right
+                anchors.rightMargin: 16
+                anchors.verticalCenter: parent.verticalCenter
+                text: clipboard.count
             }
         }
 
         MenuItemWithIcon {
             id: newFolderMenuItem
+            name: "newFolder"
             text: appInfo.emptyStr+qsTr("New folder / file")
             onClicked: {
-                newFolderDialog.open();
+                newFolder();
             }
         }
 
-        MenuItemWithIcon {
-            id: syncItemsMenuItem
-            text: appInfo.emptyStr+qsTr("Sync connected items")
-            onClicked: {
-                syncConnectedItemsSlot();
-            }
-        }
+//        MenuItemWithIcon {
+//            id: syncItemsMenuItem
+//            name: "syncConnectedItems"
+//            text: appInfo.emptyStr+qsTr("Sync connected items")
+//            onClicked: {
+//                syncConnectedItems();
+//            }
+//        }
 
-        MenuItemWithIcon {
-            id: syncFolderMenuItem
-            text: appInfo.emptyStr+qsTr("Sync current folder")
-            onClicked: {
-                console.debug("mainMenu syncFolderMenuItem fsModel.currentDir " + fsModel.currentDir);
-                syncFileSlot(fsModel.currentDir, -1);
-            }
-        }
+//        MenuItemWithIcon {
+//            id: syncFolderMenuItem
+//            name: "syncCurrentFolder"
+//            text: appInfo.emptyStr+qsTr("Sync current folder")
+//            onClicked: {
+//                syncCurrentFolder();
+//            }
+//        }
 
         MenuItemWithIcon {
             id: filterMenuItem
-            text: appInfo.emptyStr+qsTr("Set name filter")
-
+            name: "setNameFilter"
+            text: appInfo.emptyStr+qsTr("Find name")
             onClicked: {
-                nameFilterPanel.open();
+                setNameFilter();
+            }
+        }
+
+        MenuItemWithIcon {
+            id: driveMenuItem
+            name: "driveMenuItem"
+            text: appInfo.emptyStr+qsTr("Drives")
+            onClicked: {
+                drives();
             }
         }
 
         MenuItemWithIcon {
             id: sortByMenuItem
+            name: "sortByMenu"
             text: appInfo.emptyStr+qsTr("Sort by")
             platformSubItemIndicator: true
             onClicked: {
-                sortByMenu.open();
+                openSortByMenu();
             }
         }
 
         MenuItemWithIcon {
+            name: "settings"
             text: appInfo.emptyStr+qsTr("Settings")
             platformSubItemIndicator: true
             onClicked: {
-//                settingMenu.open();
-                pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
-                pageStack.find(function (page) {
-                    if (page.name == "folderPage") {
-                        page.requestJobQueueStatusSlot();
-                    }
-                });
+                openSettings();
             }
         }
 
         MenuItemWithIcon {
+            name: "about"
             text: appInfo.emptyStr+qsTr("About")
             onClicked: {
-                pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
+                openAbout();
             }
         }
                 
 //        MenuItemWithIcon {
+//            name: "moreApps"
 //            text: appInfo.emptyStr+qsTr("More Apps")
 //            onClicked: {
-//                Qt.openUrlExternally("http://www.meeki.mobi/");
+//                openMoreApps();
 //            }
 //        }
         
         MenuItemWithIcon {
+            name: "exit"
             text: appInfo.emptyStr+qsTr("Exit")
             onClicked: {
                 quit();
             }
-        }
-    }
-
-    // Override this function with menuItem logic.
-    function isMenuItemVisible(menuItem) {
-        // Validate each menu logic if it's specified, otherwise it's visible.
-        if (menuItem == pasteMenuItem) {
-            return clipboard.count > 0;
-        } else if (menuItem == clearClipboardMenuItem) {
-            return clipboard.count > 0;
-        } else if (menuItem == markMenuItem) {
-            return fsListView.state != "mark";
-        } else if (menuItem == syncFolderMenuItem) {
-            return !fsModel.isRoot() && cloudDriveModel.canSync(fsModel.currentDir);
-        } else {
-            return true;
         }
     }
 }

@@ -5,7 +5,6 @@ import "Utility.js" as Utility
 
 SelectionDialog {
     id: uidDialog
-    height: 200
 
     property string caller
     property int operation

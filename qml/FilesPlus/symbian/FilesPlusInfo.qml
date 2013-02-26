@@ -15,10 +15,11 @@ Rectangle {
 
         Image {
             id: icon
-            width: 180
-            height: 180
+            width: 120
+            height: 120
             anchors.horizontalCenter: parent.horizontalCenter
             source: "FilesPlus256.png"
+            smooth: true
 
             MouseArea {
                 anchors.fill: parent
@@ -45,7 +46,7 @@ Rectangle {
             width: 300
             text: appInfo.emptyStr+qsTr("FilesPlus provides extended functions beyond file manager.\
 \n   + Print with Google Cloud Print.\
-\n   + Sync with Cloud Drive.\
+\n   + Sync with multiple cloud storages.\
 \n   + Preview images in your folder.\
 \n   + Present folders in Pie view.")
             anchors.horizontalCenter: parent.horizontalCenter
@@ -57,7 +58,7 @@ Rectangle {
             height: 80
             anchors.horizontalCenter: parent.horizontalCenter
             Image {
-                source: "dropbox_white.png"
+                source: "dropbox_icon.png"
                 anchors.verticalCenter: parent.verticalCenter
                 MouseArea {
                     anchors.fill: parent
@@ -66,6 +67,36 @@ Rectangle {
                         Qt.openUrlExternally("https://www.dropbox.com");
                     }
                 }
+            }
+            Image {
+                source: "skydrive_icon.png"
+                anchors.verticalCenter: parent.verticalCenter
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton
+                    onClicked: {
+                        Qt.openUrlExternally("https://skydrive.live.com/");
+                    }
+                }
+            }
+            Image {
+                source: "drive_icon.png"
+                anchors.verticalCenter: parent.verticalCenter
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton
+                    onClicked: {
+                        Qt.openUrlExternally("https://drive.google.com");
+                    }
+                }
+            }
+            Image {
+                source: "ftp_icon.png"
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Image {
+                source: "webdav_icon.png"
+                anchors.verticalCenter: parent.verticalCenter
             }
             Image {
                 source: "cloudprint-ready.png"

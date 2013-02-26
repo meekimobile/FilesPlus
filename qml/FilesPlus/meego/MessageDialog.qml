@@ -4,10 +4,10 @@ import "Utility.js" as Utility
 
 CommonDialog {
     id: messageDialog
-    
+
     property alias message: messageDialog.contentText
     property bool autoClose: false
-    property int autoCloseInterval: 5000
+    property int autoCloseInterval: 3000
 
     titleIcon: "FilesPlusIcon.svg"
     buttonTexts: [appInfo.emptyStr+qsTr("OK")]

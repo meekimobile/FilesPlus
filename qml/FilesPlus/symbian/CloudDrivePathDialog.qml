@@ -3,19 +3,23 @@ import com.nokia.symbian 1.1
 import CloudDriveModel 1.0
 import "Utility.js" as Utility
 
-CommonDialog {
+ConfirmDialog {
     id: cloudDrivePathDialog
+    width: parent.width
 
     property string caller
     property int operation
     property string localPath
-    property string remotePath
+    property string remotePath // Specified remote path
     property string originalRemotePath
     property int selectedCloudType
     property string selectedUid
     property int selectedModelIndex
     property string selectedRemotePath
-    property string remoteParentPath
+    property string selectedRemotePathName
+    property string remoteParentPath // Current browse remote path
+    property string remoteParentPathName // Shows on titlebar
+    property string remoteParentParentPath // For change up
     property int selectedIndex
     property bool selectedIsDir
     property bool selectedIsValid
@@ -24,7 +28,7 @@ CommonDialog {
 
     signal opening()
     signal opened()
-    signal createRemoteFolder(string newRemotePath)
+    signal createRemoteFolder(string newRemoteFolderName)
     signal refreshRequested()
     signal deleteRemotePath(string remotePath)
 
@@ -32,21 +36,21 @@ CommonDialog {
         console.debug("cloudDrivePathDialog proceedOperation() implementation is required.");
     }
 
-    function getTitleText(localPath, remotePath, remoteParentPath) {
+    function getTitleText(localPath, remotePathName, remoteParentPathName) {
         var text = "";
 
         switch (operation) {
         case CloudDriveModel.FilePut:
-            text += qsTr("Upload %1 into %2").arg(fsModel.getFileName(localPath)).arg(remoteParentPath);
+            text += qsTr("Upload %1 into %2").arg(fsModel.getFileName(localPath)).arg(remoteParentPathName);
             break;
         case CloudDriveModel.FileGet:
-            text += (remotePath == "") ? qsTr("Please select folder") : qsTr("Download %1").arg(fsModel.getFileName(remotePath));
+            text += (remotePathName == "") ? qsTr("Please select folder") : qsTr("Download %1").arg(remotePathName);
             break;
         case CloudDriveModel.Browse:
-            text += qsTr("Connect %1 to %2").arg(fsModel.getFileName(localPath)).arg(remotePath);
+            text += qsTr("Connect %1 to %2").arg(fsModel.getFileName(localPath)).arg(remotePathName);
             break;
         case CloudDriveModel.Metadata:
-            text += qsTr("Sync %1 to %2").arg(fsModel.getFileName(localPath)).arg(remotePath);
+            text += qsTr("Sync %1 to %2").arg(fsModel.getFileName(localPath)).arg(remotePathName);
             break;
         }
 
@@ -54,29 +58,22 @@ CommonDialog {
     }
 
     function parseCloudDriveMetadataJson(jsonText) {
-        // Reset list view.
-        cloudDrivePathListModel.clear();
-        cloudDrivePathListView.currentIndex = -1;
-        selectedIndex = -1;
-        selectedRemotePath = "";
-        selectedIsDir = false;
-        selectedIsValid = true;
         originalRemotePath = (originalRemotePath == "") ? remotePath : originalRemotePath;
 
-        var json = Utility.createJsonObj(jsonText);
-        remoteParentPath = json.path;
+        cloudDrivePathListModel.clear();
+        var responseJson = cloudDriveModel.parseCloudDriveMetadataJson(selectedCloudType, selectedUid, originalRemotePath, jsonText,  cloudDrivePathListModel);
+        console.debug("cloudDrivePathDialog parseCloudDriveMetadataJson responseJson " + JSON.stringify(responseJson));
 
-        for (var i=0; i<json.contents.length; i++) {
-            var item = json.contents[i];
-            var modelItem = { "path": item.path, "lastModified": (new Date(item.modified)), "isDir": item.is_dir };
-            cloudDrivePathListModel.append(modelItem);
-            if (item.path == originalRemotePath) {
-                selectedIndex = i;
-                selectedRemotePath = item.path;
-                selectedIsDir = item.is_dir;
-                cloudDrivePathListView.currentIndex = i;
-            }
-        }
+        selectedIsValid = true;
+        selectedIndex = responseJson.selectedIndex;
+        selectedRemotePath = responseJson.selectedRemotePath;
+        selectedRemotePathName = responseJson.selectedRemotePathName;
+        selectedIsDir = responseJson.selectedIsDir;
+        remoteParentPath = responseJson.remoteParentPath;
+        remoteParentPathName = responseJson.remoteParentPathName;
+        remoteParentParentPath = responseJson.remoteParentParentPath;
+
+        cloudDrivePathListView.currentIndex = responseJson.selectedIndex;
 
         // Reset busy.
         cloudDrivePathDialog.isBusy = false;
@@ -85,8 +82,9 @@ CommonDialog {
         }
     }
 
-    function changeRemotePath(remotePath) {
-        cloudDrivePathDialog.remotePath = remotePath;
+    function changeRemotePath(remoteParentPath) {
+        console.debug("cloudDrivePathDialog changeRemotePath " + remoteParentPath);
+        cloudDrivePathDialog.remoteParentPath = remoteParentPath;
         refresh();
     }
 
@@ -106,12 +104,33 @@ CommonDialog {
         return selectedRemotePath;
     }
 
-    titleIcon: "FilesPlusIcon.svg"
-    titleText: appInfo.emptyStr+getTitleText(localPath, selectedRemotePath, remoteParentPath)
-    buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
-    content: Column {
+    function refreshItem(remotePath) {
+        var timestamp = (new Date()).getTime();
+        var i = cloudDrivePathListModel.findIndexByRemotePath(remotePath);
+        console.debug("cloudDrivePathDialog refreshItem i " + i);
+        if (i >= 0) {
+            cloudDrivePathListModel.setProperty(i, "timestamp", timestamp);
+        }
+    }
+
+    ListModel {
+        id: cloudDrivePathListModel
+
+        function findIndexByRemotePath(remotePath) {
+            for (var i=0; i<cloudDrivePathListModel.count; i++) {
+                if (cloudDrivePathListModel.get(i).absolutePath == remotePath) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+    }
+
+    titleText: appInfo.emptyStr+getTitleText(localPath, selectedRemotePathName, remoteParentPathName)
+    content: Item {
         width: parent.width
-        spacing: 5
+        height: childrenRect.height
 
         Rectangle {
             id: toolBar
@@ -122,6 +141,13 @@ CommonDialog {
             gradient: Gradient {
                 GradientStop { position: 0.0; color: "#808080" }
                 GradientStop { position: 1.0; color: "#404040" }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    // DO nothing
+                }
             }
 
             Row {
@@ -147,7 +173,7 @@ CommonDialog {
                     visible: !newFolderNameInput.visible
                     iconSource: "back.svg"
                     onClicked: {
-                        changeRemotePath(remoteParentPath);
+                        changeRemotePath(remoteParentParentPath);
                     }
                 }
 
@@ -160,7 +186,7 @@ CommonDialog {
                     color: "white"
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     verticalAlignment: Text.AlignVCenter
-                    text: remoteParentPath
+                    text: cloudDriveModel.isRemoteAbsolutePath(selectedCloudType) ? remoteParentPath : remoteParentPathName
                 }
 
                 TextField {
@@ -193,9 +219,9 @@ CommonDialog {
                     onClicked: {
                         newFolderButton.focus = true;
                         if (newFolderNameInput.text.trim() != "") {
-                            createRemoteFolder(remoteParentPath + "/" + newFolderNameInput.text.trim())
-                            newFolderNameInput.visible = false;
                             isBusy = true;
+                            newFolderNameInput.visible = false;
+                            createRemoteFolder(newFolderNameInput.text.trim())
                         }
                     }
                 }
@@ -208,8 +234,9 @@ CommonDialog {
                     iconSource: "folder_add.svg"
                     onClicked: {
                         // Show new folder name field.
-                        newFolderNameInput.visible = true;
-                        newFolderNameInput.text = "";
+//                        newFolderNameInput.visible = true;
+//                        newFolderNameInput.text = "";
+                        newFolderDialog.open();
                     }
                 }
             }
@@ -219,9 +246,7 @@ CommonDialog {
             id: cloudDrivePathListView
             width: parent.width
             height: (window.inPortrait ? 300 : 180)
-            model: ListModel {
-                id: cloudDrivePathListModel
-            }
+            model: cloudDrivePathListModel
             delegate: cloudDrivePathItemDelegate
             highlight: Rectangle {
                 width: cloudDrivePathListView.width
@@ -240,6 +265,9 @@ CommonDialog {
             highlightFollowsCurrentItem: true
             highlightMoveSpeed: 2000
             pressDelay: 100
+            clip: true
+            anchors.top: toolBar.bottom
+            anchors.topMargin: 5
             onMovementStarted: {
                 if (currentItem) {
                     currentItem.pressed = false;
@@ -253,13 +281,14 @@ CommonDialog {
                 opacity: 0.5
                 visible: isBusy
                 anchors.fill: parent
+                z: 2
 
                 BusyIndicator {
                     id: busyIcon
                     visible: isBusy
                     running: isBusy
                     width: 100
-                    height: 100
+                    height: width
                     anchors.centerIn: parent
                 }
 
@@ -272,87 +301,54 @@ CommonDialog {
                 }
             }
         }
+
+        ScrollDecorator {
+            id: scrollBar
+            flickableItem: cloudDrivePathListView
+        }
     }
 
     Component {
         id: cloudDrivePathItemDelegate
 
-        ListItem {
-            id: cloudDrivePathItem
-            height: 60
-            Row {
-                anchors.fill: parent
-                spacing: 5
+        CloudListItem {
+            id: listItem
+            listViewState: (cloudDrivePathListView.state ? cloudDrivePathListView.state : "")
+            syncIconVisible: isConnected
+            syncIconSource: "cloud.svg"
+            actionIconSource: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath, cloudDriveModel.getCloudName(selectedCloudType), selectedUid) : ""
+            listItemIconSource: appInfo.emptySetting+listItem.getIconSource(timestamp)
+            inverted: false
 
-                Rectangle {
-                    id: iconRect
-                    width: 60
-                    height: parent.height
-                    color: "transparent"
-
-                    Image {
-                        id: icon
-                        asynchronous: true
-                        width: 48
-                        height: 48
-                        fillMode: Image.PreserveAspectFit
-                        source: cloudDrivePathItem.getIconSource(path, isDir)
-                        anchors.centerIn: parent
-                    }
-                }
-
-                Column {
-                    width: parent.width - iconRect.width - (2*parent.spacing) - connectionIcon.width - parent.spacing
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 2
-                    Text {
-                        width: parent.width
-                        text: cloudDriveModel.getRemoteName(path)
-                        font.pointSize: 8
-                        color: "white"
-                        elide: Text.ElideMiddle
-                    }
-                    Text {
-                        width: parent.width
-                        text: Qt.formatDateTime(lastModified, "d MMM yyyy h:mm:ss ap")
-                        font.pointSize: 6
-                        color: "lightgray"
-                        elide: Text.ElideMiddle
-                    }
-                }
-
-                Image {
-                    id: connectionIcon
-                    width: (visible) ? 30 : 0
-                    height: parent.height
-                    fillMode: Image.PreserveAspectFit
-                    z: 1
-                    visible: cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, path);
-                    source: "cloud.svg"
-                }
-            }
-
-            function getIconSource(path, isDir) {
+            // Override to support cloud items.
+            function getIconSource(timestamp) {
                 var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
                 var viewableTextFileTypes = ["TXT", "HTML"];
+
                 if (isDir) {
                     return "folder_list.svg";
-                } else {
-                    var dotPos = path.lastIndexOf(".");
-                    var fileType = (dotPos > -1) ? path.substr(1+dotPos) : "";
-                    if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                        return "photos_list.svg";
+                } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                    var showThumbnail = appInfo.getSettingBoolValue("CloudFolderPage.thumbnail.enabled", false);
+                    if (showThumbnail && thumbnail && thumbnail != "") {
+                        // Dropbox's thumbnail url can't open with Image directly. Need to invoke cacheImage() or use RemoteImageProvider to download.
+                        // Always cache thumbnail by using RemoteImageProvider.
+                        if (cloudDriveModel.isImageUrlCachable(selectedCloudType) && fileType.toUpperCase() != "SVG") {
+                            return "image://remote/" + thumbnail + "#t=" + timestamp;
+                        } else {
+                            return thumbnail;
+                        }
                     } else {
-                        return "notes_list.svg";
+                        return "photos_list.svg";
                     }
+                } else {
+                    return "notes_list.svg";
                 }
             }
 
-            onClicked: {
+            onClicked: { // Switch type
                 if (index == selectedIndex && isDir) {
                     // Second click on current item. Folder only.
-                    // Use path with /. to guide onRefreshRequested to get parent path as itself.
-                    changeRemotePath(path + "/.");
+                    changeRemotePath(absolutePath);
                 } else {
                     // Always set selectedIndex to support changeRemotePath.
                     selectedIndex = index;
@@ -360,28 +356,67 @@ CommonDialog {
                     // FileGet and FilePut can select any items because it's not related to operations.
                     // Other operations must select only the same item type that selected from local path.
                     if (fsModel.isDir(localPath) == isDir || operation == CloudDriveModel.FileGet || operation == CloudDriveModel.FilePut) {
-                        selectedRemotePath = path;
+                        selectedRemotePath = absolutePath;
+                        selectedRemotePathName = name;
                         selectedIsDir = isDir;
                         selectedIsValid = true;
-                        console.debug("cloudDrivePathDialog selectedIndex " + selectedIndex + " selectedRemotePath " + selectedRemotePath + " selectedIsDir " + selectedIsDir);
+                        console.debug("cloudDrivePathDialog selectedIndex " + selectedIndex + " selectedRemotePath " + selectedRemotePath + " selectedRemotePathName " + selectedRemotePathName + " selectedIsDir " + selectedIsDir);
                     } else {
                         selectedRemotePath = "";
+                        selectedRemotePathName = "";
                         selectedIsDir = isDir;
                         selectedIsValid = false;
                         cloudDrivePathListView.currentIndex = -1;
-                        console.debug("cloudDrivePathDialog invalid selectedIndex " + selectedIndex + " selectedRemotePath " + selectedRemotePath + " selectedIsDir " + selectedIsDir);
+                        console.debug("cloudDrivePathDialog invalid selectedIndex " + selectedIndex + " selectedRemotePath " + selectedRemotePath + " selectedRemotePathName " + selectedRemotePath + " selectedIsDir " + selectedIsDir);
                         // TODO Disable OK button.
                     }
                 }
             }
 
             onPressAndHold: {
-                var res = cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, path);
-                console.debug("cloudDrivePathItem path " + path + " isRemotePathConnected " + res);
+                var res = cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, absolutePath);
+                console.debug("cloudDrivePathItem absolutePath " + absolutePath + " isRemotePathConnected " + res);
                 if (!res) {
-                    deleteCloudItemConfirmation.remotePath = path;
+                    deleteCloudItemConfirmation.remotePath = absolutePath;
+                    deleteCloudItemConfirmation.remotePathName = name;
                     deleteCloudItemConfirmation.open();
                 }
+            }
+
+            onListItemIconError: {
+                if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
+                    cloudDriveModel.cacheImage(absolutePath, thumbnail, 48, 48, "folderPage"); // Use default icon size.
+                }
+            }
+        }
+    }
+
+    ConfirmDialog {
+        id: newFolderDialog
+        titleText: appInfo.emptyStr+qsTr("New folder")
+        content: Item {
+            width: parent.width - 20
+            height: 80
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            TextField {
+                id: folderName
+                width: parent.width
+                placeholderText: appInfo.emptyStr+qsTr("Please input folder name.")
+                anchors.centerIn: parent
+            }
+        }
+
+        onOpened: {
+            folderName.text = "";
+            folderName.forceActiveFocus();
+        }
+
+        onConfirm: {
+            folderName.closeSoftwareInputPanel();
+            if (folderName.text !== "") {
+                isBusy = true;
+                createRemoteFolder(folderName.text.trim());
             }
         }
     }
@@ -390,10 +425,12 @@ CommonDialog {
         id: deleteCloudItemConfirmation
 
         property string remotePath
+        property string remotePathName
 
         titleText: appInfo.emptyStr+qsTr("Delete")
-        contentText: appInfo.emptyStr+qsTr("Delete %1 ?").arg(deleteCloudItemConfirmation.remotePath);
+        contentText: appInfo.emptyStr+qsTr("Delete %1 ?").arg(deleteCloudItemConfirmation.remotePathName);
         onConfirm: {
+            isBusy = true;
             deleteRemotePath(deleteCloudItemConfirmation.remotePath);
         }
     }

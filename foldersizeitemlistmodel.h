@@ -9,6 +9,8 @@
 #include <QUrl>
 #include <QDir>
 #include <QFileInfo>
+#include <QFileSystemWatcher>
+#include <QDesktopServices>
 #include <qsystemstorageinfo.h>
 #include "foldersizeitem.h"
 #include "foldersizemodelthread.h"
@@ -55,6 +57,7 @@ public:
         IsDirRole,
         SubDirCountRole,
         SubFileCountRole,
+        BaseNameRole,
         FileTypeRole,
         IsRunningRole,
         RunningOperationRole,
@@ -91,10 +94,12 @@ public:
     Q_INVOKABLE void setSortFlag(const int sortFlag, const bool saveSortFlag = true);
     Q_INVOKABLE void revertSortFlag();
     QStringList getNameFilters() const;
-    void setNameFilters(const QStringList nameFilters);
+    void setNameFilters(const QStringList nameFilters);   
+    Q_INVOKABLE QVariant get(const int index);
     Q_INVOKABLE QVariant getProperty(const int index, FolderSizeItemRoles role);
     Q_INVOKABLE void setProperty(const int index, FolderSizeItemRoles role, QVariant value);
     Q_INVOKABLE void setProperty(const QString localPath, FolderSizeItemRoles role, QVariant value);
+    Q_INVOKABLE void setProperty(const int index, QVariant valueJson);
 
     Q_INVOKABLE void refreshDir(const QString caller, const bool clearCache = false, const bool clearItems = false);
     Q_INVOKABLE void changeDir(const QString &name, const int sortFlag = -1);
@@ -105,6 +110,7 @@ public:
     Q_INVOKABLE QString getDirContentJson(const QString dirPath);
     Q_INVOKABLE int getIndexOnCurrentDir(const QString absFilePath);
     Q_INVOKABLE void clearIndexOnCurrentDir();
+    void refreshIndexOnCurrentDir();
     Q_INVOKABLE void removeCache(const QString absPath);
     Q_INVOKABLE bool isRunning();
 
@@ -129,19 +135,21 @@ public:
     Q_INVOKABLE bool isFile(const QString absFilePath);
     Q_INVOKABLE bool canCopy(const QString sourcePath, const QString targetPath);
     Q_INVOKABLE QString getFileName(const QString absFilePath);
-    Q_INVOKABLE QString getNewFileName(const QString absFilePath, const QString targetPath);
+    Q_INVOKABLE QString getNewFileName(const QString fileName, const QString targetPath);
     Q_INVOKABLE QString getAbsolutePath(const QString dirPath, const QString fileName);
     Q_INVOKABLE QStringList getDriveList();
     Q_INVOKABLE QStringList getLogicalDriveList();
     Q_INVOKABLE QString formatFileSize(double size);
     Q_INVOKABLE void cancelQueuedJobs();
     Q_INVOKABLE int getQueuedJobCount() const;
+    Q_INVOKABLE int getRunningJobCount() const;
     Q_INVOKABLE void abortThread(bool rollbackFlag = true);
 
     QList<FolderSizeItem> getItemList() const;
     void removeItem(const int index);
     FolderSizeItem getItem(const int index);
     void setItem(const int index, FolderSizeItem &item);
+    Q_INVOKABLE int addItem(const QString absPath);
 
     Q_INVOKABLE void proceedNextJob();
     Q_INVOKABLE void suspendNextJob();
@@ -168,6 +176,10 @@ private:
     QStringList m_driveList;
 
     QMutex mutex;
+
+    QFileSystemWatcher *m_fsWatcher;
+    void initializeFSWatcher();
+    QStringList findSubDirList(QString dirPath);
 public slots:
     void loadDirSizeCacheFinishedFilter();
     void fetchDirSizeFinishedFilter();
@@ -176,6 +188,7 @@ public slots:
     void deleteProgressFilter(int fileAction, QString sourceSubPath, QString msg, int err);
     void deleteFinishedFilter(int fileAction, QString sourcePath, QString msg, int err);
     void jobDone();
+    void fsWatcherDirectoryChangedSlot(const QString &entry);
 Q_SIGNALS:
     void loadDirSizeCacheFinished();
     void initializeDBStarted();
@@ -190,12 +203,13 @@ Q_SIGNALS:
     void deleteStarted(int fileAction, QString sourcePath);
     void deleteProgress(int fileAction, QString sourceSubPath, QString msg, int err);
     void deleteFinished(int fileAction, QString sourcePath, QString msg, int err);
-    void createFinished(QString targetPath);
+    void createFinished(QString targetPath, QString msg, int err);
     void renameFinished(QString sourcePath, QString targetPath, QString msg, int err);
     void fetchDirSizeStarted();
     void fetchDirSizeFinished();
     void fetchDirSizeUpdated(QString dirPath);
     void proceedNextJobSignal();
+    void directoryChanged(QString dirPath);
 };
 
 #endif // FOLDERSIZEITEMLISTMODEL_H

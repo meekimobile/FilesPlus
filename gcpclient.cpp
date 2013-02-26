@@ -10,7 +10,7 @@
 #if defined(Q_WS_HARMATTAN)
 const QString GCPClient::KeyStoreFilePath = "/home/user/.filesplus/GCPClient.dat";
 #else
-const QString GCPClient::KeyStoreFilePath = "C:/GCPClient.dat";
+const QString GCPClient::KeyStoreFilePath = "GCPClient.dat";
 #endif
 const QString GCPClient::consumerKey = "196573379494.apps.googleusercontent.com";
 const QString GCPClient::consumerSecret = "il59cyz3dwBW6tsHBkZYGSWj";

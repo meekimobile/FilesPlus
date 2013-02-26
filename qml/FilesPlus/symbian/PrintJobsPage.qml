@@ -7,37 +7,32 @@ Page {
     id: printJobsPage
 
     property string name: "printJobsPage"
+    property bool inverted: window.platformInverted
 
     tools: toolBarLayout
 
     ToolBarLayout {
         id: toolBarLayout
 
-        ToolButton {
+        ToolBarButton {
             id: backButton
-            iconSource: "toolbar-back"
-            platformInverted: window.platformInverted
-            flat: true
+            buttonIconSource: "toolbar-back"
             onClicked: {
                 pageStack.pop();
             }
         }
 
-        ToolButton {
+        ToolBarButton {
             id: refreshButton
-            iconSource: "toolbar-refresh"
-            platformInverted: window.platformInverted
-            flat: true
+            buttonIconSource: "toolbar-refresh"
             onClicked: {
                 gcpClient.jobs("");
             }
         }
 
-        ToolButton {
+        ToolBarButton {
             id: deleteButton
-            iconSource: (!window.platformInverted) ? "delete.svg" : "delete_inverted.svg"
-            platformInverted: window.platformInverted
-            flat: true
+            buttonIconSource: (!inverted) ? "delete.svg" : "delete_inverted.svg"
             onClicked: {
                 deleteConfirmation.open();
             }
@@ -46,40 +41,22 @@ Page {
 
     ConfirmDialog {
         id: deleteConfirmation
-        titleText: appInfo.emptyStr+qsTr("Delete print jobs")
+        titleText: appInfo.emptyStr+qsTr("Deleting")
         contentText: appInfo.emptyStr+qsTr("Delete all print jobs ?")
         onConfirm: {
             deleteAllJobs();
         }
     }
 
-    GCPClient {
-        id: gcpClient
-
-        property string selectedFilePath
-
-        onRefreshAccessTokenReplySignal: {
-            console.debug("printJobsPage gcpClient onRefreshAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
-
-            if (err == 0) {
-                gcpClient.jobs("");
-            }
-        }
-
-        onJobsReplySignal: {
-            console.debug("printJobsPage gcpClient onJobsReplySignal " + err + " " + errMsg + " " + msg);
-
-            if (err == 0) {
-                addJobsFromJson(msg);
-            } else if (err == 202) { // You have to be signed in to your Google Account.
-                gcpClient.refreshAccessToken();
-            }
-        }
-
-        onDeletejobReplySignal: {
-            console.debug("printJobsPage gcpClient onDeletejobReplySignal " + err + " " + errMsg + " " + msg);
-
-            gcpClient.jobs("");
+    ConfirmDialog {
+        id: deleteJobConfirmation
+        titleText: appInfo.emptyStr+qsTr("Deleting")
+        contentText: appInfo.emptyStr+qsTr("Delete print job %1\ntitle %2 ?").arg(jobModel.get(jobListView.currentIndex).id).arg(jobModel.get(jobListView.currentIndex).title)
+        onConfirm: {
+            // Delete selected job.
+            var jobId = jobModel.get(jobListView.currentIndex).id;
+            jobModel.setProperty(jobListView.currentIndex, "status", appInfo.emptyStr+qsTr("Deleting"));
+            gcpClient.deletejob(jobId);
         }
     }
 
@@ -123,10 +100,11 @@ Page {
     }
 
     function deleteAllJobs() {
-        for (var i=0; i<jobModel.count; i++) {
+        var jobCount = jobModel.count;
+        for (var i=0; i<jobCount; i++) {
             var jobId = jobModel.get(i).id;
             jobModel.setProperty(i, "status", appInfo.emptyStr+qsTr("Deleting"));
-            gcpClient.deletejob(jobId);
+            gcpClient.deletejob(jobId, i == (jobCount-1));
         }
     }
 
@@ -139,37 +117,6 @@ Page {
         id: jobModel
     }
 
-    Button {
-        id: popupDeleteButton
-
-        property string jobId
-
-        iconSource: (!window.platformInverted) ? "delete.svg" : "delete_inverted.svg"
-        platformInverted: window.platformInverted
-        visible: false
-        width: 50
-        height: 50
-        z: 2
-        onClicked: {
-            // Delete selected job.
-            jobModel.setProperty(jobListView.currentIndex, "status", appInfo.emptyStr+qsTr("Deleting"));
-            gcpClient.deletejob(jobId);
-            visible = false;
-        }
-        onVisibleChanged: {
-            if (visible) popupDeleteButtonTimer.restart();
-        }
-
-        Timer {
-            id: popupDeleteButtonTimer
-            interval: 2000
-            running: false
-            onTriggered: {
-                parent.visible = false;
-            }
-        }
-    }
-
     ListView {
         id: jobListView
         width: parent.width
@@ -177,59 +124,58 @@ Page {
         anchors.top: titlePanel.bottom
         model: jobModel
         delegate: jobDelegate
+        clip: true
+    }
+
+    ScrollDecorator {
+        id: scrollbar
+        flickableItem: jobListView
     }
 
     Component {
         id: jobDelegate
 
         ListItem {
-            id: listItem
+            id: jobListItem
 
             property int mouseX
             property int mouseY
 
             Row {
-                anchors.fill: parent.paddingItem
+                anchors.fill: parent
+                anchors.margins: 10
                 spacing: 5
 
                 Column {
                     width: parent.width - statusText.width - parent.spacing
-                    ListItemText {
-                        mode: listItem.mode
-                        role: "Title"
+                    Text {
                         text: title
                         width: parent.width
-                        verticalAlignment: Text.AlignVCenter
-                        platformInverted: window.platformInverted
+                        font.pointSize: 8
+                        elide: Text.ElideMiddle
+                        color: (!inverted) ? "white" : "black"
                     }
-                    ListItemText {
-                        mode: listItem.mode
-                        role: "SubTitle"
+                    Text {
                         text: printerName
                         width: parent.width
-                        verticalAlignment: Text.AlignVCenter
-                        platformInverted: window.platformInverted
+                        font.pointSize: 6
+                        elide: Text.ElideMiddle
+                        color: "grey"
                     }
                 }
-                ListItemText {
+                Text {
                     id: statusText
-                    mode: listItem.mode
-                    role: "Subtitle"
                     text: status
                     width: 120
                     horizontalAlignment: Text.AlignRight
-                    verticalAlignment: Text.AlignVCenter
-                    platformInverted: window.platformInverted
+                    font.pointSize: 6
+                    elide: Text.ElideMiddle
+                    color: "grey"
                 }
             }
 
             onPressAndHold: {
-                var panelX = x + mouseX - jobListView.contentX;
-                var panelY = y + mouseY - jobListView.contentY + jobListView.y;
-                popupDeleteButton.x = panelX - (popupDeleteButton.width / 2);
-                popupDeleteButton.y = panelY - (popupDeleteButton.height);
-                popupDeleteButton.jobId = id;
-                popupDeleteButton.visible = true;
+                deleteJobConfirmation.open();
             }
 
             MouseArea {

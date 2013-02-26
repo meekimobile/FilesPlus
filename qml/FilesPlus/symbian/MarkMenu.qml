@@ -1,83 +1,65 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
 
-Menu {
+MenuWithIcon {
     id: markMenu
     z: 2
-    platformInverted: window.platformInverted
 
     property variant disabledMenus: []
+    property bool isMarkAll: true
+
+    signal markAll()
+    signal copyMarkedItems()
+    signal cutMarkedItems()
+    signal deleteMarkedItems()
+    signal syncMarkedItems()
 
     content: MenuLayout {
         id: menuLayout
 
-        MenuItem {
-            id: markAll
-
-            property bool isMarkAll: true
-
-            platformInverted: window.platformInverted
+        MenuItemWithIcon {
+            id: toggleMarkAll
+            name: "toggleMarkAll"
             text: (isMarkAll) ? appInfo.emptyStr+qsTr("Mark all") : appInfo.emptyStr+qsTr("Unmark all")
             onClicked: {
-                if (isMarkAll) {
-                    fsListView.markAll();
-                } else {
-                    fsListView.unmarkAll();
-                }
-                isMarkAll = !isMarkAll;
+                markAll();
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: copyMarked
-            platformInverted: window.platformInverted
+            name: "copyMarked"
             text: appInfo.emptyStr+qsTr("Copy marked items")
             onClicked: {
-                fsListView.copyMarkedItems();
-                fsListView.state = "";
+                copyMarkedItems();
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: cutMarked
-            platformInverted: window.platformInverted
+            name: "cutMarked"
             text: appInfo.emptyStr+qsTr("Cut marked items")
             onClicked: {
-                fsListView.cutMarkedItems();
-                fsListView.state = "";
+                cutMarkedItems();
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: deleteMarked
-            platformInverted: window.platformInverted
+            name: "deleteMarked"
             text: appInfo.emptyStr+qsTr("Delete marked items")
             onClicked: {
-                fsListView.deleteMarkedItems();
-                fsListView.state = "";
+                deleteMarkedItems();
             }
         }
 
-        MenuItem {
+        MenuItemWithIcon {
             id: syncMarked
-            platformInverted: window.platformInverted
+            name: "syncMarked"
             text: appInfo.emptyStr+qsTr("Sync marked items")
             onClicked: {
-                fsListView.syncMarkedItems();
-                fsListView.state = "";
+                syncMarkedItems();
             }
-        }
-    }
-
-    onStatusChanged: {
-        if (status == DialogStatus.Opening) {
-            var isAnyChecked = fsListView.isAnyItemChecked();
-            console.debug("markMenu onStatusChanged isAnyChecked " + isAnyChecked);
-            copyMarked.visible = isAnyChecked;
-            cutMarked.visible = isAnyChecked;
-            syncMarked.visible = isAnyChecked;
-            deleteMarked.visible = isAnyChecked;
-            markAll.isMarkAll = !fsListView.areAllItemChecked();
         }
     }
 }

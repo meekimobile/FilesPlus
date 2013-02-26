@@ -5,6 +5,7 @@ import "Utility.js" as Utility
 MenuItem {
     id: root
 
+    property string name
     property alias platformLeftMargin: menuItemStyle.leftMargin
     property bool platformSubItemIndicator: false
     property string iconSource

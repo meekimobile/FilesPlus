@@ -4,11 +4,10 @@ import com.nokia.meego 1.0
 Menu {
     id: menu
     z: 2
+    signal closed()
 
     property variant enabledMenus: []
     property variant disabledMenus: []
-
-    signal quit()
 
     function isEnabled(menuName) {
         if (enabledMenus && enabledMenus.length > 0) {
@@ -25,16 +24,19 @@ Menu {
     }
 
     function toggleMenuItems() {
-//        console.debug("MenuWithIcon toggleMenuItems menuLayout.children.length " + menuLayout.children.length);
-        for (var i=0; i<menuLayout.children.length; i++) {
-            var menuItem = menuLayout.children[i];
-            if (!isEnabled(menuItem.text) || isDisabled(menuItem.text)) {
-//                console.debug("MenuWithIcon toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.text + " is hidden.");
+//        console.debug("MenuWithIcon toggleMenuItems content[0] " + content[0]);
+//        console.debug("MenuWithIcon toggleMenuItems content[0].children.length " + content[0].children.length);
+        var actualMenuItemCount = 0;
+        for (var i=0; i<content[0].children.length; i++) {
+            var menuItem = content[0].children[i];
+            if (!isEnabled(menuItem.name) || isDisabled(menuItem.name)) {
+//                console.debug("MenuWithIcon toggleMenuItems menuItem i " + i + " " + menuItem.toString() + " " + menuItem.name + " is hidden.");
                 menuItem.visible = false;
             } else {
-//                console.debug("MenuWithIcon toggleMenuItems menuLayout.children i " + i + " " + menuItem.toString() + " " + menuItem.text + " is shown.");
+//                console.debug("MenuWithIcon toggleMenuItems menuItem i " + i + " " + menuItem.toString() + " " + menuItem.name + " is shown.");
                 menuItem.visible = isMenuItemVisible(menuItem);
             }
+            if (menuItem.visible) actualMenuItemCount++;
         }
     }
 
@@ -45,17 +47,17 @@ Menu {
 
     function updateBgImageSources() {
         var childrenStartIndex = 0;
-        var childrenEndIndex = menuLayout.children.length - 1;
+        var childrenEndIndex = content[0].children.length - 1;
 
-        for (var i=0; i<menuLayout.children.length; i++) {
-            var menuItem = menuLayout.children[i];
+        for (var i=0; i<content[0].children.length; i++) {
+            var menuItem = content[0].children[i];
             if (menuItem.visible) {
                 childrenStartIndex = i;
                 break;
             }
         }
-        for (var i=menuLayout.children.length-1; i>=0; i--) {
-            var menuItem = menuLayout.children[i];
+        for (var i=content[0].children.length-1; i>=0; i--) {
+            var menuItem = content[0].children[i];
             if (menuItem.visible) {
                 childrenEndIndex = i;
                 break;
@@ -65,8 +67,8 @@ Menu {
         var childrenCount = childrenEndIndex - childrenStartIndex + 1;
 
 //        console.debug("MenuWithIcon updateBgImageSources childrenStartIndex " + childrenStartIndex + " childrenEndIndex " + childrenEndIndex + " childrenCount " + childrenCount);
-        for (var i=0; i<menuLayout.children.length; i++) {
-            var menuItem = menuLayout.children[i];
+        for (var i=0; i<content[0].children.length; i++) {
+            var menuItem = content[0].children[i];
             if (menuItem.visible) {
                 menuItem.updateBgImageSource(childrenStartIndex, childrenEndIndex, childrenCount);
             }
@@ -91,6 +93,8 @@ Menu {
             updateBgImageSources();
 //        } else if (status == DialogStatus.Open) {
 //            console.debug("MenuWithIcon onStatusChanged height " + height + " implicitHeight " + implicitHeight);
+        } else if (status == DialogStatus.Closed) {
+            closed();
         }
     }
 }

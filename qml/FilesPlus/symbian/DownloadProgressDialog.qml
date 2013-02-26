@@ -34,8 +34,11 @@ CommonDialog {
             
             onValueChanged: {
                 downloadProgressText.text = Utility.formatFileSize(value,3) + " / " + Utility.formatFileSize(maximumValue,3);
+
                 if (downloadProgressDialog.autoClose && value == maximumValue) {
-                    downloadProgressDialog.close();
+//                    console.debug("downloadProgressDialog.autoClose " + downloadProgressDialog.autoClose + value + " / " + maximumValue);
+                    downloadProgressDialog.accept();
+//                    console.debug("downloadProgressDialog.close() is requested.");
                 } else if (value == maximumValue) {
                     indeterminate = true;
                 }
