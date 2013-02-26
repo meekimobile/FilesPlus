@@ -158,6 +158,6 @@
         <file alias="qml/FilesPlus/CloudMenu.qml">qml/FilesPlus/meego/CloudMenu.qml</file>
         <file>qml/FilesPlus/cloud_add.svg</file>
         <file>qml/FilesPlus/cloud_add_inverted.svg</file>
-        <file>qml/FilesPlus/splash_480x854.png</file>
+        <file>qml/FilesPlus/splash_854x480.png</file>
     </qresource>
 </RCC>

@@ -15,10 +15,11 @@ Rectangle {
 
         Image {
             id: icon
-            width: 240
-            height: 240
+            width: 160
+            height: 160
             anchors.horizontalCenter: parent.horizontalCenter
             source: "FilesPlus256.png"
+            smooth: true
 
             MouseArea {
                 anchors.fill: parent
