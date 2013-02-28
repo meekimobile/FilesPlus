@@ -26,7 +26,8 @@ public:
         SortByName,
         SortByTime,
         SortBySize,
-        SortByType
+        SortByType,
+        SortByNameWithDirectoryFirst
     };
 
     enum RunnableMethods {

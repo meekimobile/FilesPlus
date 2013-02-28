@@ -10,6 +10,20 @@ bool nameLessThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
     return o1.name.toLower() < o2.name.toLower();
 }
 
+bool nameLessThanWithDirectoryFirst(const FolderSizeItem &o1, const FolderSizeItem &o2)
+{
+    if (o1.isDir && !o2.isDir) {
+        // If dir before file, return true.
+        return true;
+    } else if (!o1.isDir && o2.isDir) {
+        // If file before dir, return false;
+        return false;
+    } else {
+        // If both are dir/file, compare name.
+        return o1.name.toLower() < o2.name.toLower();
+    }
+}
+
 bool timeGreaterThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
 {
     return o1.lastModified > o2.lastModified;
@@ -24,19 +38,13 @@ bool typeLessThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
         // If file before dir, return false;
         return false;
     } else {
-        // If both are dir, compare name.
-        // If both are file, compare type and name.
-        if (o1.isDir && o2.isDir) {
-//            qDebug() << "typeLessThan" << o1.name << o1.fileType << o2.name << o2.fileType;
+        // If both are dir/file, compare type and name.
+        if (o1.fileType.toLower() == o2.fileType.toLower()) {
             return o1.name.toLower() < o2.name.toLower();
+        } else if (o1.fileType.toLower() < o2.fileType.toLower()) {
+            return true;
         } else {
-            if (o1.fileType.toLower() == o2.fileType.toLower()) {
-                return o1.name.toLower() < o2.name.toLower();
-            } else if (o1.fileType.toLower() < o2.fileType.toLower()) {
-                return true;
-            } else {
-                return false;
-            }
+            return false;
         }
     }
 }
@@ -915,6 +923,9 @@ void FolderSizeModelThread::sortItemList(QList<FolderSizeItem> &itemList, bool s
     case SortByName:
         qSort(itemList.begin(), itemList.end(), nameLessThan);
         break;
+    case SortByNameWithDirectoryFirst:
+        qSort(itemList.begin(), itemList.end(), nameLessThanWithDirectoryFirst);
+        break;
     case SortByTime:
         qSort(itemList.begin(), itemList.end(), timeGreaterThan);
         break;
@@ -964,6 +975,9 @@ void FolderSizeModelThread::getDirContent(const QString dirPath, QList<FolderSiz
     case SortByName:
         dir.setSorting(QDir::Name);
         break;
+    case SortByNameWithDirectoryFirst:
+        dir.setSorting(QDir::Name | QDir::DirsFirst);
+        break;
     case SortBySize:
         dir.setSorting(QDir::Size | QDir::DirsFirst);
         break;
@@ -971,7 +985,7 @@ void FolderSizeModelThread::getDirContent(const QString dirPath, QList<FolderSiz
         dir.setSorting(QDir::Time);
         break;
     case SortByType:
-        dir.setSorting(QDir::Type);
+        dir.setSorting(QDir::Type | QDir::DirsFirst);
         break;
     }
 

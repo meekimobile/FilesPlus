@@ -22,6 +22,16 @@ MenuWithIcon {
         }
 
         MenuItemWithIcon {
+            property int flag: FolderSizeItemListModel.SortByNameWithDirectoryFirst
+            text: appInfo.emptyStr+qsTr("Sort by Name (dir. first)")
+            checked: (sortFlag == flag)
+            platformLeftMargin: 60
+            onClicked: {
+                selectSort(flag);
+            }
+        }
+
+        MenuItemWithIcon {
             property int flag: FolderSizeItemListModel.SortByType
             text: appInfo.emptyStr+qsTr("Sort by Type")
             checked: (sortFlag == flag)

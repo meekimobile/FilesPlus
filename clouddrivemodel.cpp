@@ -6,6 +6,20 @@ bool nameLessThan(const QScriptValue &o1, const QScriptValue &o2)
     return o1.property("name").toString().toLower() < o2.property("name").toString().toLower();
 }
 
+bool nameLessThanWithDirectoryFirst(const QScriptValue &o1, const QScriptValue &o2)
+{
+    if (o1.property("isDir").toBool() && !o2.property("isDir").toBool()) {
+        // If dir before file, return true.
+        return true;
+    } else if (!o1.property("isDir").toBool() && o2.property("isDir").toBool()) {
+        // If file before dir, return false;
+        return false;
+    } else {
+        // If both are dir/file, compare name.
+        return o1.property("name").toString().toLower() < o2.property("name").toString().toLower();
+    }
+}
+
 bool timeGreaterThan(const QScriptValue &o1, const QScriptValue &o2)
 {
     qDebug() << "timeGreaterThan" << o1.property("lastModified").toString() << o2.property("lastModified").toString();
@@ -21,19 +35,13 @@ bool typeLessThan(const QScriptValue &o1, const QScriptValue &o2)
         // If file before dir, return false;
         return false;
     } else {
-        // If both are dir, compare name.
-        // If both are file, compare type and name.
-        if (o1.property("isDir").toBool() && o2.property("isDir").toBool()) {
-//            qDebug() << "typeLessThan" << o1.name << o1.fileType << o2.name << o2.fileType;
+        // If both are dir/file, compare type then name.
+        if (o1.property("fileType").toString().toLower() == o2.property("fileType").toString().toLower()) {
             return o1.property("name").toString().toLower() < o2.property("name").toString().toLower();
+        } else if (o1.property("fileType").toString().toLower() < o2.property("fileType").toString().toLower()) {
+            return true;
         } else {
-            if (o1.property("fileType").toString().toLower() == o2.property("fileType").toString().toLower()) {
-                return o1.property("name").toString().toLower() < o2.property("name").toString().toLower();
-            } else if (o1.property("fileType").toString().toLower() < o2.property("fileType").toString().toLower()) {
-                return true;
-            } else {
-                return false;
-            }
+            return false;
         }
     }
 }
@@ -4019,6 +4027,9 @@ void CloudDriveModel::sortItemList(QList<QScriptValue> &itemList, int sortFlag)
     switch (sortFlag) {
     case SortByName:
         qSort(itemList.begin(), itemList.end(), nameLessThan);
+        break;
+    case SortByNameWithDirectoryFirst:
+        qSort(itemList.begin(), itemList.end(), nameLessThanWithDirectoryFirst);
         break;
     case SortByTime:
         qSort(itemList.begin(), itemList.end(), timeGreaterThan);
