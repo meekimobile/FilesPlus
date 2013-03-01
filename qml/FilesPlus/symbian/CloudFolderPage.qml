@@ -716,9 +716,11 @@ Page {
 
         onMovementStarted: {
             if (currentItem) {
+                // Hide highlight and popupTool.
                 currentItem.pressed = false;
+                currentIndex = -1;
+                popupToolPanel.visible = false;
             }
-            currentIndex = -1;
         }
     }
 
@@ -877,14 +879,12 @@ Page {
 
         onOpened: {
 //            console.debug("popupToolRing onOpened");
-//            cloudFolderView.highlightFollowsCurrentItem = true;
         }
 
         onClosed: {
 //            console.debug("popupToolRing onClosed");
 //            // Workaround to hide highlight.
-//            cloudFolderView.currentIndex = -1;
-//            cloudFolderView.highlightFollowsCurrentItem = false;
+            cloudFolderView.currentIndex = -1;
         }
 
         onCutClicked: {
@@ -957,7 +957,7 @@ Page {
         }
 
         onShowInfo: {
-            filePropertiesDialog.show();
+            filePropertiesDialog.show(srcItemIndex);
         }
     }
 
@@ -1061,11 +1061,11 @@ Page {
 
     FilePropertiesDialog {
         id: filePropertiesDialog
-        selectedIndex: cloudFolderView.currentIndex
-        selectedItem: cloudFolderModel.get(cloudFolderView.currentIndex)
         isCloudFolder: true
 
-        function show() {
+        function show(index) {
+            selectedIndex = index;
+            selectedItem = cloudFolderModel.get(selectedIndex);
             populateCloudItemModel();
             open();
         }

@@ -814,6 +814,7 @@ Page {
         }
         clip: true
         focus: true
+        cacheBuffer: height * 2
         pressDelay: 200
         model: fsModel
         delegate: listItemDelegate
@@ -960,9 +961,10 @@ Page {
 
         onMovementStarted: {
             if (currentItem) {
-//                console.debug("fsListView onMovementStarted currentItem.pressed " + currentItem.pressed);
+                // Hide highlight and popupTool.
                 currentItem.pressed = false;
-//                console.debug("fsListView onMovementStarted currentItem.pressed " + currentItem.pressed);
+                currentIndex = -1;
+                popupToolPanel.visible = false;
             }
         }
 
@@ -1166,14 +1168,12 @@ Page {
 
         onOpened: {
 //            console.debug("popupToolRing onOpened");
-//            fsListView.highlightFollowsCurrentItem = true;
         }
 
         onClosed: {
 //            console.debug("popupToolRing onClosed");
             // Workaround to hide highlight.
-//            fsListView.currentIndex = -1;
-//            fsListView.highlightFollowsCurrentItem = false;
+            fsListView.currentIndex = -1;
         }
 
         onCutClicked: {
@@ -1268,7 +1268,7 @@ Page {
         }
 
         onShowInfo: {
-            filePropertiesDialog.show();
+            filePropertiesDialog.show(srcItemIndex);
         }
     }
 
@@ -1668,10 +1668,10 @@ Page {
 
     FilePropertiesDialog {
         id: filePropertiesDialog
-        selectedIndex: fsListView.currentIndex
-        selectedItem: fsModel.get(fsListView.currentIndex)
 
-        function show() {
+        function show(index) {
+            selectedIndex = index;
+            selectedItem = fsModel.get(selectedIndex);
             populateCloudItemModel();
             open();
         }

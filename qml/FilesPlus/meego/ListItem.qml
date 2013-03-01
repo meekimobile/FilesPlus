@@ -9,6 +9,7 @@ Item {
     property int mouseX
     property int mouseY
     property bool pressed: false
+    property bool showPressed: true
     property alias showUnderline: underline.visible
 
     signal postPressed(variant mouse)
@@ -38,6 +39,7 @@ Item {
 
     BorderImage {
         id: listItemBG
+        visible: showPressed
         anchors.fill : parent
     }
 
