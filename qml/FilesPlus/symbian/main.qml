@@ -1375,9 +1375,6 @@ PageStackWindow {
                 if (jobJson.operation == CloudDriveModel.RefreshToken) {
                     logWarn(getCloudName(jobJson.type) + " " + qsTr("Refresh Token"),
                             qsTr("Token was refreshed.") );
-
-                    // Request quota.
-                    cloudDriveModel.quota(jobJson.type, jobJson.uid);
                 } else {
                     logInfo(getCloudName(jobJson.type) + " " + qsTr("Access Token"),
                             qsTr("CloudDrive user is authorized.\nPlease proceed your sync action."),
