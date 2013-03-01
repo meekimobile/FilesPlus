@@ -282,7 +282,7 @@ Page {
                             placeholderText: appInfo.emptyStr+qsTr("Input username")
                             readOnly: false
                             validator: RegExpValidator {
-                                regExp: /[\w.@]+/
+                                regExp: /[\w.\-_@]+/
                             }
                         }
                     }
