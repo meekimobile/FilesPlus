@@ -3174,7 +3174,7 @@ void CloudDriveModel::schedulerTimeoutFilter()
 void CloudDriveModel::initJobQueueTimer()
 {
     connect(&m_jobQueueTimer, SIGNAL(timeout()), this, SLOT(proceedNextJob()) );
-    m_jobQueueTimer.setInterval(2000);
+    m_jobQueueTimer.setInterval(1000);
     m_jobQueueTimer.start();
 }
 
