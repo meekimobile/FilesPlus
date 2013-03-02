@@ -231,15 +231,11 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QScopedPointer<QApplication> app(createApplication(argc, argv));
 
 #ifdef Q_OS_SYMBIAN
-    QPixmap splashPixmap(":/qml/FilesPlus/splash_360x640.png");
-    QSplashScreen splash(splashPixmap);
-    splash.showFullScreen();
-    app.data()->processEvents();
+    QSplashScreen *splash = new QSplashScreen(QPixmap(":/qml/FilesPlus/splash_360x640.png"));
+    splash->showFullScreen();
 #elif defined(Q_WS_HARMATTAN)
-    QPixmap splashPixmap(":/qml/FilesPlus/splash_854x480.png"); // Workaround: It shows in landscape by default.
-    QSplashScreen splash(splashPixmap);
-    splash.showFullScreen();
-    app.data()->processEvents();
+    QSplashScreen *splash = new QSplashScreen(QPixmap(":/qml/FilesPlus/splash_854x480.png")); // Workaround: It shows in landscape by default.
+    splash->showFullScreen();
 #endif
 
     // Get defined locale in settings or system locale if it's not defined.
@@ -274,9 +270,11 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     // *** viewer.rootContext() can't support setContextProperty in Qt Creator
     // *** So I decide to implement PieChart with QDeclarativeItem.
 #ifdef Q_OS_SYMBIAN
-    splash.finish(&viewer);
+    splash->finish(&viewer);
+    splash->deleteLater();
 #elif defined(Q_WS_HARMATTAN)
-    splash.finish(&viewer);
+    splash->finish(&viewer);
+    splash->deleteLater();
 #endif
 
     QDeclarativeEngine *engine = viewer.engine();
