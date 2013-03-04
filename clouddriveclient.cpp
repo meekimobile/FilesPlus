@@ -252,6 +252,18 @@ void CloudDriveClient::saveConnection(QString id, QString hostname, QString user
 {
 }
 
+qint64 CloudDriveClient::getOffsetFromRange(QString rangeHeader)
+{
+    qint64 offset = 0;
+    if (!rangeHeader.isEmpty()) {
+        QStringList tokens = rangeHeader.split(QRegExp("=|-"));
+        qDebug() << "CloudDriveClient::getOffsetFromRange range" << rangeHeader << "tokens" << tokens;
+        offset = tokens.at(1).toInt();
+    }
+
+    return offset;
+}
+
 void CloudDriveClient::requestToken(QString nonce)
 {
     emit requestTokenReplySignal(nonce, -1, objectName() + " " + "Request Token", "Service is not implemented.");

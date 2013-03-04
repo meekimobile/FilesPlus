@@ -131,6 +131,7 @@ protected:
     virtual QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
     QString stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj);
     QString formatJSONDateString(QDateTime datetime);
+    qint64 getOffsetFromRange(QString rangeHeader);
 private:
 
 };

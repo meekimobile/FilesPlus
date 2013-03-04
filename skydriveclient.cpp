@@ -589,22 +589,26 @@ QString SkyDriveClient::fileGetReplySave(QNetworkReply *reply)
     if (reply->error() == QNetworkReply::NoError) {
         qDebug() << "SkyDriveClient::fileGetReplySave reply bytesAvailable" << reply->bytesAvailable();
 
+        // Find offset.
+        qint64 offset = getOffsetFromRange(QString::fromAscii(reply->request().rawHeader("Range")));
+        qDebug() << "SkyDriveClient::fileGetReplySave reply request offset" << offset;
+
         // Stream replyBody to a file on localPath.
-        qint64 totalBytes = 0;
-        char buf[1024];
+        qint64 totalBytes = reply->bytesAvailable();
+        qint64 writtenBytes = 0;
+        char buf[FileWriteBufferSize];
         QFile *localTargetFile = m_localFileHash[nonce];
-        if (localTargetFile->open(QIODevice::Append)) {
+        if (localTargetFile->open(QIODevice::ReadWrite)) {
             // Issue: Writing to file with QDataStream << QByteArray will automatically prepend with 4-bytes prefix(size).
             // Solution: Use QIODevice to write directly.
 
-            // TODO Move to offset.
-            qDebug() << "SkyDriveClient::fileGetReplySave localTargetFile->pos()" << localTargetFile->pos();
+            // Move to offset.
+            localTargetFile->seek(offset);
 
             // Read first buffer.
             qint64 c = reply->read(buf, sizeof(buf));
             while (c > 0) {
-                localTargetFile->write(buf, c);
-                totalBytes += c;
+                writtenBytes += localTargetFile->write(buf, c);
 
                 // Tell event loop to process event before it will process time consuming task.
                 QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
@@ -614,9 +618,10 @@ QString SkyDriveClient::fileGetReplySave(QNetworkReply *reply)
             }
         }
 
-        qDebug() << "SkyDriveClient::fileGetReplySave reply totalBytes=" << totalBytes;
+        qDebug() << "SkyDriveClient::fileGetReplySave reply writtenBytes" << writtenBytes << "totalBytes" << totalBytes << "localTargetFile size" << localTargetFile->size();
 
         // Close target file.
+        localTargetFile->flush();
         localTargetFile->close();
 
         QString propertyReplyBody = QString::fromUtf8(m_propertyReplyHash->value(nonce));

@@ -574,13 +574,7 @@ QString GCDClient::fileGetReplySave(QNetworkReply *reply)
         qDebug() << "GCDClient::fileGetReplySave reply bytesAvailable" << reply->bytesAvailable();
 
         // Find offset.
-        qint64 offset = 0;
-        if (reply->request().hasRawHeader("Range")) {
-            QString rangeHeader = QString::fromAscii(reply->request().rawHeader("Range"));
-            QStringList tokens = rangeHeader.split(QRegExp("=|-"));
-            qDebug() << "GCDClient::fileGetReplySave reply request range" << rangeHeader << "tokens" << tokens;
-            offset = tokens.at(1).toInt();
-        }
+        qint64 offset = getOffsetFromRange(QString::fromAscii(reply->request().rawHeader("Range")));
         qDebug() << "GCDClient::fileGetReplySave reply request offset" << offset;
 
         // Stream replyBody to a file on localPath.
@@ -599,8 +593,6 @@ QString GCDClient::fileGetReplySave(QNetworkReply *reply)
             qint64 c = reply->read(buf, sizeof(buf));
             while (c > 0) {
                 writtenBytes += localTargetFile->write(buf, c);
-
-//                emit downloadProgress(nonce, writtenBytes, totalBytes);
 
                 // Tell event loop to process event before it will process time consuming task.
                 QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
