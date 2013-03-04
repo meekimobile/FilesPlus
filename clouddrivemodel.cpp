@@ -768,6 +768,12 @@ QString CloudDriveModel::getFileType(QString localPath)
     return fileType;
 }
 
+qint64 CloudDriveModel::getFileSize(QString localPath)
+{
+    QFileInfo fileInfo(localPath);
+    return fileInfo.size();
+}
+
 CloudDriveModel::ClientTypes CloudDriveModel::getClientType(int typeInt)
 {
 //    qDebug() << "CloudDriveModel::getClientType" << typeInt;

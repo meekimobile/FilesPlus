@@ -177,6 +177,7 @@ public:
     Q_INVOKABLE bool createDirPath(const QString absPath);
     Q_INVOKABLE QString getFileName(const QString absFilePath);
     Q_INVOKABLE QString getFileType(QString localPath);
+    Q_INVOKABLE qint64 getFileSize(QString localPath);
     ClientTypes getClientType(int typeInt);
     ClientTypes getClientType(QString typeText);
     Q_INVOKABLE QString getCloudName(int type);
