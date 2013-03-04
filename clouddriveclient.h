@@ -11,6 +11,7 @@ class CloudDriveClient : public QObject
     Q_OBJECT
 public:
     static const QString KeyStoreFilePath;
+    static const int FileWriteBufferSize;
 
     explicit CloudDriveClient(QObject *parent = 0);
     virtual ~CloudDriveClient();

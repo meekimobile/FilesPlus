@@ -573,19 +573,34 @@ QString GCDClient::fileGetReplySave(QNetworkReply *reply)
     if (reply->error() == QNetworkReply::NoError) {
         qDebug() << "GCDClient::fileGetReplySave reply bytesAvailable" << reply->bytesAvailable();
 
+        // Find offset.
+        qint64 offset = 0;
+        if (reply->request().hasRawHeader("Range")) {
+            QString rangeHeader = QString::fromAscii(reply->request().rawHeader("Range"));
+            QStringList tokens = rangeHeader.split(QRegExp("=|-"));
+            qDebug() << "GCDClient::fileGetReplySave reply request range" << rangeHeader << "tokens" << tokens;
+            offset = tokens.at(1).toInt();
+        }
+        qDebug() << "GCDClient::fileGetReplySave reply request offset" << offset;
+
         // Stream replyBody to a file on localPath.
-        qint64 totalBytes = 0;
-        char buf[1024];
+        qint64 totalBytes = reply->bytesAvailable();
+        qint64 writtenBytes = 0;
+        char buf[FileWriteBufferSize];
         QFile *localTargetFile = m_localFileHash[nonce];
-        if (localTargetFile->open(QIODevice::Append)) {
+        if (localTargetFile->open(QIODevice::ReadWrite)) {
             // Issue: Writing to file with QDataStream << QByteArray will automatically prepend with 4-bytes prefix(size).
             // Solution: Use QIODevice to write directly.
+
+            // Move to offset.
+            localTargetFile->seek(offset);
 
             // Read first buffer.
             qint64 c = reply->read(buf, sizeof(buf));
             while (c > 0) {
-                localTargetFile->write(buf, c);
-                totalBytes += c;
+                writtenBytes += localTargetFile->write(buf, c);
+
+//                emit downloadProgress(nonce, writtenBytes, totalBytes);
 
                 // Tell event loop to process event before it will process time consuming task.
                 QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
@@ -595,9 +610,10 @@ QString GCDClient::fileGetReplySave(QNetworkReply *reply)
             }
         }
 
-        qDebug() << "GCDClient::fileGetReplySave reply totalBytes=" << totalBytes;
+        qDebug() << "GCDClient::fileGetReplySave reply writtenBytes" << writtenBytes << "totalBytes" << totalBytes << "localTargetFile size" << localTargetFile->size();
 
         // Close target file.
+        localTargetFile->flush();
         localTargetFile->close();
 
         QString propertyReplyBody = QString::fromUtf8(m_propertyReplyHash->value(nonce));

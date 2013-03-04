@@ -3,8 +3,10 @@
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
 const QString CloudDriveClient::KeyStoreFilePath = "/home/user/.filesplus/%1.dat";
+const int CloudDriveClient::FileWriteBufferSize = 32768;
 #else
 const QString CloudDriveClient::KeyStoreFilePath = "%1.dat";
+const int CloudDriveClient::FileWriteBufferSize = 32768;
 #endif
 
 CloudDriveClient::CloudDriveClient(QObject *parent) :
