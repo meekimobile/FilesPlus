@@ -248,7 +248,7 @@ void DropboxClient::authorize(QString nonce, QString hostname)
 
 void DropboxClient::accessToken(QString nonce, QString pin)
 {
-    qDebug() << "----- DropboxClient::accessToken -----";
+    qDebug() << "----- DropboxClient::accessToken -----" << nonce << pin;
 
     // Construct normalized query string.
     QMap<QString, QString> sortMap;

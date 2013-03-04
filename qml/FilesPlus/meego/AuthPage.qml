@@ -172,19 +172,16 @@ Page {
                     var uidIndex = html.indexOf("uid:");
                     if (uidIndex != -1) {
                         console.debug("found uid! at " + uidIndex);
-    //                    console.debug("DropboxClient html " + html);
-
+                        pinInputPanel.pin = "PinDefault";
                         cloudDriveModel.accessTokenSlot(authPage.redirectFrom, pinInputPanel.pin);
                         pageStack.pop();
                     } else if (title.match(appInfo.emptyStr+qsTr("^API Request Authorized"))) {
-    //                    console.debug("DropboxClient title " + title);
-
-                        pinInputPanel.pin = title;
+                        pinInputPanel.pin = "PinDefault";
                         cloudDriveModel.accessTokenSlot(authPage.redirectFrom, pinInputPanel.pin);
                         pageStack.pop();
                     } else {
-    //                    console.debug("DropboxClient title " + title);
-    //                    console.debug("DropboxClient html " + html);
+                        // Can't detect successful title, use default pin to hide PIN panel.
+                        pinInputPanel.pin = "PinDefault";
                     }
                 } else if (authPage.redirectFrom == "SkyDriveClient") {
                     // SkyDriveClient handler
@@ -218,7 +215,7 @@ Page {
         anchors.bottom: flickable.bottom
         anchors.bottomMargin: 5
         z: 2
-        visible: (pin != "" && pin != "PinNotFound") // TODO Should it show even PIN can't be detected?
+        visible: (pin != "" && pin != "PinNotFound" && pin != "PinDefault") // Show PIN panel when PIN is valid and not default value for Dropbox.
 
         onVisibleChanged: {
             pinInput.closeSoftwareInputPanel();
