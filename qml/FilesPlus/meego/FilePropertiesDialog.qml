@@ -226,16 +226,28 @@ CommonDialog {
                 id: cloudIcon
                 anchors.verticalCenter: parent.verticalCenter
                 width: 30
-                height: isCloudFolder ? 0 : 30
-                source: isCloudFolder ? "" : cloudDriveModel.getCloudIcon(type)
+                height: !isCloudFolder ? 30 : 0
+                source: !isCloudFolder ? cloudDriveModel.getCloudIcon(type) : ""
+                visible: !isCloudFolder
             }
-            Text {
-                width: parent.width - parent.spacing - cloudIcon.width
+            Column {
+                width: parent.width - (cloudIcon.visible ? (cloudIcon.width + parent.spacing) : 0) - (disconnectButton.width + parent.spacing)
                 anchors.verticalCenter: parent.verticalCenter
-                text: !isCloudFolder ? (email + "\n" + absolutePath) : absolutePath
-                font.pointSize: 16
-                color: "white"
-                elide: Text.ElideRight
+                Text {
+                    width: parent.width
+                    text: !isCloudFolder ? email : ""
+                    font.pointSize: 16
+                    color: "white"
+                    elide: Text.ElideRight
+                    visible: !isCloudFolder
+                }
+                Text {
+                    width: parent.width
+                    text: absolutePath
+                    font.pointSize: 16
+                    color: "white"
+                    elide: Text.ElideRight
+                }
             }
             Button {
                 id: disconnectButton

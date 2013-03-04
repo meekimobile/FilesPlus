@@ -184,8 +184,8 @@ CommonDialog {
                     }
                     Button {
                         id: syncAddButton
-                        width: 56
-                        height: 56
+                        width: 50
+                        height: 50
                         iconSource: "cloud_add.svg"
                         anchors.verticalCenter: parent.verticalCenter
                         visible: !isCloudFolder
@@ -195,8 +195,8 @@ CommonDialog {
                     }
                     Button {
                         id: syncAllButton
-                        width: 56
-                        height: 56
+                        width: 50
+                        height: 50
                         iconSource: "cloud.svg"
                         anchors.verticalCenter: parent.verticalCenter
                         visible: cloudItemModel.count > 0
@@ -227,21 +227,33 @@ CommonDialog {
                 id: cloudIcon
                 anchors.verticalCenter: parent.verticalCenter
                 width: 30
-                height: isCloudFolder ? 0 : 30
-                source: isCloudFolder ? "" : cloudDriveModel.getCloudIcon(type)
+                height: !isCloudFolder ? 30 : 0
+                source: !isCloudFolder ? cloudDriveModel.getCloudIcon(type) : ""
+                visible: !isCloudFolder
             }
-            Text {
-                width: parent.width - parent.spacing - cloudIcon.width
+            Column {
+                width: parent.width - (cloudIcon.visible ? (cloudIcon.width + parent.spacing) : 0) - (disconnectButton.width + parent.spacing)
                 anchors.verticalCenter: parent.verticalCenter
-                text: !isCloudFolder ? (email + "\n" + absolutePath) : absolutePath
-                font.pointSize: 6
-                color: "white"
-                elide: Text.ElideRight
+                Text {
+                    width: parent.width
+                    text: !isCloudFolder ? email : ""
+                    font.pointSize: 6
+                    color: "white"
+                    elide: Text.ElideRight
+                    visible: !isCloudFolder
+                }
+                Text {
+                    width: parent.width
+                    text: absolutePath
+                    font.pointSize: 6
+                    color: "white"
+                    elide: Text.ElideRight
+                }
             }
             Button {
                 id: disconnectButton
-                width: 56
-                height: 56
+                width: 50
+                height: 50
                 iconSource: "cloud_disconnect.svg"
                 anchors.verticalCenter: parent.verticalCenter
                 onClicked: {
