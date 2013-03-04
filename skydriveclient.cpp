@@ -15,7 +15,7 @@ const QString SkyDriveClient::quotaURI = "https://apis.live.net/v5.0/me/skydrive
 const QString SkyDriveClient::logoutURI = "https://login.live.com/oauth20_logout.srf";
 
 const QString SkyDriveClient::fileGetURI = "https://apis.live.net/v5.0/%1/content"; // ?download=true ?suppress_redirects=true
-const QString SkyDriveClient::filePutURI = "https://apis.live.net/v5.0/%1/files/%2"; // PUT
+const QString SkyDriveClient::filePutURI = "https://apis.live.net/v5.0/%1/files/%2"; // PUT with ?downsize_photo_uploads=false
 const QString SkyDriveClient::filesURI = "https://apis.live.net/v5.0/%1/files";
 const QString SkyDriveClient::propertyURI = "https://apis.live.net/v5.0/%1"; // GET or PUT to update.
 const QString SkyDriveClient::createFolderURI = "https://apis.live.net/v5.0/%1"; // POST with json with name = new folder name.
@@ -644,7 +644,7 @@ QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *so
     qDebug() << "----- SkyDriveClient::filePut -----" << nonce << uid << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
     QString uri = filePutURI.arg(remoteParentPath).arg(remoteFileName);
-    uri = encodeURI(uri);
+    uri = encodeURI(uri) + "?downsize_photo_uploads=false";
     qDebug() << "SkyDriveClient::filePut uri " << uri;
 
     // Send request.
