@@ -57,7 +57,7 @@ Page {
                         imageSource = fetchCurrentPendingSourceUrl();
                         Qt.openUrlExternally(imageSource);
                     } else {
-                        imageSource = "file://" + imageGridModel.get(imageGrid.currentIndex).absolutePath;
+                        imageSource = helper.getUrl(imageGridModel.get(imageGrid.currentIndex).absolutePath);
                         Qt.openUrlExternally(imageSource);
                     }
                 }
