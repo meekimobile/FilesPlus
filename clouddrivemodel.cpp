@@ -3204,6 +3204,14 @@ void CloudDriveModel::initializeDB(QString nonce)
     QSqlQuery query(m_db);
     bool res = false;
 
+    // TODO Workaround. Reindex to fix QSqlError 11 database disk image is malformed.
+    res = query.exec("REINDEX;");
+    if (res) {
+        qDebug() << "CloudDriveModel::initializeDB REINDEX is done.";
+    } else {
+        qDebug() << "CloudDriveModel::initializeDB REINDEX is failed. Error" << query.lastError();
+    }
+
     res = query.exec("CREATE TABLE cloud_drive_item(type INTEGER PRIMARY_KEY, uid TEXT PRIMARY_KEY, local_path TEXT PRIMARY_KEY, remote_path TEXT, hash TEXT, last_modified TEXT)");
     if (res) {
         qDebug() << "CloudDriveModel::initializeDB CREATE TABLE cloud_drive_item is done.";
