@@ -1704,5 +1704,9 @@ Page {
             syncFileSlot(selectedItem.absolutePath, selectedIndex);
             close();
         }
+        onDisconnect: {
+            cloudDriveModel.disconnect(type, uid, selectedItem.absolutePath);
+            close();
+        }
     }
 }

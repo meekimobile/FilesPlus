@@ -1082,6 +1082,10 @@ Page {
             cloudDriveModel.syncItemByRemotePath(selectedCloudType, selectedUid, selectedItem.absolutePath);
             close();
         }
+        onDisconnect: {
+            cloudDriveModel.disconnect(type, uid, absolutePath);
+            close();
+        }
     }
 
     onStatusChanged: {

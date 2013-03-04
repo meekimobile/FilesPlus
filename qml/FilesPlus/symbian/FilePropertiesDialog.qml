@@ -17,6 +17,7 @@ CommonDialog {
     signal closed()
     signal syncAll()
     signal syncAdd()
+    signal disconnect(int type, string uid, string absolutePath)
 
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
@@ -236,6 +237,20 @@ CommonDialog {
                 font.pointSize: 6
                 color: "white"
                 elide: Text.ElideRight
+            }
+            Button {
+                id: disconnectButton
+                width: 56
+                height: 56
+                iconSource: "cloud_disconnect.svg"
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: {
+                    if (isCloudFolder) {
+                        disconnect(selectedCloudType, selectedUid, absolutePath);
+                    } else {
+                        disconnect(type, uid, absolutePath);
+                    }
+                }
             }
         }
     }
