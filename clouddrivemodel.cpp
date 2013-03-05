@@ -269,16 +269,32 @@ void CloudDriveModel::saveCloudDriveJobs()
             qDebug() << "CloudDriveModel::saveCloudDriveJobs make dir" << info.absolutePath();
         }
     }
+
     if (file.open(QIODevice::WriteOnly)) {
         file.write("[ ");
         int c = 0;
         foreach (CloudDriveJob job, m_cloudDriveJobs->values()) {
-            // TODO Clean up job.
+            // Clean up job.
             if (job.jobId == "") continue;
 
-            if (c > 0) file.write(", ");
-            file.write(job.toJsonText().toUtf8());
-            c++;
+            // Include only file transferring jobs.
+            switch (job.operation) {
+            case FileGet:
+            case FilePut:
+            case MigrateFile:
+            case MigrateFilePut:
+            case SyncFromLocal:
+            case FilePutResume:
+            case FilePutCommit:
+            case FileGetResume:
+            case FileGetCommit:
+                if (c > 0) file.write(", ");
+                file.write(job.toJsonText().toUtf8());
+                c++;
+                break;
+            default:
+                qDebug() << "CloudDriveModel::saveCloudDriveJobs skip jobId" << job.jobId << getCloudName(job.type) << getOperationName(job.operation);
+            }
         }
         file.write(" ]");
     }
@@ -1028,6 +1044,11 @@ int CloudDriveModel::getQueuedJobCount() const
 int CloudDriveModel::getRunningJobCount() const
 {
     return runningJobCount;
+}
+
+int CloudDriveModel::getJobCount() const
+{
+    return m_cloudDriveJobs->count();
 }
 
 void CloudDriveModel::cancelQueuedJobs()
@@ -3852,9 +3873,12 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
 void CloudDriveModel::suspendJob(const QString jobId)
 {
     // Suspend job.
+    // TODO Actual abort job.
     CloudDriveJob job = m_cloudDriveJobs->value(jobId);
     job.isRunning = false;
     updateJob(job);
+    jobDone();
+    requestJobQueueStatus();
 }
 
 void CloudDriveModel::resumeJob(const QString jobId)
