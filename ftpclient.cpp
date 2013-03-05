@@ -200,6 +200,10 @@ QString FtpClient::property(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- FtpClient::property -----" << uid << remoteFilePath;
 
+    if (remoteFilePath == "/" || remoteFilePath == "") {
+        return getRootPropertyJson();
+    }
+
     QString propertyJson = "";
     QString remoteParentPath = getParentRemotePath(remoteFilePath);
     QString remoteFileName = getRemoteFileName(remoteFilePath);
@@ -288,10 +292,13 @@ void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "----- FtpClient::browse -----" << nonce << uid << remoteFilePath;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+//    connect(m_ftp, SIGNAL(commandFinished(QString,int,bool)), this, SLOT(browseReplyFinished(QString,int,bool)));
 
     // Get item list.
     if (!remoteFilePath.isEmpty()) m_ftp->cd(remoteFilePath);
     m_ftp->waitForDone();
+    // TODO Make it provide port for firewall environment.
+//    m_ftp->rawCommand("PORT 10,0,2,15,43,113");
 
     if (m_ftp->error() == QFtp::NoError) {
         // Browse a folder.
@@ -328,6 +335,34 @@ void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
     m_ftp->close();
     m_ftp->deleteLater();
     m_ftpHash->remove(m_ftp->getNonce());
+}
+
+void FtpClient::browseReplyFinished(QString nonce, int id, bool error)
+{
+    qDebug() << "FtpClient::browseReplyFinished" << nonce << id << error;
+
+    QFtpWrapper *m_ftp = m_ftpHash->value(nonce);
+    QString uid = m_ftp->getUid();
+
+    if (!error) {
+//            m_remoteRootHash[uid] = m_ftp->getCurrentPath();
+//            qDebug() << "FtpClient::browseReplyFinished nonce" << nonce << "uid" << uid << "remote root" << m_remoteRootHash[uid];
+
+        QString dataJson = getItemListJson(m_ftp->getCurrentPath(), m_ftp->getItemList());
+        QString propertyJson = "{}"; //property(nonce, uid, m_ftp->getCurrentPath());
+
+//        emit browseReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), mergePropertyAndFilesJson(propertyJson, dataJson) );
+    } else {
+//        emit browseReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), "{}");
+    }
+
+    qDebug() << "FtpClient::browseReplyFinished" << nonce << "hasPendingCommands" << m_ftp->hasPendingCommands();
+
+    if (!m_ftp->hasPendingCommands()) {
+        m_ftp->close();
+        m_ftp->deleteLater();
+        m_ftpHash->remove(m_ftp->getNonce());
+    }
 }
 
 void FtpClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
@@ -518,8 +553,8 @@ QFtpWrapper *FtpClient::connectToHost(QString nonce, QString uid)
 
 QString FtpClient::getPropertyJson(const QString parentPath, const QUrlInfo item)
 {
-    // TODO handle absolute path in name.
-    QString path = (item.name().startsWith("/") ? "" : parentPath + "/") + item.name();
+    // Handle absolute path in name.
+    QString path = removeDoubleSlash((item.name().startsWith("/") ? "" : parentPath + "/") + item.name());
     uint itemSize = item.size();
 
     QScriptEngine engine;
@@ -535,6 +570,25 @@ QString FtpClient::getPropertyJson(const QString parentPath, const QUrlInfo item
     parsedObj.setProperty("source", QScriptValue());
     parsedObj.setProperty("thumbnail", QScriptValue());
     parsedObj.setProperty("fileType", QScriptValue(getFileType(item.name())));
+
+    return stringifyScriptValue(engine, parsedObj);
+}
+
+QString FtpClient::getRootPropertyJson()
+{
+    QScriptEngine engine;
+    QScriptValue parsedObj = engine.newObject();
+    parsedObj.setProperty("name", QScriptValue("/"));
+    parsedObj.setProperty("absolutePath", QScriptValue("/"));
+    parsedObj.setProperty("parentPath", QScriptValue(""));
+    parsedObj.setProperty("size", QScriptValue(0));
+    parsedObj.setProperty("isDeleted", QScriptValue(false));
+    parsedObj.setProperty("isDir", QScriptValue(true));
+    parsedObj.setProperty("lastModified", QScriptValue(""));
+    parsedObj.setProperty("hash", QScriptValue(""));
+    parsedObj.setProperty("source", QScriptValue(""));
+    parsedObj.setProperty("thumbnail", QScriptValue(""));
+    parsedObj.setProperty("fileType", QScriptValue(""));
 
     return stringifyScriptValue(engine, parsedObj);
 }
@@ -558,8 +612,9 @@ QString FtpClient::getItemListJson(const QString parentPath, const QList<QUrlInf
 QString FtpClient::getParentRemotePath(QString remotePath)
 {
     QString remoteParentPath = "";
-    if (remotePath != "") {
+    if (remotePath != "" && remotePath != "/") {
         remoteParentPath = remotePath.mid(0, remotePath.lastIndexOf("/"));
+        remoteParentPath = (remoteParentPath == "") ? "/" : remoteParentPath;
     }
 
     return remoteParentPath;

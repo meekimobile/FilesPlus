@@ -40,6 +40,11 @@ QString QFtpWrapper::getNonce()
     return m_nonce;
 }
 
+QString QFtpWrapper::getUid()
+{
+    return m_uid;
+}
+
 QList<QUrlInfo> QFtpWrapper::getItemList()
 {
     return m_itemList;
@@ -56,7 +61,7 @@ void QFtpWrapper::waitForDone()
 
     int c = MaxWaitCount;
     while (!m_isDone && c-- > 0) {
-//        qDebug() << "QFtpWrapper::waitForDone" << m_isDone << c;
+//        qDebug() << "QFtpWrapper::waitForDone" << m_isDone << c << "hasPendingCommands" << hasPendingCommands();
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
     }
@@ -142,6 +147,8 @@ void QFtpWrapper::commandStartedFilter(int id)
 
 void QFtpWrapper::commandFinishedFilter(int id, bool error)
 {
+    qDebug() << "QFtpWrapper::commandFinishedFilter" << id << error << this->error() << this->errorString();
+
     emit commandFinished(m_nonce, id, error);
 }
 
@@ -175,6 +182,7 @@ void QFtpWrapper::rawCommandReplyFilter(int replyCode, QString result)
                 m_currentPath = rx.cap(1);
             }
         }
+        qDebug() << "QFtpWrapper::rawCommandReplyFilter m_currentPath" << m_currentPath;
     }
 
     emit rawCommandReply(m_nonce, replyCode, result);
@@ -196,6 +204,8 @@ void QFtpWrapper::stateChangedFilter(int state)
 
 void QFtpWrapper::doneFilter(bool error)
 {
+    qDebug() << "QFtpWrapper::doneFilter error" << error;
+
     m_isDone = true;
 
     emit done(m_nonce, error);

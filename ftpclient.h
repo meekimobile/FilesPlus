@@ -41,6 +41,7 @@ public:
 signals:
 
 public slots:
+    void browseReplyFinished(QString nonce, int id, bool error);
 
 protected:
 
@@ -54,6 +55,7 @@ private:
     bool deleteRecursive(QFtpWrapper *m_ftp, QString remoteFilePath);
 
     QString getPropertyJson(const QString parentPath, const QUrlInfo item);
+    QString getRootPropertyJson();
     QString getItemListJson(const QString parentPath, const QList<QUrlInfo> itemList);
     QString getParentRemotePath(QString remotePath);
     QString getRemoteFileName(QString remotePath);

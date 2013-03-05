@@ -20,6 +20,7 @@ public:
 
     QString getCurrentPath();
     QString getNonce();
+    QString getUid();
     QList<QUrlInfo> getItemList();
     void resetIsDone();
     void waitForDone();
