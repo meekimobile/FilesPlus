@@ -287,6 +287,16 @@ QString DropboxClient::encodeURI(const QString uri) {
 }
 
 QByteArray DropboxClient::createOAuthHeaderForUid(QString nonce, QString uid, QString method, QString uri, QMap<QString, QString> addParamMap) {
+    if (uid.isEmpty()) {
+        qDebug() << "DropboxClient::createOAuthHeaderForUid uid is empty.";
+        return QByteArray();
+    }
+
+    if (!accessTokenPairMap.contains(uid)) {
+        qDebug() << "DropboxClient::createOAuthHeaderForUid uid" << uid << "is not authorized.";
+        return QByteArray();
+    }
+
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
     sortMap["oauth_consumer_key"] = consumerKey;
@@ -466,6 +476,16 @@ QNetworkReply *DropboxClient::filePut(QString nonce, QString uid, QIODevice *sou
 
 QString DropboxClient::thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size)
 {
+    if (uid.isEmpty()) {
+        qDebug() << "DropboxClient::thumbnail uid is empty.";
+        return "";
+    }
+
+    if (!accessTokenPairMap.contains(uid)) {
+        qDebug() << "DropboxClient::thumbnail uid" << uid << "is not authorized.";
+        return "";
+    }
+
     QString uri = thumbnailURI.arg(dropboxRoot, remoteFilePath);
 
     QMap<QString, QString> sortMap;
