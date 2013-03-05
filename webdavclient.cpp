@@ -134,7 +134,11 @@ QString WebDavClient::fileGet(QString nonce, QString uid, QString remoteFilePath
     // Send request.
     QNetworkReply *reply = dynamic_cast<QNetworkReply *>( fileGet(nonce, uid, remoteFilePath, -1, synchronous) );
 
-    if (!synchronous) return "";
+    if (!synchronous) {
+        // Store reply for further usage.
+        m_replyHash->insert(nonce, reply);
+        return "";
+    }
 
     // Construct result.
     QString result = fileGetReplySave(reply);
@@ -156,7 +160,10 @@ void WebDavClient::filePut(QString nonce, QString uid, QString localFilePath, QS
         qint64 fileSize = localSourceFile->size();
 
         // Send request.
-        filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
+        QNetworkReply * reply = filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
+
+        // Store reply for further usage.
+        m_replyHash->insert(nonce, reply);
     } else {
         qDebug() << "WebDavClient::filePut file " << localFilePath << " can't be opened.";
         emit filePutReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");
@@ -686,6 +693,9 @@ QIODevice *WebDavClient::fileGetResume(QString nonce, QString uid, QString remot
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
+    // Store reply for further usage.
+    m_replyHash->insert(nonce, reply);
+
     return reply;
 }
 
@@ -1083,7 +1093,8 @@ void WebDavClient::fileGetReplyFinished(QNetworkReply *reply)
 
     emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), result);
 
-    // TODO scheduled to delete later.
+    // Scheduled to delete later.
+    m_replyHash->remove(nonce);
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -1120,6 +1131,7 @@ void WebDavClient::filePutReplyFinished(QNetworkReply *reply)
     emit filePutReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // Scheduled to delete later.
+    m_replyHash->remove(nonce);
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -1353,7 +1365,8 @@ void WebDavClient::fileGetResumeReplyFinished(QNetworkReply *reply)
 
     emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), result);
 
-    // TODO scheduled to delete later.
+    // Scheduled to delete later.
+    m_replyHash->remove(nonce);
     reply->deleteLater();
     reply->manager()->deleteLater();
 }

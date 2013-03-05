@@ -87,6 +87,8 @@ public:
      */
     virtual QString filePutResumeStatus(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
     virtual QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
+
+    virtual bool abort(QString nonce);
 signals:
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
@@ -116,6 +118,7 @@ public slots:
 protected:
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;
+    QHash<QString, QNetworkReply*> *m_replyHash;
 
     void loadAccessPairMap();
     void saveAccessPairMap();

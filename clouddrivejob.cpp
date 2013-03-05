@@ -25,6 +25,7 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->uploadOffset = 0;
     this->err = 0;
     this->retryCount = 0;
+    this->isAborted = false;
 }
 
 QString CloudDriveJob::toJsonText()

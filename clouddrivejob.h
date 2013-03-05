@@ -47,6 +47,8 @@ public:
 
     QString data;
 
+    bool isAborted;
+
     QString toJsonText();
 };
 

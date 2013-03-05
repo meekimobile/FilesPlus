@@ -38,6 +38,8 @@ public:
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
     QString mergePropertyAndFilesJson(QString propertyJsonText, QString filesJsonText);
+
+    bool abort(QString nonce);
 signals:
 
 public slots:

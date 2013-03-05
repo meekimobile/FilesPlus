@@ -196,6 +196,17 @@ QString FtpClient::mergePropertyAndFilesJson(QString propertyJsonText, QString f
     return stringifyScriptValue(engine, mergedObj);
 }
 
+bool FtpClient::abort(QString nonce)
+{
+    if (m_ftpHash->contains(nonce)) {
+        QFtpWrapper *ftp = m_ftpHash->value(nonce);
+        ftp->abort();
+        qDebug() << "FtpClient::abort nonce" << nonce << "is aborted.";
+    } else {
+        qDebug() << "FtpClient::abort nonce" << nonce << "is not found. Operation is ignored.";
+    }
+}
+
 QString FtpClient::property(QString nonce, QString uid, QString remoteFilePath)
 {
     qDebug() << "----- FtpClient::property -----" << uid << remoteFilePath;

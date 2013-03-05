@@ -1016,6 +1016,9 @@ void CloudDriveModel::removeJob(QString caller, QString nonce)
         return;
     }
 
+    // Abort job.
+    suspendJob(nonce);
+
     mutex.lock();
     QString localPath = m_cloudDriveJobs->value(nonce).localFilePath;
     clearConnectedRemoteDirtyCache(localPath);
@@ -3873,12 +3876,17 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
 void CloudDriveModel::suspendJob(const QString jobId)
 {
     // Suspend job.
-    // TODO Actual abort job.
     CloudDriveJob job = m_cloudDriveJobs->value(jobId);
-    job.isRunning = false;
-    updateJob(job);
-    jobDone();
-    requestJobQueueStatus();
+//    job.isRunning = false;
+//    updateJob(job);
+//    jobDone();
+//    requestJobQueueStatus();
+
+    // Actually abort job.
+    CloudDriveClient *client = getCloudClient(getClientType(job.type));
+    if (client != 0) {
+        client->abort(jobId);
+    }
 }
 
 void CloudDriveModel::resumeJob(const QString jobId)

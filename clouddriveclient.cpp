@@ -12,10 +12,12 @@ const int CloudDriveClient::FileWriteBufferSize = 32768;
 CloudDriveClient::CloudDriveClient(QObject *parent) :
     QObject(parent)
 {
+    m_replyHash = new QHash<QString, QNetworkReply*>();
 }
 
 CloudDriveClient::~CloudDriveClient()
 {
+    m_replyHash = 0;
 }
 
 bool CloudDriveClient::isAuthorized()
@@ -353,6 +355,17 @@ QString CloudDriveClient::filePutCommit(QString nonce, QString uid, QString remo
 {
     emit filePutCommitReplySignal(nonce, -1, objectName() + " " + "File Put Commit", "Service is not implemented.");
     return "";
+}
+
+bool CloudDriveClient::abort(QString nonce)
+{
+    if (m_replyHash->contains(nonce)) {
+        QNetworkReply *reply = m_replyHash->value(nonce);
+        reply->abort();
+        qDebug() << "CloudDriveClient::abort nonce" << nonce << "is aborted.";
+    } else {
+        qDebug() << "CloudDriveClient::abort nonce" << nonce << "is not found. Operation is ignored.";
+    }
 }
 
 QString CloudDriveClient::thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size)
