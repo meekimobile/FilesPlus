@@ -3,11 +3,15 @@
 
 #include <QtNetwork>
 #include <QObject>
+#include <QTimer>
+#include <QSettings>
 
 class QNetworkReplyWrapper : public QObject
 {
     Q_OBJECT
 public:
+    static const int DefaultTimeoutMSec;
+
     explicit QNetworkReplyWrapper(QNetworkReply *reply, QObject *parent = 0);
     
 signals:
@@ -18,8 +22,11 @@ public slots:
     void uploadProgressFilter(qint64 bytesSent, qint64 bytesTotal);
     void downloadProgressFilter(qint64 bytesReceived, qint64 bytesTotal);
 
+    void idleTimerTimeoutSlot();
 private:
     QNetworkReply *m_reply;
+    QTimer *m_idleTimer;
+    QSettings m_settings;
 };
 
 #endif // QNETWORKREPLYWRAPPER_H
