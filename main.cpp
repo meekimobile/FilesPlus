@@ -189,9 +189,15 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QDir sourceDir("C:/");
     foreach (QFileInfo fileInfo, sourceDir.entryInfoList(QStringList("*.dat"))) {
         QString targetFilePath = QDir(QDesktopServices::storageLocation(QDesktopServices::DataLocation)).absoluteFilePath(fileInfo.fileName());
+        if (QFile(targetFilePath).exists()) {
+            QFile::rename(targetFilePath, targetFilePath + ".bak");
+            qDebug() << "main backup" << targetFilePath << "to" << targetFilePath + ".bak";
+        }
         if (QFile::rename(fileInfo.absoluteFilePath(), targetFilePath)) {
+            // For file in same drive/partition.
             qDebug() << "main moved" << fileInfo.absoluteFilePath() << "to" << targetFilePath;
         } else if (QFile::copy(fileInfo.absoluteFilePath(), targetFilePath)) {
+            // For file in different drive/partition.
             qDebug() << "main copied" << fileInfo.absoluteFilePath() << "to" << targetFilePath;
             QFile(fileInfo.absoluteFilePath()).remove();
             qDebug() << "main removed" << fileInfo.absoluteFilePath();
