@@ -151,7 +151,9 @@ void CloudDriveClient::saveAccessPairMap() {
         } else {
             qDebug() << objectName() << "::saveAccessPairMap make dir" << info.absolutePath();
         }
-    }    if (file.open(QIODevice::WriteOnly)) {
+    }
+
+    if (file.open(QIODevice::WriteOnly)) {
         QDataStream out(&file);   // we will serialize the data into the file
         out << accessTokenPairMap;
 
