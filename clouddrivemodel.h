@@ -129,6 +129,7 @@ public:
     Q_INVOKABLE void removeJobs(bool removeAll = false);
     Q_INVOKABLE int getQueuedJobCount() const;
     Q_INVOKABLE int getRunningJobCount() const;
+    Q_INVOKABLE int getJobCount() const;
     Q_INVOKABLE void cancelQueuedJobs();
     Q_INVOKABLE void addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash, bool addOnly = false);
     Q_INVOKABLE void removeItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
