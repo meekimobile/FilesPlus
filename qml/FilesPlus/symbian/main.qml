@@ -1351,6 +1351,31 @@ PageStackWindow {
             return parsedObj;
         }
 
+        function compareFileMetadata(jobJson, jsonObj, localFilePath) {
+            var itemJson = Utility.createJsonObj(cloudDriveModel.getItemJson(localFilePath, jobJson.type, jobJson.uid));
+            var itemLocalIsFile = cloudDriveModel.isFile(localFilePath);
+            var itemLocalSize = cloudDriveModel.getFileSize(localFilePath);
+            var itemLocalLastModified = Utility.parseDate(cloudDriveModel.getFileLastModified(localFilePath));
+            var jsonObjLastModified = Utility.parseDate(jsonObj.lastModified);
+            console.debug("window cloudDriveModel compareFileMetadata file"
+                          + " remote path " + jsonObj.absolutePath + " hash " + jsonObj.hash + " size " + jsonObj.size + " lastModified " + jsonObjLastModified
+                          + " local path " + localFilePath + " hash " + itemJson.hash + " size " + itemLocalSize + " lastModified " + itemLocalLastModified
+                          + " compare(remote < local) " + (jsonObjLastModified < itemLocalLastModified)
+                          + " forcePut " + jobJson.force_put + " forceGet " + jobJson.force_get);
+            // If ((rev is newer and size is changed) or there is no local file), get from remote.
+            if (jobJson.force_get || (jsonObj.hash > itemJson.hash && jsonObj.size != itemLocalSize) || !itemLocalIsFile) {
+                // Download changed remote item to localFilePath.
+                return -1;
+            } else if (jobJson.force_put || (jsonObj.hash < itemJson.hash && jsonObj.size != itemLocalSize) || (jsonObjLastModified < itemLocalLastModified && jsonObj.size != itemLocalSize)) {
+                // ISSUE Once downloaded a file, its local timestamp will be after remote immediately. This approach may not work.
+                // Upload changed local item to remoteParentPath with item name.
+                return 1;
+            } else {
+                // Update remote has to local hash on cloudDriveItem.
+                return 0;
+            }
+        }
+
         onRequestTokenReplySignal: {
             console.debug("window cloudDriveModel onRequestTokenReplySignal " + err + " " + errMsg + " " + msg);
 
@@ -1617,18 +1642,18 @@ PageStackWindow {
                                 var item = jsonObj.children[i];
                                 var itemLocalPath = cloudDriveModel.getAbsolutePath(jobJson.local_file_path, item.name);
                                 var itemLocalHash = cloudDriveModel.getItemHash(itemLocalPath, jobJson.type, jobJson.uid);
-                                var itemLocalSize = cloudDriveModel.getFileSize(itemLocalPath);
                                 remotePathList = remotePathList + (remotePathList != "" ? "," : "") + item.absolutePath;
                                 if (item.isDir) {
                                     // This flow will trigger recursive metadata calling.
                                     cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, item.absolutePath, -1, jobJson.force_put, jobJson.force_get);
                                 } else {
-                                    console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " sync children file remote path " + item.absolutePath + " hash " + item.hash + " local path " + itemLocalPath + " hash " + itemLocalHash);
                                     // If ((rev is newer and size is changed) or there is no local file), get from remote.
                                     // TODO Should it just sync a file, then it will be decided operation on its metadata call?
-                                    if (jobJson.force_get || (item.hash > itemLocalHash && item.size != itemLocalSize)) {
+                                    var r = cloudDriveModel.compareFileMetadata(jobJson, item, itemLocalPath);
+                                    console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " sync children file remote path " + item.absolutePath + " hash " + item.hash + " local path " + itemLocalPath + " hash " + itemLocalHash + " compare result " + r);
+                                    if (r < 0) {
                                         cloudDriveModel.fileGet(jobJson.type, jobJson.uid, item.absolutePath, item.size, itemLocalPath, -1);
-                                    } else if (jobJson.force_put || (item.hash < itemLocalHash && item.size != itemLocalSize)) {
+                                    } else if (r > 0) {
                                         cloudDriveModel.filePut(jobJson.type, jobJson.uid, itemLocalPath, item.parentPath, item.name, -1);
                                     } else {
                                         cloudDriveModel.addItem(jobJson.type, jobJson.uid, itemLocalPath, item.absolutePath, item.hash);
@@ -1645,17 +1670,14 @@ PageStackWindow {
                         console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " remotePathList " + remotePathList);
                         cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, jsonObj.parentPath, jobJson.modelIndex, jobJson.force_put, remotePathList);
                     } else { // Sync file.
-                        var itemLocalSize = cloudDriveModel.getFileSize(jobJson.local_file_path);
-                        console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " sync file remote path " + jsonObj.absolutePath + " hash " + jsonObj.hash + " size " + jsonObj.size + " local path " + jobJson.local_file_path + " hash " + itemJson.hash + " size " + itemLocalSize + " forcePut " + jobJson.force_put + " forceGet " + jobJson.force_get);
                         // If ((rev is newer and size is changed) or there is no local file), get from remote.
-                        if (jobJson.force_get || (jsonObj.hash > itemJson.hash && jsonObj.size != itemLocalSize) || !cloudDriveModel.isFile(jobJson.local_file_path)) {
-                            // Download found item to localFilePath.
+                        var r = cloudDriveModel.compareFileMetadata(jobJson, jsonObj, jobJson.local_file_path);
+                        console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " sync file remote path " + jsonObj.absolutePath + " hash " + jsonObj.hash + " local path " + jobJson.local_file_path + " hash " + itemJson.hash + " forcePut " + jobJson.force_put + " forceGet " + jobJson.force_get + " compare result " + r);
+                        if (r < 0) {
                             cloudDriveModel.fileGet(jobJson.type, jobJson.uid, jsonObj.absolutePath, jsonObj.size, jobJson.local_file_path, jobJson.modelIndex);
-                        } else if (jobJson.force_put || (jsonObj.hash < itemJson.hash && jsonObj.size != itemLocalSize)) {
-                            // Upload found item to remoteParentPath with item name.
+                        } else if (r > 0) {
                             cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, jsonObj.parentPath, jsonObj.name, jobJson.modelIndex);
                         } else {
-                            // Update lastModified on cloudDriveItem.
                             cloudDriveModel.addItem(jobJson.type, jobJson.uid, jobJson.local_file_path, jobJson.remote_file_path, jsonObj.hash);
                         }
                     }

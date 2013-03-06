@@ -594,7 +594,9 @@ bool CloudDriveModel::isRemotePathConnected(CloudDriveModel::ClientTypes type, Q
 bool CloudDriveModel::isDirty(QString localPath, QDateTime lastModified)
 {
     if (m_isDirtyCache->contains(localPath)) {
-        return m_isDirtyCache->value(localPath);
+        bool isDirty = m_isDirtyCache->value(localPath);
+        qDebug() << "CloudDriveModel::isDirty cached localPath" << localPath << "file.lastModified" << lastModified << "isDirty" << isDirty;
+        return isDirty;
     }
 
     bool res = false;
@@ -616,7 +618,9 @@ bool CloudDriveModel::isDirty(QString localPath, QDateTime lastModified)
 
     }
 
-//    qDebug() << "CloudDriveModel::isDirty localPath" << localPath << res;
+    if (res) {
+        qDebug() << "CloudDriveModel::isDirty localPath" << localPath << "file.lastModified" << lastModified << "isDirty" << res;
+    }
     m_isDirtyCache->insert(localPath, res);
     return res;
 }
@@ -788,6 +792,14 @@ qint64 CloudDriveModel::getFileSize(QString localPath)
 {
     QFileInfo fileInfo(localPath);
     return fileInfo.size();
+}
+
+QString CloudDriveModel::getFileLastModified(QString localPath)
+{
+    QFileInfo fileInfo(localPath);
+    QString datetimeString = fileInfo.lastModified().toString();
+    qDebug() << "CloudDriveModel::getFileLastModified localPath" << localPath << datetimeString;
+    return datetimeString;
 }
 
 CloudDriveModel::ClientTypes CloudDriveModel::getClientType(int typeInt)
