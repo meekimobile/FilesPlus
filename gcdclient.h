@@ -123,6 +123,7 @@ private:
     QString refreshTokenUid;
     QHash<QString, QByteArray> *m_propertyReplyHash;
     QHash<QString, QByteArray> *m_filesReplyHash;
+    QHash<QString, QString> *m_downloadUrlHash;
 
     QSettings m_settings;
 

@@ -3625,7 +3625,7 @@ void CloudDriveModel::uploadProgressFilter(QString nonce, qint64 bytesSent, qint
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 //    qDebug() << "CloudDriveModel::uploadProgressFilter" << nonce << getOperationName(job.operation) << bytesSent << bytesTotal << job.uploadOffset;
     job.bytes = job.uploadOffset + bytesSent; // Add job.uploadOffset to support filePutResume.
-    updateJob(job);
+    updateJob(job, false); // Omit signal as it's too noisy and freeze UI on job page.
 
     emit uploadProgress(nonce, bytesSent, bytesTotal);
 }
@@ -3635,7 +3635,7 @@ void CloudDriveModel::downloadProgressFilter(QString nonce, qint64 bytesReceived
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 //    qDebug() << "CloudDriveModel::downloadProgressFilter" << nonce << getOperationName(job.operation) << bytesReceived << bytesTotal << job.downloadOffset;
     job.bytes = job.downloadOffset + bytesReceived; // Add job.downloadOffset to support fileGetResume.
-    updateJob(job);
+    updateJob(job, false); // Omit signal as it's too noisy and freeze UI on job page.
 
     emit downloadProgress(nonce, bytesReceived, bytesTotal);
 }

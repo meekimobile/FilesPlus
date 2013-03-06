@@ -44,6 +44,7 @@ GCDClient::GCDClient(QObject *parent) :
 
     m_propertyReplyHash = new QHash<QString, QByteArray>;
     m_filesReplyHash = new QHash<QString, QByteArray>;
+    m_downloadUrlHash = new QHash<QString, QString>;
 
     // Populate contentTypeHash.
     // TODO Make it configurable. It could be parsed from apache server's mime.types.
@@ -67,6 +68,7 @@ GCDClient::~GCDClient()
 
     m_propertyReplyHash = 0;
     m_filesReplyHash = 0;
+    m_downloadUrlHash = 0;
 }
 
 QString GCDClient::createTimestamp() {
@@ -234,6 +236,8 @@ QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
 {
     QScriptValue parsedObj = engine.newObject();
 
+    QScriptValue downloadUrlObj = jsonObj.property("downloadUrl");
+
     parsedObj.setProperty("name", jsonObj.property("title"));
     parsedObj.setProperty("absolutePath", jsonObj.property("id"));
     parsedObj.setProperty("parentPath", jsonObj.property("parents").property(0).isValid() ? jsonObj.property("parents").property(0).property("id") : QScriptValue(""));
@@ -243,13 +247,18 @@ QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     parsedObj.setProperty("lastModified", jsonObj.property("modifiedDate"));
     parsedObj.setProperty("hash", jsonObj.property("modifiedDate"));
     parsedObj.setProperty("source", QScriptValue());
-    parsedObj.setProperty("downloadUrl", jsonObj.property("downloadUrl"));
+    parsedObj.setProperty("downloadUrl", downloadUrlObj);
     parsedObj.setProperty("webContentLink", jsonObj.property("webContentLink"));
     parsedObj.setProperty("embedLink", jsonObj.property("embedLink"));
     parsedObj.setProperty("alternate", jsonObj.property("alternateLink"));
     parsedObj.setProperty("thumbnail", jsonObj.property("thumbnailLink"));
     parsedObj.setProperty("preview", jsonObj.property("thumbnailLink")); // NOTE Use same URL as thumbnail as it return 2xx x 1xx picture.
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("title").toString())));
+
+    // Cache downloadUrl for furthur usage.
+    if (downloadUrlObj.isValid()) {
+        m_downloadUrlHash->insert(jsonObj.property("id").toString(), downloadUrlObj.toString());
+    }
 
     return parsedObj;
 }
@@ -511,28 +520,37 @@ QNetworkReply * GCDClient::patchFile(QString nonce, QString uid, QString remoteF
 
 QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)
 {
-    qDebug() << "----- GCDClient::fileGet -----" << nonce << remoteFilePath << "offset" << offset << "synchronous" << synchronous;
+    qDebug() << "----- GCDClient::fileGet -----" << nonce << uid << remoteFilePath << "offset" << offset << "synchronous" << synchronous;
 
     QString uri = remoteFilePath;
     // TODO It should be downloadUrl because it will not be able to create connection in CloudDriveModel.fileGetReplyFilter.
     if (!remoteFilePath.startsWith("http")) {
-        // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
-        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "fileGet");
-        if (propertyReply->error() == QNetworkReply::NoError) {
-            // Stores property for using in fileGetReplyFinished().
-            m_propertyReplyHash->insert(nonce, propertyReply->readAll());
+        qDebug() << "GCDClient::fileGet" << nonce << uid << remoteFilePath << "getting property to get download URL";
 
-            QScriptEngine engine;
-            QScriptValue sc = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
-            uri = sc.property("downloadUrl").toString();
-            propertyReply->deleteLater();
+        // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
+        if (m_downloadUrlHash->contains(remoteFilePath)) {
+            uri = m_downloadUrlHash->value(remoteFilePath);
+            qDebug() << "GCDClient::fileGet" << nonce << uid << remoteFilePath << "found cached download URL" << uri;
         } else {
-            if (!synchronous) {
-                emit fileGetReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));
+            QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "fileGet");
+            if (propertyReply->error() == QNetworkReply::NoError) {
+                // Stores property for using in fileGetReplyFinished().
+                m_propertyReplyHash->insert(nonce, propertyReply->readAll());
+
+                QScriptEngine engine;
+                QScriptValue sc = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
+                uri = sc.property("downloadUrl").toString();
+                // Cache downloadUrl for furthur usage.
+                m_downloadUrlHash->insert(sc.property("id").toString(), uri);
                 propertyReply->deleteLater();
-                return 0;
             } else {
-                return propertyReply;
+                if (!synchronous) {
+                    emit fileGetReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));
+                    propertyReply->deleteLater();
+                    return 0;
+                } else {
+                    return propertyReply;
+                }
             }
         }
     }
@@ -1098,22 +1116,30 @@ QString GCDClient::media(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "----- GCDClient::media -----" << nonce << uid << remoteFilePath;
 
     QString uri = remoteFilePath;
-    // TODO It should be downloadUrl because it will not be able to create connection in CloudDriveModel.fileGetReplyFilter.
+    // NOTE It shouldn't be downloadUrl because it will not be able to create connection in CloudDriveModel.fileGetReplyFilter.
     if (!remoteFilePath.startsWith("http")) {
         // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
-        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "media");
-        if (propertyReply->error() == QNetworkReply::NoError) {
-            QScriptEngine engine;
-            QScriptValue sc = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
-            uri = sc.property("downloadUrl").toString();
-            propertyReply->deleteLater();
-
-            uri += "&access_token=" + accessTokenPairMap[uid].token;
+        if (m_downloadUrlHash->contains(remoteFilePath)) {
+            uri = m_downloadUrlHash->value(remoteFilePath);
+            qDebug() << "GCDClient::media" << nonce << uid << remoteFilePath << "found cached download URL" << uri;
         } else {
-            qDebug() << "GCDClient::media" << nonce << "propertyReply" << propertyReply->error() << propertyReply->errorString() << QString::fromUtf8(propertyReply->readAll());
-            uri = "";
+            QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "media");
+            if (propertyReply->error() == QNetworkReply::NoError) {
+                QScriptEngine engine;
+                QScriptValue sc = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
+                uri = sc.property("downloadUrl").toString();
+                // Cache downloadUrl for furthur usage.
+                m_downloadUrlHash->insert(sc.property("id").toString(), uri);
+                propertyReply->deleteLater();
+            } else {
+                qDebug() << "GCDClient::media" << nonce << "propertyReply" << propertyReply->error() << propertyReply->errorString() << QString::fromUtf8(propertyReply->readAll());
+                uri = "";
+            }
         }
     }
+
+    // Append with OAuth token.
+    uri += "&access_token=" + accessTokenPairMap[uid].token;
 
     qDebug() << "GCDClient::media" << nonce << "uri" << uri;
     return uri;

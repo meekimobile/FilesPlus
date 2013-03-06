@@ -1067,7 +1067,7 @@ PageStackWindow {
         ListModel {
             id: cloudDriveJobsModel
 
-            // TODO Cache found index.
+            // TODO Cache found index. But most running jobs usually be on prior index (queue).
             function findIndexByJobId(jobId) {
                 for (var i=0; i<cloudDriveJobsModel.count; i++) {
                     if (cloudDriveJobsModel.get(i).job_id == jobId) {
@@ -1085,6 +1085,15 @@ PageStackWindow {
                 var i = findIndexByJobId(jobJson.job_id);
                 if (i >= 0) {
                     cloudDriveJobsModel.set(i, jobJson);
+                }
+            }
+
+            function updateJobProgressBar(jobJson) {
+                if (!jobJson) return;
+
+                var i = findIndexByJobId(jobJson.job_id);
+                if (i >= 0) {
+                    cloudDriveJobsModel.setProperty(i, "bytes", jobJson.bytes);
                 }
             }
 
@@ -1758,6 +1767,7 @@ PageStackWindow {
 //            console.debug("window cloudDriveModel onDownloadProgress " + nonce + " " + bytesReceived + " / " + bytesTotal);
 
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            cloudDriveJobsModel.updateJobProgressBar(jobJson);
 
             // Update ProgressBar on listItem and its parent.
             pageStack.find(function (page) {
@@ -1769,6 +1779,7 @@ PageStackWindow {
 //            console.debug("window cloudDriveModel onUploadProgress " + nonce + " " + bytesSent + " / " + bytesTotal);
 
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            cloudDriveJobsModel.updateJobProgressBar(jobJson);
 
             // Update ProgressBar on listItem and its parent.
             pageStack.find(function (page) {
