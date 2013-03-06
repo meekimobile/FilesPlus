@@ -45,8 +45,12 @@ void QNetworkReplyWrapper::idleTimerTimeoutSlot()
     // Abort reply if it's timeout.
     if (m_reply != 0) {
         QString nonce = m_reply->request().attribute(QNetworkRequest::User).toString();
-        qDebug() << "QNetworkReplyWrapper::idleTimerTimeoutSlot nonce" << nonce << "reply" << m_reply;
-        m_reply->abort();
+        if (m_reply->isFinished()) {
+            qDebug() << "QNetworkReplyWrapper::idleTimerTimeoutSlot nonce" << nonce << "reply" << m_reply << "is finished. Operation is ignored.";
+        } else {
+            m_reply->abort();
+            qDebug() << "QNetworkReplyWrapper::idleTimerTimeoutSlot nonce" << nonce << "reply" << m_reply << "is aborted.";
+        }
     } else {
         qDebug() << "QNetworkReplyWrapper::idleTimerTimeoutSlot reply = 0. Operation is ignored.";
     }
