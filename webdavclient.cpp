@@ -713,7 +713,8 @@ QByteArray WebDavClient::createAuthHeader(QString uid)
     } else if (accessTokenPairMap.contains(uid)) {
         if (accessTokenPairMap[uid].token.toLower() == "basic") {
             QByteArray token;
-            token.append(QString("%1:%2").arg(accessTokenPairMap[uid].email.split("@").at(0)).arg(accessTokenPairMap[uid].secret));
+            QString username = accessTokenPairMap[uid].email.mid(0, accessTokenPairMap[uid].email.lastIndexOf("@"));
+            token.append(QString("%1:%2").arg(username).arg(accessTokenPairMap[uid].secret));
             authHeader.append("Basic ");
             authHeader.append(token.toBase64());
         } else {
@@ -957,7 +958,7 @@ void WebDavClient::saveConnection(QString id, QString hostname, QString username
     // TODO Encrypt password before store to file.
     if (accessTokenPairMap.contains(id)) {
         if (token.toLower() == "oauth") {
-            // Preserves current toekn which will be updated once authorization is done.
+            // Preserves current token which will be updated once authorization is done.
         } else {
             accessTokenPairMap[id].token = token;
         }
