@@ -845,9 +845,15 @@ QString WebDavClient::getRemoteFileName(QString remotePath)
 {
     QString name = "";
     if (remotePath != "") {
-        name = remotePath.mid(remotePath.lastIndexOf("/") + 1);
+        if (remotePath.endsWith("/")) {
+            QString trimmedRemotePath = remotePath.mid(0, remotePath.length()-1);
+            name = trimmedRemotePath.mid(trimmedRemotePath.lastIndexOf("/") + 1);
+        } else {
+            name = remotePath.mid(remotePath.lastIndexOf("/") + 1);
+        }
     }
 
+    qDebug() << "WebDavClient::getRemoteFileName" << remotePath << "->" << name;
     return name;
 }
 
@@ -1378,10 +1384,10 @@ QScriptValue WebDavClient::parseCommonPropertyScriptValue(QScriptEngine &engine,
 {
     QScriptValue parsedObj = engine.newObject();
 
-    bool objIsDir = jsonObj.property("href").toString().endsWith("/");
+    bool objIsDir = jsonObj.property("href").toString().endsWith("/") || jsonObj.property("propstat").property("prop").property("getcontenttype").toString().indexOf(QRegExp("httpd/unix-directory", Qt::CaseInsensitive)) == 0;
     QString objHref = QUrl::fromPercentEncoding(jsonObj.property("href").toString().toAscii());
-    QString objRemotePath = objIsDir ? objHref.mid(0, objHref.length()-1) : objHref; // Workaround because it ended with /
-    QString objRemoteName = jsonObj.property("propstat").property("prop").property("displayname").isValid() ? jsonObj.property("propstat").property("prop").property("displayname").toString() : getRemoteFileName(objRemotePath);
+    QString objRemotePath = (objHref.endsWith("/")) ? objHref.mid(0, objHref.length()-1) : objHref; // Workaround because it ended with /
+    QString objRemoteName = jsonObj.property("propstat").property("prop").property("displayname").isValid() ? jsonObj.property("propstat").property("prop").property("displayname").toString() : getRemoteFileName(objHref);
     uint objRemoteSize = jsonObj.property("propstat").property("prop").property("getcontentlength").isValid() ? jsonObj.property("propstat").property("prop").property("getcontentlength").toInteger() : 0;
     QDateTime objLastModified = jsonObj.property("propstat").property("prop").property("getlastmodified").isValid() ? parseReplyDateString(jsonObj.property("propstat").property("prop").property("getlastmodified").toString()) : QDateTime::currentDateTime();
     QString objRemoteHash = jsonObj.property("propstat").property("prop").property("getlastmodified").isValid() ? formatJSONDateString(objLastModified) : "FFFFFFFF"; // Uses DirtyHash if last modified doesn't exist.
