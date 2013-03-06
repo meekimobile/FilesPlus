@@ -362,7 +362,9 @@ bool CloudDriveClient::abort(QString nonce)
     if (m_replyHash->contains(nonce)) {
         QNetworkReply *reply = m_replyHash->value(nonce);
         reply->abort();
+        m_replyHash->remove(nonce);
         qDebug() << "CloudDriveClient::abort nonce" << nonce << "is aborted.";
+        qDebug() << "CloudDriveClient::abort m_replyHash count" << m_replyHash->count();
     } else {
         qDebug() << "CloudDriveClient::abort nonce" << nonce << "is not found. Operation is ignored.";
     }
@@ -426,4 +428,57 @@ QString CloudDriveClient::createFolder(QString nonce, QString uid, QString remot
 {
     emit createFolderReplySignal(nonce, -1, objectName() + " " + "Create folder", "Service is not implemented.");
     return "";
+}
+
+qint64 CloudDriveClient::writeToFile(QIODevice *source, QString targetFilePath, qint64 offset)
+{
+    qDebug() << "CloudDriveClient::writeToFile" << source << targetFilePath << offset;
+
+    // Stream replyBody to a file on localPath.
+    qint64 totalBytes = source->bytesAvailable();
+    qint64 writtenBytes = 0;
+    char buf[FileWriteBufferSize];
+    QFile *localTargetFile = new QFile(targetFilePath);
+    if (localTargetFile->open(QIODevice::ReadWrite)) {
+        // Issue: Writing to file with QDataStream << QByteArray will automatically prepend with 4-bytes prefix(size).
+        // Solution: Use QIODevice to write directly.
+
+        // Move to offset.
+        localTargetFile->seek(offset);
+
+        // Read first buffer.
+        qint64 c = source->read(buf, sizeof(buf));
+        while (c > 0) {
+            qint64 bytes = localTargetFile->write(buf, c);
+            if (bytes < 0) {
+                qDebug() << "CloudDriveClient::writeToFile can't write file" << targetFilePath << " Operation is aborted.";
+                // Close target file.
+                localTargetFile->flush();
+                localTargetFile->close();
+                return -2;
+            }
+
+            writtenBytes += bytes;
+
+            // Tell event loop to process event before it will process time consuming task.
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+
+            // Read next buffer.
+            c = source->read(buf, sizeof(buf));
+        }
+        qDebug() << "CloudDriveClient::writeToFile done writtenBytes" << writtenBytes << "totalBytes" << totalBytes << "localTargetFile size" << localTargetFile->size();
+
+        // Close target file.
+        localTargetFile->flush();
+        localTargetFile->close();
+
+        return writtenBytes;
+    } else {
+        qDebug() << "CloudDriveClient::writeToFile can't open file" << targetFilePath << " Operation is aborted.";
+        // Close target file.
+        localTargetFile->flush();
+        localTargetFile->close();
+        return -1;
+    }
+
 }

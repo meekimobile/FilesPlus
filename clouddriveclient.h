@@ -89,6 +89,8 @@ public:
     virtual QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
 
     virtual bool abort(QString nonce);
+
+    qint64 writeToFile(QIODevice *source, QString targetFilePath, qint64 offset);
 signals:
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
