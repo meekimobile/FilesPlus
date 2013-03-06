@@ -2228,31 +2228,14 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
 
             // Stream source to a file on localPath.
             qDebug() << "CloudDriveModel::migrateFile_Block tempFilePath" << tempFilePath;
-            qint64 totalBytes = 0;
-            char buf[1024];
-            QFile *localTargetFile = new QFile(tempFilePath);
-            if (localTargetFile->open(QIODevice::Append)) {
-                qint64 c = source->read(buf, sizeof(buf));
-                while (c > 0) {
-                    localTargetFile->write(buf, c);
-                    totalBytes += c;
-
-                    // Tell event loop to process event before it will process time consuming task.
-                    QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
-
-                    // Read next buffer.
-                    c = source->read(buf, sizeof(buf));
-                }
+            qint64 totalBytes = sourceClient->writeToFile(source, tempFilePath, job.downloadOffset);
+            if (totalBytes >= 0) {
                 qDebug() << "CloudDriveModel::migrateFile_Block chunk is written at offset" << job.downloadOffset << "totalBytes"  << totalBytes << "to" << tempFilePath;
             } else {
                 qDebug() << "CloudDriveModel::migrateFile_Block can't open tempFilePath" << tempFilePath;
                 migrateFilePutFilter(nonce, -1, QString("Can't open temp file %1").arg(tempFilePath), "{ }");
                 return;
             }
-
-            // Close target file.
-            localTargetFile->close();
-            localTargetFile->deleteLater();
 
             // Close source.
             source->close();

@@ -555,6 +555,9 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
+    // Store reply for further usage.
+    m_replyHash->insert(nonce, reply);
+
     while (synchronous && !reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
@@ -654,6 +657,9 @@ QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source,
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
 
+    // Store reply for further usage.
+    m_replyHash->insert(nonce, reply);
+
     while (synchronous && !reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
@@ -740,10 +746,8 @@ QNetworkReply *GCDClient::filePutMulipart(QString nonce, QString uid, QIODevice 
             QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
             connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
 
-            if (!synchronous) {
-                // Store reply for further usage.
-                m_replyHash->insert(nonce, reply);
-            }
+            // Store reply for further usage.
+            m_replyHash->insert(nonce, reply);
 
             while (synchronous && !reply->isFinished()) {
                 QApplication::processEvents(QEventLoop::AllEvents, 100);
@@ -856,6 +860,7 @@ QNetworkReply *GCDClient::filePutResume(QString nonce, QString uid, QString loca
             }
         }
     }
+    return 0;
 }
 
 QString GCDClient::filePutResumeStart(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString remoteParentPath, bool synchronous)
@@ -955,10 +960,11 @@ QString GCDClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *so
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
 
+    // Store reply for further usage. Ex. abort from job page.
+    m_replyHash->insert(nonce, reply);
+
     // Return immediately if it's not synchronous.
     if (!synchronous) {
-        // Store reply for further usage.
-        m_replyHash->insert(nonce, reply);
         return "";
     }
 
@@ -983,6 +989,7 @@ QString GCDClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *so
     }
 
     // Scheduled to delete later.
+    m_replyHash->remove(nonce);
     reply->deleteLater();
     reply->manager()->deleteLater();
 
@@ -1351,8 +1358,6 @@ QString GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath, Q
     QNetworkReply *reply = dynamic_cast<QNetworkReply *>( fileGet(nonce, uid, remoteFilePath, -1, synchronous) );
 
     if (!synchronous) {
-        // Store reply for further usage.
-        m_replyHash->insert(nonce, reply);
         return "";
     }
 
@@ -1360,6 +1365,7 @@ QString GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath, Q
     QString result = fileGetReplySave(reply);
 
     // scheduled to delete later.
+    m_replyHash->remove(nonce);
     reply->deleteLater();
     reply->manager()->deleteLater();
 
@@ -1376,10 +1382,7 @@ void GCDClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
         qint64 fileSize = localSourceFile->size();
 
         // Send request.
-        QNetworkReply * reply = filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
-
-        // Store reply for further usage.
-        m_replyHash->insert(nonce, reply);
+        filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
     } else {
         qDebug() << "GCDClient::filePut file " << localFilePath << " can't be opened.";
         emit filePutReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");

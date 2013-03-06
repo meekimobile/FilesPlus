@@ -371,8 +371,6 @@ QString DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePat
     QNetworkReply *reply = dynamic_cast<QNetworkReply *>( fileGet(nonce, uid, remoteFilePath, -1, synchronous) );
 
     if (!synchronous) {
-        // Store reply for further usage.
-        m_replyHash->insert(nonce, reply);
         return "";
     }
 
@@ -380,6 +378,7 @@ QString DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePat
     QString result = fileGetReplySave(reply);
 
     // scheduled to delete later.
+    m_replyHash->remove(nonce);
     reply->deleteLater();
     reply->manager()->deleteLater();
 
@@ -403,7 +402,6 @@ QIODevice *DropboxClient::fileGet(QString nonce, QString uid, QString remoteFile
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
     if (offset >= 0) {
-
         QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1);
         qDebug() << "DropboxClient::fileGet rangeHeader" << rangeHeader;
         req.setRawHeader("Range", rangeHeader.toAscii() );
@@ -411,6 +409,9 @@ QIODevice *DropboxClient::fileGet(QString nonce, QString uid, QString remoteFile
     QNetworkReply *reply = manager->get(req);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+
+    // Store reply for further usage.
+    m_replyHash->insert(nonce, reply);
 
     while (synchronous && !reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
@@ -442,10 +443,7 @@ void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, Q
         qint64 fileSize = localSourceFile->size();
 
         // Send request.
-        QNetworkReply * reply = filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
-
-        // Store reply for further usage.
-        m_replyHash->insert(nonce, reply);
+        filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
     } else {
         qDebug() << "DropboxClient::filePut file " << localFilePath << " can't be opened.";
         emit filePutReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");
@@ -472,6 +470,9 @@ QNetworkReply *DropboxClient::filePut(QString nonce, QString uid, QIODevice *sou
     QNetworkReply *reply = manager->put(req, source);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
+
+    // Store reply for further usage.
+    m_replyHash->insert(nonce, reply);
 
     while (synchronous && !reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
@@ -952,10 +953,11 @@ QString DropboxClient::filePutResumeUpload(QString nonce, QString uid, QIODevice
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
 
+    // Store reply for further usage.
+    m_replyHash->insert(nonce, reply);
+
     // Return immediately if it's not synchronous.
     if (!synchronous) {
-        // Store reply for further usage.
-        m_replyHash->insert(nonce, reply);
         return "";
     }
 
@@ -982,6 +984,7 @@ QString DropboxClient::filePutResumeUpload(QString nonce, QString uid, QIODevice
     }
 
     // Scheduled to delete later.
+    m_replyHash->remove(nonce);
     reply->deleteLater();
     reply->manager()->deleteLater();
 
