@@ -2793,8 +2793,8 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
 
         // Sync newRemoteParentPath (with DirtyHash) to get newRemotePath sync'd.
         // Local path isn't specified, it's requested from CloudFolderPage.
-        // If newRemotePath's parent is connected, sync its parent to connected local path.
-        if (isRemotePathConnected(getClientType(job.type), job.uid, newRemoteParentPath)) {
+        // If (newRemotePath's parent is connected but newRemotePath is not connected), sync its parent to connected local path.
+        if (isRemotePathConnected(getClientType(job.type), job.uid, newRemoteParentPath) && !isRemotePathConnected(getClientType(job.type), job.uid, newRemotePath) ) {
             qDebug() << "CloudDriveModel::createFolderReplyFilter newRemotePath" << newRemotePath << "is under connected parent remote path. Sync its parent" << newRemoteParentPath;
             syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath, DirtyHash);
         }
@@ -2958,6 +2958,7 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
         QScriptValue parsedObj = engine.evaluate("(" + msg + ")");
 
         // TODO Process delta. Move to QML to connect to FolderSizeItemListModel's delete recursive method.
+        // TODO Suppress duplicated items to avoid overload job queues.
         if (parsedObj.property("children").isValid()) {
             for (int i = 0; i < parsedObj.property("children").toVariant().toList().length(); i++) {
                 QScriptValue childObj = parsedObj.property("children").property(i);
