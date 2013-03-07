@@ -595,7 +595,7 @@ bool CloudDriveModel::isDirty(QString localPath, QDateTime lastModified)
 {
     if (m_isDirtyCache->contains(localPath)) {
         bool isDirty = m_isDirtyCache->value(localPath);
-        qDebug() << "CloudDriveModel::isDirty cached localPath" << localPath << "file.lastModified" << lastModified << "isDirty" << isDirty;
+//        qDebug() << "CloudDriveModel::isDirty cached localPath" << localPath << "file.lastModified" << lastModified << "isDirty" << isDirty;
         return isDirty;
     }
 
@@ -1999,7 +1999,7 @@ QStringList CloudDriveModel::getLocalPathList(QString localParentPath)
 
 void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut, QString data)
 {
-    qDebug() << "----- CloudDriveModel::syncFromLocal -----" << type << uid << localPath << "remoteParentPath" << remoteParentPath << "forcePut" << forcePut;
+    qDebug() << "----- CloudDriveModel::syncFromLocal -----" << type << uid << localPath << "remoteParentPath" << remoteParentPath << "forcePut" << forcePut << "data" << data;
 
     if (localPath == "") {
         qDebug() << "CloudDriveModel::syncFromLocal localPath" << localPath << "is empty. Operation is aborted.";
@@ -2024,18 +2024,18 @@ void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString u
     emit jobEnqueuedSignal(job.jobId, localPath);
 }
 
-void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut, bool isRootLocalPath, QString data)
+void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut, bool isRootLocalPath, QString data)
 {
     // This method is invoked from dir only as file which is not found will be put right away.
-    qDebug() << "----- CloudDriveModel::syncFromLocal_Block -----" << type << uid << localPath << remoteParentPath << modelIndex << "forcePut" << forcePut;
+    qDebug() << "----- CloudDriveModel::syncFromLocal_Block -----" << nonce << type << uid << localPath << remoteParentPath << modelIndex << "forcePut" << forcePut << "data" << data;
 
     if (localPath == "") {
-        qDebug() << "CloudDriveModel::syncFromLocal_Block localPath" << localPath << "is empty. Operation is aborted.";
+        qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "localPath" << localPath << "is empty. Operation is aborted.";
         return;
     }
 
     if (remoteParentPath == "") {
-        qDebug() << "CloudDriveModel::syncFromLocal_Block remoteParentPath" << remoteParentPath << "is empty. Operation is aborted.";
+        qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "remoteParentPath" << remoteParentPath << "is empty. Operation is aborted.";
         return;
     }
 
@@ -2048,7 +2048,7 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
     }
 
     QStringList remotePathList = data.split(",");
-    qDebug() << "CloudDriveModel::syncFromLocal_Block remotePathList" << remotePathList;
+//    qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "remotePathList" << remotePathList;
 
     QFileInfo info(localPath);
     if (info.isDir()) {
@@ -2057,10 +2057,10 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
         // TODO create remote directory if no content or pending refresh metadata.
         CloudDriveItem parentCloudDriveItem = getItem(localPath, type, uid);
         if (parentCloudDriveItem.localPath == "" || parentCloudDriveItem.hash == CloudDriveModel::DirtyHash) {
-            qDebug() << "CloudDriveModel::syncFromLocal_Block not found parentCloudDriveItem. Invoke creatFolder.";
+            qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "not found parentCloudDriveItem. Invoke creatFolder.";
             // Get remoteParentPath from localParentPath's cloudDriveItem if it's not specified.
             remoteParentPath = (remoteParentPath == "") ? getItemRemotePath(info.absolutePath(), type, uid) : remoteParentPath;
-            qDebug() << "CloudDriveModel::syncFromLocal_Block remoteParentPath" << remoteParentPath;
+            qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "remoteParentPath" << remoteParentPath;
 
             // Request SkyDriveClient's createFolder synchronously.
             // NOTE Insert dummy job to support QML CloudDriveModel.onCreateFolderReplySignal. It will be removed there.
@@ -2083,7 +2083,7 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
                  *Ftp { "error": "Creating directory failed: /Users/test/D: File exists.", "path": "/Users/test/D" }
                  */
                 if (sc.property("error").isValid()) {
-                    qDebug() << "CloudDriveModel::syncFromLocal_Block createFolder error localPath" << localPath << "remoteParentPath" << remoteParentPath << "createFolderReplyResult" << createFolderReplyResult;
+                    qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "createFolder error localPath" << localPath << "remoteParentPath" << remoteParentPath << "createFolderReplyResult" << createFolderReplyResult;
                     return;
                 }
 
@@ -2093,20 +2093,20 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
 
                 // Update parentCloudDriveItem.
                 parentCloudDriveItem = getItem(localPath, type, uid);
-                qDebug() << "CloudDriveModel::syncFromLocal_Block createFolder success parentCloudDriveItem" << parentCloudDriveItem;
+                qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "createFolder success parentCloudDriveItem" << parentCloudDriveItem;
             } else {
                 // Insert dummy job and invoke slot to emit signal to front-end.
                 // TODO Suppress signal if newRemoteFolder is not requested path.
-                qDebug() << "CloudDriveModel::syncFromLocal_Block createFolder failed localPath" << localPath << "remoteParentPath" << remoteParentPath << "createFolderReplyResult" << createFolderReplyResult;
+                qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "createFolder failed localPath" << localPath << "remoteParentPath" << remoteParentPath << "createFolderReplyResult" << createFolderReplyResult;
                 return;
             }
         } else {
-            qDebug() << "CloudDriveModel::syncFromLocal_Block found parentCloudDriveItem" << parentCloudDriveItem;
+            qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "found parentCloudDriveItem" << parentCloudDriveItem;
         }
 
         // TODO Abort operation if remotePath is not specified.
         if (parentCloudDriveItem.remotePath == "") {
-            qDebug() << "CloudDriveModel::syncFromLocal_Block remotePath is not specified. Operation is aborted. parentCloudDriveItem" << parentCloudDriveItem;
+            qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "remotePath is not specified. Operation is aborted. parentCloudDriveItem" << parentCloudDriveItem;
         }
 
         QDir dir(info.absoluteFilePath());
@@ -2118,31 +2118,32 @@ void CloudDriveModel::syncFromLocal_Block(CloudDriveModel::ClientTypes type, QSt
             QString localFilePath = item.absoluteFilePath();
             CloudDriveItem cloudDriveItem = getItem(localFilePath, type, uid);
             bool isNewItem = !isSyncing(type, uid, localFilePath) && (cloudDriveItem.hash == "" || cloudDriveItem.remotePath == "");
-            bool isDeletedItem = cloudDriveItem.remotePath != "" && remotePathList.indexOf(cloudDriveItem.remotePath) == -1;
+            bool isDeletedItem = cloudDriveItem.remotePath != "" && remotePathList.indexOf(cloudDriveItem.remotePath) == -1 && remotePathList.indexOf("*") == -1;
 //            qDebug() << "CloudDriveModel::syncFromLocal_Block item" << cloudDriveItem.toJsonText() << "index in remotePathList" << remotePathList.indexOf(cloudDriveItem.remotePath);
-//            qDebug() << "CloudDriveModel::syncFromLocal_Block item" << type << uid << localFilePath << cloudDriveItem.hash << isSyncing(localFilePath);
+            qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "isNewItem" << isNewItem << "isDeletedItem" << isDeletedItem << "remotePathList" << remotePathList;
 
             // If dir/file don't have localHash which means it's not synced, put it right away.
             // If forcePut, put it right away.
             if (forcePut || isNewItem) {
                 // Sync dir/file then it will decide whether get/put/do nothing by metadataReply.
-                qDebug() << "CloudDriveModel::syncFromLocal_Block new local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "parentCloudDriveItem.remotePath" << parentCloudDriveItem.remotePath << "isNewItem" << isNewItem;
+                qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "new local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "parentCloudDriveItem.remotePath" << parentCloudDriveItem.remotePath << "isNewItem" << isNewItem;
 
                 if (item.isDir()) {
                     // Drilldown local dir recursively.
-                    syncFromLocal_Block(type, uid, localFilePath, parentCloudDriveItem.remotePath, -1, forcePut, false);
+                    // TODO Don't pass remotePathList will cause removing items.
+                    syncFromLocal_Block(nonce, type, uid, localFilePath, parentCloudDriveItem.remotePath, -1, forcePut, false);
                 } else {
                     // Put file to remote parent path.
                     filePut(type, uid, localFilePath, parentCloudDriveItem.remotePath, getFileName(localFilePath), -1);
                 }
             } else if (isDeletedItem) {
-                // Remove link.
+                // Remove link if it's deleted item (there is remotePathList and cloudDriveItem.remotePath not in list).
                 // TODO Configurable file removing.
-                qDebug() << "CloudDriveModel::syncFromLocal_Block remove link to existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isDeletedItem" << isDeletedItem;
+                qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "remove link to existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isDeletedItem" << isDeletedItem;
                 removeItemWithChildren(type, uid, localFilePath);
             } else {
                 // Skip any items that already have CloudDriveItem and has localHash.
-                qDebug() << "CloudDriveModel::syncFromLocal_Block skip existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isNewItem" << isNewItem;
+                qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "skip existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isNewItem" << isNewItem;
             }
         }
 
@@ -2794,7 +2795,7 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
         // Sync newRemoteParentPath (with DirtyHash) to get newRemotePath sync'd.
         // Local path isn't specified, it's requested from CloudFolderPage.
         // If (newRemotePath's parent is connected but newRemotePath is not connected), sync its parent to connected local path.
-        if (isRemotePathConnected(getClientType(job.type), job.uid, newRemoteParentPath) && !isRemotePathConnected(getClientType(job.type), job.uid, newRemotePath) ) {
+        if (isRemotePathConnected(getClientType(job.type), job.uid, newRemoteParentPath) && !isRemotePathConnected(getClientType(job.type), job.uid, newRemotePath) && job.localFilePath == "") {
             qDebug() << "CloudDriveModel::createFolderReplyFilter newRemotePath" << newRemotePath << "is under connected parent remote path. Sync its parent" << newRemoteParentPath;
             syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath, DirtyHash);
         }
@@ -2954,6 +2955,7 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
     if (err == QNetworkReply::NoError) {
+        QHash<QString, bool> remotePathHash;
         QScriptEngine engine;
         QScriptValue parsedObj = engine.evaluate("(" + msg + ")");
 
@@ -2964,32 +2966,47 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
                 QScriptValue childObj = parsedObj.property("children").property(i);
                 bool isDeleted = childObj.property("isDeleted").toBool();
                 QString remoteFilePath = childObj.property("absolutePath").toString();
-                QString remoteParentPath = childObj.property("property").property("parentPath").toString();
+                QString remoteParentPath = childObj.property("parentPath").toString();
                 //        qDebug() << "CloudDriveModel::deltaReplyFilter remoteFilePath" << remoteFilePath << "remoteParentPath" << remoteParentPath << "isDeleted" << isDeleted;
 
                 if (isDeleted) {
-                    // TODO delete local file path and cloud item.
-                    // NOTE Metadata currently only remove link once file/folder was removed remotely.
-                    foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
-                        qDebug() << "CloudDriveModel::deltaReplyFilter remove connection to deleted remoteFilePath" << remoteFilePath << "cloudItem" << item;
-                        removeItem(getClientType(item.type), item.uid, item.localPath);
+                    if (remotePathHash.value(remoteFilePath)) {
+                        qDebug() << "CloudDriveModel::deltaReplyFilter suppress remove remoteFilePath" << remoteFilePath;
+                    } else {
+                        // TODO delete local file path and cloud item.
+                        // NOTE Metadata currently only remove link once file/folder was removed remotely.
+                        foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
+                            qDebug() << "CloudDriveModel::deltaReplyFilter remove connection to deleted remoteFilePath" << remoteFilePath << "cloudItem" << item;
+                            removeItem(getClientType(item.type), item.uid, item.localPath);
+                        }
+
+                        // Insert remoteFilePath with isDeleted to hash.
+                        remotePathHash.insert(remoteFilePath, isDeleted);
                     }
                 } else {
-                    QList<CloudDriveItem> itemList = findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)));
-                    if (itemList.isEmpty()) {
-                        // TODO Sync its connected parents (with DirtyHash) to force sync all its children.
-                        qDebug() << "CloudDriveModel::deltaReplyFilter download new item by syncing remoteParentPath" << remoteParentPath << "isRemotePathCaseInsensitive" << isRemotePathCaseInsensitive(getClientType(job.type));
-                        foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteParentPath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
-                            qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteParentPath" << remoteParentPath << "parent cloudItem" << item;
-                            updateItem(getClientType(item.type), item.uid, item.localPath, DirtyHash);
-                            metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
-                        }
+                    if (remotePathHash.contains(remoteFilePath) || remotePathHash.contains(remoteParentPath)) {
+                        qDebug() << "CloudDriveModel::deltaReplyFilter suppress sync remoteFilePath" << remoteFilePath << "remoteParentPath" << remoteParentPath;
                     } else {
-                        // TODO Sync existing item.
-                        foreach (CloudDriveItem item, itemList) {
-                            qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteFilePath" << remoteFilePath << "cloudItem" << item;
-                            metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+                        QList<CloudDriveItem> itemList = findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)));
+                        if (itemList.isEmpty()) {
+                            // TODO Sync its connected parents (with DirtyHash) to force sync all its children.
+                            qDebug() << "CloudDriveModel::deltaReplyFilter download new item by syncing remoteParentPath" << remoteParentPath << "isRemotePathCaseInsensitive" << isRemotePathCaseInsensitive(getClientType(job.type));
+                            foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteParentPath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
+                                qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteParentPath" << remoteParentPath << "parent cloudItem" << item;
+                                updateItem(getClientType(item.type), item.uid, item.localPath, DirtyHash);
+                                metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+                            }
+                        } else {
+                            // TODO Sync existing item.
+                            foreach (CloudDriveItem item, itemList) {
+                                qDebug() << "CloudDriveModel::deltaReplyFilter sync remoteFilePath" << remoteFilePath << "cloudItem" << item;
+                                metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+                            }
                         }
+
+                        // Insert remoteFilePath with isDeleted to hash.
+                        remotePathHash.insert(remoteFilePath, isDeleted);
+                        remotePathHash.insert(remoteParentPath, isDeleted);
                     }
                 }
             }
@@ -3000,6 +3017,9 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
             qDebug() << "CloudDriveModel::deltaReplyFilter has more delta. Proceed next delta request.";
             delta(getClientType(job.type), job.uid);
         }
+
+        // Clear remotePathHash.
+        remotePathHash.clear();
     }
 
     // Update job running flag.
@@ -3913,7 +3933,7 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
         refreshRequestFilter(job.jobId);
         break;
     case SyncFromLocal:
-        syncFromLocal_Block(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, job.modelIndex, job.forcePut, true, job.data);
+        syncFromLocal_Block(job.jobId, getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, job.modelIndex, job.forcePut, true, job.data);
         refreshRequestFilter(job.jobId);
         break;
     case FileGetResume:

@@ -1618,15 +1618,18 @@ QString DropboxClient::deltaReplyFinished(QNetworkReply *reply)
             QScriptValue childrenObj = engine.newArray();
             for (int i = 0; (!isReset || syncOnReset) && i < entriesCount; i++) {
                 QScriptValue sourceChildObj = sourceObj.property("entries").property(i);
+                QString parentPath = getParentRemotePath(sourceChildObj.property(0).toString());
                 qDebug() << "DropboxClient::deltaReplyFinished parsedChildObj" <<  sourceChildObj.property(0).toString() << sourceChildObj.property(1).toString();
 
                 QScriptValue parsedChildObj = engine.newObject();
                 parsedChildObj.setProperty("isDeleted", sourceChildObj.property(1).isNull());
                 parsedChildObj.setProperty("absolutePath", sourceChildObj.property(0));
-                if (!sourceChildObj.property(1).isNull()) {
-                    qDebug() << "DropboxClient::deltaReplyFinished sourceChildObj isNull" << sourceChildObj.property(1).isNull() << "update state only.";
-                    parsedChildObj.setProperty("property", parseCommonPropertyScriptValue(engine, sourceChildObj.property(1)));
-                }
+                parsedChildObj.setProperty("parentPath", QScriptValue(parentPath));
+                // Suppress as it's not used in CDM.deltaReplyFilter().
+//                if (!sourceChildObj.property(1).isNull()) {
+//                    qDebug() << "DropboxClient::deltaReplyFinished sourceChildObj isNull" << sourceChildObj.property(1).isNull() << "update state only.";
+//                    parsedChildObj.setProperty("property", parseCommonPropertyScriptValue(engine, sourceChildObj.property(1)));
+//                }
                 childrenObj.setProperty(i, parsedChildObj);
             }
             parsedObj.setProperty("children", childrenObj);

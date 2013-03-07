@@ -2120,14 +2120,17 @@ QString GCDClient::deltaReplyFinished(QNetworkReply *reply)
         QScriptValue childrenObj = engine.newArray();
         for (int i = 0; (!isReset || syncOnReset) && i < entriesCount; i++) {
             QScriptValue sourceChildObj = sourceObj.property("items").property(i);
+            QString parentPath = sourceChildObj.property("file").property("parents").property(0).isValid() ? sourceChildObj.property("file").property("parents").property(0).property("id").toString() : "";
 
             QScriptValue parsedChildObj = engine.newObject();
             parsedChildObj.setProperty("changeId", sourceChildObj.property("id"));
             parsedChildObj.setProperty("isDeleted", sourceChildObj.property("deleted"));
             parsedChildObj.setProperty("absolutePath", sourceChildObj.property("fileId"));
-            if (!sourceChildObj.property("deleted").toBool()) {
-                parsedChildObj.setProperty("property", parseCommonPropertyScriptValue(engine, sourceChildObj.property("file")));
-            }
+            parsedChildObj.setProperty("parentPath", QScriptValue(parentPath));
+            // Suppress as it's not used in CDM.deltaReplyFilter().
+//            if (!sourceChildObj.property("deleted").toBool()) {
+//                parsedChildObj.setProperty("property", parseCommonPropertyScriptValue(engine, sourceChildObj.property("file")));
+//            }
             childrenObj.setProperty(i, parsedChildObj);
         }
         QScriptValue lastChangeId = (entriesCount > 0) ? sourceObj.property("items").property(entriesCount-1).property("id") : sourceObj.property("largestChangeId");
