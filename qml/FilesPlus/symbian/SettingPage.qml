@@ -122,12 +122,12 @@ Page {
             type: "button"
             group: "CloudDrive"
         }
-        ListElement {
-            name: "sync.after.refresh"
-            title: ""
-            type: "switch"
-            group: "CloudDrive"
-        }
+//        ListElement {
+//            name: "sync.after.refresh"
+//            title: ""
+//            type: "switch"
+//            group: "CloudDrive"
+//        }
         ListElement {
             name: "CloudFolderPage.thumbnail.enabled"
             title: ""
@@ -139,6 +139,12 @@ Page {
             title: ""
             type: "switch"
             group: "CloudDrive"
+        }
+        ListElement {
+            name: "Spacer"
+            title: ""
+            type: "spacer"
+            group: "Spacer"
         }
         ListElement {
             name: "FolderPie"
