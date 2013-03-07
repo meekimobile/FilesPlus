@@ -18,7 +18,7 @@ const QString GCDClient::accountInfoURI = "https://www.googleapis.com/oauth2/v2/
 const QString GCDClient::quotaURI = "https://www.googleapis.com/drive/v2/about";
 
 const QString GCDClient::fileGetURI = "%1"; // Use downloadUrl from property.
-const QString GCDClient::filePutURI = "https://www.googleapis.com/upload/drive/v2/files"; // POST with ?uploadType=multipart
+const QString GCDClient::filePutURI = "https://www.googleapis.com/upload/drive/v2/files%1"; // POST with ?uploadType=media or multipart
 const QString GCDClient::filesURI = "https://www.googleapis.com/drive/v2/files"; // GET with q
 const QString GCDClient::propertyURI = "https://www.googleapis.com/drive/v2/files/%1"; // GET
 const QString GCDClient::createFolderURI = "https://www.googleapis.com/drive/v2/files"; // POST with json.
@@ -27,7 +27,7 @@ const QString GCDClient::deleteFileURI = "https://www.googleapis.com/drive/v2/fi
 const QString GCDClient::patchFileURI = "https://www.googleapis.com/drive/v2/files/%1"; // PATCH with partial json body.
 const QString GCDClient::sharesURI = "https://www.googleapis.com/drive/v2/files/%1/permissions"; // POST to insert permission.
 const QString GCDClient::trashFileURI = "https://www.googleapis.com/drive/v2/files/%1/trash"; // POST
-const QString GCDClient::startResumableUploadURI = "https://www.googleapis.com/upload/drive/v2/files?uploadType=resumable"; // POST with json includes file properties.
+const QString GCDClient::startResumableUploadURI = "https://www.googleapis.com/upload/drive/v2/files%1?uploadType=resumable"; // POST with json includes file properties.
 const QString GCDClient::resumeUploadURI = "%1"; // PUT with specified URL.
 const QString GCDClient::deltaURI = "https://www.googleapis.com/drive/v2/changes"; // GET with parameters.
 
@@ -653,7 +653,11 @@ QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source,
 {
     qDebug() << "----- GCDClient::filePut -----" << nonce << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
-    QString uri = filePutURI + "?uploadType=media";
+    // Search for fileId.
+    QString fileId = searchFileId(nonce, uid, remoteParentPath, remoteFileName);
+    fileId = (fileId != "") ? ("/" + fileId) : fileId;
+
+    QString uri = filePutURI.arg(fileId) + "?uploadType=media";
     qDebug() << "GCDClient::filePut uri " << uri;
 
     QString contentType = getContentType(remoteFileName);
@@ -668,10 +672,11 @@ QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source,
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteParentPath));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3), QVariant(remoteFileName));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 4), QVariant(fileId));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, QVariant(contentType));
     req.setHeader(QNetworkRequest::ContentLengthHeader, bytesTotal);
-    QNetworkReply *reply = manager->post(req, source);
+    QNetworkReply *reply = (fileId != "") ? manager->put(req, source) : manager->post(req, source);
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
     connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
 
@@ -710,7 +715,11 @@ QNetworkReply *GCDClient::filePutMulipart(QString nonce, QString uid, QIODevice 
 {
     qDebug() << "----- GCDClient::filePutMulipart -----" << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
-    QString uri = filePutURI + "?uploadType=multipart";
+    // Search for fileId.
+    QString fileId = searchFileId(nonce, uid, remoteParentPath, remoteFileName);
+    fileId = (fileId != "") ? ("/" + fileId) : fileId;
+
+    QString uri = filePutURI.arg(fileId) + "?uploadType=multipart";
     qDebug() << "GCDClient::filePutMulipart uri " << uri;
 
     if (source->open(QIODevice::ReadOnly)) {
@@ -760,7 +769,7 @@ QNetworkReply *GCDClient::filePutMulipart(QString nonce, QString uid, QIODevice 
             req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
             req.setHeader(QNetworkRequest::ContentTypeHeader, "multipart/related; boundary=\"" + boundary + "\"");
             req.setHeader(QNetworkRequest::ContentLengthHeader, postData.length());
-            QNetworkReply *reply = manager->post(req, m_bufferHash[nonce]->readAll());
+            QNetworkReply *reply = (fileId != "") ? manager->put(req, m_bufferHash[nonce]->readAll()) : manager->post(req, m_bufferHash[nonce]->readAll());
             QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
             connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
 
@@ -892,7 +901,11 @@ QString GCDClient::filePutResumeStart(QString nonce, QString uid, QString fileNa
 
     QString contentType = getContentType(fileName);
 
-    QString uri = startResumableUploadURI;
+    // Search for fileId.
+    QString fileId = searchFileId(nonce, uid, remoteParentPath, fileName);
+    fileId = (fileId != "") ? ("/" + fileId) : fileId;
+
+    QString uri = startResumableUploadURI.arg(fileId);
     qDebug() << "GCDClient::filePutResumeStart uri " << uri;
 /*
     {
@@ -919,7 +932,7 @@ QString GCDClient::filePutResumeStart(QString nonce, QString uid, QString fileNa
     req.setRawHeader("X-Upload-Content-Length", QString("%1").arg(bytesTotal).toAscii() );
     req.setHeader(QNetworkRequest::ContentLengthHeader, postData.length());
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    QNetworkReply *reply = manager->post(req, postData);
+    QNetworkReply *reply = (fileId != "") ? manager->put(req, postData) : manager->post(req, postData);
 
     // Return immediately if it's not synchronous.
     if (!synchronous) return "";
@@ -1335,6 +1348,54 @@ QNetworkReply * GCDClient::files(QString nonce, QString uid, QString remoteFileP
     reply->manager()->deleteLater();
 
     return reply;
+}
+
+QString GCDClient::searchFileId(QString nonce, QString uid, QString remoteParentPath, QString remoteFileName)
+{
+    qDebug() << "----- GCDClient::search -----" << nonce << uid << remoteParentPath << remoteFileName;
+
+    // Construct normalized query string.
+    QMap<QString, QString> sortMap;
+    sortMap["key"] = consumerKey;
+    sortMap["q"] = QUrl::toPercentEncoding(QString("'%1' in parents and title = '%2' and trashed = false").arg((remoteParentPath == "") ? RemoteRoot : remoteParentPath).arg(remoteFileName));
+    QString queryString = createQueryString(sortMap);
+    qDebug() << "GCDClient::search" << nonce << "queryString" << queryString;
+
+    QString uri = filesURI + "?" + queryString;
+    qDebug() << "GCDClient::search" << nonce << "uri" << uri;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    QNetworkReply *reply = manager->get(req);
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    QString fileId;
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue filesObj = engine.evaluate("(" + replyBody + ")");
+        int contentsCount = filesObj.property("items").property("length").toInt32();
+        qDebug() << "GCDClient::search" << nonce << "replyBody" << replyBody << "contentsCount" << contentsCount;
+        if (contentsCount > 0) {
+            fileId = filesObj.property("items").property(0).property("id").toString();
+            // TODO Cache.
+        }
+    } else {
+        qDebug() << "GCDClient::search" << nonce << "error" << reply->error() << replyBody;
+    }
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return fileId;
 }
 
 QNetworkReply * GCDClient::property(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)

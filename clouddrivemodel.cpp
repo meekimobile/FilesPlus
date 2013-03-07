@@ -3190,8 +3190,12 @@ void CloudDriveModel::schedulerTimeoutFilter()
         resumeNextJob();
     }
 
-    // Request delta.
-    scheduleDeltaJobs(cronValue);
+    // Request delta if there is no running job.
+    if (runningJobCount <= 0) {
+        scheduleDeltaJobs(cronValue);
+    } else {
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter there is running jobs, skip delta request. runningJobCount" << runningJobCount;
+    }
 
     emit schedulerTimeoutSignal();
 }
@@ -3711,8 +3715,14 @@ void CloudDriveModel::proceedNextJob() {
         break;
     }
 
-    QThreadPool::globalInstance()->start(t);
-    qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "started. runningJobCount" << runningJobCount << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount();
+    // TODO NOTE Try to avoid thread panic by invoking dispatchJob() directly for any QNAM implementation methods.
+    if (t->isDirectInvokation()) {
+        QThreadPool::globalInstance()->start(t);
+        qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "is started. runningJobCount" << runningJobCount << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount();
+    } else {
+        qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "is dispatching. runningJobCount" << runningJobCount << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount();
+        dispatchJob(nonce);
+    }
 }
 
 CloudDriveClient * CloudDriveModel::getCloudClient(ClientTypes type)

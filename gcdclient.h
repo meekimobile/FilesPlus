@@ -77,6 +77,7 @@ public:
 
     QString delta(QString nonce, QString uid, bool synchronous);
     QString media(QString nonce, QString uid, QString remoteFilePath);
+    QString searchFileId(QString nonce, QString uid, QString remoteParentPath, QString remoteFileName);
 
     QString getRemoteRoot(QString uid);
     bool isFilePutResumable(qint64 fileSize);
