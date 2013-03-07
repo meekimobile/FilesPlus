@@ -370,6 +370,7 @@ private:
     QSqlQuery m_countByLocalPathPS;
 
     void initializeDB(QString nonce);
+    void fixDamagedDB();
     void cleanDB();
     void closeDB();
 

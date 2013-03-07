@@ -3208,6 +3208,63 @@ void CloudDriveModel::initJobQueueTimer()
     m_jobQueueTimer.start();
 }
 
+void CloudDriveModel::fixDamagedDB()
+{
+    QSqlQuery query(m_db);
+    bool res;
+
+    // Drop index to fix QSqlError 11 database disk image is malformed.
+    res = query.exec("DROP INDEX cloud_drive_item_pk;");
+    if (res) {
+        qDebug() << "CloudDriveModel::fixDamagedDB DROP INDEX is done.";
+    } else {
+        qDebug() << "CloudDriveModel::fixDamagedDB DROP INDEX is failed. Error" << query.lastError();
+    }
+
+    res = query.exec("DELETE FROM cloud_drive_item WHERE local_path = '';");
+    if (res) {
+        qDebug() << "CloudDriveModel::fixDamagedDB DELETE item with empty local_path is done." << query.numRowsAffected();
+    } else {
+        qDebug() << "CloudDriveModel::fixDamagedDB DELETE is failed. Error" << query.lastError() << query.lastQuery();
+    }
+
+    // TODO Workaround. Delete duplicated unique item to fix QSqlError 19 indexed columns are not unique.
+    QSqlQuery deleteDuplicatedPS(m_db);
+    deleteDuplicatedPS.prepare("DELETE FROM cloud_drive_item WHERE type = :type AND uid = :uid AND local_path = :local_path AND rowid < :rowid;");
+
+    res = query.exec("SELECT type, uid, local_path, count(*) c, max(rowid) max_rowid FROM cloud_drive_item GROUP BY type, uid, local_path HAVING count(*) > 1;");
+    if (res) {
+        qDebug() << "CloudDriveModel::fixDamagedDB find duplicated unique key. numRowsAffected" << query.numRowsAffected();
+        QSqlRecord rec = query.record();
+        while (query.next()) {
+            if (query.isValid()) {
+                int type = query.value(rec.indexOf("type")).toInt();
+                QString uid = query.value(rec.indexOf("uid")).toString();
+                QString localPath = query.value(rec.indexOf("local_path")).toString();
+                int c = query.value(rec.indexOf("c")).toInt();
+                int maxRowId = query.value(rec.indexOf("max_rowid")).toInt();
+                qDebug() << "CloudDriveModel::fixDamagedDB find duplicated unique key record" << type << uid << localPath << c << maxRowId;
+
+                // Delete duplicated unique key record.
+                deleteDuplicatedPS.bindValue(":type", type);
+                deleteDuplicatedPS.bindValue(":uid", uid);
+                deleteDuplicatedPS.bindValue(":local_path", localPath);
+                deleteDuplicatedPS.bindValue(":rowid", maxRowId);
+                res = deleteDuplicatedPS.exec();
+                if (res) {
+                    qDebug() << "CloudDriveModel::fixDamagedDB DELETE duplicated unique key record is done." << deleteDuplicatedPS.numRowsAffected();
+                } else {
+                    qDebug() << "CloudDriveModel::fixDamagedDB DELETE duplicated unique key record is failed. Error" << deleteDuplicatedPS.lastError() << deleteDuplicatedPS.lastQuery();
+                }
+            } else {
+                qDebug() << "CloudDriveModel::fixDamagedDB find duplicated unique key record position is invalid. ps.lastError()" << query.lastError();
+            }
+        }
+    } else {
+        qDebug() << "CloudDriveModel::fixDamagedDB find duplicated unique key failed. Error" << query.lastError() << query.lastQuery();
+    }
+}
+
 void CloudDriveModel::initializeDB(QString nonce)
 {
     emit initializeDBStarted(nonce);
@@ -3234,13 +3291,8 @@ void CloudDriveModel::initializeDB(QString nonce)
     QSqlQuery query(m_db);
     bool res = false;
 
-    // TODO Workaround. Reindex to fix QSqlError 11 database disk image is malformed.
-    res = query.exec("REINDEX;");
-    if (res) {
-        qDebug() << "CloudDriveModel::initializeDB REINDEX is done.";
-    } else {
-        qDebug() << "CloudDriveModel::initializeDB REINDEX is failed. Error" << query.lastError();
-    }
+    // Fix damaged DB.
+    fixDamagedDB();
 
     res = query.exec("CREATE TABLE cloud_drive_item(type INTEGER PRIMARY_KEY, uid TEXT PRIMARY_KEY, local_path TEXT PRIMARY_KEY, remote_path TEXT, hash TEXT, last_modified TEXT)");
     if (res) {
