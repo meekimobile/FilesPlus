@@ -1635,8 +1635,9 @@ PageStackWindow {
 
                         // Sync based on remote contents.
                         // TODO Should it detect jobJson.force_put or jobJson.force_get?
-                        var remotePathList = "";
+                        var remotePathList = "*"; // Default remotePathList as * means keep all items.
                         if (jobJson.force_get || jsonObj.hash != itemJson.hash) { // Sync all json(remote)'s contents.
+                            remotePathList = ""; // Reset remotePathList.
                             for(var i=0; i<jsonObj.children.length; i++) {
                                 var item = jsonObj.children[i];
                                 var itemLocalPath = cloudDriveModel.getAbsolutePath(jobJson.local_file_path, item.name);

@@ -235,7 +235,7 @@ public:
 
     Q_INVOKABLE QStringList getLocalPathList(QString localParentPath);
     Q_INVOKABLE void syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, QString data = "");
-    Q_INVOKABLE void syncFromLocal_Block(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, bool isRootLocalPath = true, QString data = "");
+    Q_INVOKABLE void syncFromLocal_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, bool isRootLocalPath = true, QString data = "*");
 
     Q_INVOKABLE void createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, QString newRemoteFolderName);
     // createFolder_Block expected to get created remote path as result. If folder already exists, return existing folder path.
