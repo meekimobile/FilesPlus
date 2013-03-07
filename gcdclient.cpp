@@ -422,6 +422,13 @@ QString GCDClient::createFolder(QString nonce, QString uid, QString remoteParent
         return "";
     }
 
+    // Search for existing folder.
+    QString folderId = searchFileId(nonce, uid, remoteParentPath, newRemoteFolderName);
+    if (folderId != "") {
+        qDebug() << "GCDClient::createFolder" << nonce << "found existing folderId" << folderId;
+        return createFolderReplyFinished(property(nonce, uid, folderId, true));
+    }
+
     QString uri = createFolderURI;
     qDebug() << "GCDClient::createFolder uri " << uri;
 /*
