@@ -3063,7 +3063,7 @@ void CloudDriveModel::fileGetResumeReplyFilter(QString nonce, int err, QString e
             // Enqueue and resume job.
             if (job.downloadOffset < job.bytesTotal) {
                 qDebug() << "CloudDriveModel::fileGetResumeReplyFilter resume downloading job" << job.toJsonText();
-                m_jobQueue->enqueue(job.jobId);
+                m_jobQueue->insert(0, job.jobId); // Resume download with priority.
             } else {
                 qDebug() << "CloudDriveModel::fileGetResumeReplyFilter commit downloading job" << job.toJsonText();
                 fileGetReplyFilter(job.jobId, err, errMsg, msg);
@@ -3116,13 +3116,13 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
                 // Enqueue and resume job.
                 if (job.uploadOffset < job.bytesTotal) {
                     qDebug() << "CloudDriveModel::filePutResumeReplyFilter resume uploading job" << job.toJsonText();
-                    m_jobQueue->enqueue(job.jobId);
+                    m_jobQueue->insert(0, job.jobId); // Resume upload with priority.
                 } else {
                     qDebug() << "CloudDriveModel::filePutResumeReplyFilter commit uploading job" << job.toJsonText();
                     // Get uploaded path.
                     job.newRemoteFilePath = getRemotePath(getClientType(job.type), job.remoteFilePath, job.newRemoteFileName);
                     job.operation = FilePutCommit;
-                    m_jobQueue->enqueue(job.jobId);
+                    m_jobQueue->insert(0, job.jobId); // Resume upload with priority.
                 }
                 break;
             case GoogleDrive:
@@ -3142,7 +3142,7 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
                 if (job.uploadOffset < job.bytesTotal) {
                     // Enqueue and resume job.
                     qDebug() << "CloudDriveModel::filePutResumeReplyFilter resume uploading job" << job.toJsonText();
-                    m_jobQueue->enqueue(job.jobId);
+                    m_jobQueue->insert(0, job.jobId); // Resume upload with priority.
                 } else {
                     // Invoke to handle successful uploading.
                     qDebug() << "CloudDriveModel::filePutResumeReplyFilter commit uploading job" << job.toJsonText();
