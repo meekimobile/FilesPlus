@@ -12,6 +12,7 @@ public:
 
     void setNonce(QString nonce);
     void setDirectInvokation(bool flag);
+    bool isDirectInvokation();
 
     void run();
 signals:

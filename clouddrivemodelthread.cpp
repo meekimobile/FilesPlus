@@ -16,6 +16,11 @@ void CloudDriveModelThread::setDirectInvokation(bool flag)
     m_isDirectInvokation = flag;
 }
 
+bool CloudDriveModelThread::isDirectInvokation()
+{
+    return m_isDirectInvokation;
+}
+
 void CloudDriveModelThread::run()
 {
     if (m_isDirectInvokation) {
