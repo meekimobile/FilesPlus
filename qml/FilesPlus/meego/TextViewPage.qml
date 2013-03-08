@@ -31,8 +31,9 @@ Page {
             id: saveButton
             iconSource: (theme.inverted) ? "save.svg" : "save_inverted.svg"
             onClicked: {
-                // TODO Save to file.
+                // Save to file.
                 helper.saveFileContent(textViewPage.filePath, textView.text);
+                fsModel.removeCache(textViewPage.filePath);
             }
         }
 

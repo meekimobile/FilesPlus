@@ -34,8 +34,9 @@ Page {
             iconSource: (!window.platformInverted) ? "save.svg" : "save_inverted.svg"
             platformInverted: window.platformInverted
             onClicked: {
-                // TODO Save to file.
+                // Save to file.
                 helper.saveFileContent(textViewPage.filePath, textView.text);
+                fsModel.removeCache(textViewPage.filePath);
             }
         }
 
