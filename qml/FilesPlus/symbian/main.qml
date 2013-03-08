@@ -421,11 +421,15 @@ PageStackWindow {
         onDirectoryChanged: {
             console.debug("window fsModel onDirectoryChanged " + dirPath);
 
-            // Check if dirPath is connected, then trigger synchronization.
+            // Check if dirPath is connected and not syncing, then trigger synchronization.
             if (cloudDriveModel.isConnected(dirPath)) {
-                // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
-                cloudDriveModel.updateItems(dirPath, cloudDriveModel.dirtyHash);
-                cloudDriveModel.syncItem(dirPath);
+                if (!cloudDriveModel.isSyncing(dirPath)) {
+                    // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
+                    cloudDriveModel.updateItems(dirPath, cloudDriveModel.dirtyHash);
+                    cloudDriveModel.syncItem(dirPath);
+                } else {
+                    console.debug("window fsModel onDirectoryChanged " + dirPath + " is synchronizing, suppress synchronization request.");
+                }
             }
         }
 
