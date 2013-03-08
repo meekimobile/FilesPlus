@@ -1315,19 +1315,18 @@ void GCDClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 
 QNetworkReply * GCDClient::files(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
 {
-    qDebug() << "----- GCDClient::files -----" << remoteFilePath;
-
-    QApplication::processEvents();
+    qDebug() << "----- GCDClient::files -----" << nonce << uid << remoteFilePath << synchronous << callback;
 
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
     sortMap["key"] = consumerKey;
+    sortMap["maxResults"] = "1000"; // TODO Implement using pageToken. Workaround, using default value 1000.
     sortMap["q"] = QUrl::toPercentEncoding(QString("'%1' in parents and trashed = false").arg((remoteFilePath == "") ? RemoteRoot : remoteFilePath));
     QString queryString = createQueryString(sortMap);
-    qDebug() << "queryString " << queryString;
+    qDebug() << "GCDClient::files" << nonce << "queryString" << queryString;
 
     QString uri = filesURI + "?" + queryString;
-    qDebug() << "GCDClient::files uri " << uri;
+    qDebug() << "GCDClient::files" << nonce << "uri" << uri;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -1407,11 +1406,11 @@ QString GCDClient::searchFileId(QString nonce, QString uid, QString remoteParent
 
 QNetworkReply * GCDClient::property(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
 {
-    qDebug() << "----- GCDClient::property -----" << remoteFilePath << callback;
+    qDebug() << "----- GCDClient::property -----" << nonce << uid << remoteFilePath << synchronous << callback;
 
     QString uri = propertyURI.arg((remoteFilePath == "") ? RemoteRoot : remoteFilePath);
     uri = encodeURI(uri);
-    qDebug() << "GCDClient::property uri " << uri;
+    qDebug() << "GCDClient::property" << nonce << "uri" << uri;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -1770,8 +1769,8 @@ void GCDClient::mergePropertyAndFilesJson(QString nonce, QString callback)
         QScriptValue mergedObj;
         QScriptValue propertyObj;
         QScriptValue filesObj;
-        qDebug() << "GCDClient::mergePropertyAndFilesJson propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
-        qDebug() << "GCDClient::mergePropertyAndFilesJson filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
+        qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
+        qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
         propertyObj = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
         filesObj = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
 
