@@ -98,6 +98,7 @@ private:
 
     void initializeDB();
     void closeDB();
+    void fixDamagedDB();
     FolderSizeItem selectDirSizeCacheFromDB(const QString id);
     int insertDirSizeCacheToDB(const FolderSizeItem item);
     int updateDirSizeCacheToDB(const FolderSizeItem item);

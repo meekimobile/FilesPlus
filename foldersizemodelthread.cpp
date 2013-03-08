@@ -156,6 +156,9 @@ void FolderSizeModelThread::initializeDB()
     bool ok = m_db.open();
     qDebug() << "FolderSizeModelThread::initializeDB" << ok << "connectionName" << m_db.connectionName() << "databaseName" << m_db.databaseName() << "driverName" << m_db.driverName();
 
+    // Fix damaged DB.
+    fixDamagedDB();
+
     QSqlQuery query(m_db);
     bool res = false;
 
@@ -208,6 +211,59 @@ void FolderSizeModelThread::closeDB()
 {
     qDebug() << "FolderSizeModelThread::closeDB" << countDirSizeCacheDB();
     m_db.close();
+}
+
+void FolderSizeModelThread::fixDamagedDB()
+{
+    QSqlQuery query(m_db);
+    bool res;
+
+    // Drop index to fix QSqlError 11 database disk image is malformed.
+    res = query.exec("DROP INDEX folderpie_cache_pk;");
+    if (res) {
+        qDebug() << "FolderSizeModelThread::fixDamagedDB DROP INDEX is done.";
+    } else {
+        qDebug() << "FolderSizeModelThread::fixDamagedDB DROP INDEX is failed. Error" << query.lastError();
+    }
+
+    res = query.exec("DELETE FROM folderpie_cache WHERE id = '';");
+    if (res) {
+        qDebug() << "FolderSizeModelThread::fixDamagedDB DELETE item with empty id is done." << query.numRowsAffected();
+    } else {
+        qDebug() << "FolderSizeModelThread::fixDamagedDB DELETE is failed. Error" << query.lastError() << query.lastQuery();
+    }
+
+    // TODO Workaround. Delete duplicated unique item to fix QSqlError 19 indexed columns are not unique.
+    QSqlQuery deleteDuplicatedPS(m_db);
+    deleteDuplicatedPS.prepare("DELETE FROM folderpie_cache WHERE id = :id AND rowid < :rowid;");
+
+    res = query.exec("SELECT id, count(*) c, max(rowid) max_rowid FROM folderpie_cache GROUP BY id HAVING count(*) > 1;");
+    if (res) {
+        qDebug() << "FolderSizeModelThread::fixDamagedDB find duplicated unique key. numRowsAffected" << query.size();
+        QSqlRecord rec = query.record();
+        while (query.next()) {
+            if (query.isValid()) {
+                QString id = query.value(rec.indexOf("id")).toString();
+                int c = query.value(rec.indexOf("c")).toInt();
+                int maxRowId = query.value(rec.indexOf("max_rowid")).toInt();
+                qDebug() << "FolderSizeModelThread::fixDamagedDB find duplicated unique key record" << id << c << maxRowId;
+
+                // Delete duplicated unique key record.
+                deleteDuplicatedPS.bindValue(":id", id);
+                deleteDuplicatedPS.bindValue(":rowid", maxRowId);
+                res = deleteDuplicatedPS.exec();
+                if (res) {
+                    qDebug() << "FolderSizeModelThread::fixDamagedDB DELETE duplicated unique key record is done." << deleteDuplicatedPS.numRowsAffected();
+                } else {
+                    qDebug() << "FolderSizeModelThread::fixDamagedDB DELETE duplicated unique key record is failed. Error" << deleteDuplicatedPS.lastError() << deleteDuplicatedPS.lastQuery();
+                }
+            } else {
+                qDebug() << "FolderSizeModelThread::fixDamagedDB find duplicated unique key record position is invalid. ps.lastError()" << query.lastError();
+            }
+        }
+    } else {
+        qDebug() << "FolderSizeModelThread::fixDamagedDB find duplicated unique key failed. Error" << query.lastError() << query.lastQuery();
+    }
 }
 
 FolderSizeItem FolderSizeModelThread::selectDirSizeCacheFromDB(const QString id)
