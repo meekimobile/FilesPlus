@@ -3255,7 +3255,7 @@ void CloudDriveModel::fixDamagedDB()
 
     res = query.exec("SELECT type, uid, local_path, count(*) c, max(rowid) max_rowid FROM cloud_drive_item GROUP BY type, uid, local_path HAVING count(*) > 1;");
     if (res) {
-        qDebug() << "CloudDriveModel::fixDamagedDB find duplicated unique key. numRowsAffected" << query.numRowsAffected();
+        qDebug() << "CloudDriveModel::fixDamagedDB find duplicated unique key. numRowsAffected" << query.size();
         QSqlRecord rec = query.record();
         while (query.next()) {
             if (query.isValid()) {
