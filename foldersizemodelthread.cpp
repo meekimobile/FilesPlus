@@ -239,7 +239,7 @@ void FolderSizeModelThread::fixDamagedDB()
 
     res = query.exec("SELECT id, count(*) c, max(rowid) max_rowid FROM folderpie_cache GROUP BY id HAVING count(*) > 1;");
     if (res) {
-        qDebug() << "FolderSizeModelThread::fixDamagedDB find duplicated unique key. numRowsAffected" << query.size();
+        qDebug() << "FolderSizeModelThread::fixDamagedDB find duplicated unique key. numRowsAffected" << query.numRowsAffected();
         QSqlRecord rec = query.record();
         while (query.next()) {
             if (query.isValid()) {
