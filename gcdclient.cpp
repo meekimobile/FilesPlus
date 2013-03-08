@@ -2057,8 +2057,11 @@ void GCDClient::filePutResumeUploadReplyFinished(QNetworkReply *reply)
             // Emit signal with offset to resume upload.
             emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"offset\": %1 }").arg(offset) );
         } else {
-            // Emit signal with successful upload reply which include uploaded file size.
-            emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
+            // Emit signal with successful upload reply which include uploaded file's common property json.
+            QScriptEngine engine;
+            QScriptValue jsonObj = engine.evaluate("(" + QString::fromUtf8(replyBody) + ")");
+            QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+            emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), stringifyScriptValue(engine, parsedObj));
         }
     } else {
         // REMARK Use QString::fromUtf8() to support unicode text.

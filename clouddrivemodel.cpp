@@ -2117,10 +2117,10 @@ void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::Client
 
             QString localFilePath = item.absoluteFilePath();
             CloudDriveItem cloudDriveItem = getItem(localFilePath, type, uid);
+            // TODO Cache isSyncing()
             bool isNewItem = !isSyncing(type, uid, localFilePath) && (cloudDriveItem.hash == "" || cloudDriveItem.remotePath == "");
             bool isDeletedItem = cloudDriveItem.remotePath != "" && remotePathList.indexOf(cloudDriveItem.remotePath) == -1 && remotePathList.indexOf("*") == -1;
-//            qDebug() << "CloudDriveModel::syncFromLocal_Block item" << cloudDriveItem.toJsonText() << "index in remotePathList" << remotePathList.indexOf(cloudDriveItem.remotePath);
-            qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "isNewItem" << isNewItem << "isDeletedItem" << isDeletedItem << "remotePathList" << remotePathList;
+            qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isNewItem" << isNewItem << "isDeletedItem" << isDeletedItem << "remotePathList" << remotePathList;
 
             // If dir/file don't have localHash which means it's not synced, put it right away.
             // If forcePut, put it right away.
@@ -2134,6 +2134,7 @@ void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::Client
                     syncFromLocal_Block(nonce, type, uid, localFilePath, parentCloudDriveItem.remotePath, -1, forcePut, false);
                 } else {
                     // Put file to remote parent path.
+                    // TODO Add more comparing logic whether upload or just update hash.
                     filePut(type, uid, localFilePath, parentCloudDriveItem.remotePath, getFileName(localFilePath), -1);
                 }
             } else if (isDeletedItem) {
@@ -3134,8 +3135,8 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
                 if (sc.property("offset").isValid()) {
                     job.uploadOffset = sc.property("offset").toUInt32(); // NOTE offset got from (maxRange+1) returned from status request. It's actually the offset for resume uploading.
                 }
-                if (sc.property("id").isValid()) {
-                    job.uploadOffset = sc.property("fileSize").toUInt32(); // NOTE fileSize got from upload request is actually the offset for resume uploading.
+                if (sc.property("absolutePath").isValid()) { // Check if msg contains common file json with absolutePath, it means uploading is done.
+                    job.uploadOffset = sc.property("size").toUInt32(); // NOTE file size is actually the offset for resume uploading.
                 }
 
                 // Check whether resume or commit.
@@ -3147,8 +3148,8 @@ void CloudDriveModel::filePutResumeReplyFilter(QString nonce, int err, QString e
                     // Invoke to handle successful uploading.
                     qDebug() << "CloudDriveModel::filePutResumeReplyFilter commit uploading job" << job.toJsonText();
                     // Get uploaded path.
-                    if (sc.property("id").isValid()) {
-                        job.newRemoteFilePath = sc.property("id").toString();
+                    if (sc.property("absolutePath").isValid()) {
+                        job.newRemoteFilePath = sc.property("absolutePath").toString();
                     }
                     filePutReplyFilter(job.jobId, err, errMsg, msg);
                     return;
