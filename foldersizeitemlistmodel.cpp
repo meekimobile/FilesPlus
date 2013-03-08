@@ -880,11 +880,13 @@ void FolderSizeItemListModel::refreshIndexOnCurrentDir()
     }
 }
 
-void FolderSizeItemListModel::removeCache(const QString absPath)
+void FolderSizeItemListModel::removeCache(const QString absPath, bool removeAll)
 {
     // Remove cache up to root by utilizing cache in getPathToRoot().
     foreach (QString path, getPathToRoot(absPath)) {
-        if (m.removeDirSizeCache(path) == 0) {
+        if (removeAll) {
+            m.removeDirSizeCache(path);
+        } else if (QFileInfo(path).isDir() && m.removeDirSizeCache(path) == 0) {
             qDebug() << "FolderSizeItemListModel::removeCache cache of" << path << "is already removed. Operation is ignored.";
             break;
         }

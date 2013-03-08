@@ -112,7 +112,7 @@ public:
     Q_INVOKABLE int getIndexOnCurrentDir(const QString absFilePath);
     Q_INVOKABLE void clearIndexOnCurrentDir();
     void refreshIndexOnCurrentDir();
-    Q_INVOKABLE void removeCache(const QString absPath);
+    Q_INVOKABLE void removeCache(const QString absPath, bool removeAll = false);
     Q_INVOKABLE bool isRunning();
 
     // File/Dir manipulation methods.
