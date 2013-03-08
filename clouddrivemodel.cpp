@@ -913,7 +913,7 @@ QString CloudDriveModel::getOperationName(int operation) {
     case FileGetResume:
         return tr("Download");
     default:
-        return tr("Invalid operation");
+        return "invalid";
     }
 }
 
@@ -3762,9 +3762,24 @@ void CloudDriveModel::proceedNextJob() {
     // TODO Check retryCount before proceed.
     QString nonce = m_jobQueue->dequeue();
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    // Check if it's invalid operation, then discard and return.
+    if (getOperationName(job.operation) == "invalid") {
+        qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "operation" << getOperationName(job.operation) << " Operation is discarded.";
+        return;
+    }
+
 //    job.isRunning = true; // It will be set by dispatchJob() invoked by thread.
-    job.retryCount++;
+    if (job.err != 0) job.retryCount++;
     updateJob(job);
+
+    // Check if retry hits maximum, then discard and return.
+    int maxRetryCount = m_settings.value("CloudDriveModel.maxRetryCount", QVariant(3)).toInt();
+    if (job.retryCount > maxRetryCount) {
+        qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "operation" << getOperationName(job.operation) << "retry" << job.retryCount << "maxRetryCount" << maxRetryCount << " Operation is aborted.";
+        return;
+    }
+
     // Increase runningJobCount.
     mutex.lock();
     runningJobCount++;
@@ -3973,6 +3988,8 @@ void CloudDriveModel::resumeJob(const QString jobId)
     // Enqueue job.
     CloudDriveJob job = m_cloudDriveJobs->value(jobId);
     if (!job.isRunning) {
+        job.retryCount = 0; // Reset retry count.
+        updateJob(job, false);
         m_jobQueue->enqueue(jobId);
     }
 }
