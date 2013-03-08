@@ -1020,6 +1020,9 @@ void SkyDriveClient::propertyReplyFinished(QNetworkReply *reply)
 
     if (reply->error() == QNetworkReply::NoError) {
         m_propertyReplyHash->insert(nonce, reply->readAll());
+
+        // Merge and emit signal if both property and files are available.
+        mergePropertyAndFilesJson(nonce, callback);
     } else {
         // Remove once used.
         m_propertyReplyHash->remove(nonce);
@@ -1035,11 +1038,7 @@ void SkyDriveClient::propertyReplyFinished(QNetworkReply *reply)
         }
     }
 
-    if (m_propertyReplyHash->contains(nonce) && m_filesReplyHash->contains(nonce)) {
-        mergePropertyAndFilesJson(nonce, callback);
-    }
-
-    // TODO scheduled to delete later.
+    // Scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -1051,13 +1050,27 @@ void SkyDriveClient::filesReplyFinished(QNetworkReply *reply)
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString callback = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
 
-    m_filesReplyHash->insert(nonce, reply->readAll());
+    if (reply->error() == QNetworkReply::NoError) {
+        m_filesReplyHash->insert(nonce, reply->readAll());
 
-    if (m_propertyReplyHash->contains(nonce) && m_filesReplyHash->contains(nonce)) {
+        // Merge and emit signal if both property and files are available.
         mergePropertyAndFilesJson(nonce, callback);
+    } else {
+        // Remove once used.
+        m_propertyReplyHash->remove(nonce);
+        m_filesReplyHash->remove(nonce);
+
+        // Property is mandatory. Emit error if error occurs.
+        if (callback == "browse") {
+            emit browseReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+        } else if (callback == "metadata") {
+            emit metadataReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
+        } else {
+            qDebug() << "SkyDriveClient::filesReplyFinished invalid callback" << callback;
+        }
     }
 
-    // TODO scheduled to delete later.
+    // Scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
