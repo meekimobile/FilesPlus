@@ -892,8 +892,8 @@ FolderSizeItem FolderSizeModelThread::getCachedDir(const QFileInfo dir, const bo
 
     // If (cache is invalidated or not found) and FolderSizeModelThread is ready, get cache recursively.
     // Otherwise return dummy dir item with 0 byte.
-    if (!isFound || !isValid) {
-        //        qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir NOT found " + dir.absoluteFilePath();
+    if (!isFound || !isValid || dir.isRoot()) {
+//        qDebug() << QTime::currentTime() << "FolderSizeModelThread::getCachedDir NOT found " + dir.absoluteFilePath();
 
         // Avoid UI freezing by processEvents().
         QApplication::processEvents();
