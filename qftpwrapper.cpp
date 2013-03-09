@@ -21,8 +21,8 @@ QFtpWrapper::QFtpWrapper(QString nonce, QObject *parent) :
     // Initialize idle timer.
     m_idleTimer = new QTimer(this);
     connect(m_idleTimer, SIGNAL(timeout()), this, SLOT(idleTimerTimeoutSlot()) );
-    connect(this, SIGNAL(destroyed()), m_idleTimer, SLOT(stop()) );
-    connect(this, SIGNAL(destroyed()), m_idleTimer, SLOT(deleteLater()) );
+//    connect(this, SIGNAL(destroyed()), m_idleTimer, SLOT(stop()) );
+//    connect(this, SIGNAL(destroyed()), m_idleTimer, SLOT(deleteLater()) );
     m_idleTimer->setInterval(m_settings.value("QFtpWrapper.timeout.interval", QVariant(DefaultTimeoutMSec)).toInt());
     m_idleTimer->setSingleShot(true);
 }
@@ -66,11 +66,11 @@ void QFtpWrapper::resetIsDone()
 
 bool QFtpWrapper::waitForDone()
 {
-    qDebug() << "QFtpWrapper::waitForDone" << m_isDone;
+    qDebug() << "QFtpWrapper::waitForDone" << m_nonce << m_isDone;
 
     int c = MaxWaitCount;
     while (!m_isDone && c-- > 0) {
-        qDebug() << "QFtpWrapper::waitForDone" << m_isDone << c;
+        qDebug() << "QFtpWrapper::waitForDone" << m_nonce << m_isDone << c;
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
     }
@@ -90,7 +90,7 @@ bool QFtpWrapper::deleteRecursive(QString remoteFilePath)
         remoteFilePath = m_remoteFilePath;
     }
 
-    qDebug() << "QFtpWrapper::deleteRecursive" << remoteFilePath;
+    qDebug() << "QFtpWrapper::deleteRecursive" << m_nonce << remoteFilePath;
 
     // Check if it's folder by cd.
     cd(remoteFilePath);
@@ -102,7 +102,7 @@ bool QFtpWrapper::deleteRecursive(QString remoteFilePath)
         // ISSUE list() get clear before start listing. When pop to parent level, the list is empty.
         QList<QUrlInfo> itemList = getItemList();
         for (int i = 0; i < itemList.count(); i++) {
-            qDebug() << "QFtpWrapper::deleteRecursive item" << remoteFilePath + "/" + itemList.at(i).name() << "isDir" << itemList.at(i).isDir();
+            qDebug() << "QFtpWrapper::deleteRecursive" << m_nonce << "item" << remoteFilePath + "/" + itemList.at(i).name() << "isDir" << itemList.at(i).isDir();
             if (itemList.at(i).isDir()) {
                 // Drill down into folder.
                 bool res = deleteRecursive(remoteFilePath + "/" + itemList.at(i).name());
@@ -114,11 +114,11 @@ bool QFtpWrapper::deleteRecursive(QString remoteFilePath)
                 remove(itemList.at(i).name());
                 waitForDone();
                 if (error() != QFtp::NoError) {
-                    qDebug() << "QFtpWrapper::deleteRecursive can't delete file" << remoteFilePath + "/" + itemList.at(i).name() << error() << errorString();
+                    qDebug() << "QFtpWrapper::deleteRecursive" << m_nonce << "can't delete file" << remoteFilePath + "/" + itemList.at(i).name() << error() << errorString();
                     emit deleteRecursiveFinished(m_nonce, error(), errorString());
                     return false;
                 } else {
-                    qDebug() << "QFtpWrapper::deleteRecursive delete file" << remoteFilePath + "/" + itemList.at(i).name();
+                    qDebug() << "QFtpWrapper::deleteRecursive" << m_nonce << "delete file" << remoteFilePath + "/" + itemList.at(i).name();
                 }
             }
         }
@@ -128,22 +128,22 @@ bool QFtpWrapper::deleteRecursive(QString remoteFilePath)
         rmdir(remoteFilePath);
         waitForDone();
         if (error() != QFtp::NoError) {
-            qDebug() << "QFtpWrapper::deleteRecursive can't delete folder" << remoteFilePath << error() << errorString();
+            qDebug() << "QFtpWrapper::deleteRecursive" << m_nonce << "can't delete folder" << remoteFilePath << error() << errorString();
             emit deleteRecursiveFinished(m_nonce, error(), errorString());
             return false;
         } else {
-            qDebug() << "QFtpWrapper::deleteRecursive delete folder" << remoteFilePath;
+            qDebug() << "QFtpWrapper::deleteRecursive" << m_nonce << "delete folder" << remoteFilePath;
         }
     } else {
         // It's a file. Delete it.
         remove(remoteFilePath);
         waitForDone();
         if (error() != QFtp::NoError) {
-            qDebug() << "QFtpWrapper::deleteRecursive can't delete file" << remoteFilePath << error() << errorString();
+            qDebug() << "QFtpWrapper::deleteRecursive" << m_nonce << "can't delete file" << remoteFilePath << error() << errorString();
             emit deleteRecursiveFinished(m_nonce, error(), errorString());
             return false;
         } else {
-            qDebug() << "QFtpWrapper::deleteRecursive delete file" << remoteFilePath;
+            qDebug() << "QFtpWrapper::deleteRecursive" << m_nonce << "delete file" << remoteFilePath;
         }
     }
 
@@ -176,7 +176,7 @@ QString QFtpWrapper::getCommandName(Command cmd)
 
 void QFtpWrapper::commandStartedFilter(int id)
 {
-    qDebug() << "QFtpWrapper::commandStartedFilter" << id << "currentCommand" << currentCommand() << getCommandName(currentCommand());
+    qDebug() << "QFtpWrapper::commandStartedFilter" << m_nonce << id << "currentCommand" << currentCommand() << getCommandName(currentCommand());
 
     m_isDone = false;
     m_itemList.clear();
@@ -189,7 +189,7 @@ void QFtpWrapper::commandStartedFilter(int id)
 
 void QFtpWrapper::commandFinishedFilter(int id, bool error)
 {
-    qDebug() << "QFtpWrapper::commandFinishedFilter" << id << (error ? (this->error() + " " + this->errorString()) : "");
+    qDebug() << "QFtpWrapper::commandFinishedFilter" << m_nonce << id << (error ? (this->error() + " " + this->errorString()) : "");
 
     emit commandFinished(m_nonce, id, error);
 
@@ -209,7 +209,7 @@ void QFtpWrapper::listInfoFilter(const QUrlInfo &i)
 
 //    emit listInfo(m_nonce, mod);
 
-    qDebug() << "QFtpWrapper::listInfoFilter name" << i.name() << "isDir" << i.isDir();
+    qDebug() << "QFtpWrapper::listInfoFilter" << m_nonce << "name" << i.name() << "isDir" << i.isDir();
 
     m_itemList.append(i);
 
@@ -219,7 +219,7 @@ void QFtpWrapper::listInfoFilter(const QUrlInfo &i)
 void QFtpWrapper::rawCommandReplyFilter(int replyCode, QString result)
 {
     // Capture PWD result.
-    qDebug() << "QFtpWrapper::rawCommandReplyFilter" << replyCode << result << "m_lastRawCommand" << m_lastRawCommand;
+    qDebug() << "QFtpWrapper::rawCommandReplyFilter" << m_nonce << replyCode << result << "m_lastRawCommand" << m_lastRawCommand;
     if (m_lastRawCommand.toLower() == "pwd") {
         QRegExp rx(".*\"([^\"]+)\".*");
         if (rx.exactMatch(result)) {
@@ -227,7 +227,7 @@ void QFtpWrapper::rawCommandReplyFilter(int replyCode, QString result)
                 m_currentPath = rx.cap(1);
             }
         }
-        qDebug() << "QFtpWrapper::rawCommandReplyFilter m_currentPath" << m_currentPath;
+        qDebug() << "QFtpWrapper::rawCommandReplyFilter" << m_nonce << "m_currentPath" << m_currentPath;
     }
 
     emit rawCommandReply(m_nonce, replyCode, result);
@@ -252,7 +252,7 @@ void QFtpWrapper::stateChangedFilter(int state)
 
 void QFtpWrapper::doneFilter(bool error)
 {
-    qDebug() << "QFtpWrapper::doneFilter" << (error ? "error" : "");
+    qDebug() << "QFtpWrapper::doneFilter" << m_nonce << (error ? "error" : "");
 
     m_isDone = true;
 
