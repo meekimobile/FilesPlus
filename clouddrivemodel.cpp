@@ -2230,7 +2230,7 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
         while (job.downloadOffset < remoteFileSize && !m_isAborted) {
             QIODevice *source = sourceClient->fileGet(nonce, uid, remoteFilePath, job.downloadOffset, true);
             if (source == 0) {
-                migrateFilePutFilter(nonce, -1, "Service is not implemented.", "{ }");
+                migrateFilePutFilter(nonce, -1, "Service is not implemented or host is not accessible.", "{ }");
                 return;
             }
             // Handle error.
@@ -2376,7 +2376,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
     QIODevice *source = sourceClient->fileGet(nonce, uid, remoteFilePath, job.downloadOffset, true);
     if (source == 0) {
         // Error occurs in fileGet method.
-        migrateFilePutFilter(nonce, -1, tr("Service is not implemented."), "{ }");
+        migrateFilePutFilter(nonce, -1, tr("Service is not implemented or host is not accessible."), "{ }");
         return;
     } else {
         qDebug() << "CloudDriveModel::migrateFileResume_Block chunk is downloaded. source->metaObject()->className()" << source->metaObject()->className() << "size" << source->size() << "bytesAvailable" << source->bytesAvailable() << "job" << job.toJsonText();
@@ -3782,11 +3782,12 @@ void CloudDriveModel::proceedNextJob() {
         return;
     }
 
+    qDebug() << "CloudDriveModel::proceedNextJob proceed jobId" << nonce << "operation" << getOperationName(job.operation) << "runningJobCount" << runningJobCount;
+
     // Increase runningJobCount.
     mutex.lock();
     runningJobCount++;
     mutex.unlock();
-    qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "operation" << getOperationName(job.operation) << "runningJobCount" << runningJobCount;
 
     // Dispatch job.
     CloudDriveModelThread *t = new CloudDriveModelThread(this);

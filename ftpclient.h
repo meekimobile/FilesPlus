@@ -24,7 +24,7 @@ public:
     bool isUnicodeSupported();
 
     void quota(QString nonce, QString uid);
-    QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = true);
+    QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
@@ -37,14 +37,13 @@ public:
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
-    QString mergePropertyAndFilesJson(QString propertyJsonText, QString filesJsonText);
 
 //    bool abort(QString nonce);
 signals:
 
 public slots:
-    void browseReplyFinished(QString nonce, int id, bool error);
-
+    QString fileGetReplyFinished(QString nonce, bool error, bool synchronous = false);
+    void filePutReplyFinished(QString nonce, bool error, bool synchronous = false);
 protected:
 
 private:
@@ -61,6 +60,7 @@ private:
     QString getItemListJson(const QString parentPath, const QList<QUrlInfo> itemList);
     QString getParentRemotePath(QString remotePath);
     QString getRemoteFileName(QString remotePath);
+    QString mergePropertyAndFilesJson(QString propertyJsonText, QString filesJsonText);
 };
 
 #endif // FTPCLIENT_H

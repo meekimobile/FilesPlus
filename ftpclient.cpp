@@ -31,52 +31,35 @@ void FtpClient::quota(QString nonce, QString uid)
     emit quotaReplySignal(nonce, 0, "", "{ }", 0, 0, 0);
 }
 
-QString FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous)
+QString FtpClient::fileGetReplyFinished(QString nonce, bool error, bool synchronous)
 {
-    qDebug() << "----- FtpClient::fileGet -----" << uid << remoteFilePath << localFilePath << synchronous;
-
-    QString remoteParentPath = getParentRemotePath(remoteFilePath);
-
+    QFtpWrapper *m_ftp = m_ftpHash->value(nonce);
+    QString uid = m_ftp->m_uid;
+    QString remoteFilePath = m_ftp->m_remoteFilePath;
     QString result;
-    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
-    m_ftp->m_remoteFilePath = remoteFilePath;
-    m_ftp->m_localFilePath = localFilePath;
-    m_ftp->cd(remoteParentPath);
 
-    m_localFileHash[nonce] = new QFile(localFilePath);
-    QFile *localTargetFile = m_localFileHash[nonce];
-    if (localTargetFile->open(QIODevice::WriteOnly)) {
-        m_ftp->get(getRemoteFileName(remoteFilePath), localTargetFile);
-//        m_ftp->waitForDone();
-
-        // Construct result.
-        if (m_ftp->error() == QFtp::NoError) {
-            m_ftp->list(remoteFilePath);
-            m_ftp->waitForDone();
-
-            if (m_ftp->getItemList().isEmpty()) {
-                // remoteFilePath is not found.
-                qDebug() << "FtpClient::fileGet" << uid << remoteFilePath << "is not found.";
-                result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(-1).arg(tr("%1 is not found.").arg(remoteFilePath));
-                if (!synchronous) emit fileGetReplySignal(m_ftp->getNonce(), -1, tr("Can't get %1").arg(remoteFilePath), result);
-            } else {
-                qDebug() << "FtpClient::fileGet" << uid << remoteFilePath << "is a file.";
-                result = getPropertyJson(getParentRemotePath(remoteFilePath), m_ftp->getItemList().first());
-                if (!synchronous) emit fileGetReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), result);
-            }
+    if (!error) {
+        if (m_ftp->getItemList().isEmpty()) {
+            // remoteFilePath is not found.
+            qDebug() << "FtpClient::fileGet" << uid << remoteFilePath << "is not found.";
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(-1).arg(tr("%1 is not found.").arg(remoteFilePath));
+            if (!synchronous) emit fileGetReplySignal(m_ftp->getNonce(), -1, tr("Can't get %1").arg(remoteFilePath), result);
         } else {
-            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(m_ftp->error()).arg(m_ftp->errorString());
+            qDebug() << "FtpClient::fileGet" << uid << remoteFilePath << "is a file.";
+            result = getPropertyJson(getParentRemotePath(remoteFilePath), m_ftp->getItemList().first());
             if (!synchronous) emit fileGetReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), result);
         }
     } else {
-        result = QString("{ \"error\": -1, \"error_string\": \"Can't open file %1\" }").arg(localFilePath);
-        if (!synchronous) emit fileGetReplySignal(m_ftp->getNonce(), -1, "", result);
+        // NOTE json string doesn't support newline character.
+        QString escapedErrorString =  m_ftp->errorString().replace("\n", " ");
+        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(m_ftp->error()).arg(escapedErrorString);
+        if (!synchronous) emit fileGetReplySignal(m_ftp->getNonce(), m_ftp->error(), escapedErrorString, result);
     }
 
     // Close and remove localFile pointer.
-    if (m_localFileHash.contains(nonce)) {
-        m_localFileHash[nonce]->close();
-        m_localFileHash.remove(nonce);
+    if (m_localFileHash.contains(m_ftp->getNonce())) {
+        m_localFileHash[m_ftp->getNonce()]->close();
+        m_localFileHash.remove(m_ftp->getNonce());
     }
 
     // Clean up.
@@ -85,6 +68,46 @@ QString FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath, Q
     m_ftpHash->remove(m_ftp->getNonce());
 
     return result;
+}
+
+QString FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous)
+{
+    qDebug() << "----- FtpClient::fileGet -----" << nonce << uid << remoteFilePath << localFilePath << synchronous;
+
+    QString remoteParentPath = getParentRemotePath(remoteFilePath);
+    QString result;
+
+    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    // Check state if it's accessible.
+    if (m_ftp->state() != QFtp::LoggedIn) {
+        return QString("{ \"error\": -1, \"error_string\": \"%1\" }").arg(tr("Host is not accessible."));
+    }
+    m_ftp->m_remoteFilePath = remoteFilePath;
+    m_ftp->m_localFilePath = localFilePath;
+    m_ftp->cd(remoteParentPath);
+    m_ftp->waitForDone();
+    // TODO Check if it's timeout then emit error.
+
+    m_localFileHash[nonce] = new QFile(localFilePath);
+    QFile *localTargetFile = m_localFileHash[nonce];
+    if (localTargetFile->open(QIODevice::WriteOnly)) {
+        // Connect done signal to fileGetReplyFinished slot.
+        if (!synchronous) connect(m_ftp, SIGNAL(done(QString,bool)), this, SLOT(fileGetReplyFinished(QString,bool)) );
+        m_ftp->get(getRemoteFileName(remoteFilePath), localTargetFile);
+        m_ftp->list(remoteFilePath);
+    } else {
+        result = QString("{ \"error\": -1, \"error_string\": \"Can't open file %1\" }").arg(localFilePath);
+        if (!synchronous) emit fileGetReplySignal(m_ftp->getNonce(), -1, "", result);
+    }
+
+    if (!synchronous) {
+        return result;
+    }
+
+    // Wait until pending commands are done.
+    m_ftp->waitForDone();
+
+    return fileGetReplyFinished(nonce, (m_ftp->error() != QFtp::NoError), synchronous);
 }
 
 /*
@@ -131,60 +154,73 @@ void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
 }
 */
 
-void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName)
+void FtpClient::filePutReplyFinished(QString nonce, bool error, bool synchronous)
 {
-    qDebug() << "----- FtpClient::filePut -----" << uid << localFilePath << remoteParentPath << remoteFileName;
-
-    QString remoteFilePath = remoteParentPath + "/" + remoteFileName;
-
+    QFtpWrapper *m_ftp = m_ftpHash->value(nonce);
+    QString uid = m_ftp->m_uid;
+    QString remoteFilePath = m_ftp->m_remoteFilePath;
     QString result;
-    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
-    m_ftp->m_localFilePath = localFilePath;
-    m_ftp->m_remoteFilePath = remoteFilePath;
-    m_ftp->cd(remoteParentPath);
 
-    m_localFileHash[nonce] = new QFile(localFilePath);
-    QFile *localSourceFile = m_localFileHash[nonce];
-    if (localSourceFile->open(QIODevice::ReadOnly)) {
-        m_ftp->put(localSourceFile, remoteFileName);
-        m_ftp->waitForDone();
-
-        // Construct result.
-        if (m_ftp->error() == QFtp::NoError) {
-            // Connect and get uploaded file property.
-            m_ftp = connectToHost(nonce, uid);
-            m_ftp->list(remoteFilePath);
-            m_ftp->waitForDone();
-
-            if (m_ftp->getItemList().isEmpty()) {
-                // remoteFilePath is not found.
-                qDebug() << "FtpClient::filePut" << uid << remoteFilePath << "is not found.";
-                result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(-1).arg(tr("%1 is not found.").arg(remoteFilePath));
-                emit filePutReplySignal(m_ftp->getNonce(), -1, tr("Can't put %1").arg(remoteFilePath), result);
-            } else {
-                qDebug() << "FtpClient::filePut" << uid << remoteFilePath << "is a file.";
-                result = getPropertyJson(getParentRemotePath(remoteFilePath), m_ftp->getItemList().first());
-                emit filePutReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), result);
-            }
+    if (!error) {
+        if (m_ftp->getItemList().isEmpty()) {
+            // remoteFilePath is not found.
+            qDebug() << "FtpClient::filePut" << uid << remoteFilePath << "is not found.";
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(-1).arg(tr("%1 is not found.").arg(remoteFilePath));
+            if (!synchronous) emit filePutReplySignal(m_ftp->getNonce(), -1, tr("Can't put %1").arg(remoteFilePath), result);
         } else {
-            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(m_ftp->error()).arg(m_ftp->errorString());
-            emit filePutReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), result);
+            qDebug() << "FtpClient::filePut" << uid << remoteFilePath << "is a file.";
+            result = getPropertyJson(getParentRemotePath(remoteFilePath), m_ftp->getItemList().first());
+            if (!synchronous) emit filePutReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), result);
         }
     } else {
-        result = QString("{ \"error\": -1, \"error_string\": \"Can't open file %1\" }").arg(localFilePath);
-        emit filePutReplySignal(m_ftp->getNonce(), -1, "", result);
+        // NOTE json string doesn't support newline character.
+        QString escapedErrorString =  m_ftp->errorString().replace("\n", " ");
+        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(m_ftp->error()).arg(escapedErrorString);
+        if (!synchronous) emit filePutReplySignal(m_ftp->getNonce(), m_ftp->error(), escapedErrorString, result);
     }
 
     // Close and remove localFile pointer.
-    if (m_localFileHash.contains(nonce)) {
-        m_localFileHash[nonce]->close();
-        m_localFileHash.remove(nonce);
+    if (m_localFileHash.contains(m_ftp->getNonce())) {
+        m_localFileHash[m_ftp->getNonce()]->close();
+        m_localFileHash.remove(m_ftp->getNonce());
     }
 
     // Clean up.
     m_ftp->close();
     m_ftp->deleteLater();
     m_ftpHash->remove(m_ftp->getNonce());
+}
+
+void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName)
+{
+    qDebug() << "----- FtpClient::filePut -----" << nonce << uid << localFilePath << remoteParentPath << remoteFileName;
+
+    QString remoteFilePath = remoteParentPath + "/" + remoteFileName;
+    QString result;
+
+    QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    // Check state if it's accessible.
+    if (m_ftp->state() != QFtp::LoggedIn) {
+        emit filePutReplySignal(nonce, QNetworkReply::HostNotFoundError, tr("Host is not accessible."), "");
+        return;
+    }
+    m_ftp->m_localFilePath = localFilePath;
+    m_ftp->m_remoteFilePath = remoteFilePath;
+    m_ftp->cd(remoteParentPath);
+    m_ftp->waitForDone();
+    // TODO Check if it's timeout then emit error.
+
+    m_localFileHash[nonce] = new QFile(localFilePath);
+    QFile *localSourceFile = m_localFileHash[nonce];
+    if (localSourceFile->open(QIODevice::ReadOnly)) {
+        // Connect done signal to filePutReplyFinished slot.
+        connect(m_ftp, SIGNAL(done(QString,bool)), this, SLOT(filePutReplyFinished(QString,bool)) );
+        m_ftp->put(localSourceFile, remoteFileName);
+        m_ftp->list(remoteFilePath);
+    } else {
+        result = QString("{ \"error\": -1, \"error_string\": \"Can't open file %1\" }").arg(localFilePath);
+        emit filePutReplySignal(m_ftp->getNonce(), -1, "", result);
+    }
 }
 
 QString FtpClient::mergePropertyAndFilesJson(QString propertyJsonText, QString filesJsonText)
@@ -221,6 +257,11 @@ QString FtpClient::property(QString nonce, QString uid, QString remoteFilePath)
     QString remoteFileName = getRemoteFileName(remoteFilePath);
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    // Check state if it's accessible.
+    if (m_ftp->state() != QFtp::LoggedIn) {
+        return QString("{ \"error\": %1, \"errorString\": \"%2\" }").arg(-1).arg(tr("Host is not accessible."));
+    }
+    m_ftp->resetIsDone();
     m_ftp->list(remoteParentPath);
     m_ftp->waitForDone();
 
@@ -238,13 +279,16 @@ QString FtpClient::property(QString nonce, QString uid, QString remoteFilePath)
             }
         }
     } else {
-        qDebug() << "FtpClient::property" << uid << remoteFilePath << "error" << m_ftp->error() << m_ftp->errorString();
-        propertyJson = QString("{ \"error\": %1, \"errorString\": \"%2\" }").arg(m_ftp->error()).arg(m_ftp->errorString());
+        // NOTE json string doesn't support newline character.
+        QString escapedErrorString =  m_ftp->errorString().replace("\n", " ");
+        qDebug() << "FtpClient::property" << uid << remoteFilePath << "error" << m_ftp->error() << escapedErrorString;
+        propertyJson = QString("{ \"error\": %1, \"errorString\": \"%2\" }").arg(m_ftp->error()).arg(escapedErrorString);
     }
 
-    m_ftp->close();
-    m_ftp->deleteLater();
-    m_ftpHash->remove(m_ftp->getNonce());
+    // NOTE It's private method which is invoked by others. So leave clean up for caller.
+//    m_ftp->close();
+//    m_ftp->deleteLater();
+//    m_ftpHash->remove(m_ftp->getNonce());
 
     return propertyJson;
 }
@@ -257,18 +301,43 @@ void FtpClient::metadata(QString nonce, QString uid, QString remoteFilePath)
     if (propertyJson.isEmpty()) {
         qDebug() << "FtpClient::metadata" << uid << remoteFilePath << "is not found.";
         emit metadataReplySignal(nonce, QNetworkReply::ContentNotFoundError, tr("%1 is not found.").arg(remoteFilePath), "");
+        QFtpWrapper *m_ftp = m_ftpHash->value(nonce);
+        m_ftp->close();
+        m_ftp->deleteLater();
+        m_ftpHash->remove(m_ftp->getNonce());
         return;
+    } else {
+        QScriptEngine engine;
+        QScriptValue propertyJsonObj = engine.evaluate("(" + propertyJson + ")");
+        if (propertyJsonObj.isValid() && propertyJsonObj.property("error").isValid()) {
+            emit metadataReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, tr("%1 is not accessible.").arg(remoteFilePath), propertyJson);
+            QFtpWrapper *m_ftp = m_ftpHash->value(nonce);
+            m_ftp->close();
+            m_ftp->deleteLater();
+            m_ftpHash->remove(m_ftp->getNonce());
+            return;
+        }
     }
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    // Check state if it's accessible.
+    if (m_ftp->state() != QFtp::LoggedIn) {
+        emit metadataReplySignal(nonce, QNetworkReply::HostNotFoundError, tr("Host is not accessible."), "");
+        m_ftp->close();
+        m_ftp->deleteLater();
+        m_ftpHash->remove(m_ftp->getNonce());
+        return;
+    }
 
     // Check if remoteFilePath is dir or file by change directory.
+    m_ftp->resetIsDone();
     m_ftp->cd(remoteFilePath);
     m_ftp->waitForDone();
 
     if (m_ftp->error() == QFtp::NoError) {
         // remoteFilePath is dir.
         qDebug() << "FtpClient::metadata" << uid << remoteFilePath << " is dir.";
+        m_ftp->resetIsDone();
         m_ftp->pwd();
         m_ftp->list();
         m_ftp->waitForDone();
@@ -279,6 +348,7 @@ void FtpClient::metadata(QString nonce, QString uid, QString remoteFilePath)
     } else {
         // remoteFilePath is file or not found.
         qDebug() << "FtpClient::metadata" << uid << remoteFilePath << "is file or not found. error" << m_ftp->error() << m_ftp->errorString();
+        m_ftp->resetIsDone();
         m_ftp->list(remoteFilePath);
         m_ftp->waitForDone();
 
@@ -304,23 +374,31 @@ void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "----- FtpClient::browse -----" << nonce << uid << remoteFilePath;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
-//    connect(m_ftp, SIGNAL(commandFinished(QString,int,bool)), this, SLOT(browseReplyFinished(QString,int,bool)));
+    // Check state if it's accessible.
+    if (m_ftp->state() != QFtp::LoggedIn) {
+        emit browseReplySignal(nonce, QNetworkReply::HostNotFoundError, tr("Host is not accessible."), "");
+        return;
+    }
 
     // Get item list.
-    if (!remoteFilePath.isEmpty()) m_ftp->cd(remoteFilePath);
-    m_ftp->waitForDone();
+    if (!remoteFilePath.isEmpty()) {
+//        m_ftp->resetIsDone();
+        m_ftp->cd(remoteFilePath);
+        m_ftp->waitForDone();
+    }
     // TODO Make it provide port for firewall environment.
 //    m_ftp->rawCommand("PORT 10,0,2,15,43,113");
 
     if (m_ftp->error() == QFtp::NoError) {
         // Browse a folder.
+//        m_ftp->resetIsDone();
         m_ftp->pwd();
         m_ftp->list(remoteFilePath);
         m_ftp->waitForDone();
 
         if (remoteFilePath == "") {
             m_remoteRootHash[uid] = m_ftp->getCurrentPath();
-            qDebug() << "FtpClient::browse nonce" << nonce << "uid" << uid << "remote root" << m_remoteRootHash[uid];
+            qDebug() << "FtpClient::browse" << nonce << uid << "save RemoteRoot" << m_remoteRootHash[uid];
         }
         QString dataJson = getItemListJson(m_ftp->getCurrentPath(), m_ftp->getItemList());
         QString propertyJson = property(nonce, uid, m_ftp->getCurrentPath());
@@ -329,6 +407,7 @@ void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
     } else {
         // remoteFilePath is file or not found.
         qDebug() << "FtpClient::browse nonce" << nonce << "uid" << uid << remoteFilePath << "is file or not found. error" << m_ftp->error() << m_ftp->errorString();
+//        m_ftp->resetIsDone();
         m_ftp->list(remoteFilePath);
         m_ftp->waitForDone();
 
@@ -347,34 +426,6 @@ void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
     m_ftp->close();
     m_ftp->deleteLater();
     m_ftpHash->remove(m_ftp->getNonce());
-}
-
-void FtpClient::browseReplyFinished(QString nonce, int id, bool error)
-{
-    qDebug() << "FtpClient::browseReplyFinished" << nonce << id << error;
-
-    QFtpWrapper *m_ftp = m_ftpHash->value(nonce);
-    QString uid = m_ftp->getUid();
-
-    if (!error) {
-//            m_remoteRootHash[uid] = m_ftp->getCurrentPath();
-//            qDebug() << "FtpClient::browseReplyFinished nonce" << nonce << "uid" << uid << "remote root" << m_remoteRootHash[uid];
-
-        QString dataJson = getItemListJson(m_ftp->getCurrentPath(), m_ftp->getItemList());
-        QString propertyJson = "{}"; //property(nonce, uid, m_ftp->getCurrentPath());
-
-//        emit browseReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), mergePropertyAndFilesJson(propertyJson, dataJson) );
-    } else {
-//        emit browseReplySignal(nonce, m_ftp->error(), m_ftp->errorString(), "{}");
-    }
-
-    qDebug() << "FtpClient::browseReplyFinished" << nonce << "hasPendingCommands" << m_ftp->hasPendingCommands();
-
-    if (!m_ftp->hasPendingCommands()) {
-        m_ftp->close();
-        m_ftp->deleteLater();
-        m_ftpHash->remove(m_ftp->getNonce());
-    }
 }
 
 void FtpClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
@@ -397,6 +448,11 @@ void FtpClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "----- FtpClient::deleteFile -----" << uid << remoteFilePath;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    // Check state if it's accessible.
+    if (m_ftp->state() != QFtp::LoggedIn) {
+        emit deleteFileReplySignal(nonce, QNetworkReply::HostNotFoundError, tr("Host is not accessible."), "");
+        return;
+    }
 
     deleteRecursive(m_ftp, remoteFilePath);
 
@@ -429,6 +485,11 @@ QString FtpClient::createFolder(QString nonce, QString uid, QString remoteParent
     QString newRemoteFolderPath = remoteParentPath + "/" + newRemoteFolderName;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    // Check state if it's accessible.
+    if (m_ftp->state() != QFtp::LoggedIn) {
+        emit createFolderReplySignal(nonce, QNetworkReply::HostNotFoundError, tr("Host is not accessible."), "");
+        return QString("{ \"error\": %1, \"errorString\": \"%2\" }").arg(-1).arg(tr("Host is not accessible."));
+    }
 
     m_ftp->mkdir(newRemoteFolderPath);
     m_ftp->waitForDone();
@@ -473,12 +534,18 @@ QIODevice *FtpClient::fileGet(QString nonce, QString uid, QString remoteFilePath
     QString remoteParentPath = getParentRemotePath(remoteFilePath);
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    // Check state if it's accessible.
+    if (m_ftp->state() != QFtp::LoggedIn) {
+        return 0;
+    }
     m_ftp->m_remoteFilePath = remoteFilePath;
     m_ftp->cd(remoteParentPath);
+    m_ftp->waitForDone();
 
     // Creat buffer as QIODevice.
     QBuffer *buf = new QBuffer();
     if (buf->open(QIODevice::WriteOnly)) {
+        m_ftp->resetIsDone();
         m_ftp->get(getRemoteFileName(remoteFilePath), buf);
         m_ftp->waitForDone();
         buf->close();
@@ -498,6 +565,11 @@ QNetworkReply *FtpClient::filePut(QString nonce, QString uid, QIODevice *source,
     QString remoteFilePath = remoteParentPath + "/" + remoteFileName;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
+    // Check state if it's accessible.
+    if (m_ftp->state() != QFtp::LoggedIn) {
+        emit migrateFilePutReplySignal(nonce, QNetworkReply::HostNotFoundError, tr("Host is not accessible."), "");
+        return 0;
+    }
     m_ftp->m_remoteFilePath = remoteFilePath;
     m_ftp->cd(remoteParentPath);
 
@@ -527,6 +599,12 @@ QNetworkReply *FtpClient::filePut(QString nonce, QString uid, QIODevice *source,
 
 QFtpWrapper *FtpClient::connectToHost(QString nonce, QString uid)
 {
+    if (m_ftpHash->contains(nonce)) {
+        QFtpWrapper *ftp = m_ftpHash->value(nonce);
+        qDebug() << "FtpClient::connectToHost" << nonce << "return stored ftp object" << ftp;
+        return ftp;
+    }
+
     /* Notes:
      * Stores email as user@host --> Token(token="", secret=password, email=user@host)
      */
@@ -556,9 +634,12 @@ QFtpWrapper *FtpClient::connectToHost(QString nonce, QString uid)
     m_ftp->abort();
     m_ftp->connectToHost(hostname, port);
     m_ftp->login(username, password);
-
-    // Insert to hash.
-    m_ftpHash->insert(nonce, m_ftp);
+    m_ftp->waitForDone();
+    // Check state if it's accessible.
+    if (m_ftp->state() == QFtp::LoggedIn) {
+        // Insert to hash.
+        m_ftpHash->insert(nonce, m_ftp);
+    }
 
     return m_ftp;
 }

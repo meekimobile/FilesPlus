@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QRegExp>
 #include <QDebug>
+#include <QSettings>
 #include "sleeper.h"
 
 class QFtpWrapper : public QFtp
@@ -12,6 +13,7 @@ class QFtpWrapper : public QFtp
     Q_OBJECT
 public:
     static const int MaxWaitCount;
+    static const int DefaultTimeoutMSec;
 
     explicit QFtpWrapper(QString nonce, QObject *parent = 0);
     
@@ -23,7 +25,8 @@ public:
     QString getUid();
     QList<QUrlInfo> getItemList();
     void resetIsDone();
-    void waitForDone();
+    bool waitForDone();
+    QString getCommandName(Command cmd);
 
     // Parameter storage.
     QString m_uid;
@@ -50,6 +53,8 @@ public slots:
     void stateChangedFilter(int state);
     void doneFilter(bool error);
 
+    void idleTimerTimeoutSlot();
+
     // Extended methods.
     bool deleteRecursive(QString remoteFilePath = "");
 private:
@@ -58,6 +63,8 @@ private:
     QString m_currentPath;
     QString m_lastRawCommand;
     QList<QUrlInfo> m_itemList;
+    QTimer *m_idleTimer;
+    QSettings m_settings;
 };
 
 #endif // QFTPWRAPPER_H

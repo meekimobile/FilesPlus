@@ -1,6 +1,7 @@
 #include "qftpwrapper.h"
 
-const int QFtpWrapper::MaxWaitCount = 36000; // 36000*100 msec = 60 mins.
+const int QFtpWrapper::MaxWaitCount = 150; // 150*100 msec(s) = 15 sec(s).
+const int QFtpWrapper::DefaultTimeoutMSec = 15000;
 
 QFtpWrapper::QFtpWrapper(QString nonce, QObject *parent) :
     QFtp(parent)
@@ -16,6 +17,14 @@ QFtpWrapper::QFtpWrapper(QString nonce, QObject *parent) :
     connect(this, SIGNAL(dataTransferProgress(qint64,qint64)), this, SLOT(dataTransferProgressFilter(qint64,qint64)));
     connect(this, SIGNAL(stateChanged(int)), this, SLOT(stateChangedFilter(int)));
     connect(this, SIGNAL(done(bool)), this, SLOT(doneFilter(bool)));
+
+    // Initialize idle timer.
+    m_idleTimer = new QTimer(this);
+    connect(m_idleTimer, SIGNAL(timeout()), this, SLOT(idleTimerTimeoutSlot()) );
+    connect(this, SIGNAL(destroyed()), m_idleTimer, SLOT(stop()) );
+    connect(this, SIGNAL(destroyed()), m_idleTimer, SLOT(deleteLater()) );
+    m_idleTimer->setInterval(m_settings.value("QFtpWrapper.timeout.interval", QVariant(DefaultTimeoutMSec)).toInt());
+    m_idleTimer->setSingleShot(true);
 }
 
 int QFtpWrapper::pwd()
@@ -55,19 +64,24 @@ void QFtpWrapper::resetIsDone()
     m_isDone = false;
 }
 
-void QFtpWrapper::waitForDone()
+bool QFtpWrapper::waitForDone()
 {
     qDebug() << "QFtpWrapper::waitForDone" << m_isDone;
 
     int c = MaxWaitCount;
     while (!m_isDone && c-- > 0) {
-//        qDebug() << "QFtpWrapper::waitForDone" << m_isDone << c << "hasPendingCommands" << hasPendingCommands();
+        qDebug() << "QFtpWrapper::waitForDone" << m_isDone << c;
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
     }
 
-    // Reset m_isDone.
-    m_isDone = false;
+    // Check isDone then return true if it's actually done.
+    if (m_isDone) {
+        m_isDone = false;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 bool QFtpWrapper::deleteRecursive(QString remoteFilePath)
@@ -137,19 +151,50 @@ bool QFtpWrapper::deleteRecursive(QString remoteFilePath)
     return true;
 }
 
+QString QFtpWrapper::getCommandName(Command cmd)
+{
+    switch (cmd) {
+    case QFtp::None: return "None";
+    case QFtp::SetTransferMode: return "SetTransferMode";
+    case QFtp::SetProxy: return "SetProxy";
+    case QFtp::ConnectToHost: return "ConnectToHost";
+    case QFtp::Login: return "Login";
+    case QFtp::Close: return "Close";
+    case QFtp::List: return "List";
+    case QFtp::Cd: return "Cd";
+    case QFtp::Get: return "Get";
+    case QFtp::Put: return "Put";
+    case QFtp::Remove: return "Remove";
+    case QFtp::Mkdir: return "Mkdir";
+    case QFtp::Rmdir: return "Rmdir";
+    case QFtp::Rename: return "Rename";
+    case QFtp::RawCommand: return "RawCommand";
+    default:
+        return "Invalid";
+    }
+}
+
 void QFtpWrapper::commandStartedFilter(int id)
 {
+    qDebug() << "QFtpWrapper::commandStartedFilter" << id << "currentCommand" << currentCommand() << getCommandName(currentCommand());
+
     m_isDone = false;
     m_itemList.clear();
 
     emit commandStarted(m_nonce, id);
+
+    // Restart idle timer once command started.
+    m_idleTimer->start();
 }
 
 void QFtpWrapper::commandFinishedFilter(int id, bool error)
 {
-    qDebug() << "QFtpWrapper::commandFinishedFilter" << id << error << this->error() << this->errorString();
+    qDebug() << "QFtpWrapper::commandFinishedFilter" << id << (error ? (this->error() + " " + this->errorString()) : "");
 
     emit commandFinished(m_nonce, id, error);
+
+    // Stop idle timer once command finished.
+    m_idleTimer->stop();
 }
 
 void QFtpWrapper::listInfoFilter(const QUrlInfo &i)
@@ -195,6 +240,9 @@ void QFtpWrapper::dataTransferProgressFilter(qint64 done, qint64 total)
     } else if (currentCommand() == QFtp::Put) {
         emit uploadProgress(m_nonce, done, total);
     }
+
+    // Restart idle timer if there is any progress.
+    m_idleTimer->start();
 }
 
 void QFtpWrapper::stateChangedFilter(int state)
@@ -204,9 +252,17 @@ void QFtpWrapper::stateChangedFilter(int state)
 
 void QFtpWrapper::doneFilter(bool error)
 {
-    qDebug() << "QFtpWrapper::doneFilter error" << error;
+    qDebug() << "QFtpWrapper::doneFilter" << (error ? "error" : "");
 
     m_isDone = true;
 
     emit done(m_nonce, error);
+}
+
+void QFtpWrapper::idleTimerTimeoutSlot()
+{
+    // Abort connection if it's timeout.
+    abort();
+    m_isDone = true;
+    qDebug() << "QFtpWrapper::idleTimerTimeoutSlot nonce" << m_nonce << "is aborted.";
 }
