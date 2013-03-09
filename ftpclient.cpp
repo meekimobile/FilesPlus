@@ -34,6 +34,7 @@ void FtpClient::quota(QString nonce, QString uid)
 QString FtpClient::fileGetReplyFinished(QString nonce, bool error, bool synchronous)
 {
     QFtpWrapper *m_ftp = m_ftpHash->value(nonce);
+    disconnect(m_ftp, SIGNAL(done(QString,bool)), this, SLOT(fileGetReplyFinished(QString,bool)) );
     QString uid = m_ftp->m_uid;
     QString remoteFilePath = m_ftp->m_remoteFilePath;
     QString result;
@@ -157,6 +158,7 @@ void FtpClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
 void FtpClient::filePutReplyFinished(QString nonce, bool error, bool synchronous)
 {
     QFtpWrapper *m_ftp = m_ftpHash->value(nonce);
+    disconnect(m_ftp, SIGNAL(done(QString,bool)), this, SLOT(filePutReplyFinished(QString,bool)) );
     QString uid = m_ftp->m_uid;
     QString remoteFilePath = m_ftp->m_remoteFilePath;
     QString result;
