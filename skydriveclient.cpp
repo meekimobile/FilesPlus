@@ -228,7 +228,7 @@ void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, 
 }
 
 void SkyDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
-    qDebug() << "----- SkyDriveClient::metadata -----" << "uid" << uid << "remoteFilePath" << remoteFilePath;
+    qDebug() << "----- SkyDriveClient::metadata -----" << nonce << uid << remoteFilePath;
 
     if (remoteFilePath.isEmpty()) {
         emit metadataReplySignal(nonce, -1, "remoteFilePath is empty.", "");
@@ -241,7 +241,7 @@ void SkyDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath
 
 void SkyDriveClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "----- SkyDriveClient::browse -----" << remoteFilePath;
+    qDebug() << "----- SkyDriveClient::browse -----" << nonce << uid << remoteFilePath;
 
     // Default remoteFilePath if it's empty from DrivePage.
     remoteFilePath = (remoteFilePath == "") ? RemoteRoot : remoteFilePath;
@@ -252,7 +252,7 @@ void SkyDriveClient::browse(QString nonce, QString uid, QString remoteFilePath)
 
 QNetworkReply * SkyDriveClient::files(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
 {
-    qDebug() << "----- SkyDriveClient::files -----" << remoteFilePath;
+    qDebug() << "----- SkyDriveClient::files -----" << nonce << uid << remoteFilePath << synchronous << callback;
 
     QString uri = filesURI.arg(remoteFilePath);
     uri = encodeURI(uri);
@@ -288,7 +288,7 @@ QNetworkReply * SkyDriveClient::files(QString nonce, QString uid, QString remote
 
 QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
 {
-    qDebug() << "----- SkyDriveClient::property -----" << remoteFilePath << callback;
+    qDebug() << "----- SkyDriveClient::property -----" << nonce << uid << remoteFilePath << synchronous << callback;
 
     QString uri = propertyURI.arg(remoteFilePath);
     uri = encodeURI(uri);
@@ -329,7 +329,7 @@ void SkyDriveClient::createFolder(QString nonce, QString uid, QString remotePare
 
 QString SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
-    qDebug() << "----- SkyDriveClient::createFolder -----" << newRemoteFolderName << remoteParentPath;
+    qDebug() << "----- SkyDriveClient::createFolder -----" << nonce << uid << remoteParentPath << newRemoteFolderName << synchronous;
 
     if (remoteParentPath.isEmpty()) {
         if (!synchronous) emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
@@ -380,7 +380,7 @@ QString SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteP
 
 void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
 {
-    qDebug() << "----- SkyDriveClient::moveFile -----" << uid << remoteFilePath << targetRemoteParentPath << newRemoteFileName;
+    qDebug() << "----- SkyDriveClient::moveFile -----" << nonce << uid << remoteFilePath << targetRemoteParentPath << newRemoteFileName;
 
 //    QRegExp rx("(file\.|folder\.)(" + uid + ")(.*)");
 //    if (rx.exactMatch(targetRemoteParentPath)) {
@@ -422,7 +422,7 @@ void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath
 
 void SkyDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
 {
-    qDebug() << "----- SkyDriveClient::copyFile -----" << uid << remoteFilePath << targetRemoteParentPath << newRemoteFileName;
+    qDebug() << "----- SkyDriveClient::copyFile -----" << nonce << uid << remoteFilePath << targetRemoteParentPath << newRemoteFileName;
 
     QString uri = copyFileURI.arg(remoteFilePath);
     qDebug() << "SkyDriveClient::copyFile uri " << uri;
@@ -458,7 +458,7 @@ void SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePa
 
 QString SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
-    qDebug() << "----- SkyDriveClient::deleteFile -----";
+    qDebug() << "----- SkyDriveClient::deleteFile -----" << nonce << uid << remoteFilePath << synchronous;
 
     QString uri = deleteFileURI.arg(remoteFilePath);
 //    uri = encodeURI(uri);
@@ -493,7 +493,7 @@ QString SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFil
 
 void SkyDriveClient::renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName)
 {
-    qDebug() << "----- SkyDriveClient::renameFile -----" << remoteFilePath << newName;
+    qDebug() << "----- SkyDriveClient::renameFile -----" << nonce << uid << remoteFilePath << newName;
 
     QString uri = renameFileURI.arg(remoteFilePath);
     qDebug() << "SkyDriveClient::renameFile uri " << uri;
@@ -688,7 +688,7 @@ QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *so
 
 QIODevice *SkyDriveClient::fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset)
 {
-    qDebug() << "----- SkyDriveClient::fileGetResume -----" << remoteFilePath << "to" << localFilePath << "offset" << offset;
+    qDebug() << "----- SkyDriveClient::fileGetResume -----" << nonce << uid << remoteFilePath << "to" << localFilePath << "offset" << offset;
 
     // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
     QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "fileGetResume");
@@ -747,7 +747,7 @@ bool SkyDriveClient::isViewable()
 
 void SkyDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 {
-    qDebug() << "----- SkyDriveClient::shareFile -----" << remoteFilePath;
+    qDebug() << "----- SkyDriveClient::shareFile -----" << nonce << uid << remoteFilePath;
 
     // TODO root dropbox(Full access) or sandbox(App folder access)
     QString uri = sharesURI.arg(remoteFilePath);
@@ -1052,6 +1052,12 @@ void SkyDriveClient::filesReplyFinished(QNetworkReply *reply)
 
     if (reply->error() == QNetworkReply::NoError) {
         m_filesReplyHash->insert(nonce, reply->readAll());
+
+        // Merge and emit signal if both property and files are available.
+        mergePropertyAndFilesJson(nonce, callback);
+    } else if (reply->error() == QNetworkReply::UnknownContentError) {
+        qDebug() << "SkyDriveClient::filesReplyFinished suppress error" << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
+        m_filesReplyHash->insert(nonce, QByteArray("{}"));
 
         // Merge and emit signal if both property and files are available.
         mergePropertyAndFilesJson(nonce, callback);
