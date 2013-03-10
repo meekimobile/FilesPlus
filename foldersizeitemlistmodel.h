@@ -33,6 +33,7 @@ class FolderSizeItemListModel : public QAbstractListModel
 public:
     static const int TimerInterval;
     static const int MaxRunningJobCount;
+    static const QString DefaultTrashPath;
 
     enum SortFlags {
         SortByName,
@@ -42,12 +43,15 @@ public:
         SortByNameWithDirectoryFirst
     };
 
+    // NOTE Always needs to be the same as FolderSizeModelThread.
     enum RunnableMethods {
         FetchDirSize,
         LoadDirSizeCache,
         CopyFile,
         MoveFile,
-        DeleteFile
+        DeleteFile,
+        InitializeDB,
+        TrashFile
     };
 
     enum FolderSizeItemRoles {
@@ -125,6 +129,7 @@ public:
     Q_INVOKABLE bool createDirPath(const QString absPath);
     Q_INVOKABLE bool createEmptyFile(const QString name);
     Q_INVOKABLE bool renameFile(const QString fileName, const QString newFileName);
+    Q_INVOKABLE bool trash(const QString sourcePath);
 
     // Informative methods which don't use FolderSizeModelThread.
     Q_INVOKABLE void refreshItems();
@@ -159,6 +164,8 @@ private:
     Q_DISABLE_COPY(FolderSizeItemListModel)
     FolderSizeModelThread m;
 
+    QSettings m_settings;
+
     QQueue<FolderSizeJob> m_jobQueue;
     int runningJobCount;
     QString createNonce();
@@ -188,6 +195,7 @@ public slots:
     void copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes, qint64 count, bool isSourceRoot);
     void deleteProgressFilter(int fileAction, QString sourceSubPath, QString msg, int err);
     void deleteFinishedFilter(int fileAction, QString sourcePath, QString msg, int err);
+    void trashFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void jobDone();
     void fsWatcherDirectoryChangedSlot(const QString &entry);
 Q_SIGNALS:

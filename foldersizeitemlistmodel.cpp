@@ -3,6 +3,11 @@
 
 const int FolderSizeItemListModel::TimerInterval = 100;
 const int FolderSizeItemListModel::MaxRunningJobCount = 1;
+#if defined(Q_WS_HARMATTAN)
+const QString FolderSizeItemListModel::DefaultTrashPath = "/home/user/MyDocs/trash";
+#else
+const QString FolderSizeItemListModel::DefaultTrashPath = "E:/trash";
+#endif
 
 FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -46,6 +51,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(deleteStarted(int,QString)), this, SIGNAL(deleteStarted(int,QString)) );
     connect(&m, SIGNAL(deleteProgress(int,QString,QString,int)), this, SLOT(deleteProgressFilter(int,QString,QString,int)) );
     connect(&m, SIGNAL(deleteFinished(int,QString,QString,int)), this, SLOT(deleteFinishedFilter(int,QString,QString,int)) );
+    connect(&m, SIGNAL(trashFinished(int,QString,QString,QString,int)), this, SLOT(trashFinishedFilter(int,QString,QString,QString,int)) );
     connect(&m, SIGNAL(finished()), this, SLOT(jobDone()) );
 
     // Enqueue jobs. Queued jobs will proceed after folderPage is loaded.
@@ -651,6 +657,38 @@ bool FolderSizeItemListModel::renameFile(const QString fileName, const QString n
     return res;
 }
 
+bool FolderSizeItemListModel::trash(const QString sourcePath)
+{
+    QString trashPath = m_settings.value("FolderSizeItemListModel.trashPath", DefaultTrashPath).toString();
+    if (!QFileInfo(trashPath).isDir()) {
+        if (QDir::home().mkpath(trashPath)) {
+            qDebug() << "FolderSizeItemListModel::trash" << trashPath << "is created.";
+        } else {
+            qDebug() << "FolderSizeItemListModel::trash" << trashPath << "can't be created.";
+            return false;
+        }
+    }
+    // TODO Make it restorable by storing to canonical path.
+    QString targetPath = QDir(trashPath).absoluteFilePath(QFileInfo(sourcePath).fileName());
+    qDebug() << "FolderSizeItemListModel::trash moving" << sourcePath << "to" << targetPath;
+
+    if (sourcePath == targetPath) {
+        qDebug() << "FolderSizeItemListModel::trash error Source and Target path can't be the same.";
+        return false;
+    } else if (targetPath.indexOf(sourcePath + "/") != -1) {
+        qDebug() << "FolderSizeItemListModel::trash error Target path can't be inside source path.";
+        return false;
+    }
+
+    // Enqueue job.
+    FolderSizeJob job(createNonce(), FolderSizeModelThread::TrashFile, sourcePath, targetPath);
+    m_jobQueue.enqueue(job);
+
+    emit proceedNextJobSignal();
+
+    return true;
+}
+
 QString FolderSizeItemListModel::getDirPath(const QString absFilePath)
 {
     QFileInfo fileInfo(absFilePath);
@@ -1060,7 +1098,34 @@ void FolderSizeItemListModel::deleteFinishedFilter(int fileAction, QString sourc
     // Emit deleteFinished
     emit deleteFinished(fileAction, sourcePath, msg, err);
 
-//    qDebug() << "FolderSizeItemListModel::deleteFinishedFilter" << sourcePath << "is done.";
+    //    qDebug() << "FolderSizeItemListModel::deleteFinishedFilter" << sourcePath << "is done.";
+}
+
+void FolderSizeItemListModel::trashFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err)
+{
+    if (err >= 0) {
+        // Remove item from ListView.
+        int i = getIndexOnCurrentDir(sourcePath);
+        qDebug() << "FolderSizeItemListModel::trashFinishedFilter" << sourcePath << "is at index" << i;
+
+        if (i >= 0) {
+            beginRemoveRows(createIndex(0,0), i, i);
+
+            // Remote item from itemList.
+            removeItem(i);
+
+            // Reset m_indexOnCurrentDirHash.
+            m_indexOnCurrentDirHash->clear();
+
+            endRemoveRows();
+        }
+
+        // Remove cache of SOURCE path up to root.
+        removeCache(sourcePath);
+
+        // Remove cache of TARGET path up to root.
+        removeCache(targetPath);
+    }
 }
 
 void FolderSizeItemListModel::proceedNextJob()

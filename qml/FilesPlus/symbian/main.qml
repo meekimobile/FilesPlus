@@ -1615,8 +1615,8 @@ PageStackWindow {
 
                 if (jsonObj.isDeleted) {
                     // If dir, should remove all sub items.
-                    // TODO Configurable file removing.
                     cloudDriveModel.removeItemWithChildren(jobJson.type, jobJson.uid, jobJson.local_file_path);
+                    cloudDriveModel.requestMoveToTrash(jobJson.job_id, jobJson.local_file_path);
 
                     // Notify removed link.
                     logWarn(getCloudName(jobJson.type) + " " + qsTr("Metadata"),
@@ -1865,6 +1865,11 @@ PageStackWindow {
                     p.refreshSlot("cloudDriveModel onRefreshRequestSignal");
                 }
             }
+        }
+
+        onMoveToTrashRequestSignal: {
+            console.debug("window cloudDriveModel onMoveToTrashRequestSignal " + nonce + " " + localPath);
+            fsModel.trash(localPath);
         }
 
         onCopyFileReplySignal: {

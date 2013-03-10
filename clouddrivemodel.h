@@ -176,6 +176,7 @@ public:
     Q_INVOKABLE bool isFile(const QString absFilePath);
     Q_INVOKABLE QString getAbsolutePath(const QString dirPath, const QString fileName);
     Q_INVOKABLE bool createDirPath(const QString absPath);
+    Q_INVOKABLE bool requestMoveToTrash(const QString nonce, const QString absPath);
     Q_INVOKABLE QString getFileName(const QString absFilePath);
     Q_INVOKABLE QString getFileType(QString localPath);
     Q_INVOKABLE qint64 getFileSize(QString localPath);
@@ -279,6 +280,7 @@ signals:
     void jobUpdatedSignal(QString nonce);
     void jobRemovedSignal(QString nonce);
     void refreshRequestSignal(QString nonce);
+    void moveToTrashRequestSignal(QString nonce, QString localPath);
     void cacheImageFinished(QString absoluteFilePath, int err, QString errMsg, QString caller);
 
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);

@@ -760,11 +760,11 @@ void FolderSizeModelThread::delay(const int interval)
 #endif
 }
 
-bool FolderSizeModelThread::deleteDir(const QString sourcePath)
+bool FolderSizeModelThread::deleteDir(const QString sourcePath, bool suppressSignal)
 {
     qDebug() << "FolderSizeModelThread::deleteDir sourcePath" << sourcePath;
 
-    emit deleteStarted(m_runMethod, sourcePath);
+    if (!suppressSignal) emit deleteStarted(m_runMethod, sourcePath);
 
     // Return false if aborted.
     if (m_abortFlag) {
@@ -802,11 +802,11 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath)
 
     if (!res) {
         qDebug() << "FolderSizeModelThread::deleteDir sourcePath" << sourcePath << "failed.";
-        emit deleteProgress(m_runMethod, sourcePath, tr("Deleting %1 is failed.").arg(sourcePath), -1);
+        if (!suppressSignal) emit deleteProgress(m_runMethod, sourcePath, tr("Deleting %1 is failed.").arg(sourcePath), -1);
     } else {
         // TODO Move to emit only once per thread call.
         qDebug() << "FolderSizeModelThread::deleteDir sourcePath" << sourcePath << "done.";
-        emit deleteProgress(m_runMethod, sourcePath, tr("Deleting %1 is done.").arg(sourcePath), 0);
+        if (!suppressSignal) emit deleteProgress(m_runMethod, sourcePath, tr("Deleting %1 is done.").arg(sourcePath), 0);
 
         // Move to deleteFinishedFilter
         //        // Remove cache up to parent.
@@ -818,6 +818,22 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath)
     delay(FILE_DELETE_DELAY);
 
     return res;
+}
+
+bool FolderSizeModelThread::trash(const QString sourcePath, const QString targetPath)
+{
+    // Move to trash only.
+    // TODO Does it need to support copy? Ex. trash C: file/folder.
+    if (QFileInfo(targetPath).exists()) {
+        qDebug() << "FolderSizeModelThread::trash found existing targetPath" << targetPath << "It's being deleted.";
+        deleteDir(targetPath, true);
+    }
+
+    if (QFileInfo(sourcePath).absoluteDir().rename(sourcePath, targetPath)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 bool FolderSizeModelThread::isDirSizeCacheExisting()
@@ -1381,6 +1397,15 @@ void FolderSizeModelThread::run()
         break;
     case InitializeDB:
         initializeDB();
+        break;
+    case TrashFile:
+        if (trash(m_sourcePath, m_targetPath)) {
+            qDebug() << "FolderSizeModelThread::run trash sourcePath" << m_sourcePath << "to" << m_targetPath << "is done.";
+            emit trashFinished(TrashFile, m_sourcePath, m_targetPath, tr("Move %1 to %2 is done successfully.").arg(m_sourcePath).arg(m_targetPath), 0);
+        }
+        // Reset method parameters
+        m_sourcePath = "";
+        m_targetPath = "";
         break;
     }
 

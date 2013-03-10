@@ -767,6 +767,11 @@ bool CloudDriveModel::createDirPath(const QString absPath)
     return res;
 }
 
+bool CloudDriveModel::requestMoveToTrash(const QString nonce, const QString absPath)
+{
+    emit moveToTrashRequestSignal(nonce, absPath);
+}
+
 QString CloudDriveModel::getFileName(const QString absFilePath)
 {
     QFileInfo fileInfo(absFilePath);
@@ -2143,7 +2148,8 @@ void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::Client
                 // Remove link if it's deleted item (there is remotePathList and cloudDriveItem.remotePath not in list).
                 // TODO Configurable file removing.
                 qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "remove link to existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isDeletedItem" << isDeletedItem;
-                removeItemWithChildren(type, uid, localFilePath);
+                removeItemWithChildren(type, uid, localFilePath);                
+                requestMoveToTrash(nonce, localFilePath);
             } else {
                 // Skip any items that already have CloudDriveItem and has localHash.
                 qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "skip existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isNewItem" << isNewItem;

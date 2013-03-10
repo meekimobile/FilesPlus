@@ -36,7 +36,8 @@ public:
         CopyFile,
         MoveFile,
         DeleteFile,
-        InitializeDB
+        InitializeDB,
+        TrashFile
     };
 
     FolderSizeModelThread(QObject *parent = 0);
@@ -84,6 +85,7 @@ signals:
     void deleteStarted(int fileAction, QString localPath);
     void deleteProgress(int fileAction, QString subLocalPath, QString msg, int err);
     void deleteFinished(int fileAction, QString localPath, QString msg, int err);
+    void trashFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
 private:
     FolderSizeItem getCachedDir(const QFileInfo dir, const bool clearCache = false);
     FolderSizeItem getFileItem(const QFileInfo fileInfo);
@@ -113,7 +115,8 @@ private:
     bool move(const QString sourcePath, const QString targetPath);
     bool copy(int method, const QString sourcePath, const QString targetPath);
     bool copyFile(int method, const QString sourcePath, const QString targetPath);
-    bool deleteDir(const QString sourcePath);
+    bool deleteDir(const QString sourcePath, bool suppressSignal = false);
+    bool trash(const QString sourcePath, const QString targetPath);
     void delay(const int interval = 100);
 
     void cleanItems();
