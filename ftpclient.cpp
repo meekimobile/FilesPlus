@@ -474,13 +474,15 @@ QString FtpClient::createFolder(QString nonce, QString uid, QString remoteParent
 {
     qDebug() << "----- FtpClient::createFolder -----" << nonce << uid << remoteParentPath << newRemoteFolderName;
 
+    // NOTE Emit signal only for asynchronous request. To avoid invoking CloudDriveModel.createFolderReplyFilter() as it's not required. And also avoid invoking jobDone() which causes issue #FP20130232.
+
     if (remoteParentPath.isEmpty()) {
-        emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
+        if (!synchronous) emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
         return "";
     }
 
     if (newRemoteFolderName.isEmpty()) {
-        emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
+        if (!synchronous) emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
         return "";
     }
 
@@ -489,7 +491,7 @@ QString FtpClient::createFolder(QString nonce, QString uid, QString remoteParent
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
     // Check state if it's accessible.
     if (m_ftp->state() != QFtp::LoggedIn) {
-        emit createFolderReplySignal(nonce, QNetworkReply::HostNotFoundError, tr("Host is not accessible."), "");
+        if (!synchronous) emit createFolderReplySignal(nonce, QNetworkReply::HostNotFoundError, tr("Host is not accessible."), "");
         return QString("{ \"error\": %1, \"errorString\": \"%2\" }").arg(-1).arg(tr("Host is not accessible."));
     }
 
@@ -502,10 +504,10 @@ QString FtpClient::createFolder(QString nonce, QString uid, QString remoteParent
         QString propertyJson = property(nonce, uid, newRemoteFolderPath);
         if (propertyJson != "") {
             result = propertyJson;
-            emit createFolderReplySignal(nonce, QNetworkReply::NoError, "", result);
+            if (!synchronous) emit createFolderReplySignal(nonce, QNetworkReply::NoError, "", result);
         } else {
             qDebug() << "FtpClient::createFolder" << nonce << uid << newRemoteFolderPath << "is not found.";
-            emit createFolderReplySignal(nonce, QNetworkReply::ContentNotFoundError, "Created path is not found.", QString("{ \"error\": \"Created path is not found.\", \"path\": \"%1\" }").arg(newRemoteFolderPath) );
+            if (!synchronous) emit createFolderReplySignal(nonce, QNetworkReply::ContentNotFoundError, "Created path is not found.", QString("{ \"error\": \"Created path is not found.\", \"path\": \"%1\" }").arg(newRemoteFolderPath) );
         }
     } else {
         qDebug() << "FtpClient::createFolder" << nonce << "error" << m_ftp->error() << m_ftp->errorString();
@@ -514,11 +516,11 @@ QString FtpClient::createFolder(QString nonce, QString uid, QString remoteParent
         QString propertyJson = property(nonce, uid, newRemoteFolderPath);
         if (propertyJson != "") {
             result = propertyJson;
-            emit createFolderReplySignal(nonce, QNetworkReply::NoError, "", result);
+            if (!synchronous) emit createFolderReplySignal(nonce, QNetworkReply::NoError, "", result);
         } else {
             // NOTE json string doesn't support newline character.
             QString escapedErrorString =  m_ftp->errorString().replace("\n", " ");
-            emit createFolderReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, m_ftp->errorString(), QString("{ \"error\": \"%1\", \"path\": \"%2\" }").arg(escapedErrorString).arg(newRemoteFolderPath) );
+            if (!synchronous) emit createFolderReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, m_ftp->errorString(), QString("{ \"error\": \"%1\", \"path\": \"%2\" }").arg(escapedErrorString).arg(newRemoteFolderPath) );
         }
     }
 

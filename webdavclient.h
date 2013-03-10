@@ -83,7 +83,7 @@ public slots:
 
     void propertyReplyFinished(QNetworkReply *reply); // Includes browse, metadata and quota reply handlers.
 
-    QString createFolderReplyFinished(QNetworkReply *reply);
+    QString createFolderReplyFinished(QNetworkReply *reply, bool synchronous = false);
     void moveFileReplyFinished(QNetworkReply *reply);
     void copyFileReplyFinished(QNetworkReply *reply);
     void deleteFileReplyFinished(QNetworkReply *reply);

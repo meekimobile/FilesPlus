@@ -1113,12 +1113,12 @@ QString DropboxClient::createFolder(QString nonce, QString uid, QString remotePa
     qDebug() << "----- DropboxClient::createFolder -----" << uid << remoteParentPath << newRemoteFolderName << synchronous;
 
     if (remoteParentPath.isEmpty()) {
-        emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
+        if (!synchronous) emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
         return "";
     }
 
     if (newRemoteFolderName.isEmpty()) {
-        emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
+        if (!synchronous) emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
         return "";
     }
 
@@ -1160,7 +1160,7 @@ QString DropboxClient::createFolder(QString nonce, QString uid, QString remotePa
     }
 
     // Emit signal and return replyBody.
-    return createFolderReplyFinished(reply);
+    return createFolderReplyFinished(reply, synchronous);
 }
 
 void DropboxClient::requestTokenReplyFinished(QNetworkReply *reply)
@@ -1456,7 +1456,7 @@ void DropboxClient::browseReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-QString DropboxClient::createFolderReplyFinished(QNetworkReply *reply)
+QString DropboxClient::createFolderReplyFinished(QNetworkReply *reply, bool synchronous)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
@@ -1485,7 +1485,8 @@ QString DropboxClient::createFolderReplyFinished(QNetworkReply *reply)
         }
     }
 
-    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+    // Emit signal only for asynchronous request. To avoid invoking CloudDriveModel.createFolderReplyFilter() as it's not required. And also avoid invoking jobDone() which causes issue #FP20130232.
+    if (!synchronous) emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // scheduled to delete later.
     reply->deleteLater();

@@ -95,7 +95,7 @@ public slots:
     void filePutReplyFinished(QNetworkReply *reply);
     void metadataReplyFinished(QNetworkReply *reply);
     void browseReplyFinished(QNetworkReply *reply);
-    QString createFolderReplyFinished(QNetworkReply *reply);
+    QString createFolderReplyFinished(QNetworkReply *reply, bool synchronous = false);
     void moveFileReplyFinished(QNetworkReply *reply);
     void copyFileReplyFinished(QNetworkReply *reply);
     void deleteFileReplyFinished(QNetworkReply *reply);

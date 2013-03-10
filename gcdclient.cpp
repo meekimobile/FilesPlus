@@ -413,12 +413,12 @@ QString GCDClient::createFolder(QString nonce, QString uid, QString remoteParent
     qDebug() << "----- GCDClient::createFolder -----" << remoteParentPath << newRemoteFolderName;
 
     if (remoteParentPath.isEmpty()) {
-        emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
+        if (!synchronous) emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
         return "";
     }
 
     if (newRemoteFolderName.isEmpty()) {
-        emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
+        if (!synchronous) emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
         return "";
     }
 
@@ -426,7 +426,7 @@ QString GCDClient::createFolder(QString nonce, QString uid, QString remoteParent
     QString folderId = searchFileId(nonce, uid, remoteParentPath, newRemoteFolderName);
     if (folderId != "") {
         qDebug() << "GCDClient::createFolder" << nonce << "found existing folderId" << folderId;
-        return createFolderReplyFinished(property(nonce, uid, folderId, true));
+        return createFolderReplyFinished(property(nonce, uid, folderId, true), synchronous);
     }
 
     QString uri = createFolderURI;
@@ -468,7 +468,7 @@ QString GCDClient::createFolder(QString nonce, QString uid, QString remoteParent
     }
 
     // Emit signal and return replyBody.
-    return createFolderReplyFinished(reply);
+    return createFolderReplyFinished(reply, synchronous);
 }
 
 void GCDClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
@@ -1861,7 +1861,7 @@ void GCDClient::filesReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-QString GCDClient::createFolderReplyFinished(QNetworkReply *reply)
+QString GCDClient::createFolderReplyFinished(QNetworkReply *reply, bool synchronous)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1877,7 +1877,8 @@ QString GCDClient::createFolderReplyFinished(QNetworkReply *reply)
         replyBody = stringifyScriptValue(engine, parsedObj);
     }
 
-    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+    // Emit signal only for asynchronous request. To avoid invoking CloudDriveModel.createFolderReplyFilter() as it's not required. And also avoid invoking jobDone() which causes issue #FP20130232.
+    if (!synchronous) emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // TODO scheduled to delete later.
     reply->deleteLater();

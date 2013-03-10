@@ -487,7 +487,7 @@ QString WebDavClient::createFolder(QString nonce, QString uid, QString remotePar
     }
 
     // Emit signal and return replyBody.
-    return createFolderReplyFinished(reply);
+    return createFolderReplyFinished(reply, synchronous);
 }
 
 QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)
@@ -808,12 +808,22 @@ QString WebDavClient::prepareRemotePath(QString uid, QString remoteFilePath)
     // Remove prefix remote root path.
     if (uid != "") {
         if (!m_remoteRootHash.contains(uid) || m_remoteRootHash[uid] == "") {
-            QString hostname = getHostname(accessTokenPairMap[uid].email);
-            QString remoteRoot = (hostname.indexOf("/") != -1) ? hostname.mid(hostname.indexOf("/")) : "/";
-            path = path.replace(QRegExp("^"+remoteRoot), "/");
-            qDebug() << "WebDavClient::prepareRemotePath uid" << uid << "remoteRoot" << remoteRoot << "removed. path" << path;
-            // TODO Stores remoteRoot in m_remoteRootHash[uid].
-            m_remoteRootHash[uid] = remoteRoot;
+            // TODO If path is URL, use https://<hostname with path> as remoteRoot. Otherwise use only hostname's path as remoteRoot.
+            if (path.startsWith("https")) {
+                QString hostname = getHostname(accessTokenPairMap[uid].email);
+                QString remoteRoot = "https://" + hostname;
+                path = path.replace(QRegExp("^"+remoteRoot), "/");
+                qDebug() << "WebDavClient::prepareRemotePath uid" << uid << "remoteRoot" << remoteRoot << "removed. path" << path;
+                // Stores remoteRoot in m_remoteRootHash[uid].
+                m_remoteRootHash[uid] = remoteRoot;
+            } else {
+                QString hostname = getHostname(accessTokenPairMap[uid].email);
+                QString remoteRoot = (hostname.indexOf("/") != -1) ? hostname.mid(hostname.indexOf("/")) : "/";
+                path = path.replace(QRegExp("^"+remoteRoot), "/");
+                qDebug() << "WebDavClient::prepareRemotePath uid" << uid << "remoteRoot" << remoteRoot << "removed. path" << path;
+                // Stores remoteRoot in m_remoteRootHash[uid].
+                m_remoteRootHash[uid] = remoteRoot;
+            }
         } else {
             path = path.replace(QRegExp("^"+m_remoteRootHash[uid]), "/");
 //            qDebug() << "WebDavClient::prepareRemotePath remoteRoot" << m_remoteRootHash[uid] << "removed. path" << path;
@@ -1220,7 +1230,7 @@ void WebDavClient::propertyReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-QString WebDavClient::createFolderReplyFinished(QNetworkReply *reply)
+QString WebDavClient::createFolderReplyFinished(QNetworkReply *reply, bool synchronous)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
@@ -1250,7 +1260,8 @@ QString WebDavClient::createFolderReplyFinished(QNetworkReply *reply)
         replyBody = createResponseJson(QString::fromUtf8(reply->readAll()), "createFolderReplyFinished");
     }
 
-    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+    // Emit signal only for asynchronous request. To avoid invoking CloudDriveModel.createFolderReplyFilter() as it's not required. And also avoid invoking jobDone() which causes issue #FP20130232.
+    if (!synchronous) emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // Scheduled to delete later.
     reply->deleteLater();

@@ -332,12 +332,12 @@ QString SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteP
     qDebug() << "----- SkyDriveClient::createFolder -----" << newRemoteFolderName << remoteParentPath;
 
     if (remoteParentPath.isEmpty()) {
-        emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
+        if (!synchronous) emit createFolderReplySignal(nonce, -1, "remoteParentPath is empty.", "");
         return "";
     }
 
     if (newRemoteFolderName.isEmpty()) {
-        emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
+        if (!synchronous) emit createFolderReplySignal(nonce, -1, "newRemoteFolderName is empty.", "");
         return "";
     }
 
@@ -375,7 +375,7 @@ QString SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteP
     }
 
     // Emit signal and return replyBody.
-    return createFolderReplyFinished(reply);
+    return createFolderReplyFinished(reply, synchronous);
 }
 
 void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
@@ -1075,7 +1075,7 @@ void SkyDriveClient::filesReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-QString SkyDriveClient::createFolderReplyFinished(QNetworkReply *reply)
+QString SkyDriveClient::createFolderReplyFinished(QNetworkReply *reply, bool synchronous)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
@@ -1116,7 +1116,8 @@ QString SkyDriveClient::createFolderReplyFinished(QNetworkReply *reply)
         }
     }
 
-    emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+    // Emit signal only for asynchronous request. To avoid invoking CloudDriveModel.createFolderReplyFilter() as it's not required. And also avoid invoking jobDone() which causes issue #FP20130232.
+    if (!synchronous) emit createFolderReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // TODO scheduled to delete later.
     reply->deleteLater();
