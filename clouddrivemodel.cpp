@@ -3843,10 +3843,15 @@ void CloudDriveModel::proceedNextJob() {
 
     // TODO NOTE Try to avoid thread panic by invoking dispatchJob() directly for any QNAM implementation methods.
     if (t->isDirectInvokation()) {
-        QThreadPool::globalInstance()->start(t);
-        qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "is started. runningJobCount" << runningJobCount << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount();
+        QThread *thread = new QThread(this);
+        connect(thread, SIGNAL(started()), t, SLOT(start()));
+        connect(thread, SIGNAL(finished()), t, SLOT(deleteLater()));
+        connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+        thread->start(QThread::LowPriority);
+
+        qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "is started. runningJobCount" << runningJobCount;
     } else {
-        qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "is dispatching. runningJobCount" << runningJobCount << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount();
+        qDebug() << "CloudDriveModel::proceedNextJob jobId" << nonce << "is dispatching. runningJobCount" << runningJobCount;
         dispatchJob(nonce);
     }
 }
@@ -4038,8 +4043,7 @@ void CloudDriveModel::resumeJob(const QString jobId)
 /*
 void CloudDriveModel::threadFinishedFilter()
 {
-    // Notify job done.
-    jobDone();
+    qDebug() << "CloudDriveModel::threadFinishedFilter";
 }
 
 void CloudDriveModel::loadCloudDriveItemsFilter(QString nonce)

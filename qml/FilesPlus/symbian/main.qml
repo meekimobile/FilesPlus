@@ -1873,13 +1873,13 @@ PageStackWindow {
                 // Update item after removing job as isSyncing will check if job exists.
                 var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
+                // Remove finished job.
+                cloudDriveModel.removeJob("cloudDriveModel.onRefreshRequestSignal", jobJson.job_id);
+
                 // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
                 pageStack.find(function (page) {
                     if (page.updateItemSlot) page.updateItemSlot(jobJson);
                 });
-
-                // Remove finished job.
-                cloudDriveModel.removeJob("cloudDriveModel.onRefreshRequestSignal", jobJson.job_id);
             } else {
                 // For refresh request without specified nonce(jobId), just refresh.
                 var p = findPage("folderPage");
@@ -1897,12 +1897,6 @@ PageStackWindow {
                 var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
                 fsModel.trash(localPath);
-
-                // For refresh request without specified nonce(jobId), just refresh.
-                var p = findPage("folderPage");
-                if (p) {
-                    p.refreshSlot("cloudDriveModel onRefreshRequestSignal");
-                }
 
                 // Remove finished job.
                 cloudDriveModel.removeJob("cloudDriveModel.onMoveToTrashRequestSignal", jobJson.job_id);

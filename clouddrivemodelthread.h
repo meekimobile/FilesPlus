@@ -18,7 +18,7 @@ public:
 signals:
 
 public slots:
-
+    void start();
 private:
     QString m_nonce;
     bool m_isDirectInvokation;

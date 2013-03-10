@@ -34,3 +34,8 @@ void CloudDriveModelThread::run()
     }
     qDebug() << "CloudDriveModelThread::run job" << m_nonce << "thread" << QThread::currentThread() << "done.";
 }
+
+void CloudDriveModelThread::start()
+{
+    run();
+}
