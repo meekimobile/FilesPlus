@@ -317,7 +317,7 @@ public slots:
     void dispatchJob(const QString jobId);
     void dispatchJob(CloudDriveJob job);
 
-//    void threadFinishedFilter();
+    void threadFinishedFilter();
 //    void loadCloudDriveItemsFilter(QString nonce);
     void requestTokenReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectFilter(QString nonce, QString url, QString redirectFrom);
@@ -355,6 +355,8 @@ private:
     int runningJobCount;
     bool m_isSuspended;
     bool m_isAborted;
+
+    QHash<QString, QThread*> *m_threadHash;
 
     // Job queue processor.
     QTimer m_jobQueueTimer;

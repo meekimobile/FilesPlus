@@ -11,6 +11,7 @@ public:
     CloudDriveModelThread(QObject *parent = 0);
 
     void setNonce(QString nonce);
+    QString getNonce();
     void setDirectInvokation(bool flag);
     bool isDirectInvokation();
 

@@ -11,6 +11,11 @@ void CloudDriveModelThread::setNonce(QString nonce)
     m_nonce = nonce;
 }
 
+QString CloudDriveModelThread::getNonce()
+{
+    return m_nonce;
+}
+
 void CloudDriveModelThread::setDirectInvokation(bool flag)
 {
     m_isDirectInvokation = flag;
