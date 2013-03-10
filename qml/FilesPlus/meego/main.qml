@@ -1600,6 +1600,13 @@ PageStackWindow {
         onMetadataReplySignal: {
             // Get job json.
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+
+            // Validate job.
+            if (jobJson.job_id != nonce) {
+                console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " is invalid. Operation is ignored.");
+                return;
+            }
+
             console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " " + err + " " + errMsg + " " + msg);
 
             if (err == 0) {
@@ -1614,8 +1621,7 @@ PageStackWindow {
 
                 if (jsonObj.isDeleted) {
                     // If dir, should remove all sub items.
-                    cloudDriveModel.removeItemWithChildren(jobJson.type, jobJson.uid, jobJson.local_file_path);
-                    cloudDriveModel.requestMoveToTrash(jobJson.job_id, jobJson.local_file_path);
+                    cloudDriveModel.deleteLocal(jobJson.type, jobJson.uid, jobJson.local_file_path);
 
                     // Notify removed link.
                     logWarn(getCloudName(jobJson.type) + " " + qsTr("Metadata"),
@@ -1697,17 +1703,33 @@ PageStackWindow {
                 // Suspend next job.
                 cloudDriveModel.suspendNextJob();
 
+                var localParentPath = cloudDriveModel.getParentLocalPath(jobJson.local_file_path);
+                var remoteParentPath = "";
+                var remoteFileName = cloudDriveModel.getFileName(jobJson.local_file_path);
                 if (cloudDriveModel.isRemoteAbsolutePath(jobJson.type)) {
+                    remoteParentPath = cloudDriveModel.getParentRemotePath(jobJson.type, jobJson.remote_file_path);
+                } else {
+                    remoteParentPath = cloudDriveModel.getItemRemotePath(localParentPath, jobJson.type, jobJson.uid);
+                }
+                console.debug("window cloudDriveModel onMetadataReplySignal " + err + " " + errMsg + " " + msg +  " locaParentPath " + localParentPath + " remoteParentPath " + remoteParentPath);
+
+                // Proceed put if remoteParentPath is available. Otherwise remote the link.
+                if (remoteParentPath != "") {
                     console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " put " + jobJson.local_file_path + " to " + jobJson.remote_file_path);
                     if (cloudDriveModel.isDir(jobJson.local_file_path)) {
                         // Remote folder will be created in syncFromLocal if it's required.
-                        var remoteParentPath = cloudDriveModel.getParentRemotePath(jobJson.type, jobJson.remote_file_path);
                         cloudDriveModel.syncFromLocal(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, jobJson.modelIndex);
                     } else {
-                        var remoteParentPath = cloudDriveModel.getParentRemotePath(jobJson.type, jobJson.remote_file_path);
-                        var remoteFileName = cloudDriveModel.getFileName(jobJson.local_file_path);
                         cloudDriveModel.filePut(jobJson.type, jobJson.uid, jobJson.local_file_path, remoteParentPath, remoteFileName, jobJson.modelIndex);
                     }
+                } else {
+                    // If dir, should remove all sub items.
+                    cloudDriveModel.disconnect(jobJson.type, jobJson.uid, jobJson.local_file_path);
+
+                    // Notify removed link.
+                    logWarn(getCloudName(jobJson.type) + " " + qsTr("Metadata"),
+                            qsTr("%1 was removed remotely.\nLink will be removed.").arg(jobJson.local_file_path),
+                            2000);
                 }
 
                 // Resume next jobs.
@@ -1850,13 +1872,13 @@ PageStackWindow {
                 // Update item after removing job as isSyncing will check if job exists.
                 var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
-                // Remove finished job.
-                cloudDriveModel.removeJob("cloudDriveModel.onRefreshRequestSignal", jobJson.job_id);
-
                 // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
                 pageStack.find(function (page) {
                     if (page.updateItemSlot) page.updateItemSlot(jobJson);
                 });
+
+                // Remove finished job.
+                cloudDriveModel.removeJob("cloudDriveModel.onRefreshRequestSignal", jobJson.job_id);
             } else {
                 // For refresh request without specified nonce(jobId), just refresh.
                 var p = findPage("folderPage");
@@ -1868,7 +1890,22 @@ PageStackWindow {
 
         onMoveToTrashRequestSignal: {
             console.debug("window cloudDriveModel onMoveToTrashRequestSignal " + nonce + " " + localPath);
-            fsModel.trash(localPath);
+
+            if (nonce != "") {
+                // Update item after removing job as isSyncing will check if job exists.
+                var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+
+                fsModel.trash(localPath);
+
+                // For refresh request without specified nonce(jobId), just refresh.
+                var p = findPage("folderPage");
+                if (p) {
+                    p.refreshSlot("cloudDriveModel onRefreshRequestSignal");
+                }
+
+                // Remove finished job.
+                cloudDriveModel.removeJob("cloudDriveModel.onMoveToTrashRequestSignal", jobJson.job_id);
+            }
         }
 
         onCopyFileReplySignal: {

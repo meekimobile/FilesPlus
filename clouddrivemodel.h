@@ -84,6 +84,7 @@ public:
         ShareFile,
         Browse,
         Disconnect,
+        DeleteLocal,
         ScheduleSync,
         MigrateFile,
         MigrateFilePut,
@@ -235,7 +236,7 @@ public:
     Q_INVOKABLE void browse(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
 
     Q_INVOKABLE QStringList getLocalPathList(QString localParentPath);
-    Q_INVOKABLE void syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, QString data = "");
+    Q_INVOKABLE void syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, QString data = "*");
     Q_INVOKABLE void syncFromLocal_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, bool isRootLocalPath = true, QString data = "*");
 
     Q_INVOKABLE void createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, QString newRemoteFolderName);
@@ -262,6 +263,7 @@ public:
     void migrateFileResume_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
 
     Q_INVOKABLE void disconnect(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
+    Q_INVOKABLE void deleteLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
 
     Q_INVOKABLE QString thumbnail(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString format, QString size); // Used by DropboxClient and ImageViewPage.qml.
     Q_INVOKABLE void cacheImage(QString remoteFilePath, QString url, int w, int h, QString caller);

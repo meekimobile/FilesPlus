@@ -769,6 +769,15 @@ bool CloudDriveModel::createDirPath(const QString absPath)
 
 bool CloudDriveModel::requestMoveToTrash(const QString nonce, const QString absPath)
 {
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    // Update job running flag.
+    job.isRunning = false;
+    updateJob(job);
+
+    // Notify job done.
+    jobDone();
+
     emit moveToTrashRequestSignal(nonce, absPath);
 }
 
@@ -903,6 +912,8 @@ QString CloudDriveModel::getOperationName(int operation) {
         return tr("InitializeCloudClients");
     case Disconnect:
         return tr("Disconnect");
+    case DeleteLocal:
+        return tr("Delete");
     case ScheduleSync:
         return tr("ScheduleSync");
     case MigrateFile:
@@ -2074,6 +2085,7 @@ void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::Client
             m_cloudDriveJobs->insert(job.jobId, job);
 
             QString createFolderReplyResult = cloudClient->createFolder(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFileName, true);
+            m_cloudDriveJobs->remove(job.jobId); // Remove dummy job after used.
 //            qDebug() << "CloudDriveModel::syncFromLocal_Block createFolderReplyResult" << createFolderReplyResult;
             if (createFolderReplyResult != "") {
                 QScriptEngine engine;
@@ -2148,8 +2160,11 @@ void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::Client
                 // Remove link if it's deleted item (there is remotePathList and cloudDriveItem.remotePath not in list).
                 // TODO Configurable file removing.
                 qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "remove link to existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isDeletedItem" << isDeletedItem;
-                removeItemWithChildren(type, uid, localFilePath);                
-                requestMoveToTrash(nonce, localFilePath);
+                if (m_settings.value("CloudDriveModel.syncFromLocal.deleteLocalFile.enabled", true).toBool()) {
+                    deleteLocal(type, uid, localFilePath);
+                } else {
+                    disconnect(type, uid, localFilePath);
+                }
             } else {
                 // Skip any items that already have CloudDriveItem and has localHash.
                 qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "skip existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isNewItem" << isNewItem;
@@ -2475,6 +2490,18 @@ void CloudDriveModel::disconnect(CloudDriveModel::ClientTypes type, QString uid,
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), Disconnect, type, uid, localPath, "", -1);
+//    job.isRunning = true;
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show in job page.
+    emit jobEnqueuedSignal(job.jobId, job.localFilePath);
+}
+
+void CloudDriveModel::deleteLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
+{
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), DeleteLocal, type, uid, localPath, "", -1);
 //    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
@@ -3807,6 +3834,7 @@ void CloudDriveModel::proceedNextJob() {
     case InitializeDB:
     case InitializeCloudClients:
     case Disconnect:
+    case DeleteLocal:
     case SyncFromLocal:
     case MigrateFilePut:
         t->setDirectInvokation(true);
@@ -3956,6 +3984,10 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
     case Disconnect:
         removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
         refreshRequestFilter(job.jobId);
+        break;
+    case DeleteLocal:
+        removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
+        requestMoveToTrash(job.jobId, job.localFilePath);
         break;
     case SyncFromLocal:
         syncFromLocal_Block(job.jobId, getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, job.modelIndex, job.forcePut, true, job.data);
