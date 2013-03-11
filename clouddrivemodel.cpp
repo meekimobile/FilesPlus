@@ -94,8 +94,10 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     // Create temp path.
     createTempPath();
 
-    // Set thread pool with MaxRunningJobCount+1 to support browse method.
-    QThreadPool::globalInstance()->setMaxThreadCount(MaxRunningJobCount + 1);
+    // Initialize thread pools and hash
+    // TODO Refactor to avoid using QThreadPool as it causes panic in Symbian.
+    m_browseThreadPool.setMaxThreadCount(1);
+    m_cacheImageThreadPool.setMaxThreadCount(3);
     m_threadHash = new QHash<QString, QThread*>();
 
     // Initialize scheduler queue.
@@ -2005,7 +2007,7 @@ void CloudDriveModel::browse(CloudDriveModel::ClientTypes type, QString uid, QSt
     CloudDriveModelThread *t = new CloudDriveModelThread(this);
     t->setNonce(job.jobId); // Set job ID to thread. It will invoke parent's dispatchJob later.
     t->setDirectInvokation(false);
-    QThreadPool::globalInstance()->start(t);
+    m_browseThreadPool.start(t);
 }
 
 QStringList CloudDriveModel::getLocalPathList(QString localParentPath)
@@ -2530,7 +2532,8 @@ void CloudDriveModel::cacheImage(QString remoteFilePath, QString url, int w, int
     CacheImageWorker *worker = new CacheImageWorker(remoteFilePath, url, QSize(w,h), TEMP_PATH, caller);
     connect(worker, SIGNAL(cacheImageFinished(QString,int,QString,QString)), SIGNAL(cacheImageFinished(QString,int,QString,QString)));
     connect(worker, SIGNAL(refreshFolderCacheSignal(QString)), SIGNAL(refreshFolderCacheSignal(QString)));
-    QThreadPool::globalInstance()->start(worker);
+    m_cacheImageThreadPool.start(worker);
+    qDebug() << "CloudDriveModel::cacheImage m_cacheImageThreadPool" << m_cacheImageThreadPool.activeThreadCount() << "/" << m_cacheImageThreadPool.maxThreadCount();
 }
 
 QString CloudDriveModel::media(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath)
@@ -3795,7 +3798,7 @@ void CloudDriveModel::proceedNextJob() {
     // Proceed next job in queue. Any jobs which haven't queued will be ignored.
     if (runningJobCount > 0) {
         qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount
-                 << "thread pool" << QThreadPool::globalInstance()->activeThreadCount() << "/" << QThreadPool::globalInstance()->maxThreadCount()
+                 << "m_browseThreadPool" << m_browseThreadPool.activeThreadCount() << "/" << m_browseThreadPool.maxThreadCount()
                  << "m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count() << "m_isSuspended" << m_isSuspended
                  << "m_threadHash count" << m_threadHash->count();
     }

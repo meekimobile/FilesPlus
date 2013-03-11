@@ -357,6 +357,8 @@ private:
     bool m_isAborted;
 
     QHash<QString, QThread*> *m_threadHash;
+    QThreadPool m_browseThreadPool;
+    QThreadPool m_cacheImageThreadPool;
 
     // Job queue processor.
     QTimer m_jobQueueTimer;
