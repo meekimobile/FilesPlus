@@ -120,6 +120,14 @@ Page {
         isBusy = false;
     }
 
+    function syncCurrentFolderSlot() {
+        var isConnected = cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, remoteParentPath);
+        console.debug("cloudFolderPage syncCurrentFolder remoteParentPath " + remoteParentPath + " isConnected " + isConnected);
+        if (isConnected) {
+            cloudDriveModel.syncItemByRemotePath(selectedCloudType, selectedUid, remoteParentPath);
+        }
+    }
+
     function syncConnectedItemsSlot() {
         // Suspend for queuing.
         cloudDriveModel.suspendNextJob();
@@ -127,7 +135,7 @@ Page {
         for (var i=0; i<cloudFolderModel.count; i++) {
             var remotePath = cloudFolderModel.get(i).absolutePath;
             var isConnected = cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, remotePath);
-            console.debug("folderPage synconnectedItemsSlot remotePath " + remotePath + " isConnected " + isConnected);
+            console.debug("cloudFolderPage synconnectedItemsSlot remotePath " + remotePath + " isConnected " + isConnected);
             if (isConnected) {
                 cloudDriveModel.syncItemByRemotePath(selectedCloudType, selectedUid, remotePath);
             }
@@ -441,13 +449,24 @@ Page {
 
     CloudMenu {
         id: cloudMenu
-        disabledMenus: ["syncCurrentFolder"]
 
+        onSyncCurrentFolder: {
+            syncCurrentFolderSlot();
+        }
         onSyncConnectedItems: {
             syncConnectedItemsSlot();
         }
         onShowCloudDriveJobs: {
             pageStack.push(Qt.resolvedUrl("CloudDriveJobsPage.qml"));
+        }
+
+        function isMenuItemVisible(menuItem) {
+            // Validate each menu logic if it's specified, otherwise it's visible.
+            if (menuItem.name == "syncCurrentFolder") {
+                return !cloudDriveModel.isRemoteRoot(selectedCloudType, selectedUid, remoteParentPath) && cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, remoteParentPath);
+            } else {
+                return true;
+            }
         }
     }
 
