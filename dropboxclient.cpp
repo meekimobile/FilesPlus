@@ -1061,7 +1061,7 @@ QString DropboxClient::filePutCommit(QString nonce, QString uid, QString remoteF
     qDebug() << "----- DropboxClient::filePutCommit -----" << nonce << uid << remoteFilePath << uploadId << "synchronous" << synchronous;
 
     QString uri = commitChunkedUploadURI.arg(dropboxRoot, remoteFilePath);
-    uri = encodeURI(uri);
+//    uri = encodeURI(uri); // Post doesn't need to encode URI before request.
     qDebug() << "DropboxClient::filePutCommit uri " << uri;
 
     // Construct normalized query string.
