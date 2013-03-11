@@ -2962,6 +2962,7 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
     if (job.remoteFilePath != "") {
         foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, job.remoteFilePath)) {
             removeItemWithChildren(getClientType(item.type), item.uid, item.localPath);
+            emit refreshFolderCacheSignal(item.localPath);
         }
     }
 
