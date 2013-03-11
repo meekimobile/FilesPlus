@@ -76,9 +76,9 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
             && image.load(cachedFileInfo.absoluteFilePath())) {
         qDebug() << "LocalFileImageProvider::requestImage return cached id" << id << "cached image path" << cachedFileInfo.absoluteFilePath();
         return image;
-    } else if (!requestedSize.isValid()) {
-        qDebug() << "LocalFileImageProvider::requestImage cache not found" << cachedFileInfo.absoluteFilePath() << "and requestSize is invalid. Response error to trigger cacheImageWorker.";
-        return QImage();
+//    } else if (!requestedSize.isValid()) {
+//        qDebug() << "LocalFileImageProvider::requestImage cache not found" << cachedFileInfo.absoluteFilePath() << "and requestSize is invalid. Response error to trigger cacheImageWorker.";
+//        return QImage();
     }
 
     QFile file(absoluteFilePath);
