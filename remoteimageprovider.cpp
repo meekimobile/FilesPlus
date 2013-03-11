@@ -118,7 +118,8 @@ QImage RemoteImageProvider::requestImage(const QString &id, QSize *size, const Q
         }
     }
 
-    if (m_settings.value("RemoteImageProvider.getCachedImage.enabled", QVariant(false)).toBool()) {
+    // NOTE If CacheImageWorker is not enabled, get cached image directly. Otherwise return invalid image to trigger CacheImageWorker.
+    if (!m_settings.value("RemoteImageProvider.CacheImageWorker.enabled", QVariant(true)).toBool()) {
         // Get image from source URL.
         image = getCachedImage(id, requestedSize);
         size->setWidth(image.size().width());
