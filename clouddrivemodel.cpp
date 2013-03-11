@@ -4003,7 +4003,12 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
         break;
     case DeleteLocal:
         removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
-        requestMoveToTrash(job.jobId, job.localFilePath);
+        if (!isConnected(job.localFilePath)) {
+            requestMoveToTrash(job.jobId, job.localFilePath);
+        } else {
+            qDebug() << "CloudDriveModel::dispatchJob DeleteLocal localFilePath" << job.localFilePath << "is still connected. Invoking requestMoveToTrash() is suppressed.";
+            refreshRequestFilter(job.jobId);
+        }
         break;
     case SyncFromLocal:
         syncFromLocal_Block(job.jobId, getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, job.modelIndex, job.forcePut, true, job.data);
