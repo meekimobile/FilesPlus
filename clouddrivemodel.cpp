@@ -2154,7 +2154,7 @@ void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::Client
                 if (item.isDir()) {
                     // Drilldown local dir recursively.
                     // TODO Don't pass remotePathList will cause removing items.
-                    syncFromLocal_Block(nonce, type, uid, localFilePath, parentCloudDriveItem.remotePath, -1, forcePut, false);
+                    syncFromLocal(type, uid, localFilePath, parentCloudDriveItem.remotePath, -1, forcePut);
                 } else {
                     // Put file to remote parent path.
                     // TODO Add more comparing logic whether upload or just update hash.
