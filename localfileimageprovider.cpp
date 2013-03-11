@@ -76,9 +76,10 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
             && image.load(cachedFileInfo.absoluteFilePath())) {
         qDebug() << "LocalFileImageProvider::requestImage return cached id" << id << "cached image path" << cachedFileInfo.absoluteFilePath();
         return image;
-//    } else if (!requestedSize.isValid()) {
-//        qDebug() << "LocalFileImageProvider::requestImage cache not found" << cachedFileInfo.absoluteFilePath() << "and requestSize is invalid. Response error to trigger cacheImageWorker.";
-//        return QImage();
+    } else if (!requestedSize.isValid() && m_settings.value("LocalFileImageProvider.CacheImageWorker.enabled", QVariant(false)).toBool()) {
+        // NOTE Invalid requestedSize is requested from preview image. For thumbnail, it always request with a valid size.
+        qDebug() << "LocalFileImageProvider::requestImage cache not found" << cachedFileInfo.absoluteFilePath() << "and requestSize is invalid. Response error to trigger cacheImageWorker.";
+        return QImage();
     }
 
     QFile file(absoluteFilePath);

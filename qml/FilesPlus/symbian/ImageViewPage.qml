@@ -355,6 +355,7 @@ Page {
                     Image {
                         id: imageFlickView
                         source: getImageSource(previewUrl, timestamp) // NOTE It's populated while opening the page. Timestamp is used for force refreshing.
+                        asynchronous: true // To request image in low priority thread.
 //                        fillMode: Image.PreserveAspectFit
 //                        width: imageGrid.cellWidth // Undefine to get actual width.
 //                        height: imageGrid.cellHeight // Undefine to get actual height.
@@ -408,7 +409,7 @@ Page {
                                 console.debug("imageViewPage imageFlickView onStatusChanged ready width " + width + " height " + height);
                                 if (showGrid) {
                                     // Scale to fit cell.
-                                    scaleTo(imageViewPage.width, imageViewPage.height);
+                                    scaleTo(screen.width, screen.height - 24); // Workaround for Symbian only. As imageViewPage height got reduced while loading because previous page shows toolbar.
                                     // Save minimum size in cell.
                                     minPaintedWidth = width;
                                     minPaintedHeight = height;

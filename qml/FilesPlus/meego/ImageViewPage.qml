@@ -351,6 +351,7 @@ Page {
                     Image {
                         id: imageFlickView
                         source: getImageSource(previewUrl, timestamp) // NOTE It's populated while opening the page. Timestamp is used for force refreshing.
+                        asynchronous: true // To request image in low priority thread.
 //                        fillMode: Image.PreserveAspectFit
 //                        width: imageGrid.cellWidth // Undefine to get actual width.
 //                        height: imageGrid.cellHeight // Undefine to get actual height.
