@@ -2959,11 +2959,10 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
     // Disconnect deleted local path.
-    if (job.localFilePath != "") {
-        removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
-    }
     if (job.remoteFilePath != "") {
-        removeItemByRemotePath(getClientType(job.type), job.uid, job.remoteFilePath);
+        foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, job.remoteFilePath)) {
+            removeItemWithChildren(getClientType(item.type), item.uid, item.localPath);
+        }
     }
 
     // Stop running.
