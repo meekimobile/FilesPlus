@@ -2153,7 +2153,7 @@ void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::Client
 
                 if (item.isDir()) {
                     // Drilldown local dir recursively.
-                    // TODO Don't pass remotePathList will cause removing items.
+                    // NOTE Don't pass remotePathList will cause removing items.
                     syncFromLocal(type, uid, localFilePath, parentCloudDriveItem.remotePath, -1, forcePut);
                 } else {
                     // Put file to remote parent path.
@@ -2161,12 +2161,12 @@ void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::Client
                     filePut(type, uid, localFilePath, parentCloudDriveItem.remotePath, getFileName(localFilePath), -1);
                 }
             } else if (isDeletedItem) {
-                // Remove link if it's deleted item (there is remotePathList and cloudDriveItem.remotePath not in list).
-                // TODO Configurable file removing.
-                qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "remove link to existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isDeletedItem" << isDeletedItem;
+                // Configurable file removing if it's deleted item (there is remotePathList and cloudDriveItem.remotePath not in list).
                 if (m_settings.value("CloudDriveModel.syncFromLocal.deleteLocalFile.enabled", true).toBool()) {
+                    qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "trash local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isDeletedItem" << isDeletedItem;
                     deleteLocal(type, uid, localFilePath);
                 } else {
+                    qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "remove link to existing local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isDeletedItem" << isDeletedItem;
                     disconnect(type, uid, localFilePath);
                 }
             } else {
@@ -3011,13 +3011,17 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
 
                 if (isDeleted) {
                     if (remotePathHash.value(remoteFilePath)) {
-                        qDebug() << "CloudDriveModel::deltaReplyFilter suppress remove remoteFilePath" << remoteFilePath;
+                        qDebug() << "CloudDriveModel::deltaReplyFilter" << nonce << "suppress remove remoteFilePath" << remoteFilePath;
                     } else {
-                        // TODO delete local file path and cloud item.
-                        // NOTE Metadata currently only remove link once file/folder was removed remotely.
                         foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
-                            qDebug() << "CloudDriveModel::deltaReplyFilter remove connection to deleted remoteFilePath" << remoteFilePath << "cloudItem" << item;
-                            removeItem(getClientType(item.type), item.uid, item.localPath);
+                            // Configurable file removing.
+                            if (m_settings.value("CloudDriveModel::deltaReplyFilter.deleteLocalFile.enabled", true).toBool()) {
+                                qDebug() << "CloudDriveModel::deltaReplyFilter" << nonce << "trash item" << item.type << item.uid << item.localPath << "remotePath" << item.remotePath << "hash" << item.hash;
+                                deleteLocal(getClientType(item.type), item.uid, item.localPath);
+                            } else {
+                                qDebug() << "CloudDriveModel::deltaReplyFilter" << nonce << "disconnect item" << item.type << item.uid << item.localPath << "remotePath" << item.remotePath << "hash" << item.hash;
+                                disconnect(getClientType(item.type), item.uid, item.localPath);
+                            }
                         }
 
                         // Insert remoteFilePath with isDeleted to hash.
