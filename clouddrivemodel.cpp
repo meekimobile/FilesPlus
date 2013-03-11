@@ -764,6 +764,9 @@ bool CloudDriveModel::createDirPath(const QString absPath)
 
     QDir dir(getParentLocalPath(absPath));
     bool res = dir.mkdir(getFileName(absPath));
+    if (res) {
+        emit refreshFolderCacheSignal(absPath);
+    }
 
     return res;
 }
@@ -2961,8 +2964,14 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
     // Disconnect deleted local path.
     if (job.remoteFilePath != "") {
         foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, job.remoteFilePath)) {
-            removeItemWithChildren(getClientType(item.type), item.uid, item.localPath);
-            emit refreshFolderCacheSignal(item.localPath);
+            // Configurable file removing.
+            if (m_settings.value("CloudDriveModel.deleteFileReplyFilter.deleteLocalFile.enabled", true).toBool()) {
+                qDebug() << "CloudDriveModel::deleteFileReplyFilter" << nonce << "trash local item" << item.toJsonText();
+                deleteLocal(getClientType(item.type), item.uid, item.localPath);
+            } else {
+                qDebug() << "CloudDriveModel::deleteFileReplyFilter" << nonce << "remove link to existing local item" << item.toJsonText();
+                disconnect(getClientType(item.type), item.uid, item.localPath);
+            }
         }
     }
 

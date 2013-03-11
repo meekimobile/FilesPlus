@@ -1849,7 +1849,7 @@ PageStackWindow {
 
         onRefreshFolderCacheSignal: {
             // TODO Remove folder cache.
-            fsModel.removeCache(localPath);
+            fsModel.removeCache(localPath, true);
         }
 
         onJobQueueStatusSignal: {
