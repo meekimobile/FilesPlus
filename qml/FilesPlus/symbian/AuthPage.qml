@@ -172,13 +172,17 @@ Page {
                     console.debug("DropboxClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom);
                     console.debug("DropboxClient title " + title);
                     console.debug("DropboxClient html " + html);
-                    var uidIndex = html.indexOf("uid:");
+/*
+  NOTE: 2013-03-12 Dropbox has changed to include uid in first login page. It causes issue not showing login page.
+                   var uidIndex = html.indexOf("uid:");
                     if (uidIndex != -1) {
                         console.debug("found uid! at " + uidIndex);
                         pinInputPanel.pin = "PinDefault";
                         cloudDriveModel.accessTokenSlot(authPage.redirectFrom, pinInputPanel.pin);
                         pageStack.pop();
-                    } else if (title.match(appInfo.emptyStr+qsTr("^API Request Authorized"))) {
+                    } else
+*/
+                    if (title.match(appInfo.emptyStr+qsTr("^API Request Authorized"))) {
                         pinInputPanel.pin = "PinDefault";
                         cloudDriveModel.accessTokenSlot(authPage.redirectFrom, pinInputPanel.pin);
                         pageStack.pop();
