@@ -512,8 +512,12 @@ Page {
             if (btClient.isPowerOn) {
                 btSelectionDialog.open();
             } else {
-                // TODO configurable suppress confirmation.
-                btPowerOnDialog.open();
+                if (appInfo.getSettingBoolValue("automatically.bluetooth.on", false)) {
+                    btClient.powerOn();
+                    btSelectionDialog.open();
+                } else {
+                    btPowerOnDialog.open();
+                }
             }
         }
     }
