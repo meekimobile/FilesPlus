@@ -101,7 +101,9 @@ QString SystemInfoHelper::getFileContent(const QString &localPath)
     QString text;
     QFile file(localPath);
     if (file.open(QIODevice::ReadOnly)) {
-        text.append(file.readAll());
+        QTextStream in(&file);
+        in.setCodec("UTF-8");
+        text.append(in.readAll());
     }
     file.close();
 
@@ -112,16 +114,19 @@ QString SystemInfoHelper::getFileContent(const QString &localPath)
 
 int SystemInfoHelper::saveFileContent(const QString &localPath, const QString &text)
 {
-    qDebug() << "SystemInfoHelper::saveFileContent localPath " << localPath;
+    qDebug() << "SystemInfoHelper::saveFileContent localPath " << localPath << text;
 
     if (localPath.isEmpty()) return -1;
 
     qint64 c = -1;
     QFile file(localPath);
     if (file.open(QIODevice::WriteOnly)) {
-        c = file.write(text.toUtf8());
+        QTextStream out(&file);
+        out.setCodec("UTF-8");
+        out << text;
     }
     file.close();
+    c = file.size();
 
     qDebug() << "SystemInfoHelper::saveFileContent bytes write " << c;
 
