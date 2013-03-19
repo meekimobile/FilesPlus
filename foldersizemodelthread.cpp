@@ -802,11 +802,11 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath, bool suppressSig
 
     if (!res) {
         qDebug() << "FolderSizeModelThread::deleteDir sourcePath" << sourcePath << "failed.";
-        if (!suppressSignal) emit deleteProgress(m_runMethod, sourcePath, tr("Deleting %1 is failed.").arg(sourcePath), -1);
+        if (!suppressSignal) emit deleteProgress(m_runMethod, sourcePath, tr("Deleting %1 is failed.").arg(sourceFileInfo.fileName()), -1);
     } else {
         // TODO Move to emit only once per thread call.
         qDebug() << "FolderSizeModelThread::deleteDir sourcePath" << sourcePath << "done.";
-        if (!suppressSignal) emit deleteProgress(m_runMethod, sourcePath, tr("Deleting %1 is done.").arg(sourcePath), 0);
+        if (!suppressSignal) emit deleteProgress(m_runMethod, sourcePath, tr("Deleting %1 is done.").arg(sourceFileInfo.fileName()), 0);
 
         // Move to deleteFinishedFilter
         //        // Remove cache up to parent.

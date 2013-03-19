@@ -27,7 +27,7 @@ Dialog {
         spacing: 5
         anchors.horizontalCenter: parent.horizontalCenter
 
-        property int buttonWidth: (width / buttonTexts.length) - spacing
+        property int buttonWidth: (buttonTexts.length > 1) ? ((width / buttonTexts.length) - spacing) : (width /  2)
 
         Repeater {
             model: buttonTexts
@@ -35,6 +35,7 @@ Dialog {
                 text: modelData
                 width: buttonRow.buttonWidth
                 anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: (buttonTexts.length > 1) ? undefined : parent.horizontalCenter
                 onClicked: {
                     buttonClicked(index);
                     close();

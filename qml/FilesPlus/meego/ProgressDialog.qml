@@ -77,7 +77,7 @@ CommonDialog {
 
     titleText: appInfo.emptyStr+qsTr("Progressing")
     titleIcon: "FilesPlusIcon.svg"
-    buttonTexts: [appInfo.emptyStr+qsTr("OK"), appInfo.emptyStr+qsTr("Cancel")]
+    buttonTexts: [appInfo.emptyStr+qsTr("Cancel")]
     content: Column {
         width: parent.width - 10
         spacing: 4
@@ -151,8 +151,6 @@ CommonDialog {
     
     onButtonClicked: {
         if (index == 0) {
-            ok();
-        } else {
             cancel();
         }
     }
