@@ -50,7 +50,12 @@ ConfirmDialog {
             text += qsTr("Connect %1 to %2").arg(fsModel.getFileName(localPath)).arg(remotePathName);
             break;
         case CloudDriveModel.Metadata:
-            text += qsTr("Sync %1 to %2").arg(fsModel.getFileName(localPath)).arg(remotePathName);
+            if (localPath != "") {
+                text += qsTr("Sync %1 to %2").arg(fsModel.getFileName(localPath)).arg(remotePathName);
+            } else if (clipboard.count > 0) {
+                var syncCount = clipboard.countByAction("sync");
+                text += qsTr("Sync %n item(s) to", "disambiguation", syncCount);
+            }
             break;
         }
 
@@ -355,12 +360,19 @@ ConfirmDialog {
 
                     // FileGet and FilePut can select any items because it's not related to operations.
                     // Other operations must select only the same item type that selected from local path.
-                    if (fsModel.isDir(localPath) == isDir || operation == CloudDriveModel.FileGet || operation == CloudDriveModel.FilePut) {
+                    if ((localPath != "" && fsModel.isDir(localPath) == isDir) || operation == CloudDriveModel.FileGet || operation == CloudDriveModel.FilePut) {
                         selectedRemotePath = absolutePath;
                         selectedRemotePathName = name;
                         selectedIsDir = isDir;
                         selectedIsValid = true;
-                        console.debug("cloudDrivePathDialog selectedIndex " + selectedIndex + " selectedRemotePath " + selectedRemotePath + " selectedRemotePathName " + selectedRemotePathName + " selectedIsDir " + selectedIsDir);
+                        console.debug("cloudDrivePathDialog valid selectedIndex " + selectedIndex + " selectedRemotePath " + selectedRemotePath + " selectedRemotePathName " + selectedRemotePathName + " selectedIsDir " + selectedIsDir);
+                    } else if (clipboard.count > 0) {
+                        selectedRemotePath = "";
+                        selectedRemotePathName = "";
+                        selectedIsDir = isDir;
+                        selectedIsValid = true;
+                        cloudDrivePathListView.currentIndex = -1;
+                        console.debug("cloudDrivePathDialog valid clipboard.count " + clipboard.count + " selectedIndex " + selectedIndex + " selectedRemotePath " + selectedRemotePath + " selectedRemotePathName " + selectedRemotePath + " selectedIsDir " + selectedIsDir);
                     } else {
                         selectedRemotePath = "";
                         selectedRemotePathName = "";

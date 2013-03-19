@@ -1467,6 +1467,39 @@ Page {
             } else if (clipboard.count > 0){
                 // Sync from clipboard.
 
+                // Check if all selected items are connected to cloud.
+                var connectedItemCount = 0;
+                var totalConnectedItemCount = 0;
+                for (var i=0; i<clipboard.count; i++) {
+                    if (clipboard.get(i).action == "sync") {
+                        console.debug("uidDialog onAccepted clipboard item i " + i + " " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
+                        var sourcePath = clipboard.get(i).sourcePath;
+                        var remotePath = cloudDriveModel.getItemRemotePath(sourcePath, uidDialog.selectedCloudType, uidDialog.selectedUid);
+                        if (remotePath != "") {
+                            connectedItemCount++;
+                        }
+                        totalConnectedItemCount++;
+                    }
+                }
+
+                if (connectedItemCount < totalConnectedItemCount) {
+                    if (connectedItemCount > 0) {
+                        // Select any connected items.
+                        showMessageDialogSlot(qsTr("Sync marked items"), qsTr("Please select only items connected to target cloud storage or not connected at all."));
+                        // Clear clipboard.
+                        clipboard.clear();
+                        return;
+                    } else {
+                        // Select only items which are not connected.
+                        cloudDrivePathDialog.open();
+                        cloudDrivePathDialog.remotePath = "";
+                        cloudDrivePathDialog.remoteParentPath = "";
+                        cloudDrivePathDialog.refresh();
+                        return;
+                    }
+                }
+
+                // Select only connected items.
                 // Suspend for queuing.
                 cloudDriveModel.suspendNextJob();
 
@@ -1574,10 +1607,10 @@ Page {
 
                 break;
             case CloudDriveModel.Metadata:
-                if (fsModel.isDir(localPath) && remotePath != "") {
+                if (localPath != "" && fsModel.isDir(localPath) && remotePath != "") {
                     console.debug("cloudDrivePathDialog proceedOperation Metadata sync from " + localPath + " to " + remotePath);
                     cloudDriveModel.metadata(type, uid, localPath, remotePath, selectedModelIndex);
-                } else {
+                } else {                  
                     // Check if cloud client's remotePath is absolute path.
                     if (cloudDriveModel.isRemoteAbsolutePath(type)) {
                         // If localPath is file or remotePath is not specified.
@@ -1631,7 +1664,22 @@ Page {
                 // TODO Close dialog before resumeJob.
                 close();
                 cloudDriveModel.suspendNextJob();
-                proceedOperation(selectedCloudType, selectedUid, localPath, selectedRemotePath, selectedRemotePathName, selectedIsDir, remoteParentPath, selectedModelIndex);
+
+                if (localPath != "") {
+                    // Select only 1 item.
+                    proceedOperation(selectedCloudType, selectedUid, localPath, selectedRemotePath, selectedRemotePathName, selectedIsDir, remoteParentPath, selectedModelIndex);
+                } else {
+                    // Sync masked items.
+                    for (var i=0; i<clipboard.count; i++) {
+                        if (clipboard.get(i).action == "sync") {
+                            console.debug("cloudDrivePathDialog onConfirm clipboard item i " + i + " " + clipboard.get(i).action + " sourcePath " + clipboard.get(i).sourcePath);
+                            var sourcePath = clipboard.get(i).sourcePath;
+                            // proceedOperation() needs only localPath and remoteParentPath.
+                            proceedOperation(selectedCloudType, selectedUid, sourcePath, selectedRemotePath, selectedRemotePathName, selectedIsDir, remoteParentPath, selectedModelIndex);
+                        }
+                    }
+                }
+
                 cloudDriveModel.resumeNextJob();
             }
         }
