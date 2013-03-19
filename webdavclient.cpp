@@ -1427,9 +1427,10 @@ void WebDavClient::sslErrorsReplyFilter(QNetworkReply *reply, QList<QSslError> s
     if (m_settings.value(objectName() + ".ignoreSSLSelfSignedCertificateErrors", QVariant(false)).toBool()) {
         QList<QSslError> expectedSslErrors;
         foreach (QSslError sslError, sslErrors) {
-            if (sslError.error() == QSslError::SelfSignedCertificate || sslError.error() == QSslError::HostNameMismatch) {
+            // NOTE Ignore all errors to support WIndows self-signed certificates. sslErrors ["The host name did not match any of the valid hosts for this certificate", "The issuer certificate of a locally looked up certificate could not be found", "No certificates could be verified"]
+//            if (sslError.error() == QSslError::SelfSignedCertificate || sslError.error() == QSslError::HostNameMismatch) {
                 expectedSslErrors.append(sslError);
-            }
+//            }
         }
 
         qDebug() << "WebDavClient::sslErrorsReplyFilter nonce" << nonce << "ignore expectedSslErrors" << expectedSslErrors;

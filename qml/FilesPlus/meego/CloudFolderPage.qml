@@ -284,7 +284,7 @@ Page {
 
     TitlePanel {
         id: currentPath
-        text: cloudDriveModel.isRemoteAbsolutePath(selectedCloudType) ? remoteParentPath : remoteParentPathName
+        text: cloudDriveModel.isRemoteAbsolutePath(selectedCloudType) ? cloudDriveModel.getPathFromUrl(remoteParentPath) : remoteParentPathName
         textLeftMargin: height + 5
 
         Image {

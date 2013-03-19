@@ -950,6 +950,17 @@ QString CloudDriveModel::formatJSONDateString(QDateTime datetime)
     return datetime.toString("yyyy-MM-ddThh:mm:ss.zzzZ");
 }
 
+QString CloudDriveModel::getPathFromUrl(QString urlString)
+{
+    if (urlString.startsWith("http")) {
+        QUrl url(urlString);
+        qDebug() << "CloudDriveModel::getPathFromUrl" << urlString << "url" << url << "isValid" << url.isValid() << "path" << url.path();
+        return url.path();
+    } else {
+        return urlString;
+    }
+}
+
 bool CloudDriveModel::isRemoteAbsolutePath(CloudDriveModel::ClientTypes type)
 {
     return getCloudClient(type)->isRemoteAbsolutePath();

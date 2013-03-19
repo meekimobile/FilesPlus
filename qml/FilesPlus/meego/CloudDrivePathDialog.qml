@@ -188,7 +188,7 @@ ConfirmDialog {
                     color: "white"
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     verticalAlignment: Text.AlignVCenter
-                    text: cloudDriveModel.isRemoteAbsolutePath(selectedCloudType) ? remoteParentPath : remoteParentPathName
+                    text: cloudDriveModel.isRemoteAbsolutePath(selectedCloudType) ? cloudDriveModel.getPathFromUrl(remoteParentPath) : remoteParentPathName
                 }
 
                 TextField {
