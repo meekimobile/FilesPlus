@@ -182,6 +182,8 @@ CommonDialog {
 //            progressBar.value = 0;
 
             closing();
+        } else if (status == DialogStatus.Closed) {
+            closed();
         }
     }
 }
