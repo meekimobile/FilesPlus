@@ -1,5 +1,18 @@
+filesplus (1.2.2) unstable; urgency=low
+  * Fix to upload copied file after copying is done.
+  * Automaticly turn on Bluetooth for sending files.
+  * Fix synchronizing multiple selected files.
+  * Adjust copy/delete progress dialog.
+  * Fix to support unicode on text editor.
+
+ -- Taweesak Kittipuree <>  Thu, 21 Mar 2013 15:12:15 +0700
+
 filesplus (1.2.1) unstable; urgency=low
-  * <Add change description here>
+  * Fix Dropbox PinNotFound bug.
+  * Fix WebDAV to support '-','@' in username and also support GMX.
+  * Fix FTP bug.
+  * Reduce crash.
+  * Correct Deutsch translation.
 
  -- Taweesak Kittipuree <>  Fri, 01 Mar 2013 16:52:29 +0700
 
