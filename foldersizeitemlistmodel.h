@@ -30,6 +30,7 @@ class FolderSizeItemListModel : public QAbstractListModel
     Q_PROPERTY(int sortFlag READ getSortFlag WRITE setSortFlag)
     Q_PROPERTY(int count READ rowCount)
     Q_PROPERTY(QStringList nameFilters READ getNameFilters WRITE setNameFilters)
+    Q_PROPERTY(int runningJobCount READ getRunningJobCount NOTIFY runningJobCountChanged)
 public:
     static const int TimerInterval;
     static const int MaxRunningJobCount;
@@ -219,6 +220,7 @@ Q_SIGNALS:
     void fetchDirSizeUpdated(QString dirPath);
     void proceedNextJobSignal();
     void directoryChanged(QString dirPath);
+    void runningJobCountChanged();
 };
 
 #endif // FOLDERSIZEITEMLISTMODEL_H

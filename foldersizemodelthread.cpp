@@ -68,7 +68,7 @@ const QString FolderSizeModelThread::CACHE_FILE_PATH = "/home/user/.folderpie/Fo
 const QString FolderSizeModelThread::CACHE_DB_PATH = "/home/user/.folderpie/FolderPieCache.db";
 const QString FolderSizeModelThread::CACHE_DB_CONNECTION_NAME = "folderpie_cache";
 const QString FolderSizeModelThread::DEFAULT_CURRENT_DIR = "/home/user/MyDocs";
-const int FolderSizeModelThread::FILE_READ_BUFFER = 32768;
+const int FolderSizeModelThread::FILE_READ_BUFFER = 1048576;
 const int FolderSizeModelThread::FILE_COPY_DELAY = 50;
 const int FolderSizeModelThread::FILE_DELETE_DELAY = 200;
 #else

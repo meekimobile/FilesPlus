@@ -19,6 +19,7 @@ CommonDialog {
     property alias indeterminate: progressBar.indeterminate
     property bool autoClose: false
     property int autoCloseInterval: 2000
+    property bool autoCloseByValue: false
     property bool formatValue: false
     property alias updateInterval: progressTimer.interval
     property int accuDeltaValue: 0
@@ -46,6 +47,14 @@ CommonDialog {
             lastValue = newValue;
         }
 //        console.debug("progressDialog newValue " + newValue + " lastValue " + lastValue + " deltaValue " + deltaValue + " accuDeltaValue " + accuDeltaValue + " value " + value);
+    }
+
+    onCountChanged: {
+        if (count > 0 && count >= maxCount) {
+            console.debug("ProgressDialog onCountChanged " + count + " >= " + maxCount);
+            ok();
+            toggleHideAction();
+        }
     }
 
     SequentialAnimation {
@@ -114,7 +123,7 @@ CommonDialog {
                 }
 
 //                console.debug("ProgressDialog progressBar onValueChanged value " + value + " maximumValue " +maximumValue);
-                if (value >= maximumValue) {
+                if (progressDialog.autoCloseByValue && value >= maximumValue) {
                     console.debug("ProgressDialog progressBar onValueChanged " + value + " >= " +maximumValue);
                     ok();
                     toggleHideAction();
@@ -168,9 +177,9 @@ CommonDialog {
             autoClose = false;
             message = "";
             indeterminate = false;
-            formatValue = false;
-            newValue = 0;
-            progressBar.value = 0;
+//            formatValue = false;
+//            newValue = 0;
+//            progressBar.value = 0;
 
             closing();
         }

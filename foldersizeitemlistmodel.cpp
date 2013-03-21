@@ -333,6 +333,7 @@ void FolderSizeItemListModel::jobDone()
     if (runningJobCount > 0) {
         mutex.lock();
         runningJobCount--;
+        emit runningJobCountChanged();
         mutex.unlock();
     }
 
@@ -1163,6 +1164,7 @@ void FolderSizeItemListModel::proceedNextJob()
 
     mutex.lock();
     runningJobCount++;
+    emit runningJobCountChanged();
     mutex.unlock();
 
     qDebug() << "FolderSizeItemListModel::proceedNextJob start job" << job.jobId << "runningJobCount" << runningJobCount << "m_jobQueue" << m_jobQueue.count();

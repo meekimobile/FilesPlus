@@ -627,13 +627,23 @@ PageStackWindow {
             fsModel.refreshDir("copyProgressDialog onCancel");
         }
         onOpened: {
+            // Set CDM flags to pause while fsModel is running.
+            cloudDriveModel.suspendScheduledJob();
+            cloudDriveModel.setIsPaused(true);
+
             fsModel.resumeNextJob();
+        }
+        onClosed: {
+            // Reset CDM flags.
+            cloudDriveModel.resumeScheduledJob();
+            cloudDriveModel.setIsPaused(false);
         }
     }
 
     ProgressDialog {
         id: deleteProgressDialog
         autoClose: false
+        autoCloseByValue: true
         titleText: appInfo.emptyStr+qsTr("Deleting")
         onOk: {
             // Refresh view after copied/moved.
@@ -647,7 +657,16 @@ PageStackWindow {
             fsModel.refreshDir("deleteProgressDialog onCancel");
         }
         onOpened: {
+            // Set CDM flags to pause while fsModel is running.
+            cloudDriveModel.suspendScheduledJob();
+            cloudDriveModel.setIsPaused(true);
+
             fsModel.resumeNextJob();
+        }
+        onClosed: {
+            // Reset CDM flags.
+            cloudDriveModel.resumeScheduledJob();
+            cloudDriveModel.setIsPaused(false);
         }
     }
 

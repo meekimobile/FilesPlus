@@ -1889,6 +1889,9 @@ void CloudDriveModel::quota(CloudDriveModel::ClientTypes type, QString uid)
     CloudDriveJob job(createNonce(), Quota, type, uid, "", "", -1);
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show enqueued job.
+    emit jobEnqueuedSignal(job.jobId, "");
 }
 
 void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, QString localFilePath, int modelIndex)
@@ -3266,6 +3269,16 @@ void CloudDriveModel::refreshRequestFilter(QString nonce)
 
 void CloudDriveModel::schedulerTimeoutFilter()
 {
+    if (m_isSchedulerSuspended) {
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter suspended m_isSchedulerSuspended" << m_isSchedulerSuspended << QDateTime::currentDateTime().toString("d/M/yyyy hh:mm:ss.zzz");
+        return;
+    }
+
+    if (runningJobCount > 0) {
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter suspended runningJobCount" << runningJobCount << QDateTime::currentDateTime().toString("d/M/yyyy hh:mm:ss.zzz");
+        return;
+    }
+
 //    qDebug() << "CloudDriveModel::schedulerTimeoutFilter" << QDateTime::currentDateTime().toString("d/M/yyyy hh:mm:ss.zzz");
 
     QString cronValue = QDateTime::currentDateTime().toString("m h d M ddd");
@@ -3810,14 +3823,14 @@ void CloudDriveModel::proceedNextJob() {
     if (runningJobCount > 0) {
         qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount
                  << "m_browseThreadPool" << m_browseThreadPool.activeThreadCount() << "/" << m_browseThreadPool.maxThreadCount()
-                 << "m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count() << "m_isSuspended" << m_isSuspended
+                 << "m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count() << "m_isSuspended" << m_isSuspended << "m_isAborted" << m_isAborted << "m_isPaused" << m_isPaused
                  << "m_threadHash count" << m_threadHash->count();
     }
 
     // Emit status signal.
     emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), m_cloudDriveJobs->count(), getItemCount());
 
-    if (runningJobCount >= MaxRunningJobCount || m_jobQueue->count() <= 0 || m_isSuspended || m_isAborted) {
+    if (runningJobCount >= MaxRunningJobCount || m_jobQueue->count() <= 0 || m_isSuspended || m_isAborted || m_isPaused) {
         // Check if there is no running job and is aborted.
         if (runningJobCount <= 0 && m_isAborted) {
             QApplication::quit();
@@ -4077,6 +4090,26 @@ void CloudDriveModel::resumeJob(const QString jobId)
         updateJob(job, false);
         m_jobQueue->enqueue(jobId);
     }
+}
+
+void CloudDriveModel::suspendScheduledJob()
+{
+    m_isSchedulerSuspended = true;
+}
+
+void CloudDriveModel::resumeScheduledJob()
+{
+    m_isSchedulerSuspended = false;
+}
+
+bool CloudDriveModel::isPaused()
+{
+    return m_isPaused;
+}
+
+void CloudDriveModel::setIsPaused(bool pause)
+{
+    m_isPaused = pause;
 }
 
 void CloudDriveModel::threadFinishedFilter()

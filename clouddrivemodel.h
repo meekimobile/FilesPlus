@@ -160,6 +160,10 @@ public:
     Q_INVOKABLE void resumeNextJob(bool resetAbort = false);
     Q_INVOKABLE void suspendJob(const QString jobId);
     Q_INVOKABLE void resumeJob(const QString jobId);
+    Q_INVOKABLE void suspendScheduledJob();
+    Q_INVOKABLE void resumeScheduledJob();
+    Q_INVOKABLE bool isPaused();
+    Q_INVOKABLE void setIsPaused(bool pause);
 
     // Other.
     Q_INVOKABLE QString getRemoteRoot(CloudDriveModel::ClientTypes type, QString uid);
@@ -356,6 +360,7 @@ private:
     int runningJobCount;
     bool m_isSuspended;
     bool m_isAborted;
+    bool m_isPaused;
 
     QHash<QString, QThread*> *m_threadHash;
     QThreadPool m_browseThreadPool;
@@ -437,6 +442,7 @@ private:
     bool m_dropboxFullAccess;
 
     // Scheduler.
+    bool m_isSchedulerSuspended;
     QTimer m_schedulerTimer;
     void initScheduler();
     bool matchCronExp(QString cronExp, QString cronValue);
