@@ -10,6 +10,10 @@ Item {
     property variant listView
     property int modelIndex: listView.indexAt(listView.contentX, listView.contentY)
     property alias scrollBarWidth: quickScroll.width
+    property alias scrollBarColor: quickScroll.color
+    property alias indicatorWidth: quickScrollIndicator.width
+    property alias indicatorColor: quickScrollIndicator.color
+    property int indicatorRightMargin: 5
     property alias indicatorBarHeight: quickScrollIndicatorBar.height
     property alias indicatorBarTitle: quickScrollIndicatorBarTitle.text
     property int indicatorHeight: height * (height / listView.contentHeight)
@@ -74,7 +78,8 @@ Item {
             id: quickScrollIndicator
             width: parent.width - 10
             height: indicatorHeight
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.right: parent.right
+            anchors.rightMargin: indicatorRightMargin
             y: position
             color: !inverted ? "white" : "black"
             radius: 10
