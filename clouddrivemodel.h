@@ -34,7 +34,7 @@ class CloudDriveModel : public QDeclarativeItem
     Q_ENUMS(Operations)
     Q_PROPERTY(QString dirtyHash READ dirtyHash CONSTANT)
     Q_PROPERTY(bool dropboxFullAccess READ getDropboxFullAccess WRITE setDropboxFullAccess)
-    Q_PROPERTY(int sortFlag READ getSortFlag WRITE setSortFlag)
+    Q_PROPERTY(int sortFlag READ getSortFlag WRITE setSortFlag NOTIFY sortFlagChanged)
 public:
     static const QString ITEM_DAT_PATH;
     static const QString ITEM_DB_PATH;
@@ -317,6 +317,8 @@ signals:
 
     // Scheduler.
     void schedulerTimeoutSignal();
+
+    void sortFlagChanged();
 public slots:
     void proceedNextJob();
     void dispatchJob(const QString jobId);

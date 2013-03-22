@@ -27,7 +27,7 @@ class FolderSizeItemListModel : public QAbstractListModel
     Q_ENUMS(RunningOperations)
     Q_ENUMS(IndexOnCurrentDir)
     Q_PROPERTY(QString currentDir READ currentDir WRITE setCurrentDir NOTIFY currentDirChanged)
-    Q_PROPERTY(int sortFlag READ getSortFlag WRITE setSortFlag)
+    Q_PROPERTY(int sortFlag READ getSortFlag WRITE setSortFlag NOTIFY sortFlagChanged)
     Q_PROPERTY(int count READ rowCount)
     Q_PROPERTY(QStringList nameFilters READ getNameFilters WRITE setNameFilters)
     Q_PROPERTY(int runningJobCount READ getRunningJobCount NOTIFY runningJobCountChanged)
@@ -221,6 +221,7 @@ Q_SIGNALS:
     void proceedNextJobSignal();
     void directoryChanged(QString dirPath);
     void runningJobCountChanged();
+    void sortFlagChanged();
 };
 
 #endif // FOLDERSIZEITEMLISTMODEL_H
