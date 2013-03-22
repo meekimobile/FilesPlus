@@ -52,7 +52,7 @@ Item {
 
         Text {
             id: quickScrollIndicatorBarTitle
-            width: parent.width - scrollBarWidth - 20
+            width: parent.width - scrollBarWidth - 10
             font.pixelSize: 48
             color: !inverted ? "black" : "white"
             elide: Text.ElideRight
@@ -68,7 +68,7 @@ Item {
         width: 80
         anchors.right: parent.right
         color: !inverted ? "white" : "black"
-        opacity: 0.3
+        opacity: 0.2
 
         Rectangle {
             id: quickScrollIndicator
