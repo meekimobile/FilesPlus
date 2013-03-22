@@ -953,9 +953,15 @@ QString CloudDriveModel::formatJSONDateString(QDateTime datetime)
 QString CloudDriveModel::getPathFromUrl(QString urlString)
 {
     if (urlString.startsWith("http")) {
-        QUrl url(urlString);
-        qDebug() << "CloudDriveModel::getPathFromUrl" << urlString << "url" << url << "isValid" << url.isValid() << "path" << url.path();
-        return url.path();
+        // Use RegExp to parse path from url string. To support # in path.
+        QRegExp rx("^(http|https|ftp)://([^/]+)(/.*)");
+        rx.indexIn(urlString);
+        qDebug() << "CloudDriveModel::getPathFromUrl" << urlString << "capturedTexts" << rx.capturedTexts();
+        if (rx.captureCount() >= 3) {
+            return rx.cap(3);
+        } else {
+            return "";
+        }
     } else {
         return urlString;
     }
