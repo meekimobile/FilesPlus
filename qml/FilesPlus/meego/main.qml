@@ -2421,19 +2421,6 @@ PageStackWindow {
         }
     }
 
-    Text {
-        id: statusBarTitle
-        x: 4
-        y: 0
-        width: parent.width / 2
-        height: 26
-        color: "white"
-        text: "FilesPlus"
-        smooth: false
-        verticalAlignment: Text.AlignVCenter
-        font.pointSize: 18
-    }
-
     Rectangle {
         id: busyPanel
         x: 0
