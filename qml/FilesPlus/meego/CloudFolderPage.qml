@@ -737,11 +737,18 @@ Page {
                 popupToolPanel.visible = false;
             }
         }
-    }
 
-    ScrollDecorator {
-        id: scrollbar
-        flickableItem: cloudFolderView
+        QuickScrollPanel {
+            id: quickScrollPanel
+            listView: parent
+            indicatorBarTitle: (modelIndex < 0) ? ""
+                               : ( cloudDriveModel.sortFlag == CloudDriveModel.SortByTime
+                                  ? Qt.formatDateTime(cloudFolderModel.get(modelIndex).lastModified, "d MMM yyyy")
+                                  : cloudFolderModel.get(modelIndex).name )
+            inverted: !theme.inverted
+            scrollBarWidth: 80
+            indicatorBarHeight: 80
+        }
     }
 
     Component {
