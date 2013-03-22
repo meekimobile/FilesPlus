@@ -721,11 +721,6 @@ Page {
             fsModel.refreshItems();
         }
 
-        ScrollDecorator {
-            id: scrollbar
-            flickableItem: fsListView
-        }
-
         transform: Rotation {
             id: rotation
             origin.x: flipable1.width/2
@@ -997,6 +992,18 @@ Page {
         Component.onCompleted: {
             console.debug(Utility.nowText() + " folderPage fsListView onCompleted");
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("FolderListView"), 0.1);
+        }
+
+        QuickScrollPanel {
+            id: quickScrollPanel
+            listView: parent
+            indicatorBarTitle: (modelIndex < 0) ? ""
+                               : ( fsModel.sortFlag == FolderSizeItemListModel.SortByTime
+                                  ? Qt.formatDateTime(fsModel.get(modelIndex).lastModified, "d MMM yyyy")
+                                  : fsModel.get(modelIndex).name )
+            inverted: !theme.inverted
+            scrollBarWidth: 80
+            indicatorBarHeight: 80
         }
     }
 

@@ -157,5 +157,6 @@
         <file>qml/FilesPlus/cloud_add.svg</file>
         <file>qml/FilesPlus/cloud_add_inverted.svg</file>
         <file>qml/FilesPlus/splash_360x640.png</file>
+        <file alias="qml/FilesPlus/QuickScrollPanel.qml">qml/FilesPlus/symbian/QuickScrollPanel.qml</file>
     </qresource>
 </RCC>
