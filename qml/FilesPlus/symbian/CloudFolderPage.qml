@@ -752,6 +752,8 @@ Page {
             inverted: window.platformInverted
             scrollBarWidth: 70
             indicatorBarHeight: 70
+            scrollBarColor: "grey"
+            indicatorWidth: 5
         }
     }
 

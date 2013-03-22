@@ -748,6 +748,8 @@ Page {
             inverted: !theme.inverted
             scrollBarWidth: 80
             indicatorBarHeight: 80
+            scrollBarColor: "grey"
+            indicatorWidth: 5
         }
     }
 
