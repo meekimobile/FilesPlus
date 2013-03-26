@@ -72,7 +72,8 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
     // Check if cached image is available.
     QFileInfo cachedFileInfo(getCachedPath(absoluteFilePath, requestedSize));
     if (cachedFileInfo.exists()
-            && cachedFileInfo.created().secsTo(QDateTime::currentDateTime()) < m_settings.value("image.cache.retention.seconds", QVariant(86400)).toInt() // 86400 secs = 1 day
+            && cachedFileInfo.lastModified() >= QFileInfo(absoluteFilePath).lastModified()
+//            && cachedFileInfo.created().secsTo(QDateTime::currentDateTime()) < m_settings.value("image.cache.retention.seconds", QVariant(86400)).toInt() // 86400 secs = 1 day
             && image.load(cachedFileInfo.absoluteFilePath())) {
         qDebug() << "LocalFileImageProvider::requestImage return cached id" << id << "cached image path" << cachedFileInfo.absoluteFilePath();
         return image;
