@@ -137,6 +137,7 @@ protected:
     QString stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj);
     QString formatJSONDateString(QDateTime datetime);
     qint64 getOffsetFromRange(QString rangeHeader);
+    QString getPathFromUrl(QString urlString);
 private:
 
 };

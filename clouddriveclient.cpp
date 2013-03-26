@@ -268,6 +268,23 @@ qint64 CloudDriveClient::getOffsetFromRange(QString rangeHeader)
     return offset;
 }
 
+QString CloudDriveClient::getPathFromUrl(QString urlString)
+{
+    if (urlString.startsWith("http")) {
+        // Use RegExp to parse path from url string. To support # in path.
+        QRegExp rx("^(http|https|ftp)://([^/]+)(/.*)");
+        rx.indexIn(urlString);
+        qDebug() << "CloudDriveClient::getPathFromUrl" << urlString << "capturedTexts" << rx.capturedTexts();
+        if (rx.captureCount() >= 3) {
+            return rx.cap(3);
+        } else {
+            return "";
+        }
+    } else {
+        return urlString;
+    }
+}
+
 void CloudDriveClient::requestToken(QString nonce)
 {
     emit requestTokenReplySignal(nonce, -1, objectName() + " " + "Request Token", "Service is not implemented.");
