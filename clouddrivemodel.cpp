@@ -4091,7 +4091,7 @@ void CloudDriveModel::resumeJob(const QString jobId)
 {
     // Enqueue job.
     CloudDriveJob job = m_cloudDriveJobs->value(jobId);
-    if (!job.isRunning) {
+    if (!job.isRunning && !m_jobQueue->contains(jobId)) {
         job.retryCount = 0; // Reset retry count.
         updateJob(job, false);
         m_jobQueue->enqueue(jobId);
