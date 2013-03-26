@@ -1391,7 +1391,7 @@ void CloudDriveModel::loadScheduledItems(QString cronValue)
                     qDebug() << "CloudDriveModel::loadScheduledItems schedule sync item" << item;
                     m_scheduledItems->enqueue(item);
                 } else {
-                    qDebug() << "CloudDriveModel::loadScheduledItems discard item" << item;
+//                    qDebug() << "CloudDriveModel::loadScheduledItems discard item" << item;
                 }
             } else {
                 qDebug() << "CloudDriveModel::loadScheduledItems record position is invalid. ps.lastError()" << ps.lastError();
@@ -1450,13 +1450,13 @@ QString CloudDriveModel::getDeltaCronExp(CloudDriveModel::ClientTypes type, QStr
 
 bool CloudDriveModel::matchCronExp(QString cronExp, QString cronValue)
 {
-    qDebug() << "CloudDriveModel::matchCronExp start cronExp" << cronExp << "cronValue" << cronValue;
+//    qDebug() << "CloudDriveModel::matchCronExp start cronExp" << cronExp << "cronValue" << cronValue;
 
     QStringList cronExpList = cronExp.split(" ");
     QStringList cronValueList = cronValue.split(" ");
 
     if (cronExpList.length() != cronValueList.length()) {
-        qDebug() << "CloudDriveModel::matchCronExp failed cronValueList" << cronValueList << "length" << cronValueList.length();
+//        qDebug() << "CloudDriveModel::matchCronExp failed cronValueList" << cronValueList << "length" << cronValueList.length();
         return false;
     }
 
@@ -1465,7 +1465,7 @@ bool CloudDriveModel::matchCronExp(QString cronExp, QString cronValue)
     for (int i = 0; i < cronExpList.length(); i++) {
         e = cronExpList.at(i);
         v = cronValueList.at(i);
-        qDebug() << "CloudDriveModel::matchCronExp i" << i << "e" << e << "v" << v;
+//        qDebug() << "CloudDriveModel::matchCronExp i" << i << "e" << e << "v" << v;
 
         // TODO Support - and , in e.
         if (e == "*") {
@@ -1476,18 +1476,18 @@ bool CloudDriveModel::matchCronExp(QString cronExp, QString cronValue)
             if (mod == 0) {
                 // continue.
             } else {
-                qDebug() << "CloudDriveModel::matchCronExp failed i" << i << "e" << e << "v" << v << "div" << div << "mod" << mod;
+//                qDebug() << "CloudDriveModel::matchCronExp failed i" << i << "e" << e << "v" << v << "div" << div << "mod" << mod;
                 return false;
             }
         } else if (e.toInt() == v.toInt()) {
             // continue.
         } else {
-            qDebug() << "CloudDriveModel::matchCronExp failed i" << i << "e" << e << "v" << v;
+//            qDebug() << "CloudDriveModel::matchCronExp failed i" << i << "e" << e << "v" << v;
             return false;
         }
     }
 
-    qDebug() << "CloudDriveModel::matchCronExp success cronExp" << cronExp << "cronValue" << cronValue;
+//    qDebug() << "CloudDriveModel::matchCronExp success cronExp" << cronExp << "cronValue" << cronValue;
     return true;
 }
 
