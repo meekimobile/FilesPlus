@@ -62,6 +62,7 @@ Page {
 
     function changeRemotePath(remoteParentPath) {
         console.debug("cloudFolderPage changeRemotePath " + remoteParentPath);
+        quickScrollPanel.visible = false;
         cloudFolderPage.remoteParentPath = remoteParentPath;
         refreshSlot("cloudFolderPage changeRemotePath");
     }

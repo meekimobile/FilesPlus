@@ -5,7 +5,7 @@ Item {
     anchors.fill: listView
     visible: false
 
-    property bool showScrollBar: listView.moving
+    property bool showScrollBar: listView.moving && (listView.contentHeight > height)
     property bool showScrollIndicator: false
     property variant listView
     property int modelIndex: listView.indexAt(listView.contentX, listView.contentY)

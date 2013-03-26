@@ -336,6 +336,7 @@ Page {
     function goUpSlot() {
         nameFilterPanel.close();
         fsModel.nameFilters = [];
+        quickScrollPanel.visible = false;
 
         if (fsModel.isRoot()) {
             // Flip back to list view, then pop folderPage.
@@ -353,6 +354,7 @@ Page {
     function changeDirSlot(name, sortBy) {
         nameFilterPanel.close();
         fsModel.nameFilters = [];
+        quickScrollPanel.visible = false;
 
         if (sortBy) {
             fsModel.changeDir(name, sortBy);

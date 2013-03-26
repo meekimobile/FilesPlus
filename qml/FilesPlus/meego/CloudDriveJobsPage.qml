@@ -46,10 +46,10 @@ Page {
             }
         }
         ToolBarButton {
-            id: deleteAllButton
-            buttonIconSource: (!inverted) ? "delete.svg" : "delete_inverted.svg"
+            id: optionsButton
+            buttonIconSource: "toolbar-view-menu"
             onClicked: {
-                cancelQueuedCloudDriveJobsConfirmation.open();
+                optionsMenu.open();
             }
         }
     }
@@ -157,6 +157,36 @@ Page {
             // Hide highlight.
             jobListView.currentIndex = -1;
             jobListView.highlightFollowsCurrentItem = false;
+        }
+    }
+
+    MenuWithIcon {
+        id: optionsMenu
+
+        content: MenuLayout {
+            id: optionsMenuLayout
+
+            // TODO Alias for fixing incorrect children.
+            default property alias children: optionsMenuLayout.menuChildren
+
+            MenuItemWithIcon {
+                name: "resumeAll"
+                text: appInfo.emptyStr+qsTr("Resume all")
+                onClicked: {
+                    for (var i=0; i<cloudDriveJobsModel.count; i++) {
+                        var jobId = cloudDriveJobsModel.get(i).job_id;
+                        cloudDriveModel.resumeJob(jobId);
+                    }
+                }
+            }
+
+            MenuItemWithIcon {
+                name: "removeAll"
+                text: appInfo.emptyStr+qsTr("Remove all")
+                onClicked: {
+                    cancelQueuedCloudDriveJobsConfirmation.open();
+                }
+            }
         }
     }
 
