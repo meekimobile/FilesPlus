@@ -284,7 +284,7 @@ void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, 
     QByteArray authHeader = createAuthHeader(uid);
     qDebug() << "WebDavClient::moveFile authHeader" << authHeader;
 
-    QByteArray destinationHeader = copyFileURI.arg(hostname).arg(prepareRemotePath(uid, newRemoteFilePath)).toUtf8();
+    QByteArray destinationHeader = copyFileURI.arg(getHostname(accessTokenPairMap[uid].email, true)).arg(prepareRemotePath(uid, newRemoteFilePath)).toUtf8();
     qDebug() << "WebDavClient::moveFile destinationHeader" << destinationHeader;
 
     // Send request.
@@ -323,7 +323,7 @@ void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, 
     QByteArray authHeader = createAuthHeader(uid);
     qDebug() << "WebDavClient::copyFile authHeader" << authHeader;
 
-    QByteArray destinationHeader = copyFileURI.arg(hostname).arg(prepareRemotePath(uid, newRemoteFilePath)).toUtf8();
+    QByteArray destinationHeader = encodeURI(copyFileURI.arg(getHostname(accessTokenPairMap[uid].email, true)).arg(prepareRemotePath(uid, newRemoteFilePath))).toAscii();
     qDebug() << "WebDavClient::copyFile destinationHeader" << destinationHeader;
 
     // Send request.
@@ -836,9 +836,13 @@ QString WebDavClient::prepareRemotePath(QString uid, QString remoteFilePath)
     return path;
 }
 
-QString WebDavClient::getHostname(QString email)
+QString WebDavClient::getHostname(QString email, bool hostOnly)
 {
-    return email.mid(email.lastIndexOf("@")+1);
+    QString hostname = email.mid(email.lastIndexOf("@")+1);
+    if (hostOnly && hostname.lastIndexOf(":") != -1) {
+        hostname = hostname.mid(0, hostname.lastIndexOf(":"));
+    }
+    return hostname;
 }
 
 QString WebDavClient::getParentRemotePath(QString remotePath)
@@ -1279,7 +1283,7 @@ void WebDavClient::moveFileReplyFinished(QNetworkReply *reply)
     qDebug() << "WebDavClient::moveFileReplyFinished" << nonce << reply << QString(" Error=%1").arg(reply->error());
 
     QString replyBody;
-    qDebug() << "WebDavClient::moveFileReplyFinished" << nonce << "replyBody" << replyBody;
+    qDebug() << "WebDavClient::moveFileReplyFinished" << nonce << "replyBody" << replyBody << "statusCode" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     if (reply->error() == QNetworkReply::NoError) {
         reply = property(nonce, uid, prepareRemotePath(uid, newRemoteFilePath));
         if (reply->error() == QNetworkReply::NoError) {
@@ -1307,7 +1311,7 @@ void WebDavClient::copyFileReplyFinished(QNetworkReply *reply)
     qDebug() << "WebDavClient::copyFileReplyFinished" << nonce << reply << QString(" Error=%1").arg(reply->error());
 
     QString replyBody;
-    qDebug() << "WebDavClient::copyFileReplyFinished" << nonce << "replyBody" << replyBody;
+    qDebug() << "WebDavClient::copyFileReplyFinished" << nonce << "replyBody" << replyBody << "statusCode" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     if (reply->error() == QNetworkReply::NoError) {
         reply = property(nonce, uid, prepareRemotePath(uid, newRemoteFilePath));
         if (reply->error() == QNetworkReply::NoError) {
@@ -1395,8 +1399,10 @@ QScriptValue WebDavClient::parseCommonPropertyScriptValue(QScriptEngine &engine,
 {
     QScriptValue parsedObj = engine.newObject();
 
+    // NOTE href always be percent-encoded from server. WebDAVClient will decode to readable format. Href will be percent-encoded agqain before actually requesting.
+
     bool objIsDir = jsonObj.property("href").toString().endsWith("/") || jsonObj.property("propstat").property("prop").property("getcontenttype").toString().indexOf(QRegExp("httpd/unix-directory", Qt::CaseInsensitive)) == 0;
-    QString objHref = QUrl::fromPercentEncoding(jsonObj.property("href").toString().toAscii());
+    QString objHref = (jsonObj.property("href").toString().startsWith("http")) ? QUrl::fromPercentEncoding(getPathFromUrl(jsonObj.property("href").toString()).toAscii()) : QUrl::fromPercentEncoding(jsonObj.property("href").toString().toAscii());
     QString objRemotePath = (objHref.endsWith("/")) ? objHref.mid(0, objHref.length()-1) : objHref; // Workaround because it ended with /
     QString objRemoteName = jsonObj.property("propstat").property("prop").property("displayname").isValid() ? jsonObj.property("propstat").property("prop").property("displayname").toString() : getRemoteFileName(objHref);
     uint objRemoteSize = jsonObj.property("propstat").property("prop").property("getcontentlength").isValid() ? jsonObj.property("propstat").property("prop").property("getcontentlength").toInteger() : 0;

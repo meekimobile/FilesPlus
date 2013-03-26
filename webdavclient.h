@@ -104,7 +104,7 @@ private:
     QString createPropertyJson(QString replyBody, QString caller);
     QString createResponseJson(QString replyBody, QString caller);
     QString prepareRemotePath(QString uid, QString remoteFilePath);
-    QString getHostname(QString email);
+    QString getHostname(QString email, bool hostOnly = false);
 
     void testSSLConnection(QString hostname);
     QSslConfiguration getSelfSignedSslConfiguration(QSslConfiguration sslConf);
