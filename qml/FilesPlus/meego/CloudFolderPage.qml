@@ -415,18 +415,22 @@ Page {
         onCutMarkedItems: {
             cloudFolderView.cutMarkedItems();
             cloudFolderView.state = "";
+            cloudFolderView.currentIndex = -1;
         }
         onCopyMarkedItems: {
             cloudFolderView.copyMarkedItems();
             cloudFolderView.state = "";
+            cloudFolderView.currentIndex = -1;
         }
         onDeleteMarkedItems: {
             cloudFolderView.deleteMarkedItems();
             cloudFolderView.state = "";
+            cloudFolderView.currentIndex = -1;
         }
         onSyncMarkedItems: {
             cloudFolderView.syncMarkedItems();
             cloudFolderView.state = "";
+            cloudFolderView.currentIndex = -1;
         }
         onStatusChanged: {
             if (status == DialogStatus.Opening) {

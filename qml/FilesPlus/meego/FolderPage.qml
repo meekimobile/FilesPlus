@@ -267,18 +267,22 @@ Page {
         onCopyMarkedItems: {
             fsListView.copyMarkedItems();
             fsListView.state = "";
+            fsListView.currentIndex = -1;
         }
         onCutMarkedItems: {
             fsListView.cutMarkedItems();
             fsListView.state = "";
+            fsListView.currentIndex = -1;
         }
         onDeleteMarkedItems: {
             fsListView.deleteMarkedItems();
             fsListView.state = "";
+            fsListView.currentIndex = -1;
         }
         onSyncMarkedItems: {
             fsListView.syncMarkedItems();
             fsListView.state = "";
+            fsListView.currentIndex = -1;
         }
         onStatusChanged: {
             if (status == DialogStatus.Opening) {
