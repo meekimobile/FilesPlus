@@ -751,6 +751,7 @@ Page {
             indicatorBarHeight: 80
             scrollBarColor: "grey"
             indicatorWidth: 5
+            autoHideInterval: appInfo.emptySetting+appInfo.getSettingValue("QuickScrollPanel.timer.interval", 2) * 1000
         }
     }
 
