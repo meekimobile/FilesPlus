@@ -1,3 +1,8 @@
+filesplus (1.2.3) unstable; urgency=low
+  * Add Google Cloud Print supported file type to support .doc, .xls, .ppt and other files via mime.types configuration.
+
+ -- Taweesak Kittipuree <>  Tue, 09 Apr 2013 12:16:13 +0700
+
 filesplus (1.2.2) unstable; urgency=low
   * Fix to upload copied file after copying is done.
   * Automaticly turn on Bluetooth for sending files.

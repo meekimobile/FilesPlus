@@ -6,6 +6,7 @@
 #include <QScriptValue>
 #include <QScriptValueIterator>
 #include <QDesktopServices>
+#include <QApplication>
 #include "contenttypehelper.h"
 
 // Harmattan is a linux
@@ -34,21 +35,12 @@ GCPClient::GCPClient(QDeclarativeItem *parent)
     loadParamMap();
 
     // Populate contentTypeHash.
+#if defined(Q_WS_HARMATTAN)
+    QString sourceFilePath = QDir(QApplication::applicationDirPath()).absoluteFilePath("../config/mime.types");
+#else
     QString sourceFilePath = QDir(QDesktopServices::storageLocation(QDesktopServices::DataLocation)).absoluteFilePath("config/mime.types");
+#endif
     m_contentTypeHash = ContentTypeHelper().loadMimeTypes(sourceFilePath);
-//    m_contentTypeHash["jpg"] = "image/jpeg";
-//    m_contentTypeHash["png"] = "image/png";
-//    m_contentTypeHash["pdf"] = "application/pdf";
-//    m_contentTypeHash["txt"] = "text/plain";
-//    m_contentTypeHash["log"] = "text/plain";
-//    m_contentTypeHash["csv"] = "text/plain";
-//    m_contentTypeHash["doc"] = "application/msword";
-//    m_contentTypeHash["xls"] = "application/vnd.ms-excel";
-//    m_contentTypeHash["ppt"] = "application/vnd.ms-powerpoint";
-//    m_contentTypeHash["odt"] = "application/vnd.oasis.opendocument.text";
-//    m_contentTypeHash["ods"] = "application/vnd.oasis.opendocument.spreadsheet";
-//    m_contentTypeHash["odp"] = "application/vnd.oasis.opendocument.presentation";
-    // TODO SVG ?
 }
 
 GCPClient::~GCPClient()
