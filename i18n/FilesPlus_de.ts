@@ -2041,14 +2041,14 @@ Es zeigt ein Kreisdiagramm zum leichteren Verständnis auf einen Blick.</transla
 <context>
     <name>GCPClient</name>
     <message>
-        <location filename="../gcpclient.cpp" line="+348"/>
+        <location filename="../gcpclient.cpp" line="+343"/>
         <source>Refresh token is missing</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktualisieren Token fehlt</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Refresh token is missing. Please authorize Google Cloud Print account again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktualisieren Token fehlt. Bitte autorisieren Google Cloud Print Konto erneut.</translation>
     </message>
 </context>
 <context>
@@ -2616,8 +2616,8 @@ Link wird entfernt.</translation>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+260"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+273"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+266"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+279"/>
         <source>Cancel queued jobs</source>
         <translation>Aktivitäten in der Warteschlange abbrechen</translation>
     </message>
@@ -2628,22 +2628,22 @@ Link wird entfernt.</translation>
         <translation>Synchronisieren Sie alle verbundenen Elemente</translation>
     </message>
     <message>
-        <location line="-212"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-224"/>
+        <location line="-218"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-230"/>
         <source>Settings</source>
         <translation>Einstellungen</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+220"/>
+        <location line="+226"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <location line="+232"/>
+        <location line="+238"/>
         <source>Logging (Debug)</source>
         <translation>Protokoll (Fehlerbehebung)</translation>
     </message>
     <message>
-        <location line="-219"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-231"/>
+        <location line="-225"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-237"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -2654,8 +2654,8 @@ FilesPlus wird nun beendet.
 Bitte bestätigen Sie.</translation>
     </message>
     <message>
-        <location line="+200"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+212"/>
+        <location line="+206"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+218"/>
         <source>Show cloud print jobs</source>
         <translation>Zeige CloudPrint Druckaufträge</translation>
     </message>
@@ -2760,8 +2760,8 @@ Bitte bestätigen Sie.</translation>
         <translation type="obsolete">Ignoriere SSL selbstsigniertes Zertifikatsfehler</translation>
     </message>
     <message numerus="yes">
-        <location line="+172"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+177"/>
+        <location line="+173"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+178"/>
         <source>%n sec.</source>
         <translation>
             <numerusform>%n sek.</numerusform>
@@ -2795,8 +2795,8 @@ Bitte bestätigen Sie.</translation>
         <translation type="obsolete">Zeige Miniaturansicht</translation>
     </message>
     <message>
-        <location line="-276"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-281"/>
+        <location line="-277"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-282"/>
         <source>Keep bluetooth off</source>
         <translation>Schalten Sie Bluetooth nach der Benutzung aus</translation>
     </message>
@@ -2823,6 +2823,13 @@ Bitte bestätigen Sie.</translation>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+3"/>
         <source>Ignore WebDAV SSL self-signed certificate errors</source>
         <translation>Ignoriere WebDAV SSL selbstsigniertes Zertifikatsfehler</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Cache local images</source>
+        <translatorcomment>Save thumbnails of local images</translatorcomment>
+        <translation>Sparen Sie Miniaturansichten der lokalen Bilder</translation>
     </message>
     <message>
         <location line="+32"/>
@@ -2855,7 +2862,7 @@ Bitte bestätigen Sie.</translation>
         <translation>Chinesisch</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-224"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-225"/>
         <source>Show private drive on drive page</source>
         <translation>Zeige private Speicher auf der Startseite</translation>
     </message>
@@ -2964,33 +2971,33 @@ Bitte bestätigen Sie.</translation>
     <name>main</name>
     <message>
         <location filename="../qml/FilesPlus/meego/main.qml" line="+83"/>
-        <location line="+1858"/>
+        <location line="+1860"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+84"/>
-        <location line="+1858"/>
+        <location line="+1860"/>
         <source>Copy</source>
         <translation>Kopieren</translation>
     </message>
     <message>
-        <location line="-1856"/>
-        <location line="+1892"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1856"/>
-        <location line="+1892"/>
+        <location line="-1858"/>
+        <location line="+1894"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1858"/>
+        <location line="+1894"/>
         <source>Move</source>
         <translation>Verschieben</translation>
     </message>
     <message>
-        <location line="-1890"/>
-        <location line="+1924"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1890"/>
-        <location line="+1924"/>
+        <location line="-1892"/>
+        <location line="+1926"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1892"/>
+        <location line="+1926"/>
         <source>Delete</source>
         <translation>Löschen</translation>
     </message>
     <message>
-        <location line="-1815"/>
+        <location line="-1817"/>
         <location line="+110"/>
         <location line="+341"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1815"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1817"/>
         <location line="+110"/>
         <location line="+341"/>
         <source>Deleting</source>
@@ -3039,18 +3046,18 @@ Bitte bestätigen Sie.</translation>
         <location line="+332"/>
         <location line="+83"/>
         <location line="+223"/>
-        <location line="+1155"/>
+        <location line="+1157"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+46"/>
         <location line="+332"/>
         <location line="+83"/>
         <location line="+223"/>
-        <location line="+1155"/>
+        <location line="+1157"/>
         <source>%1 is loaded.</source>
         <translation>%1 wird geladen.</translation>
     </message>
     <message>
-        <location line="-1784"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1784"/>
+        <location line="-1786"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1786"/>
         <source>Quit</source>
         <translation>Beenden</translation>
     </message>
@@ -3275,17 +3282,17 @@ Du wirst zu einer Genehmigung weitergeleitet.</translation>
     <message>
         <location line="+36"/>
         <location line="+5"/>
-        <location line="+455"/>
+        <location line="+457"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+36"/>
         <location line="+5"/>
-        <location line="+455"/>
+        <location line="+457"/>
         <source>Refresh Token</source>
         <translation>Aktualisiere Token</translation>
     </message>
     <message>
-        <location line="-455"/>
+        <location line="-457"/>
         <location line="+38"/>
-        <location line="+275"/>
+        <location line="+277"/>
         <location line="+118"/>
         <location line="+41"/>
         <location line="+19"/>
@@ -3305,9 +3312,9 @@ Du wirst zu einer Genehmigung weitergeleitet.</translation>
         <location line="+47"/>
         <location line="+14"/>
         <location line="+28"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-455"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-457"/>
         <location line="+38"/>
-        <location line="+275"/>
+        <location line="+277"/>
         <location line="+118"/>
         <location line="+41"/>
         <location line="+19"/>
@@ -3331,11 +3338,11 @@ Du wirst zu einer Genehmigung weitergeleitet.</translation>
         <translation>Fehler</translation>
     </message>
     <message>
-        <location line="-1141"/>
-        <location line="+1287"/>
+        <location line="-1143"/>
+        <location line="+1289"/>
         <location line="+8"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1141"/>
-        <location line="+1287"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1143"/>
+        <location line="+1289"/>
         <location line="+8"/>
         <source>Printing</source>
         <translation>Drucken</translation>
@@ -3363,10 +3370,10 @@ Du wirst zu einer Genehmigung weitergeleitet.</translation>
         <translation>Token angefordert</translation>
     </message>
     <message>
-        <location line="-435"/>
-        <location line="+461"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-435"/>
-        <location line="+461"/>
+        <location line="-437"/>
+        <location line="+463"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-437"/>
+        <location line="+463"/>
         <source>Token was refreshed.</source>
         <translation>Token wurde aktualisiert.</translation>
     </message>
