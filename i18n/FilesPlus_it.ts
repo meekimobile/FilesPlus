@@ -1088,12 +1088,12 @@ Premi &apos;OK&apos; per continuare.</translation>
 <context>
     <name>CloudFolderPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+529"/>
+        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+534"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
         <location line="+3"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+532"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+537"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
@@ -1102,8 +1102,8 @@ Premi &apos;OK&apos; per continuare.</translation>
         <translation>_Copia</translation>
     </message>
     <message>
-        <location line="+527"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+528"/>
+        <location line="+528"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+529"/>
         <source>New folder</source>
         <translation>Nuova Cartella</translation>
     </message>
@@ -1677,10 +1677,10 @@ Premi &apos;OK&apos; per continuare.</translation>
     </message>
     <message>
         <location filename="../qml/FilesPlus/meego/FolderPage.qml" line="+35"/>
-        <location line="+760"/>
+        <location line="+766"/>
         <location line="+199"/>
         <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+35"/>
-        <location line="+764"/>
+        <location line="+770"/>
         <location line="+199"/>
         <source>%1 is loaded.</source>
         <translation>%1 viene caricato.</translation>
@@ -1700,8 +1700,8 @@ You will be redirected to cloud account page.</source>
 Sarai reindirizzato alla pagina di autorizzazione.</translation>
     </message>
     <message>
-        <location line="+1104"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1105"/>
+        <location line="+1105"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1106"/>
         <source>Sync marked items</source>
         <translation>Sincronizza gli elementi contrassegnati</translation>
     </message>
@@ -2336,6 +2336,19 @@ Il tutto presentato con un Diagramma a torta.</translation>
         <location line="-754"/>
         <source>Can&apos;t get %1</source>
         <translation>Impossibile scaricare %1</translation>
+    </message>
+</context>
+<context>
+    <name>GCPClient</name>
+    <message>
+        <location filename="../gcpclient.cpp" line="+348"/>
+        <source>Refresh token is missing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Refresh token is missing. Please authorize Google Cloud Print account again.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

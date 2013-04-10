@@ -340,7 +340,7 @@ void GCPClient::refreshAccessToken()
 
     if (!m_paramMap.contains("refresh_token") || m_paramMap["refresh_token"] == "") {
         qDebug() << "GCPClient::refreshAccessToken refreshToken is empty. Operation is aborted.";
-        emit refreshAccessTokenReplySignal(-1, "Refresh token is missing", "Refresh token is missing. Please authorize Google Cloud Print account again.");
+        emit refreshAccessTokenReplySignal(-1, tr("Refresh token is missing"), tr("Refresh token is missing. Please authorize Google Cloud Print account again."));
         return;
     }
 
