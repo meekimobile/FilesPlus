@@ -8,7 +8,7 @@ class ContentTypeHelper
 public:
     ContentTypeHelper();
 
-    QHash<QString, QString> loadMimeTypes(const QString &localPath);
+    QHash<QString, QString> parseContentTypeHash(const QString &localPath);
 };
 
 #endif // CONTENTTYPEHELPER_H

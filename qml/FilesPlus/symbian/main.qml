@@ -1076,6 +1076,8 @@ PageStackWindow {
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("GCPClient"), 0.1);
 
             if (gcpClient.isAuthorized()) {
+                // Populate contentTypeHash.
+                gcpClient.loadContentTypeHash(appInfo.getConfigPath() + "/mime.types");
                 gcpClient.search("");
             }
         }

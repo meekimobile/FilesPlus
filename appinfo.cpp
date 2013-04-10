@@ -91,6 +91,16 @@ void AppInfo::clearClipboard()
     qDebug() << "AppInfo::clearClipboard";
 }
 
+QString AppInfo::getConfigPath()
+{
+#if defined(Q_WS_HARMATTAN)
+    QString sourceFilePath = QDir(QApplication::applicationDirPath()).absoluteFilePath("../config");
+#else
+    QString sourceFilePath = QDir(QDesktopServices::storageLocation(QDesktopServices::DataLocation)).absoluteFilePath("config");
+#endif
+    return sourceFilePath;
+}
+
 bool AppInfo::isMonitoring()
 {
     return getSettingBoolValue("Monitoring.enabled", false);

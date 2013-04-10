@@ -5,8 +5,6 @@
 #include <QScriptEngine>
 #include <QScriptValue>
 #include <QScriptValueIterator>
-#include <QDesktopServices>
-#include <QApplication>
 #include "contenttypehelper.h"
 
 // Harmattan is a linux
@@ -33,14 +31,6 @@ GCPClient::GCPClient(QDeclarativeItem *parent)
     : QDeclarativeItem(parent)
 {
     loadParamMap();
-
-    // Populate contentTypeHash.
-#if defined(Q_WS_HARMATTAN)
-    QString sourceFilePath = QDir(QApplication::applicationDirPath()).absoluteFilePath("../config/mime.types");
-#else
-    QString sourceFilePath = QDir(QDesktopServices::storageLocation(QDesktopServices::DataLocation)).absoluteFilePath("config/mime.types");
-#endif
-    m_contentTypeHash = ContentTypeHelper().loadMimeTypes(sourceFilePath);
 }
 
 GCPClient::~GCPClient()
@@ -276,6 +266,11 @@ QByteArray GCPClient::encodeMultiPart(QString boundary, QMap<QString, QString> p
     postData.append(CRLF);
 
     return postData;
+}
+
+void GCPClient::loadContentTypeHash(QString sourceFilePath)
+{
+    m_contentTypeHash = ContentTypeHelper().parseContentTypeHash(sourceFilePath);
 }
 
 void GCPClient::authorize()

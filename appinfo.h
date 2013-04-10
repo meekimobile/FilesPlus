@@ -46,6 +46,9 @@ public:
     Q_INVOKABLE QString getFromClipboard();
     Q_INVOKABLE void clearClipboard();
 
+    // Configuration.
+    Q_INVOKABLE QString getConfigPath();
+
     void componentComplete();
     void init();
 signals:

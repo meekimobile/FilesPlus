@@ -7,9 +7,9 @@ ContentTypeHelper::ContentTypeHelper()
 {
 }
 
-QHash<QString, QString> ContentTypeHelper::loadMimeTypes(const QString &localPath)
+QHash<QString, QString> ContentTypeHelper::parseContentTypeHash(const QString &localPath)
 {
-    qDebug() << "ContentTypeHelper::loadMimeTypes localPath " << localPath;
+    qDebug() << "ContentTypeHelper::parseContentTypeHash localPath " << localPath;
 
     if (localPath.isEmpty()) return QHash<QString, QString>();
 
@@ -27,13 +27,13 @@ QHash<QString, QString> ContentTypeHelper::loadMimeTypes(const QString &localPat
                 // Parse line.
                 tokens = line.split(QRegExp("\\s+"));
                 if (tokens.count() > 1) {
-                    qDebug() << "ContentTypeHelper::loadMimeTypes accepted line" << line << tokens;
+                    qDebug() << "ContentTypeHelper::parseContentTypeHash accepted line" << line << tokens;
                     for (int i = 1; i < tokens.count(); i++) {
                         contentTypeHash.insert(tokens.at(i), tokens.at(0));
-                        qDebug() << "ContentTypeHelper::loadMimeTypes inserted" << tokens.at(i) << "=" << tokens.at(0);
+                        qDebug() << "ContentTypeHelper::parseContentTypeHash inserted" << tokens.at(i) << "=" << tokens.at(0);
                     }
                 } else {
-                    qDebug() << "ContentTypeHelper::loadMimeTypes skipped line" << line << tokens;
+//                    qDebug() << "ContentTypeHelper::parseContentTypeHash skipped line" << line << tokens;
                 }
             }
 
@@ -43,7 +43,7 @@ QHash<QString, QString> ContentTypeHelper::loadMimeTypes(const QString &localPat
     }
     file.close();
 
-    qDebug() << "ContentTypeHelper::loadMimeTypes contentTypeHash.count()" << contentTypeHash.count();
+    qDebug() << "ContentTypeHelper::parseContentTypeHash contentTypeHash.count()" << contentTypeHash.count();
 
     return contentTypeHash;
 }
