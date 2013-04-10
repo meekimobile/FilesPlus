@@ -9,7 +9,7 @@
 #if defined(Q_WS_HARMATTAN)
 const int LocalFileImageProvider::DEFAULT_CACHE_IMAGE_SIZE = 480;
 #else
-const int LocalFileImageProvider::DEFAULT_CACHE_IMAGE_SIZE = 360;
+const int LocalFileImageProvider::DEFAULT_CACHE_IMAGE_SIZE = 480;
 #endif
 
 LocalFileImageProvider::LocalFileImageProvider(QString cachePath) : QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
@@ -71,16 +71,18 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
 
     // Check if cached image is available.
     QFileInfo cachedFileInfo(getCachedPath(absoluteFilePath, requestedSize));
-    if (cachedFileInfo.exists()
-            && cachedFileInfo.lastModified() >= QFileInfo(absoluteFilePath).lastModified()
-//            && cachedFileInfo.created().secsTo(QDateTime::currentDateTime()) < m_settings.value("image.cache.retention.seconds", QVariant(86400)).toInt() // 86400 secs = 1 day
-            && image.load(cachedFileInfo.absoluteFilePath())) {
-        qDebug() << "LocalFileImageProvider::requestImage return cached id" << id << "cached image path" << cachedFileInfo.absoluteFilePath();
-        return image;
-    } else if (!requestedSize.isValid() && m_settings.value("LocalFileImageProvider.CacheImageWorker.enabled", QVariant(false)).toBool()) {
-        // NOTE Invalid requestedSize is requested from preview image. For thumbnail, it always request with a valid size.
-        qDebug() << "LocalFileImageProvider::requestImage cache not found" << cachedFileInfo.absoluteFilePath() << "and requestSize is invalid. Response error to trigger cacheImageWorker.";
-        return QImage();
+    if (m_settings.value("LocalFileImageProvider.cache.enabled", QVariant(false)).toBool()) {
+        if (cachedFileInfo.exists()
+                && cachedFileInfo.lastModified() >= QFileInfo(absoluteFilePath).lastModified()
+//                && cachedFileInfo.created().secsTo(QDateTime::currentDateTime()) < m_settings.value("image.cache.retention.seconds", QVariant(86400)).toInt() // 86400 secs = 1 day
+                && image.load(cachedFileInfo.absoluteFilePath())) {
+            qDebug() << "LocalFileImageProvider::requestImage return cached id" << id << "cached image path" << cachedFileInfo.absoluteFilePath();
+            return image;
+        } else if (!requestedSize.isValid() && m_settings.value("LocalFileImageProvider.CacheImageWorker.enabled", QVariant(false)).toBool()) {
+            // NOTE Invalid requestedSize is requested from preview image. For thumbnail, it always request with a valid size.
+            qDebug() << "LocalFileImageProvider::requestImage cache not found" << cachedFileInfo.absoluteFilePath() << "and requestSize is invalid. Response error to trigger cacheImageWorker.";
+            return QImage();
+        }
     }
 
     QFile file(absoluteFilePath);
@@ -113,13 +115,15 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
         if (ir.error() != 0) {
             qDebug() << "LocalFileImageProvider::requestImage read err " << ir.error() << " " << ir.errorString();
         } else {
-            // Save cached image.
-            QDir cachePath(m_cachePath);
-            if (!cachePath.exists()) {
-                cachePath.mkpath(m_cachePath);
+            if (m_settings.value("LocalFileImageProvider.cache.enabled", QVariant(false)).toBool()) {
+                // Save cached image.
+                QDir cachePath(m_cachePath);
+                if (!cachePath.exists()) {
+                    cachePath.mkpath(m_cachePath);
+                }
+                image.save(cachedFileInfo.absoluteFilePath());
+                qDebug() << "LocalFileImageProvider::requestImage save id" << id << cachedFileInfo.absoluteFilePath();
             }
-            image.save(cachedFileInfo.absoluteFilePath());
-            qDebug() << "LocalFileImageProvider::requestImage save id" << id << cachedFileInfo.absoluteFilePath();
         }
     } else {
         qDebug() << "LocalFileImageProvider::requestImage can't read from file. Invalid file content.";
