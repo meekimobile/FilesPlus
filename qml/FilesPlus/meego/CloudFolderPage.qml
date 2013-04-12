@@ -226,7 +226,7 @@ Page {
                     cloudFolderView.state = "";
                 } else {
                     // Specify local path to focus after cd to parent directory..
-//                    fsListView.focusLocalPath = fsModel.currentDir;
+//                    cloudFolderView.focusLocalPath = cloudFolderModel.currentDir;
                     goUpSlot();
                 }
             }
@@ -796,11 +796,14 @@ Page {
             }
 
             function getMediaSource(source, remoteFilePath) {
+                var url = "";
                 if (source) {
-                    return source;
+                    url = source;
                 } else {
-                    return cloudDriveModel.media(selectedCloudType, selectedUid, remoteFilePath);
+                    url = cloudDriveModel.media(selectedCloudType, selectedUid, remoteFilePath);
                 }
+//                console.debug("cloudFolderPage listItem getMediaSource url " + url);
+                return url;
             }
 
             onPressAndHold: {
@@ -829,6 +832,11 @@ Page {
 
                         isBusy = true;
 
+                        if (source) console.debug("cloudFolderPage listItem onClicked source " + source);
+                        if (alternative) console.debug("cloudFolderPage listItem onClicked alternative " + alternative);
+                        if (thumbnail) console.debug("cloudFolderPage listItem onClicked thumbnail " + thumbnail);
+                        if (preview) console.debug("cloudFolderPage listItem onClicked preview " + preview);
+
                         // Check if it's viewable.
                         var url;
                         if (cloudDriveModel.isViewable(selectedCloudType)) {
@@ -841,13 +849,17 @@ Page {
                             } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                                 // View with internal web viewer.
                                 url = getMediaSource(source, absolutePath);
-                                appInfo.addToClipboard(url);
-                                pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
+                                if (url != "") {
+                                    appInfo.addToClipboard(url);
+                                    pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
+                                }
                             } else {
                                 // Open with system web browser.
                                 url = getMediaSource(source, absolutePath);
                                 if (url != "") {
                                     Qt.openUrlExternally(url);
+                                } else if (alternative != "") {
+                                    Qt.openUrlExternally(alternative);
                                 }
                             }
                         } else {
