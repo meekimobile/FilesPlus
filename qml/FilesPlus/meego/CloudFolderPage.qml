@@ -475,6 +475,37 @@ Page {
         }
     }
 
+    OpenMenu {
+        id: openMenu
+
+        property int selectedIndex: cloudFolderView.currentIndex
+
+        function show() {
+            var absolutePath = cloudFolderModel.get(selectedIndex).absolutePath;
+            var source = cloudFolderModel.get(selectedIndex).source;
+            var alternative = cloudFolderModel.get(selectedIndex).alternative;
+
+            source = (source) ? source : cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
+            cloudFolderModel.setProperty(selectedIndex, "source", source);
+            console.debug("cloudFolderPage openMenu show source " + cloudFolderModel.get(selectedIndex).source + " alternative " + cloudFolderModel.get(selectedIndex).alternative);
+
+            if (source != "" && (!alternative || alternative == "")) {
+                openMedia();
+            } else if (source == "" && alternative != "") {
+                openWeb();
+            } else {
+                open();
+            }
+        }
+
+        onOpenMedia: {
+            Qt.openUrlExternally(cloudFolderModel.get(selectedIndex).source);
+        }
+        onOpenWeb: {
+            Qt.openUrlExternally(cloudFolderModel.get(selectedIndex).alternative);
+        }
+    }
+
     ListModel {
         id: cloudFolderModel
 
@@ -854,21 +885,13 @@ Page {
                                     pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
                                 }
                             } else {
-                                // Open with system web browser.
-                                url = getMediaSource(source, absolutePath);
-                                if (url != "") {
-                                    Qt.openUrlExternally(url);
-                                } else if (alternative != "") {
-                                    Qt.openUrlExternally(alternative);
-                                }
+                                // Shows options if both source and alternative are available.
+                                openMenu.show();
                             }
                         } else {
                             // File is not viewable but may be browsable.
-                            // TODO Provide alternate link.
-                            url = getMediaSource(source, absolutePath);
-                            if (url != "") {
-                                Qt.openUrlExternally(url);
-                            }
+                            // Shows options if both source and alternative are available.
+                            openMenu.show();
                         }
 
                         isBusy = false;
