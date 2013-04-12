@@ -250,7 +250,7 @@ QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     parsedObj.setProperty("downloadUrl", downloadUrlObj);
     parsedObj.setProperty("webContentLink", jsonObj.property("webContentLink"));
     parsedObj.setProperty("embedLink", jsonObj.property("embedLink"));
-    parsedObj.setProperty("alternate", jsonObj.property("alternateLink"));
+    parsedObj.setProperty("alternative", jsonObj.property("alternateLink"));
     parsedObj.setProperty("thumbnail", jsonObj.property("thumbnailLink"));
     parsedObj.setProperty("preview", jsonObj.property("thumbnailLink")); // NOTE Use same URL as thumbnail as it return 2xx x 1xx picture.
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("title").toString())));
@@ -543,12 +543,17 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
             if (propertyReply->error() == QNetworkReply::NoError) {
                 // Stores property for using in fileGetReplyFinished().
                 m_propertyReplyHash->insert(nonce, propertyReply->readAll());
+                qDebug() << "GCDClient::fileGet" << nonce << uid << remoteFilePath << "propertyReplyBody" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
 
                 QScriptEngine engine;
                 QScriptValue sc = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
-                uri = sc.property("downloadUrl").toString();
-                // Cache downloadUrl for furthur usage.
-                m_downloadUrlHash->insert(sc.property("id").toString(), uri);
+                if (sc.property("downloadUrl").isValid()) {
+                    uri = sc.property("downloadUrl").toString();
+                    // Cache downloadUrl for furthur usage.
+                    m_downloadUrlHash->insert(sc.property("id").toString(), uri);
+                } else {
+                    qDebug() << "GCDClient::fileGet" << nonce << uid << remoteFilePath << "downloadUrl is not available.";
+                }
                 propertyReply->deleteLater();
             } else {
                 if (!synchronous) {
@@ -561,7 +566,7 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
             }
         }
     }
-    qDebug() << "GCDClient::fileGet uri " << uri;
+    qDebug() << "GCDClient::fileGet" << nonce << uid << remoteFilePath << "download uri" << uri;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -1159,7 +1164,9 @@ QString GCDClient::media(QString nonce, QString uid, QString remoteFilePath)
     }
 
     // Append with OAuth token.
-    uri += "&access_token=" + accessTokenPairMap[uid].token;
+    if (uri != "") {
+        uri += "&access_token=" + accessTokenPairMap[uid].token;
+    }
 
     qDebug() << "GCDClient::media" << nonce << "uri" << uri;
     return uri;
