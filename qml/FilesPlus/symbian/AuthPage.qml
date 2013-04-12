@@ -135,6 +135,14 @@ Page {
                 okButton.visible = false;
             }
 
+            onLoadFailed: {
+                console.debug("webView onLoadFailed authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom + " title = " + title);
+
+                // Reset related objects.
+                webViewBusy.visible = false;
+                pinInputPanel.pin = "";
+            }
+
             onLoadFinished: {
                 // Workaround for transparent background ( https://bugreports.qt-project.org/browse/QTWEBKIT-352 )
                 webView.evaluateJavaScript("if (!document.body.style.backgroundColor) document.body.style.backgroundColor='white';");
