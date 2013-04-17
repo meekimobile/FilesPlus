@@ -320,19 +320,19 @@ Si prega di fare clic su OK per continuare.</translation>
 <context>
     <name>AuthPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/AuthPage.qml" line="+182"/>
-        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+185"/>
+        <location filename="../qml/FilesPlus/meego/AuthPage.qml" line="+206"/>
+        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+207"/>
         <source>^API Request Authorized</source>
         <translation>^API Request Authorized</translation>
     </message>
     <message>
-        <location line="+55"/>
-        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+55"/>
+        <location line="+57"/>
+        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+57"/>
         <source>Please confirm PIN.</source>
         <translation>Si prega di confermare il PIN.</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+17"/>
         <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+16"/>
         <source>Privacy Policy</source>
         <translation>Privacy Policy</translation>
@@ -1088,12 +1088,12 @@ Premi &apos;OK&apos; per continuare.</translation>
 <context>
     <name>CloudFolderPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+534"/>
+        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+565"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
         <location line="+3"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+537"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+568"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
@@ -1102,8 +1102,8 @@ Premi &apos;OK&apos; per continuare.</translation>
         <translation>_Copia</translation>
     </message>
     <message>
-        <location line="+528"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+529"/>
+        <location line="+532"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+533"/>
         <source>New folder</source>
         <translation>Nuova Cartella</translation>
     </message>
@@ -2563,6 +2563,21 @@ Il tutto presentato con un Diagramma a torta.</translation>
         <location filename="../qml/FilesPlus/symbian/NewFolderDialog.qml" line="+0"/>
         <source>Please input file name.</source>
         <translation>Inserisci il nome file.</translation>
+    </message>
+</context>
+<context>
+    <name>OpenMenu</name>
+    <message>
+        <location filename="../qml/FilesPlus/meego/OpenMenu.qml" line="+20"/>
+        <location filename="../qml/FilesPlus/symbian/OpenMenu.qml" line="+15"/>
+        <source>Open</source>
+        <translation>Aprire</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <location filename="../qml/FilesPlus/symbian/OpenMenu.qml" line="+8"/>
+        <source>Open on web</source>
+        <translation>Aprire il suo URL</translation>
     </message>
 </context>
 <context>
