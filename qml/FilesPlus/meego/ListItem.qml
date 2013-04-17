@@ -65,6 +65,9 @@ Item {
 
             listItem.postPressed(mouse);
         }
+        onPositionChanged: {
+            parent.pressed = false;
+        }
         onReleased: {
 //            console.debug("ListItem onReleased mouse " + mouse);
             parent.pressed = false;
