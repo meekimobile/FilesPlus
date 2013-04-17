@@ -8,24 +8,40 @@ Page {
 
     property alias url: webView.url
     property string redirectFrom
+    property bool inverted: !theme.inverted
+    property bool showPinInputPanel: false
 
     tools: ToolBarLayout {
         id: toolBarLayout
         x: 0
 
-        ToolIcon {
-            id:backButton
-            iconId: "toolbar-back"
-
+        ToolBarButton {
+            id: backButton
+            buttonIconSource: "toolbar-back"
             onClicked: {
                 pageStack.pop();
             }
         }
 
-        ToolIcon {
-            id:okButton
-            iconSource: (theme.inverted) ? "ok.svg" : "ok_inverted.svg"
+        ToolBarButton {
+            id: openWithWebButton
+            buttonIconSource: (!inverted) ? "internet.svg" : "internet_inverted.svg"
+            onClicked: {
+                Qt.openUrlExternally(webView.url);
+            }
+        }
 
+        ToolBarButton {
+            id: toggleInputPanelButton
+            buttonIconSource: (!inverted) ? "edit.svg" : "edit_inverted.svg"
+            onClicked: {
+                showPinInputPanel = !showPinInputPanel;
+            }
+        }
+
+        ToolBarButton {
+            id: okButton
+            buttonIconSource: (!inverted) ? "ok.svg" : "ok_inverted.svg"
             onClicked: {
                 // TODO Remove dependency to make authPage reusable for other REST API.
                 cloudDriveModel.accessTokenSlot(authPage.redirectFrom, pinInputPanel.pin);
@@ -129,7 +145,7 @@ Page {
 
             onLoadStarted: {
                 webViewBusy.visible = true;
-                okButton.visible = false;
+//                okButton.visible = false;
             }
 
             onLoadFailed: {
@@ -168,7 +184,7 @@ Page {
                     if (title.match("^Success")) {
                         var pin = parseGoogleDriveCode(title);
                         pinInputPanel.pin = pin;
-                        okButton.visible = pinInputPanel.visible;
+//                        okButton.visible = pinInputPanel.visible;
                     }
                 } else if (authPage.redirectFrom == "DropboxClient") {
                     okButton.visible = true;
@@ -203,14 +219,14 @@ Page {
 
                     var pin = authPage.parseSkyDriveCode(url);
                     pinInputPanel.pin = pin;
-                    okButton.visible = pinInputPanel.visible;
+//                    okButton.visible = pinInputPanel.visible;
                 } else if (authPage.redirectFrom == "WebDavClient") {
                     // WebDavClient handler
                     console.debug("WebDavClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom);
 
                     var pin = authPage.parseWebDAVCode(url);
                     pinInputPanel.pin = pin;
-                    okButton.visible = pinInputPanel.visible;
+//                    okButton.visible = pinInputPanel.visible;
                 }
             }
         }
@@ -227,10 +243,12 @@ Page {
         anchors.bottom: flickable.bottom
         anchors.bottomMargin: 5
         z: 2
-        visible: (pin != "" && pin != "PinNotFound" && pin != "PinDefault") // Show PIN panel when PIN is valid and not default value for Dropbox.
+        visible: showPinInputPanel || (pin != "" && pin != "PinNotFound" && pin != "PinDefault") // Show PIN panel when PIN is valid and not default value for Dropbox.
 
         onVisibleChanged: {
-            pinInput.closeSoftwareInputPanel();
+            if (!visible) {
+                pinInput.closeSoftwareInputPanel();
+            }
         }
 
         property alias pin: pinInput.text
@@ -250,7 +268,7 @@ Page {
                 focus: pinInputPanel.visible
                 width: parent.width
                 font.pointSize: 16
-                readOnly: true
+                readOnly: false
                 wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
             }
         }
