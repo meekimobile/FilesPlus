@@ -266,6 +266,7 @@ QNetworkReply * SkyDriveClient::files(QString nonce, QString uid, QString remote
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(callback));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(uid));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
 
@@ -302,6 +303,7 @@ QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString rem
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(callback));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(uid));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
 
@@ -976,10 +978,11 @@ void SkyDriveClient::browseReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void SkyDriveClient::mergePropertyAndFilesJson(QString nonce, QString callback)
+void SkyDriveClient::mergePropertyAndFilesJson(QString nonce, QString callback, QString uid)
 {
     if (m_propertyReplyHash->contains(nonce) && m_filesReplyHash->contains(nonce)) {
         QScriptEngine engine;
+        engine.setProperty("uid", QVariant(uid));
         QScriptValue mergedObj;
         QScriptValue propertyObj;
         QScriptValue filesObj;
@@ -1017,12 +1020,13 @@ void SkyDriveClient::propertyReplyFinished(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString callback = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
 
     if (reply->error() == QNetworkReply::NoError) {
         m_propertyReplyHash->insert(nonce, reply->readAll());
 
         // Merge and emit signal if both property and files are available.
-        mergePropertyAndFilesJson(nonce, callback);
+        mergePropertyAndFilesJson(nonce, callback, uid);
     } else {
         // Remove once used.
         m_propertyReplyHash->remove(nonce);
@@ -1049,18 +1053,19 @@ void SkyDriveClient::filesReplyFinished(QNetworkReply *reply)
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString callback = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
 
     if (reply->error() == QNetworkReply::NoError) {
         m_filesReplyHash->insert(nonce, reply->readAll());
 
         // Merge and emit signal if both property and files are available.
-        mergePropertyAndFilesJson(nonce, callback);
+        mergePropertyAndFilesJson(nonce, callback, uid);
     } else if (reply->error() == QNetworkReply::UnknownContentError) {
         qDebug() << "SkyDriveClient::filesReplyFinished suppress error" << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
         m_filesReplyHash->insert(nonce, QByteArray("{}"));
 
         // Merge and emit signal if both property and files are available.
-        mergePropertyAndFilesJson(nonce, callback);
+        mergePropertyAndFilesJson(nonce, callback, uid);
     } else {
         // Remove once used.
         m_propertyReplyHash->remove(nonce);
@@ -1273,6 +1278,8 @@ QScriptValue SkyDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engin
 {
     QScriptValue parsedObj = engine.newObject();
 
+    QString alternative = jsonObj.property("link").toString();
+
     parsedObj.setProperty("name", jsonObj.property("name"));
     parsedObj.setProperty("absolutePath", jsonObj.property("id"));
     parsedObj.setProperty("parentPath", !jsonObj.property("parent_id").isNull() ? jsonObj.property("parent_id") : QScriptValue(""));
@@ -1282,7 +1289,7 @@ QScriptValue SkyDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engin
     parsedObj.setProperty("lastModified", jsonObj.property("updated_time"));
     parsedObj.setProperty("hash", jsonObj.property("updated_time"));
     parsedObj.setProperty("source", jsonObj.property("source"));
-    parsedObj.setProperty("alternative", jsonObj.property("link"));
+    parsedObj.setProperty("alternative", QScriptValue(alternative));
     parsedObj.setProperty("thumbnail", jsonObj.property("picture"));
     parsedObj.setProperty("preview", jsonObj.property("images").property(0).property("source"));
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("name").toString())));
