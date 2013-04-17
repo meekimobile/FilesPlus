@@ -96,7 +96,7 @@ Page {
                     width: parent.width - cloudIcon.width - parent.spacing
                     font.pointSize: 18
                     elide: Text.ElideMiddle
-                    color: (!inverted) ? "white" : "black"
+                    color: "white"
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
