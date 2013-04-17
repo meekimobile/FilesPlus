@@ -261,6 +261,7 @@ Page {
 
             Label {
                 text: appInfo.emptyStr+qsTr("Please confirm PIN.")
+                color: "white"
             }
 
             TextArea {
