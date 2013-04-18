@@ -151,7 +151,7 @@ QString WebDavClient::fileGet(QString nonce, QString uid, QString remoteFilePath
 
 void WebDavClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName)
 {
-    qDebug() << "----- WebDavClient::filePut -----" << uid << localFilePath << remoteParentPath << remoteFileName;
+    qDebug() << "----- WebDavClient::filePut -----" << nonce << uid << localFilePath << remoteParentPath << remoteFileName;
 
     m_localFileHash[nonce] = new QFile(localFilePath);
     QFile *localSourceFile = m_localFileHash[nonce];
@@ -161,7 +161,7 @@ void WebDavClient::filePut(QString nonce, QString uid, QString localFilePath, QS
         // Send request.
         filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
     } else {
-        qDebug() << "WebDavClient::filePut file " << localFilePath << " can't be opened.";
+        qDebug() << "WebDavClient::filePut" << nonce << "file" << localFilePath << " can't be opened.";
         emit filePutReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");
     }
 }
@@ -497,10 +497,10 @@ QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFileP
     QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = fileGetURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
-    qDebug() << "WebDavClient::fileGet uri" << uri;
+    qDebug() << "WebDavClient::fileGet" << nonce << "uri" << uri;
 
     QByteArray authHeader = createAuthHeader(uid);
-    qDebug() << "WebDavClient::fileGet authHeader" << authHeader;
+    qDebug() << "WebDavClient::fileGet" << nonce << "authHeader" << authHeader;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -520,7 +520,7 @@ QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFileP
     req.setRawHeader("Accept", QByteArray("*/*"));
     if (offset >= 0) {
         QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1);
-        qDebug() << "WebDavClient::fileGet rangeHeader" << rangeHeader;
+        qDebug() << "WebDavClient::fileGet" << nonce << "rangeHeader" << rangeHeader;
         req.setRawHeader("Range", rangeHeader.toAscii() );
     }
     // TODO TE: chunked, Accept-Encoding: gzip
@@ -608,16 +608,16 @@ QString WebDavClient::fileGetReplySave(QNetworkReply *reply)
 
 QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
 {
-    qDebug() << "----- WebDavClient::filePut -----" << uid << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
+    qDebug() << "----- WebDavClient::filePut -----" << nonce << uid << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
     QString remoteFilePath = remoteParentPath + "/" + remoteFileName;
     QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = filePutURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
-    qDebug() << "WebDavClient::filePut uri " << uri;
+    qDebug() << "WebDavClient::filePut" << nonce << "uri" << uri;
 
     QByteArray authHeader = createAuthHeader(uid);
-    qDebug() << "WebDavClient::filePut authHeader" << authHeader;
+    qDebug() << "WebDavClient::filePut" << nonce << "authHeader" << authHeader;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -661,7 +661,7 @@ QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *sour
 
 QIODevice *WebDavClient::fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset)
 {
-    qDebug() << "----- WebDavClient::fileGetResume -----" << remoteFilePath << "to" << localFilePath << "offset" << offset;
+    qDebug() << "----- WebDavClient::fileGetResume -----" << nonce << remoteFilePath << "to" << localFilePath << "offset" << offset;
 
     // Create localTargetFile for file getting.
     m_localFileHash[nonce] = new QFile(localFilePath);
@@ -670,10 +670,10 @@ QIODevice *WebDavClient::fileGetResume(QString nonce, QString uid, QString remot
     QString hostname = getHostname(accessTokenPairMap[uid].email);
     QString uri = fileGetURI.arg(hostname).arg(prepareRemotePath(uid, remoteFilePath));
     uri = encodeURI(uri);
-    qDebug() << "WebDavClient::fileGet uri" << uri;
+    qDebug() << "WebDavClient::fileGet" << nonce << "uri" << uri;
 
     QByteArray authHeader = createAuthHeader(uid);
-    qDebug() << "WebDavClient::fileGet authHeader" << authHeader;
+    qDebug() << "WebDavClient::fileGet" << nonce << "authHeader" << authHeader;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -687,7 +687,7 @@ QIODevice *WebDavClient::fileGetResume(QString nonce, QString uid, QString remot
     req.setRawHeader("Accept", QByteArray("*/*"));
     if (offset >= 0) {
         QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1);
-        qDebug() << "WebDavClient::fileGetResume rangeHeader" << rangeHeader;
+        qDebug() << "WebDavClient::fileGetResume" << nonce << "rangeHeader" << rangeHeader;
         req.setRawHeader("Range", rangeHeader.toAscii() );
     }
     // TODO TE: chunked, Accept-Encoding: gzip

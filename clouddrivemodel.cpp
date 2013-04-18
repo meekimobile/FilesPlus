@@ -1083,6 +1083,8 @@ void CloudDriveModel::removeJob(QString caller, QString nonce)
         return;
     }
 
+    qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce;
+
     // Abort job.
     suspendJob(nonce);
 
@@ -1138,6 +1140,7 @@ void CloudDriveModel::cancelQueuedJobs()
 
 void CloudDriveModel::removeJobs(bool removeAll)
 {
+    qDebug() << "CloudDriveModel::removeJobs removeAll" << removeAll;
     // Remove unqueued jobs.
     foreach (CloudDriveJob job, m_cloudDriveJobs->values()) {
         if (removeAll || !job.isRunning) {
@@ -2352,7 +2355,7 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
             if (targetReply->error() == QNetworkReply::NoError){
                 job.uploadOffset = remoteFileSize;
                 // Invoke slot to reset running and emit signal.
-                migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(),targetReply->readAll());
+                migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(), targetReply->readAll());
             } else {
                 // Invoke slot to reset running and emit signal.
                 // TODO How to shows if error occurs from target?
