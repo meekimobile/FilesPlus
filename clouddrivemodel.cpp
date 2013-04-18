@@ -2617,7 +2617,7 @@ void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, Q
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 }
 
-void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath)
+void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, bool suppressDeleteLocal)
 {
     if (remoteFilePath == "") {
         qDebug() << "CloudDriveModel::deleteFile remoteFilePath" << remoteFilePath << "is empty. Operation is aborted.";
@@ -2626,6 +2626,7 @@ void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid,
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), DeleteFile, type, uid, localFilePath, remoteFilePath, -1);
+    job.suppressDeleteLocal = suppressDeleteLocal;
 //    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
@@ -2988,7 +2989,7 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
     if (job.remoteFilePath != "") {
         foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, job.remoteFilePath)) {
             // Configurable file removing.
-            if (m_settings.value("CloudDriveModel.deleteFileReplyFilter.deleteLocalFile.enabled", true).toBool()) {
+            if (!job.suppressDeleteLocal && m_settings.value("CloudDriveModel.deleteFileReplyFilter.deleteLocalFile.enabled", true).toBool()) {
                 qDebug() << "CloudDriveModel::deleteFileReplyFilter" << nonce << "trash local item" << item.toJsonText();
                 deleteLocal(getClientType(item.type), item.uid, item.localPath);
             } else {

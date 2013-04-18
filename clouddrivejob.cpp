@@ -26,6 +26,7 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->err = 0;
     this->retryCount = 0;
     this->isAborted = false;
+    this->suppressDeleteLocal = false;
 }
 
 QString CloudDriveJob::toJsonText()

@@ -1433,7 +1433,8 @@ Page {
                 cloudDriveModel.shareFile(type, uid, localPath, remotePath);
                 break;
             case CloudDriveModel.DeleteFile:
-                cloudDriveModel.deleteFile(type, uid, localPath, remotePath);
+                // NOTE Keep local disconnected item because you have requested to delete only connected cloud item.
+                cloudDriveModel.deleteFile(type, uid, localPath, remotePath, true);
                 break;
             case CloudDriveModel.Disconnect:
                 cloudDriveModel.disconnect(type, uid, localPath);
