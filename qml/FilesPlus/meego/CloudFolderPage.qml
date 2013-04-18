@@ -390,6 +390,7 @@ Page {
 
         onSelectSort: {
             console.debug("sortByMenu setSortFlag flag=" + flag);
+            cloudFolderView.positionViewAtBeginning();
             cloudDriveModel.setSortFlag(selectedCloudType, selectedUid, selectedRemotePath, flag);
         }
 

@@ -17,6 +17,7 @@ MenuWithIcon {
             checked: (sortFlag == flag)
             platformLeftMargin: 60
             onClicked: {
+                sortFlag = flag;
                 selectSort(flag);
             }
         }
@@ -27,6 +28,7 @@ MenuWithIcon {
             checked: (sortFlag == flag)
             platformLeftMargin: 60
             onClicked: {
+                sortFlag = flag;
                 selectSort(flag);
             }
         }
@@ -37,6 +39,7 @@ MenuWithIcon {
             checked: (sortFlag == flag)
             platformLeftMargin: 60
             onClicked: {
+                sortFlag = flag;
                 selectSort(flag);
             }
         }
@@ -47,6 +50,7 @@ MenuWithIcon {
             checked: (sortFlag == flag)
             platformLeftMargin: 60
             onClicked: {
+                sortFlag = flag;
                 selectSort(flag);
             }
         }
@@ -57,6 +61,7 @@ MenuWithIcon {
             checked: (sortFlag == flag)
             platformLeftMargin: 60
             onClicked: {
+                sortFlag = flag;
                 selectSort(flag);
             }
         }
