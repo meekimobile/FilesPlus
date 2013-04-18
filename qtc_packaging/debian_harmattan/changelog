@@ -1,5 +1,8 @@
 filesplus (1.2.3) unstable; urgency=low
   * Add Google Cloud Print supported file type to support .doc, .xls, .ppt and other files via mime.types configuration.
+  * Fix to support Cubby.com
+  * Save sort flag for cloud storage.
+  * Fix to support manually PIN code input during authorization.
 
  -- Taweesak Kittipuree <>  Tue, 09 Apr 2013 12:16:13 +0700
 
