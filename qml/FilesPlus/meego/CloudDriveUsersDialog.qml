@@ -82,7 +82,7 @@ SelectionDialog {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 30
                 height: 30
-                source: (hash == CloudDriveModel.dirtyHash ? "cloud_dirty.svg" : "cloud.svg")  // TODO On ListView also check isDirty from lastModified.
+                source: (hash == cloudDriveModel.dirtyHash ? "cloud_dirty.svg" : "cloud.svg")  // TODO On ListView also check isDirty from lastModified.
                 visible: (hash != "")
             }
         }
