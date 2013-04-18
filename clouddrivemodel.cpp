@@ -22,8 +22,19 @@ bool nameLessThanWithDirectoryFirst(const QScriptValue &o1, const QScriptValue &
 
 bool timeGreaterThan(const QScriptValue &o1, const QScriptValue &o2)
 {
-    qDebug() << "timeGreaterThan" << o1.property("lastModified").toString() << o2.property("lastModified").toString();
-    return o1.property("lastModified").toString()  > o2.property("lastModified").toString();
+    // NOTE date string is in UTC date string format. Needs to use custom format parsing.
+    qDebug() << "CloudDriveModel timeGreaterThan" << o1.property("lastModified").toString() << o2.property("lastModified").toString();
+    QDateTime dt1 = QDateTime::fromString(o1.property("lastModified").toString(), "ddd, dd MMM yyyy hh:mm:ss +0000");
+    if (!dt1.isValid()) {
+        dt1 = QDateTime::fromString(o1.property("lastModified").toString(), Qt::ISODate);
+    }
+    QDateTime dt2 = QDateTime::fromString(o2.property("lastModified").toString(), "ddd, dd MMM yyyy hh:mm:ss +0000");
+    if (!dt2.isValid()) {
+        dt2 = QDateTime::fromString(o2.property("lastModified").toString(), Qt::ISODate);
+    }
+    qDebug() << "CloudDriveModel timeGreaterThan" << dt1 << dt2;
+
+    return dt1 > dt2;
 }
 
 bool typeLessThan(const QScriptValue &o1, const QScriptValue &o2)
@@ -965,6 +976,11 @@ QString CloudDriveModel::getPathFromUrl(QString urlString)
     } else {
         return urlString;
     }
+}
+
+QDateTime CloudDriveModel::parseUTCDateString(QString utcString)
+{
+    return QDateTime::fromString(utcString, "ddd, dd MMM yyyy hh:mm:ss +0000");
 }
 
 bool CloudDriveModel::isRemoteAbsolutePath(CloudDriveModel::ClientTypes type)
@@ -2830,7 +2846,7 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
         emit migrateFileReplySignal(nonce, err, errMsg, msg);
     } else {
         if (err == 0) {
-            m_cachedJsonText = sortJsonText(msg, m_sortFlag);
+            m_cachedJsonText = sortJsonText(msg, getSortFlag(getClientType(job.type), job.uid, job.remoteFilePath));
             emit browseReplySignal(nonce, err, errMsg, m_cachedJsonText);
         } else {
             emit browseReplySignal(nonce, err, errMsg, msg);
@@ -4246,17 +4262,17 @@ void CloudDriveModel::createTempPath()
     }
 }
 
-int CloudDriveModel::getSortFlag()
+int CloudDriveModel::getSortFlag(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath)
 {
-    return m_sortFlag;
+    return m_settings.value(QString("CloudDriveModel.%1.%2.sortFlag").arg(type).arg(uid), QVariant(0)).toInt();
 }
 
-void CloudDriveModel::setSortFlag(int sortFlag)
+void CloudDriveModel::setSortFlag(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, int sortFlag)
 {
-    m_sortFlag = sortFlag;
+    m_settings.setValue(QString("CloudDriveModel.%1.%2.sortFlag").arg(type).arg(uid), QVariant(sortFlag));
 
     // Sorting.
-    QString msg = sortJsonText(m_cachedJsonText, m_sortFlag);
+    QString msg = sortJsonText(m_cachedJsonText, getSortFlag(type, uid, remoteFilePath));
 
     emit browseReplySignal(createNonce(), 0, "Set sort flag", msg);
 }

@@ -390,13 +390,13 @@ Page {
 
         onSelectSort: {
             console.debug("sortByMenu setSortFlag flag=" + flag);
-            cloudDriveModel.sortFlag = flag;
+            cloudDriveModel.setSortFlag(selectedCloudType, selectedUid, selectedRemotePath, flag);
         }
 
         onStatusChanged: {
             if (status == DialogStatus.Open) {
-                // TODO set sortFlag before status=Open
-                sortFlag = cloudDriveModel.sortFlag;
+                // Set sortFlag before status=Open
+                sortFlag = cloudDriveModel.getSortFlag(selectedCloudType, selectedUid, selectedRemotePath);
             }
         }
     }
@@ -778,7 +778,7 @@ Page {
             id: quickScrollPanel
             listView: parent
             indicatorBarTitle: (modelIndex < 0) ? ""
-                               : ( cloudDriveModel.sortFlag == CloudDriveModel.SortByTime
+                               : ( sortByMenu.sortFlag == CloudDriveModel.SortByTime
                                   ? Qt.formatDateTime(cloudFolderModel.get(modelIndex).lastModified, "d MMM yyyy")
                                   : cloudFolderModel.get(modelIndex).name )
             inverted: !theme.inverted

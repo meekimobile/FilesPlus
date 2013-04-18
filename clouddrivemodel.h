@@ -34,7 +34,6 @@ class CloudDriveModel : public QDeclarativeItem
     Q_ENUMS(Operations)
     Q_PROPERTY(QString dirtyHash READ dirtyHash CONSTANT)
     Q_PROPERTY(bool dropboxFullAccess READ getDropboxFullAccess WRITE setDropboxFullAccess)
-    Q_PROPERTY(int sortFlag READ getSortFlag WRITE setSortFlag NOTIFY sortFlagChanged)
 public:
     static const QString ITEM_DAT_PATH;
     static const QString ITEM_DB_PATH;
@@ -193,6 +192,7 @@ public:
     Q_INVOKABLE QDateTime parseReplyDateString(CloudDriveModel::ClientTypes type, QString dateString);
     Q_INVOKABLE QString formatJSONDateString(QDateTime datetime);
     Q_INVOKABLE QString getPathFromUrl(QString urlString);
+    Q_INVOKABLE QDateTime parseUTCDateString(QString utcString);
 
     // Scheduler.
     Q_INVOKABLE int updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp);
@@ -274,8 +274,8 @@ public:
     Q_INVOKABLE void cacheImage(QString remoteFilePath, QString url, int w, int h, QString caller);
     Q_INVOKABLE QString media(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);    
 
-    Q_INVOKABLE int getSortFlag();
-    Q_INVOKABLE void setSortFlag(int sortFlag);
+    Q_INVOKABLE int getSortFlag(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
+    Q_INVOKABLE void setSortFlag(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, int sortFlag);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void initializeDBStarted(QString nonce);
@@ -455,7 +455,6 @@ private:
     void createTempPath();
 
     // Sorting.
-    int m_sortFlag;
     QString m_cachedJsonText;
     QString sortJsonText(QString &jsonText, int sortFlag);
     void sortItemList(QList<QScriptValue> &itemList, int sortFlag);
