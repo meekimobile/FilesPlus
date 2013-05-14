@@ -157,21 +157,6 @@ QString CloudDriveModel::dirtyHash() const
     return DirtyHash;
 }
 
-bool CloudDriveModel::getDropboxFullAccess()
-{
-    return m_dropboxFullAccess;
-}
-
-void CloudDriveModel::setDropboxFullAccess(bool flag)
-{
-    if (m_dropboxFullAccess != flag) {
-        m_dropboxFullAccess = flag;
-
-        // Re-initialize DropboxClient.
-        initializeDropboxClient();
-    }
-}
-
 void CloudDriveModel::loadCloudDriveItems(QString nonce) {
     QFile file(ITEM_DAT_PATH);
     if (file.open(QIODevice::ReadOnly)) {
@@ -351,14 +336,19 @@ void CloudDriveModel::connectCloudClientsSignal(CloudDriveClient *client)
     connect(client, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
 }
 
+void CloudDriveModel::refreshDropboxClient()
+{
+    initializeDropboxClient();
+}
+
 void CloudDriveModel::initializeDropboxClient() {
-    qDebug() << "CloudDriveModel::initializeDropboxClient" << m_dropboxFullAccess;
+    qDebug() << "CloudDriveModel::initializeDropboxClient";
 
     if (dbClient != 0) {
         dbClient->deleteLater();
     }
 
-    dbClient = new DropboxClient(this, m_dropboxFullAccess);
+    dbClient = new DropboxClient(this);
     connectCloudClientsSignal(dbClient);
 }
 

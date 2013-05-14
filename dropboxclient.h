@@ -38,7 +38,7 @@ public:
 
     static const qint64 DefaultChunkSize;
 
-    explicit DropboxClient(QObject *parent = 0, bool fullAccess = false);
+    explicit DropboxClient(QObject *parent = 0);
     ~DropboxClient();
 
     QString getDefaultLocalFilePath(const QString &remoteFilePath);

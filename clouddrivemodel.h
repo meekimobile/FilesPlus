@@ -33,7 +33,6 @@ class CloudDriveModel : public QDeclarativeItem
     Q_ENUMS(SortFlags)
     Q_ENUMS(Operations)
     Q_PROPERTY(QString dirtyHash READ dirtyHash CONSTANT)
-    Q_PROPERTY(bool dropboxFullAccess READ getDropboxFullAccess WRITE setDropboxFullAccess)
 public:
     static const QString ITEM_DAT_PATH;
     static const QString ITEM_DB_PATH;
@@ -99,8 +98,6 @@ public:
     ~CloudDriveModel();
 
     QString dirtyHash() const;
-    bool getDropboxFullAccess();
-    void setDropboxFullAccess(bool flag);
 
     void addItem(QString localPath, CloudDriveItem item);
     QList<CloudDriveItem> getItemList(QString localPath);
@@ -219,6 +216,7 @@ public:
     Q_INVOKABLE void migrateCloudDriveItemsToDB();
 
     // Dropbox specific functions.
+    Q_INVOKABLE void refreshDropboxClient();
     Q_INVOKABLE bool updateDropboxPrefix(bool fullAccess);
 
     // FTP/WebDAV specific functions.
@@ -440,8 +438,6 @@ private:
 
     QString createNonce();
     void jobDone();
-
-    bool m_dropboxFullAccess;
 
     // Scheduler.
     bool m_isSchedulerSuspended;

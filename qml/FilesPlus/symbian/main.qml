@@ -564,6 +564,9 @@ PageStackWindow {
                 // Do nothing, value has been set by setting page.
             }
 
+            // Re-initialize DropboxClient.
+            cloudDriveModel.refreshDropboxClient();
+
             // Migrate DAT to DB.
             appInfo.setSettingValue("cloudItems.migration.confirmation", true);
             cloudDriveModel.migrateCloudDriveItemsToDB();
@@ -1085,7 +1088,6 @@ PageStackWindow {
 
     CloudDriveModel {
         id: cloudDriveModel
-        dropboxFullAccess: appInfo.emptySetting+appInfo.getSettingBoolValue("dropbox.fullaccess.enabled", false)
 
         property alias jobsModel: cloudDriveJobsModel
         property string shareFileCaller

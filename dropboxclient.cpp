@@ -35,13 +35,21 @@ const QString DropboxClient::commitChunkedUploadURI = "https://api-content.dropb
 
 const qint64 DropboxClient::DefaultChunkSize = 4194304; // 4MB
 
-DropboxClient::DropboxClient(QObject *parent, bool fullAccess) :
+DropboxClient::DropboxClient(QObject *parent) :
     CloudDriveClient(parent)
 {
     // Set object name for further reference.
     setObjectName(this->metaObject()->className());
 
-    isFullAccess = fullAccess;
+    // Set default dropbox mode.
+    if (!m_settings.contains("dropbox.fullaccess.enabled")) {
+        m_settings.setValue("dropbox.fullaccess.enabled", QVariant(true));
+        qDebug() << "DropboxClient::DropboxClient set default dropbox.fullaccess.enabled" << m_settings.value("dropbox.fullaccess.enabled", QVariant(true)).toBool();
+    }
+
+    qDebug() << "DropboxClient::DropboxClient dropbox.fullaccess.enabled" << m_settings.value("dropbox.fullaccess.enabled", QVariant(true)).toBool();
+
+    isFullAccess = m_settings.value("dropbox.fullaccess.enabled", QVariant(true)).toBool();
     if (isFullAccess) {
         consumerKey = DropboxConsumerKey;
         consumerSecret = DropboxConsumerSecret;
