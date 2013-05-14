@@ -207,12 +207,12 @@ Dialog {
                 }
             }
             
-            if (uploadCount>0) text = text + qsTr("Upload %n item(s)\n", "", uploadCount);
-            if (downloadCount>0) text = text + (qsTr("Download %n item(s)\n", "", downloadCount));
-            if (migrateCount>0) text = text + qsTr("Migrate %n item(s)\n", "", migrateCount);
-            if (deleteCount>0) text = text + qsTr("Delete %n item(s)\n", "", deleteCount);
-            if (copyCount>0) text = text + qsTr("Copy %n item(s)\n", "", copyCount);
-            if (cutCount>0) text = text + qsTr("Move %n item(s)\n", "", cutCount);
+            if (uploadCount>0) text = text + qsTr("Upload %n item(s)", "", uploadCount) + "\n";
+            if (downloadCount>0) text = text + qsTr("Download %n item(s)", "", downloadCount) + "\n";
+            if (migrateCount>0) text = text + qsTr("Migrate %n item(s)", "", migrateCount) + "\n";
+            if (deleteCount>0) text = text + qsTr("Delete %n item(s)", "", deleteCount) + "\n";
+            if (copyCount>0) text = text + qsTr("Copy %n item(s)", "", copyCount) + "\n";
+            if (cutCount>0) text = text + qsTr("Move %n item(s)", "", cutCount) + "\n";
             if (uploadCount+downloadCount+migrateCount+copyCount+cutCount > 0) text = text + qsTr("to") + " " + targetPathName;
             text = text + " ?";
         }

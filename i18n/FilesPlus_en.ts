@@ -1139,73 +1139,55 @@ Please click &apos;OK&apos; to continue.</translation>
     <message numerus="yes">
         <location line="-6"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-6"/>
-        <source>Upload %n item(s)
-</source>
+        <source>Upload %n item(s)</source>
         <translation>
-            <numerusform>Upload %n item
-</numerusform>
-            <numerusform>Upload %n items
-</numerusform>
+            <numerusform>Upload %n item</numerusform>
+            <numerusform>Upload %n items</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+1"/>
-        <source>Download %n item(s)
-</source>
+        <source>Download %n item(s)</source>
         <translation>
-            <numerusform>Download %n item
-</numerusform>
-            <numerusform>Download %n items
-</numerusform>
+            <numerusform>Download %n item</numerusform>
+            <numerusform>Download %n items</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+1"/>
-        <source>Migrate %n item(s)
-</source>
+        <source>Migrate %n item(s)</source>
         <translation>
-            <numerusform>Migrate %n item
-</numerusform>
-            <numerusform>Migrate %n items
-</numerusform>
+            <numerusform>Migrate %n item</numerusform>
+            <numerusform>Migrate %n items</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+1"/>
-        <source>Delete %n item(s)
-</source>
+        <source>Delete %n item(s)</source>
         <translation>
-            <numerusform>Delete %n item
-</numerusform>
-            <numerusform>Delete %n items
-</numerusform>
+            <numerusform>Delete %n item</numerusform>
+            <numerusform>Delete %n items</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+1"/>
-        <source>Copy %n item(s)
-</source>
+        <source>Copy %n item(s)</source>
         <translation>
-            <numerusform>Copy %n item
-</numerusform>
-            <numerusform>Copy %n items
-</numerusform>
+            <numerusform>Copy %n item</numerusform>
+            <numerusform>Copy %n items</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+1"/>
-        <source>Move %n item(s)
-</source>
+        <source>Move %n item(s)</source>
         <translation>
-            <numerusform>Move %n item
-</numerusform>
-            <numerusform>Move %n items
-</numerusform>
+            <numerusform>Move %n item</numerusform>
+            <numerusform>Move %n items</numerusform>
         </translation>
     </message>
     <message>

@@ -978,8 +978,7 @@ Please click &apos;OK&apos; to continue.</source>
     <message numerus="yes">
         <location line="-34"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-34"/>
-        <source>Copy %n item(s)
-</source>
+        <source>Copy %n item(s)</source>
         <translation>
             <numerusform>复制 %n 文件</numerusform>
         </translation>
@@ -1045,8 +1044,7 @@ Please click &apos;OK&apos; to continue.</source>
     <message numerus="yes">
         <location line="-31"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-31"/>
-        <source>Delete %n item(s)
-</source>
+        <source>Delete %n item(s)</source>
         <translation>
             <numerusform>删除 %n 文件</numerusform>
         </translation>
@@ -1054,8 +1052,7 @@ Please click &apos;OK&apos; to continue.</source>
     <message numerus="yes">
         <location line="-3"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-3"/>
-        <source>Upload %n item(s)
-</source>
+        <source>Upload %n item(s)</source>
         <translation>
             <numerusform>上传 %n 文件</numerusform>
         </translation>
@@ -1063,8 +1060,7 @@ Please click &apos;OK&apos; to continue.</source>
     <message numerus="yes">
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+1"/>
-        <source>Download %n item(s)
-</source>
+        <source>Download %n item(s)</source>
         <translation>
             <numerusform>下载 %n 文件</numerusform>
         </translation>
@@ -1078,8 +1074,7 @@ Please click &apos;OK&apos; to continue.</source>
     <message numerus="yes">
         <location line="+60"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+60"/>
-        <source>Move %n item(s)
-</source>
+        <source>Move %n item(s)</source>
         <translation>
             <numerusform>移动 %n 文件</numerusform>
         </translation>
@@ -1087,8 +1082,7 @@ Please click &apos;OK&apos; to continue.</source>
     <message numerus="yes">
         <location line="-3"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-3"/>
-        <source>Migrate %n item(s)
-</source>
+        <source>Migrate %n item(s)</source>
         <translation>
             <numerusform>移动 %n 文件</numerusform>
         </translation>

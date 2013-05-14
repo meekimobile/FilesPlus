@@ -1117,87 +1117,63 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
     <message numerus="yes">
         <location line="-6"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-6"/>
-        <source>Upload %n item(s)
-</source>
+        <source>Upload %n item(s)</source>
         <translatorcomment>Already checked with Yandex.ru  Загрузить=Upload</translatorcomment>
         <translation>
-            <numerusform>Загрузить %n элемент
-</numerusform>
-            <numerusform>Загрузить %n элемента
-</numerusform>
-            <numerusform>Загрузить %n элементов
-</numerusform>
+            <numerusform>Загрузить %n элемент</numerusform>
+            <numerusform>Загрузить %n элемента</numerusform>
+            <numerusform>Загрузить %n элементов</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+1"/>
-        <source>Download %n item(s)
-</source>
+        <source>Download %n item(s)</source>
         <translation>
-            <numerusform>Скачать %n элемент
-</numerusform>
-            <numerusform>Скачать %n элемента
-</numerusform>
-            <numerusform>Скачать %n элементов
-</numerusform>
+            <numerusform>Скачать %n элемент</numerusform>
+            <numerusform>Скачать %n элемента</numerusform>
+            <numerusform>Скачать %n элементов</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+1"/>
-        <source>Migrate %n item(s)
-</source>
+        <source>Migrate %n item(s)</source>
         <translatorcomment>Copy</translatorcomment>
         <translation>
-            <numerusform>Скопируйте %n элемент
-</numerusform>
-            <numerusform>Скопируйте %n элемента
-</numerusform>
-            <numerusform>Скопируйте %n элементов
-</numerusform>
+            <numerusform>Скопируйте %n элемент</numerusform>
+            <numerusform>Скопируйте %n элемента</numerusform>
+            <numerusform>Скопируйте %n элементов</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+1"/>
-        <source>Delete %n item(s)
-</source>
+        <source>Delete %n item(s)</source>
         <translation>
-            <numerusform>Удалить %n элемент
-</numerusform>
-            <numerusform>Удалите %n элемента
-</numerusform>
-            <numerusform>Удалите %n элементов
-</numerusform>
+            <numerusform>Удалить %n элемент</numerusform>
+            <numerusform>Удалите %n элемента</numerusform>
+            <numerusform>Удалите %n элементов</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+1"/>
-        <source>Copy %n item(s)
-</source>
+        <source>Copy %n item(s)</source>
         <translation>
-            <numerusform>Скопируйте %n элемент
-</numerusform>
-            <numerusform>Скопируйте %n элемента
-</numerusform>
-            <numerusform>Скопируйте %n элементов
-</numerusform>
+            <numerusform>Скопируйте %n элемент</numerusform>
+            <numerusform>Скопируйте %n элемента</numerusform>
+            <numerusform>Скопируйте %n элементов</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+1"/>
-        <source>Move %n item(s)
-</source>
+        <source>Move %n item(s)</source>
         <translation>
-            <numerusform>Переместить %n элемент
-</numerusform>
-            <numerusform>Переместить %n элемента
-</numerusform>
-            <numerusform>Переместить %n элементов
-</numerusform>
+            <numerusform>Переместить %n элемент</numerusform>
+            <numerusform>Переместить %n элемента</numerusform>
+            <numerusform>Переместить %n элементов</numerusform>
         </translation>
     </message>
     <message>
