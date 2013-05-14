@@ -679,7 +679,7 @@ Premi &apos;OK&apos; per continuare.</translation>
 <context>
     <name>CloudDriveModel</name>
     <message>
-        <location filename="../clouddrivemodel.cpp" line="+880"/>
+        <location filename="../clouddrivemodel.cpp" line="+891"/>
         <location line="+56"/>
         <source>Download</source>
         <translation>Download</translation>
@@ -815,7 +815,7 @@ Premi &apos;OK&apos; per continuare.</translation>
         <translation>Commit file caricato</translation>
     </message>
     <message>
-        <location line="+1495"/>
+        <location line="+1503"/>
         <source>Service is not implemented or host is not accessible.</source>
         <translation>Il servizio non è implementato o host non è accessibile.</translation>
     </message>
@@ -1088,12 +1088,12 @@ Premi &apos;OK&apos; per continuare.</translation>
 <context>
     <name>CloudFolderPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+565"/>
+        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+566"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
         <location line="+3"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+568"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+569"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
@@ -1700,8 +1700,8 @@ You will be redirected to cloud account page.</source>
 Sarai reindirizzato alla pagina di autorizzazione.</translation>
     </message>
     <message>
-        <location line="+1105"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1106"/>
+        <location line="+1107"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1108"/>
         <source>Sync marked items</source>
         <translation>Sincronizza gli elementi contrassegnati</translation>
     </message>
@@ -3193,26 +3193,26 @@ Conferma.</translation>
         <translation>Ordina per Nome</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+10"/>
+        <location line="+11"/>
+        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+11"/>
         <source>Sort by Name (dir. first)</source>
         <translation>Ordina per Nome (cartella prima)</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+10"/>
+        <location line="+11"/>
+        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+11"/>
         <source>Sort by Type</source>
         <translation>Ordina per Tipo</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+10"/>
+        <location line="+11"/>
+        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+11"/>
         <source>Sort by Time</source>
         <translation>Ordina per Data</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+10"/>
+        <location line="+11"/>
+        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+11"/>
         <source>Sort by Size</source>
         <translation>Ordina per Dimensione</translation>
     </message>

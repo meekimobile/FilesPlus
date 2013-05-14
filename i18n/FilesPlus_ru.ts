@@ -373,7 +373,7 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
 <context>
     <name>CloudDriveModel</name>
     <message>
-        <location filename="../clouddrivemodel.cpp" line="+880"/>
+        <location filename="../clouddrivemodel.cpp" line="+891"/>
         <location line="+56"/>
         <source>Download</source>
         <translation>Скачать</translation>
@@ -508,7 +508,7 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         <translation>Подтвердите загруженных файлов</translation>
     </message>
     <message>
-        <location line="+1495"/>
+        <location line="+1503"/>
         <source>Service is not implemented or host is not accessible.</source>
         <translation>Обслуживание не реализованы или хост не доступен.</translation>
     </message>
@@ -785,12 +785,12 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
 <context>
     <name>CloudFolderPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+565"/>
+        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+566"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
         <location line="+3"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+568"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+569"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
@@ -1416,8 +1416,8 @@ You will be redirected to cloud account page.</source>
 Вы будете направлены на страницу авторизации.</translation>
     </message>
     <message>
-        <location line="+1105"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1106"/>
+        <location line="+1107"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1108"/>
         <source>Sync marked items</source>
         <translation>Синхр. отмеченные элементы</translation>
     </message>
@@ -3018,26 +3018,26 @@ FilesPlus сейчас закроется.
         <translation>Сортировка по Имени</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+10"/>
+        <location line="+11"/>
+        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+11"/>
         <source>Sort by Name (dir. first)</source>
         <translation>Сортировка по Имени (папка первая)</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+10"/>
+        <location line="+11"/>
+        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+11"/>
         <source>Sort by Type</source>
         <translation>Сортировка по Типу</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+10"/>
+        <location line="+11"/>
+        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+11"/>
         <source>Sort by Time</source>
         <translation>Сортировка по Времени</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+10"/>
+        <location line="+11"/>
+        <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+11"/>
         <source>Sort by Size</source>
         <translation>Сортировка по Размеру</translation>
     </message>
