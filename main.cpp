@@ -234,6 +234,15 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
 #endif
 
+    // Default setting values.
+    if (!m_settings->contains("drivepage.clouddrive.enabled")) {
+        m_settings->setValue("drivepage.clouddrive.enabled", QVariant(true));
+    }
+    if (!m_settings->contains("dropbox.fullaccess.enabled")) {
+        m_settings->setValue("dropbox.fullaccess.enabled", QVariant(true));
+    }
+    m_settings->sync();
+
     QScopedPointer<QApplication> app(createApplication(argc, argv));
 
 #ifdef Q_OS_SYMBIAN
