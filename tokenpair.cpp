@@ -21,7 +21,7 @@ QDataStream &operator>>(QDataStream &in, TokenPair &t)
 
 QDebug &operator<<(QDebug &out, const TokenPair &t)
 {
-    out << "TokenPair(" << t.token << "," << t.secret << "," << t.email << ")";
+    out << "TokenPair(" << t.email << "," << t.token << ")";
 
     return out;
 }

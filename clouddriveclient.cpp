@@ -120,7 +120,7 @@ bool CloudDriveClient::isUnicodeSupported()
 }
 
 void CloudDriveClient::loadAccessPairMap() {
-    qDebug() << QTime::currentTime() << objectName() << "::loadAccessPairMap";
+//    qDebug() << QTime::currentTime() << objectName() << "::loadAccessPairMap";
 
     QFile file(KeyStoreFilePath.arg(objectName()));
     if (file.open(QIODevice::ReadOnly)) {
