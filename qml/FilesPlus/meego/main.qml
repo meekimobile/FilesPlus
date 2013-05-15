@@ -1207,8 +1207,9 @@ PageStackWindow {
             }
         }
 
-        function refreshCloudDriveAccounts() {
-            cloudDriveAccountsModel.parseCloudDriveAccountsModel();
+        function refreshCloudDriveAccounts(caller) {
+            var p = findPage("drivePage");
+            if (p) p.refreshSlot(caller);
         }
 
         function getUidListModel(localPath) {
@@ -1443,13 +1444,8 @@ PageStackWindow {
                             2000);
 
                     // Refresh to get newly authorized cloud drive.
-                    p = findPage("drivePage");
-                    if (p) p.refreshSlot("window onAccessTokenReplySignal jobJson.type " + jobJson.type + " jobJson.uid " + jobJson.uid);
+                    cloudDriveModel.refreshCloudDriveAccounts("window onAccessTokenReplySignal jobJson.type " + jobJson.type + " jobJson.uid " + jobJson.uid);
                 }
-
-                // Refresh account page.
-                var p = findPage("cloudDriveAccountsPage");
-                if (p) p.refreshCloudDriveAccountsSlot();
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Access Token"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);

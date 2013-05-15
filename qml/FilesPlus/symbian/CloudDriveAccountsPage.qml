@@ -33,7 +33,7 @@ Page {
             id: refreshButton
             buttonIconSource: "toolbar-refresh"
             onClicked: {
-                cloudDriveModel.refreshCloudDriveAccounts();
+                cloudDriveModel.refreshCloudDriveAccounts("cloudDriveAccountsPage refreshButton onClicked");
             }
         }
         ToolBarButton {
@@ -136,7 +136,7 @@ Page {
         titleText: appInfo.emptyStr+qsTr("Remove cloud drive account")
         onConfirm: {
             cloudDriveModel.removeUid(selectedCloudType, selectedUid);
-            accountListView.model.remove(index);
+            cloudDriveModel.refreshCloudDriveAccounts("cloudDriveAccountsPage remoteAccountConfirmation onConfirm");
         }
         onOpening: {
             selectedCloudType = accountListView.model.get(index).cloudDriveType;
@@ -446,7 +446,7 @@ Page {
             if (!addAccountDialog.validateForm()) return;
 
             cloudDriveModel.saveConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text, tokenInput.text);
-            cloudDriveModel.refreshCloudDriveAccounts();
+            cloudDriveModel.refreshCloudDriveAccounts("cloudDriveAccountsPage addAccountDialog onConfirm");
         }
     }
 

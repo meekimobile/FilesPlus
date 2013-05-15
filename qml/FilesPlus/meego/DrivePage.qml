@@ -186,6 +186,9 @@ Page {
         if (appInfo.getSettingBoolValue("drivepage.clouddrive.enabled", false)) {
             // Parse accounts into CloudDriveAccountsModel and also copy to driveGridModel.
             cloudDriveAccountsModel.parseCloudDriveAccountsModel(driveGridModel);
+        } else {
+            // Parse accounts into CloudDriveAccountsModel only.
+            cloudDriveAccountsModel.parseCloudDriveAccountsModel();
         }
     }
 
