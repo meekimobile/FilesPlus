@@ -206,6 +206,18 @@ Page {
             group: "Personalization"
         }
         ListElement {
+            name: "statusbar.enabled"
+            title: ""
+            type: "switch"
+            group: "Personalization"
+        }
+        ListElement {
+            name: "Spacer"
+            title: ""
+            type: "spacer"
+            group: "Spacer"
+        }
+        ListElement {
             name: "Developer"
             title: ""
             type: "section"
@@ -278,6 +290,7 @@ Page {
         else if (name == "CloudFolderPage.thumbnail.enabled") return qsTr("Show thumbnail on cloud drive") + appInfo.emptyStr;
         else if (name == "automatically.bluetooth.on") return qsTr("Turn bluetooth on automatically") + appInfo.emptyStr;
         else if (name == "keep.bluetooth.off") return qsTr("Keep bluetooth off") + appInfo.emptyStr;
+        else if (name == "statusbar.enabled") return qsTr("Show status bar") + appInfo.emptyStr;
         else if (name == "Logging.enabled") return qsTr("Logging (Debug)") + appInfo.emptyStr;
         else if (name == "dropbox.fullaccess.enabled") return qsTr("Dropbox full access") + appInfo.emptyStr;
         else if (name == "Monitoring.enabled") return qsTr("Monitoring (RAM,CPU)") + appInfo.emptyStr;

@@ -12,7 +12,7 @@ import "Utility.js" as Utility
 
 PageStackWindow {
     id: window
-    showStatusBar: true
+    showStatusBar: appInfo.emptySetting+appInfo.getSettingBoolValue("statusbar.enabled", true)
     showToolBar: true
 
     property bool inverted: !theme.inverted
