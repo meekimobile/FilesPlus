@@ -6,7 +6,7 @@ MenuWithIcon {
     z: 2
 
     property variant disabledMenus: []
-    property bool isMarkAll: true
+    property bool isMarkAll: false
 
     signal markAll()
     signal copyMarkedItems()

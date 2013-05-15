@@ -9,6 +9,7 @@ Page {
     id: folderPage
 
     property string name: "folderPage"
+    property bool inverted: window.platformInverted
 
     states: [
         State {
@@ -109,18 +110,37 @@ Page {
         }
 
         ToolBarButton {
-            id: flipButton
-            buttonIconSource: (folderPage.state != "list") ? (!window.platformInverted ? "list.svg" : "list_inverted.svg") : (!window.platformInverted ? "chart.svg" : "chart_inverted.svg")
-            visible: (fsListView.state == "")
+            id: actionButton
 
-            Component.onCompleted: {
-                flipButton.clicked.connect(flipSlot);
+            buttonIconSource: {
+                if (fsListView.state == "mark") {
+                    return (!inverted ? "ok.svg" : "ok_inverted.svg");
+                } else {
+                    if (folderPage.state != "list") {
+                        return (!inverted ? "list.svg" : "list_inverted.svg");
+                    } else {
+                        return (!inverted ? "chart.svg" : "chart_inverted.svg");
+                    }
+                }
+            }
+
+            onClicked: {
+                if (fsListView.state == "mark") {
+                    if (markMenu.isMarkAll) {
+                        fsListView.unmarkAll();
+                    } else {
+                        fsListView.markAll();
+                    }
+                    markMenu.isMarkAll = !markMenu.isMarkAll;
+                } else {
+                    flipSlot();
+                }
             }
         }
 
         ToolBarButton {
             id: cloudButton
-            buttonIconSource: (!window.platformInverted ? "cloud.svg" : "cloud_inverted.svg")
+            buttonIconSource: (!inverted ? "cloud.svg" : "cloud_inverted.svg")
             visible: (fsListView.state == "")
 
             TextIndicator {
@@ -1011,7 +1031,7 @@ Page {
                                : ( fsModel.sortFlag == FolderSizeItemListModel.SortByTime
                                   ? Qt.formatDateTime(fsModel.get(modelIndex).lastModified, "d MMM yyyy")
                                   : fsModel.get(modelIndex).name )
-            inverted: window.platformInverted
+            inverted: inverted
             scrollBarWidth: 70
             indicatorBarHeight: 70
             scrollBarColor: "grey"

@@ -7,6 +7,7 @@ Page {
     id: cloudFolderPage
 
     property string name: "cloudFolderPage"
+    property bool inverted: !theme.inverted
 
     property string caller: name
     property int operation
@@ -245,8 +246,37 @@ Page {
         }
 
         ToolBarButton {
+            id: actionButton
+
+            buttonIconSource: {
+                if (cloudFolderView.state == "mark") {
+                    return (!inverted ? "ok.svg" : "ok_inverted.svg");
+                } else {
+                    if (cloudFolderPage.state != "list") {
+                        return (!inverted ? "list.svg" : "list_inverted.svg");
+                    } else {
+                        return (!inverted ? "chart.svg" : "chart_inverted.svg");
+                    }
+                }
+            }
+
+            onClicked: {
+                if (cloudFolderView.state == "mark") {
+                    if (markMenu.isMarkAll) {
+                        cloudFolderView.unmarkAll();
+                    } else {
+                        cloudFolderView.markAll();
+                    }
+                    markMenu.isMarkAll = !markMenu.isMarkAll;
+                } else {
+//                    flipSlot();
+                }
+            }
+        }
+
+        ToolBarButton {
             id: cloudButton
-            buttonIconSource: (theme.inverted ? "cloud.svg" : "cloud_inverted.svg")
+            buttonIconSource: (!inverted ? "cloud.svg" : "cloud_inverted.svg")
             visible: (cloudFolderView.state != "mark")
 
             TextIndicator {
@@ -782,7 +812,7 @@ Page {
                                : ( sortByMenu.sortFlag == CloudDriveModel.SortByTime
                                   ? Qt.formatDateTime(cloudFolderModel.get(modelIndex).lastModified, "d MMM yyyy")
                                   : cloudFolderModel.get(modelIndex).name )
-            inverted: !theme.inverted
+            inverted: inverted
             scrollBarWidth: 80
             indicatorBarHeight: 80
             scrollBarColor: "grey"
