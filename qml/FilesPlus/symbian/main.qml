@@ -2433,6 +2433,7 @@ PageStackWindow {
         smooth: false
         verticalAlignment: Text.AlignVCenter
         font.pointSize: 6
+        visible: showStatusBar
     }
 
     Rectangle {
