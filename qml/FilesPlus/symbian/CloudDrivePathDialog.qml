@@ -196,8 +196,10 @@ ConfirmDialog {
                     MouseArea {
                         anchors.fill: parent
                         onClicked: {
-                            selectedRemotePath = remoteParentPath;
-                            selectedRemotePathName = remoteParentPathName;
+                            if (appInfo.getSettingBoolValue("CloudDriveModel.metadata.root.connection.enabled", false)) {
+                                selectedRemotePath = remoteParentPath;
+                                selectedRemotePathName = remoteParentPathName;
+                            }
                         }
                     }
                 }
