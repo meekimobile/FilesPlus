@@ -253,6 +253,12 @@ Page {
             type: "switch"
             group: "Developer"
         }
+        ListElement {
+            name: "CloudDriveModel.metadata.root.connection.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
     }
 
     GridView {
@@ -299,6 +305,7 @@ Page {
         else if (name == "drivepage.systemdrive.enabled") return qsTr("Show system drive on drive page") + appInfo.emptyStr;
         else if (name == "WebDavClient.ignoreSSLSelfSignedCertificateErrors") return qsTr("Ignore WebDAV SSL self-signed certificate errors") + appInfo.emptyStr;
         else if (name == "LocalFileImageProvider.cache.enabled") return qsTr("Cache local images") + appInfo.emptyStr;
+        else if (name == "CloudDriveModel.metadata.root.connection.enabled") return qsTr("Sync to cloud storage root") + appInfo.emptyStr;
         else return qsTr(name) + appInfo.emptyStr;
     }
 

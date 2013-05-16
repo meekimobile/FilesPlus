@@ -2001,7 +2001,8 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
         return;
     }
 
-    if (isRemoteRoot(type, uid, remoteFilePath) || remoteFilePath == "/") {
+    if (!m_settings.value("CloudDriveModel.metadata.root.connection.enabled", QVariant(false)).toBool()
+        && (isRemoteRoot(type, uid, remoteFilePath) || remoteFilePath == "/") ) {
         qDebug() << "CloudDriveModel::metadata remoteFilePath" << remoteFilePath << " is root, can't sync.";
         return;
     }
@@ -3836,12 +3837,12 @@ void CloudDriveModel::jobDone() {
 
 void CloudDriveModel::proceedNextJob() {
     // Proceed next job in queue. Any jobs which haven't queued will be ignored.
-    if (runningJobCount > 0) {
-        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount
-                 << "m_browseThreadPool" << m_browseThreadPool.activeThreadCount() << "/" << m_browseThreadPool.maxThreadCount()
-                 << "m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count() << "m_isSuspended" << m_isSuspended << "m_isAborted" << m_isAborted << "m_isPaused" << m_isPaused
-                 << "m_threadHash count" << m_threadHash->count();
-    }
+//    if (runningJobCount > 0) {
+//        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "CloudDriveModel::proceedNextJob waiting runningJobCount" << runningJobCount
+//                 << "m_browseThreadPool" << m_browseThreadPool.activeThreadCount() << "/" << m_browseThreadPool.maxThreadCount()
+//                 << "m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count() << "m_isSuspended" << m_isSuspended << "m_isAborted" << m_isAborted << "m_isPaused" << m_isPaused
+//                 << "m_threadHash count" << m_threadHash->count();
+//    }
 
     // Emit status signal.
     emit jobQueueStatusSignal(runningJobCount, m_jobQueue->count(), m_cloudDriveJobs->count(), getItemCount());

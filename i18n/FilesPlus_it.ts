@@ -815,7 +815,7 @@ Premi &apos;OK&apos; per continuare.</translation>
         <translation>Commit file caricato</translation>
     </message>
     <message>
-        <location line="+1503"/>
+        <location line="+1504"/>
         <source>Service is not implemented or host is not accessible.</source>
         <translation>Il servizio non è implementato o host non è accessibile.</translation>
     </message>
@@ -879,8 +879,8 @@ Premi &apos;OK&apos; per continuare.</translation>
         <translation type="obsolete">Cancella</translation>
     </message>
     <message>
-        <location line="+147"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDrivePathDialog.qml" line="+145"/>
+        <location line="+155"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDrivePathDialog.qml" line="+153"/>
         <source>New folder name</source>
         <translation>Nuovo nome cartella</translation>
     </message>
@@ -2922,15 +2922,15 @@ Il link verrà rimosso.</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+239"/>
+        <location line="+245"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <location line="+251"/>
+        <location line="+257"/>
         <source>Logging (Debug)</source>
         <translation>Logging (Debug)</translation>
     </message>
     <message>
-        <location line="-238"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-250"/>
+        <location line="-244"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-256"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -2945,8 +2945,8 @@ FilesPlus sta chiudendo adesso.
 Conferma.</translation>
     </message>
     <message>
-        <location line="+218"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+230"/>
+        <location line="+224"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+236"/>
         <source>Show cloud print jobs</source>
         <translation>Mostra i processi CloudPrint</translation>
     </message>
@@ -3071,6 +3071,13 @@ Conferma.</translation>
         <source>Cache local images</source>
         <translation>Cache immagini locali</translation>
     </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Sync to cloud storage root</source>
+        <translatorcomment>Sync to whole cloud storage</translatorcomment>
+        <translation>Sincronizza per intero il cloud storage</translation>
+    </message>
     <message numerus="yes">
         <location line="+171"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+175"/>
@@ -3107,8 +3114,8 @@ Conferma.</translation>
         <translation type="obsolete">Mostra anteprima</translation>
     </message>
     <message>
-        <location line="-278"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-283"/>
+        <location line="-279"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-284"/>
         <source>Keep bluetooth off</source>
         <translation>Tenere bluetooth off</translation>
     </message>
@@ -3137,8 +3144,8 @@ Conferma.</translation>
         <translation>Ignora WebDAV SSL autofirmati errori del certificato</translation>
     </message>
     <message>
-        <location line="+33"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+33"/>
+        <location line="+34"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+34"/>
         <source>Monitoring</source>
         <translation>Monitoraggio</translation>
     </message>
@@ -3167,7 +3174,7 @@ Conferma.</translation>
         <translation>Cinese</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-225"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-226"/>
         <source>Show private drive on drive page</source>
         <translation>Mostra disco di privata a pagina Drives</translation>
     </message>

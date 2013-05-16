@@ -542,7 +542,7 @@ Please click &apos;OK&apos; to continue.</translation>
         <translation>Commit upload</translation>
     </message>
     <message>
-        <location line="+1503"/>
+        <location line="+1504"/>
         <source>Service is not implemented or host is not accessible.</source>
         <translation>Service is not implemented or host is not accessible.</translation>
     </message>
@@ -606,8 +606,8 @@ Please click &apos;OK&apos; to continue.</translation>
         <translation type="obsolete">Cancel</translation>
     </message>
     <message>
-        <location line="+147"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDrivePathDialog.qml" line="+145"/>
+        <location line="+155"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDrivePathDialog.qml" line="+153"/>
         <source>New folder name</source>
         <translation>New folder name</translation>
     </message>
@@ -2671,8 +2671,8 @@ Link will be removed.</translation>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+278"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+291"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+284"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+297"/>
         <source>Cancel queued jobs</source>
         <translation>Cancel queued jobs</translation>
     </message>
@@ -2683,22 +2683,22 @@ Link will be removed.</translation>
         <translation>Sync all connected items</translation>
     </message>
     <message>
-        <location line="-230"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-242"/>
+        <location line="-236"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-248"/>
         <source>Settings</source>
         <translation>Settings</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+239"/>
+        <location line="+245"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <location line="+251"/>
+        <location line="+257"/>
         <source>Logging (Debug)</source>
         <translation>Logging (Debug)</translation>
     </message>
     <message>
-        <location line="-238"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-250"/>
+        <location line="-244"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-256"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -2709,8 +2709,8 @@ FilesPlus is exiting now.
 Please confirm.</translation>
     </message>
     <message>
-        <location line="+218"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+230"/>
+        <location line="+224"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+236"/>
         <source>Show cloud print jobs</source>
         <translation>Show cloud print jobs</translation>
     </message>
@@ -2857,6 +2857,12 @@ Please confirm.</translation>
         <translation>Cache local images</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Sync to cloud storage root</source>
+        <translation>Sync to cloud storage root</translation>
+    </message>
+    <message>
         <location line="+32"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+32"/>
         <source>Monitoring</source>
@@ -2918,7 +2924,7 @@ Please confirm.</translation>
         <translation type="obsolete">Locale</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-275"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-276"/>
         <source>Show private drive on drive page</source>
         <translation>Show private drive on drive page</translation>
     </message>

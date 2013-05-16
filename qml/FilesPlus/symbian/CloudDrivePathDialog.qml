@@ -192,6 +192,14 @@ ConfirmDialog {
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     verticalAlignment: Text.AlignVCenter
                     text: cloudDriveModel.isRemoteAbsolutePath(selectedCloudType) ? cloudDriveModel.getPathFromUrl(remoteParentPath) : remoteParentPathName
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            selectedRemotePath = remoteParentPath;
+                            selectedRemotePathName = remoteParentPathName;
+                        }
+                    }
                 }
 
                 TextField {

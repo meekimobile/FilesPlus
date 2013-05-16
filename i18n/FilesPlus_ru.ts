@@ -508,7 +508,7 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         <translation>Подтвердите загруженных файлов</translation>
     </message>
     <message>
-        <location line="+1503"/>
+        <location line="+1504"/>
         <source>Service is not implemented or host is not accessible.</source>
         <translation>Обслуживание не реализованы или хост не доступен.</translation>
     </message>
@@ -575,8 +575,8 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         <translation type="obsolete">Нет</translation>
     </message>
     <message>
-        <location line="+147"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDrivePathDialog.qml" line="+145"/>
+        <location line="+155"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDrivePathDialog.qml" line="+153"/>
         <source>New folder name</source>
         <translation>Новая папка имя</translation>
     </message>
@@ -2735,8 +2735,8 @@ Link will be removed.</source>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+278"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+291"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+284"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+297"/>
         <source>Cancel queued jobs</source>
         <translation>Отменить все заказы на печать</translation>
     </message>
@@ -2747,22 +2747,22 @@ Link will be removed.</source>
         <translation>Синхрон. всех выбр. элем</translation>
     </message>
     <message>
-        <location line="-230"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-242"/>
+        <location line="-236"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-248"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+239"/>
+        <location line="+245"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <location line="+251"/>
+        <location line="+257"/>
         <source>Logging (Debug)</source>
         <translation>Сохранять данные в лог файл (Debug)</translation>
     </message>
     <message>
-        <location line="-238"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-250"/>
+        <location line="-244"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-256"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -2773,8 +2773,8 @@ FilesPlus сейчас закроется.
 Пожалуйста, согласитесь с закрытием.</translation>
     </message>
     <message>
-        <location line="+218"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+230"/>
+        <location line="+224"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+236"/>
         <source>Show cloud print jobs</source>
         <translation>Показать заказы CloudPrint</translation>
     </message>
@@ -2924,6 +2924,13 @@ FilesPlus сейчас закроется.
         <translation>Кэширование эскизов местных</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Sync to cloud storage root</source>
+        <translatorcomment>Synchro. the whole cloud storage</translatorcomment>
+        <translation>Синхрон. в целом облако хранилища</translation>
+    </message>
+    <message>
         <location line="+32"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+32"/>
         <source>Monitoring</source>
@@ -2986,7 +2993,7 @@ FilesPlus сейчас закроется.
         <translation type="obsolete">Locale</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-275"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-276"/>
         <source>Show private drive on drive page</source>
         <translation>Показывает негласный диска на диск страницы</translation>
     </message>

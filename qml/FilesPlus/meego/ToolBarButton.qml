@@ -11,7 +11,7 @@ ToolIcon {
     signal pressAndHold()
 
     Component.onCompleted: {
-        console.debug("toolBarButton onCompleted " + children[0] + " " + children[1]);
+//        console.debug("toolBarButton onCompleted " + children[0] + " " + children[1]);
         var mouseArea = children[1];
         mouseArea.pressAndHold.connect(pressAndHold);
     }
