@@ -258,7 +258,13 @@ Page {
                     }
                     Text {
                         id: sourceName
-                        text: remote_file_path
+                        text: {
+                            if (operation == CloudDriveModel.Quota) {
+                                return uid + " (" + cloudDriveModel.getUidEmail(type, uid) + ")";
+                            } else {
+                                return remote_file_path;
+                            }
+                        }
                         width: parent.width - sourceCloudIcon.width
                         font.pointSize: 14
                         elide: Text.ElideMiddle
