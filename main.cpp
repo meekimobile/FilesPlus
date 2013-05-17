@@ -13,6 +13,7 @@
 #include "bluetoothclient.h"
 #include "messageclient.h"
 #include "clipboardmodel.h"
+#include "bookmarksmodel.h"
 #include <QDebug>
 #include <QtSql>
 #ifdef Q_OS_SYMBIAN
@@ -84,6 +85,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qmlRegisterType<BluetoothClient>("BluetoothClient", 1, 0, "BluetoothClient");
     qmlRegisterType<MessageClient>("MessageClient", 1, 0, "MessageClient");
     qmlRegisterType<ClipboardModel>("ClipboardModel", 1, 0, "ClipboardModel");
+    qmlRegisterType<BookmarksModel>("BookmarksModel", 1, 0, "BookmarksModel");
 
     // Set properties for QSettings.
     QCoreApplication::setOrganizationName("MeekiMobile");
@@ -243,6 +245,32 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     }
     m_settings->sync();
 
+    // Default database initialization.
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+#if defined(Q_WS_HARMATTAN)
+    // Create cache database path if it's not exist.
+    QDir dbPath("/home/user/.filesplus");
+    if (!dbPath.exists()) {
+        qDebug() << "main default database path" << dbPath.absolutePath() << "doesn't exists.";
+        bool res = QDir::home().mkpath(dbPath.absolutePath());
+        if (!res) {
+            qDebug() << "main default database path" << dbPath.absolutePath() << "can't be created.";
+        } else {
+            qDebug() << "main default database path" << dbPath.absolutePath() << "is created.";
+        }
+    }
+    db.setDatabaseName(dbPath.absoluteFilePath("default.db"));
+#else
+    db.setDatabaseName("default.db");
+#endif
+    if (db.open()) {
+        qDebug() << "main initialize default database successfully.";
+    } else {
+        qDebug() << "main initialize default database failed." << db.lastError().type() << db.lastError().text();
+    }
+    db.close();
+
+    // Application initialization.
     QScopedPointer<QApplication> app(createApplication(argc, argv));
 
 #ifdef Q_OS_SYMBIAN

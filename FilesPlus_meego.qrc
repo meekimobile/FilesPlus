@@ -161,5 +161,6 @@
         <file>qml/FilesPlus/splash_854x480.png</file>
         <file alias="qml/FilesPlus/QuickScrollPanel.qml">qml/FilesPlus/meego/QuickScrollPanel.qml</file>
         <file alias="qml/FilesPlus/OpenMenu.qml">qml/FilesPlus/meego/OpenMenu.qml</file>
+        <file alias="qml/FilesPlus/BookmarksPage.qml">qml/FilesPlus/meego/BookmarksPage.qml</file>
     </qresource>
 </RCC>

@@ -94,7 +94,8 @@ SOURCES += main.cpp \
     clouddriveclient.cpp \
     webdavclient.cpp \
     cacheimageworker.cpp \
-    contenttypehelper.cpp
+    contenttypehelper.cpp \
+    bookmarksmodel.cpp
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -134,7 +135,8 @@ HEADERS += \
     clouddriveclient.h \
     webdavclient.h \
     cacheimageworker.h \
-    contenttypehelper.h
+    contenttypehelper.h \
+    bookmarksmodel.h
 
 OTHER_FILES += \
     qtc_packaging/debian_harmattan/rules \
