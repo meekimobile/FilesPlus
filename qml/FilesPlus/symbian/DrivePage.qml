@@ -105,6 +105,9 @@ Page {
     DriveMenu {
         id: driveMenu
 
+        onOpenBookmarks: {
+            pageStack.push(Qt.resolvedUrl("BookmarksPage.qml"));
+        }
         onOpenSettings: {
             pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
         }
