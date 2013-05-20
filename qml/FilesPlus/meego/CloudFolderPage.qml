@@ -388,6 +388,9 @@ Page {
         onDrives: {
             pageStack.pop(cloudFolderPage);
         }
+        onOpenBookmarks: {
+            bookmarksMenu.open();
+        }
         onOpenSortByMenu: {
             sortByMenu.open();
         }
@@ -412,6 +415,17 @@ Page {
             }
 
             return true;
+        }
+    }
+
+    BookmarksMenu {
+        id: bookmarksMenu
+
+        onAddBookmark: {
+            bookmarksModel.addBookmark(selectedCloudType, selectedUid, remoteParentPath, remoteParentPathName);
+        }
+        onOpenBookmarks: {
+            pageStack.push(Qt.resolvedUrl("BookmarksPage.qml"));
         }
     }
 

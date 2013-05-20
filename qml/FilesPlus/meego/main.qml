@@ -5,6 +5,7 @@ import AppInfo 1.0
 import ClipboardModel 1.0
 import GCPClient 1.0
 import CloudDriveModel 1.0
+import BookmarksModel 1.0
 import FolderSizeItemListModel 1.0
 import MessageClient 1.0
 import BluetoothClient 1.0
@@ -2231,6 +2232,14 @@ PageStackWindow {
 
             // Proceeds queued jobs during constructions.
             cloudDriveModel.resumeNextJob();
+        }
+    }
+
+    BookmarksModel {
+        id: bookmarksModel
+
+        onAddErrorSignal: {
+            logError(qsTr("Add bookmark"), qsTr("Bookmark cannot be added. (%1 %2)").arg(type).arg(msg));
         }
     }
 

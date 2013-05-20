@@ -1,5 +1,5 @@
 import QtQuick 1.1
-import com.nokia.meego 1.0
+import com.nokia.symbian 1.1
 import CloudDriveModel 1.0
 import "Utility.js" as Utility
 
@@ -7,7 +7,7 @@ Page {
     id: bookmarksPage
 
     property string name: "bookmarksPage"
-    property bool inverted: !theme.inverted
+    property bool inverted: window.platformInverted
 
     tools: toolBarLayout
 
@@ -42,9 +42,6 @@ Page {
 
         content: MenuLayout {
             id: itemMenuLayout
-
-            // TODO Alias for fixing incorrect children.
-            default property alias children: itemMenuLayout.menuChildren
 
             MenuItemWithIcon {
                 name: "rename"
@@ -190,7 +187,7 @@ Page {
 
         ListItem {
             id: listItem
-            height: 80
+            height: 70
             Row {
                 anchors.fill: parent
                 anchors.margins: 10
@@ -212,7 +209,7 @@ Page {
                         text: title
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
-                        font.pointSize: 18
+                        font.pointSize: 8
                         elide: Text.ElideRight
                         color: (!inverted) ? "white" : "black"
                     }
@@ -221,7 +218,7 @@ Page {
                         text: (uid != "" ? ("(" + uid + ") ") : "") + path
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
-                        font.pointSize: 16
+                        font.pointSize: 6
                         elide: Text.ElideRight
                         color: "grey"
                     }

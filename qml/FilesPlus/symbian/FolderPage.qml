@@ -213,6 +213,9 @@ Page {
             flipable1.flipped = false;
             pageStack.pop(folderPage);
         }
+        onOpenBookmarks: {
+            bookmarksMenu.open();
+        }
         onOpenSortByMenu: {
             sortByMenu.open();
         }
@@ -239,6 +242,17 @@ Page {
             } else {
                 return true;
             }
+        }
+    }
+
+    BookmarksMenu {
+        id: bookmarksMenu
+
+        onAddBookmark: {
+            bookmarksModel.addBookmark(-1, "", fsModel.currentDir, fsModel.currentDir);
+        }
+        onOpenBookmarks: {
+            pageStack.push(Qt.resolvedUrl("BookmarksPage.qml"));
         }
     }
 

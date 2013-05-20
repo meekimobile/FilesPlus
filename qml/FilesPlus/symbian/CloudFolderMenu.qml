@@ -14,6 +14,7 @@ MenuWithIcon {
     signal syncCurrentFolder()
     signal setNameFilter()
     signal drives()
+    signal openBookmarks()
     signal openSortByMenu()
     signal openSettings()
     signal openMoreApps()
@@ -101,6 +102,16 @@ MenuWithIcon {
             text: appInfo.emptyStr+qsTr("Drives")
             onClicked: {
                 drives();
+            }
+        }
+
+        MenuItemWithIcon {
+            id: bookmarksMenuItem
+            name: "bookmarksMenuItem"
+            text: appInfo.emptyStr+qsTr("Bookmarks")
+            platformSubItemIndicator: true
+            onClicked: {
+                openBookmarks();
             }
         }
 

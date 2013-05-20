@@ -2,15 +2,6 @@
 #include <QtSql>
 #include <QDebug>
 
-// Harmattan is a linux
-#if defined(Q_WS_HARMATTAN)
-const QString BookmarksModel::DB_PATH = "/home/user/.filesplus/Bookmarks.db";
-const QString BookmarksModel::DB_CONNECTION_NAME = "bookmarks";
-#else
-const QString BookmarksModel::DB_PATH = "Bookmarks.db";
-const QString BookmarksModel::DB_CONNECTION_NAME = "bookmarks";
-#endif
-
 BookmarksModel::BookmarksModel(QObject *parent) :
     QSqlTableModel(parent)
 {
@@ -37,6 +28,7 @@ void BookmarksModel::initializeDB()
     }
 
     setTable("bookmarks");
+    setSort(fieldIndex("title"), Qt::AscendingOrder);
     select();
     generateRoleNames();
 }
@@ -104,6 +96,31 @@ void BookmarksModel::setProperty(const int index, QString roleName, QVariant val
             }
         }
     }
+}
+
+bool BookmarksModel::addBookmark(const int type, const QString uid, const QString path, const QString title)
+{
+    qDebug() << "BookmarksModel::addBookmark" << type << uid << path << title;
+
+    QSqlQuery query;
+    bool res;
+
+    res = query.prepare("INSERT INTO bookmarks (type, uid, path, title) VALUES (:type, :uid, :path, :title);");
+    query.bindValue(":type", type);
+    query.bindValue(":uid", uid);
+    query.bindValue(":path", path);
+    query.bindValue(":title", title);
+    res = query.exec();
+    if (res) {
+        qDebug() << "BookmarksModel::addBookmark is done.";
+        QSqlDatabase::database().commit();
+    } else {
+        qDebug() << "BookmarksModel::addBookmark failed. Error" << query.lastError();
+        QSqlDatabase::database().rollback();
+        emit addErrorSignal(query.lastError().type(), query.lastError().text());
+    }
+
+    return res;
 }
 
 bool BookmarksModel::insertTestData()

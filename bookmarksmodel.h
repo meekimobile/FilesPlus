@@ -7,9 +7,6 @@ class BookmarksModel : public QSqlTableModel
 {
     Q_OBJECT
 public:
-    static const QString DB_PATH;
-    static const QString DB_CONNECTION_NAME;
-
     explicit BookmarksModel(QObject *parent = 0);
 
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
@@ -22,8 +19,10 @@ public:
     Q_INVOKABLE QVariant get(const int index);
     Q_INVOKABLE QVariant getProperty(const int index, QString roleName);
     Q_INVOKABLE void setProperty(const int index, QString roleName, QVariant value);
+
+    Q_INVOKABLE bool addBookmark(const int type, const QString uid, const QString path, const QString title);
 signals:
-    
+    void addErrorSignal(int type, QString msg);
 public slots:
     
 private:
