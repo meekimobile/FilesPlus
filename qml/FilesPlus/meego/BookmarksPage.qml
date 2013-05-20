@@ -190,7 +190,6 @@ Page {
 
         ListItem {
             id: listItem
-            height: 80
             Row {
                 anchors.fill: parent
                 anchors.margins: 10
@@ -244,8 +243,8 @@ Page {
                 }
                 if (type < 0) {
                     // Local bookmark.
+                    pageStack.replace(Qt.resolvedUrl("FolderPage.qml"), {}, true);
                     fsModel.currentDir = path;
-                    pageStack.replace(Qt.resolvedUrl("FolderPage.qml"));
                 } else {
                     // Cloud bookmark.
                     pageStack.replace(Qt.resolvedUrl("CloudFolderPage.qml"), {
@@ -257,7 +256,7 @@ Page {
                                        selectedCloudType: type,
                                        selectedUid: uid,
                                        selectedModelIndex: -1
-                                   });
+                                   }, true);
                 }
             }
         }
