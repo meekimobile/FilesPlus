@@ -103,7 +103,7 @@ Page {
                         text: renameDialog.title
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
-                        font.pointSize: 18
+                        font.pointSize: 8
                         elide: Text.ElideMiddle
                         color: (!inverted) ? "white" : "black"
                     }
@@ -112,7 +112,7 @@ Page {
                         text: (renameDialog.uid != "" ? ("(" + renameDialog.uid + ") ") : "") + renameDialog.path
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
-                        font.pointSize: 16
+                        font.pointSize: 6
                         elide: Text.ElideMiddle
                         color: "grey"
                     }
