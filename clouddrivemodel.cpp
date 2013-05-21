@@ -1256,9 +1256,11 @@ int CloudDriveModel::removeItemByRemotePath(CloudDriveModel::ClientTypes type, Q
 void CloudDriveModel::updateItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString hash)
 {
     CloudDriveItem item = getItem(localPath, type, uid);
-    m_cloudDriveItems->remove(item.localPath, item); // Remove found item.
-    item.hash = hash;
-    m_cloudDriveItems->insert(item.localPath, item); // Insert updates item.
+    if (item.localPath != "") {
+        m_cloudDriveItems->remove(item.localPath, item); // Remove found item.
+        item.hash = hash;
+        m_cloudDriveItems->insert(item.localPath, item); // Insert updates item.
+    }
     int updateCount = updateItemToDB(item);
 
     // Remove cache for furthur refresh.
