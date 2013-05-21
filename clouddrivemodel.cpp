@@ -1378,7 +1378,7 @@ QString CloudDriveModel::getItemCronExp(CloudDriveModel::ClientTypes type, QStri
 
 void CloudDriveModel::loadScheduledItems(QString cronValue)
 {
-    // TODO match each item in next minute. Cache matched items for next firing.
+    // Match each item in next minute. Cache matched items for next firing.
     QString cronExp;
     CloudDriveItem item;
     QSqlQuery ps(m_db);
@@ -1416,6 +1416,24 @@ void CloudDriveModel::syncScheduledItems()
         CloudDriveItem item = m_scheduledItems->dequeue();
         qDebug() << "CloudDriveModel::syncScheduledItems dequeue and sync item" << item;
         metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+    }
+}
+
+void CloudDriveModel::syncDirtyItems()
+{
+    if (!m_settings.value("CloudDriveModel.syncDirtyItems.enabled", QVariant(false)).toBool()) {
+        return;
+    }
+
+    QSqlQuery ps(m_db);
+    ps.prepare("SELECT * FROM cloud_drive_item WHERE hash = :hash");
+    ps.bindValue(":hash", DirtyHash);
+    foreach (CloudDriveItem item, getItemListFromPS(ps)) {
+        qDebug() << "CloudDriveModel::syncDirtyItems" << item;
+        if (!cleanItem(item)) {
+            // Sync dirty item.
+            syncItem(getClientType(item.type), item.uid, item.localPath);
+        }
     }
 }
 
@@ -1693,6 +1711,8 @@ bool CloudDriveModel::cleanItem(const CloudDriveItem &item)
     QFileInfo info(item.localPath);
     if (!info.exists()) {
         isInvalid = true;
+    } else if (!info.isAbsolute()) {
+        isInvalid = true;
     } else if (item.localPath.startsWith(":") || item.localPath == "" || item.remotePath == "") {
         // TODO override remove for unwanted item.
         isInvalid = true;
@@ -1701,11 +1721,7 @@ bool CloudDriveModel::cleanItem(const CloudDriveItem &item)
     if (isInvalid) {
         qDebug() << "CloudDriveModel::cleanItem remove item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
         m_cloudDriveItems->remove(item.localPath, item);
-        switch (item.type) {
-        case Dropbox:
-            deleteItemToDB(Dropbox, item.uid, item.localPath);
-            break;
-        }
+        deleteItemToDB(getClientType(item.type), item.uid, item.localPath);
     } else {
         // TODO (Migration) Insert to DB.
 //        qDebug() << "CloudDriveModel::cleanItem migrate" << item;
@@ -1993,6 +2009,11 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
 {
     if (localFilePath == "") {
         qDebug() << "CloudDriveModel::metadata localFilePath" << localFilePath << " is empty, can't sync.";
+        return;
+    }
+
+    if (!QFileInfo(localFilePath).isAbsolute()) {
+        qDebug() << "CloudDriveModel::metadata localFilePath" << localFilePath << " is invalid, can't sync.";
         return;
     }
 
@@ -2839,6 +2860,7 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
     if (job.operation == MigrateFile) {
         emit migrateFileReplySignal(nonce, err, errMsg, msg);
     } else {
+        // TODO Populate internal model to reduce parse processing on QML side.
         if (err == 0) {
             m_cachedJsonText = sortJsonText(msg, getSortFlag(getClientType(job.type), job.uid, job.remoteFilePath));
             emit browseReplySignal(nonce, err, errMsg, m_cachedJsonText);
@@ -3306,6 +3328,13 @@ void CloudDriveModel::schedulerTimeoutFilter()
         suspendNextJob();
         syncScheduledItems();
         resumeNextJob();
+    }
+
+    // Sync dirty items.
+    if (runningJobCount <= 0) {
+        syncDirtyItems();
+    } else {
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter there is running jobs, skip sync dirty items. runningJobCount" << runningJobCount;
     }
 
     // Request delta if there is no running job.

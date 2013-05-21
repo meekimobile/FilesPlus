@@ -285,14 +285,31 @@ PageStackWindow {
 
             // TODO Connect to cloud if copied/moved file/folder is in connected folder.
             // TODO Make it configurable.
+            var paths
             if (err == 0) {
-                if (cloudDriveModel.isParentConnected(targetPath)) {
+                if (fileAction == FolderSizeItemListModel.MoveFile && cloudDriveModel.isParentConnected(sourcePath)) {
+                    // Delete file from clouds.
+                    var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
+                    for (var i=0; i<json.length; i++) {
+                        cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path);
+                    }
+
                     // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
-                    var paths = fsModel.getPathToRoot(targetPath);
+                    paths = fsModel.getPathToRoot(sourcePath);
                     if (paths.length > 1) {
 //                        console.debug("fsModel onCopyFinished updateItems paths[1] " + paths[1]);
                         cloudDriveModel.updateItems(paths[1], cloudDriveModel.dirtyHash);
-                        cloudDriveModel.syncItem(paths[1]);
+//                        cloudDriveModel.syncItem(paths[1]); // To be sync by syncDirtyItems()
+                    }
+                }
+
+                if (cloudDriveModel.isParentConnected(targetPath)) {
+                    // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
+                    paths = fsModel.getPathToRoot(targetPath);
+                    if (paths.length > 1) {
+//                        console.debug("fsModel onCopyFinished updateItems paths[1] " + paths[1]);
+                        cloudDriveModel.updateItems(paths[1], cloudDriveModel.dirtyHash);
+//                        cloudDriveModel.syncItem(paths[1]); // To be sync by syncDirtyItems()
                     }
                 }
             }
@@ -426,7 +443,7 @@ PageStackWindow {
                 if (!cloudDriveModel.isSyncing(dirPath)) {
                     // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
                     cloudDriveModel.updateItems(dirPath, cloudDriveModel.dirtyHash);
-                    cloudDriveModel.syncItem(dirPath);
+//                    cloudDriveModel.syncItem(dirPath); // To be sync by syncDirtyItems()
                 } else {
                     console.debug("window fsModel onDirectoryChanged " + dirPath + " is synchronizing, suppress synchronization request.");
                 }
@@ -1675,6 +1692,7 @@ PageStackWindow {
                                 remotePathList = remotePathList + (remotePathList != "" ? "," : "") + item.absolutePath;
                                 if (item.isDir) {
                                     // This flow will trigger recursive metadata calling.
+                                    // NOTE Metadata return rev for dir which is incomparable with hash. So it needs to get actual metadata for hash.
                                     cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, item.absolutePath, -1, jobJson.force_put, jobJson.force_get);
                                 } else {
                                     // If ((rev is newer and size is changed) or there is no local file), get from remote.

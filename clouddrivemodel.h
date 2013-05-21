@@ -196,6 +196,7 @@ public:
     Q_INVOKABLE QString getItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     void loadScheduledItems(QString cronValue);
     void syncScheduledItems();
+    void syncDirtyItems();
 
     // Delta.
     Q_INVOKABLE bool isDeltaSupported(CloudDriveModel::ClientTypes type);
