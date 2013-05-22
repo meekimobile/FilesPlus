@@ -196,6 +196,7 @@ public:
     Q_INVOKABLE QString getItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     void loadScheduledItems(QString cronValue);
     void syncScheduledItems();
+    void syncDirtyItems();
 
     // Delta.
     Q_INVOKABLE bool isDeltaSupported(CloudDriveModel::ClientTypes type);
@@ -285,8 +286,10 @@ signals:
     void jobUpdatedSignal(QString nonce);
     void jobRemovedSignal(QString nonce);
     void refreshRequestSignal(QString nonce);
+    void refreshItemAfterFileGetSignal(QString nonce, QString localPath);
     void moveToTrashRequestSignal(QString nonce, QString localPath);
     void cacheImageFinished(QString absoluteFilePath, int err, QString errMsg, QString caller);
+    void logRequestSignal(QString nonce, QString logType, QString titleText, QString message, bool autoCloseInterval = 2000);
 
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
@@ -455,6 +458,8 @@ private:
     QString sortJsonText(QString &jsonText, int sortFlag);
     void sortItemList(QList<QScriptValue> &itemList, int sortFlag);
     QString stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj);
+
+    int compareMetadata(CloudDriveJob job, QScriptValue &jsonObj, QString localFilePath);
 };
 
 #endif // CLOUDDRIVEMODEL_H

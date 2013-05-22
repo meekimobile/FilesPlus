@@ -243,6 +243,9 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     if (!m_settings->contains("dropbox.fullaccess.enabled")) {
         m_settings->setValue("dropbox.fullaccess.enabled", QVariant(true));
     }
+    if (!m_settings->contains("CloudDriveModel.syncDirtyItems.enabled")) {
+        m_settings->setValue("CloudDriveModel.syncDirtyItems.enabled", QVariant(true));
+    }
     m_settings->sync();
 
     // Default database initialization.

@@ -1786,3 +1786,9 @@ qint64 DropboxClient::getChunkSize()
 {
     return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();
 }
+
+QDateTime DropboxClient::parseReplyDateString(QString dateString)
+{
+    // NOTE Dropbox uses UTC datestring in its reply.
+    return QDateTime::fromString(dateString, "ddd, dd MMM yyyy hh:mm:ss +0000");
+}

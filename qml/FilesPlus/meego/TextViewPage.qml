@@ -32,8 +32,15 @@ Page {
             iconSource: (theme.inverted) ? "save.svg" : "save_inverted.svg"
             onClicked: {
                 // Save to file.
+                // TODO Opt to convert new line characters to either Windows or Unix format.
                 helper.saveFileContent(textViewPage.filePath, textView.text);
                 fsModel.removeCache(textViewPage.filePath);
+                // Reset cloudDriveModel hash on parent.
+                var paths = fsModel.getPathToRoot(textViewPage.filePath);
+                for (var i=0; i<paths.length; i++) {
+                    console.debug("textViewPage saveButton onClicked updateItems paths[" + i + "] " + paths[i]);
+                    cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
+                }
             }
         }
 

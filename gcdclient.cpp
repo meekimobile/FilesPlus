@@ -238,6 +238,9 @@ QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
 
     QScriptValue downloadUrlObj = jsonObj.property("downloadUrl");
 
+    // NOTE lastViewedByMeDate is changed on every view on web UI.
+    QScriptValue hashObj = jsonObj.property("lastViewedByMeDate").isValid() ? jsonObj.property("lastViewedByMeDate") : jsonObj.property("modifiedDate");
+
     parsedObj.setProperty("name", jsonObj.property("title"));
     parsedObj.setProperty("absolutePath", jsonObj.property("id"));
     parsedObj.setProperty("parentPath", jsonObj.property("parents").property(0).isValid() ? jsonObj.property("parents").property(0).property("id") : QScriptValue(""));
@@ -245,7 +248,7 @@ QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     parsedObj.setProperty("isDeleted", QScriptValue(jsonObj.property("explicitlyTrashed").toBool() || jsonObj.property("labels").property("trashed").toBool()));
     parsedObj.setProperty("isDir", QScriptValue(jsonObj.property("mimeType").toString() == "application/vnd.google-apps.folder"));
     parsedObj.setProperty("lastModified", jsonObj.property("modifiedDate"));
-    parsedObj.setProperty("hash", jsonObj.property("modifiedDate"));
+    parsedObj.setProperty("hash", hashObj);
     parsedObj.setProperty("source", QScriptValue());
     parsedObj.setProperty("downloadUrl", downloadUrlObj);
     parsedObj.setProperty("webContentLink", jsonObj.property("webContentLink"));
