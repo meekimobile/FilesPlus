@@ -343,7 +343,8 @@ public slots:
     void deleteFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg, QString url, int expires);
     void deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg);
-    void migrateFilePutFilter(QString nonce, int err, QString errMsg, QString msg);
+    void migrateFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void migrateFilePutReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void fileGetResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void filePutResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg);
 

@@ -1618,6 +1618,7 @@ PageStackWindow {
             if (err == 0) {
                 // Do nothing.
             } else if (err == 203) {
+                // Do nothing.
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Metadata"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
@@ -1952,47 +1953,9 @@ PageStackWindow {
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
             if (err == 0) {
-                // Parse to common json object.
-                var jsonObj = cloudDriveModel.parseCommonCloudDriveMetadataJson(jobJson.type, jobJson.uid, Utility.createJsonObj(msg));
-
-                // Suspend next job.
-                cloudDriveModel.suspendNextJob();
-
-                if (jsonObj.isDeleted) {
-                        // Do nothing.
-                } else {
-                    // Migration starts from itself.
-                    if (jsonObj.isDir) { // Migrate folder.
-                        // Create target folder.
-                        var createdRemoteFolderPath = cloudDriveModel.createFolder_Block(jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
-                        if (createdRemoteFolderPath != "") {
-                            for(var i=0; i<jsonObj.children.length; i++) {
-                                var item = jsonObj.children[i];
-                                console.debug("window cloudDriveModel onMigrateFileReplySignal item " + JSON.stringify(item));
-
-                                if (item.isDir) {
-                                    // This flow will trigger recursive migrateFile calling.
-                                    cloudDriveModel.migrateFile(jobJson.type, jobJson.uid, item.absolutePath, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, item.name);
-                                } else {
-                                    // Migrate file.
-                                    cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, item.absolutePath, item.size, jobJson.target_type, jobJson.target_uid, createdRemoteFolderPath, item.name);
-                                }
-                            }
-                        } else {
-                            // Failed folder creation.
-                            logError(getCloudName(jobJson.target_type) + " " + qsTr("Migrate"),
-                                     qsTr("Error") + " " + qsTr("Can't create folder. Migration is aborted."));
-                        }
-                    } else { // Migrate file.
-                        cloudDriveModel.migrateFilePut(jobJson.type, jobJson.uid, jobJson.remote_file_path, jsonObj.size, jobJson.target_type, jobJson.target_uid, jobJson.new_remote_file_path, jobJson.new_remote_file_name);
-                    }
-                }
-
-                // Resume next jobs.
-                cloudDriveModel.resumeNextJob();
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
-                return;
+                // Do nothing.
+            } else if (err == 203) {
+                // Do nothing.
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Migrate"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
