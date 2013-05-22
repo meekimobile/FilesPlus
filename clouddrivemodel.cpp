@@ -330,7 +330,7 @@ void CloudDriveModel::connectCloudClientsSignal(CloudDriveClient *client)
     connect(client, SIGNAL(copyFileReplySignal(QString,int,QString,QString)), SLOT(copyFileReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(deleteFileReplySignal(QString,int,QString,QString)), SLOT(deleteFileReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(shareFileReplySignal(QString,int,QString,QString,QString,int)), SLOT(shareFileReplyFilter(QString,int,QString,QString,QString,int)) );
-    connect(client, SIGNAL(migrateFilePutReplySignal(QString,int,QString,QString)), SLOT(migrateFilePutFilter(QString,int,QString,QString)) ); // Added because FtpClient doesn't provide QNetworkReply.
+    connect(client, SIGNAL(migrateFilePutReplySignal(QString,int,QString,QString)), SLOT(migrateFilePutReplyFilter(QString,int,QString,QString)) ); // Added because FtpClient doesn't provide QNetworkReply.
     connect(client, SIGNAL(fileGetResumeReplySignal(QString,int,QString,QString)), SLOT(fileGetResumeReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
@@ -2313,14 +2313,14 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
         while (job.downloadOffset < remoteFileSize && !m_isAborted) {
             QIODevice *source = sourceClient->fileGet(nonce, uid, remoteFilePath, job.downloadOffset, true);
             if (source == 0) {
-                migrateFilePutFilter(nonce, -1, "Service is not implemented or host is not accessible.", "{ }");
+                migrateFilePutReplyFilter(nonce, -1, "Service is not implemented or host is not accessible.", "{ }");
                 return;
             }
             // Handle error.
             // TODO Check type before cast.
             QNetworkReply *sourceReply = dynamic_cast<QNetworkReply *>(source);
             if (sourceReply->error() != QNetworkReply::NoError) {
-                migrateFilePutFilter(nonce, sourceReply->error(), sourceReply->errorString(), sourceReply->readAll());
+                migrateFilePutReplyFilter(nonce, sourceReply->error(), sourceReply->errorString(), sourceReply->readAll());
                 return;
             }
             qDebug() << "CloudDriveModel::migrateFile_Block chunk is downloaded. size" << source->size() << "bytesAvailable" << source->bytesAvailable() << "job" << job.toJsonText();
@@ -2332,7 +2332,7 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
                 qDebug() << "CloudDriveModel::migrateFile_Block chunk is written at offset" << job.downloadOffset << "totalBytes"  << totalBytes << "to" << tempFilePath;
             } else {
                 qDebug() << "CloudDriveModel::migrateFile_Block can't open tempFilePath" << tempFilePath;
-                migrateFilePutFilter(nonce, -1, QString("Can't open temp file %1").arg(tempFilePath), "{ }");
+                migrateFilePutReplyFilter(nonce, -1, QString("Can't open temp file %1").arg(tempFilePath), "{ }");
                 return;
             }
 
@@ -2353,7 +2353,7 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
 
     // Check isAborted.
     if (m_isAborted) {
-        migrateFilePutFilter(nonce, -1, "job is aborted.","");
+        migrateFilePutReplyFilter(nonce, -1, "job is aborted.","");
         return;
     }
 
@@ -2369,11 +2369,11 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
             if (targetReply->error() == QNetworkReply::NoError){
                 job.uploadOffset = remoteFileSize;
                 // Invoke slot to reset running and emit signal.
-                migrateFilePutFilter(nonce, targetReply->error(), targetReply->errorString(), targetReply->readAll());
+                migrateFilePutReplyFilter(nonce, targetReply->error(), targetReply->errorString(), targetReply->readAll());
             } else {
                 // Invoke slot to reset running and emit signal.
                 // TODO How to shows if error occurs from target?
-                migrateFilePutFilter(nonce, targetReply->error(), getCloudName(job.targetType) + " " + targetReply->errorString(), getCloudName(job.targetType).append(" ").append(targetReply->readAll()) );
+                migrateFilePutReplyFilter(nonce, targetReply->error(), getCloudName(job.targetType) + " " + targetReply->errorString(), getCloudName(job.targetType).append(" ").append(targetReply->readAll()) );
             }
 
             // Scheduled to delete later.
@@ -2419,7 +2419,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
             if (sc.property("error").isValid()) {
                 int err = sc.property("error").toInt32();
                 QString errString = sc.property("error_string").toString();
-                migrateFilePutFilter(job.jobId, err, errString, "");
+                migrateFilePutReplyFilter(job.jobId, err, errString, "");
                 return;
             }
         }
@@ -2438,7 +2438,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
             if (sc.property("error").isValid()) {
                 int err = sc.property("error").toInt32();
                 QString errString = sc.property("error_string").toString();
-                migrateFilePutFilter(job.jobId, err, errString, "");
+                migrateFilePutReplyFilter(job.jobId, err, errString, "");
                 return;
             }
         }
@@ -2451,7 +2451,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
 
     // Check isAborted.
     if (m_isAborted) {
-        migrateFilePutFilter(nonce, -1, "job is aborted.","");
+        migrateFilePutReplyFilter(nonce, -1, "job is aborted.","");
         return;
     }
 
@@ -2459,14 +2459,14 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
     QIODevice *source = sourceClient->fileGet(nonce, uid, remoteFilePath, job.downloadOffset, true);
     if (source == 0) {
         // Error occurs in fileGet method.
-        migrateFilePutFilter(nonce, -1, tr("Service is not implemented or host is not accessible."), "{ }");
+        migrateFilePutReplyFilter(nonce, -1, tr("Service is not implemented or host is not accessible."), "{ }");
         return;
     } else {
         qDebug() << "CloudDriveModel::migrateFileResume_Block chunk is downloaded. source->metaObject()->className()" << source->metaObject()->className() << "size" << source->size() << "bytesAvailable" << source->bytesAvailable() << "job" << job.toJsonText();
         // TODO Handle source error.
         if (QNetworkReply *sourceReply = dynamic_cast<QNetworkReply*>(source)) {
             if (sourceReply->error() != QNetworkReply::NoError) {
-                migrateFilePutFilter(job.jobId, sourceReply->error(), sourceReply->errorString(), QString::fromUtf8(sourceReply->readAll()));
+                migrateFilePutReplyFilter(job.jobId, sourceReply->error(), sourceReply->errorString(), QString::fromUtf8(sourceReply->readAll()));
                 return;
             }
         }
@@ -2479,7 +2479,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
     if (m_isAborted) {
         job.downloadOffset = 0;
         m_cloudDriveJobs->insert(job.jobId, job);
-        migrateFilePutFilter(nonce, -1, "job is aborted.","");
+        migrateFilePutReplyFilter(nonce, -1, "job is aborted.","");
         return;
     }
 
@@ -2510,11 +2510,11 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
             int err = sc.property("error").toInt32();
             QString errString = sc.property("error_string").toString();
             job.uploadOffset = -1; // Failed upload needs to get status on resume.
-            migrateFilePutFilter(job.jobId, err, errString, "");
+            migrateFilePutReplyFilter(job.jobId, err, errString, "");
             return;
         }
     } else {
-        migrateFilePutFilter(job.jobId, -1, "Unexpected error.", "Unexpected upload result is empty.");
+        migrateFilePutReplyFilter(job.jobId, -1, "Unexpected error.", "Unexpected upload result is empty.");
         return;
     }
     // Check whether resume or commit.
@@ -2536,14 +2536,14 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
             if (sc.property("error").isValid()) {
                 int err = sc.property("error").toInt32();
                 QString errString = sc.property("error_string").toString();
-                migrateFilePutFilter(job.jobId, err, errString, "");
+                migrateFilePutReplyFilter(job.jobId, err, errString, "");
                 return;
             }
             // Proceed filter with commit result and job done.
-            migrateFilePutFilter(job.jobId, QNetworkReply::NoError, "", commitResult);
+            migrateFilePutReplyFilter(job.jobId, QNetworkReply::NoError, "", commitResult);
         } else {
             // Proceed filter with last upload result and job done.
-            migrateFilePutFilter(job.jobId, QNetworkReply::NoError, "", uploadResult);
+            migrateFilePutReplyFilter(job.jobId, QNetworkReply::NoError, "", uploadResult);
         }
     }
 }
@@ -2837,7 +2837,7 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
-    // TODO Parse and store.
+    // Parse and process metadata.
     if (err == QNetworkReply::NoError) {
         qDebug() << "CloudDriveModel::metadataReplyFilter" << getCloudName(job.type) << nonce << err << errMsg << msg;
 
@@ -3007,7 +3007,8 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
 
     // Route signal to caller.
     if (job.operation == MigrateFile) {
-        emit migrateFileReplySignal(nonce, err, errMsg, msg);
+        // TODO Parse and process browsed data.
+        migrateFileReplyFilter(nonce, err, errMsg, msg);
     } else {
         // TODO Populate internal model to reduce parse processing on QML side.
         if (err == 0) {
@@ -3017,6 +3018,64 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
             emit browseReplySignal(nonce, err, errMsg, msg);
         }
     }
+}
+
+void CloudDriveModel::migrateFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+{
+    CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    if (err == QNetworkReply::NoError) {
+        qDebug() << "CloudDriveModel::migrateFileReplyFilter" << getCloudName(job.type) << nonce << err << errMsg << msg;
+
+        // Parse to common json object.
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + msg + ")");
+
+        // Suspend next job.
+        suspendNextJob();
+
+        if (jsonObj.property("isDeleted").toBool()) {
+            // Do nothing.
+        } else {
+            // Migration starts from itself.
+            if (jsonObj.property("isDir").toBool()) { // Migrate folder.
+                // Create target folder.
+                QString createdRemoteFolderPath = createFolder_Block(getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
+                if (createdRemoteFolderPath != "") {
+                    for (int i=0; i<jsonObj.property("children").property("length").toInteger(); i++) {
+                        QScriptValue item = jsonObj.property("children").property(i);
+                        if (item.property("isDir").toBool()) {
+                            // This flow will trigger recursive migrateFile calling.
+                            migrateFile(getClientType(job.type), job.uid, item.property("absolutePath").toString(), getClientType(job.targetType), job.targetUid, createdRemoteFolderPath, item.property("name").toString());
+                        } else {
+                            // Migrate file.
+                            migrateFilePut(getClientType(job.type), job.uid, item.property("absolutePath").toString(), item.property("size").toInteger(), getClientType(job.targetType), job.targetUid, createdRemoteFolderPath, item.property("name").toString());
+                        }
+
+                        // Process UI events.
+                        QApplication::processEvents();
+                    }
+                } else {
+                    // Emit failed signal.
+                    emit migrateFileReplySignal(nonce, QNetworkReply::UnknownContentError, tr("Error"), tr("Can't create folder. Migration is aborted."));
+                    // Resume next jobs.
+                    resumeNextJob();
+                    return;
+                }
+            } else { // Migrate file.
+                migrateFilePut(getClientType(job.type), job.uid, job.remoteFilePath, jsonObj.property("size").toInteger(), getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
+            }
+        }
+
+        // Resume next jobs.
+        resumeNextJob();
+    } else if (err == 204) { // Refresh token
+        refreshToken(getClientType(job.type), job.uid, job.jobId);
+        return;
+    }
+
+    // Emit success signal.
+    emit migrateFileReplySignal(nonce, err, errMsg, msg);
 }
 
 void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -3290,7 +3349,7 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
     emit deltaReplySignal(nonce, err, errMsg, msg);
 }
 
-void CloudDriveModel::migrateFilePutFilter(QString nonce, int err, QString errMsg, QString msg)
+void CloudDriveModel::migrateFilePutReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
