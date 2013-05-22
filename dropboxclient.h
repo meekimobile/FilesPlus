@@ -54,6 +54,8 @@ public:
     bool isImageUrlCachable();
     qint64 getChunkSize();
 
+    QDateTime parseReplyDateString(QString dateString);
+
     void requestToken(QString nonce);
     void authorize(QString nonce, QString hostname);
     void accessToken(QString nonce, QString pin = "");
