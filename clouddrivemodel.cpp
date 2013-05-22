@@ -2837,6 +2837,153 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
+    // TODO Parse and store.
+    if (err == QNetworkReply::NoError) {
+        qDebug() << "CloudDriveModel::metadataReplyFilter" << getCloudName(job.type) << nonce << err << errMsg << msg;
+
+        // Found metadata.
+        // Parse to common json object.
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + msg + ")");
+        CloudDriveItem parentItem = getItem(job.localFilePath, getClientType(job.type), job.uid);
+
+        // Suspend next job.
+        suspendNextJob();
+
+        if (jsonObj.property("isDeleted").toBool()) {
+            qDebug() << "CloudDriveModel::metadataReplyFilter" << getCloudName(job.type) << job.uid << jsonObj.property("absolutePath").toString() << "isDeleted" << jsonObj.property("isDeleted").toString();
+
+            // If dir, should remove all sub items.
+            deleteLocal(getClientType(job.type), job.uid, job.localFilePath);
+
+            // Notify removed link.
+            emit logRequestSignal(nonce,
+                                  "warn",
+                                  getCloudName(job.type) + " " + tr("Metadata"),
+                                  tr("%1 was removed remotely.\nLink will be removed.").arg(job.localFilePath),
+                                  2000);
+        } else {
+            // Sync starts from itself.
+            if (jsonObj.property("isDir").toBool()) { // Sync folder.
+                qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "sync folder remote path" << jsonObj.property("absolutePath").toString() << "hash" << jsonObj.property("hash").toString() << "local path" << job.localFilePath << " hash " << parentItem.hash << "children length" << jsonObj.property("children").property("length").toInteger() << "forcePut" << job.forcePut << "forceGet" << job.forceGet;
+
+                // If there is no local folder, create it and connect.
+                if (!isDir(job.localFilePath)) {
+                    // TODO Add item to ListView.
+                    createDirPath(job.localFilePath);
+                    // Remove cache on target folders and its parents.
+                    emit refreshItemAfterFileGetSignal(nonce, job.localFilePath);
+                }
+
+                // Sync based on remote contents.
+                // TODO Should it detect jobJson.force_put or jobJson.force_get?
+                QString remotePathList = "*"; // Default remotePathList as * means keep all items.
+                int r = compareMetadata(job, jsonObj, job.localFilePath);
+                if (r != 0) { // Sync all json(remote)'s contents.
+                    remotePathList = ""; // Reset remotePathList.
+                    for (int i=0; i<jsonObj.property("children").property("length").toInteger(); i++) {
+                        QScriptValue item = jsonObj.property("children").property(i);
+                        QString itemLocalPath = getAbsolutePath(job.localFilePath, item.property("name").toString());
+                        CloudDriveItem childItem = getItem(itemLocalPath, getClientType(job.type), job.uid);
+                        remotePathList = remotePathList + (remotePathList != "" ? "," : "") + item.property("absolutePath").toString();
+                        if (item.property("isDir").toBool()) {
+                            // This flow will trigger recursive metadata calling.
+                            // TODO Reduce data charges by skipping items with unchanged hash.
+                            // NOTE Dropbox's metadata return rev for chil dir(s) which is incomparable with hash. So it needs to get actual metadata for hash.
+                            int r = compareMetadata(job, item, itemLocalPath);
+                            if (r != 0) {
+                                metadata(getClientType(job.type), job.uid, itemLocalPath, item.property("absolutePath").toString(), -1, job.forcePut, job.forceGet);
+                            }
+                        } else {
+                            // If ((rev is newer and size is changed) or there is no local file), get from remote.
+                            // TODO Should it just sync a file, then it will be decided operation on its metadata call?
+                            int r = compareMetadata(job, item, itemLocalPath);
+                            qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "sync children file remote path" << item.property("absolutePath").toString() << "hash" << item.property("hash").toString() << "local path" << itemLocalPath << "hash" << childItem.hash << "compare result" << r;
+                            if (r < 0) {
+                                fileGet(getClientType(job.type), job.uid, item.property("absolutePath").toString(), item.property("size").toInt32(), itemLocalPath, -1);
+                            } else if (r > 0) {
+                                filePut(getClientType(job.type), job.uid, itemLocalPath, item.property("parentPath").toString(), item.property("name").toString(), -1);
+                            } else {
+                                addItem(getClientType(job.type), job.uid, itemLocalPath, item.property("absolutePath").toString(), item.property("hash").toString());
+                            }
+                        }
+
+                        // Process UI events.
+                        QApplication::processEvents();
+                    }
+                }
+
+                // Add or Update timestamp from local to cloudDriveItem.
+                addItem(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, jsonObj.property("hash").toString());
+
+                // Sync based on local contents.
+                // TODO Issue: syncFromLocal can't detect deleted remote file before it still has connection, then syncFromLocal will skip it.
+                qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "remotePathList" << remotePathList;
+                syncFromLocal(getClientType(job.type), job.uid, job.localFilePath, jsonObj.property("parentPath").toString(), job.modelIndex, job.forcePut, remotePathList);
+            } else { // Sync file.
+                // If ((rev is newer and size is changed) or there is no local file), get from remote.
+                int r = compareMetadata(job, jsonObj, job.localFilePath);
+                qDebug() << "CloudDriveModel::metadataReplyFilter file" << getCloudName(job.type) << nonce << "sync file remote path" << jsonObj.property("absolutePath").toString() << "hash" << jsonObj.property("hash").toString() << "local path" << job.localFilePath << "hash" + parentItem.hash << "forcePut" << job.forcePut << "forceGet" << job.forceGet << "compare result" << r;
+                if (r < 0) {
+                    fileGet(getClientType(job.type), job.uid, jsonObj.property("absolutePath").toString(), jsonObj.property("size").toInt32(), job.localFilePath, job.modelIndex);
+                } else if (r > 0) {
+                    filePut(getClientType(job.type), job.uid, job.localFilePath, jsonObj.property("parentPath").toString(), jsonObj.property("name").toString(), job.modelIndex);
+                } else {
+                    addItem(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, jsonObj.property("hash").toString());
+                }
+            }
+        }
+
+        // Resume next jobs.
+        resumeNextJob();
+    } else if (err == 203) { // If metadata is not found, put it to cloud right away recursively.
+        // TODO Choose whether just remove link or proceed put?
+        // TODO How to differentiate from newly sync and remotely removed item?
+        // Suspend next job.
+        suspendNextJob();
+
+        QString localParentPath = getParentLocalPath(job.localFilePath);
+        QString remoteParentPath = "";
+        QString remoteFileName = getFileName(job.localFilePath);
+        if (isRemoteAbsolutePath(getClientType(job.type))) {
+            remoteParentPath = getParentRemotePath(getClientType(job.type), job.remoteFilePath);
+        } else {
+            remoteParentPath = getItemRemotePath(localParentPath, getClientType(job.type), job.uid);
+        }
+        qDebug() << "CloudDriveModel::metadataReplyFilter" << err << errMsg << msg << "locaParentPath" << localParentPath << "remoteParentPath" << remoteParentPath;
+
+        // Proceed put if remoteParentPath is available. Otherwise remote the link.
+        if (remoteParentPath != "") {
+            qDebug() << "CloudDriveModel::metadataReplyFilter" << getCloudName(job.type) << "put" << job.localFilePath << "to" << job.remoteFilePath;
+            if (isDir(job.localFilePath)) {
+                // Remote folder will be created in syncFromLocal if it's required.
+                syncFromLocal(getClientType(job.type), job.uid, job.localFilePath, remoteParentPath, job.modelIndex);
+            } else {
+                filePut(getClientType(job.type), job.uid, job.localFilePath, remoteParentPath, remoteFileName, job.modelIndex);
+            }
+        } else {
+            // If dir, should remove all sub items.
+            disconnect(getClientType(job.type), job.uid, job.localFilePath);
+
+            // Notify removed link.
+            emit logRequestSignal(nonce,
+                                  "warn",
+                                  getCloudName(job.type) + " " + tr("Metadata"),
+                                  tr("%1 was removed remotely.\nLink will be removed.").arg(job.localFilePath),
+                                  2000);
+        }
+
+        // Resume next jobs.
+        resumeNextJob();
+    } else if (err == 204) { // Refresh token
+        refreshToken(getClientType(job.type), job.uid, job.jobId);
+        // Update job running flag.
+        job.isRunning = false;
+        updateJob(job);
+        jobDone();
+        return;
+    }
+
     // Update job running flag.
     job.isRunning = false;
     updateJob(job);
@@ -4356,4 +4503,45 @@ void CloudDriveModel::sortItemList(QList<QScriptValue> &itemList, int sortFlag)
 QString CloudDriveModel::stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj)
 {
     return engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
+}
+
+int CloudDriveModel::compareMetadata(CloudDriveJob job, QScriptValue &jsonObj, QString localFilePath)
+{
+    QFileInfo localFileInfo(localFilePath);
+    CloudDriveItem item = getItem(localFilePath, getClientType(job.type), job.uid);
+    QDateTime jsonObjLastModified = parseReplyDateString(getClientType(job.type), jsonObj.property("lastModified").toString());
+
+    if (jsonObj.property("isDir").toBool()) {
+        qDebug() << "CloudDriveModel::compareMetadata dir"
+                      << "remote path" << jsonObj.property("absolutePath").toString() << "hash" << jsonObj.property("hash").toString() << "lastModified" << jsonObj.property("lastModified").toString() << jsonObjLastModified
+                      << "local path" << localFilePath << "hash" << item.hash << "lastModified" << localFileInfo.lastModified()
+                      << "compare(remote < local)" << (jsonObjLastModified < localFileInfo.lastModified())
+                      << "forcePut" << job.forcePut << "forceGet" << job.forceGet;
+        // If (hash is different), get from remote.
+        if (job.forceGet || (jsonObj.property("hash").toString() > item.hash)) {
+            // Proceed getting metadata.
+            return -1;
+        } else {
+            // Update remote has to local hash on cloudDriveItem.
+            return 0;
+        }
+    } else {
+        qDebug() << "CloudDriveModel::compareMetadata file"
+                      << "remote path" << jsonObj.property("absolutePath").toString() << "hash" << jsonObj.property("hash").toString() << "size" << jsonObj.property("size").toInt32() << "lastModified" << jsonObj.property("lastModified").toString() << jsonObjLastModified
+                      << "local path" << localFilePath << "hash" << item.hash << "size" << localFileInfo.size() << "lastModified" << localFileInfo.lastModified()
+                      << "compare(remote < local)" << (jsonObjLastModified < localFileInfo.lastModified())
+                      << "forcePut" << job.forcePut << "forceGet" << job.forceGet;
+        // If ((rev is newer and size is changed) or there is no local file), get from remote.
+        if (job.forceGet || (jsonObj.property("hash").toString() > item.hash && jsonObj.property("size").toInt32() != localFileInfo.size()) || !localFileInfo.isFile()) {
+            // Download changed remote item to localFilePath.
+            return -1;
+        } else if (job.forcePut || (jsonObj.property("hash").toString() < item.hash && jsonObj.property("size").toInt32() != localFileInfo.size()) || (jsonObjLastModified < localFileInfo.lastModified() && jsonObj.property("size").toInt32() != localFileInfo.size())) {
+            // ISSUE Once downloaded a file, its local timestamp will be after remote immediately. This approach may not work.
+            // Upload changed local item to remoteParentPath with item name.
+            return 1;
+        } else {
+            // Update remote has to local hash on cloudDriveItem.
+            return 0;
+        }
+    }
 }
