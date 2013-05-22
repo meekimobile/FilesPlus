@@ -973,6 +973,11 @@ QDateTime CloudDriveModel::parseUTCDateString(QString utcString)
     return QDateTime::fromString(utcString, "ddd, dd MMM yyyy hh:mm:ss +0000");
 }
 
+QDateTime CloudDriveModel::parseJSONDateString(QString jsonString)
+{
+    return QDateTime::fromString(jsonString, Qt::ISODate);
+}
+
 bool CloudDriveModel::isRemoteAbsolutePath(CloudDriveModel::ClientTypes type)
 {
     return getCloudClient(type)->isRemoteAbsolutePath();
@@ -4568,7 +4573,7 @@ int CloudDriveModel::compareMetadata(CloudDriveJob job, QScriptValue &jsonObj, Q
 {
     QFileInfo localFileInfo(localFilePath);
     CloudDriveItem item = getItem(localFilePath, getClientType(job.type), job.uid);
-    QDateTime jsonObjLastModified = parseReplyDateString(getClientType(job.type), jsonObj.property("lastModified").toString());
+    QDateTime jsonObjLastModified = parseJSONDateString(jsonObj.property("lastModified").toString());
 
     if (jsonObj.property("isDir").toBool()) {
         qDebug() << "CloudDriveModel::compareMetadata dir"

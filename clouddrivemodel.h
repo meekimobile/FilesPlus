@@ -190,6 +190,7 @@ public:
     Q_INVOKABLE QString formatJSONDateString(QDateTime datetime);
     Q_INVOKABLE QString getPathFromUrl(QString urlString);
     Q_INVOKABLE QDateTime parseUTCDateString(QString utcString);
+    Q_INVOKABLE QDateTime parseJSONDateString(QString jsonString);
 
     // Scheduler.
     Q_INVOKABLE int updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp);
