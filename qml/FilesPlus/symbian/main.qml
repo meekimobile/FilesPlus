@@ -1403,7 +1403,7 @@ PageStackWindow {
             var itemLocalSize = cloudDriveModel.getFileSize(localFilePath);
             var itemLocalLastModified = Utility.parseDate(cloudDriveModel.getFileLastModified(localFilePath));
             var jsonObjLastModified = Utility.parseDate(jsonObj.lastModified);
-            console.debug("window cloudDriveModel compareFileMetadata file"
+            console.debug("window cloudDriveModel compareFileMetadata"
                           + " remote path " + jsonObj.absolutePath + " hash " + jsonObj.hash + " size " + jsonObj.size + " lastModified " + jsonObjLastModified
                           + " local path " + localFilePath + " hash " + itemJson.hash + " size " + itemLocalSize + " lastModified " + itemLocalLastModified
                           + " compare(remote < local) " + (jsonObjLastModified < itemLocalLastModified)
@@ -1416,6 +1416,25 @@ PageStackWindow {
                 // ISSUE Once downloaded a file, its local timestamp will be after remote immediately. This approach may not work.
                 // Upload changed local item to remoteParentPath with item name.
                 return 1;
+            } else {
+                // Update remote has to local hash on cloudDriveItem.
+                return 0;
+            }
+        }
+
+        function compareDirMetadata(jobJson, jsonObj, localFilePath) {
+            var itemJson = Utility.createJsonObj(cloudDriveModel.getItemJson(localFilePath, jobJson.type, jobJson.uid));
+            var itemLocalLastModified = Utility.parseDate(cloudDriveModel.getFileLastModified(localFilePath));
+            var jsonObjLastModified = Utility.parseDate(jsonObj.lastModified);
+            console.debug("window cloudDriveModel compareDirMetadata"
+                          + " remote path " + jsonObj.absolutePath + " hash " + jsonObj.hash + " lastModified " + jsonObjLastModified
+                          + " local path " + localFilePath + " hash " + itemJson.hash + " lastModified " + itemLocalLastModified
+                          + " compare(remote < local) " + (jsonObjLastModified < itemLocalLastModified)
+                          + " forcePut " + jobJson.force_put + " forceGet " + jobJson.force_get);
+            // If (hash is different), get from remote.
+            if (jobJson.force_get || jsonObj.hash != itemJson.hash) {
+                // Proceed getting metadata.
+                return -1;
             } else {
                 // Update remote has to local hash on cloudDriveItem.
                 return 0;
@@ -1693,8 +1712,12 @@ PageStackWindow {
                                 remotePathList = remotePathList + (remotePathList != "" ? "," : "") + item.absolutePath;
                                 if (item.isDir) {
                                     // This flow will trigger recursive metadata calling.
-                                    // NOTE Metadata return rev for dir which is incomparable with hash. So it needs to get actual metadata for hash.
-                                    cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, item.absolutePath, -1, jobJson.force_put, jobJson.force_get);
+                                    // TODO Reduce data charges by skipping items with unchanged hash.
+                                    // NOTE Dropbox's metadata return rev for chil dir(s) which is incomparable with hash. So it needs to get actual metadata for hash.
+                                    var r = cloudDriveModel.compareDirMetadata(jobJson, item, itemLocalPath);
+                                    if (r != 0) {
+                                        cloudDriveModel.metadata(jobJson.type, jobJson.uid, itemLocalPath, item.absolutePath, -1, jobJson.force_put, jobJson.force_get);
+                                    }
                                 } else {
                                     // If ((rev is newer and size is changed) or there is no local file), get from remote.
                                     // TODO Should it just sync a file, then it will be decided operation on its metadata call?
