@@ -172,7 +172,7 @@ private:
     QString createNonce();
     bool m_isSuspended;
 
-    QList<FolderSizeItem> itemList;
+    QList<FolderSizeItem> itemList; // TODO Move to heap.
     void refreshItemList();
 
     bool isDirSizeCacheExisting();

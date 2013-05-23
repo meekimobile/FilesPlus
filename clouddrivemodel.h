@@ -18,6 +18,7 @@
 #include "clouddriveitem.h"
 #include "clouddrivejob.h"
 #include "clouddrivemodelthread.h"
+#include "clouddrivemodelitem.h"
 #include "clouddriveclient.h"
 #include "dropboxclient.h"
 #include "gcdclient.h"
@@ -26,13 +27,18 @@
 #include "webdavclient.h"
 #include "cacheimageworker.h"
 
-class CloudDriveModel : public QDeclarativeItem
+class CloudDriveModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_ENUMS(ClientTypes)
     Q_ENUMS(SortFlags)
     Q_ENUMS(Operations)
     Q_PROPERTY(QString dirtyHash READ dirtyHash CONSTANT)
+    Q_PROPERTY(QString remoteParentPath READ getRemoteParentPath WRITE setRemoteParentPath NOTIFY remoteParentPathChanged)
+    Q_PROPERTY(QString remoteParentPathName READ getRemoteParentPathName WRITE setRemoteParentPathName NOTIFY remoteParentPathChanged)
+    Q_PROPERTY(QString remoteParentParentPath READ getRemoteParentParentPath WRITE setRemoteParentParentPath NOTIFY remoteParentPathChanged)
+    Q_PROPERTY(int selectedIndex READ getSelectedIndex WRITE setSelectedIndex)
+    Q_PROPERTY(QString selectedRemotePath READ getSelectedRemotePath WRITE setSelectedRemotePath)
 public:
     static const QString ITEM_DAT_PATH;
     static const QString ITEM_DB_PATH;
@@ -94,8 +100,26 @@ public:
         FileGetCommit
     };
 
-    explicit CloudDriveModel(QDeclarativeItem *parent = 0);
+    explicit CloudDriveModel(QObject *parent = 0);
     ~CloudDriveModel();
+
+    // List model methods.
+    int rowCount(const QModelIndex & parent = QModelIndex()) const;
+//    int columnCount(const QModelIndex & parent = QModelIndex()) const;
+    QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
+    Q_INVOKABLE QVariant get(const int index);
+    Q_INVOKABLE void setProperty(const int index, QString roleName, QVariant value);
+
+    QString getRemoteParentPath();
+    void setRemoteParentPath(QString remoteParentPath);
+    QString getRemoteParentPathName();
+    void setRemoteParentPathName(QString remoteParentPathName);
+    QString getRemoteParentParentPath();
+    void setRemoteParentParentPath(QString remoteParentParentPath);
+    int getSelectedIndex();
+    void setSelectedIndex(int index);
+    QString getSelectedRemotePath();
+    void setSelectedRemotePath(QString remotePath);
 
     QString dirtyHash() const;
 
@@ -321,6 +345,7 @@ signals:
     void schedulerTimeoutSignal();
 
     void sortFlagChanged();
+    void remoteParentPathChanged();
 public slots:
     void proceedNextJob();
     void dispatchJob(const QString jobId);
@@ -455,10 +480,18 @@ private:
     // Create temp path for storing temporary downloaded file during migration.
     void createTempPath();
 
-    // Sorting.
-    QString m_cachedJsonText;
+    // List model and sorting.
+    QList<CloudDriveModelItem> *m_modelItemList;
+    QString m_remoteParentPath;
+    QString m_remoteParentPathName;
+    QString m_remoteParentParentPath;
+    int m_selectedIndex;
+    QString m_selectedRemotePath;
+    void sortItemList(QList<CloudDriveModelItem> *itemList, int sortFlag);
+
+    // Unused JSON methods.
     QString sortJsonText(QString &jsonText, int sortFlag);
-    void sortItemList(QList<QScriptValue> &itemList, int sortFlag);
+    void sortJsonItemList(QList<QScriptValue> &itemList, int sortFlag);
     QString stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj);
 
     int compareMetadata(CloudDriveJob job, QScriptValue &jsonObj, QString localFilePath);

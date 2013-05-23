@@ -1107,124 +1107,7 @@ PageStackWindow {
     CloudDriveModel {
         id: cloudDriveModel
 
-        property alias jobsModel: cloudDriveJobsModel
         property string shareFileCaller
-
-        ListModel {
-            id: cloudDriveJobsModel
-
-            // TODO Cache found index. But most running jobs usually be on prior index (queue).
-            function findIndexByJobId(jobId) {
-                for (var i=0; i<cloudDriveJobsModel.count; i++) {
-                    if (cloudDriveJobsModel.get(i).job_id == jobId) {
-//                        console.debug("cloudDriveJobsModel findIndexByJobId " + i + " " + cloudDriveJobsModel.get(i).job_id);
-                        return i;
-                    }
-                }
-
-                return -1;
-            }
-
-            function updateJob(jobJson) {
-                if (!jobJson) return;
-
-                var i = findIndexByJobId(jobJson.job_id);
-                if (i >= 0) {
-                    cloudDriveJobsModel.set(i, jobJson);
-                }
-            }
-
-            function updateJobProgressBar(jobJson) {
-                if (!jobJson) return;
-
-                var i = findIndexByJobId(jobJson.job_id);
-                if (i >= 0) {
-                    cloudDriveJobsModel.setProperty(i, "bytes", jobJson.bytes);
-                }
-            }
-
-            function removeJob(jobId) {
-                var i = findIndexByJobId(jobId);
-                if (i >= 0) {
-                    cloudDriveJobsModel.remove(i);
-                }
-
-                return i;
-            }
-
-            function removeQueuedJobs() {
-                var i = 0;
-                while (i<cloudDriveJobsModel.count) {
-                    var job = cloudDriveJobsModel.get(i);
-                    if (!job.is_running) {
-                        console.debug("cloudDriveJobsModel removeQueuedJobs " + i + " " + job.job_id);
-                        cloudDriveModel.removeJob("window cloudDriveJobsModel removeQueuedJobs", job.job_id);
-                    }
-                }
-            }
-        }
-
-        ListModel {
-            id: cloudDriveAccountsModel
-
-            function parseCloudDriveAccountsModel(replicatedModel) {
-                // Check if authorized before parsing.
-                if (!cloudDriveModel.isAuthorized()) return;
-
-                // Clear model.
-                cloudDriveAccountsModel.clear();
-
-                // Get uid list.
-                var dbUidList = cloudDriveModel.getStoredUidList();
-
-                for (var i=0; i<dbUidList.length; i++)
-                {
-                    var json = JSON.parse(dbUidList[i]);
-                    var cloudType = cloudDriveModel.getClientType(json.type);
-                    console.debug("window cloudDriveAccountsModel parseCloudDriveAccountsModel type " + json.type + " " + cloudType + " i " + i + " uid " + json.uid + " email " + json.email);
-                    var modelItem = {
-                        logicalDrive: json.email,
-                        availableSpace: 0,
-                        totalSpace: -1,
-                        driveType: 7, // Cloud Drive in driveGrid.
-                        name: "",
-                        cloudDriveType: cloudType,
-                        iconSource: cloudDriveModel.getCloudIcon(cloudType),
-                        uid: json.uid,
-                        email: json.email,
-                        token: json.token,
-                        secret: json.secret,
-                        type: json.type
-                    };
-
-                    cloudDriveAccountsModel.append(modelItem);
-                    if (replicatedModel) {
-                        replicatedModel.append(modelItem);
-                    }
-
-                    // Request quota.
-                    cloudDriveModel.quota(modelItem.cloudDriveType, modelItem.uid);
-                }
-            }
-
-            function updateAccountInfoSlot(type, uid, name, email, shared, normal, quota) {
-        //        console.debug("drivePage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
-                for (var i=0; i<cloudDriveAccountsModel.count; i++) {
-                    var item = cloudDriveAccountsModel.get(i);
-        //            console.debug("drivePage updateAccountInfoSlot item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
-                    if (item.uid == uid && item.driveType == 7 && item.cloudDriveType == type) {
-                        console.debug("window cloudDriveAccountsModel updateAccountInfoSlot found item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
-                        cloudDriveAccountsModel.set(i, { availableSpace: (quota - shared - normal), totalSpace: quota });
-                        if (email) {
-                            cloudDriveAccountsModel.set(i, { logicalDrive: email, email: email });
-                        }
-                        if (name) {
-                            cloudDriveAccountsModel.set(i, { name: name });
-                        }
-                    }
-                }
-            }
-        }
 
         function refreshCloudDriveAccounts(caller) {
             var p = findPage("drivePage");
@@ -1397,6 +1280,82 @@ PageStackWindow {
             return parsedObj;
         }
 
+        function findIndexByRemotePath(remotePath) {
+            for (var i=0; i<cloudDriveModel.count; i++) {
+                if (cloudDriveModel.get(i).absolutePath == remotePath) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        function findIndexByRemotePathName(remotePathName) {
+            for (var i=0; i<cloudDriveModel.count; i++) {
+                if (cloudDriveModel.get(i).name == remotePathName) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        function findIndexByNameFilter(nameFilter, startIndex, backward) {
+            backward = (!backward) ? false : true;
+            var rx = new RegExp(nameFilter, "i");
+            if (backward) {
+                startIndex = (!startIndex) ? (cloudDriveModel.count - 1) : startIndex;
+                startIndex = (startIndex < 0 || startIndex >= cloudDriveModel.count) ? (cloudDriveModel.count - 1) : startIndex;
+                for (var i=startIndex; i>=0; i--) {
+                    if (rx.test(cloudDriveModel.get(i).name)) {
+                        return i;
+                    }
+                }
+            } else {
+                startIndex = (!startIndex) ? 0 : startIndex;
+                startIndex = (startIndex < 0 || startIndex >= cloudDriveModel.count) ? 0 : startIndex;
+                for (var i=startIndex; i<cloudDriveModel.count; i++) {
+                    if (rx.test(cloudDriveModel.get(i).name)) {
+                        return i;
+                    }
+                }
+            }
+
+            return -1;
+        }
+
+        function getNewFileName(remotePathName) {
+//            console.debug("cloudDriveModel getNewFileName " + remotePathName);
+
+            var foundIndex = findIndexByRemotePathName(remotePathName);
+            if (foundIndex > -1) {
+                var newRemotePathName = "";
+                var tokens = remotePathName.split(".", 2);
+//                console.debug("cloudDriveModel getNewFileName tokens [" + tokens + "]");
+
+                if (tokens[0].lastIndexOf(qsTr("_Copy")) > -1) {
+                    var nameTokens = tokens[0].split(qsTr("_Copy"), 2);
+//                    console.debug("cloudDriveModel getNewFileName nameTokens [" + nameTokens + "]");
+
+                    if (nameTokens.length > 1 && !isNaN(parseInt(nameTokens[1]))) {
+                        newRemotePathName += nameTokens[0] + qsTr("_Copy") + (parseInt(nameTokens[1]) + 1);
+                    } else {
+                        newRemotePathName += nameTokens[0] + qsTr("_Copy") + "2";
+                    }
+                } else {
+                    newRemotePathName += tokens[0] + qsTr("_Copy");
+                }
+
+                if (tokens.length > 1) {
+                    newRemotePathName += "." + tokens[1];
+                }
+
+                return getNewFileName(newRemotePathName);
+            } else {
+                return remotePathName;
+            }
+        }
+
         onRequestTokenReplySignal: {
             console.debug("window cloudDriveModel onRequestTokenReplySignal " + err + " " + errMsg + " " + msg);
 
@@ -1512,9 +1471,9 @@ PageStackWindow {
             if (err == 0) {
                 pageStack.find(function (page) {
                     if (page.name == "cloudFolderPage") {
-                        page.parseCloudDriveMetadataJson(msg);
+                        page.postBrowseReplySlot();
                     } else if (page.name == "folderPage") {
-                        page.parseCloudDriveMetadataJson(msg);
+                        page.postBrowseReplySlot();
                     }
                 });
             } else if (err == 204) { // Refresh token
@@ -2075,6 +2034,122 @@ PageStackWindow {
 
             // Proceeds queued jobs during constructions.
             cloudDriveModel.resumeNextJob();
+        }
+    }
+
+    ListModel {
+        id: cloudDriveJobsModel
+
+        // TODO Cache found index. But most running jobs usually be on prior index (queue).
+        function findIndexByJobId(jobId) {
+            for (var i=0; i<cloudDriveJobsModel.count; i++) {
+                if (cloudDriveJobsModel.get(i).job_id == jobId) {
+//                        console.debug("cloudDriveJobsModel findIndexByJobId " + i + " " + cloudDriveJobsModel.get(i).job_id);
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        function updateJob(jobJson) {
+            if (!jobJson) return;
+
+            var i = findIndexByJobId(jobJson.job_id);
+            if (i >= 0) {
+                cloudDriveJobsModel.set(i, jobJson);
+            }
+        }
+
+        function updateJobProgressBar(jobJson) {
+            if (!jobJson) return;
+
+            var i = findIndexByJobId(jobJson.job_id);
+            if (i >= 0) {
+                cloudDriveJobsModel.setProperty(i, "bytes", jobJson.bytes);
+            }
+        }
+
+        function removeJob(jobId) {
+            var i = findIndexByJobId(jobId);
+            if (i >= 0) {
+                cloudDriveJobsModel.remove(i);
+            }
+
+            return i;
+        }
+
+        function removeQueuedJobs() {
+            var i = 0;
+            while (i<cloudDriveJobsModel.count) {
+                var job = cloudDriveJobsModel.get(i);
+                if (!job.is_running) {
+                    console.debug("cloudDriveJobsModel removeQueuedJobs " + i + " " + job.job_id);
+                    cloudDriveModel.removeJob("window cloudDriveJobsModel removeQueuedJobs", job.job_id);
+                }
+            }
+        }
+    }
+
+    ListModel {
+        id: cloudDriveAccountsModel
+
+        function parseCloudDriveAccountsModel(replicatedModel) {
+            // Check if authorized before parsing.
+            if (!cloudDriveModel.isAuthorized()) return;
+
+            // Clear model.
+            cloudDriveAccountsModel.clear();
+
+            // Get uid list.
+            var dbUidList = cloudDriveModel.getStoredUidList();
+
+            for (var i=0; i<dbUidList.length; i++)
+            {
+                var json = JSON.parse(dbUidList[i]);
+                var cloudType = cloudDriveModel.getClientType(json.type);
+                console.debug("window cloudDriveAccountsModel parseCloudDriveAccountsModel type " + json.type + " " + cloudType + " i " + i + " uid " + json.uid + " email " + json.email);
+                var modelItem = {
+                    logicalDrive: json.email,
+                    availableSpace: 0,
+                    totalSpace: -1,
+                    driveType: 7, // Cloud Drive in driveGrid.
+                    name: "",
+                    cloudDriveType: cloudType,
+                    iconSource: cloudDriveModel.getCloudIcon(cloudType),
+                    uid: json.uid,
+                    email: json.email,
+                    token: json.token,
+                    secret: json.secret,
+                    type: json.type
+                };
+
+                cloudDriveAccountsModel.append(modelItem);
+                if (replicatedModel) {
+                    replicatedModel.append(modelItem);
+                }
+
+                // Request quota.
+                cloudDriveModel.quota(modelItem.cloudDriveType, modelItem.uid);
+            }
+        }
+
+        function updateAccountInfoSlot(type, uid, name, email, shared, normal, quota) {
+    //        console.debug("drivePage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
+            for (var i=0; i<cloudDriveAccountsModel.count; i++) {
+                var item = cloudDriveAccountsModel.get(i);
+    //            console.debug("drivePage updateAccountInfoSlot item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
+                if (item.uid == uid && item.driveType == 7 && item.cloudDriveType == type) {
+                    console.debug("window cloudDriveAccountsModel updateAccountInfoSlot found item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
+                    cloudDriveAccountsModel.set(i, { availableSpace: (quota - shared - normal), totalSpace: quota });
+                    if (email) {
+                        cloudDriveAccountsModel.set(i, { logicalDrive: email, email: email });
+                    }
+                    if (name) {
+                        cloudDriveAccountsModel.set(i, { name: name });
+                    }
+                }
+            }
         }
     }
 
