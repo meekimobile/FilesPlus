@@ -3290,7 +3290,7 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
         m_modelItemList->clear();
 
         if (err == 0) {
-            qDebug() << "CloudDriveModel::browseReplyFilter" << nonce << msg.size() << msg;
+            qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "CloudDriveModel::browseReplyFilter" << nonce << msg.size() << msg;
 
             QScriptEngine engine;
             QScriptValue json = engine.evaluate("(" + msg + ")");
@@ -3325,7 +3325,11 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
                     modelItem.isConnected = isRemotePathConnected(getClientType(job.type), job.uid, modelItem.absolutePath);
 
                     m_modelItemList->append(modelItem);
+
+                    // Process UI events.
+                    QApplication::processEvents();
                 }
+                qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "CloudDriveModel::browseReplyFilter model is populated." << nonce << m_modelItemList->size();
 
                 // Sort model item list.
                 sortItemList(m_modelItemList, getSortFlag(getClientType(job.type), job.uid, job.remoteFilePath));
