@@ -1079,6 +1079,7 @@ void FolderSizeModelThread::getDirContent(const QString dirPath, QList<FolderSiz
 
         QFileInfo fileInfo = list.at(i);
         QString fileName = fileInfo.fileName();
+        FolderSizeItem childItem;
 
         //        qDebug() << "FolderSizeModelThread::getDirContent fileInfo.absoluteFilePath()" << fileInfo.absoluteFilePath();
 
@@ -1092,12 +1093,18 @@ void FolderSizeModelThread::getDirContent(const QString dirPath, QList<FolderSiz
             // If running, return cache or dummy item.
             // If not running, drilldown to get dir content.
             if (isRunning()) {
-                itemList.append(getDirItem(fileInfo));
+                childItem = getDirItem(fileInfo);
+                childItem.isHidden = fileInfo.isHidden();
+                itemList.append(childItem);
             } else {
-                itemList.append(getCachedDir(fileInfo));
+                childItem = getCachedDir(fileInfo);
+                childItem.isHidden = fileInfo.isHidden();
+                itemList.append(childItem);
             }
         } else {
-            itemList.append(getCachedDir(fileInfo));
+            childItem = getCachedDir(fileInfo);
+            childItem.isHidden = fileInfo.isHidden();
+            itemList.append(childItem);
         }
     }
 

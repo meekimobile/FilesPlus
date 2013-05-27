@@ -1,5 +1,10 @@
 #include "foldersizeitemlistmodel.h"
 #include <QScriptEngine>
+#ifdef Q_OS_SYMBIAN
+#include <f32file.h>
+#include <e32base.h>
+#include <e32debug.h>
+#endif
 
 const int FolderSizeItemListModel::TimerInterval = 100;
 const int FolderSizeItemListModel::MaxRunningJobCount = 1;
@@ -29,6 +34,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     roles[RunningMaxValueRole] = "runningMaxValue";
     roles[IsCheckedRole] = "isChecked";
     roles[IsDirtyRole] = "isDirty";
+    roles[IsHiddenRole] = "isHidden";
     setRoleNames(roles);
 
     // TODO Initialize cache.
@@ -118,6 +124,8 @@ QVariant FolderSizeItemListModel::data(const QModelIndex & index, int role) cons
         return item.isChecked;
     else if (role == IsDirtyRole)
         return item.isDirty;
+    else if (role == IsHiddenRole)
+        return item.isHidden;
     return QVariant();
 }
 
@@ -688,6 +696,43 @@ bool FolderSizeItemListModel::trash(const QString sourcePath)
     emit proceedNextJobSignal();
 
     return true;
+}
+
+bool FolderSizeItemListModel::setFileAttribute(QString localFilePath, FileAttribute attribute, bool value)
+{
+#ifdef Q_OS_SYMBIAN
+    QString nativeLocalFilePath = QDir::toNativeSeparators(localFilePath);
+
+    TPtrC pLocalFilePath (static_cast<const TUint16*>(nativeLocalFilePath.utf16()), nativeLocalFilePath.length());
+    TBuf<100> buf;
+    buf.Copy(pLocalFilePath);
+
+    RFs fs;
+    TInt res;
+    TUint postAtts;
+    fs.Connect();
+
+    // NOTE RFs::SetAtt() must use path with native separator.
+    if (attribute == ReadOnly) {
+        if (value) {
+            res = fs.SetAtt(buf, KEntryAttReadOnly | KEntryAttNormal, KEntryAttNormal);
+        } else {
+            res = fs.SetAtt(buf, KEntryAttNormal, KEntryAttReadOnly);
+        }
+    } else if (attribute == Hidden) {
+        if (value) {
+            res = fs.SetAtt(buf, KEntryAttHidden, KEntryAttNormal);
+        } else {
+            res = fs.SetAtt(buf, KEntryAttNormal, KEntryAttHidden);
+        }
+    }
+    fs.Att(buf, postAtts);
+    RDebug::Print(_L("FolderSizeItemListModel::setFileAttribute %S %d %04x"), &buf, res, postAtts);
+    fs.Close();
+
+    return (res >= 0);
+#endif
+    return false;
 }
 
 QString FolderSizeItemListModel::getDirPath(const QString absFilePath)

@@ -26,6 +26,7 @@ class FolderSizeItemListModel : public QAbstractListModel
     Q_ENUMS(FolderSizeItemRoles)
     Q_ENUMS(RunningOperations)
     Q_ENUMS(IndexOnCurrentDir)
+    Q_ENUMS(FileAttribute)
     Q_PROPERTY(QString currentDir READ currentDir WRITE setCurrentDir NOTIFY currentDirChanged)
     Q_PROPERTY(int sortFlag READ getSortFlag WRITE setSortFlag NOTIFY sortFlagChanged)
     Q_PROPERTY(int count READ rowCount)
@@ -70,7 +71,8 @@ public:
         RunningValueRole,
         RunningMaxValueRole,
         IsCheckedRole,
-        IsDirtyRole
+        IsDirtyRole,
+        IsHiddenRole
     };
 
     enum RunningOperations {
@@ -85,6 +87,12 @@ public:
     enum IndexOnCurrentDir {
         IndexNotOnCurrentDir = 100001,
         IndexOnCurrentDirButNotFound = 100002
+    };
+
+    enum FileAttribute {
+        Hidden,
+        System,
+        ReadOnly
     };
 
     explicit FolderSizeItemListModel(QObject *parent = 0);
@@ -131,6 +139,8 @@ public:
     Q_INVOKABLE bool createEmptyFile(const QString name);
     Q_INVOKABLE bool renameFile(const QString fileName, const QString newFileName);
     Q_INVOKABLE bool trash(const QString sourcePath);
+
+    Q_INVOKABLE bool setFileAttribute(QString localFilePath, FileAttribute attribute, bool value);
 
     // Informative methods which don't use FolderSizeModelThread.
     Q_INVOKABLE void refreshItems();

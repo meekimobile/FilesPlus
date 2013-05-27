@@ -1772,10 +1772,12 @@ Page {
 
     FilePropertiesDialog {
         id: filePropertiesDialog
+        showAttributes: true
 
         function show(index) {
             selectedIndex = index;
             selectedItem = fsModel.get(selectedIndex);
+            isHidden = selectedItem.isHidden;
             populateCloudItemModel();
             open();
         }
@@ -1806,6 +1808,12 @@ Page {
         onDisconnect: {
             cloudDriveModel.disconnect(type, uid, selectedItem.absolutePath);
             close();
+        }
+        onToggleHidden: {
+            var res = fsModel.setFileAttribute(absolutePath, FolderSizeItemListModel.Hidden, value);
+            if (res) {
+                refreshSlot("folderPage filePropertiesDialog onToggleHidden");
+            }
         }
     }
 }

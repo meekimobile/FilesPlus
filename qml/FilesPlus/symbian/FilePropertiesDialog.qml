@@ -1,5 +1,6 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
+import FolderSizeItemListModel 1.0
 
 CommonDialog {
     id: filePropertiesDIalog
@@ -10,6 +11,8 @@ CommonDialog {
     property variant selectedItem
     property alias cloudItemModel: cloudItemModel
     property bool isCloudFolder: false
+    property bool showAttributes: false
+    property alias isHidden: toggleHiddenCheckbox.checked
 
     signal opening()
     signal opened()
@@ -18,6 +21,7 @@ CommonDialog {
     signal syncAll()
     signal syncAdd()
     signal disconnect(int type, string uid, string absolutePath)
+    signal toggleHidden(string absolutePath, bool value)
 
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
@@ -135,6 +139,29 @@ CommonDialog {
                         color: "white"
                         elide: Text.ElideRight
                         anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+                Row {
+                    width: parent.width
+                    visible: showAttributes
+                    Text {
+                        text: appInfo.emptyStr+qsTr("Attributes")
+                        font.pointSize: 6
+                        width: contentItem.labelWidth
+                        color: "white"
+                        elide: Text.ElideRight
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    CheckBox {
+                        id: toggleHiddenCheckbox
+                        width: parent.width - contentItem.labelWidth
+                        text: "<span style='color:white;font:6pt'>" + appInfo.emptyStr+qsTr("Hidden") + "</span>"
+                        anchors.verticalCenter: parent.verticalCenter
+                        onClicked: {
+                            if (selectedItem) {
+                                toggleHidden(selectedItem.absolutePath, toggleHiddenCheckbox.checked);
+                            }
+                        }
                     }
                 }
                 Row {

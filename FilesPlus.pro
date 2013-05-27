@@ -57,6 +57,8 @@ symbian {
         ":\"MeekiMobile\""
 
     DEPLOYMENT += my_deployment
+
+    MMP_RULES += "LIBRARY efsrv.lib"
 }
 
 # The .cpp file which was generated for your project. Feel free to hack it.
