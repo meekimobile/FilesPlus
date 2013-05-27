@@ -246,6 +246,9 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     if (!m_settings->contains("CloudDriveModel.syncDirtyItems.enabled")) {
         m_settings->setValue("CloudDriveModel.syncDirtyItems.enabled", QVariant(true));
     }
+    if (!m_settings->contains("FolderSizeModelThread.getDirContent.showHiddenSystem.enabled")) {
+        m_settings->setValue("FolderSizeModelThread.getDirContent.showHiddenSystem.enabled", QVariant(true));
+    }
     m_settings->sync();
 
     // Default database initialization.

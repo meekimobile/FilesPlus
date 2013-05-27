@@ -1046,7 +1046,11 @@ void FolderSizeModelThread::getDirContent(const QString dirPath, QList<FolderSiz
     // Get only contents in directory (not recursive).
     QDir dir;
     dir = QDir(dirPath);
-    dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
+    if (m_settings.value("FolderSizeModelThread.getDirContent.showHiddenSystem.enabled", false).toBool()) {
+        dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
+    } else {
+        dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot);
+    }
     dir.setNameFilters(m_nameFilters);
     switch (m_sortFlag) {
     case SortByName:
