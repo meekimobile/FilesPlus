@@ -379,7 +379,6 @@ Page {
         } else if (name == "drivepage.privatedrive.enabled") {
             var p = window.findPage("drivePage");
             if (p) p.refreshSlot("settingPage buttonClickedHandler drivepage.privatedrive.enabled");
-        }
         } else if (name == "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled") {
             var p = window.findPage("folderPage");
             if (p) p.refreshSlot("settingPage buttonClickedHandler FolderSizeModelThread.getDirContent.showHiddenSystem.enabled");
