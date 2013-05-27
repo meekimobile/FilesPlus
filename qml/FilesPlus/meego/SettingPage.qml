@@ -265,6 +265,12 @@ Page {
             type: "switch"
             group: "Developer"
         }
+        ListElement {
+            name: "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
     }
 
     GridView {
@@ -313,6 +319,7 @@ Page {
         else if (name == "LocalFileImageProvider.cache.enabled") return qsTr("Cache local images") + appInfo.emptyStr;
         else if (name == "CloudDriveModel.metadata.root.connection.enabled") return qsTr("Sync to cloud storage root") + appInfo.emptyStr;
         else if (name == "CloudDriveModel.syncDirtyItems.enabled") return qsTr("Sync dirty items automatically") + appInfo.emptyStr;
+        else if (name == "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled") return qsTr("Show hidden/system files") + appInfo.emptyStr;
         else return qsTr(name) + appInfo.emptyStr;
     }
 
@@ -355,6 +362,9 @@ Page {
         } else if (name == "drivepage.systemdrive.enabled") {
             var p = window.findPage("drivePage");
             if (p) p.refreshSlot("settingPage buttonClickedHandler drivepage.systemdrive.enabled");
+        } else if (name == "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled") {
+            var p = window.findPage("folderPage");
+            if (p) p.refreshSlot("settingPage buttonClickedHandler FolderSizeModelThread.getDirContent.showHiddenSystem.enabled");
         }
     }
 

@@ -137,6 +137,8 @@ private:
     bool m_rollbackFlag;
 
     bool m_isFileCached;
+
+    QSettings m_settings;
 };
 
 #endif // FOLDERSIZEMODELTHREAD_H
