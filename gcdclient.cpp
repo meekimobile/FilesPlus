@@ -239,7 +239,16 @@ QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     QScriptValue downloadUrlObj = jsonObj.property("downloadUrl");
 
     // NOTE lastViewedByMeDate is changed on every view on web UI.
-    QScriptValue hashObj = jsonObj.property("lastViewedByMeDate").isValid() ? jsonObj.property("lastViewedByMeDate") : jsonObj.property("modifiedDate");
+    QScriptValue hashObj;
+    if (jsonObj.property("lastViewedByMeDate").isValid()) {
+        if (!jsonObj.property("lastViewedByMeDate").lessThan(jsonObj.property("modifiedDate")) ) {
+            hashObj = jsonObj.property("lastViewedByMeDate");
+        } else {
+            hashObj = jsonObj.property("modifiedDate");
+        }
+    } else {
+        hashObj = jsonObj.property("modifiedDate");
+    }
 
     parsedObj.setProperty("name", jsonObj.property("title"));
     parsedObj.setProperty("absolutePath", jsonObj.property("id"));
