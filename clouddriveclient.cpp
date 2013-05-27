@@ -233,6 +233,7 @@ QString CloudDriveClient::getFileType(QString localPath)
 
 QScriptValue CloudDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj)
 {
+    // NOTE Date string must be in JSON format.
     return QScriptValue();
 }
 

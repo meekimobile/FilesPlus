@@ -1,12 +1,13 @@
 #include "clouddrivemodel.h"
+#include <QScriptValueIterator>
 
-bool nameLessThan(const QScriptValue &o1, const QScriptValue &o2)
+bool jsonNameLessThan(const QScriptValue &o1, const QScriptValue &o2)
 {
 //    qDebug() << "nameLessThan" << o1.property("name").toString().toLower() << o2.property("name").toString().toLower();
     return o1.property("name").toString().toLower() < o2.property("name").toString().toLower();
 }
 
-bool nameLessThanWithDirectoryFirst(const QScriptValue &o1, const QScriptValue &o2)
+bool jsonNameLessThanWithDirectoryFirst(const QScriptValue &o1, const QScriptValue &o2)
 {
     if (o1.property("isDir").toBool() && !o2.property("isDir").toBool()) {
         // If dir before file, return true.
@@ -20,10 +21,10 @@ bool nameLessThanWithDirectoryFirst(const QScriptValue &o1, const QScriptValue &
     }
 }
 
-bool timeGreaterThan(const QScriptValue &o1, const QScriptValue &o2)
+bool jsonTimeGreaterThan(const QScriptValue &o1, const QScriptValue &o2)
 {
     // NOTE date string is in UTC date string format. Needs to use custom format parsing.
-    qDebug() << "CloudDriveModel timeGreaterThan" << o1.property("lastModified").toString() << o2.property("lastModified").toString();
+//    qDebug() << "CloudDriveModel timeGreaterThan" << o1.property("lastModified").toString() << o2.property("lastModified").toString();
     QDateTime dt1 = QDateTime::fromString(o1.property("lastModified").toString(), "ddd, dd MMM yyyy hh:mm:ss +0000");
     if (!dt1.isValid()) {
         dt1 = QDateTime::fromString(o1.property("lastModified").toString(), Qt::ISODate);
@@ -32,12 +33,12 @@ bool timeGreaterThan(const QScriptValue &o1, const QScriptValue &o2)
     if (!dt2.isValid()) {
         dt2 = QDateTime::fromString(o2.property("lastModified").toString(), Qt::ISODate);
     }
-    qDebug() << "CloudDriveModel timeGreaterThan" << dt1 << dt2;
+//    qDebug() << "CloudDriveModel timeGreaterThan" << dt1 << dt2;
 
     return dt1 > dt2;
 }
 
-bool typeLessThan(const QScriptValue &o1, const QScriptValue &o2)
+bool jsonTypeLessThan(const QScriptValue &o1, const QScriptValue &o2)
 {
     if (o1.property("isDir").toBool() && !o2.property("isDir").toBool()) {
         // If dir before file, return true.
@@ -57,7 +58,7 @@ bool typeLessThan(const QScriptValue &o1, const QScriptValue &o2)
     }
 }
 
-bool sizeGreaterThan(const QScriptValue &o1, const QScriptValue &o2)
+bool jsonSizeGreaterThan(const QScriptValue &o1, const QScriptValue &o2)
 {
     if (o1.property("isDir").toBool() && !o2.property("isDir").toBool()) {
         // If dir before file, return true.
@@ -68,6 +69,66 @@ bool sizeGreaterThan(const QScriptValue &o1, const QScriptValue &o2)
     } else {
         // If both the same, compare size.
         return o1.property("size").toInteger() > o2.property("size").toInteger();
+    }
+}
+
+bool nameLessThan(const CloudDriveModelItem &o1, const CloudDriveModelItem &o2)
+{
+//    qDebug() << "nameLessThan" << o1.name.toLower() << o2.name.toLower();
+    return o1.name.toLower() < o2.name.toLower();
+}
+
+bool nameLessThanWithDirectoryFirst(const CloudDriveModelItem &o1, const CloudDriveModelItem &o2)
+{
+    if (o1.isDir && !o2.isDir) {
+        // If dir before file, return true.
+        return true;
+    } else if (!o1.isDir && o2.isDir) {
+        // If file before dir, return false;
+        return false;
+    } else {
+        // If both are dir/file, compare name.
+        return o1.name.toLower() < o2.name.toLower();
+    }
+}
+
+bool timeGreaterThan(const CloudDriveModelItem &o1, const CloudDriveModelItem &o2)
+{
+//    qDebug() << "CloudDriveModel timeGreaterThan" << o1.lastModified << o2.lastModified;
+    return o1.lastModified > o2.lastModified;
+}
+
+bool typeLessThan(const CloudDriveModelItem &o1, const CloudDriveModelItem &o2)
+{
+    if (o1.isDir && !o2.isDir) {
+        // If dir before file, return true.
+        return true;
+    } else if (!o1.isDir && o2.isDir) {
+        // If file before dir, return false;
+        return false;
+    } else {
+        // If both are dir/file, compare type then name.
+        if (o1.fileType.toLower() == o2.fileType.toLower()) {
+            return o1.name.toLower() < o2.name.toLower();
+        } else if (o1.fileType.toLower() < o2.fileType.toLower()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+
+bool sizeGreaterThan(const CloudDriveModelItem &o1, const CloudDriveModelItem &o2)
+{
+    if (o1.isDir && !o2.isDir) {
+        // If dir before file, return true.
+        return true;
+    } else if (!o1.isDir && o2.isDir) {
+        // If file before dir, return false;
+        return false;
+    } else {
+        // If both the same, compare size.
+        return o1.size > o2.size;
     }
 }
 
@@ -91,8 +152,8 @@ const QString CloudDriveModel::DirtyHash = "FFFFFFFF";
 //const QStringList CloudDriveModel::restrictFileTypes = QString("SIS,SISX,DEB").split(",");
 const QStringList CloudDriveModel::restrictFileTypes;
 
-CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
-    QDeclarativeItem(parent)
+CloudDriveModel::CloudDriveModel(QObject *parent) :
+    QAbstractListModel(parent)
 {
     // Issue: Qt on Belle doesn't support QtConcurrent and QFuture.
     // Example code: QFuture<void> loadDataFuture = QtConcurrent::run(this, &CloudDriveModel::loadCloudDriveItems);
@@ -132,6 +193,38 @@ CloudDriveModel::CloudDriveModel(QDeclarativeItem *parent) :
     m_isDirtyCache = new QHash<QString, bool>();
     m_isSyncingCache = new QHash<QString, bool>();
 
+    // Initialize cloud drive model item list.
+    QHash<int, QByteArray> roles;
+    int i = Qt::UserRole; // Start from user role.
+    roles[++i] = "name";
+    roles[++i] = "absolutePath";
+    roles[++i] = "parentPath";
+    roles[++i] = "size";
+    roles[++i] = "lastModified";
+    roles[++i] = "isDir";
+    roles[++i] = "hash";
+    roles[++i] = "subDirCount";
+    roles[++i] = "subFileCount";
+    roles[++i] = "fileType";
+    roles[++i] = "isDeleted";
+    roles[++i] = "source";
+    roles[++i] = "alternative";
+    roles[++i] = "thumbnail";
+    roles[++i] = "preview";
+    roles[++i] = "downloadUrl";
+    roles[++i] = "webContentLink";
+    roles[++i] = "embedLink";
+    roles[++i] = "isRunning";
+    roles[++i] = "runningValue";
+    roles[++i] = "runningMaxValue";
+    roles[++i] = "runningOperation";
+    roles[++i] = "isChecked";
+    roles[++i] = "isDirty";
+    roles[++i] = "isConnected";
+    roles[++i] = "timestamp";
+    setRoleNames(roles);
+    m_modelItemList = new QList<CloudDriveModelItem>();
+
     // Initialize cloud storage clients.
     initializeCloudClients(createNonce());
 
@@ -150,6 +243,180 @@ CloudDriveModel::~CloudDriveModel()
     // Close DB.
     cleanDB();
     closeDB();
+}
+
+int CloudDriveModel::rowCount(const QModelIndex &parent) const
+{
+    return m_modelItemList->count();
+}
+
+QVariant CloudDriveModel::data(const QModelIndex &index, int role) const
+{
+    if (index.row() >= rowCount()) {
+        return QString("");
+    }
+
+    CloudDriveModelItem modelItem = m_modelItemList->at(index.row());
+    QString roleName = roleNames().value(role);
+//    qDebug() << "CloudDriveModel::data role" << role << roleName;
+    if (roleName == "name") return modelItem.name;
+    else if (roleName == "absolutePath") return modelItem.absolutePath;
+    else if (roleName == "parentPath") return modelItem.parentPath;
+    else if (roleName == "size") return modelItem.size;
+    else if (roleName == "lastModified") return modelItem.lastModified;
+    else if (roleName == "isDir") return modelItem.isDir;
+    else if (roleName == "hash") return modelItem.hash;
+    else if (roleName == "subDirCount") return modelItem.subDirCount;
+    else if (roleName == "subFileCount") return modelItem.subFileCount;
+    else if (roleName == "fileType") return modelItem.fileType;
+    else if (roleName == "isDeleted") return modelItem.isDeleted;
+    else if (roleName == "source") return modelItem.source;
+    else if (roleName == "alternative") return modelItem.alternative;
+    else if (roleName == "thumbnail") return modelItem.thumbnail;
+    else if (roleName == "preview") return modelItem.preview;
+    else if (roleName == "downloadUrl") return modelItem.downloadUrl;
+    else if (roleName == "webContentLink") return modelItem.webContentLink;
+    else if (roleName == "embedLink") return modelItem.embedLink;
+    else if (roleName == "isRunning") return modelItem.isRunning;
+    else if (roleName == "runningValue") return modelItem.runningValue;
+    else if (roleName == "runningMaxValue") return modelItem.runningMaxValue;
+    else if (roleName == "runningOperation") return modelItem.runningOperation;
+    else if (roleName == "isChecked") return modelItem.isChecked;
+    else if (roleName == "isDirty") return modelItem.isDirty;
+    else if (roleName == "isConnected") return modelItem.isConnected;
+    else if (roleName == "timestamp") return modelItem.timestamp;
+
+    return QString("");
+}
+
+QVariant CloudDriveModel::get(const int index)
+{
+    if (index >= 0 && index < rowCount()) {
+        QMap<QString,QVariant> jsonObj;
+        foreach(int role, roleNames().keys()) {
+            QString propertyName = QString(roleNames().value(role));
+            QVariant propertyValue = data(createIndex(index,0), role);
+            jsonObj[propertyName] = propertyValue;
+        }
+//        qDebug() << "CloudDriveModel::get" << QVariant(jsonObj);
+        return QVariant(jsonObj);
+    }
+
+    return QVariant();
+}
+
+void CloudDriveModel::setProperty(const int index, QString roleName, QVariant value)
+{
+    bool isChanged = false;
+    if (index >= 0 && index < rowCount()) {
+        // Update to limited properties.
+        CloudDriveModelItem item = m_modelItemList->at(index);
+        if (roleName == "isRunning" && item.isRunning != value.toBool()) {
+            item.isRunning = value.toBool();
+            isChanged = true;
+        } else if (roleName == "runningValue" && item.runningValue != value.toLongLong()) {
+            item.runningValue = value.toLongLong();
+            isChanged = true;
+        } else if (roleName == "runningMaxValue" && item.runningMaxValue != value.toLongLong()) {
+            item.runningMaxValue = value.toLongLong();
+            isChanged = true;
+        } else if (roleName == "runningOperation" && item.runningOperation != value.toInt()) {
+            item.runningOperation = value.toInt();
+            isChanged = true;
+        } else if (roleName == "isChecked" && item.isChecked != value.toBool()) {
+            item.isChecked = value.toBool();
+            isChanged = true;
+        } else if (roleName == "isDirty" && item.isDirty != value.toBool()) {
+            item.isDirty = value.toBool();
+            isChanged = true;
+        } else if (roleName == "isConnected" && item.isConnected != value.toBool()) {
+            item.isConnected = value.toBool();
+            isChanged = true;
+        } else if (roleName == "timestamp" && item.timestamp != value.toLongLong()) {
+            item.timestamp = value.toLongLong();
+            isChanged = true;
+        } else if (roleName == "source" && item.source != value.toString()) {
+            item.source = value.toString();
+            isChanged = true;
+        } else if (roleName == "alternative" && item.alternative != value.toString()) {
+            item.alternative = value.toString();
+            isChanged = true;
+        } else if (roleName == "thumbnail" && item.thumbnail != value.toString()) {
+            item.thumbnail = value.toString();
+            isChanged = true;
+        } else if (roleName == "preview" && item.preview != value.toString()) {
+            item.preview = value.toString();
+            isChanged = true;
+        } else if (roleName == "downloadUrl" && item.downloadUrl != value.toString()) {
+            item.downloadUrl = value.toString();
+            isChanged = true;
+        } else if (roleName == "webContentLink" && item.webContentLink != value.toString()) {
+            item.webContentLink = value.toString();
+            isChanged = true;
+        } else if (roleName == "embedLink" && item.embedLink != value.toString()) {
+            item.embedLink = value.toString();
+            isChanged = true;
+        }
+
+        if (isChanged) {
+//            qDebug() << "CloudDriveModel::setProperty" << index << roleName << value << "isChanged" << isChanged;
+            m_modelItemList->replace(index, item);
+            // Emit data changed.
+            emit dataChanged(createIndex(index,0), createIndex(index, 0));
+        }
+    } else {
+        // TODO do nothing.
+    }
+}
+
+QString CloudDriveModel::getRemoteParentPath()
+{
+    return m_remoteParentPath;
+}
+
+void CloudDriveModel::setRemoteParentPath(QString remoteParentPath)
+{
+    m_remoteParentPath = remoteParentPath;
+}
+
+QString CloudDriveModel::getRemoteParentPathName()
+{
+    return m_remoteParentPathName;
+}
+
+void CloudDriveModel::setRemoteParentPathName(QString remoteParentPathName)
+{
+    m_remoteParentPathName = remoteParentPathName;
+}
+
+QString CloudDriveModel::getRemoteParentParentPath()
+{
+    return m_remoteParentParentPath;
+}
+
+void CloudDriveModel::setRemoteParentParentPath(QString remoteParentParentPath)
+{
+    m_remoteParentParentPath = remoteParentParentPath;
+}
+
+int CloudDriveModel::getSelectedIndex()
+{
+    return m_selectedIndex;
+}
+
+void CloudDriveModel::setSelectedIndex(int index)
+{
+    m_selectedIndex = index;
+}
+
+QString CloudDriveModel::getSelectedRemotePath()
+{
+    return m_selectedRemotePath;
+}
+
+void CloudDriveModel::setSelectedRemotePath(QString remotePath)
+{
+    m_selectedRemotePath = remotePath;
 }
 
 QString CloudDriveModel::dirtyHash() const
@@ -3012,13 +3279,70 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
 
     // Route signal to caller.
     if (job.operation == MigrateFile) {
-        // TODO Parse and process browsed data.
+        // Parse and process browsed data.
         migrateFileReplyFilter(nonce, err, errMsg, msg);
     } else {
-        // TODO Populate internal model to reduce parse processing on QML side.
+        // Populate internal list model to reduce parse processing on QML side.
+        // TODO Figure out exchanging value objects between specific cloud client and CDM.
+        // TODO Use QMultiMap to sort while inserting?
+
+        // Clear model item list.
+        m_modelItemList->clear();
+
         if (err == 0) {
-            m_cachedJsonText = sortJsonText(msg, getSortFlag(getClientType(job.type), job.uid, job.remoteFilePath));
-            emit browseReplySignal(nonce, err, errMsg, m_cachedJsonText);
+            qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "CloudDriveModel::browseReplyFilter" << nonce << msg.size() << msg;
+
+            QScriptEngine engine;
+            QScriptValue json = engine.evaluate("(" + msg + ")");
+
+            // Populate model item list.
+            m_selectedIndex = -1;
+            if (json.property("children").isValid()) {
+                m_remoteParentPath = json.property("absolutePath").toString();
+                m_remoteParentPathName = isRemoteAbsolutePath(getClientType(job.type)) ? m_remoteParentPath : json.property("name").toString();
+                m_remoteParentParentPath = json.property("parentPath").toString();
+
+                for (int i = 0; i < json.property("children").property("length").toInt32(); i++) {
+                    QScriptValue childItem = json.property("children").property(i);
+
+                    CloudDriveModelItem modelItem;
+                    modelItem.name = childItem.property("name").toString();
+                    modelItem.absolutePath = childItem.property("absolutePath").toString();
+                    modelItem.parentPath = childItem.property("parentPath").toString();
+                    modelItem.size = childItem.property("size").toInteger();
+                    modelItem.lastModified = parseJSONDateString(childItem.property("lastModified").toString());
+                    modelItem.isDir = childItem.property("isDir").toBool();
+                    modelItem.hash = childItem.property("hash").toString();
+                    modelItem.fileType = childItem.property("fileType").toString();
+                    modelItem.isDeleted = childItem.property("isDeleted").toBool();
+                    modelItem.source = childItem.property("source").toString();
+                    modelItem.alternative = childItem.property("alternative").toString();
+                    modelItem.thumbnail = childItem.property("thumbnail").toString();
+                    modelItem.preview = childItem.property("preview").toString();
+                    modelItem.downloadUrl = childItem.property("downloadUrl").toString();
+                    modelItem.webContentLink = childItem.property("webContentLink").toString();
+                    modelItem.embedLink = childItem.property("embedLink").toString();
+                    modelItem.isConnected = isRemotePathConnected(getClientType(job.type), job.uid, modelItem.absolutePath);
+
+                    m_modelItemList->append(modelItem);
+
+                    // Process UI events.
+                    QApplication::processEvents();
+                }
+                qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "CloudDriveModel::browseReplyFilter model is populated." << nonce << m_modelItemList->size();
+
+                // Sort model item list.
+                sortItemList(m_modelItemList, getSortFlag(getClientType(job.type), job.uid, job.remoteFilePath));
+            }
+
+            emit remoteParentPathChanged();
+
+            // Emit data changed.
+            beginResetModel();
+            emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, 0));
+            endResetModel();
+
+            emit browseReplySignal(nonce, err, errMsg, "{}");
         } else {
             emit browseReplySignal(nonce, err, errMsg, msg);
         }
@@ -4508,9 +4832,17 @@ void CloudDriveModel::setSortFlag(CloudDriveModel::ClientTypes type, QString uid
     m_settings.setValue(QString("CloudDriveModel.%1.%2.sortFlag").arg(type).arg(uid), QVariant(sortFlag));
 
     // Sorting.
-    QString msg = sortJsonText(m_cachedJsonText, getSortFlag(type, uid, remoteFilePath));
+    // TODO Sort in thread.
+//    QString msg = sortJsonText(m_cachedJsonText, getSortFlag(type, uid, remoteFilePath));
+    sortItemList(m_modelItemList, getSortFlag(type, uid, remoteFilePath));
 
-    emit browseReplySignal(createNonce(), 0, "Set sort flag", msg);
+    // Emit data changed.
+    beginResetModel();
+    emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, 0));
+    endResetModel();
+
+//    emit browseReplySignal(createNonce(), 0, "Set sort flag", msg);
+    emit browseReplySignal(createNonce(), 0, "Set sort flag", "{}");
 }
 
 QString CloudDriveModel::sortJsonText(QString &jsonText, int sortFlag)
@@ -4525,7 +4857,7 @@ QString CloudDriveModel::sortJsonText(QString &jsonText, int sortFlag)
         itemList.append(parsedJsonObj.property("children").property(i));
     }
 
-    sortItemList(itemList, sortFlag);
+    sortJsonItemList(itemList, sortFlag);
 
     QScriptValue sortedChildren = engine.newArray();
     for (int i = 0; i < itemList.count(); i++) {
@@ -4537,31 +4869,58 @@ QString CloudDriveModel::sortJsonText(QString &jsonText, int sortFlag)
     return stringifyScriptValue(engine, parsedJsonObj);
 }
 
-void CloudDriveModel::sortItemList(QList<QScriptValue> &itemList, int sortFlag)
+void CloudDriveModel::sortJsonItemList(QList<QScriptValue> &itemList, int sortFlag)
 {
     QDateTime start = QDateTime::currentDateTime();
-    qDebug() << start.toString(Qt::ISODate) << "CloudDriveModel::sortItemList sortFlag" << sortFlag << "itemList.length()" << itemList.length();
+    qDebug() << start.toString(Qt::ISODate) << "CloudDriveModel::sortJsonItemList sortFlag" << sortFlag << "itemList.length()" << itemList.length();
 
     switch (sortFlag) {
     case SortByName:
-        qSort(itemList.begin(), itemList.end(), nameLessThan);
+        qSort(itemList.begin(), itemList.end(), jsonNameLessThan);
         break;
     case SortByNameWithDirectoryFirst:
-        qSort(itemList.begin(), itemList.end(), nameLessThanWithDirectoryFirst);
+        qSort(itemList.begin(), itemList.end(), jsonNameLessThanWithDirectoryFirst);
         break;
     case SortByTime:
-        qSort(itemList.begin(), itemList.end(), timeGreaterThan);
+        qSort(itemList.begin(), itemList.end(), jsonTimeGreaterThan);
         break;
     case SortByType:
-        qSort(itemList.begin(), itemList.end(), typeLessThan);
+        qSort(itemList.begin(), itemList.end(), jsonTypeLessThan);
         break;
     case SortBySize:
-        qSort(itemList.begin(), itemList.end(), sizeGreaterThan);
+        qSort(itemList.begin(), itemList.end(), jsonSizeGreaterThan);
         break;
     }
 
     QDateTime end = QDateTime::currentDateTime();
-    qDebug() << end.toString(Qt::ISODate) << "CloudDriveModel::sortItemList done elapse" << start.msecsTo(end) << "ms. itemList.length()" << itemList.length();
+    qDebug() << end.toString(Qt::ISODate) << "CloudDriveModel::sortJsonItemList done elapse" << start.msecsTo(end) << "ms. itemList.length()" << itemList.length();
+}
+
+void CloudDriveModel::sortItemList(QList<CloudDriveModelItem> *itemList, int sortFlag)
+{
+    QDateTime start = QDateTime::currentDateTime();
+    qDebug() << start.toString(Qt::ISODate) << "CloudDriveModel::sortItemList sortFlag" << sortFlag << "itemList->length()" << itemList->length();
+
+    switch (sortFlag) {
+    case SortByName:
+        qSort(itemList->begin(), itemList->end(), nameLessThan);
+        break;
+    case SortByNameWithDirectoryFirst:
+        qSort(itemList->begin(), itemList->end(), nameLessThanWithDirectoryFirst);
+        break;
+    case SortByTime:
+        qSort(itemList->begin(), itemList->end(), timeGreaterThan);
+        break;
+    case SortByType:
+        qSort(itemList->begin(), itemList->end(), typeLessThan);
+        break;
+    case SortBySize:
+        qSort(itemList->begin(), itemList->end(), sizeGreaterThan);
+        break;
+    }
+
+    QDateTime end = QDateTime::currentDateTime();
+    qDebug() << end.toString(Qt::ISODate) << "CloudDriveModel::sortItemList done elapse" << start.msecsTo(end) << "ms. itemList->length()" << itemList->length();
 }
 
 QString CloudDriveModel::stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj)

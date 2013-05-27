@@ -19,13 +19,12 @@ Page {
     property int selectedModelIndex
     property string selectedRemotePath
     property string selectedRemotePathName
-    property string remoteParentPath // Current browse remote path
-    property string remoteParentPathName // Shows on titlebar
-    property string remoteParentParentPath // For change up
-    property int selectedIndex
+    property string remoteParentPath: cloudDriveModel.remoteParentPath // Current browse remote path
+    property string remoteParentPathName: cloudDriveModel.remoteParentPathName // Shows on titlebar
+    property string remoteParentParentPath: cloudDriveModel.remoteParentParentPath // For change up
+    property int selectedIndex: cloudDriveModel.selectedIndex
     property bool selectedIsDir
     property bool selectedIsValid
-    property alias contentModel: cloudFolderModel
     property bool isBusy
 
     function goUpSlot() {
@@ -37,22 +36,12 @@ Page {
         }
     }
 
-    function parseCloudDriveMetadataJson(jsonText) {
+    function postBrowseReplySlot() {
         originalRemotePath = (originalRemotePath == "") ? remotePath : originalRemotePath;
 
-        cloudFolderModel.clear();
-        var responseJson = cloudDriveModel.parseCloudDriveMetadataJson(selectedCloudType, selectedUid, originalRemotePath, jsonText,  cloudFolderModel);
-
         selectedIsValid = true;
-        selectedIndex = responseJson.selectedIndex;
-        selectedRemotePath = responseJson.selectedRemotePath;
-        selectedRemotePathName = responseJson.selectedRemotePathName;
-        selectedIsDir = responseJson.selectedIsDir;
-        remoteParentPath = responseJson.remoteParentPath;
-        remoteParentPathName = responseJson.remoteParentPathName;
-        remoteParentParentPath = responseJson.remoteParentParentPath;
-
-        cloudFolderView.currentIndex = responseJson.selectedIndex;
+        selectedIndex = cloudDriveModel.findIndexByRemotePath(originalRemotePath);
+        cloudFolderView.currentIndex = selectedIndex;
 
         // Reset busy.
         isBusy = false;
@@ -66,16 +55,6 @@ Page {
         quickScrollPanel.visible = false;
         cloudFolderPage.remoteParentPath = remoteParentPath;
         refreshSlot("cloudFolderPage changeRemotePath");
-    }
-
-    function getSelectedRemotePath() {
-        var selectedRemotePath = "";
-
-        if (cloudFolderView.currentIndex > -1) {
-            selectedRemotePath = cloudDrivePathListModel.get(cloudFolderView.currentIndex).path;
-        }
-
-        return selectedRemotePath;
     }
 
     function createRemoteFolder(newRemoteFolderName) {
@@ -134,8 +113,8 @@ Page {
         // Suspend for queuing.
         cloudDriveModel.suspendNextJob();
 
-        for (var i=0; i<cloudFolderModel.count; i++) {
-            var remotePath = cloudFolderModel.get(i).absolutePath;
+        for (var i=0; i<cloudDriveModel.count; i++) {
+            var remotePath = cloudDriveModel.get(i).absolutePath;
             var isConnected = cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, remotePath);
             console.debug("cloudFolderPage synconnectedItemsSlot remotePath " + remotePath + " isConnected " + isConnected);
             if (isConnected) {
@@ -180,10 +159,10 @@ Page {
         if (jobJson.remote_file_path == "") return;
 
         if (jobJson.type == selectedCloudType && jobJson.uid == selectedUid) {
-            var i = cloudFolderModel.findIndexByRemotePath(jobJson.remote_file_path);
+            var i = cloudDriveModel.findIndexByRemotePath(jobJson.remote_file_path);
 //            console.debug("cloudFolderPage updateItemSlot caller " + caller + " jobJson " + JSON.stringify(jobJson) + " model index " + i);
             if (i >= 0) {
-                cloudFolderModel.set(i, { isRunning: jobJson.is_running, isConnected: cloudDriveModel.isRemotePathConnected(jobJson.type, jobJson.uid, jobJson.remote_file_path) });
+                cloudDriveModel.set(i, { isRunning: jobJson.is_running, isConnected: cloudDriveModel.isRemotePathConnected(jobJson.type, jobJson.uid, jobJson.remote_file_path) });
             }
         }
     }
@@ -209,10 +188,10 @@ Page {
 
     function refreshItem(remotePath) {
         var timestamp = (new Date()).getTime();
-        var i = cloudFolderModel.findIndexByRemotePath(remotePath);
+        var i = cloudDriveModel.findIndexByRemotePath(remotePath);
         console.debug("cloudFolderPage refreshItem i " + i);
         if (i >= 0) {
-            cloudFolderModel.setProperty(i, "timestamp", timestamp);
+            cloudDriveModel.setProperty(i, "timestamp", timestamp);
         }
     }
 
@@ -226,8 +205,8 @@ Page {
                 if (cloudFolderView.state == "mark") {
                     cloudFolderView.state = "";
                 } else {
-                    // Specify local path to focus after cd to parent directory..
-//                    cloudFolderView.focusLocalPath = cloudFolderModel.currentDir;
+                    // TODO Specify local path to focus after cd to parent directory..
+//                    cloudFolderView.focusLocalPath = cloudDriveModel.currentDir;
                     goUpSlot();
                 }
             }
@@ -315,7 +294,7 @@ Page {
 
     TitlePanel {
         id: currentPath
-        text: cloudDriveModel.isRemoteAbsolutePath(selectedCloudType) ? cloudDriveModel.getPathFromUrl(remoteParentPath) : remoteParentPathName
+        text: remoteParentPathName
         textLeftMargin: height + 5
 
         Image {
@@ -334,7 +313,7 @@ Page {
         anchors.bottom: parent.bottom
 
         onPrevious: {
-            lastFindIndex = cloudFolderModel.findIndexByNameFilter(nameFilter, --lastFindIndex, true);
+            lastFindIndex = cloudDriveModel.findIndexByNameFilter(nameFilter, --lastFindIndex, true);
             console.debug("cloudFolderPage nameFilterPanel onPrevious nameFilter " + nameFilter + " lastFindIndex " + lastFindIndex);
             if (lastFindIndex > -1) {
                 cloudFolderView.positionViewAtIndex(lastFindIndex, ListView.Beginning);
@@ -343,7 +322,7 @@ Page {
         }
 
         onNext: {
-            lastFindIndex = cloudFolderModel.findIndexByNameFilter(nameFilter, ++lastFindIndex, false);
+            lastFindIndex = cloudDriveModel.findIndexByNameFilter(nameFilter, ++lastFindIndex, false);
             console.debug("cloudFolderPage nameFilterPanel onNext nameFilter " + nameFilter + " lastFindIndex " + lastFindIndex);
             if (lastFindIndex > -1) {
                 cloudFolderView.positionViewAtIndex(lastFindIndex, ListView.Beginning);
@@ -526,13 +505,13 @@ Page {
         property int selectedIndex: cloudFolderView.currentIndex
 
         function show() {
-            var absolutePath = cloudFolderModel.get(selectedIndex).absolutePath;
-            var source = cloudFolderModel.get(selectedIndex).source;
-            var alternative = cloudFolderModel.get(selectedIndex).alternative;
+            var absolutePath = cloudDriveModel.get(selectedIndex).absolutePath;
+            var source = cloudDriveModel.get(selectedIndex).source;
+            var alternative = cloudDriveModel.get(selectedIndex).alternative;
 
             source = (source) ? source : cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
-            cloudFolderModel.setProperty(selectedIndex, "source", source);
-            console.debug("cloudFolderPage openMenu show source " + cloudFolderModel.get(selectedIndex).source + " alternative " + cloudFolderModel.get(selectedIndex).alternative);
+            cloudDriveModel.setProperty(selectedIndex, "source", source);
+            console.debug("cloudFolderPage openMenu show source " + cloudDriveModel.get(selectedIndex).source + " alternative " + cloudDriveModel.get(selectedIndex).alternative);
 
             if (source != "" && (!alternative || alternative == "")) {
                 openMedia();
@@ -544,90 +523,10 @@ Page {
         }
 
         onOpenMedia: {
-            Qt.openUrlExternally(cloudFolderModel.get(selectedIndex).source);
+            Qt.openUrlExternally(cloudDriveModel.get(selectedIndex).source);
         }
         onOpenWeb: {
-            Qt.openUrlExternally(cloudFolderModel.get(selectedIndex).alternative);
-        }
-    }
-
-    ListModel {
-        id: cloudFolderModel
-
-        function findIndexByRemotePath(remotePath) {
-            for (var i=0; i<cloudFolderModel.count; i++) {
-                if (cloudFolderModel.get(i).absolutePath == remotePath) {
-                    return i;
-                }
-            }
-
-            return -1;
-        }
-
-        function findIndexByRemotePathName(remotePathName) {
-            for (var i=0; i<cloudFolderModel.count; i++) {
-                if (cloudFolderModel.get(i).name == remotePathName) {
-                    return i;
-                }
-            }
-
-            return -1;
-        }
-
-        function findIndexByNameFilter(nameFilter, startIndex, backward) {
-            backward = (!backward) ? false : true;
-            var rx = new RegExp(nameFilter, "i");
-            if (backward) {
-                startIndex = (!startIndex) ? (cloudFolderModel.count - 1) : startIndex;
-                startIndex = (startIndex < 0 || startIndex >= cloudFolderModel.count) ? (cloudFolderModel.count - 1) : startIndex;
-                for (var i=startIndex; i>=0; i--) {
-                    if (rx.test(cloudFolderModel.get(i).name)) {
-                        return i;
-                    }
-                }
-            } else {
-                startIndex = (!startIndex) ? 0 : startIndex;
-                startIndex = (startIndex < 0 || startIndex >= cloudFolderModel.count) ? 0 : startIndex;
-                for (var i=startIndex; i<cloudFolderModel.count; i++) {
-                    if (rx.test(cloudFolderModel.get(i).name)) {
-                        return i;
-                    }
-                }
-            }
-
-            return -1;
-        }
-
-        function getNewFileName(remotePathName) {
-//            console.debug("cloudFolderModel getNewFileName " + remotePathName);
-
-            var foundIndex = findIndexByRemotePathName(remotePathName);
-            if (foundIndex > -1) {
-                var newRemotePathName = "";
-                var tokens = remotePathName.split(".", 2);
-//                console.debug("cloudFolderModel getNewFileName tokens [" + tokens + "]");
-
-                if (tokens[0].lastIndexOf(qsTr("_Copy")) > -1) {
-                    var nameTokens = tokens[0].split(qsTr("_Copy"), 2);
-//                    console.debug("cloudFolderModel getNewFileName nameTokens [" + nameTokens + "]");
-
-                    if (nameTokens.length > 1 && !isNaN(parseInt(nameTokens[1]))) {
-                        newRemotePathName += nameTokens[0] + qsTr("_Copy") + (parseInt(nameTokens[1]) + 1);
-                    } else {
-                        newRemotePathName += nameTokens[0] + qsTr("_Copy") + "2";
-                    }
-                } else {
-                    newRemotePathName += tokens[0] + qsTr("_Copy");
-                }
-
-                if (tokens.length > 1) {
-                    newRemotePathName += "." + tokens[1];
-                }
-
-                return getNewFileName(newRemotePathName);
-            } else {
-                return remotePathName;
-            }
+            Qt.openUrlExternally(cloudDriveModel.get(selectedIndex).alternative);
         }
     }
 
@@ -657,7 +556,7 @@ Page {
         clip: true
         focus: true
         pressDelay: 200
-        model: cloudFolderModel
+        model: cloudDriveModel
         delegate: cloudItemDelegate
         state: ""
         states: [
@@ -824,8 +723,8 @@ Page {
             listView: parent
             indicatorBarTitle: (modelIndex < 0) ? ""
                                : ( sortByMenu.sortFlag == CloudDriveModel.SortByTime
-                                  ? Qt.formatDateTime(cloudFolderModel.get(modelIndex).lastModified, "d MMM yyyy")
-                                  : cloudFolderModel.get(modelIndex).name )
+                                  ? Qt.formatDateTime(cloudDriveModel.get(modelIndex).lastModified, "d MMM yyyy")
+                                  : cloudDriveModel.get(modelIndex).name )
             inverted: inverted
             scrollBarWidth: 80
             indicatorBarHeight: 80
@@ -898,7 +797,7 @@ Page {
 
             onClicked: {
                 if (cloudFolderView.state == "mark") {
-                    cloudFolderModel.setProperty(index, "isChecked", !isChecked);
+                    cloudDriveModel.setProperty(index, "isChecked", !isChecked);
                 } else {
                     if (isDir) {
                         changeRemotePath(absolutePath);
@@ -921,7 +820,7 @@ Page {
                             if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                                 // NOTE ImageViewPage will populate ImageViewModel with mediaUrl.
                                 pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
-                                               { model: cloudFolderModel, selectedCloudType: selectedCloudType, selectedUid: selectedUid, selectedFilePath: absolutePath });
+                                               { model: cloudDriveModel, selectedCloudType: selectedCloudType, selectedUid: selectedUid, selectedFilePath: absolutePath });
                             } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                                 // View with internal web viewer.
                                 url = getMediaSource(source, absolutePath);
@@ -1025,12 +924,12 @@ Page {
             isBusy = true;
 
             var url;
-            if (!cloudFolderModel.get(srcItemIndex).source) {
+            if (!cloudDriveModel.get(srcItemIndex).source) {
                 // Request media to get URL.
                 url = cloudDriveModel.media(selectedCloudType, selectedUid, srcFilePath);
             } else {
                 // Get media URL.
-                url = cloudFolderModel.get(srcItemIndex).source;
+                url = cloudDriveModel.get(srcItemIndex).source;
             }
             if (url && url != "") {
                 gcpClient.printURLSlot(url);
@@ -1055,7 +954,7 @@ Page {
 
         onMarkClicked: {
             cloudFolderView.state = "mark";
-            cloudFolderModel.setProperty(srcItemIndex, "isChecked", true);
+            cloudDriveModel.setProperty(srcItemIndex, "isChecked", true);
         }
 
         onMailFile: {
@@ -1175,7 +1074,7 @@ Page {
 
         function show(index) {
             selectedIndex = index;
-            selectedItem = cloudFolderModel.get(selectedIndex);
+            selectedItem = cloudDriveModel.get(selectedIndex);
             populateCloudItemModel();
             open();
         }

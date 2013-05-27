@@ -17,13 +17,12 @@ ConfirmDialog {
     property int selectedModelIndex
     property string selectedRemotePath
     property string selectedRemotePathName
-    property string remoteParentPath // Current browse remote path
-    property string remoteParentPathName // Shows on titlebar
-    property string remoteParentParentPath // For change up
-    property int selectedIndex
+    property string remoteParentPath: cloudDriveModel.remoteParentPath // Current browse remote path
+    property string remoteParentPathName: cloudDriveModel.remoteParentPathName // Shows on titlebar
+    property string remoteParentParentPath: cloudDriveModel.remoteParentParentPath // For change up
+    property int selectedIndex: cloudDriveModel.selectedIndex
     property bool selectedIsDir
     property bool selectedIsValid
-    property alias contentModel: cloudDrivePathListModel
     property bool isBusy
 
     signal opening()
@@ -62,23 +61,18 @@ ConfirmDialog {
         return text;
     }
 
-    function parseCloudDriveMetadataJson(jsonText) {
+    function postBrowseReplySlot() {
         originalRemotePath = (originalRemotePath == "") ? remotePath : originalRemotePath;
 
-        cloudDrivePathListModel.clear();
-        var responseJson = cloudDriveModel.parseCloudDriveMetadataJson(selectedCloudType, selectedUid, originalRemotePath, jsonText,  cloudDrivePathListModel);
-        console.debug("cloudDrivePathDialog parseCloudDriveMetadataJson responseJson " + JSON.stringify(responseJson));
-
         selectedIsValid = true;
-        selectedIndex = responseJson.selectedIndex;
-        selectedRemotePath = responseJson.selectedRemotePath;
-        selectedRemotePathName = responseJson.selectedRemotePathName;
-        selectedIsDir = responseJson.selectedIsDir;
-        remoteParentPath = responseJson.remoteParentPath;
-        remoteParentPathName = responseJson.remoteParentPathName;
-        remoteParentParentPath = responseJson.remoteParentParentPath;
-
-        cloudDrivePathListView.currentIndex = responseJson.selectedIndex;
+        selectedIndex = cloudDriveModel.findIndexByRemotePath(originalRemotePath);
+        if (selectedIndex > -1) {
+            var selectedItem = cloudDriveModel.get(selectedIndex);
+            selectedRemotePath = selectedItem.absolutePath;
+            selectedRemotePathName = selectedItem.name;
+            selectedIsDir = selectedItem.isDir;
+        }
+        cloudDrivePathListView.currentIndex = selectedIndex;
 
         // Reset busy.
         cloudDrivePathDialog.isBusy = false;
@@ -99,36 +93,12 @@ ConfirmDialog {
         refreshRequested();
     }
 
-    function getSelectedRemotePath() {
-        var selectedRemotePath = "";
-
-        if (cloudDrivePathListView.currentIndex > -1) {
-            selectedRemotePath = cloudDrivePathListModel.get(cloudDrivePathListView.currentIndex).path;
-        }
-
-        return selectedRemotePath;
-    }
-
     function refreshItem(remotePath) {
         var timestamp = (new Date()).getTime();
-        var i = cloudDrivePathListModel.findIndexByRemotePath(remotePath);
+        var i = cloudDriveModel.findIndexByRemotePath(remotePath);
         console.debug("cloudDrivePathDialog refreshItem i " + i);
         if (i >= 0) {
-            cloudDrivePathListModel.setProperty(i, "timestamp", timestamp);
-        }
-    }
-
-    ListModel {
-        id: cloudDrivePathListModel
-
-        function findIndexByRemotePath(remotePath) {
-            for (var i=0; i<cloudDrivePathListModel.count; i++) {
-                if (cloudDrivePathListModel.get(i).absolutePath == remotePath) {
-                    return i;
-                }
-            }
-
-            return -1;
+            cloudDriveModel.setProperty(i, "timestamp", timestamp);
         }
     }
 
@@ -193,7 +163,7 @@ ConfirmDialog {
                     color: "white"
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     verticalAlignment: Text.AlignVCenter
-                    text: cloudDriveModel.isRemoteAbsolutePath(selectedCloudType) ? cloudDriveModel.getPathFromUrl(remoteParentPath) : remoteParentPathName
+                    text: remoteParentPathName
 
                     MouseArea {
                         anchors.fill: parent
@@ -263,7 +233,7 @@ ConfirmDialog {
             id: cloudDrivePathListView
             width: parent.width
             height: (window.inPortrait ? 560 : 240) // 7 items for portrait, 3 items for landscape.
-            model: cloudDrivePathListModel
+            model: cloudDriveModel
             delegate: cloudDrivePathItemDelegate
             highlight: Rectangle {
                 width: cloudDrivePathListView.width
@@ -453,6 +423,9 @@ ConfirmDialog {
             isBusy = true;
             deleteRemotePath(deleteCloudItemConfirmation.remotePath);
         }
+        onReject: {
+            cloudDrivePathListView.currentIndex = -1;
+        }
     }
 
     onStatusChanged: {
@@ -460,6 +433,7 @@ ConfirmDialog {
             cloudDrivePathDialog.isBusy = true;
             cloudDrivePathDialog.originalRemotePath = "";
             cloudDrivePathDialog.selectedRemotePath = "";
+            cloudDrivePathDialog.selectedRemotePathName = "";
             newFolderNameInput.focus = false;
             newFolderNameInput.visible = false;
             opening();

@@ -64,7 +64,7 @@ Page {
         width: parent.width
         height: parent.height - titlePanel.height
         anchors.top: titlePanel.bottom
-        model: cloudDriveModel.jobsModel
+        model: cloudDriveJobsModel
         delegate: jobDelegate
         clip: true
         pressDelay: 100

@@ -201,7 +201,7 @@ CommonDialog {
             var foundIndex = -1;
             var sourcePathName = (clipboard.get(0).sourcePathName) ? clipboard.get(0).sourcePathName : cloudDriveModel.getFileName(clipboard.get(0).sourcePath);
             if (targetPath == remoteParentPath) {
-                foundIndex = cloudFolderModel.findIndexByRemotePathName(sourcePathName);
+                foundIndex = cloudDriveModel.findIndexByRemotePathName(sourcePathName);
             }
 
             console.debug("fileActionDialog canCopy " + sourcePathName + " foundIndex " + foundIndex);
@@ -215,7 +215,7 @@ CommonDialog {
     function getNewName() {
         if (selectedCloudType != -1) {
             // selectedCloudType and selectedUid are defined. Parent is CloudFolderPage.
-            return cloudFolderModel.getNewFileName(fileActionDialog.sourcePathName);
+            return cloudDriveModel.getNewFileName(fileActionDialog.sourcePathName);
         } else {
             // selectedCloudType or selectedUid is undefined. Parent is FolderPage.
             return fsModel.getNewFileName(fileActionDialog.sourcePathName, fileActionDialog.targetPath);

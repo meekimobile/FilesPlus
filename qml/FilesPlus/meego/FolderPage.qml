@@ -568,8 +568,8 @@ Page {
         dropboxFullAccessConfirmation.open();
     }
 
-    function parseCloudDriveMetadataJson(jsonText) {
-        cloudDrivePathDialog.parseCloudDriveMetadataJson(jsonText);
+    function postBrowseReplySlot() {
+        cloudDrivePathDialog.postBrowseReplySlot();
         cloudDrivePathDialog.open();
     }
 
