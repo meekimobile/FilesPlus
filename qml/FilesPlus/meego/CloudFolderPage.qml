@@ -349,8 +349,9 @@ Page {
         disabledMenus: ["syncConnectedItems","syncCurrentFolder"]
 
         onPaste: {
-            fileActionDialog.targetPath = remoteParentPath;
-            fileActionDialog.targetPathName = remoteParentPathName;
+            console.debug("cloudFolderPage mainMenu onPaste " + cloudDriveModel.remoteParentPath + " " + cloudDriveModel.remoteParentPathName);
+            fileActionDialog.targetPath = cloudDriveModel.remoteParentPath;
+            fileActionDialog.targetPathName = cloudDriveModel.remoteParentPathName;
             fileActionDialog.open();
         }
         onOpenMarkMenu: {
@@ -906,6 +907,7 @@ Page {
         }
 
         onPasteClicked: {
+            console.debug("cloudFolderPage popupToolPanel onPasteClicked " + targetPath + " " + selectedFileName);
             fileActionDialog.targetPath = targetPath;
             fileActionDialog.targetPathName = selectedFileName;
             fileActionDialog.open();
@@ -975,7 +977,7 @@ Page {
         id: fileActionDialog
         selectedCloudType: cloudFolderPage.selectedCloudType
         selectedUid: cloudFolderPage.selectedUid
-        remoteParentPath: cloudFolderPage.remoteParentPath
+        remoteParentPath: cloudDriveModel.remoteParentPath
 
         onConfirm: {
             // It always replace existing names.
@@ -1000,7 +1002,7 @@ Page {
                     }
                     res = true;
                 } else if (["copy","cut"].indexOf(action) > -1 && (cloudDriveModel.getClientType(clipboard.get(i).type) != selectedCloudType || clipboard.get(i).uid != selectedUid) ) {
-                    console.debug("cloudFolderPage fileActionDialog onConfirm migrate clipboard type " + clipboard.get(i).type + " uid " + clipboard.get(i).uid + " sourcePath " + sourcePath + " actualTargetPath " + actualTargetPath);
+                    console.debug("cloudFolderPage fileActionDialog onConfirm migrate clipboard type " + clipboard.get(i).type + " uid " + clipboard.get(i).uid + " sourcePath " + sourcePath + " targetPath " + targetPath + " sourcePathName " + sourcePathName);
                     cloudDriveModel.migrateFile(cloudDriveModel.getClientType(clipboard.get(i).type), clipboard.get(i).uid, sourcePath, selectedCloudType, selectedUid, targetPath, sourcePathName);
                     res = true;
                 } else if (action == "copy" && clipboard.get(i).type) {
