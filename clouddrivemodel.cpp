@@ -2824,10 +2824,10 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
     }
 }
 
-void CloudDriveModel::disconnect(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
+void CloudDriveModel::disconnect(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath)
 {
     // Enqueue job.
-    CloudDriveJob job(createNonce(), Disconnect, type, uid, localPath, "", -1);
+    CloudDriveJob job(createNonce(), Disconnect, type, uid, localPath, remotePath, -1);
 //    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);

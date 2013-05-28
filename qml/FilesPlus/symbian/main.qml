@@ -1720,7 +1720,7 @@ PageStackWindow {
 
                 // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
                 pageStack.find(function (page) {
-                    if (page.updateItemSlot) page.updateItemSlot(jobJson);
+                    if (page.updateItemSlot) page.updateItemSlot(jobJson, "window cloudDriveModel onRefreshRequestSignal");
                 });
             } else {
                 // For refresh request without specified nonce(jobId), just refresh.

@@ -292,7 +292,7 @@ public:
     void migrateFile_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
     void migrateFileResume_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
 
-    Q_INVOKABLE void disconnect(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
+    Q_INVOKABLE void disconnect(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath = "");
     Q_INVOKABLE void deleteLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
 
     Q_INVOKABLE QString thumbnail(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString format, QString size); // Used by DropboxClient and ImageViewPage.qml.

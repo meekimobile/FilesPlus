@@ -160,7 +160,7 @@ Page {
 
         if (jobJson.type == selectedCloudType && jobJson.uid == selectedUid) {
             var i = cloudDriveModel.findIndexByRemotePath(jobJson.remote_file_path);
-//            console.debug("cloudFolderPage updateItemSlot caller " + caller + " jobJson " + JSON.stringify(jobJson) + " model index " + i);
+            console.debug("cloudFolderPage updateItemSlot caller " + caller + " jobJson " + JSON.stringify(jobJson) + " model index " + i);
             if (i >= 0) {
                 cloudDriveModel.setProperty(i, "isRunning", jobJson.is_running);
                 cloudDriveModel.setProperty(i, "isConnected", cloudDriveModel.isRemotePathConnected(jobJson.type, jobJson.uid, jobJson.remote_file_path));
@@ -1097,7 +1097,7 @@ Page {
             close();
         }
         onDisconnect: {
-            cloudDriveModel.disconnect(type, uid, absolutePath);
+            cloudDriveModel.disconnect(type, uid, absolutePath, selectedItem.absolutePath);
             close();
         }
     }
