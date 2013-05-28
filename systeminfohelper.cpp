@@ -124,11 +124,13 @@ int SystemInfoHelper::saveFileContent(const QString &localPath, const QString &t
         QTextStream out(&file);
         out.setCodec("UTF-8");
         out << text;
-    }
-    file.close();
-    c = file.size();
 
-    qDebug() << "SystemInfoHelper::saveFileContent bytes write " << c;
+        file.close();
+        c = file.size();
+        qDebug() << "SystemInfoHelper::saveFileContent bytes write " << c;
+    } else {
+        qDebug() << "SystemInfoHelper::saveFileContent can't open file" << localPath << "for writing.";
+    }
 
     return c;
 }
