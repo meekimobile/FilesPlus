@@ -22,6 +22,7 @@ CommonDialog {
     signal syncAll()
     signal syncAdd()
     signal disconnect(int type, string uid, string absolutePath)
+    signal scheduleSync(int type, string uid, string absolutePath)
     signal toggleHidden(string absolutePath, bool value)
     signal toggleReadOnly(string absolutePath, bool value)
 
@@ -275,7 +276,10 @@ CommonDialog {
                 visible: !isCloudFolder
             }
             Column {
-                width: parent.width - (cloudIcon.visible ? (cloudIcon.width + parent.spacing) : 0) - (disconnectButton.width + parent.spacing)
+                width: parent.width
+                       - (cloudIcon.visible ? (cloudIcon.width + parent.spacing) : 0)
+                       - (scheduleSyncButton.visible ? (scheduleSyncButton.width + parent.spacing) : 0)
+                       - (disconnectButton.width + parent.spacing)
                 anchors.verticalCenter: parent.verticalCenter
                 Text {
                     width: parent.width
@@ -291,6 +295,21 @@ CommonDialog {
                     font.pointSize: 6
                     color: "white"
                     elide: Text.ElideRight
+                }
+            }
+            Button {
+                id: scheduleSyncButton
+                width: 50
+                height: 50
+                iconSource: "cloud_wait.svg"
+                anchors.verticalCenter: parent.verticalCenter
+                visible: !isCloudFolder
+                onClicked: {
+                    if (isCloudFolder) {
+                        scheduleSync(selectedCloudType, selectedUid, absolutePath);
+                    } else {
+                        scheduleSync(type, uid, absolutePath);
+                    }
                 }
             }
             Button {

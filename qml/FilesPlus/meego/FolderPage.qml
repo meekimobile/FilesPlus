@@ -1811,6 +1811,13 @@ Page {
             cloudDriveModel.disconnect(type, uid, selectedItem.absolutePath);
             close();
         }
+        onScheduleSync: {
+            uidDialog.selectedCloudType = type;
+            uidDialog.selectedUid = uid;
+            uidDialog.localPath = selectedItem.absolutePath;
+            cloudDriveSchedulerDialog.localPathCronExp = cloudDriveModel.getItemCronExp(type, uid, selectedItem.absolutePath);
+            cloudDriveSchedulerDialog.open();
+        }
         onToggleHidden: {
             var res = fsModel.setFileAttribute(absolutePath, FolderSizeItemListModel.Hidden, value);
             if (res) {

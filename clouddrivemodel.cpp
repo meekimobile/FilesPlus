@@ -1626,10 +1626,10 @@ int CloudDriveModel::updateItemCronExp(CloudDriveModel::ClientTypes type, QStrin
     qry.bindValue(":local_path", localPath);
     bool res = qry.exec();
     if (res) {
-        qDebug() << "CloudDriveModel::updateItemCronExpToDB done" << qry.numRowsAffected();
+        qDebug() << "CloudDriveModel::updateItemCronExpToDB done" << type << uid << localPath << cronExp << "numRowsAffected" << qry.numRowsAffected();
         return qry.numRowsAffected();
     } else {
-        qDebug() << "CloudDriveModel::updateItemCronExpToDB failed" << qry.lastError();
+        qDebug() << "CloudDriveModel::updateItemCronExpToDB failed" << type << uid << localPath << cronExp << "error" << qry.lastError();
         return qry.numRowsAffected();
     }
 }
@@ -1646,9 +1646,9 @@ QString CloudDriveModel::getItemCronExp(CloudDriveModel::ClientTypes type, QStri
     bool res = qry.exec();
     if (res && qry.next()) {
         cronExp = qry.value(qry.record().indexOf("cron_exp")).toString();
-        qDebug() << "CloudDriveModel::getItemCronExp done" << cronExp;
+        qDebug() << "CloudDriveModel::getItemCronExp done" << type << uid << localPath << cronExp;
     } else {
-        qDebug() << "CloudDriveModel::getItemCronExp failed" << qry.lastError();
+        qDebug() << "CloudDriveModel::getItemCronExp failed" << type << uid << localPath << "error" << qry.lastError();
     }
 
     return cronExp;

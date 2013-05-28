@@ -1778,7 +1778,7 @@ Page {
 
     FilePropertiesDialog {
         id: filePropertiesDialog
-        showAttributes: true
+        showAttributes: true // For Symbian only
 
         function show(index) {
             selectedIndex = index;
@@ -1815,6 +1815,13 @@ Page {
         onDisconnect: {
             cloudDriveModel.disconnect(type, uid, selectedItem.absolutePath);
             close();
+        }
+        onScheduleSync: {
+            uidDialog.selectedCloudType = type;
+            uidDialog.selectedUid = uid;
+            uidDialog.localPath = selectedItem.absolutePath;
+            cloudDriveSchedulerDialog.localPathCronExp = cloudDriveModel.getItemCronExp(type, uid, selectedItem.absolutePath);
+            cloudDriveSchedulerDialog.open();
         }
         onToggleHidden: {
             var res = fsModel.setFileAttribute(absolutePath, FolderSizeItemListModel.Hidden, value);
