@@ -267,6 +267,12 @@ Page {
             group: "Developer"
         }
         ListElement {
+            name: "RemoteImageProvider.CacheImageWorker.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
+        ListElement {
             name: "CloudDriveModel.metadata.root.connection.enabled"
             title: ""
             type: "switch"
@@ -331,6 +337,7 @@ Page {
         else if (name == "drivepage.privatedrive.enabled") return qsTr("Show private drive on drive page") + appInfo.emptyStr;
         else if (name == "WebDavClient.ignoreSSLSelfSignedCertificateErrors") return qsTr("Ignore WebDAV SSL self-signed certificate errors") + appInfo.emptyStr;
         else if (name == "LocalFileImageProvider.cache.enabled") return qsTr("Cache local images") + appInfo.emptyStr;
+        else if (name == "RemoteImageProvider.CacheImageWorker.enabled") return qsTr("Queue cloud image caching") + appInfo.emptyStr;
         else if (name == "CloudDriveModel.metadata.root.connection.enabled") return qsTr("Sync to cloud storage root") + appInfo.emptyStr;
         else if (name == "CloudDriveModel.syncDirtyItems.enabled") return qsTr("Sync dirty items automatically") + appInfo.emptyStr;
         else if (name == "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled") return qsTr("Show hidden/system files") + appInfo.emptyStr;

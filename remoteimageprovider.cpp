@@ -68,7 +68,7 @@ QImage RemoteImageProvider::getCachedImage(const QString &id, const QSize &reque
 
 QImage RemoteImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
 {
-    qDebug() << "RemoteImageProvider::requestImage request id" << id << "size" << size << "requestedSize" << requestedSize;
+    qDebug() << "RemoteImageProvider::requestImage request id" << id << "size" << size << "requestedSize" << requestedSize << "thread" << QThread::currentThread();
 
     if (id == "") {
         qDebug() << "RemoteImageProvider::requestImage id is empty.";
@@ -119,6 +119,7 @@ QImage RemoteImageProvider::requestImage(const QString &id, QSize *size, const Q
     }
 
     // NOTE If CacheImageWorker is not enabled, get cached image directly. Otherwise return invalid image to trigger CacheImageWorker.
+    // REMARK It causes 'Thread has crashed: Thread XXXX has panicked. Category: KERN-EXEC; Reason: 0' if caller object doesn't exists.
     if (!m_settings.value("RemoteImageProvider.CacheImageWorker.enabled", QVariant(false)).toBool()) {
         // Get image from source URL.
         image = getCachedImage(id, requestedSize);

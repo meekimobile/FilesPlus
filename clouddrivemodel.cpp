@@ -169,7 +169,11 @@ CloudDriveModel::CloudDriveModel(QObject *parent) :
     // Initialize thread pools and hash
     // TODO Refactor to avoid using QThreadPool as it causes panic in Symbian.
     m_browseThreadPool.setMaxThreadCount(1);
+#ifdef Q_OS_SYMBIAN
+    m_cacheImageThreadPool.setMaxThreadCount(1);
+#else
     m_cacheImageThreadPool.setMaxThreadCount(3);
+#endif
     m_threadHash = new QHash<QString, QThread*>();
 
     // Initialize scheduler queue.
@@ -2855,7 +2859,7 @@ QString CloudDriveModel::thumbnail(CloudDriveModel::ClientTypes type, QString ui
 void CloudDriveModel::cacheImage(QString remoteFilePath, QString url, int w, int h, QString caller)
 {
     CacheImageWorker *worker = new CacheImageWorker(remoteFilePath, url, QSize(w,h), TEMP_PATH, caller);
-    connect(worker, SIGNAL(cacheImageFinished(QString,int,QString,QString)), SIGNAL(cacheImageFinished(QString,int,QString,QString)));
+    connect(worker, SIGNAL(cacheImageFinished(QString,int,QString,QString)), SLOT(cacheImageFinishedFilter(QString,int,QString,QString)));
     connect(worker, SIGNAL(refreshFolderCacheSignal(QString)), SIGNAL(refreshFolderCacheSignal(QString)));
     m_cacheImageThreadPool.start(worker);
     qDebug() << "CloudDriveModel::cacheImage m_cacheImageThreadPool" << m_cacheImageThreadPool.activeThreadCount() << "/" << m_cacheImageThreadPool.maxThreadCount();
@@ -3884,6 +3888,13 @@ void CloudDriveModel::schedulerTimeoutFilter()
     }
 
     emit schedulerTimeoutSignal();
+}
+
+void CloudDriveModel::cacheImageFinishedFilter(QString absoluteFilePath, int err, QString errMsg, QString caller)
+{
+    qDebug() << "CloudDriveModel::cacheImageFinishedFilter" << QThread::currentThread();
+
+    emit cacheImageFinished(absoluteFilePath, err, errMsg, caller);
 }
 
 void CloudDriveModel::initJobQueueTimer()

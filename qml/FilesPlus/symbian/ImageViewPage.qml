@@ -220,7 +220,7 @@ Page {
         anchors.fill: parent
         cellWidth: parent.width
         cellHeight: parent.height
-        cacheBuffer: cellWidth * 3
+//        cacheBuffer: cellWidth * 3 // NOTE Unset cacheBuffer to make non-cache selected image's loading faster. It will load previous, next and current delegates.
         flow: GridView.TopToBottom
         snapMode: GridView.SnapOneRow
         model: imageGridModel

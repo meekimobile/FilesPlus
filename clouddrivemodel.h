@@ -384,6 +384,9 @@ public slots:
 
     // Scheduler
     void schedulerTimeoutFilter();
+
+    // Cache image.
+    void cacheImageFinishedFilter(QString absoluteFilePath, int err, QString errMsg, QString caller);
 private:
     QMultiMap<QString, CloudDriveItem> *m_cloudDriveItems;
     QHash<QString, CloudDriveJob> *m_cloudDriveJobs;
