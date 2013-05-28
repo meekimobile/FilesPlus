@@ -162,7 +162,8 @@ Page {
             var i = cloudDriveModel.findIndexByRemotePath(jobJson.remote_file_path);
 //            console.debug("cloudFolderPage updateItemSlot caller " + caller + " jobJson " + JSON.stringify(jobJson) + " model index " + i);
             if (i >= 0) {
-                cloudDriveModel.set(i, { isRunning: jobJson.is_running, isConnected: cloudDriveModel.isRemotePathConnected(jobJson.type, jobJson.uid, jobJson.remote_file_path) });
+                cloudDriveModel.setProperty(i, "isRunning", jobJson.is_running);
+                cloudDriveModel.setProperty(i, "isConnected", cloudDriveModel.isRemotePathConnected(jobJson.type, jobJson.uid, jobJson.remote_file_path));
             }
         }
     }
@@ -189,7 +190,7 @@ Page {
     function refreshItem(remotePath) {
         var timestamp = (new Date()).getTime();
         var i = cloudDriveModel.findIndexByRemotePath(remotePath);
-        console.debug("cloudFolderPage refreshItem i " + i);
+        console.debug("cloudFolderPage refreshItem remotePath " + remotePath + " i " + i);
         if (i >= 0) {
             cloudDriveModel.setProperty(i, "timestamp", timestamp);
         }

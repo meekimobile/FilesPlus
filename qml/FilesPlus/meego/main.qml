@@ -1280,6 +1280,7 @@ PageStackWindow {
         }
 
         function findIndexByRemotePath(remotePath) {
+//            console.debug("cloudDriveModel.findIndexByRemotePath cloudDriveModel.count " + cloudDriveModel.count);
             for (var i=0; i<cloudDriveModel.count; i++) {
                 if (cloudDriveModel.get(i).absolutePath == remotePath) {
                     return i;
