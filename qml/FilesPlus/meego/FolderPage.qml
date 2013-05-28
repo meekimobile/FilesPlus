@@ -1773,7 +1773,7 @@ Page {
 
     FilePropertiesDialog {
         id: filePropertiesDialog
-        showAttributes: true
+        showAttributes: false
 
         function show(index) {
             selectedIndex = index;
