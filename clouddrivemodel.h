@@ -33,6 +33,7 @@ class CloudDriveModel : public QAbstractListModel
     Q_ENUMS(ClientTypes)
     Q_ENUMS(SortFlags)
     Q_ENUMS(Operations)
+    Q_PROPERTY(int count READ rowCount NOTIFY rowCountChanged)
     Q_PROPERTY(QString dirtyHash READ dirtyHash CONSTANT)
     Q_PROPERTY(QString remoteParentPath READ getRemoteParentPath WRITE setRemoteParentPath NOTIFY remoteParentPathChanged)
     Q_PROPERTY(QString remoteParentPathName READ getRemoteParentPathName WRITE setRemoteParentPathName NOTIFY remoteParentPathChanged)
@@ -346,6 +347,7 @@ signals:
 
     void sortFlagChanged();
     void remoteParentPathChanged();
+    void rowCountChanged();
 public slots:
     void proceedNextJob();
     void dispatchJob(const QString jobId);

@@ -3337,6 +3337,7 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
             }
 
             emit remoteParentPathChanged();
+            emit rowCountChanged();
 
             // Emit data changed.
             beginResetModel();
