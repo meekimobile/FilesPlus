@@ -35,6 +35,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     roles[IsCheckedRole] = "isChecked";
     roles[IsDirtyRole] = "isDirty";
     roles[IsHiddenRole] = "isHidden";
+    roles[IsReadOnlyRole] = "isReadOnly";
     setRoleNames(roles);
 
     // TODO Initialize cache.
@@ -126,6 +127,8 @@ QVariant FolderSizeItemListModel::data(const QModelIndex & index, int role) cons
         return item.isDirty;
     else if (role == IsHiddenRole)
         return item.isHidden;
+    else if (role == IsReadOnlyRole)
+        return item.isReadOnly;
     return QVariant();
 }
 
@@ -714,12 +717,14 @@ bool FolderSizeItemListModel::setFileAttribute(QString localFilePath, FileAttrib
 
     // NOTE RFs::SetAtt() must use path with native separator.
     if (attribute == ReadOnly) {
+//        qDebug() << "FolderSizeItemListModel::setFileAttribute ReadOnly" << localFilePath << value;
         if (value) {
             res = fs.SetAtt(buf, KEntryAttReadOnly | KEntryAttNormal, KEntryAttNormal);
         } else {
             res = fs.SetAtt(buf, KEntryAttNormal, KEntryAttReadOnly);
         }
     } else if (attribute == Hidden) {
+//        qDebug() << "FolderSizeItemListModel::setFileAttribute Hidden" << localFilePath << value;
         if (value) {
             res = fs.SetAtt(buf, KEntryAttHidden, KEntryAttNormal);
         } else {

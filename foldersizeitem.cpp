@@ -9,6 +9,7 @@ FolderSizeItem::FolderSizeItem()
     this->runningMaxValue = 0;
     this->isChecked = false;
     this->isHidden = false;
+    this->isReadOnly = false;
 }
 
 FolderSizeItem::FolderSizeItem(const QString &name, const QString &absolutePath, const QDateTime &lastModified, const qint64 &size, const bool isDir, const qint64 &subDirCount, const qint64 &subFileCount)
@@ -28,6 +29,7 @@ FolderSizeItem::FolderSizeItem(const QString &name, const QString &absolutePath,
     this->runningMaxValue = 0;
     this->isChecked = false;
     this->isHidden = false;
+    this->isReadOnly = false;
 }
 
 QString FolderSizeItem::toJsonText()

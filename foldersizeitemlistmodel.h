@@ -72,7 +72,8 @@ public:
         RunningMaxValueRole,
         IsCheckedRole,
         IsDirtyRole,
-        IsHiddenRole
+        IsHiddenRole,
+        IsReadOnlyRole
     };
 
     enum RunningOperations {

@@ -1095,15 +1095,18 @@ void FolderSizeModelThread::getDirContent(const QString dirPath, QList<FolderSiz
             if (isRunning()) {
                 childItem = getDirItem(fileInfo);
                 childItem.isHidden = fileInfo.isHidden();
+                childItem.isReadOnly = !fileInfo.isWritable();
                 itemList.append(childItem);
             } else {
                 childItem = getCachedDir(fileInfo);
                 childItem.isHidden = fileInfo.isHidden();
+                childItem.isReadOnly = !fileInfo.isWritable();
                 itemList.append(childItem);
             }
         } else {
             childItem = getCachedDir(fileInfo);
             childItem.isHidden = fileInfo.isHidden();
+            childItem.isReadOnly = !fileInfo.isWritable();
             itemList.append(childItem);
         }
     }

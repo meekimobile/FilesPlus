@@ -29,6 +29,7 @@ public:
     bool isChecked;
     bool isDirty;
     bool isHidden;
+    bool isReadOnly;
 
     QString toJsonText();
 private:

@@ -11,6 +11,7 @@ CommonDialog {
     property bool isCloudFolder: false
     property bool showAttributes: false
     property alias isHidden: toggleHiddenCheckbox.checked
+    property alias isReadOnly: toggleReadOnlyCheckbox.checked
 
     signal opening()
     signal opened()
@@ -20,6 +21,7 @@ CommonDialog {
     signal syncAdd()
     signal disconnect(int type, string uid, string absolutePath)
     signal toggleHidden(string absolutePath, bool value)
+    signal toggleReadOnly(string absolutePath, bool value)
 
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
@@ -141,6 +143,7 @@ CommonDialog {
                 }
                 Row {
                     width: parent.width
+                    spacing: 3
                     visible: showAttributes
                     Text {
                         text: appInfo.emptyStr+qsTr("Attributes")
@@ -150,14 +153,27 @@ CommonDialog {
                         elide: Text.ElideRight
                         anchors.verticalCenter: parent.verticalCenter
                     }
-                    CheckBox {
+                    Button {
                         id: toggleHiddenCheckbox
-                        width: parent.width - contentItem.labelWidth
+                        width: (parent.width - contentItem.labelWidth - parent.spacing*2) / 2
                         text: appInfo.emptyStr+qsTr("Hidden")
+                        checkable: true
                         anchors.verticalCenter: parent.verticalCenter
                         onClicked: {
                             if (selectedItem) {
                                 toggleHidden(selectedItem.absolutePath, toggleHiddenCheckbox.checked);
+                            }
+                        }
+                    }
+                    Button {
+                        id: toggleReadOnlyCheckbox
+                        width: (parent.width - contentItem.labelWidth - parent.spacing*2) / 2
+                        text: appInfo.emptyStr+qsTr("Read Only")
+                        checkable: true
+                        anchors.verticalCenter: parent.verticalCenter
+                        onClicked: {
+                            if (selectedItem) {
+                                toggleReadOnly(selectedItem.absolutePath, toggleReadOnlyCheckbox.checked);
                             }
                         }
                     }

@@ -1080,6 +1080,7 @@ Page {
                     return "cloud.svg";
                 }
             }
+            opacity: isHidden ? 0.5 : 1
 
             onPressAndHold: {
                 if (fsListView.state != "mark") {
@@ -1778,6 +1779,7 @@ Page {
             selectedIndex = index;
             selectedItem = fsModel.get(selectedIndex);
             isHidden = selectedItem.isHidden;
+            isReadOnly = selectedItem.isReadOnly;
             populateCloudItemModel();
             open();
         }
@@ -1813,6 +1815,12 @@ Page {
             var res = fsModel.setFileAttribute(absolutePath, FolderSizeItemListModel.Hidden, value);
             if (res) {
                 refreshSlot("folderPage filePropertiesDialog onToggleHidden");
+            }
+        }
+        onToggleReadOnly: {
+            var res = fsModel.setFileAttribute(absolutePath, FolderSizeItemListModel.ReadOnly, value);
+            if (res) {
+                refreshSlot("folderPage filePropertiesDialog onToggleReadOnly");
             }
         }
     }
