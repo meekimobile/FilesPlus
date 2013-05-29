@@ -112,18 +112,23 @@ QString SystemInfoHelper::getFileContent(const QString &localPath)
     return text;
 }
 
-int SystemInfoHelper::saveFileContent(const QString &localPath, const QString &text)
+int SystemInfoHelper::saveFileContent(const QString &localPath, const QString &text, bool useWindowsEOL)
 {
-    qDebug() << "SystemInfoHelper::saveFileContent localPath " << localPath << text;
+    qDebug() << "SystemInfoHelper::saveFileContent localPath " << localPath << text << useWindowsEOL;
 
     if (localPath.isEmpty()) return -1;
 
     qint64 c = -1;
     QFile file(localPath);
-    if (file.open(QIODevice::WriteOnly)) {
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream out(&file);
         out.setCodec("UTF-8");
-        out << text;
+
+        QTextStream in(text.toUtf8());
+        while (!in.atEnd()) {
+            QString lineNoEOL = in.readLine();
+            out << lineNoEOL << (useWindowsEOL ? "\r\n" : "\n");
+        }
 
         file.close();
         c = file.size();

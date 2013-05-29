@@ -19,7 +19,7 @@ public:
     Q_INVOKABLE QString getPrivateDrive();
 
     Q_INVOKABLE QString getFileContent(const QString &localPath);
-    Q_INVOKABLE int saveFileContent(const QString &localPath, const QString &text);
+    Q_INVOKABLE int saveFileContent(const QString &localPath, const QString &text, bool useWindowsEOL = false);
 
     Q_INVOKABLE QVariant getFileAttribute(const QString &localPath, const QString &attributeName);
 

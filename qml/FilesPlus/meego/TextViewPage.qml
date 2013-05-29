@@ -10,6 +10,23 @@ Page {
     property string filePath
     property string fileName
 
+    function saveFileSlot(useWindowsEOL) {
+        // Save to file.
+        // TODO Opt to convert new line characters to either Windows or Unix format.
+        var r = helper.saveFileContent(textViewPage.filePath, textView.text, useWindowsEOL);
+        if (r < 0) {
+            window.showMessageDialogSlot(qsTr("Text Editor"), qsTr("Can not write to file."));
+        } else {
+            fsModel.removeCache(textViewPage.filePath);
+            // Reset cloudDriveModel hash on parent.
+            var paths = fsModel.getPathToRoot(textViewPage.filePath);
+            for (var i=0; i<paths.length; i++) {
+                console.debug("textViewPage saveFileSlot updateItems paths[" + i + "] " + paths[i]);
+                cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
+            }
+        }
+    }
+
     tools: ToolBarLayout {
         ToolIcon {
             id: backButton
@@ -31,20 +48,7 @@ Page {
             id: saveButton
             iconSource: (theme.inverted) ? "save.svg" : "save_inverted.svg"
             onClicked: {
-                // Save to file.
-                // TODO Opt to convert new line characters to either Windows or Unix format.
-                var r = helper.saveFileContent(textViewPage.filePath, textView.text);
-                if (r < 0) {
-                    window.showMessageDialogSlot(qsTr("Text Editor"), qsTr("Can not write to file."));
-                } else {
-                    fsModel.removeCache(textViewPage.filePath);
-                    // Reset cloudDriveModel hash on parent.
-                    var paths = fsModel.getPathToRoot(textViewPage.filePath);
-                    for (var i=0; i<paths.length; i++) {
-                        console.debug("textViewPage saveButton onClicked updateItems paths[" + i + "] " + paths[i]);
-                        cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
-                    }
-                }
+                saveMenu.open();
             }
         }
 
@@ -53,6 +57,33 @@ Page {
             iconSource: (theme.inverted) ? "print.svg" : "print_inverted.svg"
             onClicked: {
                 gcpClient.printFileSlot(textViewPage.filePath, -1);
+            }
+        }
+    }
+
+    MenuWithIcon {
+        id: saveMenu
+
+        content: MenuLayout {
+            id: menuLayout
+
+            // TODO Alias for fixing incorrect children.
+            default property alias children: menuLayout.menuChildren
+
+            MenuItemWithIcon {
+                name: "saveForWindows"
+                text: appInfo.emptyStr+"Windows "+qsTr("format")
+                onClicked: {
+                    saveFileSlot(true);
+                }
+            }
+
+            MenuItemWithIcon {
+                name: "saveForUnix"
+                text: appInfo.emptyStr+"UNIX "+qsTr("format")
+                onClicked: {
+                    saveFileSlot(false);
+                }
             }
         }
     }
