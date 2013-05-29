@@ -17,10 +17,10 @@ ConfirmDialog {
     property int selectedModelIndex
     property string selectedRemotePath
     property string selectedRemotePathName
-    property string remoteParentPath: cloudDriveModel.remoteParentPath // Current browse remote path
-    property string remoteParentPathName: cloudDriveModel.remoteParentPathName // Shows on titlebar
-    property string remoteParentParentPath: cloudDriveModel.remoteParentParentPath // For change up
-    property int selectedIndex: cloudDriveModel.selectedIndex
+    property string remoteParentPath // Current browse remote path
+    property string remoteParentPathName // Shows on titlebar
+    property string remoteParentParentPath // For change up
+    property int selectedIndex: -1
     property bool selectedIsDir
     property bool selectedIsValid
     property bool isBusy
@@ -28,7 +28,7 @@ ConfirmDialog {
     signal opening()
     signal opened()
     signal createRemoteFolder(string newRemoteFolderName)
-    signal refreshRequested()
+    signal refreshRequested(string remoteParentPath)
     signal deleteRemotePath(string remotePath)
 
     function proceedOperation(type, uid, localPath, remotePath, modelIndex) {
@@ -62,6 +62,11 @@ ConfirmDialog {
     }
 
     function postBrowseReplySlot() {
+        console.debug("cloudDrivePathDialog postBrowseReplySlot selectedCloudType " + selectedCloudType + " selectedUid " + selectedUid + " cloudDriveModel.remoteParentPath " + cloudDriveModel.remoteParentPath + " cloudDriveModel.remoteParentParentPath " + cloudDriveModel.remoteParentParentPath);
+        remoteParentPath = cloudDriveModel.remoteParentPath;
+        remoteParentPathName = cloudDriveModel.remoteParentPathName;
+        remoteParentParentPath = cloudDriveModel.remoteParentParentPath;
+
         originalRemotePath = (originalRemotePath == "") ? remotePath : originalRemotePath;
 
         selectedIsValid = true;
@@ -83,14 +88,13 @@ ConfirmDialog {
 
     function changeRemotePath(remoteParentPath) {
         console.debug("cloudDrivePathDialog changeRemotePath " + remoteParentPath);
-        cloudDrivePathDialog.remoteParentPath = remoteParentPath;
-        refresh();
+        cloudDrivePathDialog.isBusy = true;
+        refreshRequested(remoteParentPath);
     }
 
     function refresh() {
-        cloudDrivePathDialog.selectedIndex = -1;
         cloudDrivePathDialog.isBusy = true;
-        refreshRequested();
+        refreshRequested(cloudDriveModel.remoteParentPath);
     }
 
     function refreshItem(remotePath) {
@@ -167,8 +171,11 @@ ConfirmDialog {
                         anchors.fill: parent
                         onClicked: {
                             if (appInfo.getSettingBoolValue("CloudDriveModel.metadata.root.connection.enabled", false)) {
-                                selectedRemotePath = remoteParentPath;
-                                selectedRemotePathName = remoteParentPathName;
+                                console.debug("cloudDrivePathDialog currentRemotePath onClicked cloudDriveModel.remoteParentPath " + cloudDriveModel.remoteParentPath + " cloudDriveModel.remoteParentPathName " + cloudDriveModel.remoteParentPathName);
+                                selectedRemotePath = cloudDriveModel.remoteParentPath;
+                                selectedRemotePathName = cloudDriveModel.remoteParentPathName;
+                                selectedIndex = -1;
+                                cloudDrivePathListView.currentIndex = -1;
                             }
                         }
                     }

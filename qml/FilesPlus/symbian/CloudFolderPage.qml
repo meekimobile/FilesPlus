@@ -19,24 +19,29 @@ Page {
     property int selectedModelIndex
     property string selectedRemotePath
     property string selectedRemotePathName
-    property string remoteParentPath: cloudDriveModel.remoteParentPath // Current browse remote path
-    property string remoteParentPathName: cloudDriveModel.remoteParentPathName // Shows on titlebar
-    property string remoteParentParentPath: cloudDriveModel.remoteParentParentPath // For change up
-    property int selectedIndex: cloudDriveModel.selectedIndex
+    property string remoteParentPath // Current browse remote path
+    property string remoteParentPathName // Shows on titlebar
+    property string remoteParentParentPath // For change up
+    property int selectedIndex: -1
     property bool selectedIsDir
     property bool selectedIsValid
     property bool isBusy
 
     function goUpSlot() {
-        console.debug("cloudFolderPage goUpSlot selectedCloudType " + selectedCloudType + " selectedUid " + selectedUid + " remoteParentPath " + remoteParentPath + " remoteParentParentPath " + remoteParentParentPath);
-        if (cloudDriveModel.isRemoteRoot(selectedCloudType, selectedUid, remoteParentPath) || remoteParentParentPath == "") {
+        console.debug("cloudFolderPage goUpSlot selectedCloudType " + selectedCloudType + " selectedUid " + selectedUid + " cloudDriveModel.remoteParentPath " + cloudDriveModel.remoteParentPath + " cloudDriveModel.remoteParentParentPath " + cloudDriveModel.remoteParentParentPath);
+        if (cloudDriveModel.isRemoteRoot(selectedCloudType, selectedUid, cloudDriveModel.remoteParentPath) || cloudDriveModel.remoteParentParentPath == "") {
             pageStack.pop(cloudFolderPage);
         } else {
-            changeRemotePath(remoteParentParentPath);
+            changeRemotePath(cloudDriveModel.remoteParentParentPath);
         }
     }
 
     function postBrowseReplySlot() {
+        console.debug("cloudFolderPage postBrowseReplySlot selectedCloudType " + selectedCloudType + " selectedUid " + selectedUid + " cloudDriveModel.remoteParentPath " + cloudDriveModel.remoteParentPath + " cloudDriveModel.remoteParentParentPath " + cloudDriveModel.remoteParentParentPath);
+        remoteParentPath = cloudDriveModel.remoteParentPath;
+        remoteParentPathName = cloudDriveModel.remoteParentPathName;
+        remoteParentParentPath = cloudDriveModel.remoteParentParentPath;
+
         originalRemotePath = (originalRemotePath == "") ? remotePath : originalRemotePath;
 
         selectedIsValid = true;
@@ -53,8 +58,12 @@ Page {
     function changeRemotePath(remoteParentPath) {
         console.debug("cloudFolderPage changeRemotePath " + remoteParentPath);
         quickScrollPanel.visible = false;
-        cloudFolderPage.remoteParentPath = remoteParentPath;
-        refreshSlot("cloudFolderPage changeRemotePath");
+        selectedIndex = -1;
+        isBusy = true;
+
+        // Browse remote parent path.
+        var actualRemoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getParentRemotePath(selectedCloudType, remotePath) : remoteParentPath;
+        cloudDriveModel.browse(selectedCloudType, selectedUid, actualRemoteParentPath);
     }
 
     function createRemoteFolder(newRemoteFolderName) {
@@ -74,13 +83,13 @@ Page {
 
     function refreshSlot(caller) {
         console.debug("cloudFolderPage refreshSlot caller " + caller + " " + selectedCloudType + " " + remotePath + " " + remoteParentPath);
-
+        quickScrollPanel.visible = false;
         selectedIndex = -1;
         isBusy = true;
 
         // Browse remote parent path.
-        remoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getParentRemotePath(selectedCloudType, remotePath) : remoteParentPath;
-        cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
+        var actualRemoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getParentRemotePath(selectedCloudType, remotePath) : remoteParentPath;
+        cloudDriveModel.browse(selectedCloudType, selectedUid, actualRemoteParentPath);
     }
 
     function mailFileSlot(remotePath, remotePathName) {

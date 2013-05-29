@@ -1449,23 +1449,20 @@ Page {
                     // If it's not connected, show cloudDrivePathDialog.
                     cloudDrivePathDialog.open();
                     cloudDrivePathDialog.remotePath = remotePath;
-                    cloudDrivePathDialog.remoteParentPath = "";
-                    cloudDrivePathDialog.refresh();
+                    cloudDrivePathDialog.changeRemotePath("");
                 }
                 break;
             case CloudDriveModel.FilePut:
                 // Show cloudDrivePathDialog.
                 cloudDrivePathDialog.open();
                 cloudDrivePathDialog.remotePath = ""; // Undefine remote path for local path.
-                cloudDrivePathDialog.remoteParentPath = "";
-                cloudDrivePathDialog.refresh();
+                cloudDrivePathDialog.changeRemotePath("");
                 break;
             case CloudDriveModel.FileGet:
                 // Show cloudDrivePathDialog.
                 cloudDrivePathDialog.open();
                 cloudDrivePathDialog.remotePath = ""; // Undefine remote path for local path.
-                cloudDrivePathDialog.remoteParentPath = "";
-                cloudDrivePathDialog.refresh();
+                cloudDrivePathDialog.changeRemotePath("");
                 break;
             case CloudDriveModel.ShareFile:
                 // TODO Find way to refresh it before shareReplyFinished.
@@ -1484,8 +1481,7 @@ Page {
                 // Show cloudDrivePathDialog.
                 cloudDrivePathDialog.open();
                 cloudDrivePathDialog.remotePath = remotePath;
-                cloudDrivePathDialog.remoteParentPath = "";
-                cloudDrivePathDialog.refresh();
+                cloudDrivePathDialog.changeRemotePath("");
                 break;
             case CloudDriveModel.ScheduleSync:
                 cloudDriveSchedulerDialog.localPathCronExp = cloudDriveModel.getItemCronExp(type, uid, localPath);
@@ -1550,8 +1546,7 @@ Page {
                         // Select only items which are not connected.
                         cloudDrivePathDialog.open();
                         cloudDrivePathDialog.remotePath = "";
-                        cloudDrivePathDialog.remoteParentPath = "";
-                        cloudDrivePathDialog.refresh();
+                        cloudDrivePathDialog.changeRemotePath("");
                         return;
                     }
                 }
@@ -1750,8 +1745,8 @@ Page {
             console.debug("cloudDrivePathDialog onRefreshRequested " + selectedCloudType + " " + remotePath + " " + remoteParentPath);
 
             // Browse remote parent path.
-            remoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getParentRemotePath(selectedCloudType, remotePath) : remoteParentPath;
-            cloudDriveModel.browse(selectedCloudType, selectedUid, remoteParentPath);
+            var actualRemoteParentPath = (remoteParentPath == "") ? cloudDriveModel.getParentRemotePath(selectedCloudType, remotePath) : remoteParentPath;
+            cloudDriveModel.browse(selectedCloudType, selectedUid, actualRemoteParentPath);
         }
 
         onDeleteRemotePath: {
