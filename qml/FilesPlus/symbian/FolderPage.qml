@@ -1678,10 +1678,10 @@ Page {
                     } else {
                         // Find remote path by name.
                         var newRemoteFolderName = fsModel.getFileName(localPath);
-                        for (var i=0; i<contentModel.count; i++) {
+                        for (var i=0; i<cloudDriveModel.count; i++) {
                             // TODO Find exactly match with name and isDir.
-                            if (contentModel.get(i).name == newRemoteFolderName) {
-                                remotePath = contentModel.get(i).absolutePath;
+                            if (cloudDriveModel.get(i).name == newRemoteFolderName) {
+                                remotePath = cloudDriveModel.get(i).absolutePath;
                                 console.debug("cloudDrivePathDialog proceedOperation Metadata found remotePath " + remotePath + " for " + newRemoteFolderName);
                                 break;
                             }

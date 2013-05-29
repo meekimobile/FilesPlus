@@ -3272,6 +3272,15 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
 
 void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
+#ifdef Q_OS_SYMBIAN
+    // Remove all threads from pool once there is no active thread.
+    // NOTE To prevent thread panicking on Symbian. (#FP20130153)
+    if (m_browseThreadPool.activeThreadCount() <= 0) {
+        m_browseThreadPool.waitForDone();
+        qDebug() << "CloudDriveModel::browseReplyFilter waitForDone() is invoked. m_browseThreadPool" << m_browseThreadPool.activeThreadCount() << "/" << m_browseThreadPool.maxThreadCount();
+    }
+#endif
+
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
     // Update job running flag.
