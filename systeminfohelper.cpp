@@ -94,27 +94,29 @@ QString SystemInfoHelper::getPrivateDrive()
 
 QString SystemInfoHelper::getFileContent(const QString &localPath)
 {
-    qDebug() << "SystemInfoHelper::getFileContent localPath " << localPath;
+    qDebug() << "SystemInfoHelper::getFileContent localPath" << localPath;
 
     if (localPath.isEmpty()) return "";
 
     QString text;
     QFile file(localPath);
-    if (file.open(QIODevice::ReadOnly)) {
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&file);
         in.setCodec("UTF-8");
         text.append(in.readAll());
-    }
-    file.close();
 
-    qDebug() << "SystemInfoHelper::getFileContent text.length() " << text.length();
+        file.close();
+        qDebug() << "SystemInfoHelper::getFileContent text.length()" << text.length();
+    } else {
+        qDebug() << "SystemInfoHelper::getFileContent can't open file" << localPath << "for reading.";
+    }
 
     return text;
 }
 
 int SystemInfoHelper::saveFileContent(const QString &localPath, const QString &text, bool useWindowsEOL)
 {
-    qDebug() << "SystemInfoHelper::saveFileContent localPath " << localPath << text << useWindowsEOL;
+    qDebug() << "SystemInfoHelper::saveFileContent localPath" << localPath << text << useWindowsEOL;
 
     if (localPath.isEmpty()) return -1;
 
@@ -122,9 +124,8 @@ int SystemInfoHelper::saveFileContent(const QString &localPath, const QString &t
     QFile file(localPath);
     if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream out(&file);
-        out.setCodec("UTF-8");
 
-        QTextStream in(text.toUtf8());
+        QTextStream in(text.toUtf8()); // NOTE Convert to UTF8 byte array. It's no need to setCodec for out.
         while (!in.atEnd()) {
             QString lineNoEOL = in.readLine();
             out << lineNoEOL << (useWindowsEOL ? "\r\n" : "\n");
@@ -132,7 +133,7 @@ int SystemInfoHelper::saveFileContent(const QString &localPath, const QString &t
 
         file.close();
         c = file.size();
-        qDebug() << "SystemInfoHelper::saveFileContent bytes write " << c;
+        qDebug() << "SystemInfoHelper::saveFileContent bytes write" << c;
     } else {
         qDebug() << "SystemInfoHelper::saveFileContent can't open file" << localPath << "for writing.";
     }
