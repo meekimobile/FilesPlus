@@ -3892,7 +3892,16 @@ void CloudDriveModel::schedulerTimeoutFilter()
 
 void CloudDriveModel::cacheImageFinishedFilter(QString absoluteFilePath, int err, QString errMsg, QString caller)
 {
-    qDebug() << "CloudDriveModel::cacheImageFinishedFilter" << QThread::currentThread();
+    qDebug() << "CloudDriveModel::cacheImageFinishedFilter started. m_cacheImageThreadPool" << m_cacheImageThreadPool.activeThreadCount() << "/" << m_cacheImageThreadPool.maxThreadCount();
+
+#ifdef Q_OS_SYMBIAN
+    // Remove all threads from pool once there is no active thread.
+    // NOTE To prevent thread panicking on Symbian. (#FP20130153)
+    if (m_cacheImageThreadPool.activeThreadCount() <= 0) {
+        m_cacheImageThreadPool.waitForDone();
+        qDebug() << "CloudDriveModel::cacheImageFinishedFilter waitForDone() is invoked. m_cacheImageThreadPool" << m_cacheImageThreadPool.activeThreadCount() << "/" << m_cacheImageThreadPool.maxThreadCount();
+    }
+#endif
 
     emit cacheImageFinished(absoluteFilePath, err, errMsg, caller);
 }
