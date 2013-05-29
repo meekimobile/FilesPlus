@@ -336,7 +336,7 @@ signals:
     void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg, QString url, int expires);
     void deltaReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void migrateFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg, bool errorOnTarget);
 
     void migrateStartedSignal(qint64 total);
     void migrateProgressSignal(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, qint64 count, qint64 total);
@@ -373,7 +373,7 @@ public slots:
     void shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg, QString url, int expires);
     void deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void migrateFileReplyFilter(QString nonce, int err, QString errMsg, QString msg);
-    void migrateFilePutReplyFilter(QString nonce, int err, QString errMsg, QString msg);
+    void migrateFilePutReplyFilter(QString nonce, int err, QString errMsg, QString msg, bool errorOnTarget = false);
     void fileGetResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void filePutResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg);
 

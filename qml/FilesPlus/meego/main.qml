@@ -1931,7 +1931,7 @@ PageStackWindow {
         }
 
         onMigrateFilePutReplySignal: {
-            console.debug("window cloudDriveModel onMigrateFilePutReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
+            console.debug("window cloudDriveModel onMigrateFilePutReplySignal " + nonce + " " + err + " " + errMsg + " " + msg + " " + errorOnTarget);
 
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
@@ -1942,11 +1942,20 @@ PageStackWindow {
                     p.refreshItemAfterFilePutSlot(jobJson);
                 }
             } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
+                if (errorOnTarget) {
+                    cloudDriveModel.refreshToken(jobJson.target_type, jobJson.target_uid, jobJson.job_id);
+                } else {
+                    cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
+                }
                 return;
             } else {
-                logError(getCloudName(jobJson.type) + " " + qsTr("Migrate"),
-                         qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                if (errorOnTarget) {
+                    logError(getCloudName(jobJson.target_type) + " " + qsTr("Migrate"),
+                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                } else {
+                    logError(getCloudName(jobJson.type) + " " + qsTr("Migrate"),
+                             qsTr("Error") + " " + err + " " + errMsg + " " + msg);
+                }
             }
 
             // Remove finished job.

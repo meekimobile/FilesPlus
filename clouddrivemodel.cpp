@@ -2695,7 +2695,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
             if (sc.property("error").isValid()) {
                 int err = sc.property("error").toInt32();
                 QString errString = sc.property("error_string").toString();
-                migrateFilePutReplyFilter(job.jobId, err, errString, "");
+                migrateFilePutReplyFilter(job.jobId, err, errString, "", true);
                 return;
             }
         }
@@ -2714,7 +2714,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
             if (sc.property("error").isValid()) {
                 int err = sc.property("error").toInt32();
                 QString errString = sc.property("error_string").toString();
-                migrateFilePutReplyFilter(job.jobId, err, errString, "");
+                migrateFilePutReplyFilter(job.jobId, err, errString, "", true);
                 return;
             }
         }
@@ -2786,11 +2786,11 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
             int err = sc.property("error").toInt32();
             QString errString = sc.property("error_string").toString();
             job.uploadOffset = -1; // Failed upload needs to get status on resume.
-            migrateFilePutReplyFilter(job.jobId, err, errString, "");
+            migrateFilePutReplyFilter(job.jobId, err, errString, "", true);
             return;
         }
     } else {
-        migrateFilePutReplyFilter(job.jobId, -1, "Unexpected error.", "Unexpected upload result is empty.");
+        migrateFilePutReplyFilter(job.jobId, -1, "Unexpected error.", "Unexpected upload result is empty.", true);
         return;
     }
     // Check whether resume or commit.
@@ -2812,14 +2812,14 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
             if (sc.property("error").isValid()) {
                 int err = sc.property("error").toInt32();
                 QString errString = sc.property("error_string").toString();
-                migrateFilePutReplyFilter(job.jobId, err, errString, "");
+                migrateFilePutReplyFilter(job.jobId, err, errString, "", true);
                 return;
             }
             // Proceed filter with commit result and job done.
-            migrateFilePutReplyFilter(job.jobId, QNetworkReply::NoError, "", commitResult);
+            migrateFilePutReplyFilter(job.jobId, QNetworkReply::NoError, "", commitResult, true);
         } else {
             // Proceed filter with last upload result and job done.
-            migrateFilePutReplyFilter(job.jobId, QNetworkReply::NoError, "", uploadResult);
+            migrateFilePutReplyFilter(job.jobId, QNetworkReply::NoError, "", uploadResult, true);
         }
     }
 }
@@ -3693,7 +3693,7 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
     emit deltaReplySignal(nonce, err, errMsg, msg);
 }
 
-void CloudDriveModel::migrateFilePutReplyFilter(QString nonce, int err, QString errMsg, QString msg)
+void CloudDriveModel::migrateFilePutReplyFilter(QString nonce, int err, QString errMsg, QString msg, bool errorOnTarget)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
@@ -3707,7 +3707,7 @@ void CloudDriveModel::migrateFilePutReplyFilter(QString nonce, int err, QString 
     // Notify job done.
     jobDone();
 
-    emit migrateFilePutReplySignal(nonce, err, errMsg, msg);
+    emit migrateFilePutReplySignal(nonce, err, errMsg, msg, errorOnTarget);
 }
 
 void CloudDriveModel::fileGetResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg)
