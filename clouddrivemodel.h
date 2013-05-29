@@ -38,8 +38,8 @@ class CloudDriveModel : public QAbstractListModel
     Q_PROPERTY(QString remoteParentPath READ getRemoteParentPath WRITE setRemoteParentPath NOTIFY remoteParentPathChanged)
     Q_PROPERTY(QString remoteParentPathName READ getRemoteParentPathName WRITE setRemoteParentPathName NOTIFY remoteParentPathChanged)
     Q_PROPERTY(QString remoteParentParentPath READ getRemoteParentParentPath WRITE setRemoteParentParentPath NOTIFY remoteParentPathChanged)
-    Q_PROPERTY(int selectedIndex READ getSelectedIndex WRITE setSelectedIndex)
-    Q_PROPERTY(QString selectedRemotePath READ getSelectedRemotePath WRITE setSelectedRemotePath)
+    Q_PROPERTY(int selectedIndex READ getSelectedIndex WRITE setSelectedIndex NOTIFY selectedIndexChanged)
+    Q_PROPERTY(QString selectedRemotePath READ getSelectedRemotePath WRITE setSelectedRemotePath NOTIFY selectedIndexChanged)
 public:
     static const QString ITEM_DAT_PATH;
     static const QString ITEM_DB_PATH;
@@ -348,6 +348,7 @@ signals:
     void sortFlagChanged();
     void remoteParentPathChanged();
     void rowCountChanged();
+    void selectedIndexChanged();
 public slots:
     void proceedNextJob();
     void dispatchJob(const QString jobId);
