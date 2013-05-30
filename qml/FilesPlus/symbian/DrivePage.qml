@@ -49,6 +49,15 @@ Page {
         }
     }
 
+    function updateLogicalDriveSlot(logicalDrive, available, total) {
+        var i = driveGridModel.findIndexByLogicalDrive(logicalDrive);
+        console.debug("drivePage updateLogicalDriveSlot i " + i + " logicalDrive " + logicalDrive + " available " + available + " total " + total);
+        if (i > -1) {
+            var item = driveGrid.model.get(i);
+            driveGrid.model.set(i, { availableSpace: available, totalSpace: total });
+        }
+    }
+
     function updateJobQueueCount(runningJobCount, jobQueueCount) {
         // Update (runningJobCount + jobQueueCount) on cloudButton.
         cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
@@ -178,6 +187,22 @@ Page {
                              });
             }
         }
+
+        // Add trash folder.
+        if (appInfo.getSettingBoolValue("drivepage.trash.enabled", false)) {
+            model.append({
+                             logicalDrive: fsModel.getTrashPath(),
+                             availableSpace: 0,
+                             totalSpace: -1,
+                             driveType: 1, // Internal drive.
+                             email: "",
+                             uid: "",
+                             name: qsTr("Trash"),
+                             cloudDriveType: -1,
+                             iconSource: "delete_list.svg"
+                         });
+            fsModel.requestTrashStatus();
+        }
     }
 
     function refreshSlot(caller) {
@@ -207,6 +232,17 @@ Page {
                 for (var i = 0; i < driveGridModel.count; i++) {
                     var item = driveGridModel.get(i);
                     if (item.driveType == 7 && item.cloudDriveType == cloudType && item.uid == uid) {
+                        return i;
+                    }
+                }
+
+                return -1;
+            }
+
+            function findIndexByLogicalDrive(logicalDrive) {
+                for (var i = 0; i < driveGridModel.count; i++) {
+                    var item = driveGridModel.get(i);
+                    if (item.logicalDrive == logicalDrive) {
                         return i;
                     }
                 }

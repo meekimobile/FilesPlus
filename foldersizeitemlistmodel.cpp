@@ -669,18 +669,54 @@ bool FolderSizeItemListModel::renameFile(const QString fileName, const QString n
     return res;
 }
 
-bool FolderSizeItemListModel::trash(const QString sourcePath)
+QString FolderSizeItemListModel::getTrashPath()
+{
+    return m_settings.value("FolderSizeItemListModel.trashPath", DefaultTrashPath).toString();
+}
+
+bool FolderSizeItemListModel::createTrashIfNotExists()
 {
     QString trashPath = m_settings.value("FolderSizeItemListModel.trashPath", DefaultTrashPath).toString();
     if (!QFileInfo(trashPath).isDir()) {
         if (QDir::home().mkpath(trashPath)) {
-            qDebug() << "FolderSizeItemListModel::trash" << trashPath << "is created.";
+            qDebug() << "FolderSizeItemListModel::createTrashIfNotExists" << trashPath << "is created.";
         } else {
-            qDebug() << "FolderSizeItemListModel::trash" << trashPath << "can't be created.";
+            qDebug() << "FolderSizeItemListModel::createTrashIfNotExists" << trashPath << "can't be created.";
             return false;
         }
     }
+
+    return true;
+}
+
+QString FolderSizeItemListModel::getTrashJsonText()
+{
+    if (!createTrashIfNotExists()) {
+        return "";
+    }
+
+    QString trashPath = m_settings.value("FolderSizeItemListModel.trashPath", DefaultTrashPath).toString();
+
+    return getItemJson(trashPath);
+}
+
+qlonglong FolderSizeItemListModel::getMaxTrashSize()
+{
+    QString trashPath = m_settings.value("FolderSizeItemListModel.trashPath", DefaultTrashPath).toString();
+    float maxTrashSizeRatio = m_settings.value("FolderSizeItemListModel.maxTrashSizeRatio", 0.1).toFloat();
+    QSystemStorageInfo storageInfo;
+
+    return storageInfo.totalDiskSpace(getRoot(trashPath)) * maxTrashSizeRatio;
+}
+
+bool FolderSizeItemListModel::trash(const QString sourcePath)
+{
+    if (!createTrashIfNotExists()) {
+        return false;
+    }
+
     // TODO Make it restorable by storing to canonical path.
+    QString trashPath = m_settings.value("FolderSizeItemListModel.trashPath", DefaultTrashPath).toString();
     QString targetPath = QDir(trashPath).absoluteFilePath(QFileInfo(sourcePath).fileName());
     qDebug() << "FolderSizeItemListModel::trash moving" << sourcePath << "to" << targetPath;
 
@@ -699,6 +735,11 @@ bool FolderSizeItemListModel::trash(const QString sourcePath)
     emit proceedNextJobSignal();
 
     return true;
+}
+
+void FolderSizeItemListModel::requestTrashStatus()
+{
+    emit trashChanged();
 }
 
 bool FolderSizeItemListModel::setFileAttribute(QString localFilePath, FileAttribute attribute, bool value)
@@ -761,7 +802,8 @@ QStringList FolderSizeItemListModel::getPathToRoot(const QString absFilePath)
 //    qDebug() << "FolderSizeItemListModel::getPathToRoot absFilePath" << absFilePath << "cache" << m_pathToRootCache->contains(absFilePath);
     if (!m_pathToRootCache->contains(absFilePath)) {
         QDir dir(absFilePath);
-        while (!dir.isRoot()) {
+
+        while (!isRoot(dir.absolutePath())) {
             paths << dir.absolutePath();
 //            qDebug() << "FolderSizeItemListModel::getPathToRoot append" << dir.absolutePath();
             dir.cdUp();
@@ -781,6 +823,13 @@ QStringList FolderSizeItemListModel::getPathToRoot(const QString absFilePath)
 
         return returnedPaths;
     }
+}
+
+QString FolderSizeItemListModel::getRoot(const QString absFilePath)
+{
+    QStringList paths = getPathToRoot(absFilePath);
+
+    return paths.last();
 }
 
 bool FolderSizeItemListModel::isDir(const QString absFilePath)

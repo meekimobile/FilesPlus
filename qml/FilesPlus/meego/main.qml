@@ -450,6 +450,25 @@ PageStackWindow {
             }
         }
 
+        onInitializeDBFinished: {
+            fsModel.requestTrashStatus();
+        }
+
+        onTrashChanged: {
+            console.debug("window fsModel onTrashChanged");
+
+            // Update trash size.
+            if (appInfo.getSettingBoolValue("drivepage.trash.enabled", false)) {
+                var trashObj = Utility.createJsonObj(fsModel.getTrashJsonText());
+                var trashMaxSize = (trashObj.absolute_path != "") ? fsModel.getMaxTrashSize() : -1;
+                var trashAvailableSize = (trashObj.absolute_path != "") ? (trashMaxSize - trashObj.size) : 0;
+                var p = findPage("drivePage");
+                if (p) {
+                    p.updateLogicalDriveSlot(fsModel.getTrashPath(), trashAvailableSize, trashMaxSize);
+                }
+            }
+        }
+
         Component.onCompleted: {
             console.debug(Utility.nowText() + " window fsModel onCompleted");
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("FolderModel"), 0.1);

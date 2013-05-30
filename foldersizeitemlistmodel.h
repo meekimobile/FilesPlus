@@ -139,8 +139,16 @@ public:
     Q_INVOKABLE bool createDirPath(const QString absPath);
     Q_INVOKABLE bool createEmptyFile(const QString name);
     Q_INVOKABLE bool renameFile(const QString fileName, const QString newFileName);
-    Q_INVOKABLE bool trash(const QString sourcePath);
 
+    // Trash related methods.
+    Q_INVOKABLE QString getTrashPath();
+    bool createTrashIfNotExists();
+    Q_INVOKABLE QString getTrashJsonText();
+    Q_INVOKABLE qlonglong getMaxTrashSize();
+    Q_INVOKABLE bool trash(const QString sourcePath);
+    Q_INVOKABLE void requestTrashStatus();
+
+    // Modify file attributes (for Symbian).
     Q_INVOKABLE bool setFileAttribute(QString localFilePath, FileAttribute attribute, bool value);
 
     // Informative methods which don't use FolderSizeModelThread.
@@ -149,6 +157,7 @@ public:
     Q_INVOKABLE void refreshItem(const QString localPath);
     Q_INVOKABLE QString getDirPath(const QString absFilePath);
     Q_INVOKABLE QStringList getPathToRoot(const QString absFilePath);
+    Q_INVOKABLE QString getRoot(const QString absFilePath);
     Q_INVOKABLE bool isDir(const QString absFilePath);
     Q_INVOKABLE bool isFile(const QString absFilePath);
     Q_INVOKABLE bool canCopy(const QString sourcePath, const QString targetPath);
@@ -233,6 +242,7 @@ Q_SIGNALS:
     void directoryChanged(QString dirPath);
     void runningJobCountChanged();
     void sortFlagChanged();
+    void trashChanged();
 };
 
 #endif // FOLDERSIZEITEMLISTMODEL_H

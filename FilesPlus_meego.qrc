@@ -163,5 +163,6 @@
         <file alias="qml/FilesPlus/OpenMenu.qml">qml/FilesPlus/meego/OpenMenu.qml</file>
         <file alias="qml/FilesPlus/BookmarksPage.qml">qml/FilesPlus/meego/BookmarksPage.qml</file>
         <file alias="qml/FilesPlus/BookmarksMenu.qml">qml/FilesPlus/meego/BookmarksMenu.qml</file>
+        <file>qml/FilesPlus/delete_list.svg</file>
     </qresource>
 </RCC>

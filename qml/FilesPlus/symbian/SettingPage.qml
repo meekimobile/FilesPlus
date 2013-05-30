@@ -255,6 +255,12 @@ Page {
             group: "Developer"
         }
         ListElement {
+            name: "drivepage.trash.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
+        ListElement {
             name: "WebDavClient.ignoreSSLSelfSignedCertificateErrors"
             title: ""
             type: "switch"
@@ -341,6 +347,7 @@ Page {
         else if (name == "Developer") return qsTr("Developer") + appInfo.emptyStr;
         else if (name == "drivepage.systemdrive.enabled") return qsTr("Show system drive on drive page") + appInfo.emptyStr;
         else if (name == "drivepage.privatedrive.enabled") return qsTr("Show private drive on drive page") + appInfo.emptyStr;
+        else if (name == "drivepage.trash.enabled") return qsTr("Show trash on drive page") + appInfo.emptyStr;
         else if (name == "WebDavClient.ignoreSSLSelfSignedCertificateErrors") return qsTr("Ignore WebDAV SSL self-signed certificate errors") + appInfo.emptyStr;
         else if (name == "LocalFileImageProvider.cache.enabled") return qsTr("Cache local images") + appInfo.emptyStr;
         else if (name == "LocalFileImageProvider.CacheImageWorker.enabled") return qsTr("Queue local image caching") + appInfo.emptyStr;
@@ -393,6 +400,9 @@ Page {
         } else if (name == "drivepage.privatedrive.enabled") {
             var p = window.findPage("drivePage");
             if (p) p.refreshSlot("settingPage buttonClickedHandler drivepage.privatedrive.enabled");
+        } else if (name == "drivepage.trash.enabled") {
+            var p = window.findPage("drivePage");
+            if (p) p.refreshSlot("settingPage buttonClickedHandler drivepage.trash.enabled");
         } else if (name == "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled") {
             var p = window.findPage("folderPage");
             if (p) p.refreshSlot("settingPage buttonClickedHandler FolderSizeModelThread.getDirContent.showHiddenSystem.enabled");
