@@ -65,20 +65,22 @@ SelectionDialog {
             anchors.margins: 10
             spacing: 2
             Image {
+                id: cloudIcon
                 anchors.verticalCenter: parent.verticalCenter
-                width: 30
-                height: 30
+                width: 48
+                height: 48
                 source: cloudDriveModel.getCloudIcon(type)
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - 64
+                width: parent.width - cloudIcon.width - connectionIcon.width -(2*parent.spacing)
                 font.pointSize: 18
                 elide: Text.ElideMiddle
                 color: "white"
                 text: email
             }
             Image {
+                id: connectionIcon
                 anchors.verticalCenter: parent.verticalCenter
                 width: 30
                 height: 30

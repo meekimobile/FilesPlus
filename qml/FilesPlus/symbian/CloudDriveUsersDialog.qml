@@ -62,6 +62,7 @@ SelectionDialog {
             anchors.fill: uidDialogListViewItem.paddingItem
             spacing: 2
             Image {
+                id: cloudIcon
                 anchors.verticalCenter: parent.verticalCenter
                 width: 30
                 height: 30
@@ -69,12 +70,13 @@ SelectionDialog {
             }
             ListItemText {
                 anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - 64
+                width: parent.width - cloudIcon.width - connectionIcon.width -(2*parent.spacing)
                 mode: uidDialogListViewItem.mode
                 role: "Title"
                 text: email
             }
             Image {
+                id: connectionIcon
                 anchors.verticalCenter: parent.verticalCenter
                 width: 30
                 height: 30
