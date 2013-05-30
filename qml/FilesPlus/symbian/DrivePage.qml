@@ -201,7 +201,6 @@ Page {
                              cloudDriveType: -1,
                              iconSource: "delete_list.svg"
                          });
-            fsModel.requestTrashStatus();
         }
     }
 
@@ -292,6 +291,9 @@ Page {
 
             // Request cloud job queue status.
             cloudDriveModel.requestJobQueueStatus();
+
+            // Request trash status.
+            fsModel.requestTrashStatus();
 
             // Show notify if logging is enabled.
             console.debug("drivePage onStatusChanged Logging.enabled " + appInfo.getSettingBoolValue("Logging.enabled", false));
