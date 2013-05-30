@@ -204,6 +204,9 @@ void FolderSizeModelThread::initializeDB()
     m_countPS = QSqlQuery(m_db);
     m_countPS.prepare("SELECT count(*) count FROM folderpie_cache");
 
+    // Process pending events.
+    QApplication::processEvents();
+
     emit initializeDBFinished();
 }
 
@@ -218,6 +221,16 @@ void FolderSizeModelThread::fixDamagedDB()
     QSqlQuery query(m_db);
     bool res;
 
+    // Test database table.
+    // NOTE QSqlError 10, 11, 19 requires reindex.
+    res = query.exec("SELECT count(*) FROM folderpie_cache WHERE id = ''");
+    if (res) {
+        qDebug() << "FolderSizeModelThread::fixDamagedDB folderpie_cache is valid. Operation is aborted.";
+        return;
+    } else {
+        qDebug() << "FolderSizeModelThread::fixDamagedDB folderpie_cache is malformed. Error" << query.lastError();
+    }
+
     // Drop index to fix QSqlError 11 database disk image is malformed.
     res = query.exec("DROP INDEX folderpie_cache_pk;");
     if (res) {
@@ -226,7 +239,7 @@ void FolderSizeModelThread::fixDamagedDB()
         qDebug() << "FolderSizeModelThread::fixDamagedDB DROP INDEX is failed. Error" << query.lastError();
     }
 
-    res = query.exec("DELETE FROM folderpie_cache WHERE id = '';");
+    res = query.exec("DELETE FROM folderpie_cache WHERE id = ''");
     if (res) {
         qDebug() << "FolderSizeModelThread::fixDamagedDB DELETE item with empty id is done." << query.numRowsAffected();
     } else {
@@ -242,6 +255,9 @@ void FolderSizeModelThread::fixDamagedDB()
         qDebug() << "FolderSizeModelThread::fixDamagedDB find duplicated unique key. numRowsAffected" << query.numRowsAffected();
         QSqlRecord rec = query.record();
         while (query.next()) {
+            // Process pending events.
+            QApplication::processEvents();
+
             if (query.isValid()) {
                 QString id = query.value(rec.indexOf("id")).toString();
                 int c = query.value(rec.indexOf("c")).toInt();
@@ -264,6 +280,9 @@ void FolderSizeModelThread::fixDamagedDB()
     } else {
         qDebug() << "FolderSizeModelThread::fixDamagedDB find duplicated unique key failed. Error" << query.lastError() << query.lastQuery();
     }
+
+    // Process pending events.
+    QApplication::processEvents();
 }
 
 FolderSizeItem FolderSizeModelThread::selectDirSizeCacheFromDB(const QString id)
