@@ -28,14 +28,6 @@ CommonDialog {
     signal ok()
     signal cancel()
 
-    function toggleHideAction() {
-        if (autoClose) {
-            hideAction.restart();
-        } else {
-            hideAction.stop();
-        }
-    }
-
     onNewValueChanged: {
         var deltaValue = 0;
         if (newValue > 0) {
@@ -45,14 +37,6 @@ CommonDialog {
             lastValue = newValue;
         }
 //        console.debug("progressDialog newValue " + newValue + " lastValue " + lastValue + " deltaValue " + deltaValue + " accuDeltaValue " + accuDeltaValue + " value " + value);
-    }
-
-    onCountChanged: {
-        if (count > 0 && count >= maxCount) {
-            console.debug("ProgressDialog onCountChanged " + count + " >= " + maxCount);
-            ok();
-            toggleHideAction();
-        }
     }
 
     SequentialAnimation {
@@ -81,6 +65,22 @@ CommonDialog {
 
 //            console.debug("progressTimer accuDeltaValue " + accuDeltaValue + " bps " + ((1000 * accuDeltaValue) / interval) );
             parent.accuDeltaValue = 0;
+
+            // Detect end of progress.
+            if (parent.autoCloseByValue && parent.value > 0 && parent.value >= parent.max) {
+                console.debug("progressDialog progressTimer onTriggered value " + parent.value + " >= max " + parent.max);
+                progressTimer.stop();
+                hideAction.restart();
+                ok();
+            }
+
+            if (parent.autoClose && parent.count > 0 && parent.count >= parent.maxCount) {
+                console.debug("progressDialog progressTimer onTriggered count " + parent.count + " >= maxCount " + parent.maxCount);
+                progressTimer.stop();
+                hideAction.restart();
+                ok();
+            }
+
         }
     }
 
@@ -118,13 +118,6 @@ CommonDialog {
                     progressText.text = Utility.formatFileSize(value,3) + " / " + Utility.formatFileSize(maximumValue,3);
                 } else {
                     progressText.text = value + " / " + maximumValue;
-                }
-
-//                console.debug("ProgressDialog progressBar onValueChanged value " + value + " maximumValue " +maximumValue);
-                if (progressDialog.autoCloseByValue && value >= maximumValue) {
-                    console.debug("ProgressDialog progressBar onValueChanged " + value + " >= " +maximumValue);
-                    ok();
-                    toggleHideAction();
                 }
             }
         }
@@ -175,9 +168,6 @@ CommonDialog {
             autoClose = false;
             message = "";
             indeterminate = false;
-//            formatValue = false;
-//            newValue = 0;
-//            progressBar.value = 0;
 
             closing();
         }
