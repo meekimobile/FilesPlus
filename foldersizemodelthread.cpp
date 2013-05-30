@@ -270,7 +270,6 @@ FolderSizeItem FolderSizeModelThread::selectDirSizeCacheFromDB(const QString id)
 {
     FolderSizeItem item;
     bool res;
-    QSqlRecord rec = m_selectPS.record();
 
     // Find in itemCache, return if found.
     if (m_itemCache->contains(id)) {
@@ -281,8 +280,9 @@ FolderSizeItem FolderSizeModelThread::selectDirSizeCacheFromDB(const QString id)
 
     m_selectPS.bindValue(":id", id);
     res = m_selectPS.exec();
-    if (res && m_selectPS.next()) {
+    if (res && m_selectPS.first()) {
 //        qDebug() << "FolderSizeModelThread::selectDirSizeCacheFromDB id" << id << "is found. id" << m_selectPS.value(rec.indexOf("id")).toString() << "size" << m_selectPS.value(rec.indexOf("size")).toLongLong();
+        QSqlRecord rec = m_selectPS.record();
         item.name = m_selectPS.value(rec.indexOf("name")).toString();
         item.absolutePath = m_selectPS.value(rec.indexOf("absolute_path")).toString();
         item.lastModified = m_selectPS.value(rec.indexOf("last_modified")).toDateTime();
@@ -298,7 +298,7 @@ FolderSizeItem FolderSizeModelThread::selectDirSizeCacheFromDB(const QString id)
             m_itemCache->insert(id, item);
         }
     } else {
-        qDebug() << "FolderSizeModelThread::selectDirSizeCacheFromDB id" << id << " is not found.";
+        qDebug() << "FolderSizeModelThread::selectDirSizeCacheFromDB id" << id << " is not found. error" << m_selectPS.lastError();
     }
 
     return item;
