@@ -705,8 +705,12 @@ qlonglong FolderSizeItemListModel::getMaxTrashSize()
     QString trashPath = m_settings.value("FolderSizeItemListModel.trashPath", DefaultTrashPath).toString();
     float maxTrashSizeRatio = m_settings.value("FolderSizeItemListModel.maxTrashSizeRatio", 0.1).toFloat();
     QSystemStorageInfo storageInfo;
+    QString logicalDrive = getRoot(trashPath);
+#ifdef Q_OS_SYMBIAN
+    logicalDrive = logicalDrive.mid(0, 1);
+#endif
 
-    return storageInfo.totalDiskSpace(getRoot(trashPath)) * maxTrashSizeRatio;
+    return storageInfo.totalDiskSpace(logicalDrive) * maxTrashSizeRatio;
 }
 
 bool FolderSizeItemListModel::trash(const QString sourcePath)
