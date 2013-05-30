@@ -89,10 +89,11 @@ Page {
                 spacing: 5
                 Image {
                     id: cloudIcon
-                    source: (renameDialog.type < 0) ? (!inverted ? "device.svg" : "device_inverted.svg") : cloudDriveModel.getCloudIcon(renameDialog.type)
-                    width: 48
-                    height: 48
+                    source: (renameDialog.type < 0) ? "device.svg" : cloudDriveModel.getCloudIcon(renameDialog.type)
+                    width: 67
+                    height: 57
                     fillMode: Image.PreserveAspectFit
+                    smooth: true
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 Column {
@@ -105,7 +106,7 @@ Page {
                         verticalAlignment: Text.AlignVCenter
                         font.pointSize: 8
                         elide: Text.ElideMiddle
-                        color: (!inverted) ? "white" : "black"
+                        color: "white"
                     }
                     Text {
                         id: subtitleText
@@ -194,10 +195,11 @@ Page {
 
                 Image {
                     id: cloudIcon
-                    source: (type < 0) ? (!inverted ? "device.svg" : "device_inverted.svg") : cloudDriveModel.getCloudIcon(type)
-                    width: 48
-                    height: 48
+                    source: (type < 0) ? "device.svg" : cloudDriveModel.getCloudIcon(type)
+                    width: 67
+                    height: 57
                     fillMode: Image.PreserveAspectFit
+                    smooth: true
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 Column {

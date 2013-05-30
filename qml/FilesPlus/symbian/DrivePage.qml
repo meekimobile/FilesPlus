@@ -85,6 +85,13 @@ Page {
             }
         }
         ToolBarButton {
+            id: bookmarkButton
+            buttonIconSource: (!window.platformInverted ? "favourite.svg" : "favourite_inverted.svg")
+            onClicked: {
+                pageStack.push(Qt.resolvedUrl("BookmarksPage.qml"));
+            }
+        }
+        ToolBarButton {
             id: cloudButton
             buttonIconSource: (!window.platformInverted ? "cloud.svg" : "cloud_inverted.svg")
 
@@ -114,9 +121,6 @@ Page {
     DriveMenu {
         id: driveMenu
 
-        onOpenBookmarks: {
-            pageStack.push(Qt.resolvedUrl("BookmarksPage.qml"));
-        }
         onOpenSettings: {
             pageStack.push(Qt.resolvedUrl("SettingPage.qml"));
         }

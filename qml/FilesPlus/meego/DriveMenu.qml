@@ -5,7 +5,6 @@ MenuWithIcon {
     id: driveMenu
     z: 2
 
-    signal openBookmarks()
     signal openSettings()
     signal openMoreApps()
     signal openAbout()
@@ -16,14 +15,6 @@ MenuWithIcon {
 
         // TODO Alias for fixing incorrect children.
         default property alias children: menuLayout.menuChildren
-
-        MenuItemWithIcon {
-            name: "bookmarks"
-            text: appInfo.emptyStr+qsTr("Bookmarks")
-            onClicked: {
-                openBookmarks();
-            }
-        }
 
         MenuItemWithIcon {
             name: "settings"

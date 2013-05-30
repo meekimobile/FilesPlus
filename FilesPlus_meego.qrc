@@ -164,5 +164,6 @@
         <file alias="qml/FilesPlus/BookmarksPage.qml">qml/FilesPlus/meego/BookmarksPage.qml</file>
         <file alias="qml/FilesPlus/BookmarksMenu.qml">qml/FilesPlus/meego/BookmarksMenu.qml</file>
         <file>qml/FilesPlus/delete_list.svg</file>
+        <file>qml/FilesPlus/favourite_inverted.svg</file>
     </qresource>
 </RCC>

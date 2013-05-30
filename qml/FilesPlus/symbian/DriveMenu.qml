@@ -5,20 +5,13 @@ MenuWithIcon {
     id: driveMenu
     z: 2
 
-    signal openBookmarks()
     signal openSettings()
     signal openMoreApps()
     signal openAbout()
     signal quit()
 
     content: MenuLayout {
-        MenuItemWithIcon {
-            name: "bookmarks"
-            text: appInfo.emptyStr+qsTr("Bookmarks")
-            onClicked: {
-                openBookmarks();
-            }
-        }
+        id: menuLayout
 
         MenuItemWithIcon {
             name: "settings"
