@@ -233,6 +233,7 @@ Q_SIGNALS:
     void deleteStarted(int fileAction, QString sourcePath);
     void deleteProgress(int fileAction, QString sourceSubPath, QString msg, int err);
     void deleteFinished(int fileAction, QString sourcePath, QString msg, int err);
+    void trashFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void createFinished(QString targetPath, QString msg, int err);
     void renameFinished(QString sourcePath, QString targetPath, QString msg, int err);
     void fetchDirSizeStarted();

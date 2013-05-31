@@ -524,18 +524,25 @@ bool FolderSizeItemListModel::removeRow(int row, const QModelIndex &parent)
 
 bool FolderSizeItemListModel::removeRows(int row, int count, const QModelIndex &parent)
 {
-    for (int i = row; i < row+count; i++) {
-        QString filePath = data(this->index(i,0), AbsolutePathRole).toString();
+    beginRemoveRows(parent, row, row + count - 1);
 
-        // Queue delete job.
-        deleteFile(filePath);
+    for (int i = row; i < row+count; i++) {
+        removeItem(i);
     }
+
+    endRemoveRows();
 
     return true;
 }
 
 bool FolderSizeItemListModel::deleteFile(const QString absPath)
 {
+    if (m_settings.value("FolderSizeItemListModel.deleteFile.use.trash.enabled", false).toBool()) {
+        if (!absPath.startsWith(getTrashPath())) {
+            return trash(absPath);
+        }
+    }
+
     // Enqueue job.
     FolderSizeJob job(createNonce(), FolderSizeModelThread::DeleteFile, absPath, "");
     m_jobQueue.enqueue(job);
@@ -1153,19 +1160,15 @@ void FolderSizeItemListModel::deleteProgressFilter(int fileAction, QString sourc
         int i = getIndexOnCurrentDir(sourceSubPath);
 
         if (i >= 0) {
-            beginRemoveRows(createIndex(0,0), i, i);
-
-            // Remote item from itemList.
-            removeItem(i);
+            // Remove item from model.
+            removeRow(i);
 
             // Reset m_indexOnCurrentDirHash.
             m_indexOnCurrentDirHash->clear();
-
-            endRemoveRows();
         }
     }
 
-    // TODO Not require as deleteFinishedFilter have done.
+    // NOTE Not require as deleteFinishedFilter have done.
     // Remove cache of path up to root.
 //    removeCache(sourceSubPath);
 
@@ -1178,23 +1181,9 @@ void FolderSizeItemListModel::deleteProgressFilter(int fileAction, QString sourc
 void FolderSizeItemListModel::deleteFinishedFilter(int fileAction, QString sourcePath, QString msg, int err)
 {
 //    qDebug() << "FolderSizeItemListModel::deleteFinishedFilter" << sourcePath;
+
+    // NOTE Not require as deleteProgressFilter have done.
     // Remove item from ListView.
-    // TODO streamline flow to remove item correctly.
-    if (err >= 0) {
-        int i = getIndexOnCurrentDir(sourcePath);
-
-        if (i >= 0) {
-            beginRemoveRows(createIndex(0,0), i, i);
-
-            // Remote item from itemList.
-            removeItem(i);
-
-            // Reset m_indexOnCurrentDirHash.
-            m_indexOnCurrentDirHash->clear();
-
-            endRemoveRows();
-        }
-    }
 
     // Remove cache of path up to root.
     removeCache(sourcePath);
@@ -1210,18 +1199,14 @@ void FolderSizeItemListModel::trashFinishedFilter(int fileAction, QString source
     if (err >= 0) {
         // Remove item from ListView.
         int i = getIndexOnCurrentDir(sourcePath);
-        qDebug() << "FolderSizeItemListModel::trashFinishedFilter" << sourcePath << "is at index" << i;
+//        qDebug() << "FolderSizeItemListModel::trashFinishedFilter" << sourcePath << "is at index" << i;
 
         if (i >= 0) {
-            beginRemoveRows(createIndex(0,0), i, i);
-
-            // Remote item from itemList.
-            removeItem(i);
+            // Remove item from model.
+            removeRow(i);
 
             // Reset m_indexOnCurrentDirHash.
             m_indexOnCurrentDirHash->clear();
-
-            endRemoveRows();
         }
 
         // Remove cache of SOURCE path up to root.
@@ -1230,6 +1215,8 @@ void FolderSizeItemListModel::trashFinishedFilter(int fileAction, QString source
         // Remove cache of TARGET path up to root.
         removeCache(targetPath);
     }
+
+    emit trashFinished(fileAction, sourcePath, targetPath, msg, err);
 }
 
 void FolderSizeItemListModel::proceedNextJob()

@@ -166,6 +166,11 @@ PageStackWindow {
         }
 
         function openDeleteProgressDialog() {
+            // Suppress dialog if FolderSizeItemListModel.deleteFIle uses trash.
+            if (appInfo.getSettingBoolValue("FolderSizeItemListModel.deleteFIle.use.trash.enabled", false)) {
+                return;
+            }
+
             // Estimate total.
             var totalFiles = 0;
             var totalFolders = 0;
@@ -687,6 +692,7 @@ PageStackWindow {
         titleText: appInfo.emptyStr+qsTr("Deleting")
         onOk: {
             // Refresh view after copied/moved.
+            // NOTE FolderSizeItemListModel.deleteProgressFilter() already remove item from model.
             fsModel.refreshDir("deleteProgressDialog onOk");
         }
         onCancel: {
@@ -694,6 +700,7 @@ PageStackWindow {
             // Abort thread with rollbackFlag=false.
             fsModel.abortThread(false);
             // Refresh view after copied/moved.
+            // NOTE FolderSizeItemListModel.deleteProgressFilter() already remove item from model.
             fsModel.refreshDir("deleteProgressDialog onCancel");
         }
         onOpened: {
