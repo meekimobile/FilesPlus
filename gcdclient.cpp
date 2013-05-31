@@ -232,6 +232,14 @@ QString GCDClient::getRedirectedUrl(QString url)
     return redirectedUrl;
 }
 
+bool GCDClient::isCloudOnly(QScriptValue jsonObj)
+{
+    // Check if file is cloud only which can't be downloaded.
+    bool isCloudOnly = jsonObj.property("mimeType").toString().startsWith("application/vnd.google-apps.");
+
+    return isCloudOnly;
+}
+
 QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj)
 {
     QScriptValue parsedObj = engine.newObject();
@@ -266,6 +274,10 @@ QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     parsedObj.setProperty("thumbnail", jsonObj.property("thumbnailLink"));
     parsedObj.setProperty("preview", jsonObj.property("thumbnailLink")); // NOTE Use same URL as thumbnail as it return 2xx x 1xx picture.
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("title").toString())));
+    parsedObj.setProperty("mimeType", jsonObj.property("mimeType"));
+    parsedObj.setProperty("isCloudOnly", QScriptValue(isCloudOnly(jsonObj)));
+    parsedObj.setProperty("exportLinks", jsonObj.property("exportLinks"));
+    parsedObj.setProperty("iconLink", jsonObj.property("iconLink"));
 
     // Cache downloadUrl for furthur usage.
     if (downloadUrlObj.isValid()) {
@@ -563,6 +575,13 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
                     uri = sc.property("downloadUrl").toString();
                     // Cache downloadUrl for furthur usage.
                     m_downloadUrlHash->insert(sc.property("id").toString(), uri);
+                } else if (isCloudOnly(sc)) {
+                    qDebug() << "GCDClient::fileGet" << nonce << uid << remoteFilePath << "is cloud document format. It can't be downloaded.";
+                    emit logRequestSignal(nonce,
+                                          "warn",
+                                          "GoogleDrive " + tr("File Get"),
+                                          tr("%1 is cloud document format.\nIt can't be downloaded.").arg(sc.property("title").toString()),
+                                          2000);
                 } else {
                     qDebug() << "GCDClient::fileGet" << nonce << uid << remoteFilePath << "downloadUrl is not available.";
                 }
@@ -832,7 +851,20 @@ QIODevice *GCDClient::fileGetResume(QString nonce, QString uid, QString remoteFi
 
             QScriptEngine engine;
             QScriptValue sc = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
-            uri = sc.property("downloadUrl").toString();
+            if (sc.property("downloadUrl").isValid()) {
+                uri = sc.property("downloadUrl").toString();
+                // Cache downloadUrl for furthur usage.
+                m_downloadUrlHash->insert(sc.property("id").toString(), uri);
+            } else if (isCloudOnly(sc)) {
+                qDebug() << "GCDClient::fileGetResume" << nonce << uid << remoteFilePath << "is cloud document format. It can't be downloaded.";
+                emit logRequestSignal(nonce,
+                                      "warn",
+                                      "GoogleDrive " + tr("File Get"),
+                                      tr("%1 is cloud document format.\nIt can't be downloaded.").arg(sc.property("title").toString()),
+                                      2000);
+            } else {
+                qDebug() << "GCDClient::fileGetResume" << nonce << uid << remoteFilePath << "downloadUrl is not available.";
+            }
             propertyReply->deleteLater();
         } else {
             emit fileGetReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));

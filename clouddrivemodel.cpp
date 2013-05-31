@@ -605,6 +605,7 @@ void CloudDriveModel::connectCloudClientsSignal(CloudDriveClient *client)
     connect(client, SIGNAL(fileGetResumeReplySignal(QString,int,QString,QString)), SLOT(fileGetResumeReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(filePutResumeReplySignal(QString,int,QString,QString)), SLOT(filePutResumeReplyFilter(QString,int,QString,QString)) );
     connect(client, SIGNAL(deltaReplySignal(QString,int,QString,QString)), SLOT(deltaReplyFilter(QString,int,QString,QString)) );
+    connect(client, SIGNAL(logRequestSignal(QString,QString,QString,QString,int)), SIGNAL(logRequestSignal(QString,QString,QString,QString,int)) );
 }
 
 void CloudDriveModel::refreshDropboxClient()
@@ -3171,16 +3172,26 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
                                 metadata(getClientType(job.type), job.uid, itemLocalPath, item.property("absolutePath").toString(), -1, job.forcePut, job.forceGet);
                             }
                         } else {
-                            // If ((rev is newer and size is changed) or there is no local file), get from remote.
-                            // TODO Should it just sync a file, then it will be decided operation on its metadata call?
-                            int r = compareMetadata(job, item, itemLocalPath);
-                            qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "sync children file remote path" << item.property("absolutePath").toString() << "hash" << item.property("hash").toString() << "local path" << itemLocalPath << "hash" << childItem.hash << "compare result" << r;
-                            if (r < 0) {
-                                fileGet(getClientType(job.type), job.uid, item.property("absolutePath").toString(), item.property("size").toInt32(), itemLocalPath, -1);
-                            } else if (r > 0) {
-                                filePut(getClientType(job.type), job.uid, itemLocalPath, item.property("parentPath").toString(), item.property("name").toString(), -1);
+                            // Check if it's cloud format.
+                            if (item.property("isCloudOnly").isValid() && item.property("isCloudOnly").toBool()) {
+                                qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "suppress sync children file remote path" << item.property("absolutePath").toString() << "mimeType" << item.property("mimeType").toString();
+                                emit logRequestSignal(nonce,
+                                                      "warn",
+                                                      getCloudName(job.type) + " " + tr("Metadata"),
+                                                      tr("%1 is cloud document format.\nIt can't be downloaded.").arg(item.property("name").toString()),
+                                                      2000);
                             } else {
-                                addItem(getClientType(job.type), job.uid, itemLocalPath, item.property("absolutePath").toString(), item.property("hash").toString());
+                                // If ((rev is newer and size is changed) or there is no local file), get from remote.
+                                // TODO Should it just sync a file, then it will be decided operation on its metadata call?
+                                int r = compareMetadata(job, item, itemLocalPath);
+                                qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "sync children file remote path" << item.property("absolutePath").toString() << "hash" << item.property("hash").toString() << "local path" << itemLocalPath << "hash" << childItem.hash << "compare result" << r;
+                                if (r < 0) {
+                                    fileGet(getClientType(job.type), job.uid, item.property("absolutePath").toString(), item.property("size").toInt32(), itemLocalPath, -1);
+                                } else if (r > 0) {
+                                    filePut(getClientType(job.type), job.uid, itemLocalPath, item.property("parentPath").toString(), item.property("name").toString(), -1);
+                                } else {
+                                    addItem(getClientType(job.type), job.uid, itemLocalPath, item.property("absolutePath").toString(), item.property("hash").toString());
+                                }
                             }
                         }
 
@@ -3197,15 +3208,25 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
                 qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "remotePathList" << remotePathList;
                 syncFromLocal(getClientType(job.type), job.uid, job.localFilePath, jsonObj.property("parentPath").toString(), job.modelIndex, job.forcePut, remotePathList);
             } else { // Sync file.
-                // If ((rev is newer and size is changed) or there is no local file), get from remote.
-                int r = compareMetadata(job, jsonObj, job.localFilePath);
-                qDebug() << "CloudDriveModel::metadataReplyFilter file" << getCloudName(job.type) << nonce << "sync file remote path" << jsonObj.property("absolutePath").toString() << "hash" << jsonObj.property("hash").toString() << "local path" << job.localFilePath << "hash" + parentItem.hash << "forcePut" << job.forcePut << "forceGet" << job.forceGet << "compare result" << r;
-                if (r < 0) {
-                    fileGet(getClientType(job.type), job.uid, jsonObj.property("absolutePath").toString(), jsonObj.property("size").toInt32(), job.localFilePath, job.modelIndex);
-                } else if (r > 0) {
-                    filePut(getClientType(job.type), job.uid, job.localFilePath, jsonObj.property("parentPath").toString(), jsonObj.property("name").toString(), job.modelIndex);
+                // Check if it's cloud format.
+                if (jsonObj.property("isCloudOnly").isValid() && jsonObj.property("isCloudOnly").toBool()) {
+                    qDebug() << "CloudDriveModel::metadataReplyFilter file" << getCloudName(job.type) << nonce << "suppress sync file remote path" << jsonObj.property("absolutePath").toString() << "mimeType" << jsonObj.property("mimeType").toString();
+                    emit logRequestSignal(nonce,
+                                          "warn",
+                                          getCloudName(job.type) + " " + tr("Metadata"),
+                                          tr("%1 is cloud document format.\nIt can't be downloaded.").arg(jsonObj.property("name").toString()),
+                                          2000);
                 } else {
-                    addItem(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, jsonObj.property("hash").toString());
+                    // If ((rev is newer and size is changed) or there is no local file), get from remote.
+                    int r = compareMetadata(job, jsonObj, job.localFilePath);
+                    qDebug() << "CloudDriveModel::metadataReplyFilter file" << getCloudName(job.type) << nonce << "sync file remote path" << jsonObj.property("absolutePath").toString() << "hash" << jsonObj.property("hash").toString() << "local path" << job.localFilePath << "hash" + parentItem.hash << "forcePut" << job.forcePut << "forceGet" << job.forceGet << "compare result" << r;
+                    if (r < 0) {
+                        fileGet(getClientType(job.type), job.uid, jsonObj.property("absolutePath").toString(), jsonObj.property("size").toInt32(), job.localFilePath, job.modelIndex);
+                    } else if (r > 0) {
+                        filePut(getClientType(job.type), job.uid, job.localFilePath, jsonObj.property("parentPath").toString(), jsonObj.property("name").toString(), job.modelIndex);
+                    } else {
+                        addItem(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, jsonObj.property("hash").toString());
+                    }
                 }
             }
         }

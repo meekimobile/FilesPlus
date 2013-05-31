@@ -115,6 +115,8 @@ signals:
 
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
+
+    void logRequestSignal(QString nonce, QString logType, QString titleText, QString message, int autoCloseInterval);
 public slots:
 
 protected:

@@ -315,7 +315,7 @@ signals:
     void refreshItemAfterFileGetSignal(QString nonce, QString localPath);
     void moveToTrashRequestSignal(QString nonce, QString localPath);
     void cacheImageFinished(QString absoluteFilePath, int err, QString errMsg, QString caller);
-    void logRequestSignal(QString nonce, QString logType, QString titleText, QString message, bool autoCloseInterval = 2000);
+    void logRequestSignal(QString nonce, QString logType, QString titleText, QString message, int autoCloseInterval);
 
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
