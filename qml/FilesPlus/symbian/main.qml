@@ -87,6 +87,8 @@ PageStackWindow {
                 return qsTr("Move");
             case FolderSizeItemListModel.DeleteFile:
                 return qsTr("Delete");
+            case FolderSizeItemListModel.TrashFile:
+                return qsTr("Trash");
             }
         }
 
@@ -315,7 +317,6 @@ PageStackWindow {
                     if (paths.length > 1) {
 //                        console.debug("fsModel onCopyFinished updateItems paths[1] " + paths[1]);
                         cloudDriveModel.updateItems(paths[1], cloudDriveModel.dirtyHash);
-//                        cloudDriveModel.syncItem(paths[1]); // To be sync by syncDirtyItems()
                     }
                 }
             }
@@ -471,6 +472,36 @@ PageStackWindow {
                 var p = findPage("drivePage");
                 if (p) {
                     p.updateLogicalDriveSlot(fsModel.getTrashPath(), trashAvailableSize, trashMaxSize);
+                }
+            }
+        }
+
+        onTrashFinished: {
+            console.debug("fsModel onTrashFinished " + fileAction + " sourcePath " + sourcePath);
+
+            // Show message if error.
+            if (err != 0) {
+                logError(getActionName(fileAction) + " " + qsTr("error"), msg);
+
+                // TODO stop queued jobs
+                fsModel.cancelQueuedJobs();
+            }
+
+            // Delete file from clouds.
+            // TODO Make it configurable.
+            if (err == 0) {
+                if (cloudDriveModel.isConnected(sourcePath)) {
+                    var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
+                    for (var i=0; i<json.length; i++) {
+                        cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path);
+                    }
+
+                    // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
+                    var paths = fsModel.getPathToRoot(sourcePath);
+                    for (var i=1; i<paths.length; i++) {
+//                        console.debug("fsModel onTrashFinished updateItems paths[" + i + "] " + paths[i]);
+                        cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
+                    }
                 }
             }
         }

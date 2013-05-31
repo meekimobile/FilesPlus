@@ -221,8 +221,7 @@ public:
     // Scheduler.
     Q_INVOKABLE int updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp);
     Q_INVOKABLE QString getItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
-    void loadScheduledItems(QString cronValue);
-    void syncScheduledItems();
+    void dirtyScheduledItems(QString cronValue);
     void syncDirtyItems();
 
     // Delta.

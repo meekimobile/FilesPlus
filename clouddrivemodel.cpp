@@ -1289,7 +1289,7 @@ bool CloudDriveModel::isDirtyBeforeSync(CloudDriveModel::ClientTypes type)
 void CloudDriveModel::initScheduler()
 {
     connect(&m_schedulerTimer, SIGNAL(timeout()), this, SLOT(schedulerTimeoutFilter()) );
-    m_schedulerTimer.setInterval(60000);
+    m_schedulerTimer.setInterval(m_settings.value("CloudDriveModel.schedulerTimer.interval", 60000).toInt());
     m_schedulerTimer.start();
 }
 
@@ -1661,57 +1661,37 @@ QString CloudDriveModel::getItemCronExp(CloudDriveModel::ClientTypes type, QStri
     return cronExp;
 }
 
-void CloudDriveModel::loadScheduledItems(QString cronValue)
+void CloudDriveModel::dirtyScheduledItems(QString cronValue)
 {
     // Match each item in next minute. Cache matched items for next firing.
     QString cronExp;
-    CloudDriveItem item;
+    int type;
+    QString uid;
+    QString localPath;
     QSqlQuery ps(m_db);
     ps.prepare("SELECT * FROM cloud_drive_item WHERE cron_exp <> ''");
     if (ps.exec()) {
-        QSqlRecord rec = ps.record();
         while (ps.next()) {
             // Process pending events.
             QApplication::processEvents();
 
             if (ps.isValid()) {
-                item.type = ps.value(rec.indexOf("type")).toInt();
-                item.uid = ps.value(rec.indexOf("uid")).toString();
-                item.localPath = ps.value(rec.indexOf("local_path")).toString();
-                item.remotePath = ps.value(rec.indexOf("remote_path")).toString();
-                item.hash = ps.value(rec.indexOf("hash")).toString();
-                item.lastModified = ps.value(rec.indexOf("last_modified")).toDateTime();
-
-                cronExp = ps.value(rec.indexOf("cron_exp")).toString();
-                // TODO Match cronExp with cronValue. Ex. cronValue 0 8 12 10 5 <-- 8:00 on 12-Oct Friday
+                type = ps.value(ps.record().indexOf("type")).toInt();
+                uid = ps.value(ps.record().indexOf("uid")).toString();
+                localPath = ps.value(ps.record().indexOf("local_path")).toString();
+                cronExp = ps.value(ps.record().indexOf("cron_exp")).toString();
+                // Match cronExp with cronValue. Ex. cronValue 0 8 12 10 5 <-- 8:00 on 12-Oct Friday
                 if (matchCronExp(cronExp, cronValue)) {
-                    qDebug() << "CloudDriveModel::loadScheduledItems schedule sync item" << item;
-                    m_scheduledItems->enqueue(item);
+                    qDebug() << "CloudDriveModel::dirtyScheduledItems schedule sync item" << type << getCloudName(type) << uid << localPath;
+                    updateItem(getClientType(type), uid, localPath, DirtyHash);
                 } else {
-//                    qDebug() << "CloudDriveModel::loadScheduledItems discard item" << item;
+//                    qDebug() << "CloudDriveModel::dirtyScheduledItems discard item" << type << getCloudName(type) << uid << localPath;
                 }
             } else {
-                qDebug() << "CloudDriveModel::loadScheduledItems record position is invalid. ps.lastError()" << ps.lastError();
+                qDebug() << "CloudDriveModel::dirtyScheduledItems record position is invalid. ps.lastError()" << ps.lastError();
                 break;
             }
         }
-    }
-}
-
-void CloudDriveModel::syncScheduledItems()
-{
-    while (!m_scheduledItems->isEmpty()) {
-        // Process pending events.
-        QApplication::processEvents();
-
-        CloudDriveItem item = m_scheduledItems->dequeue();
-        qDebug() << "CloudDriveModel::syncScheduledItems dequeue and sync item" << item;
-
-        // Check if it's required to dirty before syncing.
-        if (isDirtyBeforeSync(getClientType(item.type))) {
-            updateItem(getClientType(item.type), item.uid, item.localPath, DirtyHash);
-        }
-        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
     }
 }
 
@@ -1721,18 +1701,30 @@ void CloudDriveModel::syncDirtyItems()
         return;
     }
 
+    CloudDriveItem lastItem;
     QSqlQuery ps(m_db);
-    ps.prepare("SELECT * FROM cloud_drive_item WHERE hash = :hash");
+    ps.prepare("SELECT * FROM cloud_drive_item WHERE hash = :hash ORDER BY type, uid, local_path;");
     ps.bindValue(":hash", DirtyHash);
     foreach (CloudDriveItem item, getItemListFromPS(ps)) {
         // Process pending events.
         QApplication::processEvents();
 
-        qDebug() << "CloudDriveModel::syncDirtyItems" << item;
+        qDebug() << "CloudDriveModel::syncDirtyItems item" << item;
         if (!cleanItem(item)) {
+            // Suppress sync if any items' parent is in queued jobs.
+            if (item.type == lastItem.type
+                    && item.uid == lastItem.uid
+                    && item.localPath.startsWith(lastItem.localPath)
+                    && lastItem.localPath != "") {
+                qDebug() << "CloudDriveModel::syncDirtyItems suppress item" << item << "as its parent already in queue.";
+                continue;
+            }
+
             // Sync dirty item.
             syncItem(getClientType(item.type), item.uid, item.localPath);
         }
+
+        lastItem = item;
     }
 }
 
@@ -3920,29 +3912,15 @@ void CloudDriveModel::schedulerTimeoutFilter()
 
 //    qDebug() << "CloudDriveModel::schedulerTimeoutFilter" << QDateTime::currentDateTime().toString("d/M/yyyy hh:mm:ss.zzz");
 
+    // Set dirty to scheduled items.
     QString cronValue = QDateTime::currentDateTime().toString("m h d M ddd");
-
-    // Sync scheduled items.
-    loadScheduledItems(cronValue);
-    if (!m_scheduledItems->isEmpty()) {
-        suspendNextJob();
-        syncScheduledItems();
-        resumeNextJob();
-    }
+    dirtyScheduledItems(cronValue);
 
     // Sync dirty items.
-    if (runningJobCount <= 0) {
-        syncDirtyItems();
-    } else {
-        qDebug() << "CloudDriveModel::schedulerTimeoutFilter there is running jobs, skip sync dirty items. runningJobCount" << runningJobCount;
-    }
+    syncDirtyItems();
 
     // Request delta if there is no running job.
-    if (runningJobCount <= 0) {
-        scheduleDeltaJobs(cronValue);
-    } else {
-        qDebug() << "CloudDriveModel::schedulerTimeoutFilter there is running jobs, skip delta request. runningJobCount" << runningJobCount;
-    }
+    scheduleDeltaJobs(cronValue);
 
     emit schedulerTimeoutSignal();
 }
