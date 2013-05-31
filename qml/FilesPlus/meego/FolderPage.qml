@@ -1437,8 +1437,10 @@ Page {
             case CloudDriveModel.Metadata:
                 // TODO Check connection for specified type, uid, localPath.
                 if (cloudDriveModel.isConnected(type, uid, localPath) || suppressBrowsing) {
-                    // If already connected, dirty and sync it right away.
-                    cloudDriveModel.updateItem(type, uid, localPath, cloudDriveModel.dirtyHash);
+                    // Check if it's required to dirty before syncing.
+                    if (cloudDriveModel.isDirtyBeforeSync(type)) {
+                        cloudDriveModel.updateItem(type, uid, localPath, cloudDriveModel.dirtyHash);
+                    }
                     cloudDriveModel.metadata(type, uid, localPath, remotePath, modelIndex);
                 } else {
                     // If it's not connected, show cloudDrivePathDialog.

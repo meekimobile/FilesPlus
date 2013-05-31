@@ -295,6 +295,12 @@ Page {
             type: "switch"
             group: "Developer"
         }
+        ListElement {
+            name: "GCDClient.dirtyBeforeSync.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
     }
 
     GridView {
@@ -348,6 +354,7 @@ Page {
         else if (name == "CloudDriveModel.syncDirtyItems.enabled") return qsTr("Sync dirty items automatically") + appInfo.emptyStr;
         else if (name == "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled") return qsTr("Show hidden/system files") + appInfo.emptyStr;
         else if (name == "FolderSizeItemListModel.deleteFile.use.trash.enabled") return qsTr("Delete by moving to trash") + appInfo.emptyStr;
+        else if (name == "GCDClient.dirtyBeforeSync.enabled") return qsTr("Dirty before sync (GoogleDrive)") + appInfo.emptyStr;
         else return qsTr(name) + appInfo.emptyStr;
     }
 

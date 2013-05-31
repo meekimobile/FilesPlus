@@ -1280,6 +1280,12 @@ bool CloudDriveModel::isUnicodeSupported(CloudDriveModel::ClientTypes type)
     return getCloudClient(type)->isUnicodeSupported();
 }
 
+bool CloudDriveModel::isDirtyBeforeSync(CloudDriveModel::ClientTypes type)
+{
+    QString clientObjectName = getCloudClient(type)->objectName();
+    return m_settings.value(QString("%1.dirtyBeforeSync.enabled").arg(clientObjectName), false).toBool();
+}
+
 void CloudDriveModel::initScheduler()
 {
     connect(&m_schedulerTimer, SIGNAL(timeout()), this, SLOT(schedulerTimeoutFilter()) );
@@ -1665,6 +1671,9 @@ void CloudDriveModel::loadScheduledItems(QString cronValue)
     if (ps.exec()) {
         QSqlRecord rec = ps.record();
         while (ps.next()) {
+            // Process pending events.
+            QApplication::processEvents();
+
             if (ps.isValid()) {
                 item.type = ps.value(rec.indexOf("type")).toInt();
                 item.uid = ps.value(rec.indexOf("uid")).toString();
@@ -1692,8 +1701,16 @@ void CloudDriveModel::loadScheduledItems(QString cronValue)
 void CloudDriveModel::syncScheduledItems()
 {
     while (!m_scheduledItems->isEmpty()) {
+        // Process pending events.
+        QApplication::processEvents();
+
         CloudDriveItem item = m_scheduledItems->dequeue();
         qDebug() << "CloudDriveModel::syncScheduledItems dequeue and sync item" << item;
+
+        // Check if it's required to dirty before syncing.
+        if (isDirtyBeforeSync(getClientType(item.type))) {
+            updateItem(getClientType(item.type), item.uid, item.localPath, DirtyHash);
+        }
         metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
     }
 }
@@ -1708,6 +1725,9 @@ void CloudDriveModel::syncDirtyItems()
     ps.prepare("SELECT * FROM cloud_drive_item WHERE hash = :hash");
     ps.bindValue(":hash", DirtyHash);
     foreach (CloudDriveItem item, getItemListFromPS(ps)) {
+        // Process pending events.
+        QApplication::processEvents();
+
         qDebug() << "CloudDriveModel::syncDirtyItems" << item;
         if (!cleanItem(item)) {
             // Sync dirty item.
@@ -1730,6 +1750,9 @@ void CloudDriveModel::scheduleDeltaJobs(QString cronValue)
 {
     QScriptEngine engine;
     foreach (QString uidJson, getStoredUidList()) {
+        // Process pending events.
+        QApplication::processEvents();
+
         QScriptValue sc = engine.evaluate("(" + uidJson + ")");
         QString typeText = sc.property("type").toString();
         QString uid = sc.property("uid").toString();
@@ -3642,6 +3665,9 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
         // TODO Suppress duplicated items to avoid overload job queues.
         if (parsedObj.property("children").isValid()) {
             for (int i = 0; i < parsedObj.property("children").toVariant().toList().length(); i++) {
+                // Process pending events.
+                QApplication::processEvents();
+
                 QScriptValue childObj = parsedObj.property("children").property(i);
                 bool isDeleted = childObj.property("isDeleted").toBool();
                 QString remoteFilePath = childObj.property("absolutePath").toString();

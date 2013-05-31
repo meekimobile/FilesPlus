@@ -249,6 +249,9 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     if (!m_settings->contains("FolderSizeModelThread.getDirContent.showHiddenSystem.enabled")) {
         m_settings->setValue("FolderSizeModelThread.getDirContent.showHiddenSystem.enabled", QVariant(true));
     }
+    if (!m_settings->contains("GCDClient.dirtyBeforeSync.enabled")) {
+        m_settings->setValue("GCDClient.dirtyBeforeSync.enabled", QVariant(true));
+    }
     m_settings->sync();
 
     // Default database initialization.
