@@ -37,6 +37,7 @@ Rectangle {
     function open() {
         lastFindIndex = -1;
         nameFilterInput.focus = true;
+        nextButton.checked = true;
         visible = true;
         opened();
     }
