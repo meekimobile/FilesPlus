@@ -2020,9 +2020,10 @@ void CloudDriveModel::syncItems()
 
     // TODO Refactor to support others cloud storage.
     syncItems(Dropbox);
-//    syncItems(GoogleDrive);
+    syncItems(GoogleDrive);
     syncItems(SkyDrive);
     syncItems(Ftp);
+    syncItems(WebDAV);
 
     // Resume proceedNextJob().
     resumeNextJob();
@@ -5018,7 +5019,7 @@ int CloudDriveModel::compareMetadata(CloudDriveJob job, QScriptValue &jsonObj, Q
                       << "compare(remote < local)" << (jsonObjLastModified < localFileInfo.lastModified())
                       << "forcePut" << job.forcePut << "forceGet" << job.forceGet;
         // If (hash is different), get from remote.
-        if (job.forceGet || (jsonObj.property("hash").toString() > item.hash)) {
+        if (job.forceGet || (jsonObj.property("hash").toString() != item.hash)) {
             // Proceed getting metadata.
             return -1;
         } else {

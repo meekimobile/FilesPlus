@@ -232,11 +232,11 @@ public:
     Q_INVOKABLE QString getDeltaCronExp(CloudDriveModel::ClientTypes type, QString uid);
 
     // Sync items.
-    Q_INVOKABLE void syncItems();
-    Q_INVOKABLE void syncItems(CloudDriveModel::ClientTypes type);
-    Q_INVOKABLE void syncItem(const QString localFilePath);
-    Q_INVOKABLE void syncItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
-    Q_INVOKABLE bool syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, QString newHash = "", bool forcePut = false, bool forceGet = false);
+    Q_INVOKABLE void syncItems(); // NOTE Used by Settings
+    Q_INVOKABLE void syncItems(CloudDriveModel::ClientTypes type); // NOTE Used by syncItems()
+    Q_INVOKABLE void syncItem(const QString localFilePath); // NOTE Used by main.qml, FolderPage.qml
+    Q_INVOKABLE void syncItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath); // NOTE Used by syncDirtyItems()
+    Q_INVOKABLE bool syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, QString newHash = "", bool forcePut = false, bool forceGet = false); // NOTE Used by reply filter slots.
 
     // Migrate DAT to DB.
     Q_INVOKABLE int getCloudDriveItemsCount();
