@@ -1125,15 +1125,11 @@ void FolderSizeItemListModel::copyFinishedFilter(int fileAction, QString sourceP
             int i = getIndexOnCurrentDir(sourcePath);
 
             if (i >= 0) {
-                beginRemoveRows(createIndex(0,0), i, i);
-
-                // Remote item from itemList.
-                removeItem(i);
+                // Remove item from model.
+                removeRow(i);
 
                 // Reset m_indexOnCurrentDirHash.
                 m_indexOnCurrentDirHash->clear();
-
-                endRemoveRows();
             }
         }
 
