@@ -1785,9 +1785,12 @@ Page {
                 var cloudItems = Utility.createJsonObj(cloudDriveModel.getItemListJson(selectedItem.absolutePath));
                 for (var i = 0; i < cloudItems.length; i++) {
                     var cloudItem = cloudItems[i];
-                    var uidJson = Utility.createJsonObj(cloudDriveModel.getStoredUid(cloudItem.type, cloudItem.uid));
-                    var modelItem = { type: cloudItem.type, uid: cloudItem.uid, email: uidJson.email, absolutePath: (cloudItem.remote_path ? cloudItem.remote_path : qsTr("Not available")) };
-                    cloudItemModel.append(modelItem);
+                    var tokenPairJsonText = cloudDriveModel.getStoredUid(cloudItem.type, cloudItem.uid);
+                    if (tokenPairJsonText != "") {
+                        var uidJson = Utility.createJsonObj(tokenPairJsonText);
+                        var modelItem = { type: cloudItem.type, uid: cloudItem.uid, email: uidJson.email, absolutePath: (cloudItem.remote_path ? cloudItem.remote_path : qsTr("Not available")) };
+                        cloudItemModel.append(modelItem);
+                    }
                 }
             }
         }

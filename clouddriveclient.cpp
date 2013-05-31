@@ -36,6 +36,10 @@ QStringList CloudDriveClient::getStoredUidList()
 
 QString CloudDriveClient::getStoredUid(QString uid)
 {
+    if (!accessTokenPairMap.contains(uid)) {
+        return "";
+    }
+
     TokenPair t = accessTokenPairMap[uid];
 
     QString jsonText = "{ ";
