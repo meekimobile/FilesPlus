@@ -53,6 +53,17 @@ QString CloudDriveClient::getStoredUid(QString uid)
     return jsonText;
 }
 
+QString CloudDriveClient::getEmail(QString uid)
+{
+    if (!accessTokenPairMap.contains(uid)) {
+        return "";
+    }
+
+    TokenPair t = accessTokenPairMap[uid];
+
+    return t.email;
+}
+
 int CloudDriveClient::removeUid(QString uid)
 {
     qDebug() << QString(objectName()) << "::removeUid uid" << uid;

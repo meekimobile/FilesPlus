@@ -19,6 +19,7 @@ public:
     bool isAuthorized();
     QStringList getStoredUidList();
     QString getStoredUid(QString uid);
+    QString getEmail(QString uid);
     int removeUid(QString uid);
 
     virtual QDateTime parseReplyDateString(QString dateString);

@@ -1959,6 +1959,11 @@ QString CloudDriveModel::getStoredUid(CloudDriveModel::ClientTypes type, QString
     return getCloudClient(type)->getStoredUid(uid);
 }
 
+QString CloudDriveModel::getEmail(CloudDriveModel::ClientTypes type, QString uid)
+{
+    return getCloudClient(type)->getEmail(uid);
+}
+
 int CloudDriveModel::removeUid(CloudDriveModel::ClientTypes type, QString uid)
 {
     return getCloudClient(type)->removeUid(uid);
