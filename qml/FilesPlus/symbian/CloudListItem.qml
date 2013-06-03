@@ -21,6 +21,8 @@ ListItem {
     property alias syncIconSource: syncIcon.source
     property alias syncIconVisible: syncIcon.visible
     property bool inverted: window.platformInverted
+    property bool omitShowingZeroSizeDir: false
+
 
     signal listItemIconError()
 
@@ -120,7 +122,7 @@ ListItem {
                 }
                 Text {
                     id: sizeText
-                    text: Utility.formatFileSize(size, 1)
+                    text: (omitShowingZeroSizeDir && size == 0) ? "" : Utility.formatFileSize(size, 1)
                     height: parent.height
                     font.pointSize: 6
                     horizontalAlignment: Text.AlignRight

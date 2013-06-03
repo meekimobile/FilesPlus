@@ -759,6 +759,7 @@ Page {
             syncIconSource: (isRunning) ? "cloud_wait.svg" : "cloud.svg"
             actionIconSource: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath, cloudDriveModel.getCloudName(selectedCloudType), selectedUid) : ""
             listItemIconSource: appInfo.emptySetting+listItem.getIconSource(timestamp)
+            omitShowingZeroSizeDir: true
 
             // Override to support cloud items.
             function getIconSource(timestamp) {
