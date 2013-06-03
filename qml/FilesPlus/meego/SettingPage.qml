@@ -140,10 +140,40 @@ Page {
             group: "CloudDrive"
         }
         ListElement {
-            name: "Spacer"
+            name: "CloudDriveModel.metadata.root.connection.enabled"
             title: ""
-            type: "spacer"
-            group: "Spacer"
+            type: "switch"
+            group: "CloudDrive"
+        }
+        ListElement {
+            name: "CloudDriveModel.syncDirtyItems.enabled"
+            title: ""
+            type: "switch"
+            group: "CloudDrive"
+        }
+        ListElement {
+            name: "GCDClient.dirtyBeforeSync.enabled"
+            title: ""
+            type: "switch"
+            group: "CloudDrive"
+        }
+        ListElement {
+            name: "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnCharging.enabled"
+            title: ""
+            type: "switch"
+            group: "CloudDrive"
+        }
+        ListElement {
+            name: "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnBatteryOk.enabled"
+            title: ""
+            type: "switch"
+            group: "CloudDrive"
+        }
+        ListElement {
+            name: "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnWlan.enabled"
+            title: ""
+            type: "switch"
+            group: "CloudDrive"
         }
         ListElement {
             name: "FolderPie"
@@ -242,7 +272,19 @@ Page {
             group: "Developer"
         }
         ListElement {
+            name: "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
+        ListElement {
             name: "drivepage.trash.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
+        ListElement {
+            name: "FolderSizeItemListModel.deleteFile.use.trash.enabled"
             title: ""
             type: "switch"
             group: "Developer"
@@ -267,36 +309,6 @@ Page {
         }
         ListElement {
             name: "RemoteImageProvider.CacheImageWorker.enabled"
-            title: ""
-            type: "switch"
-            group: "Developer"
-        }
-        ListElement {
-            name: "CloudDriveModel.metadata.root.connection.enabled"
-            title: ""
-            type: "switch"
-            group: "Developer"
-        }
-        ListElement {
-            name: "CloudDriveModel.syncDirtyItems.enabled"
-            title: ""
-            type: "switch"
-            group: "Developer"
-        }
-        ListElement {
-            name: "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled"
-            title: ""
-            type: "switch"
-            group: "Developer"
-        }
-        ListElement {
-            name: "FolderSizeItemListModel.deleteFile.use.trash.enabled"
-            title: ""
-            type: "switch"
-            group: "Developer"
-        }
-        ListElement {
-            name: "GCDClient.dirtyBeforeSync.enabled"
             title: ""
             type: "switch"
             group: "Developer"
@@ -328,6 +340,12 @@ Page {
         else if (name == "showCloudDriveAccounts") return qsTr("Show accounts") + appInfo.emptyStr;
         else if (name == "sync.after.refresh") return qsTr("Auto-sync after refresh") + appInfo.emptyStr;
         else if (name == "drivepage.clouddrive.enabled") return qsTr("Show cloud storage on drive page") + appInfo.emptyStr;
+        else if (name == "CloudDriveModel.metadata.root.connection.enabled") return qsTr("Sync to cloud storage root") + appInfo.emptyStr;
+        else if (name == "CloudDriveModel.syncDirtyItems.enabled") return qsTr("Sync dirty items automatically") + appInfo.emptyStr;
+        else if (name == "GCDClient.dirtyBeforeSync.enabled") return qsTr("Dirty before sync (GoogleDrive)") + appInfo.emptyStr;
+        else if (name == "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnCharging.enabled") return qsTr("Schedule sync only on charging") + appInfo.emptyStr;
+        else if (name == "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnBatteryOk.enabled") return qsTr("Schedule sync only if battery is OK (>40%)") + appInfo.emptyStr;
+        else if (name == "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnWlan.enabled") return qsTr("Schedule sync only on WiFi") + appInfo.emptyStr;
         else if (name == "FolderPie.enabled") return qsTr("FolderPie feature") + appInfo.emptyStr;
         else if (name == "resetCache") return qsTr("Reset current folder cache") + appInfo.emptyStr;
         else if (name == "Theme.inverted") return qsTr("Theme") + appInfo.emptyStr;
@@ -350,11 +368,8 @@ Page {
         else if (name == "LocalFileImageProvider.cache.enabled") return qsTr("Cache local images") + appInfo.emptyStr;
         else if (name == "LocalFileImageProvider.CacheImageWorker.enabled") return qsTr("Queue local image caching") + appInfo.emptyStr;
         else if (name == "RemoteImageProvider.CacheImageWorker.enabled") return qsTr("Queue cloud image caching") + appInfo.emptyStr;
-        else if (name == "CloudDriveModel.metadata.root.connection.enabled") return qsTr("Sync to cloud storage root") + appInfo.emptyStr;
-        else if (name == "CloudDriveModel.syncDirtyItems.enabled") return qsTr("Sync dirty items automatically") + appInfo.emptyStr;
         else if (name == "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled") return qsTr("Show hidden/system files") + appInfo.emptyStr;
         else if (name == "FolderSizeItemListModel.deleteFile.use.trash.enabled") return qsTr("Delete by moving to trash") + appInfo.emptyStr;
-        else if (name == "GCDClient.dirtyBeforeSync.enabled") return qsTr("Dirty before sync (GoogleDrive)") + appInfo.emptyStr;
         else return qsTr(name) + appInfo.emptyStr;
     }
 

@@ -15,6 +15,8 @@
 #include <QApplication>
 #include <QtSql>
 #include <QSettings>
+#include <QSystemNetworkInfo>
+#include <QSystemBatteryInfo>
 #include "clouddriveitem.h"
 #include "clouddrivejob.h"
 #include "clouddrivemodelthread.h"
@@ -26,6 +28,8 @@
 #include "ftpclient.h"
 #include "webdavclient.h"
 #include "cacheimageworker.h"
+
+using namespace QtMobility;
 
 class CloudDriveModel : public QAbstractListModel
 {
@@ -401,6 +405,10 @@ private:
     QHash<QString, QThread*> *m_threadHash;
     QThreadPool m_browseThreadPool;
     QThreadPool m_cacheImageThreadPool;
+
+    // System information.
+    QSystemNetworkInfo m_networkInfo;
+    QSystemBatteryInfo m_batteryInfo;
 
     // Job queue processor.
     QTimer m_jobQueueTimer;

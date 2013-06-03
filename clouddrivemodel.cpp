@@ -3910,6 +3910,25 @@ void CloudDriveModel::schedulerTimeoutFilter()
         return;
     }
 
+    if (m_settings.value("CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnCharging.enabled", false).toBool()
+            && m_batteryInfo.chargingState() != QSystemBatteryInfo::Charging) {
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter suspended m_batteryInfo.batteryStatus()" << m_batteryInfo.batteryStatus() << "m_batteryInfo.remainingCapacityPercent()" << m_batteryInfo.remainingCapacityPercent();
+        return;
+    }
+
+    if (m_settings.value("CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnBatteryOk.enabled", false).toBool()
+            && m_batteryInfo.batteryStatus() < QSystemBatteryInfo::BatteryOk) {
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter suspended m_batteryInfo.batteryStatus()" << m_batteryInfo.batteryStatus() << "m_batteryInfo.remainingCapacityPercent()" << m_batteryInfo.remainingCapacityPercent();
+        return;
+    }
+
+    if (m_settings.value("CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnWlan.enabled", false).toBool()
+            && m_networkInfo.currentMode() != QSystemNetworkInfo::WlanMode) {
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter suspended m_networkInfo.currentMode()" << m_networkInfo.currentMode();
+        return;
+    }
+
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_networkInfo.currentMode()" << m_networkInfo.currentMode() << "m_networkInfo.cellDataTechnology()" << m_networkInfo.cellDataTechnology() << "m_networkInfo.networkStatus(currentMode)" << m_networkInfo.networkStatus(m_networkInfo.currentMode());
 //    qDebug() << "CloudDriveModel::schedulerTimeoutFilter" << QDateTime::currentDateTime().toString("d/M/yyyy hh:mm:ss.zzz");
 
     // Set dirty to scheduled items.
