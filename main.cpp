@@ -302,13 +302,14 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     // ISSUE: If enable code below, causes unable to remove translator and switch back to english. Requires English translation to make it works.
     // Install default app translator.
     QTranslator myappTranslator;
-    bool res = false;
-//    res = myappTranslator.load(m_settings->applicationName() + "_" + localeName, ":/"); // Load qm file from qrc.
+    QString i18nPath;
 #ifdef Q_OS_SYMBIAN
-    res = myappTranslator.load(m_settings->applicationName() + "_" + localeName, "i18n"); // Load qm file from application default path.
+    i18nPath = "i18n"; // Load qm file from application default path. Use ":/" if load from qrc.
 #elif defined(Q_WS_HARMATTAN)
-    res = myappTranslator.load(m_settings->applicationName() + "_" + localeName, QDir(app.data()->applicationDirPath()).absoluteFilePath("../i18n") ); // Load qm file from application binary path.
+    i18nPath = QDir(app.data()->applicationDirPath()).absoluteFilePath("../i18n"); // Load qm file from application binary path.
 #endif
+    qDebug() << "main i18nPath" << i18nPath << "exists" << QDir(i18nPath).exists();
+    bool res = myappTranslator.load(m_settings->applicationName() + "_" + localeName, i18nPath);
     if (res) {
         qDebug() << "main myappTranslation is loaded. isEmpty" << myappTranslator.isEmpty();
         app.data()->installTranslator(&myappTranslator);
