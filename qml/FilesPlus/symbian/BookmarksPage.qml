@@ -218,7 +218,7 @@ Page {
                         text: title
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
-                        font.pointSize: 8
+                        font.pointSize: 6
                         elide: Text.ElideRight
                         color: (!inverted) ? "white" : "black"
                     }
