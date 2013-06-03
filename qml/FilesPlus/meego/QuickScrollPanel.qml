@@ -13,7 +13,7 @@ Item {
     property alias scrollBarColor: quickScroll.color
     property alias indicatorWidth: quickScrollIndicator.width
     property alias indicatorColor: quickScrollIndicator.color
-    property int indicatorRightMargin: 5
+    property int indicatorRightMargin: 0
     property alias indicatorBarHeight: quickScrollIndicatorBar.height
     property alias indicatorBarTitle: quickScrollIndicatorBarTitle.text
     property int indicatorHeight: height * (height / listView.contentHeight)
@@ -22,7 +22,7 @@ Item {
     property alias indicatorBarTitleFontPixelSize: quickScrollIndicatorBarTitle.font.pixelSize
     property alias indicatorBarTitleColor: quickScrollIndicatorBarTitle.color
     property alias autoHideInterval: hideTimer.interval
-    property bool inverted: false
+    property bool inverted: !theme.inverted
 
     function calculateContentY(mouseY) {
         return Math.floor(Math.min(maxPosition, Math.max(0, mouseY)) / maxPosition * (listView.contentHeight - height));

@@ -1041,7 +1041,6 @@ Page {
                                : ( fsModel.sortFlag == FolderSizeItemListModel.SortByTime
                                   ? Qt.formatDateTime(fsModel.get(modelIndex).lastModified, "d MMM yyyy")
                                   : fsModel.get(modelIndex).name )
-            inverted: inverted
             scrollBarWidth: 80
             indicatorBarHeight: 80
             scrollBarColor: "grey"

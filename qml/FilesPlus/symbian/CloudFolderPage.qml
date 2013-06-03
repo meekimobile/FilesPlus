@@ -740,7 +740,6 @@ Page {
                                : ( sortByMenu.sortFlag == CloudDriveModel.SortByTime
                                   ? Qt.formatDateTime(cloudDriveModel.get(modelIndex).lastModified, "d MMM yyyy")
                                   : cloudDriveModel.get(modelIndex).name )
-            inverted: inverted
             scrollBarWidth: 70
             indicatorBarHeight: 70
             scrollBarColor: "grey"
