@@ -101,22 +101,31 @@ Page {
                 }
                 Column {
                     width: parent.width - cloudIcon.width
-                    spacing: 5
+                    anchors.verticalCenter: parent.verticalCenter
                     Text {
                         id: titleText
                         text: renameDialog.title
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
-                        font.pointSize: 18
+                        font.pointSize: 14
                         elide: Text.ElideMiddle
                         color: "white"
                     }
                     Text {
                         id: subtitleText
-                        text: (renameDialog.uid != "" ? ("(" + renameDialog.uid + ") ") : "") + renameDialog.path
+                        text: renameDialog.path
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
-                        font.pointSize: 16
+                        font.pointSize: 14
+                        elide: Text.ElideMiddle
+                        color: "grey"
+                    }
+                    Text {
+                        id: subtitle2Text
+                        text: (renameDialog.uid != "" ? (cloudDriveModel.getEmail(renameDialog.type, renameDialog.uid) + " (" + renameDialog.uid + ")") : "")
+                        width: parent.width
+                        verticalAlignment: Text.AlignVCenter
+                        font.pointSize: 14
                         elide: Text.ElideMiddle
                         color: "grey"
                     }
@@ -193,7 +202,6 @@ Page {
             id: listItem
             Row {
                 anchors.fill: parent
-                anchors.margins: 10
                 spacing: 5
 
                 Image {
@@ -207,22 +215,31 @@ Page {
                 }
                 Column {
                     width: parent.width - cloudIcon.width
-                    spacing: 5
+                    anchors.verticalCenter: parent.verticalCenter
                     Text {
                         id: titleText
                         text: title
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
-                        font.pointSize: 18
+                        font.pointSize: 14
                         elide: Text.ElideRight
                         color: (!inverted) ? "white" : "black"
                     }
                     Text {
                         id: subtitleText
-                        text: (uid != "" ? ("(" + uid + ") ") : "") + path
+                        text: path
                         width: parent.width
                         verticalAlignment: Text.AlignVCenter
-                        font.pointSize: 16
+                        font.pointSize: 14
+                        elide: Text.ElideRight
+                        color: "grey"
+                    }
+                    Text {
+                        id: subtitle2Text
+                        text: (uid != "" ? (cloudDriveModel.getEmail(type, uid) + " (" + uid + ")") : "")
+                        width: parent.width
+                        verticalAlignment: Text.AlignVCenter
+                        font.pointSize: 14
                         elide: Text.ElideRight
                         color: "grey"
                     }
