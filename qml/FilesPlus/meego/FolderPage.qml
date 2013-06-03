@@ -755,7 +755,7 @@ Page {
 
         property bool flipped: false
 
-        front: fsListView
+        front: fsGridView
         back: pieChartView
         onStateChanged: {
             fsModel.refreshItems();
@@ -838,6 +838,7 @@ Page {
 
     ListView {
         id: fsListView
+        visible: false
         x: 0
         y: 0
         width: parent.width
@@ -1049,6 +1050,31 @@ Page {
         }
     }
 
+    GridView {
+        id: fsGridView
+
+        property int lastContentY
+
+        x: 0
+        y: 0
+        anchors.top: parent.top
+        width: parent.width
+        height: parent.height - (nameFilterPanel.visible ? nameFilterPanel.height : 0)
+        cellWidth: 160
+        cellHeight: 160
+        highlightRangeMode: GridView.NoHighlightRange
+        highlightFollowsCurrentItem: true
+        highlightMoveDuration: 1
+        highlight: Rectangle {
+            gradient: highlightGradient
+        }
+        clip: true
+        focus: true
+        pressDelay: 200
+        model: fsModel
+        delegate: gridItemDelegate
+    }
+
     Gradient {
         id: highlightGradient
         GradientStop {
@@ -1101,6 +1127,59 @@ Page {
                 } else {
                     if (isDir) {
                         fsListView.focusLocalPath = "."; // Put dummy path to avoid focus on lastCenterIndex.
+                        changeDirSlot(name);
+                    } else {
+                        // If file is running, disable preview.
+                        if (isRunning) return;
+
+                        // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
+                        var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
+                        var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
+                        if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                            // TODO Populate ImageViewModel with mediaUrl = image://local/...
+                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
+                                           { model: fsModel, selectedFilePath: absolutePath });
+                        } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                            pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
+                                           { filePath: absolutePath, fileName: name });
+                        } else {
+                            Qt.openUrlExternally(fsModel.getUrl(absolutePath));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Component {
+        id: gridItemDelegate
+
+        CloudGridItem {
+            id: gridItem
+            width: fsGridView.cellWidth
+            height: fsGridView.cellHeight
+            gridItemIconBusyVisible: true
+
+            onPressAndHold: {
+                if (fsGridView.state != "mark") {
+                    fsGridView.currentIndex = index;
+                    popupToolPanel.selectedFilePath = absolutePath;
+                    popupToolPanel.selectedFileName = name;
+                    popupToolPanel.selectedFileIndex = index;
+                    popupToolPanel.isDir = isDir;
+                    popupToolPanel.pastePath = (isDir) ? absolutePath : currentPath.text;
+                    var panelX = x + mouse.x - fsGridView.contentX;
+                    var panelY = y + mouse.y - fsGridView.contentY + flipable1.y;
+                    popupToolPanel.open(panelX, panelY);
+                }
+            }
+
+            onClicked: {
+                if (fsGridView.state == "mark") {
+                    fsModel.setProperty(index, FolderSizeItemListModel.IsCheckedRole, !isChecked);
+                } else {
+                    if (isDir) {
+//                        fsGridView.focusLocalPath = "."; // Put dummy path to avoid focus on lastCenterIndex.
                         changeDirSlot(name);
                     } else {
                         // If file is running, disable preview.

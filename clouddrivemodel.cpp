@@ -1494,9 +1494,7 @@ void CloudDriveModel::removeItemWithChildren(CloudDriveModel::ClientTypes type, 
         deleteCount += deleteItemToDB(type, uid, item.localPath);
 
         // Remove cache for furthur refresh.
-        m_isConnectedCache->remove(item.localPath);
-        m_isDirtyCache->remove(item.localPath);
-        m_isSyncingCache->remove(item.localPath);
+        clearConnectedRemoteDirtyCache(item.localPath);
     }
 
     qDebug() << "CloudDriveModel::removeItemWithChildren removeCount" << removeCount << "deleteCount" << deleteCount;
