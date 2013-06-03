@@ -278,11 +278,29 @@ Page {
                 }
             }
         }
+
+        onDrivePressAndHold: {
+            if (index > -1) {
+                var logicalDrive = driveGridModel.get(index).logicalDrive;
+                if (logicalDrive == fsModel.getTrashPath()) {
+                    emptyTrashConfirmation.open();
+                }
+            }
+        }
     }
 
     TitlePanel {
         id: titlePanel
         text: appInfo.emptyStr+qsTr("Drives")
+    }
+
+    ConfirmDialog {
+        id: emptyTrashConfirmation
+        titleText: appInfo.emptyStr+qsTr("Trash");
+        contentText: appInfo.emptyStr+qsTr("Empty trash?")
+        onConfirm: {
+            fsModel.emptyTrash();
+        }
     }
 
     onStatusChanged: {

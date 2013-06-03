@@ -431,8 +431,8 @@ Premi &apos;OK&apos; per continuare.</translation>
         <translation>Cancella</translation>
     </message>
     <message>
-        <location line="+42"/>
-        <location filename="../qml/FilesPlus/symbian/BookmarksPage.qml" line="+42"/>
+        <location line="+43"/>
+        <location filename="../qml/FilesPlus/symbian/BookmarksPage.qml" line="+43"/>
         <source>Please input new name.</source>
         <translation>Inserisci il nuovo nome.</translation>
     </message>
@@ -736,7 +736,7 @@ Premi &apos;OK&apos; per continuare.</translation>
 <context>
     <name>CloudDriveModel</name>
     <message>
-        <location filename="../clouddrivemodel.cpp" line="+1148"/>
+        <location filename="../clouddrivemodel.cpp" line="+1153"/>
         <location line="+56"/>
         <source>Download</source>
         <translation>Download</translation>
@@ -872,26 +872,35 @@ Premi &apos;OK&apos; per continuare.</translation>
         <translation>Commit file caricato</translation>
     </message>
     <message>
-        <location line="+1532"/>
+        <location line="+1548"/>
         <source>Service is not implemented or host is not accessible.</source>
         <translation>Il servizio non è implementato o host non è accessibile.</translation>
     </message>
     <message>
         <location line="+400"/>
-        <location line="+109"/>
+        <location line="+41"/>
+        <location line="+36"/>
+        <location line="+52"/>
         <source>Metadata</source>
         <translation>Sincronizzare</translation>
     </message>
     <message>
-        <location line="-108"/>
-        <location line="+109"/>
+        <location line="-128"/>
+        <location line="+129"/>
         <source>%1 was removed remotely.
 Link will be removed.</source>
         <translation>%1 stato rimosso in remoto.
 Il link verrà rimosso.</translation>
     </message>
     <message>
-        <location line="+146"/>
+        <location line="-88"/>
+        <location line="+36"/>
+        <source>%1 is cloud document format.
+It can&apos;t be downloaded.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+208"/>
         <source>Error</source>
         <translation>Errore</translation>
     </message>
@@ -960,8 +969,8 @@ Il link verrà rimosso.</translation>
         <translation type="obsolete">Cancella</translation>
     </message>
     <message>
-        <location line="+128"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDrivePathDialog.qml" line="+126"/>
+        <location line="+135"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDrivePathDialog.qml" line="+133"/>
         <source>New folder name</source>
         <translation>Nuovo nome cartella</translation>
     </message>
@@ -1179,8 +1188,8 @@ Il link verrà rimosso.</translation>
         <translation type="obsolete">_Copia</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+1051"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+1055"/>
+        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+1063"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+1067"/>
         <source>New folder</source>
         <translation>Nuova Cartella</translation>
     </message>
@@ -1289,7 +1298,7 @@ Il link verrà rimosso.</translation>
 <context>
     <name>DriveGrid</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/DriveGrid.qml" line="+12"/>
+        <location filename="../qml/FilesPlus/meego/DriveGrid.qml" line="+13"/>
         <location filename="../qml/FilesPlus/symbian/DriveGrid.qml" line="+12"/>
         <source>No Drive</source>
         <translation>Nessun Drive</translation>
@@ -1358,14 +1367,12 @@ Il link verrà rimosso.</translation>
 <context>
     <name>DriveMenu</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/DriveMenu.qml" line="+22"/>
-        <location filename="../qml/FilesPlus/symbian/DriveMenu.qml" line="+17"/>
         <source>Bookmarks</source>
-        <translation>Segnalibri</translation>
+        <translation type="obsolete">Segnalibri</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <location filename="../qml/FilesPlus/symbian/DriveMenu.qml" line="+8"/>
+        <location filename="../qml/FilesPlus/meego/DriveMenu.qml" line="+21"/>
+        <location filename="../qml/FilesPlus/symbian/DriveMenu.qml" line="+18"/>
         <source>Settings</source>
         <translation>Impostazioni</translation>
     </message>
@@ -1389,20 +1396,32 @@ Il link verrà rimosso.</translation>
 <context>
     <name>DrivePage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/DrivePage.qml" line="+175"/>
-        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+175"/>
+        <location filename="../qml/FilesPlus/meego/DrivePage.qml" line="+188"/>
+        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+188"/>
         <source>Private drive</source>
         <translation>Drive privato</translation>
     </message>
     <message>
-        <location line="+71"/>
-        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+71"/>
+        <location line="+16"/>
+        <location line="+95"/>
+        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+16"/>
+        <source>Trash</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-5"/>
+        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+81"/>
         <source>Drives</source>
         <translation>Drives</translation>
     </message>
     <message>
-        <location line="+17"/>
-        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+17"/>
+        <location line="+6"/>
+        <source>Empty trash?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+20"/>
         <source>Logging</source>
         <translation>Registrazione</translation>
     </message>
@@ -1609,8 +1628,8 @@ Il link verrà rimosso.</translation>
 <context>
     <name>FilePropertiesDialog</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/FilePropertiesDialog.qml" line="+33"/>
-        <location filename="../qml/FilesPlus/symbian/FilePropertiesDialog.qml" line="+34"/>
+        <location filename="../qml/FilesPlus/meego/FilePropertiesDialog.qml" line="+39"/>
+        <location filename="../qml/FilesPlus/symbian/FilePropertiesDialog.qml" line="+41"/>
         <source>Information</source>
         <translation>informazione</translation>
     </message>
@@ -1645,8 +1664,26 @@ Il link verrà rimosso.</translation>
         <translation>Ultima modifica</translation>
     </message>
     <message>
-        <location line="+26"/>
-        <location filename="../qml/FilesPlus/symbian/FilePropertiesDialog.qml" line="+26"/>
+        <location line="+21"/>
+        <location filename="../qml/FilesPlus/symbian/FilePropertiesDialog.qml" line="+21"/>
+        <source>Attributes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location filename="../qml/FilesPlus/symbian/FilePropertiesDialog.qml" line="+10"/>
+        <source>Hidden</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <location filename="../qml/FilesPlus/symbian/FilePropertiesDialog.qml" line="+12"/>
+        <source>Read Only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <location filename="../qml/FilesPlus/symbian/FilePropertiesDialog.qml" line="+20"/>
         <source>Contents</source>
         <translation>Contenuto</translation>
     </message>
@@ -1765,8 +1802,8 @@ You will be redirected to cloud account page.</source>
 Sarai reindirizzato alla pagina di autorizzazione.</translation>
     </message>
     <message>
-        <location line="+1107"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1108"/>
+        <location line="+1106"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1107"/>
         <source>Sync marked items</source>
         <translation>Sincronizza gli elementi contrassegnati</translation>
     </message>
@@ -1777,8 +1814,8 @@ Sarai reindirizzato alla pagina di autorizzazione.</translation>
         <translation>Si prega di selezionare solo gli elementi collegati alla nube di storage di destinazione o non è collegato a tutti.</translation>
     </message>
     <message>
-        <location line="+251"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+251"/>
+        <location line="+255"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+255"/>
         <source>Not available</source>
         <translation>Non disponibile</translation>
     </message>
@@ -2171,8 +2208,8 @@ Il link verrà rimosso.</translation>
         <translation type="obsolete">Sfogliare</translation>
     </message>
     <message>
-        <location line="-31"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-31"/>
+        <location line="-36"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-36"/>
         <source>Schedule sync %1</source>
         <translation>Sinc. Pianificazione %1</translation>
     </message>
@@ -2214,7 +2251,7 @@ Il tutto presentato con un Diagramma a torta.</translation>
 <context>
     <name>FolderSizeItemListModel</name>
     <message>
-        <location filename="../foldersizeitemlistmodel.cpp" line="+540"/>
+        <location filename="../foldersizeitemlistmodel.cpp" line="+558"/>
         <location line="+22"/>
         <source>Source and Target path can&apos;t be the same.</source>
         <translation>Il percorso di origine e destinazione non possono coincidere.</translation>
@@ -2260,7 +2297,7 @@ Il tutto presentato con un Diagramma a torta.</translation>
         <translation type="obsolete">Copia</translation>
     </message>
     <message>
-        <location line="+116"/>
+        <location line="+224"/>
         <location line="+9"/>
         <source>_Copy</source>
         <translation>_Copia</translation>
@@ -2274,15 +2311,15 @@ Il tutto presentato con un Diagramma a torta.</translation>
 <context>
     <name>FolderSizeModelThread</name>
     <message>
-        <location filename="../foldersizemodelthread.cpp" line="+540"/>
+        <location filename="../foldersizemodelthread.cpp" line="+559"/>
         <location line="+75"/>
         <location line="+121"/>
-        <location line="+677"/>
+        <location line="+687"/>
         <source>Move %1 to %2 is done successfully.</source>
         <translation>Sposta %1 su %2 eseguita con successo.</translation>
     </message>
     <message>
-        <location line="-855"/>
+        <location line="-865"/>
         <location line="+90"/>
         <location line="+80"/>
         <source>Copy %1 to %2 is aborted.</source>
@@ -2342,7 +2379,7 @@ Il tutto presentato con un Diagramma a torta.</translation>
         <translation type="obsolete">Eliminazione di sub articolo %1 completato.</translation>
     </message>
     <message>
-        <location line="+594"/>
+        <location line="+604"/>
         <source>Deleting %1 is aborted.</source>
         <translation>Eliminazione di %1 annullata.</translation>
     </message>
@@ -2401,6 +2438,22 @@ Il tutto presentato con un Diagramma a torta.</translation>
         <location line="-754"/>
         <source>Can&apos;t get %1</source>
         <translation>Impossibile scaricare %1</translation>
+    </message>
+</context>
+<context>
+    <name>GCDClient</name>
+    <message>
+        <location filename="../gcdclient.cpp" line="+582"/>
+        <location line="+280"/>
+        <source>File Get</source>
+        <translation type="unfinished">Ricezione file</translation>
+    </message>
+    <message>
+        <location line="-279"/>
+        <location line="+280"/>
+        <source>%1 is cloud document format.
+It can&apos;t be downloaded.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2597,8 +2650,8 @@ Il tutto presentato con un Diagramma a torta.</translation>
 <context>
     <name>NameFilterPanel</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/NameFilterPanel.qml" line="+69"/>
-        <location filename="../qml/FilesPlus/symbian/NameFilterPanel.qml" line="+70"/>
+        <location filename="../qml/FilesPlus/meego/NameFilterPanel.qml" line="+70"/>
+        <location filename="../qml/FilesPlus/symbian/NameFilterPanel.qml" line="+71"/>
         <source>Please input name filter.</source>
         <translation>Inserisci il filtro per nome.</translation>
     </message>
@@ -3005,17 +3058,21 @@ Il link verrà rimosso.</translation>
     <name>SettingPage</name>
     <message>
         <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+49"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+50"/>
         <source>Settings</source>
         <translation>Impostazioni</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+257"/>
+        <location line="+287"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
+        <location line="+299"/>
         <source>Logging (Debug)</source>
         <translation>Logging (Debug)</translation>
     </message>
     <message>
-        <location line="-256"/>
+        <location line="-286"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-298"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -3030,129 +3087,184 @@ FilesPlus sta chiudendo adesso.
 Conferma.</translation>
     </message>
     <message>
-        <location line="+236"/>
+        <location line="+266"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+278"/>
         <source>Show cloud print jobs</source>
         <translation>Mostra i processi CloudPrint</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Print from URL</source>
         <translation>Stampa URL</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Reset cloud print</source>
         <translation>Azzerare CloudPrint</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Show cloud drive jobs</source>
         <translation>Mostra processi CloudDrive</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Cancel queued jobs</source>
         <translation>Annullare i processi in coda</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Sync all connected items</source>
         <translation>Sincronizza tutti gli elementi collegati</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Show accounts</source>
         <translation>Mostra Accounts</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Auto-sync after refresh</source>
         <translation>Sincro. dopo l&apos;aggiorna</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Show cloud storage on drive page</source>
         <translation>Mostra Cloud Drive a pagina Drives</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>FolderPie feature</source>
         <translation>Funzione FolderPie</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Reset current folder cache</source>
         <translation>Resetta la cache della cartella corrente</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Theme</source>
         <translatorcomment>Theme white/black</translatorcomment>
         <translation>Tema bianco / nero</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Popup interval</source>
         <translation>Intervallo di popup</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Compact list item</source>
         <translation>Elemento compatto</translation>
     </message>
     <message>
         <location line="+2"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+2"/>
         <source>Show thumbnail on local drive</source>
         <translation>Mostra anteprima sul disco locale</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Show thumbnail on cloud drive</source>
         <translation>Mostra anteprima sul cloud storage</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Turn bluetooth on automatically</source>
         <translation>Attivare Bluetooth automaticamente</translation>
     </message>
     <message>
         <location line="+2"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+2"/>
         <source>Show status bar</source>
         <translation>Mostra barra di stato</translation>
     </message>
     <message>
         <location line="+2"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+2"/>
         <source>Dropbox full access</source>
         <translation>Dropbox pieno accesso</translation>
     </message>
     <message>
         <location line="+4"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+4"/>
         <source>Show system drive on drive page</source>
         <translation>Mostra disco di sistema a pagina Drives</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+2"/>
+        <source>Show trash on drive page</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+2"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+2"/>
         <source>Cache local images</source>
         <translation>Cache immagini locali</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Queue local image caching</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Queue cloud image caching</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Sync to cloud storage root</source>
         <translatorcomment>Sync to whole cloud storage</translatorcomment>
         <translation>Sincronizza per intero il cloud storage</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Sync dirty items automatically</source>
         <translation>Sincronizza automaticamente gli elementi sporchi</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Show hidden/system files</source>
         <translation>Mostra file nascosti</translation>
     </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Delete by moving to trash</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Dirty before sync (GoogleDrive)</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
-        <location line="+174"/>
+        <location line="+177"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+181"/>
         <source>%n sec.</source>
         <translation>
             <numerusform>%n sec.</numerusform>
@@ -3161,16 +3273,19 @@ Conferma.</translation>
     </message>
     <message>
         <location line="+96"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+96"/>
         <source>Languages</source>
         <translation>Lingue</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Cancel</source>
         <translation>Cancella</translation>
     </message>
@@ -3183,58 +3298,69 @@ Conferma.</translation>
         <translation type="obsolete">Mostra anteprima</translation>
     </message>
     <message>
-        <location line="-284"/>
+        <location line="-292"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-297"/>
         <source>Keep bluetooth off</source>
         <translation>Tenere bluetooth off</translation>
     </message>
     <message>
         <location line="+4"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+4"/>
         <source>Monitoring (RAM,CPU)</source>
         <translation>Monitoraggio (RAM,CPU)</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Personalization</source>
         <translation>Personalizzazione</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Developer</source>
         <translation>Sviluppatore</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+4"/>
         <source>Ignore WebDAV SSL self-signed certificate errors</source>
         <translation>Ignora WebDAV SSL autofirmati errori del certificato</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+40"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+40"/>
         <source>Monitoring</source>
         <translation>Monitoraggio</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Monitoring is enabled. Log file is </source>
         <translation>Il monitoraggio attivato. File di log </translation>
     </message>
     <message>
-        <location line="+169"/>
+        <location line="+172"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+176"/>
         <source>English</source>
         <translation>Inglese</translation>
     </message>
     <message>
         <location line="+10"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+10"/>
         <source>Russian</source>
         <translation>Russo</translation>
     </message>
     <message>
         <location line="+10"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+10"/>
         <source>Chinese</source>
         <translation>Cinese</translation>
     </message>
     <message>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-239"/>
         <source>Show private drive on drive page</source>
-        <translation type="obsolete">Mostra disco di privata a pagina Drives</translation>
+        <translation type="unfinished">Mostra disco di privata a pagina Drives</translation>
     </message>
 </context>
 <context>
@@ -3268,6 +3394,29 @@ Conferma.</translation>
         <location filename="../qml/FilesPlus/symbian/SortByMenu.qml" line="+11"/>
         <source>Sort by Size</source>
         <translation>Ordina per Dimensione</translation>
+    </message>
+</context>
+<context>
+    <name>TextViewPage</name>
+    <message>
+        <location filename="../qml/FilesPlus/meego/TextViewPage.qml" line="+18"/>
+        <location filename="../qml/FilesPlus/symbian/TextViewPage.qml" line="+18"/>
+        <source>Text Editor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <location filename="../qml/FilesPlus/symbian/TextViewPage.qml" line="+0"/>
+        <source>Can not write to file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+57"/>
+        <location line="+8"/>
+        <location filename="../qml/FilesPlus/symbian/TextViewPage.qml" line="+58"/>
+        <location line="+8"/>
+        <source>format</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -3341,61 +3490,69 @@ Conferma.</translation>
     <name>main</name>
     <message>
         <location filename="../qml/FilesPlus/meego/main.qml" line="+84"/>
-        <location line="+1679"/>
+        <location line="+1740"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+85"/>
-        <location line="+1679"/>
+        <location line="+1740"/>
         <source>Copy</source>
         <translation>Copia</translation>
     </message>
     <message>
-        <location line="-1677"/>
-        <location line="+1713"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1677"/>
-        <location line="+1713"/>
+        <location line="-1738"/>
+        <location line="+1774"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1738"/>
+        <location line="+1774"/>
         <source>Move</source>
         <translation>Sposta</translation>
     </message>
     <message>
-        <location line="-1711"/>
-        <location line="+1745"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1711"/>
-        <location line="+1745"/>
+        <location line="-1772"/>
+        <location line="+1806"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1772"/>
+        <location line="+1806"/>
         <source>Delete</source>
         <translation>Elimina</translation>
     </message>
     <message>
-        <location line="-1636"/>
-        <location line="+127"/>
-        <location line="+344"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1636"/>
-        <location line="+127"/>
-        <location line="+344"/>
+        <location line="-1804"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1804"/>
+        <source>Trash</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+114"/>
+        <location line="+126"/>
+        <location line="+393"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+114"/>
+        <location line="+126"/>
+        <location line="+393"/>
         <source>Deleting</source>
         <translation>Eliminazione in corso</translation>
     </message>
     <message>
-        <location line="-413"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-413"/>
+        <location line="-461"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-461"/>
         <source>to</source>
         <translation>in</translation>
     </message>
     <message>
         <location line="+21"/>
-        <location line="+73"/>
+        <location line="+72"/>
         <location line="+52"/>
         <location line="+8"/>
+        <location line="+68"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+21"/>
-        <location line="+73"/>
+        <location line="+72"/>
         <location line="+52"/>
         <location line="+8"/>
+        <location line="+68"/>
         <source>error</source>
         <translation>errore</translation>
     </message>
     <message>
-        <location line="-130"/>
-        <location line="+73"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-130"/>
-        <location line="+73"/>
+        <location line="-197"/>
+        <location line="+72"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-197"/>
+        <location line="+72"/>
         <source>failed</source>
         <translation>fallito</translation>
     </message>
@@ -3412,22 +3569,22 @@ Conferma.</translation>
         <translation>Rinomina</translation>
     </message>
     <message>
-        <location line="+46"/>
-        <location line="+335"/>
+        <location line="+95"/>
+        <location line="+337"/>
         <location line="+83"/>
         <location line="+223"/>
-        <location line="+936"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+46"/>
-        <location line="+335"/>
+        <location line="+949"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+95"/>
+        <location line="+337"/>
         <location line="+83"/>
         <location line="+223"/>
-        <location line="+936"/>
+        <location line="+949"/>
         <source>%1 is loaded.</source>
         <translation>%1 viene caricato.</translation>
     </message>
     <message>
-        <location line="-1568"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1568"/>
+        <location line="-1583"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1583"/>
         <source>Quit</source>
         <translation>Esci</translation>
     </message>
@@ -3598,8 +3755,8 @@ Si prega di autorizzare nuovamente gli account prima di procedere, le vostre azi
         <translation>Nube conversione dei dati</translation>
     </message>
     <message>
-        <location line="+146"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+146"/>
+        <location line="+148"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+148"/>
         <source>Other recipient</source>
         <translation>Altro destinatario</translation>
     </message>
@@ -3652,18 +3809,18 @@ Sarai reindirizzato alla pagina di autorizzazione.</translation>
     <message>
         <location line="+36"/>
         <location line="+5"/>
-        <location line="+391"/>
+        <location line="+392"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+36"/>
         <location line="+5"/>
-        <location line="+391"/>
+        <location line="+392"/>
         <source>Refresh Token</source>
         <translation>Rinnovare Token di accesso</translation>
     </message>
     <message>
-        <location line="-391"/>
+        <location line="-392"/>
         <location line="+38"/>
         <location line="+160"/>
-        <location line="+169"/>
+        <location line="+170"/>
         <location line="+36"/>
         <location line="+19"/>
         <location line="+36"/>
@@ -3671,7 +3828,7 @@ Sarai reindirizzato alla pagina di autorizzazione.</translation>
         <location line="+35"/>
         <location line="+32"/>
         <location line="+33"/>
-        <location line="+28"/>
+        <location line="+31"/>
         <location line="+9"/>
         <location line="+5"/>
         <location line="+139"/>
@@ -3680,11 +3837,12 @@ Sarai reindirizzato alla pagina di autorizzazione.</translation>
         <location line="+39"/>
         <location line="+24"/>
         <location line="+23"/>
-        <location line="+28"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-391"/>
+        <location line="+33"/>
+        <location line="+3"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-392"/>
         <location line="+38"/>
         <location line="+160"/>
-        <location line="+169"/>
+        <location line="+170"/>
         <location line="+36"/>
         <location line="+19"/>
         <location line="+36"/>
@@ -3692,7 +3850,7 @@ Sarai reindirizzato alla pagina di autorizzazione.</translation>
         <location line="+35"/>
         <location line="+32"/>
         <location line="+33"/>
-        <location line="+28"/>
+        <location line="+31"/>
         <location line="+9"/>
         <location line="+5"/>
         <location line="+139"/>
@@ -3701,47 +3859,48 @@ Sarai reindirizzato alla pagina di autorizzazione.</translation>
         <location line="+39"/>
         <location line="+24"/>
         <location line="+23"/>
-        <location line="+28"/>
+        <location line="+33"/>
+        <location line="+3"/>
         <source>Error</source>
         <translation>Errore</translation>
     </message>
     <message>
-        <location line="-904"/>
-        <location line="+1192"/>
+        <location line="-916"/>
+        <location line="+1205"/>
         <location line="+8"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-904"/>
-        <location line="+1192"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-916"/>
+        <location line="+1205"/>
         <location line="+8"/>
         <source>Printing</source>
         <translation>Stampa</translation>
     </message>
     <message>
-        <location line="-1047"/>
-        <location line="+197"/>
+        <location line="-1060"/>
+        <location line="+198"/>
         <location line="+8"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1047"/>
-        <location line="+197"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1060"/>
+        <location line="+198"/>
         <location line="+8"/>
         <source>Access Token</source>
         <translation>Token di accesso</translation>
     </message>
     <message>
-        <location line="-204"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-204"/>
+        <location line="-205"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-205"/>
         <source>PIN code is not found.</source>
         <translation>PIN code non è stato trovato.</translation>
     </message>
     <message>
-        <location line="+168"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+168"/>
+        <location line="+169"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+169"/>
         <source>Request Token</source>
         <translation>Richiesta Token di accesso</translation>
     </message>
     <message>
-        <location line="-371"/>
-        <location line="+397"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-371"/>
-        <location line="+397"/>
+        <location line="-372"/>
+        <location line="+398"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-372"/>
+        <location line="+398"/>
         <source>Token was refreshed.</source>
         <translatorcomment>Token has been renewed.</translatorcomment>
         <translation>Token è stato rinnovato.</translation>
@@ -3811,10 +3970,10 @@ Link will be removed.</source>
 Il link verrà rimosso.</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+31"/>
         <location line="+9"/>
         <location line="+5"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+28"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+31"/>
         <location line="+9"/>
         <location line="+5"/>
         <source>Create Folder</source>
@@ -3842,9 +4001,11 @@ Il link verrà rimosso.</translation>
     </message>
     <message>
         <location line="+23"/>
-        <location line="+28"/>
+        <location line="+33"/>
+        <location line="+3"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+23"/>
-        <location line="+28"/>
+        <location line="+33"/>
+        <location line="+3"/>
         <source>Migrate</source>
         <translation>Copia</translation>
     </message>
@@ -3853,8 +4014,8 @@ Il link verrà rimosso.</translation>
         <translation type="obsolete">Impossibile creare la cartella. La copia viene annullata.</translation>
     </message>
     <message>
-        <location line="+212"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+212"/>
+        <location line="+213"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+213"/>
         <source>Add bookmark</source>
         <translation>Aggiungi segnalibro</translation>
     </message>

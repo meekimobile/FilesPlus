@@ -753,6 +753,22 @@ void FolderSizeItemListModel::requestTrashStatus()
     emit trashChanged();
 }
 
+void FolderSizeItemListModel::emptyTrash()
+{
+    QDir trashDir(getTrashPath());
+    trashDir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot);
+
+    suspendNextJob();
+    foreach (QString childName, trashDir.entryList()) {
+        QApplication::processEvents();
+
+        QString childPath = trashDir.absoluteFilePath(childName);
+        qDebug() << "FolderSizeItemListModel::emptyTrash delete childPath" << childPath;
+        deleteFile(childPath);
+    }
+    resumeNextJob();
+}
+
 bool FolderSizeItemListModel::setFileAttribute(QString localFilePath, FileAttribute attribute, bool value)
 {
 #ifdef Q_OS_SYMBIAN

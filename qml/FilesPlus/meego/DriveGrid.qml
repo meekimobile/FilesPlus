@@ -7,6 +7,7 @@ Rectangle {
     color: "transparent"
 
     signal driveSelected (string driveName, int index)
+    signal drivePressAndHold (string driveName, int index)
 
     property alias model: driveGrid.model
     property variant driveTypeTexts: [appInfo.emptyStr+qsTr("No Drive"), appInfo.emptyStr+qsTr("Internal Drive"), appInfo.emptyStr+qsTr("Removable Drive"), appInfo.emptyStr+qsTr("Remote Drive"), appInfo.emptyStr+qsTr("Cdrom Drive"), appInfo.emptyStr+qsTr("Internal Flash Drive"), appInfo.emptyStr+qsTr("Ram Drive"), appInfo.emptyStr+qsTr("Cloud Drive")]
@@ -186,6 +187,13 @@ Rectangle {
                     driveGrid.currentItem.state = "normal";
                     driveGrid.currentDriveName = model.logicalDrive;
                     driveGridRect.driveSelected(model.logicalDrive, index);
+                }
+
+                onPressAndHold: {
+                    busy = false; // Reset busy because this action still stay in current page.
+                    driveGrid.currentItem.state = "normal";
+                    driveGrid.currentDriveName = model.logicalDrive;
+                    driveGridRect.drivePressAndHold(model.logicalDrive, index);
                 }
             }
         }

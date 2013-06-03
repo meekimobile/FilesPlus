@@ -147,6 +147,7 @@ public:
     Q_INVOKABLE qlonglong getMaxTrashSize();
     Q_INVOKABLE bool trash(const QString sourcePath);
     Q_INVOKABLE void requestTrashStatus();
+    Q_INVOKABLE void emptyTrash();
 
     // Modify file attributes (for Symbian).
     Q_INVOKABLE bool setFileAttribute(QString localFilePath, FileAttribute attribute, bool value);
