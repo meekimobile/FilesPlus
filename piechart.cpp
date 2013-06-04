@@ -90,6 +90,9 @@ void PieChart::refreshItems(bool forceRefresh)
         createItemFromModel();
         createLabelFromSlices();
         update();
+    } else {
+        removeAllExistingItems();
+        update();
     }
 }
 
@@ -205,7 +208,10 @@ bool PieChart::visible() const
 
 void PieChart::setVisible(const bool visible)
 {
-    m_visible = visible;
+    if (m_visible != visible) {
+        m_visible = visible;
+        refreshItems();
+    }
 }
 
 QString PieChart::labelFontDesc() const
