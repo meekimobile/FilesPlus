@@ -306,6 +306,17 @@ public:
 
     Q_INVOKABLE int getSortFlag(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
     Q_INVOKABLE void setSortFlag(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, int sortFlag);
+
+    // Selection functions.
+    Q_INVOKABLE bool isAnyItemChecked();
+    Q_INVOKABLE bool areAllItemChecked();
+    Q_INVOKABLE void markAll();
+    Q_INVOKABLE void markAllFiles();
+    Q_INVOKABLE void markAllFolders();
+    Q_INVOKABLE void unmarkAll();
+
+    // Model functions.
+    Q_INVOKABLE void refreshItems();
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void initializeDBStarted(QString nonce);

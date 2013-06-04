@@ -290,6 +290,82 @@ void FolderSizeItemListModel::setProperty(const int index, QVariant valueJson)
     // TODO Use roleNames.key(roleName) to get role. But it's needed to map and set as in existing setProperty method.
 }
 
+bool FolderSizeItemListModel::isAnyItemChecked()
+{
+    foreach (FolderSizeItem item, itemList) {
+        QApplication::processEvents();
+        if (item.isChecked) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool FolderSizeItemListModel::areAllItemChecked()
+{
+    foreach (FolderSizeItem item, itemList) {
+        QApplication::processEvents();
+        if (!item.isChecked) {
+            return false;
+        }
+    }
+
+    return (itemList.length() > 0);
+}
+
+void FolderSizeItemListModel::markAll()
+{
+    for (int i = 0; i < itemList.length(); i++) {
+        QApplication::processEvents();
+        FolderSizeItem item = itemList.at(i);
+        item.isChecked = true;
+        itemList.replace(i, item);
+    }
+
+    refreshItems();
+}
+
+void FolderSizeItemListModel::markAllFiles()
+{
+    for (int i = 0; i < itemList.length(); i++) {
+        QApplication::processEvents();
+        FolderSizeItem item = itemList.at(i);
+        if (!item.isDir) {
+            item.isChecked = true;
+            itemList.replace(i, item);
+        }
+    }
+
+    refreshItems();
+}
+
+void FolderSizeItemListModel::markAllFolders()
+{
+    for (int i = 0; i < itemList.length(); i++) {
+        QApplication::processEvents();
+        FolderSizeItem item = itemList.at(i);
+        if (item.isDir) {
+            item.isChecked = true;
+            itemList.replace(i, item);
+        }
+    }
+
+    refreshItems();
+}
+
+void FolderSizeItemListModel::unmarkAll()
+{
+    for (int i = 0; i < itemList.length(); i++) {
+        QApplication::processEvents();
+        FolderSizeItem item = itemList.at(i);
+        item.isChecked = false;
+        itemList.replace(i, item);
+    }
+
+    refreshItems();
+}
+
 QString FolderSizeItemListModel::formatFileSize(double size)
 {
     const uint KB = 1024;

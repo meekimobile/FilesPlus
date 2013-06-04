@@ -182,6 +182,14 @@ public:
     Q_INVOKABLE void proceedNextJob();
     Q_INVOKABLE void suspendNextJob();
     Q_INVOKABLE void resumeNextJob();
+
+    // Selection functions.
+    Q_INVOKABLE bool isAnyItemChecked();
+    Q_INVOKABLE bool areAllItemChecked();
+    Q_INVOKABLE void markAll();
+    Q_INVOKABLE void markAllFiles();
+    Q_INVOKABLE void markAllFolders();
+    Q_INVOKABLE void unmarkAll();
 private:
     Q_DISABLE_COPY(FolderSizeItemListModel)
     FolderSizeModelThread m;

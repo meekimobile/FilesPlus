@@ -18,6 +18,8 @@ ListItem {
     property alias syncIconVisible: syncIcon.visible
     property bool inverted: !theme.inverted
     property bool omitShowingZeroSizeDir: false
+    property variant viewableImageFileTypes: ["JPG", "PNG", "SVG"]
+    property bool showPreview: (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1)
 
     signal pressAndHold()
     signal clicked()
@@ -90,6 +92,18 @@ ListItem {
                     running: visible
                     platformStyle: BusyIndicatorStyle { size: "small" }
                     anchors.centerIn: parent
+                }
+
+                Text {
+                    id: listItemFileType
+                    text: fileType.toUpperCase()
+                    font.pointSize: 14
+                    font.bold: true
+                    color: "black"
+                    style: Text.Outline
+                    styleColor: "white"
+                    anchors.centerIn: parent
+                    visible: !showPreview && !isDir
                 }
 
                 onStatusChanged: {

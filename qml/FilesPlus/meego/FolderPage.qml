@@ -11,14 +11,21 @@ Page {
     property string name: "folderPage"
     property bool inverted: !theme.inverted
 
+    state: "list"
     states: [
         State {
             name: "chart"
-            when: flipable1.flipped
         },
         State {
             name: "list"
-            when: !flipable1.flipped
+        },
+        State {
+            name: "grid"
+        }
+    ]
+    transitions: [
+        Transition {
+            ScriptAction { script: toggleSortFlag() }
         }
     ]
 
@@ -69,9 +76,9 @@ Page {
             id: backButton
             buttonIconSource: "toolbar-back"
             onClicked: {
-                if (fsListView.state == "mark") {
-                    fsListView.state = "";
-                    fsListView.unmarkAll();
+                if (fsModel.state == "mark") {
+                    fsModel.state = "";
+                    fsModel.unmarkAll();
                 } else {
                     // Specify local path to focus after cd to parent directory..
                     fsListView.focusLocalPath = fsModel.currentDir;
@@ -83,7 +90,7 @@ Page {
         ToolBarButton {
             id: refreshButton
             buttonIconSource: "toolbar-refresh"
-            visible: (fsListView.state == "")
+            visible: (fsModel.state == "")
 
             Timer {
                 id: refreshButtonTimer
@@ -111,11 +118,13 @@ Page {
             id: actionButton
 
             buttonIconSource: {
-                if (fsListView.state == "mark") {
+                if (fsModel.state == "mark") {
                     return (!inverted ? "ok.svg" : "ok_inverted.svg");
                 } else {
-                    if (folderPage.state != "list") {
+                    if (folderPage.state == "chart") {
                         return (!inverted ? "list.svg" : "list_inverted.svg");
+                    } else if (folderPage.state == "list") {
+                            return (!inverted ? "grid.svg" : "grid_inverted.svg");
                     } else {
                         return (!inverted ? "chart.svg" : "chart_inverted.svg");
                     }
@@ -123,15 +132,21 @@ Page {
             }
 
             onClicked: {
-                if (fsListView.state == "mark") {
+                if (fsModel.state == "mark") {
                     if (markMenu.isMarkAll) {
-                        fsListView.unmarkAll();
+                        fsModel.unmarkAll();
                     } else {
-                        fsListView.markAll();
+                        fsModel.markAll();
                     }
                     markMenu.isMarkAll = !markMenu.isMarkAll;
                 } else {
-                    flipSlot();
+                    if (folderPage.state == "chart") {
+                        folderPage.state = "list";
+                    } else if (folderPage.state == "list") {
+                        folderPage.state = "grid";
+                    } else {
+                        folderPage.state = "chart";
+                    }
                 }
             }
         }
@@ -139,7 +154,7 @@ Page {
         ToolBarButton {
             id: cloudButton
             buttonIconSource: (!inverted ? "cloud.svg" : "cloud_inverted.svg")
-            visible: (fsListView.state == "")
+            visible: (fsModel.state == "")
 
             TextIndicator {
                 id: cloudButtonIndicator
@@ -162,13 +177,13 @@ Page {
                 // Hide popupToolPanel.
                 popupToolPanel.visible = false;
 
-                if (fsListView.state == "mark") {
-                    if (!fsListView.isAnyItemChecked()) {
+                if (fsModel.state == "mark") {
+                    if (!fsModel.isAnyItemChecked()) {
                         markAllMenu.open();
                     } else {
                         markMenu.open();
                     }
-                } else if (folderPage.state == "list") {
+                } else if (folderPage.state != "chart") {
                     mainMenu.open();
                 } else if (folderPage.state == "chart") {
                     chartMenu.open();
@@ -187,7 +202,7 @@ Page {
             fileActionDialog.open();
         }
         onOpenMarkMenu: {
-            fsListView.state = "mark";
+            fsModel.state = "mark";
         }
         onClearClipboard: {
             clipboard.clear();
@@ -206,7 +221,7 @@ Page {
         }
         onDrives: {
             // Flip back to list view, then pop folderPage.
-            flipable1.flipped = false;
+            folderPage.state = "list";
             pageStack.pop(folderPage);
         }
         onOpenBookmarks: {
@@ -232,7 +247,7 @@ Page {
             } else if (menuItem.name == "clearClipboard") {
                 return clipboard.count > 0;
             } else if (menuItem.name == "markMenu") {
-                return fsListView.state != "mark";
+                return fsModel.state != "mark";
             } else if (menuItem.name == "syncCurrentFolder") {
                 return !fsModel.isRoot() && cloudDriveModel.canSync(fsModel.currentDir);
             } else {
@@ -257,7 +272,7 @@ Page {
 
         onDrives: {
             // Flip back to list view, then pop folderPage.
-            flipable1.flipped = false;
+            folderPage.state = "list";
             pageStack.pop(folderPage);
         }
         onOpenSettings: {
@@ -292,35 +307,39 @@ Page {
 
         onMarkAll: {
             if (isMarkAll) {
-                fsListView.markAll();
+                fsModel.markAll();
             } else {
-                fsListView.unmarkAll();
+                fsModel.unmarkAll();
             }
             isMarkAll = !isMarkAll;
         }
         onCopyMarkedItems: {
-            fsListView.copyMarkedItems();
-            fsListView.state = "";
+            folderPage.copyMarkedItems();
+            fsModel.state = "";
             fsListView.currentIndex = -1;
+            fsGridView.currentIndex = -1;
         }
         onCutMarkedItems: {
-            fsListView.cutMarkedItems();
-            fsListView.state = "";
+            folderPage.cutMarkedItems();
+            fsModel.state = "";
             fsListView.currentIndex = -1;
+            fsGridView.currentIndex = -1;
         }
         onDeleteMarkedItems: {
-            fsListView.deleteMarkedItems();
-            fsListView.state = "";
+            folderPage.deleteMarkedItems();
+            fsModel.state = "";
             fsListView.currentIndex = -1;
+            fsGridView.currentIndex = -1;
         }
         onSyncMarkedItems: {
-            fsListView.syncMarkedItems();
-            fsListView.state = "";
+            folderPage.syncMarkedItems();
+            fsModel.state = "";
             fsListView.currentIndex = -1;
+            fsGridView.currentIndex = -1;
         }
         onStatusChanged: {
             if (status == DialogStatus.Opening) {
-                isMarkAll = !fsListView.areAllItemChecked();
+                isMarkAll = !fsModel.areAllItemChecked();
             }
         }
     }
@@ -329,13 +348,13 @@ Page {
         id: markAllMenu
 
         onMarkAll: {
-            fsListView.markAll();
+            fsModel.markAll();
         }
         onMarkAllFiles: {
-            fsListView.markAllFiles();
+            fsModel.markAllFiles();
         }
         onMarkAllFolders: {
-            fsListView.markAllFolders();
+            fsModel.markAllFolders();
         }
     }
 
@@ -378,7 +397,7 @@ Page {
 
         if (fsModel.isRoot()) {
             // Flip back to list view, then pop folderPage.
-            flipable1.flipped = false;
+            folderPage.state = "list";
             pageStack.pop(folderPage);
         } else {
             if (state == "chart") {
@@ -399,12 +418,6 @@ Page {
         } else {
             fsModel.changeDir(name);
         }
-    }
-
-    function flipSlot() {
-        nameFilterPanel.close();
-
-        flipable1.flipped = !flipable1.flipped;
     }
 
     function orientationChangeSlot() {
@@ -717,6 +730,7 @@ Page {
 
         // Reset ListView currentIndex.
         fsListView.currentIndex = -1;
+        fsGridView.currentIndex = -1;
 
         // Auto-sync after refresh. Only dirty items will be sync'd.
         // TODO Suppress in PieView.
@@ -746,62 +760,85 @@ Page {
         cloudDrivePathDialog.refreshItem(remotePath);
     }
 
-    Flipable {
-        id: flipable1
-        width: parent.width
-        height: parent.height - currentPath.height
-        x: 0
-        anchors.top: currentPath.bottom
+    // Selection functions.
 
-        property bool flipped: false
+    function cutMarkedItems() {
+        for (var i=0; i<fsModel.count; i++) {
+            if (fsModel.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
+                console.debug("folderPage cutMarkedItems item"
+                              + " absolutePath " + fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
+                              + " isChecked " + fsModel.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
 
-        front: fsGridView
-        back: pieChartView
-        onStateChanged: {
-            fsModel.refreshItems();
+                clipboard.addItemWithSuppressCountChanged({ "action": "cut", "sourcePath": fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
+            }
+
+            // Reset isChecked.
+            fsModel.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
         }
 
-        transform: Rotation {
-            id: rotation
-            origin.x: flipable1.width/2
-            origin.y: flipable1.height/2
-            axis.x: 0; axis.y: 1; axis.z: 0     // set axis.y to 1 to rotate around y-axis
-            angle: 0    // the default angle
+        // Emit suppressed signal.
+        clipboard.emitCountChanged();
+    }
+
+    function copyMarkedItems() {
+        for (var i=0; i<fsModel.count; i++) {
+            if (fsModel.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
+                console.debug("folderPage copyMarkedItems item"
+                              + " absolutePath " + fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
+                              + " isChecked " + fsModel.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
+
+                clipboard.addItemWithSuppressCountChanged({ "action": "copy", "sourcePath": fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
+            }
+
+            // Reset isChecked.
+            fsModel.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
         }
 
-        states: [
-            State {
-                name: "front"
-                PropertyChanges { target: rotation; angle: 0 }
-                when: !flipable1.flipped
-            },
-            State {
-                name: "back"
-                PropertyChanges { target: rotation; angle: 180 }
-                when: flipable1.flipped
-            }
-        ]
+        // Emit suppressed signal.
+        clipboard.emitCountChanged();
+    }
 
-        transitions: [
-            Transition {
-                to: "front"
-                NumberAnimation { target: rotation; property: "angle"; duration: 500 }
-                ScriptAction { script: toggleSortFlag() }
-            },
-            Transition {
-                to: "back"
-                ScriptAction { script: toggleSortFlag() }
-                NumberAnimation { target: rotation; property: "angle"; duration: 500 }
+    function deleteMarkedItems() {
+        for (var i=0; i<fsModel.count; i++) {
+            if (fsModel.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
+                console.debug("folderPage deleteMarkedItems item"
+                              + " absolutePath " + fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
+                              + " isChecked " + fsModel.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
+
+                clipboard.addItem({ "action": "delete", "sourcePath": fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
             }
-        ]
+
+            // Reset isChecked.
+            fsModel.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
+        }
+
+        // Open confirmation dialog.
+        fileActionDialog.open();
+    }
+
+    function syncMarkedItems() {
+        for (var i=0; i<fsModel.count; i++) {
+            if (fsModel.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
+                console.debug("folderPage syncMarkedItems item"
+                              + " absolutePath " + fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
+                              + " isChecked " + fsModel.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
+
+                clipboard.addItem({ "action": "sync", "sourcePath": fsModel.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
+            }
+
+            // Reset isChecked.
+            fsModel.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
+        }
+
+        // Invoke syncClipboard.
+        syncClipboardItems();
     }
 
     PieChart {
         id: pieChartView
-        x: 0
-        y: 0
         width: parent.width - 4
-        height: parent.height
+        height: parent.height - currentPath.height
+        anchors.top: currentPath.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         model: fsModel
         visible: (folderPage.state == "chart")
@@ -816,7 +853,7 @@ Page {
                 // TODO keep sortBySize in PieView.
                 changeDirSlot(text, FolderSizeItemListModel.SortBySize);
             } else {
-                flipSlot();
+                folderPage.state = "list";
             }
         }
         onActiveFocusChanged: {
@@ -827,7 +864,6 @@ Page {
         }
         onSwipe: {
             console.debug("QML pieChartView.onSwipe " + swipeAngle);
-            flipSlot();
         }
 
         Component.onCompleted: {
@@ -838,12 +874,10 @@ Page {
 
     ListView {
         id: fsListView
-        visible: false
-        x: 0
-        y: 0
+        visible: (folderPage.state == "list")
         width: parent.width
-        height: parent.height - (nameFilterPanel.visible ? nameFilterPanel.height : 0)
-        anchors.top: parent.top
+        height: parent.height - currentPath.height - (nameFilterPanel.visible ? nameFilterPanel.height : 0)
+        anchors.top: currentPath.bottom
         highlightRangeMode: ListView.NoHighlightRange
         highlightFollowsCurrentItem: true
         highlightMoveDuration: 1
@@ -867,137 +901,6 @@ Page {
 
         property int lastCenterIndex
         property string focusLocalPath
-
-        function isAnyItemChecked() {
-            for (var i=0; i<model.count; i++) {
-                var checked = model.getProperty(i, FolderSizeItemListModel.IsCheckedRole);
-                if (checked) {
-//                    console.debug("fsListView isAnyItemChecked item"
-//                                  + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
-//                                  + " isChecked " + checked);
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        function areAllItemChecked() {
-            for (var i=0; i<model.count; i++) {
-                var checked = model.getProperty(i, FolderSizeItemListModel.IsCheckedRole);
-                if (!checked) {
-//                    console.debug("fsListView areAllItemChecked item"
-//                                  + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
-//                                  + " isChecked " + checked);
-                    return false;
-                }
-            }
-            return (model.count > 0);
-        }
-
-        function markAll() {
-            for (var i=0; i<model.count; i++) {
-                // Enable all as FolderSizeItemListModel and CloudDriveModel can support sourcePath as files/folders.
-//                if (!model.getProperty(i, FolderSizeItemListModel.IsDirRole)) {
-                    model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, true);
-//                }
-            }
-        }
-
-        function markAllFiles() {
-            for (var i=0; i<model.count; i++) {
-                if (!model.getProperty(i, FolderSizeItemListModel.IsDirRole)) {
-                    model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, true);
-                }
-            }
-        }
-
-        function markAllFolders() {
-            for (var i=0; i<model.count; i++) {
-                if (model.getProperty(i, FolderSizeItemListModel.IsDirRole)) {
-                    model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, true);
-                }
-            }
-        }
-
-        function unmarkAll() {
-            for (var i=0; i<model.count; i++) {
-                model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
-            }
-        }
-
-        function cutMarkedItems() {
-            for (var i=0; i<model.count; i++) {
-                if (model.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
-                    console.debug(Utility.nowText() + "fsListView cutMarkedItems item"
-                                  + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
-                                  + " isChecked " + model.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
-
-                    clipboard.addItemWithSuppressCountChanged({ "action": "cut", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
-                }
-
-                // Reset isChecked.
-//                console.debug(Utility.nowText() + "fsListView clear check item"
-//                              + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole));
-                model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
-            }
-
-            // Emit suppressed signal.
-            clipboard.emitCountChanged();
-        }
-
-        function copyMarkedItems() {
-            for (var i=0; i<model.count; i++) {
-                if (model.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
-                    console.debug("fsListView copyMarkedItems item"
-                                  + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
-                                  + " isChecked " + model.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
-
-                    clipboard.addItemWithSuppressCountChanged({ "action": "copy", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
-                }
-
-                // Reset isChecked.
-                model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
-            }
-
-            // Emit suppressed signal.
-            clipboard.emitCountChanged();
-        }
-
-        function deleteMarkedItems() {
-            for (var i=0; i<model.count; i++) {
-                if (model.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
-                    console.debug("fsListView deleteMarkedItems item"
-                                  + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
-                                  + " isChecked " + model.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
-
-                    clipboard.addItem({ "action": "delete", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
-                }
-
-                // Reset isChecked.
-                model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
-            }
-
-            // Open confirmation dialog.
-            fileActionDialog.open();
-        }
-
-        function syncMarkedItems() {
-            for (var i=0; i<model.count; i++) {
-                if (model.getProperty(i, FolderSizeItemListModel.IsCheckedRole)) {
-                    console.debug("fsListView deleteMarkedItems item"
-                                  + " absolutePath " + model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole)
-                                  + " isChecked " + model.getProperty(i, FolderSizeItemListModel.IsCheckedRole));
-
-                    clipboard.addItem({ "action": "sync", "sourcePath": model.getProperty(i, FolderSizeItemListModel.AbsolutePathRole) });
-                }
-
-                // Reset isChecked.
-                model.setProperty(i, FolderSizeItemListModel.IsCheckedRole, false);
-            }
-
-            // Invoke syncClipboard.
-            syncClipboardItems();
-        }
 
         onMovementStarted: {
             if (currentItem) {
@@ -1052,16 +955,12 @@ Page {
 
     GridView {
         id: fsGridView
-
-        property int lastContentY
-
-        x: 0
-        y: 0
-        anchors.top: parent.top
+        visible: (folderPage.state == "grid")
         width: parent.width
-        height: parent.height - (nameFilterPanel.visible ? nameFilterPanel.height : 0)
-        cellWidth: 160
-        cellHeight: 160
+        height: parent.height - currentPath.height - (nameFilterPanel.visible ? nameFilterPanel.height : 0)
+        anchors.top: currentPath.bottom
+        cellWidth: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 120 : 160)
+        cellHeight: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 120 : 160)
         highlightRangeMode: GridView.NoHighlightRange
         highlightFollowsCurrentItem: true
         highlightMoveDuration: 1
@@ -1073,6 +972,28 @@ Page {
         pressDelay: 200
         model: fsModel
         delegate: gridItemDelegate
+        state: ""
+        states: [
+            State {
+                name: "mark"
+            }
+        ]
+
+        property int lastContentY
+
+        QuickScrollPanel {
+            id: gridQuickScrollPanel
+            listView: parent
+            indicatorBarTitle: (modelIndex < 0) ? ""
+                               : ( fsModel.sortFlag == FolderSizeItemListModel.SortByTime
+                                  ? Qt.formatDateTime(fsModel.get(modelIndex).lastModified, "d MMM yyyy")
+                                  : fsModel.get(modelIndex).name )
+            scrollBarWidth: 80
+            indicatorBarHeight: 80
+            scrollBarColor: "grey"
+            indicatorWidth: 5
+            autoHideInterval: appInfo.emptySetting+appInfo.getSettingValue("QuickScrollPanel.timer.interval", 2) * 1000
+        }
     }
 
     Gradient {
@@ -1093,7 +1014,7 @@ Page {
 
         CloudListItem {
             id: listItem
-            listViewState: (fsListView.state ? fsListView.state : "")
+            listViewState: (fsModel.state ? fsModel.state : "")
             runningIconSource: fsModel.getRunningOperationIconSource(runningOperation)
             syncIconVisible: cloudDriveModel.isConnected(absolutePath) || cloudDriveModel.isSyncing(absolutePath);
             syncIconSource: {
@@ -1108,7 +1029,7 @@ Page {
             opacity: isHidden ? 0.5 : 1
 
             onPressAndHold: {
-                if (fsListView.state != "mark") {
+                if (fsModel.state != "mark") {
                     fsListView.currentIndex = index;
                     popupToolPanel.selectedFilePath = absolutePath;
                     popupToolPanel.selectedFileName = name;
@@ -1116,13 +1037,13 @@ Page {
                     popupToolPanel.isDir = isDir;
                     popupToolPanel.pastePath = (isDir) ? absolutePath : currentPath.text;
                     var panelX = x + mouseX - fsListView.contentX;
-                    var panelY = y + mouseY - fsListView.contentY + flipable1.y;
+                    var panelY = y + mouseY - fsListView.contentY + fsListView.y;
                     popupToolPanel.open(panelX, panelY);
                 }
             }
 
             onClicked: {
-                if (fsListView.state == "mark") {
+                if (fsModel.state == "mark") {
                     fsModel.setProperty(index, FolderSizeItemListModel.IsCheckedRole, !isChecked);
                 } else {
                     if (isDir) {
@@ -1156,12 +1077,26 @@ Page {
 
         CloudGridItem {
             id: gridItem
+            gridViewState: (fsModel.state ? fsModel.state : "")
+            runningIconSource: fsModel.getRunningOperationIconSource(runningOperation)
+            syncIconVisible: !runningIconVisible && (cloudDriveModel.isConnected(absolutePath) || cloudDriveModel.isSyncing(absolutePath))
+            syncIconSource: {
+                if (cloudDriveModel.isSyncing(absolutePath)) {
+                    return "cloud_wait.svg";
+                } else if (cloudDriveModel.isDirty(absolutePath, lastModified)) {
+                    return "cloud_dirty.svg";
+                } else {
+                    return "cloud.svg";
+                }
+            }
+            opacity: isHidden ? 0.5 : 1
             width: fsGridView.cellWidth
             height: fsGridView.cellHeight
             gridItemIconBusyVisible: true
+            subIconMargin: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 10 : 32) // 32 for 3 columns, 10 for 4 columns
 
             onPressAndHold: {
-                if (fsGridView.state != "mark") {
+                if (fsModel.state != "mark") {
                     fsGridView.currentIndex = index;
                     popupToolPanel.selectedFilePath = absolutePath;
                     popupToolPanel.selectedFileName = name;
@@ -1169,13 +1104,13 @@ Page {
                     popupToolPanel.isDir = isDir;
                     popupToolPanel.pastePath = (isDir) ? absolutePath : currentPath.text;
                     var panelX = x + mouse.x - fsGridView.contentX;
-                    var panelY = y + mouse.y - fsGridView.contentY + flipable1.y;
+                    var panelY = y + mouse.y - fsGridView.contentY + fsGridView.y;
                     popupToolPanel.open(panelX, panelY);
                 }
             }
 
             onClicked: {
-                if (fsGridView.state == "mark") {
+                if (fsModel.state == "mark") {
                     fsModel.setProperty(index, FolderSizeItemListModel.IsCheckedRole, !isChecked);
                 } else {
                     if (isDir) {
@@ -1214,12 +1149,14 @@ Page {
         requestAsType: true
         anchors.bottom: parent.bottom
 
+        property variant view: (folderPage.state == "list") ? fsListView : fsGridView
+
         onPrevious: {
             lastFindIndex = fsModel.findIndexByNameFilter(nameFilter, --lastFindIndex, true);
             console.debug("folderPage nameFilterPanel onPrevious nameFilter " + nameFilter + " lastFindIndex " + lastFindIndex);
             if (lastFindIndex > -1) {
-                fsListView.positionViewAtIndex(lastFindIndex, ListView.Beginning);
-                fsListView.currentIndex = lastFindIndex;
+                view.positionViewAtIndex(lastFindIndex, ListView.Beginning);
+                view.currentIndex = lastFindIndex;
             }
         }
 
@@ -1227,21 +1164,21 @@ Page {
             lastFindIndex = fsModel.findIndexByNameFilter(nameFilter, ++lastFindIndex, false);
             console.debug("folderPage nameFilterPanel onNext nameFilter " + nameFilter + " lastFindIndex " + lastFindIndex);
             if (lastFindIndex > -1) {
-                fsListView.positionViewAtIndex(lastFindIndex, ListView.Beginning);
-                fsListView.currentIndex = lastFindIndex;
+                view.positionViewAtIndex(lastFindIndex, ListView.Beginning);
+                view.currentIndex = lastFindIndex;
             }
         }
 
         onOpened: {
             // Turn highlight on.
-//            fsListView.highlightFollowsCurrentItem = true;
-            lastFindIndex = fsListView.currentIndex;
+//            view.highlightFollowsCurrentItem = true;
+            lastFindIndex = view.currentIndex;
         }
 
         onClosed: {
             // Turn highlight off.
-//            fsListView.highlightFollowsCurrentItem = false;
-            fsListView.currentIndex = -1;
+//            view.highlightFollowsCurrentItem = false;
+            view.currentIndex = -1;
         }
     }
 
@@ -1307,6 +1244,7 @@ Page {
 //            console.debug("popupToolRing onClosed");
             // Workaround to hide highlight.
             fsListView.currentIndex = -1;
+            fsGridView.currentIndex = -1;
         }
 
         onCutClicked: {
@@ -1356,6 +1294,7 @@ Page {
 
         onShowTools: {
             fsListView.currentIndex = srcItemIndex;
+            fsGridView.currentIndex = srcItemIndex;
             toolMenu.selectedIndex = srcItemIndex;
             toolMenu.selectedFilePath = srcFilePath;
             toolMenu.open();
@@ -1371,7 +1310,7 @@ Page {
         }
 
         onMarkClicked: {
-            fsListView.state = "mark";
+            fsModel.state = "mark";
             fsModel.setProperty(srcItemIndex, FolderSizeItemListModel.IsCheckedRole, true);
         }
 

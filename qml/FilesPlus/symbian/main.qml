@@ -77,6 +77,8 @@ PageStackWindow {
     FolderSizeItemListModel {
         id: fsModel
 
+        property string state: ""
+
         // Test only. ISSUE: Setting currentDir to path that requires long caching time ("/home/user") will freeze UI at splash screen.
 
         function getActionName(fileAction) {
@@ -1165,6 +1167,7 @@ PageStackWindow {
         id: cloudDriveModel
 
         property string shareFileCaller
+        property string state: ""
 
         function refreshCloudDriveAccounts(caller) {
             var p = findPage("drivePage");

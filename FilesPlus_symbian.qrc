@@ -163,5 +163,8 @@
         <file alias="qml/FilesPlus/BookmarksMenu.qml">qml/FilesPlus/symbian/BookmarksMenu.qml</file>
         <file>qml/FilesPlus/delete_list.svg</file>
         <file>qml/FilesPlus/favourite_inverted.svg</file>
+        <file alias="qml/FilesPlus/CloudGridItem.qml">qml/FilesPlus/symbian/CloudGridItem.qml</file>
+        <file>qml/FilesPlus/grid.svg</file>
+        <file>qml/FilesPlus/grid_inverted.svg</file>
     </qresource>
 </RCC>

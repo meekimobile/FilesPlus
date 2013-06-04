@@ -218,6 +218,12 @@ Page {
             group: "Personalization"
         }
         ListElement {
+            name: "GridView.compact.enabled"
+            title: ""
+            type: "switch"
+            group: "Personalization"
+        }
+        ListElement {
             name: "thumbnail.enabled"
             title: ""
             type: "switch"
@@ -240,12 +246,6 @@ Page {
             title: ""
             type: "switch"
             group: "Personalization"
-        }
-        ListElement {
-            name: "Spacer"
-            title: ""
-            type: "spacer"
-            group: "Spacer"
         }
         ListElement {
             name: "Developer"
@@ -351,6 +351,7 @@ Page {
         else if (name == "Theme.inverted") return qsTr("Theme") + appInfo.emptyStr;
         else if (name == "popup.timer.interval") return qsTr("Popup interval") + appInfo.emptyStr;
         else if (name == "listItem.compact.enabled") return qsTr("Compact list item") + appInfo.emptyStr;
+        else if (name == "GridView.compact.enabled") return qsTr("Grid view columns 3/4") + appInfo.emptyStr;
         else if (name == "locale") return languageModel.getLanguage(appInfo.getLocale(), appInfo.getSystemLocale()) + appInfo.emptyStr;
         else if (name == "thumbnail.enabled") return qsTr("Show thumbnail on local drive") + appInfo.emptyStr;
         else if (name == "CloudFolderPage.thumbnail.enabled") return qsTr("Show thumbnail on cloud drive") + appInfo.emptyStr;
@@ -392,6 +393,9 @@ Page {
             resetCacheConfirmation.open();
         } else if (name == "Theme.inverted") {
             theme.inverted = !theme.inverted;
+        } else if (name == "GridView.compact.enabled") {
+            fsModel.refreshItems();
+            cloudDriveModel.refreshItems();
         } else if (name == "locale") {
             languageSelector.open();
         } else if (name == "Logging.enabled") {

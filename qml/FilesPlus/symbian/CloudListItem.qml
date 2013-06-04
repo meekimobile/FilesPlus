@@ -22,6 +22,8 @@ ListItem {
     property alias syncIconVisible: syncIcon.visible
     property bool inverted: window.platformInverted
     property bool omitShowingZeroSizeDir: false
+    property variant viewableImageFileTypes: ["JPG", "PNG", "SVG"]
+    property bool showPreview: (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1)
 
 
     signal listItemIconError()
@@ -94,6 +96,18 @@ ListItem {
                     width: parent.width
                     height: parent.height
                     anchors.centerIn: parent
+                }
+
+                Text {
+                    id: listItemFileType
+                    text: fileType.toUpperCase()
+                    font.pointSize: 6
+                    font.bold: true
+                    color: "black"
+                    style: Text.Outline
+                    styleColor: "white"
+                    anchors.centerIn: parent
+                    visible: !showPreview && !isDir
                 }
 
                 onStatusChanged: {

@@ -27,6 +27,16 @@ Page {
     property bool selectedIsValid
     property bool isBusy
 
+    state: "list"
+    states: [
+        State {
+            name: "list"
+        },
+        State {
+            name: "grid"
+        }
+    ]
+
     function goUpSlot() {
         console.debug("cloudFolderPage goUpSlot selectedCloudType " + selectedCloudType + " selectedUid " + selectedUid + " cloudDriveModel.remoteParentPath " + cloudDriveModel.remoteParentPath + " cloudDriveModel.remoteParentParentPath " + cloudDriveModel.remoteParentParentPath);
         if (cloudDriveModel.isRemoteRoot(selectedCloudType, selectedUid, cloudDriveModel.remoteParentPath) || cloudDriveModel.remoteParentParentPath == "") {
@@ -47,11 +57,13 @@ Page {
         selectedIsValid = true;
         selectedIndex = cloudDriveModel.findIndexByRemotePath(originalRemotePath);
         cloudFolderView.currentIndex = selectedIndex;
+        cloudFolderGridView.currentIndex = selectedIndex;
 
         // Reset busy.
         isBusy = false;
         if (selectedIndex > -1) {
             cloudFolderView.positionViewAtIndex(selectedIndex, ListView.Contain); // Issue: ListView.Center will cause list item displayed out of list view in Meego only.
+            cloudFolderGridView.positionViewAtIndex(selectedIndex, ListView.Contain); // Issue: ListView.Center will cause list item displayed out of list view in Meego only.
         }
     }
 
@@ -205,6 +217,96 @@ Page {
         }
     }
 
+    // Selection functions.
+
+    function cutMarkedItems() {
+        for (var i=0; i<cloudDriveModel.count; i++) {
+            if (cloudDriveModel.get(i).isChecked) {
+                console.debug(Utility.nowText() + "cloudFolderPage cutMarkedItems item"
+                              + " absolutePath " + cloudDriveModel.get(i).absolutePath
+                              + " isChecked " + cloudDriveModel.get(i).isChecked);
+
+                clipboard.addItemWithSuppressCountChanged({ "action": "cut",
+                                                              "type": cloudDriveModel.getCloudName(selectedCloudType),
+                                                              "uid": selectedUid,
+                                                              "sourcePath": cloudDriveModel.get(i).absolutePath,
+                                                              "sourcePathName": cloudDriveModel.get(i).name });
+            }
+
+            // Reset isChecked.
+            cloudDriveModel.setProperty(i, "isChecked", false);
+        }
+
+        // Emit suppressed signal.
+        clipboard.emitCountChanged();
+    }
+
+    function copyMarkedItems() {
+        for (var i=0; i<cloudDriveModel.count; i++) {
+            if (cloudDriveModel.get(i).isChecked) {
+                console.debug(Utility.nowText() + "cloudFolderPage copyMarkedItems item"
+                              + " absolutePath " + cloudDriveModel.get(i).absolutePath
+                              + " isChecked " + cloudDriveModel.get(i).isChecked);
+
+                clipboard.addItemWithSuppressCountChanged({ "action": "copy",
+                                                              "type": cloudDriveModel.getCloudName(selectedCloudType),
+                                                              "uid": selectedUid,
+                                                              "sourcePath": cloudDriveModel.get(i).absolutePath,
+                                                              "sourcePathName": cloudDriveModel.get(i).name });
+            }
+
+            // Reset isChecked.
+            cloudDriveModel.setProperty(i, "isChecked", false);
+        }
+
+        // Emit suppressed signal.
+        clipboard.emitCountChanged();
+    }
+
+    function deleteMarkedItems() {
+        for (var i=0; i<cloudDriveModel.count; i++) {
+            if (cloudDriveModel.get(i).isChecked) {
+                console.debug(Utility.nowText() + "cloudFolderPage deleteMarkedItems item"
+                              + " absolutePath " + cloudDriveModel.get(i).absolutePath
+                              + " isChecked " + cloudDriveModel.get(i).isChecked);
+
+                clipboard.addItem({ "action": "delete",
+                                      "type": cloudDriveModel.getCloudName(selectedCloudType),
+                                      "uid": selectedUid,
+                                      "sourcePath": cloudDriveModel.get(i).absolutePath,
+                                      "sourcePathName": cloudDriveModel.get(i).name });
+            }
+
+            // Reset isChecked.
+            cloudDriveModel.setProperty(i, "isChecked", false);
+        }
+
+        // Open confirmation dialog.
+        fileActionDialog.open();
+    }
+
+    function syncMarkedItems() {
+        for (var i=0; i<cloudDriveModel.count; i++) {
+            if (cloudDriveModel.get(i).isChecked) {
+                console.debug(Utility.nowText() + " cloudFolderPage syncMarkedItems item"
+                              + " absolutePath " + cloudDriveModel.get(i).absolutePath
+                              + " isChecked " + cloudDriveModel.get(i).isChecked);
+
+                clipboard.addItem({ "action": "sync",
+                                      "type": cloudDriveModel.getCloudName(selectedCloudType),
+                                      "uid": selectedUid,
+                                      "sourcePath": cloudDriveModel.get(i).absolutePath,
+                                      "sourcePathName": cloudDriveModel.get(i).name });
+            }
+
+            // Reset isChecked.
+            cloudDriveModel.setProperty(i, "isChecked", false);
+        }
+
+        // Invoke syncClipboard.
+        syncClipboardItems();
+    }
+
     tools: ToolBarLayout {
         id: toolBarLayout
 
@@ -212,8 +314,8 @@ Page {
             id: backButton
             buttonIconSource: "toolbar-back"
             onClicked: {
-                if (cloudFolderView.state == "mark") {
-                    cloudFolderView.state = "";
+                if (cloudDriveModel.state == "mark") {
+                    cloudDriveModel.state = "";
                 } else {
                     // TODO Specify local path to focus after cd to parent directory..
 //                    cloudFolderView.focusLocalPath = cloudDriveModel.currentDir;
@@ -225,7 +327,7 @@ Page {
         ToolBarButton {
             id: refreshButton
             buttonIconSource: "toolbar-refresh"
-            visible: (cloudFolderView.state != "mark")
+            visible: (cloudDriveModel.state != "mark")
             onClicked: {
                 // Force resume.
                 cloudDriveModel.resumeNextJob();
@@ -238,27 +340,31 @@ Page {
             id: actionButton
 
             buttonIconSource: {
-                if (cloudFolderView.state == "mark") {
+                if (cloudDriveModel.state == "mark") {
                     return (!inverted ? "ok.svg" : "ok_inverted.svg");
                 } else {
-                    if (cloudFolderPage.state != "list") {
-                        return (!inverted ? "list.svg" : "list_inverted.svg");
+                    if (cloudFolderPage.state == "list") {
+                        return (!inverted ? "grid.svg" : "grid_inverted.svg");
                     } else {
-                        return (!inverted ? "chart.svg" : "chart_inverted.svg");
+                        return (!inverted ? "list.svg" : "list_inverted.svg");
                     }
                 }
             }
 
             onClicked: {
-                if (cloudFolderView.state == "mark") {
+                if (cloudDriveModel.state == "mark") {
                     if (markMenu.isMarkAll) {
-                        cloudFolderView.unmarkAll();
+                        cloudDriveModel.unmarkAll();
                     } else {
-                        cloudFolderView.markAll();
+                        cloudDriveModel.markAll();
                     }
                     markMenu.isMarkAll = !markMenu.isMarkAll;
                 } else {
-//                    flipSlot();
+                    if (cloudFolderPage.state == "list") {
+                        cloudFolderPage.state = "grid";
+                    } else {
+                        cloudFolderPage.state = "list";
+                    }
                 }
             }
         }
@@ -266,7 +372,7 @@ Page {
         ToolBarButton {
             id: cloudButton
             buttonIconSource: (!inverted ? "cloud.svg" : "cloud_inverted.svg")
-            visible: (cloudFolderView.state != "mark")
+            visible: (cloudDriveModel.state != "mark")
 
             TextIndicator {
                 id: cloudButtonIndicator
@@ -291,8 +397,8 @@ Page {
                 // Hide popupToolPanel.
                 popupToolPanel.visible = false;
 
-                if (cloudFolderView.state == "mark") {
-                    if (!cloudFolderView.isAnyItemChecked()) {
+                if (cloudDriveModel.state == "mark") {
+                    if (!cloudDriveModel.isAnyItemChecked()) {
                         markAllMenu.open();
                     } else {
                         markMenu.open();
@@ -325,12 +431,14 @@ Page {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: (inputContext.visible ? (inputContext.height - 60) : 0) // Symbian only
 
+        property variant view: (cloudFolderPage.state == "list") ? cloudFolderView : cloudFolderGridView
+
         onPrevious: {
             lastFindIndex = cloudDriveModel.findIndexByNameFilter(nameFilter, --lastFindIndex, true);
             console.debug("cloudFolderPage nameFilterPanel onPrevious nameFilter " + nameFilter + " lastFindIndex " + lastFindIndex);
             if (lastFindIndex > -1) {
-                cloudFolderView.positionViewAtIndex(lastFindIndex, ListView.Beginning);
-                cloudFolderView.currentIndex = lastFindIndex;
+                view.positionViewAtIndex(lastFindIndex, ListView.Beginning);
+                view.currentIndex = lastFindIndex;
             }
         }
 
@@ -338,21 +446,21 @@ Page {
             lastFindIndex = cloudDriveModel.findIndexByNameFilter(nameFilter, ++lastFindIndex, false);
             console.debug("cloudFolderPage nameFilterPanel onNext nameFilter " + nameFilter + " lastFindIndex " + lastFindIndex);
             if (lastFindIndex > -1) {
-                cloudFolderView.positionViewAtIndex(lastFindIndex, ListView.Beginning);
-                cloudFolderView.currentIndex = lastFindIndex;
+                view.positionViewAtIndex(lastFindIndex, ListView.Beginning);
+                view.currentIndex = lastFindIndex;
             }
         }
 
         onOpened: {
             // Turn highlight on.
-//            cloudFolderView.highlightFollowsCurrentItem = true;
-            lastFindIndex = cloudFolderView.currentIndex;
+//            view.highlightFollowsCurrentItem = true;
+            lastFindIndex = view.currentIndex;
         }
 
         onClosed: {
             // Turn highlight off.
-//            cloudFolderView.highlightFollowsCurrentItem = false;
-            cloudFolderView.currentIndex = -1;
+//            view.highlightFollowsCurrentItem = false;
+            view.currentIndex = -1;
         }
     }
 
@@ -367,7 +475,7 @@ Page {
             fileActionDialog.open();
         }
         onOpenMarkMenu: {
-            cloudFolderView.state = "mark";
+            cloudDriveModel.state = "mark";
         }
         onClearClipboard: {
             clipboard.clear();
@@ -404,7 +512,7 @@ Page {
             } else if (menuItem.name == "clearClipboard") {
                 return clipboard.count > 0;
             } else if (menuItem.name == "markMenu") {
-                return cloudFolderView.state != "mark";
+                return cloudDriveModel.state != "mark";
             }
 
             return true;
@@ -428,6 +536,7 @@ Page {
         onSelectSort: {
             console.debug("sortByMenu setSortFlag flag=" + flag);
             cloudFolderView.positionViewAtBeginning();
+            cloudFolderGridView.positionViewAtBeginning();
             cloudDriveModel.setSortFlag(selectedCloudType, selectedUid, selectedRemotePath, flag);
         }
 
@@ -444,35 +553,39 @@ Page {
 
         onMarkAll: {
             if (isMarkAll) {
-                cloudFolderView.markAll();
+                cloudDriveModel.markAll();
             } else {
-                cloudFolderView.unmarkAll();
+                cloudDriveModel.unmarkAll();
             }
             isMarkAll = !isMarkAll;
         }
         onCutMarkedItems: {
-            cloudFolderView.cutMarkedItems();
-            cloudFolderView.state = "";
+            cloudFolderPage.cutMarkedItems();
+            cloudDriveModel.state = "";
             cloudFolderView.currentIndex = -1;
+            cloudFolderGridView.currentIndex = -1;
         }
         onCopyMarkedItems: {
-            cloudFolderView.copyMarkedItems();
-            cloudFolderView.state = "";
+            cloudFolderPage.copyMarkedItems();
+            cloudDriveModel.state = "";
             cloudFolderView.currentIndex = -1;
+            cloudFolderGridView.currentIndex = -1;
         }
         onDeleteMarkedItems: {
-            cloudFolderView.deleteMarkedItems();
-            cloudFolderView.state = "";
+            cloudFolderPage.deleteMarkedItems();
+            cloudDriveModel.state = "";
             cloudFolderView.currentIndex = -1;
+            cloudFolderGridView.currentIndex = -1;
         }
         onSyncMarkedItems: {
-            cloudFolderView.syncMarkedItems();
-            cloudFolderView.state = "";
+            cloudFolderPage.syncMarkedItems();
+            cloudDriveModel.state = "";
             cloudFolderView.currentIndex = -1;
+            cloudFolderGridView.currentIndex = -1;
         }
         onStatusChanged: {
             if (status == DialogStatus.Opening) {
-                isMarkAll = !cloudFolderView.areAllItemChecked();
+                isMarkAll = !cloudDriveModel.areAllItemChecked();
             }
         }
 
@@ -485,9 +598,9 @@ Page {
     MarkAllMenu {
         id: markAllMenu
 
-        onMarkAll: cloudFolderView.markAll()
-        onMarkAllFiles: cloudFolderView.markAllFiles()
-        onMarkAllFolders: cloudFolderView.markAllFolders();
+        onMarkAll: cloudDriveModel.markAll()
+        onMarkAllFiles: cloudDriveModel.markAllFiles()
+        onMarkAllFolders: cloudDriveModel.markAllFolders();
     }
 
     CloudMenu {
@@ -516,7 +629,7 @@ Page {
     OpenMenu {
         id: openMenu
 
-        property int selectedIndex: cloudFolderView.currentIndex
+        property int selectedIndex: (cloudFolderPage.state == "list") ? cloudFolderView.currentIndex : cloudFolderGridView.currentIndex
 
         function show() {
             var absolutePath = cloudDriveModel.get(selectedIndex).absolutePath;
@@ -546,6 +659,7 @@ Page {
 
     ListView {
         id: cloudFolderView
+        visible: (cloudFolderPage.state == "list")
         width: parent.width
         height: parent.height - currentPath.height - (nameFilterPanel.visible ? nameFilterPanel.height : 0) - (inputContext.visible ? (inputContext.height - 60) : 0) // Symbian only
         anchors.top: currentPath.bottom
@@ -554,18 +668,7 @@ Page {
         highlightMoveDuration: 1
         highlightMoveSpeed: 4000
         highlight: Rectangle {
-            width: cloudFolderView.width
-            gradient: Gradient {
-                GradientStop {
-                    position: 0
-                    color: "#0080D0"
-                }
-
-                GradientStop {
-                    position: 1
-                    color: "#53A3E6"
-                }
-            }
+            gradient: highlightGradient
         }
         clip: true
         focus: true
@@ -578,126 +681,6 @@ Page {
                 name: "mark"
             }
         ]
-
-        function isAnyItemChecked() {
-            for (var i=0; i<model.count; i++) {
-                var checked = model.get(i).isChecked;
-                if (checked) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        function areAllItemChecked() {
-            for (var i=0; i<model.count; i++) {
-                var checked = model.get(i).isChecked;
-                if (!checked) {
-                    return false;
-                }
-            }
-            return (model.count > 0);
-        }
-
-        function markAll() {
-            for (var i=0; i<model.count; i++) {
-                model.setProperty(i, "isChecked", true);
-            }
-        }
-
-        function markAllFiles() {
-            for (var i=0; i<model.count; i++) {
-                if (!model.get(i).isDir) {
-                    model.setProperty(i, "isChecked", true);
-                }
-            }
-        }
-
-        function markAllFolders() {
-            for (var i=0; i<model.count; i++) {
-                if (model.get(i).isDir) {
-                    model.setProperty(i, "isChecked", true);
-                }
-            }
-        }
-
-        function unmarkAll() {
-            for (var i=0; i<model.count; i++) {
-                model.setProperty(i, "isChecked", false);
-            }
-        }
-
-        function cutMarkedItems() {
-            for (var i=0; i<model.count; i++) {
-                if (model.get(i).isChecked) {
-                    console.debug(Utility.nowText() + "cloudFolderView cutMarkedItems item"
-                                  + " absolutePath " + model.get(i).absolutePath
-                                  + " isChecked " + model.get(i).isChecked);
-
-                    clipboard.addItemWithSuppressCountChanged({ "action": "cut", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": model.get(i).absolutePath, "sourcePathName": model.get(i).name });
-                }
-
-                // Reset isChecked.
-                model.setProperty(i, "isChecked", false);
-            }
-
-            // Emit suppressed signal.
-            clipboard.emitCountChanged();
-        }
-
-        function copyMarkedItems() {
-            for (var i=0; i<model.count; i++) {
-                if (model.get(i).isChecked) {
-                    console.debug(Utility.nowText() + "cloudFolderView copyMarkedItems item"
-                                  + " absolutePath " + model.get(i).absolutePath
-                                  + " isChecked " + model.get(i).isChecked);
-
-                    clipboard.addItemWithSuppressCountChanged({ "action": "copy", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": model.get(i).absolutePath, "sourcePathName": model.get(i).name });
-                }
-
-                // Reset isChecked.
-                model.setProperty(i, "isChecked", false);
-            }
-
-            // Emit suppressed signal.
-            clipboard.emitCountChanged();
-        }
-
-        function deleteMarkedItems() {
-            for (var i=0; i<model.count; i++) {
-                if (model.get(i).isChecked) {
-                    console.debug(Utility.nowText() + "cloudFolderView deleteMarkedItems item"
-                                  + " absolutePath " + model.get(i).absolutePath
-                                  + " isChecked " + model.get(i).isChecked);
-
-                    clipboard.addItem({ "action": "delete", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": model.get(i).absolutePath, "sourcePathName": model.get(i).name });
-                }
-
-                // Reset isChecked.
-                model.setProperty(i, "isChecked", false);
-            }
-
-            // Open confirmation dialog.
-            fileActionDialog.open();
-        }
-
-        function syncMarkedItems() {
-            for (var i=0; i<model.count; i++) {
-                if (model.get(i).isChecked) {
-                    console.debug(Utility.nowText() + " cloudFolderView syncMarkedItems item"
-                                  + " absolutePath " + model.get(i).absolutePath
-                                  + " isChecked " + model.get(i).isChecked);
-
-                    clipboard.addItem({ "action": "sync", "type": cloudDriveModel.getCloudName(selectedCloudType), "uid": selectedUid, "sourcePath": model.get(i).absolutePath, "sourcePathName": model.get(i).name });
-                }
-
-                // Reset isChecked.
-                model.setProperty(i, "isChecked", false);
-            }
-
-            // Invoke syncClipboard.
-            syncClipboardItems();
-        }
 
         Rectangle {
             id: busyPanel
@@ -748,12 +731,68 @@ Page {
         }
     }
 
+    GridView {
+        id: cloudFolderGridView
+        visible: (cloudFolderPage.state == "grid")
+        width: parent.width
+        height: parent.height - currentPath.height - (nameFilterPanel.visible ? nameFilterPanel.height : 0)
+        anchors.top: currentPath.bottom
+        cellWidth: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 90 : 120)
+        cellHeight: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 90 : 120)
+        highlightRangeMode: GridView.NoHighlightRange
+        highlightFollowsCurrentItem: true
+        highlightMoveDuration: 1
+        highlight: Rectangle {
+            gradient: highlightGradient
+        }
+        clip: true
+        focus: true
+        pressDelay: 100
+        model: cloudDriveModel
+        delegate: gridItemDelegate
+        state: ""
+        states: [
+            State {
+                name: "mark"
+            }
+        ]
+
+        property int lastContentY
+
+        QuickScrollPanel {
+            id: gridQuickScrollPanel
+            listView: parent
+            indicatorBarTitle: (modelIndex < 0) ? ""
+                               : ( sortByMenu.sortFlag == CloudDriveModel.SortByTime
+                                  ? Qt.formatDateTime(cloudDriveModel.get(modelIndex).lastModified, "d MMM yyyy")
+                                  : cloudDriveModel.get(modelIndex).name )
+            scrollBarWidth: 70
+            indicatorBarHeight: 70
+            scrollBarColor: "grey"
+            indicatorWidth: 5
+            autoHideInterval: appInfo.emptySetting+appInfo.getSettingValue("QuickScrollPanel.timer.interval", 2) * 1000
+        }
+    }
+
+    Gradient {
+        id: highlightGradient
+        GradientStop {
+            position: 0
+            color: "#0080D0"
+        }
+
+        GradientStop {
+            position: 1
+            color: "#53A3E6"
+        }
+    }
+
     Component {
         id: cloudItemDelegate
 
         CloudListItem {
             id: listItem
-            listViewState: (cloudFolderView.state ? cloudFolderView.state : "")
+            listViewState: (cloudDriveModel.state ? cloudDriveModel.state : "")
             syncIconVisible: isConnected
             syncIconSource: (isRunning) ? "cloud_wait.svg" : "cloud.svg"
             actionIconSource: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath, cloudDriveModel.getCloudName(selectedCloudType), selectedUid) : ""
@@ -797,7 +836,7 @@ Page {
             }
 
             onPressAndHold: {
-                if (cloudFolderView.state != "mark") {
+                if (cloudDriveModel.state != "mark") {
                     cloudFolderView.currentIndex = index;
                     popupToolPanel.selectedFilePath = absolutePath;
                     popupToolPanel.selectedFileName = name;
@@ -811,7 +850,7 @@ Page {
             }
 
             onClicked: {
-                if (cloudFolderView.state == "mark") {
+                if (cloudDriveModel.state == "mark") {
                     cloudDriveModel.setProperty(index, "isChecked", !isChecked);
                 } else {
                     if (isDir) {
@@ -866,6 +905,128 @@ Page {
         }
     }
 
+    Component {
+        id: gridItemDelegate
+
+        CloudGridItem {
+            id: gridItem
+            gridViewState: (cloudDriveModel.state ? cloudDriveModel.state : "")
+            syncIconVisible: isConnected && !isRunning
+            syncIconSource: (isRunning) ? "cloud_wait.svg" : "cloud.svg"
+            actionIconSource: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath, cloudDriveModel.getCloudName(selectedCloudType), selectedUid) : ""
+            gridItemIconSource: appInfo.emptySetting+gridItem.getIconSource(timestamp)
+            width: cloudFolderGridView.cellWidth
+            height: cloudFolderGridView.cellHeight
+            gridItemIconBusyVisible: true
+            subIconMargin: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 10 : 32) // 32 for 3 columns, 10 for 4 columns
+
+            function getIconSource(timestamp) {
+                var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
+
+                if (isDir) {
+                    return "folder_list.svg";
+                } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                    var previewUrl = preview;
+                    if (previewUrl == "") {
+                        previewUrl = cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
+                        cloudDriveModel.setProperty(index, "preview", previewUrl);
+                    }
+                    return getImageSource(previewUrl, timestamp);
+                } else {
+                    return "notes_list.svg";
+                }
+            }
+
+            function getImageSource(url, timestamp) {
+                if (cloudDriveModel.isImageUrlCachable(selectedCloudType) && (fileType.toUpperCase() != "SVG")) {
+                    // Cache only cloud, cachable and not-SVG image.
+                    return "image://remote/" + url + "#t=" + timestamp;
+                } else {
+                    return url + "#t=" + timestamp;
+                }
+            }
+
+            function getMediaSource(source, remoteFilePath) {
+                var url = "";
+                if (source) {
+                    url = source;
+                } else {
+                    url = cloudDriveModel.media(selectedCloudType, selectedUid, remoteFilePath);
+                }
+//                console.debug("cloudFolderPage gridItem getMediaSource url " + url);
+                return url;
+            }
+
+            onPressAndHold: {
+                if (cloudDriveModel.state != "mark") {
+                    cloudFolderGridView.currentIndex = index;
+                    popupToolPanel.selectedFilePath = absolutePath;
+                    popupToolPanel.selectedFileName = name;
+                    popupToolPanel.selectedFileIndex = index;
+                    popupToolPanel.isDir = isDir;
+                    popupToolPanel.pastePath = (isDir) ? absolutePath : remoteParentPath;
+                    var panelX = x + mouse.x - cloudFolderGridView.contentX + cloudFolderGridView.x;
+                    var panelY = y + mouse.y - cloudFolderGridView.contentY + cloudFolderGridView.y;
+                    popupToolPanel.open(panelX, panelY);
+                }
+            }
+
+            onClicked: {
+                if (cloudDriveModel.state == "mark") {
+                    cloudDriveModel.setProperty(index, "isChecked", !isChecked);
+                } else {
+                    if (isDir) {
+                        changeRemotePath(absolutePath);
+                    } else {
+                        // If file is running, disable preview.
+                        if (isRunning) return;
+
+                        isBusy = true;
+
+                        if (source) console.debug("cloudFolderPage listItem onClicked source " + source);
+                        if (alternative) console.debug("cloudFolderPage listItem onClicked alternative " + alternative);
+                        if (thumbnail) console.debug("cloudFolderPage listItem onClicked thumbnail " + thumbnail);
+                        if (preview) console.debug("cloudFolderPage listItem onClicked preview " + preview);
+
+                        // Check if it's viewable.
+                        var url;
+                        if (cloudDriveModel.isViewable(selectedCloudType)) {
+                            var viewableImageFileTypes = ["JPG", "PNG", "GIF", "SVG"];
+                            var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
+                            if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                                // NOTE ImageViewPage will populate ImageViewModel with mediaUrl.
+                                pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
+                                               { model: cloudDriveModel, selectedCloudType: selectedCloudType, selectedUid: selectedUid, selectedFilePath: absolutePath });
+                            } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                                // View with internal web viewer.
+                                url = getMediaSource(source, absolutePath);
+                                if (url != "") {
+                                    appInfo.addToClipboard(url);
+                                    pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
+                                }
+                            } else {
+                                // Shows options if both source and alternative are available.
+                                openMenu.show();
+                            }
+                        } else {
+                            // File is not viewable but may be browsable.
+                            // Shows options if both source and alternative are available.
+                            openMenu.show();
+                        }
+
+                        isBusy = false;
+                    }
+                }
+            }
+
+            onListItemIconError: {
+                if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
+                    cloudDriveModel.cacheImage(absolutePath, preview, -1, -1, cloudFolderPage.name); // Use original size because previewUrl is already specified with size.
+                }
+            }
+        }
+    }
+
     Rectangle {
         id: popupToolPanelBG
         color: "black"
@@ -909,6 +1070,7 @@ Page {
 //            console.debug("popupToolRing onClosed");
 //            // Workaround to hide highlight.
             cloudFolderView.currentIndex = -1;
+            cloudFolderGridView.currentIndex = -1;
         }
 
         onCutClicked: {
@@ -969,7 +1131,7 @@ Page {
         }
 
         onMarkClicked: {
-            cloudFolderView.state = "mark";
+            cloudDriveModel.state = "mark";
             cloudDriveModel.setProperty(srcItemIndex, "isChecked", true);
         }
 

@@ -55,7 +55,8 @@ void customMessageHandler(QtMsgType type, const char *msg)
     ts << txt << endl;
 #elif defined(Q_WS_HARMATTAN)
     // Append to file.
-    QString filePath = QString("/home/user/MyDocs/%1_Debug_%2.log").arg(AppName).arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
+    // NOTE Log file with .txt as extension will be shown on Document app on N9.
+    QString filePath = QString("/home/user/MyDocs/%1_Debug_%2.log.txt").arg(AppName).arg(QDateTime::currentDateTime().toString("yyyyMMdd"));
     QFile outFile(filePath);
     outFile.open(QIODevice::WriteOnly | QIODevice::Append);
     QTextStream ts(&outFile);

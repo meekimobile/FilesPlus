@@ -4526,6 +4526,27 @@ void CloudDriveModel::proceedNextJob() {
         return;
     }
 
+    if (m_settings.value("CloudDriveModel.proceedNextJob.syncOnlyOnCharging.enabled", false).toBool()
+            && m_batteryInfo.chargingState() != QSystemBatteryInfo::Charging) {
+        qDebug() << "CloudDriveModel::proceedNextJob suspended m_batteryInfo.batteryStatus()" << m_batteryInfo.batteryStatus() << "m_batteryInfo.remainingCapacityPercent()" << m_batteryInfo.remainingCapacityPercent();
+        // TODO Fail job.
+        return;
+    }
+
+    if (m_settings.value("CloudDriveModel.proceedNextJob.syncOnlyOnBatteryOk.enabled", false).toBool()
+            && m_batteryInfo.batteryStatus() < QSystemBatteryInfo::BatteryOk) {
+        qDebug() << "CloudDriveModel::proceedNextJob suspended m_batteryInfo.batteryStatus()" << m_batteryInfo.batteryStatus() << "m_batteryInfo.remainingCapacityPercent()" << m_batteryInfo.remainingCapacityPercent();
+        // TODO Fail job.
+        return;
+    }
+
+    if (m_settings.value("CloudDriveModel.proceedNextJob.syncOnlyOnWlan.enabled", false).toBool()
+            && m_networkInfo.currentMode() != QSystemNetworkInfo::WlanMode) {
+        qDebug() << "CloudDriveModel::proceedNextJob suspended m_networkInfo.currentMode()" << m_networkInfo.currentMode();
+        // TODO Fail job.
+        return;
+    }
+
     // TODO Check retryCount before proceed.
     QString nonce = m_jobQueue->dequeue();
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
@@ -4947,6 +4968,89 @@ void CloudDriveModel::setSortFlag(CloudDriveModel::ClientTypes type, QString uid
 
 //    emit browseReplySignal(createNonce(), 0, "Set sort flag", msg);
     emit browseReplySignal(createNonce(), 0, "Set sort flag", "{}");
+}
+
+bool CloudDriveModel::isAnyItemChecked()
+{
+    for (int i = 0; i < m_modelItemList->length(); i++) {
+        QApplication::processEvents();
+        if (m_modelItemList->at(i).isChecked) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool CloudDriveModel::areAllItemChecked()
+{
+    for (int i = 0; i < m_modelItemList->length(); i++) {
+        QApplication::processEvents();
+        if (!m_modelItemList->at(i).isChecked) {
+            return false;
+        }
+    }
+
+    return (m_modelItemList->length() > 0);
+}
+
+void CloudDriveModel::markAll()
+{
+    for (int i = 0; i < m_modelItemList->length(); i++) {
+        QApplication::processEvents();
+        CloudDriveModelItem item = m_modelItemList->at(i);
+        item.isChecked = true;
+        m_modelItemList->replace(i, item);
+    }
+
+    refreshItems();
+}
+
+void CloudDriveModel::markAllFiles()
+{
+    for (int i = 0; i < m_modelItemList->length(); i++) {
+        QApplication::processEvents();
+        CloudDriveModelItem item = m_modelItemList->at(i);
+        if (!item.isDir) {
+            item.isChecked = true;
+            m_modelItemList->replace(i, item);
+        }
+    }
+
+    refreshItems();
+}
+
+void CloudDriveModel::markAllFolders()
+{
+    for (int i = 0; i < m_modelItemList->length(); i++) {
+        QApplication::processEvents();
+        CloudDriveModelItem item = m_modelItemList->at(i);
+        if (item.isDir) {
+            item.isChecked = true;
+            m_modelItemList->replace(i, item);
+        }
+    }
+
+    refreshItems();
+}
+
+void CloudDriveModel::unmarkAll()
+{
+    for (int i = 0; i < m_modelItemList->length(); i++) {
+        QApplication::processEvents();
+        CloudDriveModelItem item = m_modelItemList->at(i);
+        item.isChecked = false;
+        m_modelItemList->replace(i, item);
+    }
+
+    refreshItems();
+}
+
+void CloudDriveModel::refreshItems()
+{
+    beginResetModel();
+    emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, 0));
+    endResetModel();
 }
 
 QString CloudDriveModel::sortJsonText(QString &jsonText, int sortFlag)

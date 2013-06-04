@@ -1,5 +1,5 @@
 import QtQuick 1.1
-import com.nokia.meego 1.0
+import com.nokia.symbian 1.1
 import "Utility.js" as Utility
 
 Item {
@@ -86,14 +86,15 @@ Item {
         BusyIndicator {
             visible: gridItemIconBusyVisible && (parent.status == Image.Loading || parent.status == Image.Error)
             running: visible
-            platformStyle: BusyIndicatorStyle { size: "medium" }
+            width: parent.width
+            height: parent.height
             anchors.centerIn: parent
         }
 
         Text {
             id: gridItemFileType
             text: fileType.toUpperCase()
-            font.pointSize: 24
+            font.pointSize: 8
             font.bold: true
             color: "black"
             style: Text.Outline
@@ -161,7 +162,7 @@ Item {
     Text {
         id: gridItemLabel
         text: name
-        font.pointSize: 16
+        font.pointSize: 6
         color: (!inverted) ? "white" : "black"
         width: parent.width - 2
         z: 1
