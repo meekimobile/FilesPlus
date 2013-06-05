@@ -93,7 +93,7 @@ Item {
         Text {
             id: gridItemFileType
             text: fileType.toUpperCase()
-            font.pointSize: 24
+            font.pointSize: 18
             font.bold: true
             color: "black"
             style: Text.Outline

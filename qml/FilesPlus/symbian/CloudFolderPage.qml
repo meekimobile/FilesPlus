@@ -757,6 +757,31 @@ Page {
             }
         ]
 
+        Rectangle {
+            id: gridBusyPanel
+            color: "black"
+            opacity: 0.7
+            visible: isBusy
+            anchors.fill: parent
+
+            BusyIndicator {
+                id: gridBusyIcon
+                visible: isBusy
+                running: isBusy
+                width: 100
+                height: width
+                anchors.centerIn: parent
+            }
+
+            MouseArea {
+                enabled: isBusy
+                anchors.fill: parent
+                onPressed: {
+                    // do nothing.
+                }
+            }
+        }
+
         property int lastContentY
 
         QuickScrollPanel {
