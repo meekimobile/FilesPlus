@@ -339,6 +339,11 @@ Page {
 
                 refreshSlot("refreshButton onClicked");
             }
+            onPressAndHold: {
+                if (cloudFolderPage.state == "grid" && cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
+                    clearCachedImagesConfirmation.open();
+                }
+            }
         }
 
         ToolBarButton {
@@ -677,15 +682,10 @@ Page {
         }
         clip: true
         focus: true
+        cacheBuffer: height * 2
         pressDelay: 100
         model: cloudDriveModel
         delegate: cloudItemDelegate
-        state: ""
-        states: [
-            State {
-                name: "mark"
-            }
-        ]
 
         Rectangle {
             id: busyPanel
@@ -752,15 +752,10 @@ Page {
         }
         clip: true
         focus: true
+        cacheBuffer: height * 2
         pressDelay: 100
         model: cloudDriveModel
         delegate: gridItemDelegate
-        state: ""
-        states: [
-            State {
-                name: "mark"
-            }
-        ]
 
         Rectangle {
             id: gridBusyPanel
@@ -788,6 +783,14 @@ Page {
         }
 
         property int lastContentY
+
+        onMovementStarted: {
+            if (currentItem) {
+                // Hide highlight and popupTool.
+                currentIndex = -1;
+                popupToolPanel.visible = false;
+            }
+        }
 
         QuickScrollPanel {
             id: gridQuickScrollPanel
@@ -831,9 +834,6 @@ Page {
 
             // Override to support cloud items.
             function getIconSource(timestamp) {
-                var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-                var viewableTextFileTypes = ["TXT", "HTML"];
-
                 if (isDir) {
                     return "folder_list.svg";
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
@@ -899,8 +899,6 @@ Page {
                         // Check if it's viewable.
                         var url;
                         if (cloudDriveModel.isViewable(selectedCloudType)) {
-                            var viewableImageFileTypes = ["JPG", "PNG", "GIF", "SVG"];
-                            var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
                             if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                                 // NOTE ImageViewPage will populate ImageViewModel with mediaUrl.
                                 pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
@@ -951,8 +949,6 @@ Page {
             subIconMargin: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 10 : 10) // Symbian only. 10 for 3 columns, 10 for 4 columns
 
             function getIconSource(timestamp) {
-                var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-
                 if (isDir) {
                     return "folder_list.svg";
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
@@ -1021,8 +1017,6 @@ Page {
                         // Check if it's viewable.
                         var url;
                         if (cloudDriveModel.isViewable(selectedCloudType)) {
-                            var viewableImageFileTypes = ["JPG", "PNG", "GIF", "SVG"];
-                            var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
                             if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                                 // NOTE ImageViewPage will populate ImageViewModel with mediaUrl.
                                 pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
@@ -1306,6 +1300,15 @@ Page {
         onDisconnect: {
             cloudDriveModel.disconnect(type, uid, absolutePath, selectedItem.absolutePath);
             close();
+        }
+    }
+
+    ConfirmDialog {
+        id: clearCachedImagesConfirmation
+        titleText: appInfo.emptyStr+qsTr("Reset image cache")
+        contentText: appInfo.emptyStr+qsTr("Reset image cache on current folder?")
+        onConfirm: {
+            cloudDriveModel.clearCachedImagesOnCurrentRemotePath();
         }
     }
 

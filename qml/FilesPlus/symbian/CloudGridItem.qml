@@ -18,7 +18,8 @@ Item {
     property alias syncIconVisible: syncIcon.visible
     property bool inverted: window.platformInverted
     property bool omitShowingZeroSizeDir: false
-    property variant viewableImageFileTypes: ["JPG", "PNG", "SVG"]
+    property variant viewableImageFileTypes: ["JPG", "PNG", "SVG", "GIF"]
+    property variant viewableTextFileTypes: ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"]
     property bool showPreview: (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1)
     property real subIconMargin: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 10 : 10) // For Symbian only. 10 for 3 columns, 10 for 4 columns
 
@@ -27,8 +28,6 @@ Item {
     signal listItemIconError()
     
     function getIconSource(timestamp) {
-        var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-        
         if (isDir) {
             return "folder_list.svg";
         } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
@@ -142,6 +141,7 @@ Item {
         anchors.margins: subIconMargin
         fillMode: Image.PreserveAspectFit
         visible: (source != "")
+        opacity: showPreview ? 0.5 : 1
     }
 
     Image {

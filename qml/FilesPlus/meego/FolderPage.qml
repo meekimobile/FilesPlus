@@ -963,11 +963,20 @@ Page {
         }
         clip: true
         focus: true
+        cacheBuffer: height * 2
         pressDelay: 200
         model: fsModel
         delegate: gridItemDelegate
 
         property int lastContentY
+
+        onMovementStarted: {
+            if (currentItem) {
+                // Hide highlight and popupTool.
+                currentIndex = -1;
+                popupToolPanel.visible = false;
+            }
+        }
 
         QuickScrollPanel {
             id: gridQuickScrollPanel

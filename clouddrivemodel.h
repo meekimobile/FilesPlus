@@ -314,6 +314,7 @@ public:
     Q_INVOKABLE void markAllFiles();
     Q_INVOKABLE void markAllFolders();
     Q_INVOKABLE void unmarkAll();
+    Q_INVOKABLE void clearCachedImagesOnCurrentRemotePath();
 
     // Model functions.
     Q_INVOKABLE void refreshItems();

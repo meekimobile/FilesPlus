@@ -30,28 +30,28 @@ void CacheImageWorker::run()
     }
 }
 
-QString CacheImageWorker::getCachedLocalPath(const QString &id, const QSize &requestedSize)
+QString CacheImageWorker::getCachedLocalPath(const QString &localPath, const QSize &requestedSize, const QString cachePath)
 {
-    QFileInfo fi(id);
+    QFileInfo fi(localPath);
     QString cachedImagePath;
     if (requestedSize.isValid()) {
-        cachedImagePath = QString("%1/%2_%3_%4x%5.png").arg(m_cachePath).arg(fi.baseName()).arg(fi.completeSuffix()).arg(requestedSize.width()).arg(requestedSize.height());
+        cachedImagePath = QString("%1/%2_%3_%4x%5.png").arg(cachePath).arg(fi.baseName()).arg(fi.completeSuffix()).arg(requestedSize.width()).arg(requestedSize.height());
     } else {
-        cachedImagePath = QString("%1/%2_%3.png").arg(m_cachePath).arg(fi.baseName()).arg(fi.completeSuffix());
+        cachedImagePath = QString("%1/%2_%3.png").arg(cachePath).arg(fi.baseName()).arg(fi.completeSuffix());
     }
 
     return cachedImagePath;
 }
 
-QString CacheImageWorker::getCachedRemotePath(const QString &id, const QSize &requestedSize)
+QString CacheImageWorker::getCachedRemotePath(const QString &urlString, const QSize &requestedSize, const QString cachePath)
 {
-    QUrl url(id);
+    QUrl url(urlString);
     QByteArray hash = QCryptographicHash::hash(url.host().append(url.path()).toUtf8(), QCryptographicHash::Md5).toHex();
     QString cachedImagePath;
     if (requestedSize.isValid()) {
-        cachedImagePath = QString("%1/%2_%3x%4.png").arg(m_cachePath).arg(QString(hash)).arg(requestedSize.width()).arg(requestedSize.height());
+        cachedImagePath = QString("%1/%2_%3x%4.png").arg(cachePath).arg(QString(hash)).arg(requestedSize.width()).arg(requestedSize.height());
     } else {
-        cachedImagePath = QString("%1/%2.png").arg(m_cachePath).arg(QString(hash));
+        cachedImagePath = QString("%1/%2.png").arg(cachePath).arg(QString(hash));
     }
 
     return cachedImagePath;
@@ -69,7 +69,7 @@ void CacheImageWorker::cacheRemoteImage(const QString &url, const QSize &request
 
     // Check if cached image is available.
     // 86400 secs = 1 day
-    QFileInfo cachedFileInfo(getCachedRemotePath(url, requestedSize));
+    QFileInfo cachedFileInfo(getCachedRemotePath(url, requestedSize, m_cachePath));
     // Create directory path if it's not exist.
     if (!cachedFileInfo.dir().exists()) {
         cachedFileInfo.dir().mkpath(cachedFileInfo.absolutePath());
@@ -165,7 +165,7 @@ void CacheImageWorker::cacheLocalImage(const QString &filePath, const QSize &req
 
     // Check if cached image is available.
     // 86400 secs = 1 day
-    QFileInfo cachedFileInfo(getCachedLocalPath(filePath, requestedSize));
+    QFileInfo cachedFileInfo(getCachedLocalPath(filePath, requestedSize, m_cachePath));
     // Create directory path if it's not exist.
     if (!cachedFileInfo.dir().exists()) {
         cachedFileInfo.dir().mkpath(cachedFileInfo.absolutePath());

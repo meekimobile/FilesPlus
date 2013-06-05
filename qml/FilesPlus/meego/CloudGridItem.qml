@@ -142,6 +142,7 @@ Item {
         anchors.margins: subIconMargin
         fillMode: Image.PreserveAspectFit
         visible: (source != "")
+        opacity: showPreview ? 0.5 : 1
     }
 
     Image {

@@ -334,6 +334,11 @@ Page {
 
                 refreshSlot("refreshButton onClicked");
             }
+            onPressAndHold: {
+                if (cloudFolderPage.state == "grid" && cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
+                    clearCachedImagesConfirmation.open();
+                }
+            }
         }
 
         ToolBarButton {
@@ -669,6 +674,7 @@ Page {
         }
         clip: true
         focus: true
+        cacheBuffer: height * 2
         pressDelay: 200
         model: cloudDriveModel
         delegate: cloudItemDelegate
@@ -737,6 +743,7 @@ Page {
         }
         clip: true
         focus: true
+        cacheBuffer: height * 2
         pressDelay: 200
         model: cloudDriveModel
         delegate: gridItemDelegate
@@ -766,6 +773,14 @@ Page {
         }
 
         property int lastContentY
+
+        onMovementStarted: {
+            if (currentItem) {
+                // Hide highlight and popupTool.
+                currentIndex = -1;
+                popupToolPanel.visible = false;
+            }
+        }
 
         QuickScrollPanel {
             id: gridQuickScrollPanel
@@ -1275,6 +1290,15 @@ Page {
         onDisconnect: {
             cloudDriveModel.disconnect(type, uid, absolutePath, selectedItem.absolutePath);
             close();
+        }
+    }
+
+    ConfirmDialog {
+        id: clearCachedImagesConfirmation
+        titleText: appInfo.emptyStr+qsTr("Reset image cache")
+        contentText: appInfo.emptyStr+qsTr("Reset image cache on current folder?")
+        onConfirm: {
+            cloudDriveModel.clearCachedImagesOnCurrentRemotePath();
         }
     }
 

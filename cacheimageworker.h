@@ -11,6 +11,9 @@ class CacheImageWorker : public QObject, public QRunnable
 public:
     static const int DEFAULT_CACHE_IMAGE_SIZE;
 
+    static QString getCachedRemotePath(const QString &urlString, const QSize &requestedSize, const QString cachePath);
+    static QString getCachedLocalPath(const QString &localPath, const QSize &requestedSize, const QString cachePath);
+
     CacheImageWorker(const QString absoluteFilePath, const QString url, const QSize &requestedSize, const QString cachePath, const QString caller);
 
     void run();
@@ -25,9 +28,7 @@ private:
     QString m_caller;
     QSettings m_settings;
 
-    QString getCachedRemotePath(const QString &id, const QSize &requestedSize);
     void cacheRemoteImage(const QString &url, const QSize &requestedSize);
-    QString getCachedLocalPath(const QString &id, const QSize &requestedSize);
     void cacheLocalImage(const QString &filePath, const QSize &requestedSize);
 };
 

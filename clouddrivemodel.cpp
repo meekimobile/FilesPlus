@@ -5046,6 +5046,18 @@ void CloudDriveModel::unmarkAll()
     refreshItems();
 }
 
+void CloudDriveModel::clearCachedImagesOnCurrentRemotePath()
+{
+    for (int i = 0; i < m_modelItemList->length(); i++) {
+        QApplication::processEvents();
+        CloudDriveModelItem item = m_modelItemList->at(i);
+        QString cacheFilePath = CacheImageWorker::getCachedRemotePath(item.preview, QSize(-1, -1), TEMP_PATH);
+        QFile(cacheFilePath).remove();
+    }
+
+    refreshItems();
+}
+
 void CloudDriveModel::refreshItems()
 {
     beginResetModel();
