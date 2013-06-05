@@ -3931,7 +3931,7 @@ void CloudDriveModel::schedulerTimeoutFilter()
         return;
     }
 
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_networkInfo.currentMode()" << m_networkInfo.currentMode() << "m_networkInfo.cellDataTechnology()" << m_networkInfo.cellDataTechnology() << "m_networkInfo.networkStatus(currentMode)" << m_networkInfo.networkStatus(m_networkInfo.currentMode());
+//    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_networkInfo.currentMode()" << m_networkInfo.currentMode() << "m_networkInfo.cellDataTechnology()" << m_networkInfo.cellDataTechnology() << "m_networkInfo.networkStatus(currentMode)" << m_networkInfo.networkStatus(m_networkInfo.currentMode());
 //    qDebug() << "CloudDriveModel::schedulerTimeoutFilter" << QDateTime::currentDateTime().toString("d/M/yyyy hh:mm:ss.zzz");
 
     // Set dirty to scheduled items.

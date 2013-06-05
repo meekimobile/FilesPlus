@@ -26,6 +26,11 @@ Page {
     transitions: [
         Transition {
             ScriptAction { script: toggleSortFlag() }
+        },
+        Transition {
+            from: "list"
+            to: "grid"
+            ScriptAction { script: fsModel.refreshItems() }
         }
     ]
 
@@ -1097,7 +1102,7 @@ Page {
             width: fsGridView.cellWidth
             height: fsGridView.cellHeight
             gridItemIconBusyVisible: true
-            subIconMargin: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 10 : 32) // 32 for 3 columns, 10 for 4 columns
+            subIconMargin: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 10 : 10) // For Symbian only. 10 for 3 columns, 10 for 4 columns
 
             onPressAndHold: {
                 if (fsModel.state != "mark") {

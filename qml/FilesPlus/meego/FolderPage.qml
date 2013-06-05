@@ -892,12 +892,6 @@ Page {
         pressDelay: 200
         model: fsModel
         delegate: listItemDelegate
-        state: ""
-        states: [
-            State {
-                name: "mark"
-            }
-        ]
 
         property int lastCenterIndex
         property string focusLocalPath
@@ -972,12 +966,6 @@ Page {
         pressDelay: 200
         model: fsModel
         delegate: gridItemDelegate
-        state: ""
-        states: [
-            State {
-                name: "mark"
-            }
-        ]
 
         property int lastContentY
 
@@ -1054,8 +1042,6 @@ Page {
                         if (isRunning) return;
 
                         // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
-                        var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-                        var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
                         if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             // TODO Populate ImageViewModel with mediaUrl = image://local/...
                             pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
@@ -1121,8 +1107,6 @@ Page {
                         if (isRunning) return;
 
                         // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
-                        var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-                        var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
                         if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             // TODO Populate ImageViewModel with mediaUrl = image://local/...
                             pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),

@@ -16,11 +16,11 @@ Item {
     property alias runningIconVisible: runningIcon.visible
     property alias syncIconSource: syncIcon.source
     property alias syncIconVisible: syncIcon.visible
-    property bool inverted: !theme.inverted
+    property bool inverted: window.platformInverted
     property bool omitShowingZeroSizeDir: false
     property variant viewableImageFileTypes: ["JPG", "PNG", "SVG"]
     property bool showPreview: (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1)
-    property real subIconMargin: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 10 : 32) // 32 for 3 columns, 10 for 4 columns
+    property real subIconMargin: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 10 : 10) // For Symbian only. 10 for 3 columns, 10 for 4 columns
 
     signal pressAndHold(variant mouse)
     signal clicked(variant mouse)
@@ -86,8 +86,6 @@ Item {
         BusyIndicator {
             visible: gridItemIconBusyVisible && (parent.status == Image.Loading || parent.status == Image.Error)
             running: visible
-            width: parent.width
-            height: parent.height
             anchors.centerIn: parent
         }
 

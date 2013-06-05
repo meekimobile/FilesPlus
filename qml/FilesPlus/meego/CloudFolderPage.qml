@@ -672,12 +672,6 @@ Page {
         pressDelay: 200
         model: cloudDriveModel
         delegate: cloudItemDelegate
-        state: ""
-        states: [
-            State {
-                name: "mark"
-            }
-        ]
 
         Rectangle {
             id: busyPanel
@@ -746,12 +740,6 @@ Page {
         pressDelay: 200
         model: cloudDriveModel
         delegate: gridItemDelegate
-        state: ""
-        states: [
-            State {
-                name: "mark"
-            }
-        ]
 
         Rectangle {
             id: gridBusyPanel
@@ -821,9 +809,6 @@ Page {
 
             // Override to support cloud items.
             function getIconSource(timestamp) {
-                var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-                var viewableTextFileTypes = ["TXT", "HTML"];
-
                 if (isDir) {
                     return "folder_list.svg";
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
@@ -889,8 +874,6 @@ Page {
                         // Check if it's viewable.
                         var url;
                         if (cloudDriveModel.isViewable(selectedCloudType)) {
-                            var viewableImageFileTypes = ["JPG", "PNG", "GIF", "SVG"];
-                            var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
                             if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                                 // NOTE ImageViewPage will populate ImageViewModel with mediaUrl.
                                 pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
@@ -941,8 +924,6 @@ Page {
             subIconMargin: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 10 : 32) // 32 for 3 columns, 10 for 4 columns
 
             function getIconSource(timestamp) {
-                var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-
                 if (isDir) {
                     return "folder_list.svg";
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
@@ -1011,8 +992,6 @@ Page {
                         // Check if it's viewable.
                         var url;
                         if (cloudDriveModel.isViewable(selectedCloudType)) {
-                            var viewableImageFileTypes = ["JPG", "PNG", "GIF", "SVG"];
-                            var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
                             if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                                 // NOTE ImageViewPage will populate ImageViewModel with mediaUrl.
                                 pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),

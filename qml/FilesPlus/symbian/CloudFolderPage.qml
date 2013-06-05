@@ -36,6 +36,11 @@ Page {
             name: "grid"
         }
     ]
+    transitions: [
+        Transition {
+            ScriptAction { script: cloudDriveModel.refreshItems() }
+        }
+    ]
 
     function goUpSlot() {
         console.debug("cloudFolderPage goUpSlot selectedCloudType " + selectedCloudType + " selectedUid " + selectedUid + " cloudDriveModel.remoteParentPath " + cloudDriveModel.remoteParentPath + " cloudDriveModel.remoteParentParentPath " + cloudDriveModel.remoteParentParentPath);
@@ -943,7 +948,7 @@ Page {
             width: cloudFolderGridView.cellWidth
             height: cloudFolderGridView.cellHeight
             gridItemIconBusyVisible: true
-            subIconMargin: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 10 : 32) // 32 for 3 columns, 10 for 4 columns
+            subIconMargin: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 10 : 10) // Symbian only. 10 for 3 columns, 10 for 4 columns
 
             function getIconSource(timestamp) {
                 var viewableImageFileTypes = ["JPG", "PNG", "SVG"];

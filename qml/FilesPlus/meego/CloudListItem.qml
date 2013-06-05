@@ -18,7 +18,8 @@ ListItem {
     property alias syncIconVisible: syncIcon.visible
     property bool inverted: !theme.inverted
     property bool omitShowingZeroSizeDir: false
-    property variant viewableImageFileTypes: ["JPG", "PNG", "SVG"]
+    property variant viewableImageFileTypes: ["JPG", "PNG", "SVG", "GIF"]
+    property variant viewableTextFileTypes: ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"]
     property bool showPreview: (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1)
 
     signal pressAndHold()
@@ -26,9 +27,6 @@ ListItem {
     signal listItemIconError()
 
     function getIconSource(timestamp) {
-        var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-        var viewableTextFileTypes = ["TXT", "HTML"];
-        
         if (isDir) {
             return "folder_list.svg";
         } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
