@@ -733,8 +733,8 @@ Page {
         width: parent.width
         height: parent.height - currentPath.height - (nameFilterPanel.visible ? nameFilterPanel.height : 0)
         anchors.top: currentPath.bottom
-        cellWidth: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 120 : 160)
-        cellHeight: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 120 : 160)
+        cellWidth: appInfo.emptySetting + (appInfo.getSettingBoolValue("GridView.compact.enabled", false) ? 120 : 160)
+        cellHeight: appInfo.emptySetting + (appInfo.getSettingBoolValue("GridView.compact.enabled", false) ? 120 : 160)
         highlightRangeMode: GridView.NoHighlightRange
         highlightFollowsCurrentItem: true
         highlightMoveDuration: 1
@@ -936,7 +936,7 @@ Page {
             width: cloudFolderGridView.cellWidth
             height: cloudFolderGridView.cellHeight
             gridItemIconBusyVisible: true
-            subIconMargin: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 10 : 32) // 32 for 3 columns, 10 for 4 columns
+            subIconMargin: appInfo.emptySetting + (appInfo.getSettingBoolValue("GridView.compact.enabled", false) ? 10 : 32) // 32 for 3 columns, 10 for 4 columns
 
             function getIconSource(timestamp) {
                 if (isDir) {

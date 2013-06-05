@@ -21,7 +21,7 @@ Item {
     property variant viewableImageFileTypes: ["JPG", "PNG", "SVG", "GIF"]
     property variant viewableTextFileTypes: ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"]
     property bool showPreview: (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1)
-    property real subIconMargin: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 10 : 32) // 32 for 3 columns, 10 for 4 columns
+    property real subIconMargin: appInfo.emptySetting + (appInfo.getSettingBoolValue("GridView.compact.enabled", false) ? 10 : 32) // 32 for 3 columns, 10 for 4 columns
 
     signal pressAndHold(variant mouse)
     signal clicked(variant mouse)
