@@ -334,6 +334,8 @@ Page {
             buttonIconSource: "toolbar-refresh"
             visible: (cloudDriveModel.state != "mark")
             onClicked: {
+                if (isPressAndHold) return;// Workaround for Symbian only.
+
                 // Force resume.
                 cloudDriveModel.resumeNextJob();
 
