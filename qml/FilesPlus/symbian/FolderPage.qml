@@ -962,8 +962,8 @@ Page {
         width: parent.width
         height: parent.height - currentPath.height - (nameFilterPanel.visible ? nameFilterPanel.height : 0) - (inputContext.visible ? (inputContext.height - 60) : 0) // Symbian only
         anchors.top: currentPath.bottom
-        cellWidth: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 90 : 120)
-        cellHeight: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 90 : 120)
+        cellWidth: appInfo.emptySetting + (appInfo.getSettingBoolValue("GridView.compact.enabled", false) ? 90 : 120)
+        cellHeight: appInfo.emptySetting + (appInfo.getSettingBoolValue("GridView.compact.enabled", false) ? 90 : 120)
         highlightRangeMode: GridView.NoHighlightRange
         highlightFollowsCurrentItem: true
         highlightMoveDuration: 1
@@ -1097,7 +1097,7 @@ Page {
             width: fsGridView.cellWidth
             height: fsGridView.cellHeight
             gridItemIconBusyVisible: true
-            subIconMargin: appInfo.emptySetting + (appInfo.getSettingValue("GridView.compact.enabled", false) ? 10 : 10) // For Symbian only. 10 for 3 columns, 10 for 4 columns
+            subIconMargin: appInfo.emptySetting + (appInfo.getSettingBoolValue("GridView.compact.enabled", false) ? 10 : 10) // For Symbian only. 10 for 3 columns, 10 for 4 columns
 
             onPressAndHold: {
                 if (fsModel.state != "mark") {
