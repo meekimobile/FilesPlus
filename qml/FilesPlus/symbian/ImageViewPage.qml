@@ -19,7 +19,7 @@ Page {
     property real maxZoomFactor: 3
     property variant viewableImageFileTypes: ["JPG", "PNG", "GIF", "SVG"];
     property bool inPortrait
-    property bool isImageUrlCachable: (selectedCloudType == -1) ? false : cloudDriveModel.isImageUrlCachable(selectedCloudType)
+    property bool isImageUrlCachable: (selectedCloudType == -1) ? true : cloudDriveModel.isImageUrlCachable(selectedCloudType)
 
     state: "grid"
     states: [
