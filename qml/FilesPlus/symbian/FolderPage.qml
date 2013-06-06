@@ -1032,6 +1032,7 @@ Page {
                     return "cloud.svg";
                 }
             }
+            isImageUrlCachable: true
             opacity: isHidden ? 0.5 : 1
 
             onPressAndHold: {
@@ -1097,6 +1098,7 @@ Page {
             width: fsGridView.cellWidth
             height: fsGridView.cellHeight
             gridItemIconBusyVisible: true
+            isImageUrlCachable: true
             subIconMargin: appInfo.emptySetting + (appInfo.getSettingBoolValue("GridView.compact.enabled", false) ? 10 : 10) // For Symbian only. 10 for 3 columns, 10 for 4 columns
 
             onPressAndHold: {
