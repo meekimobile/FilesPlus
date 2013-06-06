@@ -21,6 +21,7 @@ Item {
     property variant viewableImageFileTypes: ["JPG", "PNG", "SVG", "GIF"]
     property variant viewableTextFileTypes: ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"]
     property bool showPreview: (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1)
+    property bool isImageUrlCachable: false
     property real subIconMargin: appInfo.emptySetting + (appInfo.getSettingBoolValue("GridView.compact.enabled", false) ? 10 : 32) // 32 for 3 columns, 10 for 4 columns
 
     signal pressAndHold(variant mouse)
@@ -76,6 +77,8 @@ Item {
     Image {
         id: gridItemIcon
         source: appInfo.emptySetting+getIconSource((new Date()).getTime())
+        sourceSize.width: isImageUrlCachable ? 128 : undefined // Expected size of thumbnail128 from cloud service.
+        sourceSize.height: isImageUrlCachable ? 128 : undefined
         anchors.centerIn: parent
         asynchronous: true
         smooth: false

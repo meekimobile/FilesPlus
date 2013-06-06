@@ -1069,7 +1069,7 @@ Page {
         ringRadius: 65
         buttonRadius: 28
         timeout: appInfo.emptySetting+appInfo.getSettingValue("popup.timer.interval", 2) * 1000
-        disabledButtons: ["editFile","cloud","bluetooth"]
+        disabledButtons: ["editFile","cloud","bluetooth"] // For Symbian only.
 
         function isButtonVisibleCallback(buttonName) {
             if (buttonName === "sync") {

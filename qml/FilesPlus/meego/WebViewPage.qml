@@ -1,7 +1,6 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
 import QtWebKit 1.0
-import SystemInfoHelper 1.0
 import "Utility.js" as Utility
 
 Page {
@@ -85,10 +84,6 @@ Page {
         if (status == PageStatus.Active) {
             pasteURL();
         }
-    }
-
-    SystemInfoHelper {
-        id: helper
     }
 
     Rectangle {

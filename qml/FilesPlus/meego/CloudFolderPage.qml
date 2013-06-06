@@ -805,8 +805,8 @@ Page {
             syncIconVisible: isConnected
             syncIconSource: (isRunning) ? "cloud_wait.svg" : "cloud.svg"
             actionIconSource: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath, cloudDriveModel.getCloudName(selectedCloudType), selectedUid) : ""
-            listItemIconSource: appInfo.emptySetting+listItem.getIconSource(timestamp)
             omitShowingZeroSizeDir: true
+            isImageUrlCachable: cloudDriveModel.isImageUrlCachable(selectedCloudType)
 
             // Override to support cloud items.
             function getIconSource(timestamp) {
@@ -918,22 +918,17 @@ Page {
             syncIconVisible: isConnected && !isRunning
             syncIconSource: (isRunning) ? "cloud_wait.svg" : "cloud.svg"
             actionIconSource: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath, cloudDriveModel.getCloudName(selectedCloudType), selectedUid) : ""
-            gridItemIconSource: appInfo.emptySetting+gridItem.getIconSource(timestamp)
             width: cloudFolderGridView.cellWidth
             height: cloudFolderGridView.cellHeight
             gridItemIconBusyVisible: true
+            isImageUrlCachable: cloudDriveModel.isImageUrlCachable(selectedCloudType)
             subIconMargin: appInfo.emptySetting + (appInfo.getSettingBoolValue("GridView.compact.enabled", false) ? 10 : 32) // 32 for 3 columns, 10 for 4 columns
 
             function getIconSource(timestamp) {
                 if (isDir) {
                     return "folder_list.svg";
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                    var previewUrl = preview;
-                    if (previewUrl == "") {
-                        previewUrl = cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
-                        cloudDriveModel.setProperty(index, "preview", previewUrl);
-                    }
-                    return getImageSource(previewUrl, timestamp);
+                    return getImageSource(thumbnail128, timestamp);
                 } else {
                     return "notes_list.svg";
                 }
@@ -1021,7 +1016,7 @@ Page {
 
             onListItemIconError: {
                 if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
-                    cloudDriveModel.cacheImage(absolutePath, preview, -1, -1, cloudFolderPage.name); // Use original size because previewUrl is already specified with size.
+                    cloudDriveModel.cacheImage(absolutePath, thumbnail128, 128, 128, cloudFolderPage.name); // Use original size because previewUrl is already specified with size.
                 }
             }
         }
@@ -1048,7 +1043,7 @@ Page {
         ringRadius: 80
         buttonRadius: 35
         timeout: appInfo.emptySetting+appInfo.getSettingValue("popup.timer.interval", 2) * 1000
-        disabledButtons: ["editFile","cloud","shareFile"]
+        disabledButtons: ["editFile","cloud","shareFile"] // For Meego only.
 
         function isButtonVisibleCallback(buttonName) {
             if (buttonName === "sync") {
@@ -1281,7 +1276,7 @@ Page {
         titleText: appInfo.emptyStr+qsTr("Reset image cache")
         contentText: appInfo.emptyStr+qsTr("Reset image cache on current folder?")
         onConfirm: {
-            cloudDriveModel.clearCachedImagesOnCurrentRemotePath();
+            cloudDriveModel.clearCachedImagesOnCurrentRemotePath(true, true, true);
         }
     }
 

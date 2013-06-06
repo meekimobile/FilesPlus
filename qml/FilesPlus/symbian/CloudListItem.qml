@@ -30,9 +30,6 @@ ListItem {
     signal listItemIconError()
 
     function getIconSource(timestamp) {
-        var viewableImageFileTypes = ["JPG", "PNG", "SVG"];
-        var viewableTextFileTypes = ["TXT", "HTML"];
-        
         if (isDir) {
             return "folder_list.svg";
         } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
@@ -108,7 +105,7 @@ ListItem {
                 width: 48
                 height: 48
                 fillMode: Image.PreserveAspectFit
-                anchors.centerIn: parent                
+                anchors.centerIn: parent
                 source: appInfo.emptySetting+listItem.getIconSource((new Date()).getTime())
                 asynchronous: true
                 smooth: false

@@ -1,6 +1,5 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
-import SystemInfoHelper 1.0
 import "Utility.js" as Utility
 
 Page {
@@ -86,10 +85,6 @@ Page {
                 }
             }
         }
-    }
-
-    SystemInfoHelper {
-        id: helper
     }
 
     TitlePanel {
