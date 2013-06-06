@@ -1,7 +1,6 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
 import CloudDriveModel 1.0
-import SystemInfoHelper 1.0
 import "Utility.js" as Utility
 
 Page {
@@ -20,6 +19,7 @@ Page {
     property real maxZoomFactor: 3
     property variant viewableImageFileTypes: ["JPG", "PNG", "GIF", "SVG"];
     property bool inPortrait
+    property bool isImageUrlCachable: (selectedCloudType == -1) ? false : cloudDriveModel.isImageUrlCachable(selectedCloudType)
 
     state: "grid"
     states: [
@@ -356,11 +356,16 @@ Page {
                         id: imageFlickView
                         source: getImageSource(previewUrl, timestamp) // NOTE It's populated while opening the page. Timestamp is used for force refreshing.
                         asynchronous: true // To request image in low priority thread.
+                        cache: !isImageUrlCachable
 //                        fillMode: Image.PreserveAspectFit
 //                        width: imageGrid.cellWidth // Undefine to get actual width.
 //                        height: imageGrid.cellHeight // Undefine to get actual height.
 //                        sourceSize.width: (selectedCloudType == -1 && fileType.toUpperCase() != "SVG") ? imageGrid.cellWidth : undefined // Requires for showing preview cache on local drive.
 //                        sourceSize.height: (selectedCloudType == -1 && fileType.toUpperCase() != "SVG") ? imageGrid.cellHeight : undefined // Requires for showing preview cache on local drive.
+
+                        // NOTE Workaround for GCDClient, SkyDrive which preview image is not cachable.
+                        // NOTE Set only sourceSize.width to let Image object fill with fit mode. It's the same as in LocalFileImageProvider.
+                        sourceSize.width: isImageUrlCachable ? undefined : 480
 
                         property real minPaintedWidth
                         property real minPaintedHeight
@@ -409,7 +414,7 @@ Page {
                                 console.debug("imageViewPage imageFlickView onStatusChanged ready width " + width + " height " + height);
                                 if (showGrid) {
                                     // Scale to fit cell.
-                                    scaleTo(screen.width, screen.height - 24); // Workaround for Symbian only. As imageViewPage height got reduced while loading because previous page shows toolbar.
+                                    scaleTo(screen.width, screen.height - (window.showStatusBar ? 24 : 0)); // Workaround for Symbian only. As imageViewPage height got reduced while loading because previous page shows toolbar.
                                     // Save minimum size in cell.
                                     minPaintedWidth = width;
                                     minPaintedHeight = height;
@@ -496,9 +501,5 @@ Page {
                 imageGrid.positionViewAtEnd();
             }
         }
-    }
-
-    SystemInfoHelper {
-        id: helper
     }
 }

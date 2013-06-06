@@ -170,7 +170,7 @@ CloudDriveModel::CloudDriveModel(QObject *parent) :
     // TODO Refactor to avoid using QThreadPool as it causes panic in Symbian.
     m_browseThreadPool.setMaxThreadCount(1);
 #ifdef Q_OS_SYMBIAN
-    m_cacheImageThreadPool.setMaxThreadCount(1);
+    m_cacheImageThreadPool.setMaxThreadCount(3);
 #else
     m_cacheImageThreadPool.setMaxThreadCount(3);
 #endif
@@ -214,6 +214,7 @@ CloudDriveModel::CloudDriveModel(QObject *parent) :
     roles[++i] = "source";
     roles[++i] = "alternative";
     roles[++i] = "thumbnail";
+    roles[++i] = "thumbnail128";
     roles[++i] = "preview";
     roles[++i] = "downloadUrl";
     roles[++i] = "webContentLink";
@@ -277,6 +278,7 @@ QVariant CloudDriveModel::data(const QModelIndex &index, int role) const
     else if (roleName == "source") return modelItem.source;
     else if (roleName == "alternative") return modelItem.alternative;
     else if (roleName == "thumbnail") return modelItem.thumbnail;
+    else if (roleName == "thumbnail128") return modelItem.thumbnail128;
     else if (roleName == "preview") return modelItem.preview;
     else if (roleName == "downloadUrl") return modelItem.downloadUrl;
     else if (roleName == "webContentLink") return modelItem.webContentLink;
@@ -347,6 +349,9 @@ void CloudDriveModel::setProperty(const int index, QString roleName, QVariant va
             isChanged = true;
         } else if (roleName == "thumbnail" && item.thumbnail != value.toString()) {
             item.thumbnail = value.toString();
+            isChanged = true;
+        } else if (roleName == "thumbnail128" && item.thumbnail128 != value.toString()) {
+            item.thumbnail128 = value.toString();
             isChanged = true;
         } else if (roleName == "preview" && item.preview != value.toString()) {
             item.preview = value.toString();
@@ -3372,6 +3377,7 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
                     modelItem.source = childItem.property("source").toString();
                     modelItem.alternative = childItem.property("alternative").toString();
                     modelItem.thumbnail = childItem.property("thumbnail").toString();
+                    modelItem.thumbnail128 = childItem.property("thumbnail128").toString();
                     modelItem.preview = childItem.property("preview").toString();
                     modelItem.downloadUrl = childItem.property("downloadUrl").toString();
                     modelItem.webContentLink = childItem.property("webContentLink").toString();
@@ -5046,13 +5052,21 @@ void CloudDriveModel::unmarkAll()
     refreshItems();
 }
 
-void CloudDriveModel::clearCachedImagesOnCurrentRemotePath()
+void CloudDriveModel::clearCachedImagesOnCurrentRemotePath(bool clearThumbnail, bool clearThumbnail128, bool clearPreview)
 {
     for (int i = 0; i < m_modelItemList->length(); i++) {
         QApplication::processEvents();
         CloudDriveModelItem item = m_modelItemList->at(i);
-        QString cacheFilePath = CacheImageWorker::getCachedRemotePath(item.preview, QSize(-1, -1), TEMP_PATH);
-        QFile(cacheFilePath).remove();
+
+        if (clearThumbnail) {
+            QFile(CacheImageWorker::getCachedRemotePath(item.thumbnail, QSize(48, 48), TEMP_PATH)).remove();
+        }
+        if (clearThumbnail128) {
+            QFile(CacheImageWorker::getCachedRemotePath(item.thumbnail128, QSize(128, 128), TEMP_PATH)).remove();
+        }
+        if (clearPreview) {
+            QFile(CacheImageWorker::getCachedRemotePath(item.preview, QSize(-1, -1), TEMP_PATH)).remove();
+        }
     }
 
     refreshItems();

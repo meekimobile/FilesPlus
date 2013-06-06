@@ -22,9 +22,10 @@ ListItem {
     property alias syncIconVisible: syncIcon.visible
     property bool inverted: window.platformInverted
     property bool omitShowingZeroSizeDir: false
-    property variant viewableImageFileTypes: ["JPG", "PNG", "SVG"]
+    property variant viewableImageFileTypes: ["JPG", "PNG", "SVG", "GIF"]
+    property variant viewableTextFileTypes: ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"]
     property bool showPreview: (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1)
-
+    property bool isImageUrlCachable: false
 
     signal listItemIconError()
 
@@ -49,6 +50,27 @@ ListItem {
             return "notes_list.svg";
         }
     }
+
+    states: [
+        State {
+            name: "preview"
+            when: showPreview
+            PropertyChanges {
+                target: listItemIcon
+                explicit: true
+                fillMode: Image.PreserveAspectCrop
+            }
+        },
+        State {
+            name: "icon"
+            when: !showPreview
+            PropertyChanges {
+                target: listItemIcon
+                explicit: true
+                fillMode: Image.PreserveAspectFit
+            }
+        }
+    ]
 
     Row {
         id: listDelegateRow
@@ -81,14 +103,17 @@ ListItem {
             }
             Image {
                 id: listItemIcon
-                asynchronous: true
-                sourceSize.width: (fileType.toUpperCase() == "SVG") ? undefined : 48
-                sourceSize.height: (fileType.toUpperCase() == "SVG") ? undefined : 48
+                sourceSize.width: (fileType.toUpperCase() == "SVG" || !isImageUrlCachable) ? undefined : 48
+                sourceSize.height: (fileType.toUpperCase() == "SVG" || !isImageUrlCachable) ? undefined : 48
                 width: 48
                 height: 48
                 fillMode: Image.PreserveAspectFit
-                anchors.centerIn: parent
+                anchors.centerIn: parent                
                 source: appInfo.emptySetting+listItem.getIconSource((new Date()).getTime())
+                asynchronous: true
+                smooth: false
+                clip: true
+                cache: !showPreview
 
                 BusyIndicator {
                     visible: listItemIconBusyVisible && (parent.status == Image.Loading || parent.status == Image.Error)

@@ -31,6 +31,7 @@ QString CloudDriveModelItem::toJsonText()
     jsonText.append(QString("\"source\": \"%1\", ").arg(source));
     jsonText.append(QString("\"alternative\": \"%1\", ").arg(alternative));
     jsonText.append(QString("\"thumbnail\": \"%1\", ").arg(thumbnail));
+    jsonText.append(QString("\"thumbnail128\": \"%1\", ").arg(thumbnail128));
     jsonText.append(QString("\"preview\": \"%1\", ").arg(preview));
     jsonText.append(QString("\"downloadUrl\": \"%1\", ").arg(downloadUrl));
     jsonText.append(QString("\"webContentLink\": \"%1\", ").arg(webContentLink));

@@ -9,6 +9,7 @@ import BookmarksModel 1.0
 import FolderSizeItemListModel 1.0
 import MessageClient 1.0
 import BluetoothClient 1.0
+import SystemInfoHelper 1.0
 import "Utility.js" as Utility
 
 PageStackWindow {
@@ -932,6 +933,10 @@ PageStackWindow {
             console.debug(Utility.nowText() + " window btClient onCompleted");
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("BTClient"), 0.1);
         }
+    }
+
+    SystemInfoHelper {
+        id: helper
     }
 
     GCPClient {

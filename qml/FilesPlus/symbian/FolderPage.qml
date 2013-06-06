@@ -897,7 +897,7 @@ Page {
         }
         clip: true
         focus: true
-        cacheBuffer: height * 2
+//        cacheBuffer: height * 2
         pressDelay: 100
         model: fsModel
         delegate: listItemDelegate
@@ -972,7 +972,7 @@ Page {
         }
         clip: true
         focus: true
-        cacheBuffer: height * 2
+//        cacheBuffer: height * 2
         pressDelay: 100
         model: fsModel
         delegate: gridItemDelegate

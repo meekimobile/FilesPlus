@@ -24,6 +24,7 @@ public:
     QString source;
     QString alternative;
     QString thumbnail;
+    QString thumbnail128;
     QString preview;
     QString downloadUrl;
     QString webContentLink;

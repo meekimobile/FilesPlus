@@ -337,7 +337,7 @@ Page {
         delegate: settingListItemDelegate
         cacheBuffer: 1200
         cellWidth: (window.inPortrait) ? parent.width : (parent.width / 2)
-        cellHeight: (window.inPortrait) ? 52 : 50
+        cellHeight: (window.inPortrait) ? 52 : 48
         flow: (window.inPortrait) ? GridView.LeftToRight : GridView.TopToBottom
         snapMode: GridView.SnapToRow
         pressDelay: 100

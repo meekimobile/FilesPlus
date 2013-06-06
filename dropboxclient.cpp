@@ -1764,6 +1764,7 @@ QScriptValue DropboxClient::parseCommonPropertyScriptValue(QScriptEngine &engine
     QString uid = engine.globalObject().property("uid").toString();
 
     QString thumbnailUrl = jsonObj.property("thumb_exists").toBool() ? thumbnail(nonce, uid, jsonObj.property("path").toString(), "png", "s") : "";
+    QString thumbnail128Url = jsonObj.property("thumb_exists").toBool() ? thumbnail(nonce, uid, jsonObj.property("path").toString(), "png", "m") : "";
     QString previewUrl = jsonObj.property("thumb_exists").toBool() ? thumbnail(nonce, uid, jsonObj.property("path").toString(), "png", "l") : "";
 
     QDateTime lastModified = parseReplyDateString(jsonObj.property("modified").toString());
@@ -1778,6 +1779,7 @@ QScriptValue DropboxClient::parseCommonPropertyScriptValue(QScriptEngine &engine
     parsedObj.setProperty("hash", jsonObj.property("hash").isValid() ? jsonObj.property("hash") : jsonObj.property("rev"));
     parsedObj.setProperty("source", QScriptValue());
     parsedObj.setProperty("thumbnail", QScriptValue(thumbnailUrl));
+    parsedObj.setProperty("thumbnail128", QScriptValue(thumbnail128Url));
     parsedObj.setProperty("preview", QScriptValue(previewUrl));
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("path").toString())));
 

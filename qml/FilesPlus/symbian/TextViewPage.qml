@@ -1,6 +1,5 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
-import SystemInfoHelper 1.0
 import "Utility.js" as Utility
 
 Page {
@@ -87,10 +86,6 @@ Page {
                 }
             }
         }
-    }
-
-    SystemInfoHelper {
-        id: helper
     }
 
     TitlePanel {

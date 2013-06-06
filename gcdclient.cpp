@@ -50,6 +50,7 @@ GCDClient::GCDClient(QObject *parent) :
     // TODO Make it configurable. It could be parsed from apache server's mime.types.
     m_contentTypeHash["jpg"] = "image/jpeg";
     m_contentTypeHash["png"] = "image/png";
+    m_contentTypeHash["gif"] = "image/gif";
     m_contentTypeHash["pdf"] = "application/pdf";
     m_contentTypeHash["txt"] = "text/plain";
     m_contentTypeHash["patch"] = "text/plain";
@@ -272,7 +273,8 @@ QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     parsedObj.setProperty("embedLink", jsonObj.property("embedLink"));
     parsedObj.setProperty("alternative", jsonObj.property("alternateLink"));
     parsedObj.setProperty("thumbnail", jsonObj.property("thumbnailLink"));
-    parsedObj.setProperty("preview", jsonObj.property("thumbnailLink")); // NOTE Use same URL as thumbnail as it return 2xx x 1xx picture.
+    parsedObj.setProperty("thumbnail128", jsonObj.property("thumbnailLink"));
+    parsedObj.setProperty("preview", jsonObj.property("embedLink")); // NOTE Use same URL as thumbnail as it return 2xx x 1xx picture.
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("title").toString())));
     parsedObj.setProperty("mimeType", jsonObj.property("mimeType"));
     parsedObj.setProperty("isCloudOnly", QScriptValue(isCloudOnly(jsonObj)));

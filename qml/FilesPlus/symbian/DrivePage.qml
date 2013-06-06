@@ -1,7 +1,6 @@
 import QtQuick 1.1
 import com.nokia.symbian 1.1
 import QtMobility.systeminfo 1.2
-import SystemInfoHelper 1.0
 import CloudDriveModel 1.0
 import "Utility.js" as Utility
 
@@ -136,12 +135,8 @@ Page {
         id: storageInfo
     }
 
-    SystemInfoHelper {
-        id: systemInfoHelper
-    }
-
     function parseLocalStorage(model) {
-        var simulatedDriveNames = systemInfoHelper.getDriveList();
+        var simulatedDriveNames = helper.getDriveList();
         var drives = storageInfo.logicalDrives;
 
         for (var i=0; i<drives.length; i++)
@@ -157,7 +152,7 @@ Page {
                 if (systemDriveNames.indexOf(driveName) != -1) continue;
             }
 
-            var driveType = systemInfoHelper.getDriveTypeInt(drives[i]);
+            var driveType = helper.getDriveTypeInt(drives[i]);
             // 0=No Drive, 6=Ram Drive
             if (driveType != 0 && driveType != 6) {
                 model.append({
@@ -176,7 +171,7 @@ Page {
 
         // Add private folder.
         if (appInfo.getSettingBoolValue("drivepage.privatedrive.enabled", false)) {
-            var privateDrive = systemInfoHelper.getPrivateDrive();
+            var privateDrive = helper.getPrivateDrive();
             if (privateDrive != "") {
                 model.append({
                                  logicalDrive: privateDrive,

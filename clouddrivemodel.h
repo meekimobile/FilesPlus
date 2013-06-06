@@ -110,7 +110,6 @@ public:
 
     // List model methods.
     int rowCount(const QModelIndex & parent = QModelIndex()) const;
-//    int columnCount(const QModelIndex & parent = QModelIndex()) const;
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
     Q_INVOKABLE QVariant get(const int index);
     Q_INVOKABLE void setProperty(const int index, QString roleName, QVariant value);
@@ -314,7 +313,7 @@ public:
     Q_INVOKABLE void markAllFiles();
     Q_INVOKABLE void markAllFolders();
     Q_INVOKABLE void unmarkAll();
-    Q_INVOKABLE void clearCachedImagesOnCurrentRemotePath();
+    Q_INVOKABLE void clearCachedImagesOnCurrentRemotePath(bool clearThumbnail = false, bool clearThumbnail128 = true, bool clearPreview = false);
 
     // Model functions.
     Q_INVOKABLE void refreshItems();

@@ -7,9 +7,9 @@
 //const int LocalFileImageProvider::MAX_CACHE_COST = 10;
 //const QString LocalFileImageProvider::DEFAULT_CACHE_PATH = "LocalFileImageProvider";
 #if defined(Q_WS_HARMATTAN)
-const int LocalFileImageProvider::DEFAULT_CACHE_IMAGE_SIZE = 480;
+const int LocalFileImageProvider::DEFAULT_CACHE_IMAGE_SIZE = 480; // Make it configurable
 #else
-const int LocalFileImageProvider::DEFAULT_CACHE_IMAGE_SIZE = 480;
+const int LocalFileImageProvider::DEFAULT_CACHE_IMAGE_SIZE = 480; // Make it configurable
 #endif
 
 LocalFileImageProvider::LocalFileImageProvider(QString cachePath) : QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
