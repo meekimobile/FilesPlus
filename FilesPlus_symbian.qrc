@@ -166,5 +166,7 @@
         <file alias="qml/FilesPlus/CloudGridItem.qml">qml/FilesPlus/symbian/CloudGridItem.qml</file>
         <file>qml/FilesPlus/grid.svg</file>
         <file>qml/FilesPlus/grid_inverted.svg</file>
+        <file>qml/FilesPlus/bookmark.svg</file>
+        <file>qml/FilesPlus/bookmark_inverted.svg</file>
     </qresource>
 </RCC>

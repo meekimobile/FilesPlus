@@ -1224,6 +1224,8 @@ Page {
                 return isDir && cloudDriveModel.isConnected(selectedFilePath);
             } else if (buttonName === "paste") {
                 return (clipboard.count > 0 && isDir);
+            } else if (buttonName == "share") {
+                return fsModel.isFile(selectedFilePath) || cloudDriveModel.isConnected(selectedFilePath);
             } else if (buttonName == "mail") {
                 return cloudDriveModel.isConnected(selectedFilePath);
             } else if (buttonName == "sms") {
@@ -1482,7 +1484,7 @@ Page {
                 cloudDrivePathDialog.changeRemotePath("");
                 break;
             case CloudDriveModel.ShareFile:
-                // TODO Find way to refresh it before shareReplyFinished.
+                // TODO Find way to refresh it before shareReplyFinished. For Symbian only.
                 recipientSelectionDialog.refresh();
                 cloudDriveModel.shareFileCaller = uidDialog.caller;
                 cloudDriveModel.shareFile(type, uid, localPath, remotePath);

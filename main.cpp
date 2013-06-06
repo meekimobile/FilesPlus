@@ -10,13 +10,13 @@
 #include "localfileimageprovider.h"
 #include "remoteimageprovider.h"
 #include "appinfo.h"
-#include "bluetoothclient.h"
-#include "messageclient.h"
 #include "clipboardmodel.h"
 #include "bookmarksmodel.h"
 #include <QDebug>
 #include <QtSql>
 #ifdef Q_OS_SYMBIAN
+#include "bluetoothclient.h"
+#include "messageclient.h"
 #include "customqnetworkaccessmanagerfactory.h"
 #endif
 
@@ -72,25 +72,38 @@ void customMessageHandler(QtMsgType type, const char *msg)
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
     qDebug() << QTime::currentTime() << "main started.";
-    for (int i = 0; i < argc; i++) {
-        qDebug() << "main argv i" << i << argv[i];
-    }
-
-    qmlRegisterType<PieChart>("Charts", 1, 0, "PieChart");
-    qmlRegisterType<FolderSizeItemListModel>("FolderSizeItemListModel", 1, 0, "FolderSizeItemListModel");
-    qmlRegisterType<SystemInfoHelper>("SystemInfoHelper", 1, 0, "SystemInfoHelper");
-    qmlRegisterType<GCPClient>("GCPClient", 1, 0, "GCPClient");
-    qmlRegisterType<CloudDriveModel>("CloudDriveModel", 1, 0, "CloudDriveModel");
-    qmlRegisterType<QAbstractListModel>();
-    qmlRegisterType<AppInfo>("AppInfo", 1, 0, "AppInfo");
-    qmlRegisterType<BluetoothClient>("BluetoothClient", 1, 0, "BluetoothClient");
-    qmlRegisterType<MessageClient>("MessageClient", 1, 0, "MessageClient");
-    qmlRegisterType<ClipboardModel>("ClipboardModel", 1, 0, "ClipboardModel");
-    qmlRegisterType<BookmarksModel>("BookmarksModel", 1, 0, "BookmarksModel");
 
     // Set properties for QSettings.
     QCoreApplication::setOrganizationName("MeekiMobile");
     QCoreApplication::setApplicationName(AppName);
+
+    // Initializes settings.
+#ifdef Q_OS_SYMBIAN
+    // Default logging is enabled on first startup. It will be uninstalled and disabled once DrivePage is loaded successfully.
+    QSettings *m_settings = new QSettings();
+    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
+    if (m_settings->value("Logging.enabled", true).toBool()) {
+        qDebug() << "main m_settings Logging.enabled=true";
+        qInstallMsgHandler(customMessageHandler);
+        suppressWarningMsg = m_settings->value("Logging.suppressWarning", true).toBool();
+    } else {
+        qDebug() << "main m_settings Logging.enabled=false";
+    }
+#elif defined(Q_WS_HARMATTAN)
+    // Default logging is enabled on first startup. It will be uninstalled and disabled once DrivePage is loaded successfully.
+    QSettings *m_settings = new QSettings();
+    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
+    if (m_settings->value("Logging.enabled", true).toBool()) {
+        qDebug() << "main m_settings Logging.enabled=true";
+        qInstallMsgHandler(customMessageHandler);
+        suppressWarningMsg = m_settings->value("Logging.suppressWarning", true).toBool();
+    } else {
+        qDebug() << "main m_settings Logging.enabled=false";
+    }
+#else
+    QSettings *m_settings = new QSettings();
+    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
+#endif
 
 /*
     // TODO ***** test only.
@@ -176,6 +189,10 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 #endif
 */
 
+    for (int i = 0; i < argc; i++) {
+        qDebug() << "main argv i" << i << argv[i];
+    }
+
     // For testing only.
     qDebug() << "main ApplicationBinaryLocation argv[0]" << argv[0];
     qDebug() << "main ApplicationsLocation" << QDesktopServices::storageLocation(QDesktopServices::ApplicationsLocation) << "currentDir" << QDir().absolutePath();
@@ -208,33 +225,6 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
             qDebug() << "main moving" << fileInfo.absoluteFilePath() << "to" << targetFilePath << "failed.";
         }
     }
-#endif
-
-#ifdef Q_OS_SYMBIAN
-    // Default logging is enabled on first startup. It will be uninstalled and disabled once DrivePage is loaded successfully.
-    QSettings *m_settings = new QSettings();
-    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
-    if (m_settings->value("Logging.enabled", true).toBool()) {
-        qDebug() << "main m_settings Logging.enabled=true";
-        qInstallMsgHandler(customMessageHandler);
-        suppressWarningMsg = m_settings->value("Logging.suppressWarning", true).toBool();
-    } else {
-        qDebug() << "main m_settings Logging.enabled=false";
-    }
-#elif defined(Q_WS_HARMATTAN)
-    // Default logging is enabled on first startup. It will be uninstalled and disabled once DrivePage is loaded successfully.
-    QSettings *m_settings = new QSettings();
-    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
-    if (m_settings->value("Logging.enabled", true).toBool()) {
-        qDebug() << "main m_settings Logging.enabled=true";
-        qInstallMsgHandler(customMessageHandler);
-        suppressWarningMsg = m_settings->value("Logging.suppressWarning", true).toBool();
-    } else {
-        qDebug() << "main m_settings Logging.enabled=false";
-    }
-#else
-    QSettings *m_settings = new QSettings();
-    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
 #endif
 
     // Default setting values.
@@ -279,6 +269,21 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
         qDebug() << "main initialize default database failed." << db.lastError().type() << db.lastError().text();
     }
     db.close();
+
+    // Registers QML types.
+    qmlRegisterType<PieChart>("Charts", 1, 0, "PieChart");
+    qmlRegisterType<FolderSizeItemListModel>("FolderSizeItemListModel", 1, 0, "FolderSizeItemListModel");
+    qmlRegisterType<SystemInfoHelper>("SystemInfoHelper", 1, 0, "SystemInfoHelper");
+    qmlRegisterType<GCPClient>("GCPClient", 1, 0, "GCPClient");
+    qmlRegisterType<CloudDriveModel>("CloudDriveModel", 1, 0, "CloudDriveModel");
+    qmlRegisterType<QAbstractListModel>();
+    qmlRegisterType<AppInfo>("AppInfo", 1, 0, "AppInfo");
+    qmlRegisterType<ClipboardModel>("ClipboardModel", 1, 0, "ClipboardModel");
+    qmlRegisterType<BookmarksModel>("BookmarksModel", 1, 0, "BookmarksModel");
+#ifdef Q_OS_SYMBIAN
+    qmlRegisterType<BluetoothClient>("BluetoothClient", 1, 0, "BluetoothClient");
+    qmlRegisterType<MessageClient>("MessageClient", 1, 0, "MessageClient");
+#endif
 
     // Application initialization.
     QScopedPointer<QApplication> app(createApplication(argc, argv));

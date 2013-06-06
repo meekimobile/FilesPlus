@@ -4,7 +4,7 @@
 #include <QDeclarativeItem>
 #include <QCache>
 #include <QFileInfo>
-#include <qsystemstorageinfo.h>
+#include <QSystemStorageInfo>
 
 using namespace QtMobility;
 
@@ -25,6 +25,9 @@ public:
 
     Q_INVOKABLE QString getUrl(const QString absPath);
     Q_INVOKABLE QString getCompletedUrl(const QString userInputLocation);
+
+    Q_INVOKABLE void shareFile(const QString &absolutePath);
+    Q_INVOKABLE void shareUrl(const QString &urlString, const QString &title = "", const QString &desc = "");
 signals:
     
 public slots:

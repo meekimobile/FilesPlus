@@ -2,6 +2,10 @@
 #include <QDebug>
 #include <QDesktopServices>
 #include "systeminfohelper.h"
+#ifdef Q_WS_HARMATTAN
+#include <maemo-meegotouch-interfaces/shareuiinterface.h>
+#include <MDataUri>
+#endif
 
 SystemInfoHelper::SystemInfoHelper(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
@@ -164,5 +168,61 @@ QString SystemInfoHelper::getUrl(const QString absPath)
 QString SystemInfoHelper::getCompletedUrl(const QString userInputLocation)
 {
     return QUrl::fromUserInput(userInputLocation).toString();
+}
+
+void SystemInfoHelper::shareFile(const QString &absolutePath)
+{
+    qDebug() << "SystemInfoHelper::shareFile absolutePath" << absolutePath;
+
+#ifdef Q_WS_HARMATTAN
+    QFileInfo shareFileInfo(absolutePath);
+    QString shareFileURL = shareFileInfo.canonicalFilePath();
+
+    if (shareFileURL.isEmpty()) {
+        qDebug() << "SystemInfoHelper::shareFile shareFileURL is empty.";
+        return;
+    } else {
+        qDebug() << "SystemInfoHelper::shareFile shareFileURL" << shareFileURL;
+    }
+
+    QStringList items;
+    items << shareFileURL;
+
+    ShareUiInterface shareIf("com.nokia.ShareUi");
+    if (shareIf.isValid()) {
+        shareIf.share(items);
+    } else {
+        qDebug() << "SystemInfoHelper::shareFile ShareUI is invalid.";
+    }
+#endif
+}
+
+void SystemInfoHelper::shareUrl(const QString &urlString, const QString &title, const QString &desc)
+{
+    qDebug() << "SystemInfoHelper::shareUrl urlString" << urlString;
+
+#ifdef Q_WS_HARMATTAN
+    MDataUri duri;
+    duri.setMimeType("text/x-url");
+    duri.setTextData(urlString);
+    duri.setAttribute("title", title);
+    duri.setAttribute("description", desc);
+
+    if (duri.isValid() == false) {
+        qCritical() << "SystemInfoHelper::shareUrl url is invalid.";
+        return;
+    }
+
+
+    QStringList items;
+    items << duri.toString();
+
+    ShareUiInterface shareIf("com.nokia.ShareUi");
+    if (shareIf.isValid()) {
+        shareIf.share(items);
+    } else {
+        qDebug() << "SystemInfoHelper::shareUrl ShareUI is invalid.";
+    }
+#endif
 }
 

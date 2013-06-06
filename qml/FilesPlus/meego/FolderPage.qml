@@ -534,43 +534,6 @@ Page {
         syncFileSlot(srcFilePath, selectedIndex, CloudDriveModel.FileGet);
     }
 
-    function mailFileSlot(srcFilePath, selectedIndex) {
-        console.debug("folderPage mailFileSlot srcFilePath=" + srcFilePath);
-        if (cloudDriveModel.isConnected(srcFilePath)) {
-            uidDialog.localPath = srcFilePath;
-            uidDialog.operation = CloudDriveModel.ShareFile;
-            uidDialog.caller = "mailFileSlot";
-            uidDialog.open();
-        }
-    }
-
-    function smsFileSlot(srcFilePath, selectedIndex) {
-        console.debug("folderPage smsFileSlot srcFilePath=" + srcFilePath);
-        if (cloudDriveModel.isConnected(srcFilePath)) {
-            uidDialog.localPath = srcFilePath;
-            uidDialog.operation = CloudDriveModel.ShareFile;
-            uidDialog.caller = "smsFileSlot";
-            uidDialog.open();
-        }
-    }
-
-    function bluetoothFileSlot(srcFilePath, selectedIndex) {
-        console.debug("folderPage bluetoothFileSlot srcFilePath=" + srcFilePath);
-        if (fsModel.isFile(srcFilePath)) {
-            btSelectionDialog.srcFilePath = srcFilePath;
-            if (btClient.isPowerOn) {
-                btSelectionDialog.open();
-            } else {
-                if (appInfo.getSettingBoolValue("automatically.bluetooth.on", false)) {
-                    btClient.powerOn();
-                    btSelectionDialog.open();
-                } else {
-                    btPowerOnDialog.open();
-                }
-            }
-        }
-    }
-
     function cancelAllFolderSizeJobsSlot() {
         fsModel.cancelQueuedJobs();
         // Abort thread with rollbackFlag=false.
@@ -1214,12 +1177,12 @@ Page {
                 return isDir && cloudDriveModel.isConnected(selectedFilePath);
             } else if (buttonName === "paste") {
                 return (clipboard.count > 0 && isDir);
-            } else if (buttonName == "mail") {
-                return cloudDriveModel.isConnected(selectedFilePath);
-            } else if (buttonName == "sms") {
-                return cloudDriveModel.isConnected(selectedFilePath);
-            } else if (buttonName == "bluetooth") {
+            } else if (buttonName == "share") {
+                return fsModel.isFile(selectedFilePath) || cloudDriveModel.isConnected(selectedFilePath);
+            } else if (buttonName == "shareFile") {
                 return fsModel.isFile(selectedFilePath);
+            } else if (buttonName == "shareUrl") {
+                return cloudDriveModel.isConnected(selectedFilePath);
             } else if (buttonName == "editFile") {
                 return fsModel.isFile(selectedFilePath);
             } else if (buttonName == "print") {
@@ -1315,16 +1278,17 @@ Page {
             downloadFileSlot(srcFilePath, srcItemIndex);
         }
 
-        onMailFile: {
-            mailFileSlot(srcFilePath, srcItemIndex);
+        onShareFile: {
+            helper.shareFile(srcFilePath);
         }
 
-        onSmsFile: {
-            smsFileSlot(srcFilePath, srcItemIndex);
-        }
-
-        onBluetoothFile: {
-            bluetoothFileSlot(srcFilePath, srcItemIndex);
+        onShareUrl: {
+            if (cloudDriveModel.isConnected(srcFilePath)) {
+                uidDialog.localPath = srcFilePath;
+                uidDialog.operation = CloudDriveModel.ShareFile;
+                uidDialog.caller = "shareUrlSlot";
+                uidDialog.open();
+            }
         }
 
         onEditFile: {
@@ -1472,8 +1436,6 @@ Page {
                 cloudDrivePathDialog.changeRemotePath("");
                 break;
             case CloudDriveModel.ShareFile:
-                // TODO Find way to refresh it before shareReplyFinished.
-                recipientSelectionDialog.refresh();
                 cloudDriveModel.shareFileCaller = uidDialog.caller;
                 cloudDriveModel.shareFile(type, uid, localPath, remotePath);
                 break;
@@ -1780,7 +1742,7 @@ Page {
 
     FilePropertiesDialog {
         id: filePropertiesDialog
-        showAttributes: false
+        showAttributes: false // For Meego only.
 
         function show(index) {
             selectedIndex = index;

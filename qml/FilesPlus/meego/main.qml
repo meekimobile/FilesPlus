@@ -1,5 +1,4 @@
 import QtQuick 1.1
-import QtMobility.contacts 1.1
 import com.nokia.meego 1.0
 import AppInfo 1.0
 import ClipboardModel 1.0
@@ -7,8 +6,7 @@ import GCPClient 1.0
 import CloudDriveModel 1.0
 import BookmarksModel 1.0
 import FolderSizeItemListModel 1.0
-import MessageClient 1.0
-import BluetoothClient 1.0
+import SystemInfoHelper 1.0
 import "Utility.js" as Utility
 
 PageStackWindow {
@@ -791,146 +789,8 @@ PageStackWindow {
         }
     }
 
-    ContactModel {
-        id: favContactModel
-        filter: DetailFilter {
-            detail: ContactDetail.Favorite
-            field: Favorite.Favorite
-            matchFlags: Filter.MatchFixedString // Meego only
-            value: "true"
-        }
-        sortOrders: [
-            SortOrder {
-                detail: ContactDetail.Favorite
-                field: Favorite.Favorite
-                direction: Qt.AscendingOrder // Meego ascending true > false
-            },
-            SortOrder {
-                detail: ContactDetail.Name
-                field: Name.FirstName
-                direction: Qt.AscendingOrder
-            },
-            SortOrder {
-                detail: ContactDetail.Name
-                field: Name.LastName
-                direction: Qt.AscendingOrder
-            }
-        ]
-
-        function getFavListModel() {
-            // Construct model.
-            var model = Qt.createQmlObject('import QtQuick 1.1; ListModel {}', favContactModel);
-
-            console.debug("getFavListModel favContactModel.contacts.length " + favContactModel.contacts.length + " error " + favContactModel.error);
-            for (var i=0; i<favContactModel.contacts.length; i++) {
-                var contact = favContactModel.contacts[i];
-                var favorite = (contact.favorite) ? contact.favorite.favorite : false;
-//                console.debug("getFavListModel contact i " + i + " displayLabel " + contact.displayLabel + " email " + contact.email.emailAddress + " phoneNumber " + contact.phoneNumber.number + " favorite " + favorite);
-                model.append({
-                                 displayLabel: contact.displayLabel,
-                                 email: contact.email.emailAddress,
-                                 phoneNumber: contact.phoneNumber.number,
-                                 favorite: favorite
-                             });
-            }
-
-            model.append({
-                             displayLabel: qsTr("Other recipient"),
-                             email: "",
-                             phoneNumber: "",
-                             favorite: false
-                         });
-
-            return model;
-        }
-
-        Component.onCompleted: {
-            console.debug(Utility.nowText() + " window favContactModel onCompleted");
-            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("ContactModel"), 0.1);
-        }
-    }
-
-    MessageClient {
-        id: msgClient
-    }
-
-    BluetoothClient {
-        id: btClient
-        property alias deviceModel: btDeviceModel
-
-        ListModel {
-            id: btDeviceModel
-
-            function findDeviceAddress(deviceAddress) {
-                for (var i=0; i<btDeviceModel.count; i++) {
-                    var existingDeviceAddress = btDeviceModel.get(i).deviceAddress;
-                    if (existingDeviceAddress === deviceAddress) {
-                        return i;
-                    }
-                }
-                return -1;
-            }
-        }
-
-        onHostModeStateChanged: {
-            if (hostMode != BluetoothClient.HostPoweredOff) {
-                btClient.startDiscovery();
-            }
-        }
-
-        onDiscoveryChanged: {
-            console.debug("btClient.onDiscoveryChanged " + discovery);
-        }
-
-        onServiceDiscovered: {
-            var i = btDeviceModel.findDeviceAddress(deviceAddress);
-            console.debug("btClient.onServiceDiscovered " + deviceName + " " + deviceAddress + " " + isTrusted + " " + isPaired + " i " + i);
-            var jsonObj = {
-                "deviceName": deviceName,
-                "deviceAddress": deviceAddress,
-                "isTrusted": isTrusted,
-                "isPaired": isPaired
-            };
-            if (i === -1) {
-                btDeviceModel.append(jsonObj);
-            } else {
-                btDeviceModel.set(i, jsonObj);
-            }
-        }
-
-        onRequestPowerOn: {
-            btPowerOnDialog.open();
-        }
-
-        onUploadStarted: {
-            btUploadProgressDialog.srcFilePath = localPath;
-            btUploadProgressDialog.autoClose = true;
-            btUploadProgressDialog.min = 0;
-            btUploadProgressDialog.max = 0;
-            btUploadProgressDialog.value = 0;
-            btUploadProgressDialog.indeterminate = true;
-            btUploadProgressDialog.message = "";
-            btUploadProgressDialog.open();
-        }
-
-        onUploadProgress: {
-            btUploadProgressDialog.indeterminate = false;
-            btUploadProgressDialog.max = bytesTotal;
-            btUploadProgressDialog.value = bytesSent;
-        }
-
-        onUploadFinished: {
-            btUploadProgressDialog.indeterminate = false;
-            btUploadProgressDialog.message = msg;
-            if (appInfo.getSettingBoolValue("keep.bluetooth.off", false)) {
-                btClient.powerOff();
-            }
-        }
-
-        Component.onCompleted: {
-            console.debug(Utility.nowText() + " window btClient onCompleted");
-            window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("BTClient"), 0.1);
-        }
+    SystemInfoHelper {
+        id: helper
     }
 
     GCPClient {
@@ -1925,10 +1785,10 @@ PageStackWindow {
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
             if (err == 0) {
-                // Open recipientSelectionDialog for sending share link.
-                showRecipientSelectionDialogSlot(jobJson.type, jobJson.uid, jobJson.local_file_path,
-                                                 (jobJson.local_file_path.indexOf("/") >= 0) ? cloudDriveModel.getFileName(jobJson.local_file_path) : jobJson.local_file_path,
-                                                 url);
+                // Show share UI. For Meego only.
+                helper.shareUrl(url,
+                                qsTr("Share file on %1").arg(cloudDriveModel.getCloudName(jobJson.type)),
+                                qsTr("Please download file with below link."));
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
@@ -2332,92 +2192,6 @@ PageStackWindow {
         printerSelectionDialog.srcFilePath = srcFilePath;
         printerSelectionDialog.srcURL = srcUrl;
         printerSelectionDialog.open();
-    }
-
-    RecipientSelectionDialog {
-        id: recipientSelectionDialog
-        shareFileCaller: cloudDriveModel.shareFileCaller
-
-        function refresh() {
-            if (model) {
-                model.destroy();
-            }
-            model = favContactModel.getFavListModel();
-            // Update model for next opening.
-            favContactModel.update();
-        }
-
-        onAccepted: {
-            console.debug("recipientSelectionDialog onAccepted shareFileCaller " + shareFileCaller + " email " + selectedEmail + " senderEmail " + senderEmail + " selectedNumber " + selectedNumber);
-            console.debug("recipientSelectionDialog onAccepted messageBody " + messageBody);
-            if (shareFileCaller == "mailFileSlot") {
-                // ISSUE Mail client doesn't get all message body if it contains URI with & in query string. Worksround by using message client.
-//                Qt.openUrlExternally("mailto:" + selectedEmail + "?subject=" + messageSubject + "&body=" + messageBody);
-                msgClient.sendEmail(selectedEmail, messageSubject, messageBody);
-            } else if (shareFileCaller == "smsFileSlot") {
-                // TODO Doesn't work on meego. Needs to use MessageClient.
-//                Qt.openUrlExternally("sms:" + selectedNumber + "?body=" + messageBody);
-                msgClient.sendSMS(selectedNumber, messageBody);
-            }
-        }
-    }
-
-    function showRecipientSelectionDialogSlot(cloudDriveType, uid, localPath, fileName, url) {
-        // Open recipientSelectionDialog for sending share link.
-        var senderEmail = cloudDriveModel.getUidEmail(cloudDriveType, uid);
-        if (senderEmail != "") {
-            recipientSelectionDialog.srcFilePath = localPath;
-            recipientSelectionDialog.srcFileName = fileName;
-            recipientSelectionDialog.messageSubject = appInfo.emptyStr+qsTr("Share file on %1").arg(cloudDriveModel.getCloudName(cloudDriveType));
-            recipientSelectionDialog.messageBody = appInfo.emptyStr+qsTr("Please download file with below link.") + "\n" + url;
-            recipientSelectionDialog.senderEmail = senderEmail;
-            recipientSelectionDialog.open();
-        }
-    }
-
-    UploadProgressDialog {
-        id: btUploadProgressDialog
-        titleText: appInfo.emptyStr+qsTr("Bluetooth transfering")
-        buttonTexts: [appInfo.emptyStr+qsTr("Cancel")]
-        onButtonClicked: {
-            if (index == 0) {
-                if (!btClient.isFinished) {
-                    btClient.uploadAbort();
-                }
-            }
-        }
-    }
-
-    ConfirmDialog {
-        id: btPowerOnDialog
-        titleText: appInfo.emptyStr+qsTr("Bluetooth transfering")
-        contentText: appInfo.emptyStr+qsTr("Transfering requires Bluetooth.\
-\n\nPlease click 'OK' to turn Bluetooth on.")
-        onConfirm: {
-            btClient.powerOn();
-            btSelectionDialog.open();
-        }
-    }
-
-    BluetoothSelectionDialog {
-        id: btSelectionDialog
-        model: btClient.deviceModel
-        discovery: btClient.discovery
-        onSelected: {
-            btClient.sendFile(localPath, deviceAddress);
-        }
-        onRejected: {
-            btClient.stopDiscovery();
-            if (appInfo.getSettingBoolValue("keep.bluetooth.off", false)) {
-                btClient.powerOff();
-            }
-        }
-        onStatusChanged: {
-            if (status == DialogStatus.Open) {
-                btClient.requestDiscoveredDevices();
-                btClient.startDiscovery(false, true);
-            }
-        }
     }
 
     Rectangle {

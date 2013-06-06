@@ -1,5 +1,6 @@
 # Add modules
 QT += declarative network script sql xml
+QT += opengl
 
 # Add more folders to ship with the application, here
 i18n_folder.source = i18n/*.qm
@@ -36,13 +37,21 @@ symbian:TARGET.EPOCSTACKSIZE = 0x100000 # 1M
 # If your application uses the Qt Mobility libraries, uncomment the following
 # lines and add the respective components to the MOBILITY variable.
 CONFIG += mobility
-MOBILITY = systeminfo contacts connectivity messaging
+MOBILITY = systeminfo connectivity
+symbian {
+    MOBILITY += contacts messaging
+}
 
 # Speed up launching on MeeGo/Harmattan when using applauncherd daemon
 CONFIG += qdeclarative-boostable
 
 # Add dependency to Symbian components
 CONFIG += qt-components
+
+#share-ui
+contains(MEEGO_EDITION, harmattan) {
+    CONFIG += shareuiinterface-maemo-meegotouch share-ui-plugin share-ui-common mdatauri
+}
 
 # Added by Nokia Publisher Support's comments.
 # In case your SDK does not generate the component dependency from your project file.
@@ -84,8 +93,6 @@ SOURCES += main.cpp \
     monitoring.cpp \
     foldersizejob.cpp \
     appinfo.cpp \
-    bluetoothclient.cpp \
-    messageclient.cpp \
     clipboardmodel.cpp \
     customqnetworkaccessmanagerfactory.cpp \
     customqnetworkaccessmanager.cpp \
@@ -99,6 +106,12 @@ SOURCES += main.cpp \
     contenttypehelper.cpp \
     bookmarksmodel.cpp \
     clouddrivemodelitem.cpp
+
+symbian {
+SOURCES += \
+    bluetoothclient.cpp \
+    messageclient.cpp
+}
 
 # Please do not modify the following two lines. Required for deployment.
 include(qmlapplicationviewer/qmlapplicationviewer.pri)
@@ -126,8 +139,6 @@ HEADERS += \
     monitoring.h \
     foldersizejob.h \
     appinfo.h \
-    bluetoothclient.h \
-    messageclient.h \
     clipboardmodel.h \
     customqnetworkaccessmanagerfactory.h \
     customqnetworkaccessmanager.h \
@@ -141,6 +152,12 @@ HEADERS += \
     contenttypehelper.h \
     bookmarksmodel.h \
     clouddrivemodelitem.h
+
+symbian {
+HEADERS += \
+    bluetoothclient.h \
+    messageclient.h
+}
 
 OTHER_FILES += \
     qtc_packaging/debian_harmattan/rules \

@@ -104,20 +104,6 @@ Page {
         cloudDriveModel.browse(selectedCloudType, selectedUid, actualRemoteParentPath);
     }
 
-    function mailFileSlot(remotePath, remotePathName) {
-        console.debug("cloudFolderPage mailFileSlot remotePath=" + remotePath);
-        recipientSelectionDialog.refresh();
-        cloudDriveModel.shareFileCaller = "mailFileSlot";
-        cloudDriveModel.shareFile(selectedCloudType, selectedUid, remotePathName, remotePath);
-    }
-
-    function smsFileSlot(remotePath, remotePathName) {
-        console.debug("cloudFolderPage smsFileSlot remotePath=" + remotePath);
-        recipientSelectionDialog.refresh();
-        cloudDriveModel.shareFileCaller = "smsFileSlot";
-        cloudDriveModel.shareFile(selectedCloudType, selectedUid, remotePathName, remotePath);
-    }
-
     function resetBusySlot(caller) {
         isBusy = false;
     }
@@ -1062,7 +1048,7 @@ Page {
         ringRadius: 80
         buttonRadius: 35
         timeout: appInfo.emptySetting+appInfo.getSettingValue("popup.timer.interval", 2) * 1000
-        disabledButtons: ["editFile","cloud","bluetooth"]
+        disabledButtons: ["editFile","cloud","shareFile"]
 
         function isButtonVisibleCallback(buttonName) {
             if (buttonName === "sync") {
@@ -1149,12 +1135,9 @@ Page {
             cloudDriveModel.setProperty(srcItemIndex, "isChecked", true);
         }
 
-        onMailFile: {
-            mailFileSlot(srcFilePath, selectedFileName);
-        }
-
-        onSmsFile: {
-            smsFileSlot(srcFilePath, selectedFileName);
+        onShareUrl: {
+            cloudDriveModel.shareFileCaller = "shareUrlSlot";
+            cloudDriveModel.shareFile(selectedCloudType, selectedUid, selectedFileName, srcFilePath);
         }
 
         onShowInfo: {

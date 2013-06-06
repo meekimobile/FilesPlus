@@ -90,6 +90,8 @@ Rectangle {
     signal disconnectFile(string srcFilePath, int srcItemIndex)
     signal browseRemoteFile(string srcFilePath, int srcItemIndex)
     signal scheduleSyncFile(string srcFilePath, int srcItemIndex)
+    signal shareFile(string srcFilePath, int srcItemIndex)
+    signal shareUrl(string srcFilePath, int srcItemIndex)
     signal mailFile(string srcFilePath, int srcItemIndex)
     signal smsFile(string srcFilePath, int srcItemIndex)
     signal bluetoothFile(string srcFilePath, int srcItemIndex)
@@ -162,9 +164,11 @@ Rectangle {
 
     ListModel {
         id: shareButtonModel
-        ListElement { buttonName: "mail"; icon: "mail.svg" }
-        ListElement { buttonName: "sms"; icon: "messaging.svg" }
-        ListElement { buttonName: "bluetooth"; icon: "bluetooth.svg" }
+        ListElement { buttonName: "shareFile"; icon: "notes.svg" } // For Meego only.
+        ListElement { buttonName: "shareUrl"; icon: "bookmark.svg" } // For Meego only.
+//        ListElement { buttonName: "mail"; icon: "mail.svg" }
+//        ListElement { buttonName: "sms"; icon: "messaging.svg" }
+//        ListElement { buttonName: "bluetooth"; icon: "bluetooth.svg" }
     }
 
     ListModel {
@@ -262,6 +266,10 @@ Rectangle {
             popupToolPanel.state = "share";
             popupTimer.restart();
             return;
+        } else if (buttonName == "shareFile") {
+            shareFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "shareUrl") {
+            shareUrl(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "mail") {
             mailFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "sms") {

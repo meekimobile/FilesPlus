@@ -86,7 +86,7 @@ Page {
         }
         ToolBarButton {
             id: bookmarkButton
-            buttonIconSource: (theme.inverted ? "favourite.svg" : "favourite_inverted.svg")
+            buttonIconSource: (theme.inverted ? "bookmark.svg" : "bookmark_inverted.svg")
             onClicked: {
                 pageStack.push(Qt.resolvedUrl("BookmarksPage.qml"));
             }
