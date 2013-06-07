@@ -50,20 +50,10 @@ ListItem {
         State {
             name: "preview"
             when: showPreview
-            PropertyChanges {
-                target: listItemIcon
-                explicit: true
-                fillMode: Image.PreserveAspectCrop
-            }
         },
         State {
             name: "icon"
             when: !showPreview
-            PropertyChanges {
-                target: listItemIcon
-                explicit: true
-                fillMode: Image.PreserveAspectFit
-            }
         }
     ]
 
@@ -102,7 +92,7 @@ ListItem {
                 sourceSize.height: (fileType.toUpperCase() == "SVG" || !isImageUrlCachable) ? undefined : 48
                 width: 48
                 height: 48
-                fillMode: Image.PreserveAspectFit
+                fillMode: showPreview ? Image.PreserveAspectCrop : Image.PreserveAspectFit
                 anchors.centerIn: parent
                 source: appInfo.emptySetting+listItem.getIconSource((new Date()).getTime())
                 asynchronous: true
