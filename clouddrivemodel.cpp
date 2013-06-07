@@ -138,6 +138,7 @@ const QString CloudDriveModel::ITEM_DAT_PATH = "/home/user/.filesplus/CloudDrive
 const QString CloudDriveModel::ITEM_DB_PATH = "/home/user/.filesplus/CloudDriveModel.db";
 const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
 const QString CloudDriveModel::TEMP_PATH = "/home/user/MyDocs/temp/.filesplus";
+const QString CloudDriveModel::IMAGE_CACHE_PATH = "/home/user/MyDocs/temp/.filesplus";
 const QString CloudDriveModel::JOB_DAT_PATH = "/home/user/.filesplus/CloudDriveJobs.dat";
 const int CloudDriveModel::MaxRunningJobCount = 1;
 #else
@@ -145,6 +146,7 @@ const QString CloudDriveModel::ITEM_DAT_PATH = "CloudDriveModel.dat";
 const QString CloudDriveModel::ITEM_DB_PATH = "CloudDriveModel.db";
 const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
 const QString CloudDriveModel::TEMP_PATH = "E:/temp/.filesplus";
+const QString CloudDriveModel::IMAGE_CACHE_PATH = "E:/temp/.filesplus";
 const QString CloudDriveModel::JOB_DAT_PATH = "CloudDriveJobs.dat"; // It's in private folder.
 const int CloudDriveModel::MaxRunningJobCount = 1;
 #endif
@@ -2883,7 +2885,7 @@ QString CloudDriveModel::thumbnail(CloudDriveModel::ClientTypes type, QString ui
 
 void CloudDriveModel::cacheImage(QString remoteFilePath, QString url, int w, int h, QString caller)
 {
-    CacheImageWorker *worker = new CacheImageWorker(remoteFilePath, url, QSize(w,h), TEMP_PATH, caller);
+    CacheImageWorker *worker = new CacheImageWorker(remoteFilePath, url, QSize(w,h), m_settings.value("image.cache.path", IMAGE_CACHE_PATH).toString(), caller);
     connect(worker, SIGNAL(cacheImageFinished(QString,int,QString,QString)), SLOT(cacheImageFinishedFilter(QString,int,QString,QString)));
     connect(worker, SIGNAL(refreshFolderCacheSignal(QString)), SIGNAL(refreshFolderCacheSignal(QString)));
     m_cacheImageThreadPool.start(worker);
@@ -5059,13 +5061,13 @@ void CloudDriveModel::clearCachedImagesOnCurrentRemotePath(bool clearThumbnail, 
         CloudDriveModelItem item = m_modelItemList->at(i);
 
         if (clearThumbnail) {
-            QFile(CacheImageWorker::getCachedRemotePath(item.thumbnail, QSize(48, 48), TEMP_PATH)).remove();
+            QFile(CacheImageWorker::getCachedRemotePath(item.thumbnail, QSize(48, 48), m_settings.value("image.cache.path", IMAGE_CACHE_PATH).toString())).remove();
         }
         if (clearThumbnail128) {
-            QFile(CacheImageWorker::getCachedRemotePath(item.thumbnail128, QSize(128, 128), TEMP_PATH)).remove();
+            QFile(CacheImageWorker::getCachedRemotePath(item.thumbnail128, QSize(128, 128), m_settings.value("image.cache.path", IMAGE_CACHE_PATH).toString())).remove();
         }
         if (clearPreview) {
-            QFile(CacheImageWorker::getCachedRemotePath(item.preview, QSize(-1, -1), TEMP_PATH)).remove();
+            QFile(CacheImageWorker::getCachedRemotePath(item.preview, QSize(-1, -1), m_settings.value("image.cache.path", IMAGE_CACHE_PATH).toString())).remove();
         }
     }
 

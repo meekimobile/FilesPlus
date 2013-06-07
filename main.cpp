@@ -243,6 +243,20 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     if (!m_settings->contains("GCDClient.dirtyBeforeSync.enabled")) {
         m_settings->setValue("GCDClient.dirtyBeforeSync.enabled", QVariant(true));
     }
+    if (!m_settings->contains("temp.path")) {
+#ifdef Q_OS_SYMBIAN
+        m_settings->setValue("temp.path", QVariant("E:/temp/.filesplus"));
+#elif defined(Q_WS_HARMATTAN)
+        m_settings->setValue("temp.path", QVariant("/home/user/MyDocs/temp/.filesplus"));
+#endif
+    }
+    if (!m_settings->contains("image.cache.path")) {
+#ifdef Q_OS_SYMBIAN
+        m_settings->setValue("image.cache.path", QVariant("E:/temp/.filesplus"));
+#elif defined(Q_WS_HARMATTAN)
+        m_settings->setValue("image.cache.path", QVariant("/home/user/MyDocs/temp/.filesplus"));
+#endif
+    }
     m_settings->sync();
 
     // Default database initialization.
@@ -337,13 +351,13 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 #endif
 
     QDeclarativeEngine *engine = viewer.engine();
-#ifdef Q_OS_SYMBIAN
-    engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider("E:/temp/.filesplus"));
-    engine->addImageProvider(QLatin1String("remote"), new RemoteImageProvider("E:/temp/.filesplus"));
-#elif defined(Q_WS_HARMATTAN)
-    engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider("/home/user/MyDocs/temp/.filesplus"));
-    engine->addImageProvider(QLatin1String("remote"), new RemoteImageProvider("/home/user/MyDocs/temp/.filesplus"));
-#endif
+
+    // Initialize image provider.
+    if (!QDir(m_settings->value("image.cache.path").toString()).exists()) {
+        QDir().mkpath(m_settings->value("image.cache.path").toString());
+    }
+    engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider(m_settings->value("image.cache.path").toString()));
+    engine->addImageProvider(QLatin1String("remote"), new RemoteImageProvider(m_settings->value("image.cache.path").toString()));
 
 #ifdef Q_OS_SYMBIAN
     // Add custom NAMF to change User-Agent to fix problem with Dropbox login page.

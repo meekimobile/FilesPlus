@@ -49,6 +49,7 @@ public:
     static const QString ITEM_DB_PATH;
     static const QString ITEM_DB_CONNECTION_NAME;
     static const QString TEMP_PATH;
+    static const QString IMAGE_CACHE_PATH;
     static const QString JOB_DAT_PATH;
     static const int MaxRunningJobCount;
     static const QString DirtyHash;
