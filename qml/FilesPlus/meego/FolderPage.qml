@@ -82,6 +82,7 @@ Page {
                 } else {
                     // Specify local path to focus after cd to parent directory..
                     fsListView.focusLocalPath = fsModel.currentDir;
+                    fsGridView.focusLocalPath = fsModel.currentDir;
                     goUpSlot();
                 }
             }
@@ -869,20 +870,20 @@ Page {
         }
 
         onMovementEnded: {
-            fsListView.lastCenterIndex = fsListView.indexAt(0, fsListView.contentY + (fsListView.height / 2));
+            lastCenterIndex = fsListView.indexAt(0, contentY + (height / 2));
         }
 
         onCountChanged: {
 //            console.debug("fsListView onCountChanged " + count + " model.count " + model.count);
             if (count == model.count) {
-                if (fsListView.focusLocalPath != "") {
+                if (focusLocalPath != "") {
                     // Focus on specified local path's index.
                     // The path is set by back button or listItem onClicked as "." to avoid focusing any item.
-                    var focusIndex = fsModel.getIndexOnCurrentDir(fsListView.focusLocalPath);
+                    var focusIndex = fsModel.getIndexOnCurrentDir(focusLocalPath);
                     if (focusIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
                         fsListView.positionViewAtIndex(focusIndex, ListView.Center);
                     }
-                    fsListView.focusLocalPath = "";
+                    focusLocalPath = "";
                 } else {
                     // Keep focus on last center index.
                     fsListView.positionViewAtIndex(lastCenterIndex, ListView.Center);
@@ -931,13 +932,36 @@ Page {
         model: fsModel
         delegate: gridItemDelegate
 
-        property int lastContentY
+        property int lastCenterIndex
+        property string focusLocalPath
 
         onMovementStarted: {
             if (currentItem) {
                 // Hide highlight and popupTool.
                 currentIndex = -1;
                 popupToolPanel.visible = false;
+            }
+        }
+
+        onMovementEnded: {
+            lastCenterIndex = fsGridView.indexAt(0, contentY + (height / 2));
+        }
+
+        onCountChanged: {
+//            console.debug("fsListView onCountChanged " + count + " model.count " + model.count);
+            if (count == model.count) {
+                if (focusLocalPath != "") {
+                    // Focus on specified local path's index.
+                    // The path is set by back button or listItem onClicked as "." to avoid focusing any item.
+                    var focusIndex = fsModel.getIndexOnCurrentDir(focusLocalPath);
+                    if (focusIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
+                        fsGridView.positionViewAtIndex(focusIndex, GridView.Center);
+                    }
+                    focusLocalPath = "";
+                } else {
+                    // Keep focus on last center index.
+                    fsGridView.positionViewAtIndex(lastCenterIndex, GridView.Center);
+                }
             }
         }
 
@@ -1074,7 +1098,7 @@ Page {
                     fsModel.setProperty(index, FolderSizeItemListModel.IsCheckedRole, !isChecked);
                 } else {
                     if (isDir) {
-//                        fsGridView.focusLocalPath = "."; // Put dummy path to avoid focus on lastCenterIndex.
+                        fsGridView.focusLocalPath = "."; // Put dummy path to avoid focus on lastCenterIndex.
                         changeDirSlot(name);
                     } else {
                         // If file is running, disable preview.

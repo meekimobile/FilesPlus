@@ -322,8 +322,9 @@ Page {
                 if (cloudDriveModel.state == "mark") {
                     cloudDriveModel.state = "";
                 } else {
-                    // TODO Specify local path to focus after cd to parent directory..
-//                    cloudFolderView.focusLocalPath = cloudDriveModel.currentDir;
+                    // Specify remote path to focus after cd to parent directory..
+                    cloudFolderView.focusRemotePath = cloudDriveModel.remoteParentPath;
+                    cloudFolderGridView.focusRemotePath = cloudDriveModel.remoteParentPath;
                     goUpSlot();
                 }
             }
@@ -714,12 +715,34 @@ Page {
             }
         }
 
+        property int lastCenterIndex
+        property string focusRemotePath
+
         onMovementStarted: {
             if (currentItem) {
                 // Hide highlight and popupTool.
                 currentItem.pressed = false;
                 currentIndex = -1;
                 popupToolPanel.visible = false;
+            }
+        }
+
+        onMovementEnded: {
+            lastCenterIndex = cloudFolderView.indexAt(0, contentY + (height / 2));
+        }
+
+        onCountChanged: {
+            if (count == model.count) {
+                if (focusRemotePath != "") {
+                    // Focus on specified remote path's index.
+                    // The path is set by back button or listItem onClicked as "." to avoid focusing any item.
+                    lastCenterIndex = cloudDriveModel.findIndexByRemotePath(focusRemotePath);
+                    focusRemotePath = "";
+                }
+
+                if (lastCenterIndex != -1) {
+                    cloudFolderView.positionViewAtIndex(lastCenterIndex, ListView.Center);
+                }
             }
         }
 
@@ -784,13 +807,33 @@ Page {
             }
         }
 
-        property int lastContentY
+        property int lastCenterIndex
+        property string focusRemotePath
 
         onMovementStarted: {
             if (currentItem) {
                 // Hide highlight and popupTool.
                 currentIndex = -1;
                 popupToolPanel.visible = false;
+            }
+        }
+
+        onMovementEnded: {
+            lastCenterIndex = cloudFolderGridView.indexAt(0, contentY + (height / 2));
+        }
+
+        onCountChanged: {
+            if (count == model.count) {
+                if (focusRemotePath != "") {
+                    // Focus on specified remote path's index.
+                    // The path is set by back button or listItem onClicked as "." to avoid focusing any item.
+                    lastCenterIndex = cloudDriveModel.findIndexByRemotePath(focusRemotePath);
+                    focusRemotePath = "";
+                }
+
+                if (lastCenterIndex != -1) {
+                    cloudFolderGridView.positionViewAtIndex(lastCenterIndex, ListView.Center);
+                }
             }
         }
 
@@ -886,6 +929,7 @@ Page {
                     cloudDriveModel.setProperty(index, "isChecked", !isChecked);
                 } else {
                     if (isDir) {
+                        ListView.view.focusRemotePath = ".";
                         changeRemotePath(absolutePath);
                     } else {
                         // If file is running, disable preview.
@@ -999,6 +1043,7 @@ Page {
                     cloudDriveModel.setProperty(index, "isChecked", !isChecked);
                 } else {
                     if (isDir) {
+                        GridView.view.focusRemotePath = ".";
                         changeRemotePath(absolutePath);
                     } else {
                         // If file is running, disable preview.
