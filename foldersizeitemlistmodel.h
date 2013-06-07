@@ -218,6 +218,8 @@ private:
     QFileSystemWatcher *m_fsWatcher;
     void initializeFSWatcher();
     QStringList findSubDirList(QString dirPath);
+    void addWatchedDirPath(QString dirPath);
+    void removeWatchedDirPath(QString dirPath);
 public slots:
     void loadDirSizeCacheFinishedFilter();
     void fetchDirSizeFinishedFilter();

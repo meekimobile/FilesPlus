@@ -619,6 +619,9 @@ bool FolderSizeItemListModel::deleteFile(const QString absPath)
         }
     }
 
+    // Remove from fsWatcher.
+    removeWatchedDirPath(absPath);
+
     // Enqueue job.
     FolderSizeJob job(createNonce(), FolderSizeModelThread::DeleteFile, absPath, "");
     m_jobQueue.enqueue(job);
@@ -659,6 +662,9 @@ bool FolderSizeItemListModel::move(const QString sourcePath, const QString targe
         emit copyFinished(FolderSizeModelThread::MoveFile, sourcePath, targetPath, tr("Target path can't be inside source path."), -6, 0, -1, 0);
         return false;
     }
+
+    // Remove from fsWatcher.
+    removeWatchedDirPath(sourcePath);
 
     // TODO Show running on targetPath's parent.
     emit copyStarted(FolderSizeModelThread::MoveFile, sourcePath, getDirPath(targetPath), tr("Show running on targetPath's parent"), 0);
@@ -729,9 +735,13 @@ bool FolderSizeItemListModel::renameFile(const QString fileName, const QString n
 {
     if (fileName == newFileName) return false;
 
-    QDir::setCurrent(currentDir());
     QFileInfo sourceFileInfo(fileName);
+    QDir::setCurrent(currentDir());
     int res = false;
+
+    // Remove from fsWatcher.
+    removeWatchedDirPath(sourceFileInfo.absoluteFilePath());
+
     if (sourceFileInfo.isFile()) {
         res = QFile::rename(fileName, newFileName);
     } else {
@@ -814,6 +824,9 @@ bool FolderSizeItemListModel::trash(const QString sourcePath)
         qDebug() << "FolderSizeItemListModel::trash error Target path can't be inside source path.";
         return false;
     }
+
+    // Remove from fsWatcher.
+    removeWatchedDirPath(sourcePath);
 
     // Enqueue job.
     FolderSizeJob job(createNonce(), FolderSizeModelThread::TrashFile, sourcePath, targetPath);
@@ -1034,6 +1047,22 @@ QStringList FolderSizeItemListModel::findSubDirList(QString dirPath)
     }
     qDebug() << "FolderSizeItemListModel::findSubDirList dirPath" << dirPath << "subDirList" << subDirList;
     return subDirList;
+}
+
+void FolderSizeItemListModel::addWatchedDirPath(QString dirPath)
+{
+    // TODO Make it configurable.
+    m_fsWatcher->addPaths(findSubDirList(dirPath));
+    qDebug() << "FolderSizeItemListModel::addWatchedDirPath" << dirPath;
+}
+
+void FolderSizeItemListModel::removeWatchedDirPath(QString dirPath)
+{
+    // TODO Make it configurable.
+    if (m_fsWatcher->directories().contains(dirPath)) {
+        m_fsWatcher->removePaths(findSubDirList(dirPath));
+        qDebug() << "FolderSizeItemListModel::removeWatchedDirPath" << dirPath;
+    }
 }
 
 void FolderSizeItemListModel::initializeFSWatcher()
