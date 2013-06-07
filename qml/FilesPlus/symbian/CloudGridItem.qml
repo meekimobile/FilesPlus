@@ -66,10 +66,10 @@ Item {
                 target: gridItemIcon
                 explicit: true
                 fillMode: Image.PreserveAspectFit
-                width: parent.width - 40
-                height: parent.width - 40
-                sourceSize.width: parent.width - 40
-                sourceSize.height: parent.width - 40
+                width: parent.width - 30
+                height: parent.width - 30
+                sourceSize.width: parent.width - 30
+                sourceSize.height: parent.width - 30
             }
         }
     ]
