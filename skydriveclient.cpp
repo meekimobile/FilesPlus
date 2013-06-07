@@ -1279,6 +1279,8 @@ QScriptValue SkyDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engin
     QScriptValue parsedObj = engine.newObject();
 
     QString alternative = jsonObj.property("link").toString();
+    QString thumbnail128Url = jsonObj.property("images").property(1).property("source").toString();
+    QString previewUrl = jsonObj.property("images").property(0).property("source").toString();
 
     parsedObj.setProperty("name", jsonObj.property("name"));
     parsedObj.setProperty("absolutePath", jsonObj.property("id"));
@@ -1291,8 +1293,8 @@ QScriptValue SkyDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engin
     parsedObj.setProperty("source", jsonObj.property("source"));
     parsedObj.setProperty("alternative", QScriptValue(alternative));
     parsedObj.setProperty("thumbnail", jsonObj.property("picture"));
-    parsedObj.setProperty("thumbnail128", jsonObj.property("picture"));
-    parsedObj.setProperty("preview", jsonObj.property("images").property(0).property("source"));
+    parsedObj.setProperty("thumbnail128", QScriptValue(thumbnail128Url));
+    parsedObj.setProperty("preview", QScriptValue(previewUrl));
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("name").toString())));
 
     return parsedObj;
