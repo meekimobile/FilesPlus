@@ -853,17 +853,20 @@ Page {
 
             // Override to support cloud items.
             function getIconSource(timestamp) {
+                var url = thumbnail;
+
                 if (isDir) {
                     return "folder_list.svg";
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                     var showThumbnail = appInfo.getSettingBoolValue("CloudFolderPage.thumbnail.enabled", false);
-                    if (showThumbnail && thumbnail && thumbnail != "") {
+                    if (showThumbnail && url && url != "") {
                         // Dropbox's thumbnail url can't open with Image directly. Need to invoke cacheImage() or use RemoteImageProvider to download.
                         // Always cache thumbnail by using RemoteImageProvider.
-                        if (cloudDriveModel.isImageUrlCachable(selectedCloudType) && fileType.toUpperCase() != "SVG") {
-                            return "image://remote/" + thumbnail + "#t=" + timestamp;
+                        if (cloudDriveModel.isImageUrlCachable(selectedCloudType) && (fileType.toUpperCase() != "SVG")) {
+                            // Cache only cloud, cachable and not-SVG image.
+                            return "image://remote/" + url + "#t=" + timestamp;
                         } else {
-                            return thumbnail;
+                            return url + "#t=" + timestamp;
                         }
                     } else {
                         return "photos_list.svg";
@@ -965,25 +968,32 @@ Page {
             width: cloudFolderGridView.cellWidth
             height: cloudFolderGridView.cellHeight
             gridItemIconBusyVisible: true
+            showPreview: cloudDriveModel.isViewable(selectedCloudType) && (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1)
             isImageUrlCachable: cloudDriveModel.isImageUrlCachable(selectedCloudType)
             subIconMargin: appInfo.emptySetting + (appInfo.getSettingBoolValue("GridView.compact.enabled", false) ? 10 : 32) // 32 for 3 columns, 10 for 4 columns
 
+            // Override to support cloud items.
             function getIconSource(timestamp) {
+                var url = thumbnail128;
+
                 if (isDir) {
                     return "folder_list.svg";
                 } else if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                    return getImageSource(thumbnail128, timestamp);
+                    var showThumbnail = appInfo.getSettingBoolValue("CloudFolderPage.thumbnail.enabled", false);
+                    if (showThumbnail && url && url != "") {
+                        // Dropbox's thumbnail url can't open with Image directly. Need to invoke cacheImage() or use RemoteImageProvider to download.
+                        // Always cache thumbnail by using RemoteImageProvider.
+                        if (cloudDriveModel.isImageUrlCachable(selectedCloudType) && (fileType.toUpperCase() != "SVG")) {
+                            // Cache only cloud, cachable and not-SVG image.
+                            return "image://remote/" + url + "#t=" + timestamp;
+                        } else {
+                            return url + "#t=" + timestamp;
+                        }
+                    } else {
+                        return "photos_list.svg";
+                    }
                 } else {
                     return "notes_list.svg";
-                }
-            }
-
-            function getImageSource(url, timestamp) {
-                if (cloudDriveModel.isImageUrlCachable(selectedCloudType) && (fileType.toUpperCase() != "SVG")) {
-                    // Cache only cloud, cachable and not-SVG image.
-                    return "image://remote/" + url + "#t=" + timestamp;
-                } else {
-                    return url + "#t=" + timestamp;
                 }
             }
 
