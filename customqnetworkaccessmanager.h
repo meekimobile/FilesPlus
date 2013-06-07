@@ -4,6 +4,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#include <QSettings>
 
 class CustomQNetworkAccessManager : public QNetworkAccessManager
 {
@@ -14,7 +15,9 @@ public:
 signals:
     
 public slots:
-    
+
+private:
+    QSettings m_settings;
 };
 
 #endif // CUSTOMQNETWORKACCESSMANAGER_H

@@ -257,6 +257,12 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
         m_settings->setValue("image.cache.path", QVariant("/home/user/MyDocs/temp/.filesplus"));
 #endif
     }
+#ifdef Q_OS_SYMBIAN
+    if (!m_settings->contains("CustomQNetworkAccessManager.userAgent.www.dropbox.com")) {
+        m_settings->setValue("CustomQNetworkAccessManager.userAgent.www.dropbox.com",
+                             "Mozilla/5.0 (Nokia Belle; U; N8-00; en-TH) AppleWebKit/534.3 (KHTML, like Gecko) FilesPlus Mobile Safari/534.3");
+    }
+#endif
     m_settings->sync();
 
     // Default database initialization.
