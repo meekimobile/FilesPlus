@@ -230,22 +230,22 @@ Page {
             group: "Personalization"
         }
         ListElement {
-            name: "Spacer"
-            title: ""
-            type: "spacer"
-            group: "Spacer"
-        }
-        ListElement {
-            name: "Spacer"
-            title: ""
-            type: "spacer"
-            group: "Spacer"
-        }
-        ListElement {
             name: "statusbar.enabled"
             title: ""
             type: "switch"
             group: "Personalization"
+        }
+        ListElement {
+            name: "Spacer"
+            title: ""
+            type: "spacer"
+            group: "Spacer"
+        }
+        ListElement {
+            name: "Spacer"
+            title: ""
+            type: "spacer"
+            group: "Spacer"
         }
         ListElement {
             name: "Developer"
