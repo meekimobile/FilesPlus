@@ -4,6 +4,7 @@
 #include <QCoreApplication>
 #include <QScriptEngine>
 #include <QScriptValueIterator>
+#include "contenttypehelper.h"
 
 const QString GCDClient::consumerKey = "196573379494.apps.googleusercontent.com";
 const QString GCDClient::consumerSecret = "il59cyz3dwBW6tsHBkZYGSWj";
@@ -45,21 +46,6 @@ GCDClient::GCDClient(QObject *parent) :
     m_propertyReplyHash = new QHash<QString, QByteArray>;
     m_filesReplyHash = new QHash<QString, QByteArray>;
     m_downloadUrlHash = new QHash<QString, QString>;
-
-    // Populate contentTypeHash.
-    // TODO Make it configurable. It could be parsed from apache server's mime.types.
-    m_contentTypeHash["jpg"] = "image/jpeg";
-    m_contentTypeHash["png"] = "image/png";
-    m_contentTypeHash["gif"] = "image/gif";
-    m_contentTypeHash["pdf"] = "application/pdf";
-    m_contentTypeHash["txt"] = "text/plain";
-    m_contentTypeHash["patch"] = "text/plain";
-    m_contentTypeHash["log"] = "text/plain";
-    m_contentTypeHash["avi"] = "video/x-msvideo";
-    m_contentTypeHash["mp3"] = "audio/mpeg3";
-    m_contentTypeHash["mp4"] = "video/mp4";
-    m_contentTypeHash["mov"] = "video/quicktime";
-    m_contentTypeHash["flv"] = "video/x-flv";
 }
 
 GCDClient::~GCDClient()
@@ -196,16 +182,7 @@ QByteArray GCDClient::encodeMultiPart(QString boundary, QMap<QString, QString> p
 }
 
 QString GCDClient::getContentType(QString fileName) {
-    // Parse fileName with RegExp
-    QRegExp rx("(.+)(\\.)(\\w{3,5})$");
-    rx.indexIn(fileName);
-//    qDebug() << "GCDClient::getContentType fileName=" << fileName << " rx.captureCount()=" << rx.captureCount();
-//    for(int i=0; i<=rx.captureCount(); i++) {
-//        qDebug() << "GCDClient::getContentType i=" << i << " rx.cap=" << rx.cap(i);
-//    }
-    QString fileExt = rx.cap(3).toLower();
-
-    QString contentType = m_contentTypeHash[fileExt];
+    QString contentType = ContentTypeHelper::getContentType(fileName);
     if (contentType == "") {
         contentType = "application/octet-stream";
     }
@@ -703,9 +680,10 @@ QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source,
     fileId = (fileId != "") ? ("/" + fileId) : fileId;
 
     QString uri = filePutURI.arg(fileId) + "?uploadType=media";
-    qDebug() << "GCDClient::filePut uri " << uri;
+    qDebug() << "GCDClient::filePut nonce" << nonce << "uri" << uri;
 
     QString contentType = getContentType(remoteFileName);
+    qDebug() << "GCDClient::filePut nonce" << nonce << "remoteFileName" << remoteFileName << "contentType" << contentType;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -747,7 +725,7 @@ QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source,
             metadata.append(" \"title\": \"" + remoteFileName.toUtf8() + "\", ");
             metadata.append(" \"parents\": [{ \"id\": \"" + remoteParentPath.toUtf8() + "\" }] ");
             metadata.append("}");
-            qDebug() << "GCDClient::filePut patch metadata" << metadata;
+            qDebug() << "GCDClient::filePut nonce" << nonce << "patch metadata" << metadata;
 
             reply = patchFile(nonce, uid, remoteFilePath, metadata);
         }

@@ -268,11 +268,6 @@ QByteArray GCPClient::encodeMultiPart(QString boundary, QMap<QString, QString> p
     return postData;
 }
 
-void GCPClient::loadContentTypeHash(QString sourceFilePath)
-{
-    m_contentTypeHash = ContentTypeHelper().parseContentTypeHash(sourceFilePath);
-}
-
 void GCPClient::authorize()
 {
     qDebug() << "----- GCPClient::authorize -----";
@@ -560,16 +555,7 @@ void GCPClient::printer(QString printerId)
 }
 
 QString GCPClient::getContentType(QString fileName) {
-    // Parse fileName with RegExp
-    QRegExp rx("(.+)(\\.)(\\w{3,4})$");
-    rx.indexIn(fileName);
-//    qDebug() << "GCPClient::getContentType fileName=" << fileName << " rx.captureCount()=" << rx.captureCount();
-    for(int i=0; i<=rx.captureCount(); i++) {
-//        qDebug() << "i=" << i << " rx.cap=" << rx.cap(i);
-    }
-    QString fileExt = rx.cap(3).toLower();
-
-    return m_contentTypeHash[fileExt];
+    return ContentTypeHelper::getContentType(fileName);
 }
 
 void GCPClient::accessTokenReplyFinished(QNetworkReply *reply)

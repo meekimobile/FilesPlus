@@ -35,9 +35,6 @@ public:
     QHash<QString, QString> createHashFromJson(QString jsonText);
     QByteArray encodeMultiPart(QString boundary, QMap<QString, QString> paramMap, QString fileParameter, QString fileName, QByteArray fileData, QString contentType);
 
-    // Mime.types mapping.
-    Q_INVOKABLE void loadContentTypeHash(QString sourceFilePath);
-
     Q_INVOKABLE void authorize();
     Q_INVOKABLE bool parseAuthorizationCode(QString text);
     Q_INVOKABLE void accessToken();
@@ -83,7 +80,6 @@ private:
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;
     QHash<QString, QString> m_printerHash;
-    QHash<QString, QString> m_contentTypeHash;
 
     QDateTime m_paramMapLastModified;
     bool isParamMapChanged();

@@ -118,7 +118,6 @@ protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:
     QString localPath;
-    QHash<QString, QString> m_contentTypeHash;
     QHash<QString, QFile*> m_localFileHash;
     QHash<QString, QBuffer*> m_bufferHash;
     QString refreshTokenUid;

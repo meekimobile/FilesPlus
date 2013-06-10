@@ -2,10 +2,8 @@
 #include <QDir>
 #include <QDebug>
 #include <QRegExp>
-
-ContentTypeHelper::ContentTypeHelper()
-{
-}
+#include <QApplication>
+#include <QDesktopServices>
 
 QHash<QString, QString> ContentTypeHelper::parseContentTypeHash(const QString &localPath)
 {
@@ -46,4 +44,25 @@ QHash<QString, QString> ContentTypeHelper::parseContentTypeHash(const QString &l
     qDebug() << "ContentTypeHelper::parseContentTypeHash contentTypeHash.count()" << contentTypeHash.count();
 
     return contentTypeHash;
+}
+
+QString ContentTypeHelper::getConfigPath()
+{
+#if defined(Q_WS_HARMATTAN)
+    QString sourceFilePath = QDir(QApplication::applicationDirPath()).absoluteFilePath("../config");
+#else
+    QString sourceFilePath = QDir(QDesktopServices::storageLocation(QDesktopServices::DataLocation)).absoluteFilePath("config");
+#endif
+    return sourceFilePath;
+}
+
+QString ContentTypeHelper::getContentType(QString fileName)
+{
+    ContentTypeHelper *instance = getInstance();
+
+    if (instance->m_contentTypeHash.empty()) {
+        instance->m_contentTypeHash = parseContentTypeHash(getConfigPath() + "/mime.types");
+    }
+
+    return instance->m_contentTypeHash[QFileInfo(fileName).suffix().toLower()];
 }
