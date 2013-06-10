@@ -771,7 +771,14 @@ QString WebDavClient::createPropertyJson(QString replyBody, QString caller)
     int childrenArrayIndex = 0;
     n = n.nextSibling();
     while(!n.isNull()) {
-        childrenArrayObj.setProperty(childrenArrayIndex++, parseCommonPropertyScriptValue(engine, createScriptValue(engine, n, caller)));
+        QScriptValue childObj = parseCommonPropertyScriptValue(engine, createScriptValue(engine, n, caller));
+        if (!m_settings.value("WebDavClient.createPropertyJson.showHiddenSystem.enabled", false).toBool()
+                && childObj.property("isHidden").toBool()) {
+            // Skip hidden child if showing is disabled.
+        } else {
+            // Add child to array.
+            childrenArrayObj.setProperty(childrenArrayIndex++, childObj);
+        }
         n = n.nextSibling();
     }
     jsonObj.setProperty("children", childrenArrayObj);
@@ -1410,12 +1417,14 @@ QScriptValue WebDavClient::parseCommonPropertyScriptValue(QScriptEngine &engine,
     uint objRemoteSize = jsonObj.property("propstat").property("prop").property("getcontentlength").isValid() ? jsonObj.property("propstat").property("prop").property("getcontentlength").toInteger() : 0;
     QDateTime objLastModified = jsonObj.property("propstat").property("prop").property("getlastmodified").isValid() ? parseReplyDateString(jsonObj.property("propstat").property("prop").property("getlastmodified").toString()) : QDateTime::currentDateTime();
     QString objRemoteHash = jsonObj.property("propstat").property("prop").property("getlastmodified").isValid() ? formatJSONDateString(objLastModified) : "FFFFFFFF"; // Uses DirtyHash if last modified doesn't exist.
+    bool isHidden = objRemoteName.startsWith(".");
 
     parsedObj.setProperty("name", QScriptValue(objRemoteName));
     parsedObj.setProperty("absolutePath", QScriptValue(objHref));
     parsedObj.setProperty("parentPath", QScriptValue(getParentRemotePath(objRemotePath) + "/"));
     parsedObj.setProperty("size", QScriptValue(objRemoteSize));
     parsedObj.setProperty("isDeleted", QScriptValue(false));
+    parsedObj.setProperty("isHidden", QScriptValue(isHidden));
     parsedObj.setProperty("isDir", QScriptValue(objIsDir));
     parsedObj.setProperty("lastModified", QScriptValue(formatJSONDateString(objLastModified)));
     parsedObj.setProperty("hash",  QScriptValue(objRemoteHash));

@@ -291,6 +291,18 @@ Page {
             group: "Developer"
         }
         ListElement {
+            name: "FtpClient.getItemListJson.showHiddenSystem.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
+        ListElement {
+            name: "WebDavClient.createPropertyJson.showHiddenSystem.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
+        ListElement {
             name: "drivepage.trash.enabled"
             title: ""
             type: "switch"
@@ -383,7 +395,9 @@ Page {
         else if (name == "LocalFileImageProvider.cache.enabled") return qsTr("Cache local images") + appInfo.emptyStr;
         else if (name == "LocalFileImageProvider.CacheImageWorker.enabled") return qsTr("Queue local image caching") + appInfo.emptyStr;
         else if (name == "RemoteImageProvider.CacheImageWorker.enabled") return qsTr("Queue cloud image caching") + appInfo.emptyStr;
-        else if (name == "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled") return qsTr("Show hidden/system files") + appInfo.emptyStr;
+        else if (name == "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled") return qsTr("Show hidden files on local drive") + appInfo.emptyStr;
+        else if (name == "FtpClient.getItemListJson.showHiddenSystem.enabled") return qsTr("Show hidden files on FTP") + appInfo.emptyStr;
+        else if (name == "WebDavClient.createPropertyJson.showHiddenSystem.enabled") return qsTr("Show hidden files on WebDAV") + appInfo.emptyStr;
         else if (name == "FolderSizeItemListModel.deleteFile.use.trash.enabled") return qsTr("Delete by moving to trash") + appInfo.emptyStr;
         else return qsTr(name) + appInfo.emptyStr;
     }
@@ -439,6 +453,12 @@ Page {
         } else if (name == "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled") {
             var p = window.findPage("folderPage");
             if (p) p.refreshSlot("settingPage buttonClickedHandler FolderSizeModelThread.getDirContent.showHiddenSystem.enabled");
+        } else if (name == "FtpClient.getItemListJson.showHiddenSystem.enabled") {
+            var p = window.findPage("cloudFolderPage");
+            if (p) p.refreshSlot("settingPage buttonClickedHandler FtpClient.getItemListJson.showHiddenSystem.enabled");
+        } else if (name == "WebDavClient.createPropertyJson.showHiddenSystem.enabled") {
+            var p = window.findPage("cloudFolderPage");
+            if (p) p.refreshSlot("settingPage buttonClickedHandler WebDavClient.createPropertyJson.showHiddenSystem.enabled");
         }
     }
 

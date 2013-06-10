@@ -21,6 +21,8 @@ public:
     qint64 subFileCount;
     QString fileType;
     bool isDeleted;
+    bool isHidden;
+    bool isReadOnly;
     QString source;
     QString alternative;
     QString thumbnail;

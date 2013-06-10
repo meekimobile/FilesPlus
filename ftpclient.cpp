@@ -653,6 +653,7 @@ QString FtpClient::getPropertyJson(const QString parentPath, const QUrlInfo item
     // Handle absolute path in name.
     QString path = removeDoubleSlash((item.name().startsWith("/") ? "" : parentPath + "/") + item.name());
     uint itemSize = item.size();
+    bool isHidden = item.name().startsWith(".");
 
     QScriptEngine engine;
     QScriptValue parsedObj = engine.newObject();
@@ -661,6 +662,7 @@ QString FtpClient::getPropertyJson(const QString parentPath, const QUrlInfo item
     parsedObj.setProperty("parentPath", QScriptValue(parentPath));
     parsedObj.setProperty("size", QScriptValue(itemSize));
     parsedObj.setProperty("isDeleted", QScriptValue(false));
+    parsedObj.setProperty("isHidden", QScriptValue(isHidden));
     parsedObj.setProperty("isDir", QScriptValue(item.isDir()));
     parsedObj.setProperty("lastModified", QScriptValue(formatJSONDateString(item.lastModified())));
     parsedObj.setProperty("hash", QScriptValue(formatJSONDateString(item.lastModified())));
@@ -696,10 +698,17 @@ QString FtpClient::getItemListJson(const QString parentPath, const QList<QUrlInf
     QUrlInfo item;
     for (int i = 0; i < itemList.count(); i++) {
         item = itemList.at(i);
-        if (dataJsonText.length() > 0) {
-            dataJsonText.append(", ");
+        // Hide hidden child.
+        if (!m_settings.value("FtpClient.getItemListJson.showHiddenSystem.enabled", false).toBool()
+                && item.name().startsWith(".")) {
+            // Skip hidden child if showing is disabled.
+        } else {
+            // Add child to list.
+            if (dataJsonText.length() > 0) {
+                dataJsonText.append(", ");
+            }
+            dataJsonText.append(getPropertyJson(parentPath, item));
         }
-        dataJsonText.append(getPropertyJson(parentPath, item));
     }
     dataJsonText.prepend("[ ").append(" ]");
 

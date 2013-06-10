@@ -11,6 +11,8 @@ CloudDriveModelItem::CloudDriveModelItem()
     this->isChecked = false;
     this->isConnected = false;
     this->isDeleted = false;
+    this->isHidden = false;
+    this->isReadOnly = false;
     this->timestamp = QDateTime::currentMSecsSinceEpoch();
 }
 
@@ -28,6 +30,8 @@ QString CloudDriveModelItem::toJsonText()
     jsonText.append(QString("\"sub_file_count\": %1, ").arg(subFileCount));
     jsonText.append(QString("\"file_type\": \"%1\", ").arg(fileType));
     jsonText.append(QString("\"is_deleted\": %1, ").arg(isDeleted?"true":"false"));
+    jsonText.append(QString("\"is_hidden\": %1, ").arg(isHidden?"true":"false"));
+    jsonText.append(QString("\"is_read_only\": %1, ").arg(isReadOnly?"true":"false"));
     jsonText.append(QString("\"source\": \"%1\", ").arg(source));
     jsonText.append(QString("\"alternative\": \"%1\", ").arg(alternative));
     jsonText.append(QString("\"thumbnail\": \"%1\", ").arg(thumbnail));

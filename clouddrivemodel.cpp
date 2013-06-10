@@ -213,6 +213,8 @@ CloudDriveModel::CloudDriveModel(QObject *parent) :
     roles[++i] = "subFileCount";
     roles[++i] = "fileType";
     roles[++i] = "isDeleted";
+    roles[++i] = "isHidden";
+    roles[++i] = "isReadOnly";
     roles[++i] = "source";
     roles[++i] = "alternative";
     roles[++i] = "thumbnail";
@@ -277,6 +279,8 @@ QVariant CloudDriveModel::data(const QModelIndex &index, int role) const
     else if (roleName == "subFileCount") return modelItem.subFileCount;
     else if (roleName == "fileType") return modelItem.fileType;
     else if (roleName == "isDeleted") return modelItem.isDeleted;
+    else if (roleName == "isHidden") return modelItem.isHidden;
+    else if (roleName == "isReadOnly") return modelItem.isReadOnly;
     else if (roleName == "source") return modelItem.source;
     else if (roleName == "alternative") return modelItem.alternative;
     else if (roleName == "thumbnail") return modelItem.thumbnail;
@@ -3376,6 +3380,8 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
                     modelItem.hash = childItem.property("hash").toString();
                     modelItem.fileType = childItem.property("fileType").toString();
                     modelItem.isDeleted = childItem.property("isDeleted").toBool();
+                    modelItem.isHidden = childItem.property("isHidden").toBool();
+                    modelItem.isReadOnly = childItem.property("isReadOnly").toBool();
                     modelItem.source = childItem.property("source").toString();
                     modelItem.alternative = childItem.property("alternative").toString();
                     modelItem.thumbnail = childItem.property("thumbnail").toString();

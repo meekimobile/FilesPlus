@@ -850,6 +850,7 @@ Page {
             actionIconSource: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath, cloudDriveModel.getCloudName(selectedCloudType), selectedUid) : ""
             omitShowingZeroSizeDir: true
             isImageUrlCachable: cloudDriveModel.isImageUrlCachable(selectedCloudType)
+            opacity: isHidden ? 0.5 : 1
 
             // Override to support cloud items.
             function getIconSource(timestamp) {
@@ -971,6 +972,7 @@ Page {
             showPreview: cloudDriveModel.isViewable(selectedCloudType) && (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1)
             isImageUrlCachable: cloudDriveModel.isImageUrlCachable(selectedCloudType)
             subIconMargin: appInfo.emptySetting + (appInfo.getSettingBoolValue("GridView.compact.enabled", false) ? 10 : 32) // 32 for 3 columns, 10 for 4 columns
+            opacity: isHidden ? 0.5 : 1
 
             // Override to support cloud items.
             function getIconSource(timestamp) {
