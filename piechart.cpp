@@ -258,14 +258,16 @@ void PieChart::paint(QPainter *painter, const QStyleOptionGraphicsItem * o, QWid
 
 void PieChart::removeAllExistingItems() {
     // Remove existing slices from scene and list.
-    qDebug() << QTime::currentTime() << "PieChart::removeAllExistingItems childItems.count " << childItems().count() << " scene item count " << scene()->items().count();
-    foreach (QGraphicsItem *slice, childItems()) {
-        slice->removeSceneEventFilter(this);
-        scene()->removeItem(slice);
-    }
-    update();
+    if (!childItems().empty()) {
+        qDebug() << QTime::currentTime() << "PieChart::removeAllExistingItems childItems.count " << childItems().count() << " scene item count " << scene()->items().count();
+        foreach (QGraphicsItem *slice, childItems()) {
+            slice->removeSceneEventFilter(this);
+            scene()->removeItem(slice);
+        }
+        update();
 
-    qDebug() << QTime::currentTime() << "PieChart::removeAllExistingItems removed childItems.count " << childItems().count() << " scene item count " << scene()->items().count();
+        qDebug() << QTime::currentTime() << "PieChart::removeAllExistingItems removed childItems.count " << childItems().count() << " scene item count " << scene()->items().count();
+    }
 }
 
 void PieChart::createItemFromModel()
