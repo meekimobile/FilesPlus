@@ -709,14 +709,24 @@ Page {
             id: languageModel
             ListElement { locale: "en"; value: "English" }
             ListElement { locale: "ru"; value: "Русский" }
+            ListElement { locale: "ru_2"; value: "Русский (2)" }
             ListElement { locale: "zh"; value: "中文(中国大陆)" }
             ListElement { locale: "de"; value: "Deutsch" }
             ListElement { locale: "it"; value: "Italiano" }
 
             function getIndexByLocale(locale) {
+                // Find exact match language_country.
                 for (var i=0; i<languageModel.count; i++) {
                     var item = languageModel.get(i);
-                    if (locale.indexOf(item.locale) == 0) {
+                    if (locale === item.locale) {
+                        return i;
+                    }
+                }
+
+                // Find language only match.
+                for (i=0; i<languageModel.count; i++) {
+                    item = languageModel.get(i);
+                    if (locale.indexOf(item.locale) === 0) {
                         return i;
                     }
                 }

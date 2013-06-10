@@ -874,7 +874,7 @@ It can&apos;t be downloaded.</source>
     </message>
     <message>
         <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+1278"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+1305"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+1307"/>
         <source>New folder</source>
         <translation>Neuer Ordner</translation>
     </message>
@@ -2769,7 +2769,7 @@ Link wird entfernt.</translation>
     <name>SettingPage</name>
     <message>
         <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+350"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+351"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+363"/>
         <source>Cancel queued jobs</source>
         <translation>Aktivitäten in der Warteschlange abbrechen</translation>
     </message>
@@ -2781,7 +2781,7 @@ Link wird entfernt.</translation>
     </message>
     <message>
         <location line="-302"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-302"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-314"/>
         <source>Settings</source>
         <translation>Einstellungen</translation>
     </message>
@@ -2789,13 +2789,13 @@ Link wird entfernt.</translation>
         <location line="+6"/>
         <location line="+316"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <location line="+318"/>
+        <location line="+330"/>
         <source>Logging (Debug)</source>
         <translation>Protokoll (Fehlerbehebung)</translation>
     </message>
     <message>
         <location line="-315"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-317"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-329"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -2807,7 +2807,7 @@ Bitte bestätigen Sie.</translation>
     </message>
     <message>
         <location line="+290"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+290"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+302"/>
         <source>Show cloud print jobs</source>
         <translation>Zeige CloudPrint Druckaufträge</translation>
     </message>
@@ -2942,7 +2942,7 @@ Bitte bestätigen Sie.</translation>
     </message>
     <message numerus="yes">
         <location line="+195"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+192"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+200"/>
         <source>%n sec.</source>
         <translation>
             <numerusform>%n sek.</numerusform>
@@ -2976,7 +2976,7 @@ Bitte bestätigen Sie.</translation>
         <translation type="obsolete">Zeige Miniaturansicht</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-297"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-305"/>
         <source>Keep bluetooth off</source>
         <translation>Schalten Sie Bluetooth nach der Benutzung aus</translation>
     </message>
@@ -3043,40 +3043,42 @@ Bitte bestätigen Sie.</translation>
         <translation>Sync schmutzigen Elemente automatisch</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+29"/>
         <source>Show hidden/system files</source>
-        <translation>Zeige versteckte Dateien</translation>
+        <translation type="obsolete">Zeige versteckte Dateien</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+29"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <location line="+29"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+32"/>
         <source>Delete by moving to trash</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="-28"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-29"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-31"/>
         <source>Dirty before sync (GoogleDrive)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+25"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+28"/>
         <source>Show hidden files on local drive</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Show hidden files on FTP</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Show hidden files on WebDAV</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+36"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+64"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+36"/>
         <source>Monitoring</source>
         <translation>Überwachung</translation>
     </message>
@@ -3088,7 +3090,7 @@ Bitte bestätigen Sie.</translation>
     </message>
     <message>
         <location line="+178"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+176"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+182"/>
         <source>English</source>
         <translation>Englisch</translation>
     </message>
@@ -3105,7 +3107,7 @@ Bitte bestätigen Sie.</translation>
         <translation>Chinesisch</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-239"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-247"/>
         <source>Show private drive on drive page</source>
         <translation type="unfinished">Zeige private Speicher auf der Startseite</translation>
     </message>

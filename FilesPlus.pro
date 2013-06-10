@@ -3,7 +3,7 @@ QT += declarative network script sql xml
 QT += opengl
 
 # Add more folders to ship with the application, here
-i18n_folder.source = i18n/*.qm
+i18n_folder.source = i18n/*.qm i18n/*.ts
 i18n_folder.target = i18n
 config_folder.source = config/mime.types
 config_folder.target = config
@@ -203,6 +203,7 @@ contains(MEEGO_EDITION, harmattan) {
 TRANSLATIONS += \
     i18n/FilesPlus_en.ts \
     i18n/FilesPlus_ru.ts \
+    i18n/FilesPlus_ru_2.ts \
     i18n/FilesPlus_zh.ts \
     i18n/FilesPlus_de.ts \
     i18n/FilesPlus_it.ts

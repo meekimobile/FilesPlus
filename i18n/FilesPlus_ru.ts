@@ -121,7 +121,7 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         <location line="+0"/>
         <location filename="../qml/FilesPlus/symbian/BookmarksPage.qml" line="+0"/>
         <source>Cancel</source>
-        <translation>Нет</translation>
+        <translation>Отмена</translation>
     </message>
     <message>
         <location line="+52"/>
@@ -203,7 +203,7 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         <location line="+0"/>
         <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+0"/>
         <source>Cancel</source>
-        <translation>Нет</translation>
+        <translation>Отмена</translation>
     </message>
     <message>
         <location line="+31"/>
@@ -576,6 +576,7 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
         <location line="+36"/>
         <location line="+52"/>
         <source>Metadata</source>
+        <translatorcomment>Synchronize</translatorcomment>
         <translation>Синхронизировать</translation>
     </message>
     <message>
@@ -887,7 +888,7 @@ It can&apos;t be downloaded.</source>
     </message>
     <message>
         <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+1278"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+1305"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+1307"/>
         <source>New folder</source>
         <translation>Новая папка</translation>
     </message>
@@ -2253,7 +2254,7 @@ And present in Pie view for easy understanding at glance.</source>
         <location filename="../gcdclient.cpp" line="+584"/>
         <location line="+280"/>
         <source>File Get</source>
-        <translation type="unfinished">Получение файла</translation>
+        <translation>Получение файла</translation>
     </message>
     <message>
         <location line="-279"/>
@@ -2893,7 +2894,7 @@ Link will be removed.</source>
     <name>SettingPage</name>
     <message>
         <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+350"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+351"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+363"/>
         <source>Cancel queued jobs</source>
         <translation>Отменить все заказы на печать</translation>
     </message>
@@ -2905,7 +2906,7 @@ Link will be removed.</source>
     </message>
     <message>
         <location line="-302"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-302"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-314"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
@@ -2913,13 +2914,13 @@ Link will be removed.</source>
         <location line="+6"/>
         <location line="+316"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <location line="+318"/>
+        <location line="+330"/>
         <source>Logging (Debug)</source>
         <translation>Сохранять данные в лог файл (Debug)</translation>
     </message>
     <message>
         <location line="-315"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-317"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-329"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -2931,7 +2932,7 @@ FilesPlus сейчас закроется.
     </message>
     <message>
         <location line="+290"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+290"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+302"/>
         <source>Show cloud print jobs</source>
         <translation>Показать заказы CloudPrint</translation>
     </message>
@@ -3134,40 +3135,42 @@ FilesPlus сейчас закроется.
         <translation>Синхрон. измененных элементов автоматически</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+29"/>
         <source>Show hidden/system files</source>
-        <translation>Показывает скрытые файлы</translation>
+        <translation type="obsolete">Показывает скрытые файлы</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+29"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <location line="+29"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+32"/>
         <source>Delete by moving to trash</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="-28"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-29"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-31"/>
         <source>Dirty before sync (GoogleDrive)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+25"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+28"/>
         <source>Show hidden files on local drive</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Show hidden files on FTP</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Show hidden files on WebDAV</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+36"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+64"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+36"/>
         <source>Monitoring</source>
         <translation>Наблюдение</translation>
     </message>
@@ -3179,7 +3182,7 @@ FilesPlus сейчас закроется.
     </message>
     <message numerus="yes">
         <location line="+150"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+148"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+154"/>
         <source>%n sec.</source>
         <translation>
             <numerusform>%n сек.</numerusform>
@@ -3228,9 +3231,9 @@ FilesPlus сейчас закроется.
         <translation type="obsolete">Locale</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-289"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-297"/>
         <source>Show private drive on drive page</source>
-        <translation type="unfinished">Показывает негласный диска на диск страницы</translation>
+        <translation>Показывает негласный диска на диск страницы</translation>
     </message>
 </context>
 <context>
