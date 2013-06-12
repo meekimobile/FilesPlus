@@ -170,5 +170,9 @@
         <file>qml/FilesPlus/grid_inverted.svg</file>
         <file>qml/FilesPlus/bookmark.svg</file>
         <file>qml/FilesPlus/bookmark_inverted.svg</file>
+        <file>qml/FilesPlus/compress.svg</file>
+        <file>qml/FilesPlus/compress_inverted.svg</file>
+        <file alias="qml/FilesPlus/CompressedFileMenu.qml">qml/FilesPlus/meego/CompressedFileMenu.qml</file>
+        <file alias="qml/FilesPlus/CompressedFolderPage.qml">qml/FilesPlus/meego/CompressedFolderPage.qml</file>
     </qresource>
 </RCC>

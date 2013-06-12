@@ -382,6 +382,20 @@ Page {
         }
     }
 
+    CompressedFileMenu {
+        id: compressedFileMenu
+
+        onOpenCompressedFile: {
+            var item = fsModel.get(selectedIndex);
+            pageStack.push(Qt.resolvedUrl("CompressedFolderPage.qml"),
+                           { compressedFilePath: item.absolutePath, compressedFileName: item.name });
+        }
+        onExtract: {
+            var item = fsModel.get(selectedIndex);
+            compressedFolderModel.extract(item.absolutePath);
+        }
+    }
+
     function refreshSlot(caller) {
         caller = (!caller) ? "folderPage refreshSlot" : caller;
         fsModel.refreshDir(caller, false);
@@ -1046,6 +1060,9 @@ Page {
                         } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
                                            { filePath: absolutePath, fileName: name });
+                        } else if (fileType.toUpperCase() === "ZIP") {
+                            compressedFileMenu.selectedIndex = index;
+                            compressedFileMenu.open();
                         } else {
                             Qt.openUrlExternally(fsModel.getUrl(absolutePath));
                         }
@@ -1211,6 +1228,8 @@ Page {
                 return cloudDriveModel.isConnected(selectedFilePath);
             } else if (buttonName == "editFile") {
                 return fsModel.isFile(selectedFilePath);
+            } else if (buttonName == "compress") {
+                return !compressedFolderModel.isCompressedFile(selectedFilePath);
             } else if (buttonName == "print") {
                 return fsModel.isFile(selectedFilePath);
             }
@@ -1325,6 +1344,10 @@ Page {
         onShowInfo: {
             filePropertiesDialog.show(srcItemIndex);
         }
+
+        onCompress: {
+            compressedFolderModel.compress(srcFilePath);
+        }
     }
 
     FileActionDialog {
@@ -1355,6 +1378,8 @@ Page {
                     res = res && fsModel.move(sourcePath, actualTargetPath);
                 } else if (action == "delete" && !clipboard.get(i).type) {
                     res = res && fsModel.deleteFile(sourcePath);
+                } else if (action == "extract" && !clipboard.get(i).type) {
+                    res = res && compressedFolderModel.extract(sourcePath, clipboard.get(i).extractFileList, targetPath);
                 } else {
                     console.debug("folderPage fileActionDialog onConfirm invalid action " + action);
                 }

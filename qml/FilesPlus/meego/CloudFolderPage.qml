@@ -497,7 +497,7 @@ Page {
         function isMenuItemVisible(menuItem) {
             // Validate each menu logic if it's specified, otherwise it's visible.
             if (menuItem.name == "paste") {
-                return (clipboard.count > 0);
+                return (clipboard.count > 0 && clipboard.get(0).action != "extract");
             } else if (menuItem.name == "clearClipboard") {
                 return clipboard.count > 0;
             } else if (menuItem.name == "markMenu") {
@@ -1106,7 +1106,7 @@ Page {
             if (buttonName === "sync") {
                 return cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, selectedFilePath);
             } else if (buttonName === "paste") {
-                return (clipboard.count > 0);
+                return (clipboard.count > 0 && clipboard.get(0).action != "extract");
             } else if (buttonName == "print") {
                 return !popupToolPanel.isDir && cloudDriveModel.isViewable(selectedCloudType);
             }

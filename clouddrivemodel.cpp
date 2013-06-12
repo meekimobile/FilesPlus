@@ -2624,7 +2624,7 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
                 return;
             }
             // Handle error.
-            // TODO Check type before cast.
+            // TODO Check type before cast. Use qobject_cast. It will return NULL if casting failed.
             QNetworkReply *sourceReply = dynamic_cast<QNetworkReply *>(source);
             if (sourceReply->error() != QNetworkReply::NoError) {
                 migrateFilePutReplyFilter(nonce, sourceReply->error(), sourceReply->errorString(), sourceReply->readAll());
@@ -3212,7 +3212,6 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
                                                       2000);
                             } else {
                                 // If ((rev is newer and size is changed) or there is no local file), get from remote.
-                                // TODO Should it just sync a file, then it will be decided operation on its metadata call?
                                 int r = compareMetadata(job, item, itemLocalPath);
                                 qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "sync children file remote path" << item.property("absolutePath").toString() << "hash" << item.property("hash").toString() << "local path" << itemLocalPath << "hash" << childItem.hash << "compare result" << r;
                                 if (r < 0) {
@@ -3220,6 +3219,9 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
                                 } else if (r > 0) {
                                     filePut(getClientType(job.type), job.uid, itemLocalPath, item.property("parentPath").toString(), item.property("name").toString(), -1);
                                 } else {
+                                    // TODO Detect changed name.
+                                    // 1) Rename local file.
+                                    // 2) Update cloud drive item.
                                     addItem(getClientType(job.type), job.uid, itemLocalPath, item.property("absolutePath").toString(), item.property("hash").toString());
                                 }
                             }
@@ -3231,6 +3233,9 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
                 }
 
                 // Add or Update timestamp from local to cloudDriveItem.
+                // TODO Detect changed name.
+                // 1) Rename local folder.
+                // 2) Update cloud drive item of local folder and its children.  REMARK but it will have problem if local folder connected with multiple cloud folders.
                 addItem(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, jsonObj.property("hash").toString());
 
                 // Sync based on local contents.

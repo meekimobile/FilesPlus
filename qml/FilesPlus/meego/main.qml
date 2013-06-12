@@ -7,6 +7,7 @@ import CloudDriveModel 1.0
 import BookmarksModel 1.0
 import FolderSizeItemListModel 1.0
 import SystemInfoHelper 1.0
+import CompressedFolderModel 1.0
 import "Utility.js" as Utility
 
 PageStackWindow {
@@ -791,6 +792,32 @@ PageStackWindow {
 
     SystemInfoHelper {
         id: helper
+    }
+
+    CompressedFolderModel {
+        id: compressedFolderModel
+
+        onCompressStarted: {
+            console.debug("compressedFolderModel onCompressStarted " + compressedFilePath);
+        }
+
+        onCompressFinished: {
+            console.debug("compressedFolderModel onCompressFinished " + compressedFilePath + " err " + err);
+            if (err == 0) {
+                fsModel.refreshDir("compressedFolderModel onCompressFinished");
+            }
+        }
+
+        onExtractStarted: {
+            console.debug("compressedFolderModel onExtractStarted " + compressedFilePath);
+        }
+
+        onExtractFinished: {
+            console.debug("compressedFolderModel onExtractFinished " + compressedFilePath + " err " + err);
+            if (err == 0) {
+                fsModel.refreshDir("compressedFolderModel onExtractFinished");
+            }
+        }
     }
 
     GCPClient {

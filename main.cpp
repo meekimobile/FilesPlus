@@ -1,5 +1,7 @@
 #include <QtGui/QApplication>
 #include <QDeclarativeEngine>
+#include <QDebug>
+#include <QtSql>
 #include "qmlapplicationviewer.h"
 #include "piechart.h"
 #include "foldersizeitemlistmodel.h"
@@ -12,13 +14,12 @@
 #include "appinfo.h"
 #include "clipboardmodel.h"
 #include "bookmarksmodel.h"
-#include <QDebug>
-#include <QtSql>
 #ifdef Q_OS_SYMBIAN
 #include "bluetoothclient.h"
 #include "messageclient.h"
 #include "customqnetworkaccessmanagerfactory.h"
 #endif
+#include "compressedfoldermodel.h"
 
 static const QString AppName = "FilesPlus";
 
@@ -69,6 +70,90 @@ void customMessageHandler(QtMsgType type, const char *msg)
     }
 }
 
+void testReset()
+{
+#ifdef Q_OS_SYMBIAN
+    // Rollback to DAT bak for testing.
+    qDebug() << "main testReset TEST -------------------------------------------------------";
+    bool ok = false;
+
+//    ok = QFile("C:/Data/.config/MeekiMobile/FilesPlus.conf").remove();
+//    qDebug() << "main testReset remove C:/Data/.config/MeekiMobile/FilesPlus.conf" << ok;
+
+    QSqlDatabase f_db = QSqlDatabase::addDatabase("QSQLITE", "folderpie_cache");
+    f_db.setDatabaseName("FolderPieCache.db");
+    ok = f_db.open();
+    if (ok) {
+        QSqlQuery qry(f_db);
+        qry.exec("DROP INDEX folderpie_cache_pk");
+        qDebug() << "main" << qry.lastError() << qry.lastQuery();
+        qry.exec("DROP TABLE folderpie_cache");
+        qDebug() << "main" << qry.lastError() << qry.lastQuery();
+    }
+    f_db.close();
+
+    ok = QFile("CloudDriveModel.dat").remove();
+    qDebug() << "main testReset remove CloudDriveModel.dat" << ok;
+
+    // For testing existing user case.
+    ok = QFile("CloudDriveModel.dat.bak").copy("CloudDriveModel.dat");
+    qDebug() << "main testReset copy CloudDriveModel.dat.bak to CloudDriveModel.dat" << ok;
+
+    // For testing newly user case.
+//    ok = QFile("DropboxClient.dat").remove();
+//    qDebug() << "main testReset remove DropboxClient.dat" << ok;
+
+    QSqlDatabase c_db = QSqlDatabase::addDatabase("QSQLITE", "cloud_drive_model");
+    c_db.setDatabaseName("CloudDriveModel.db");
+    ok = c_db.open();
+    if (ok) {
+        QSqlQuery qry(c_db);
+        qry.exec("DROP INDEX cloud_drive_item_pk");
+        qDebug() << "main" << qry.lastError() << qry.lastQuery();
+        qry.exec("DROP TABLE cloud_drive_item");
+        qDebug() << "main" << qry.lastError() << qry.lastQuery();
+    }
+    c_db.close();
+
+//    m_settings->setValue("dropbox.fullaccess.enabled", false);
+//    qDebug() << "main testReset setting dropbox.fullaccess.enabled" << m_settings->value("dropbox.fullaccess.enabled");
+
+    qDebug() << "main testReset TEST -------------------------------------------------------";
+#elif defined(Q_WS_HARMATTAN)
+    // Rollback to DAT bak for testing.
+    qDebug() << "main testReset TEST -------------------------------------------------------";
+    bool ok = false;
+
+//    ok = QFile("/home/developer/.config/MeekiMobile/FilesPlus.conf").remove();
+//    qDebug() << "main testReset remove /home/developer/.config/MeekiMobile/FilesPlus.conf" << ok;
+
+//    ok = QFile("/home/user/.config/MeekiMobile/FilesPlus.conf").remove();
+//    qDebug() << "main testReset remove /home/user/.config/MeekiMobile/FilesPlus.conf" << ok;
+
+    ok = QFile("/home/user/.folderpie/FolderPieCache.db").remove();
+    qDebug() << "main testReset remove /home/user/.folderpie/FolderPieCache.db" << ok;
+
+    ok = QFile("/home/user/.filesplus/CloudDriveModel.dat").remove();
+    qDebug() << "main testReset remove /home/user/.filesplus/CloudDriveModel.dat" << ok;
+
+    // For testing existing user case.
+//    ok = QFile("/home/user/.filesplus/CloudDriveModel.dat.bak").copy("/home/user/.filesplus/CloudDriveModel.dat");
+//    qDebug() << "main testReset copy /home/user/.filesplus/CloudDriveModel.dat.bak to CloudDriveModel.dat" << ok;
+
+    // For testing newly user case.
+//    ok = QFile("/home/user/.filesplus/DropboxClient.dat").remove();
+//    qDebug() << "main testReset remove /home/user/.filesplus/DropboxClient.dat" << ok;
+
+    ok = QFile("/home/user/.filesplus/CloudDriveModel.db").remove();
+    qDebug() << "main testReset remove CloudDriveModel.db" << ok;
+
+//    m_settings->setValue("dropbox.fullaccess.enabled", false);
+//    qDebug() << "main testReset setting dropbox.fullaccess.enabled" << m_settings->value("dropbox.fullaccess.enabled");
+
+    qDebug() << "main testReset TEST -------------------------------------------------------";
+#endif
+}
+
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
     qDebug() << QTime::currentTime() << "main started.";
@@ -104,90 +189,6 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QSettings *m_settings = new QSettings();
     qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
 #endif
-
-/*
-    // TODO ***** test only.
-#ifdef Q_OS_SYMBIAN
-    // Rollback to DAT bak for testing.
-    qDebug() << "main TEST -------------------------------------------------------";
-    bool ok = false;
-
-//    ok = QFile("C:/Data/.config/MeekiMobile/FilesPlus.conf").remove();
-//    qDebug() << "main remove C:/Data/.config/MeekiMobile/FilesPlus.conf" << ok;
-
-    QSqlDatabase f_db = QSqlDatabase::addDatabase("QSQLITE", "folderpie_cache");
-    f_db.setDatabaseName("FolderPieCache.db");
-    ok = f_db.open();
-    if (ok) {
-        QSqlQuery qry(f_db);
-        qry.exec("DROP INDEX folderpie_cache_pk");
-        qDebug() << "main" << qry.lastError() << qry.lastQuery();
-        qry.exec("DROP TABLE folderpie_cache");
-        qDebug() << "main" << qry.lastError() << qry.lastQuery();
-    }
-    f_db.close();
-
-    ok = QFile("CloudDriveModel.dat").remove();
-    qDebug() << "main remove CloudDriveModel.dat" << ok;
-
-    // For testing existing user case.
-    ok = QFile("CloudDriveModel.dat.bak").copy("CloudDriveModel.dat");
-    qDebug() << "main copy CloudDriveModel.dat.bak to CloudDriveModel.dat" << ok;
-
-    // For testing newly user case.
-//    ok = QFile("DropboxClient.dat").remove();
-//    qDebug() << "main remove DropboxClient.dat" << ok;
-
-    QSqlDatabase c_db = QSqlDatabase::addDatabase("QSQLITE", "cloud_drive_model");
-    c_db.setDatabaseName("CloudDriveModel.db");
-    ok = c_db.open();
-    if (ok) {
-        QSqlQuery qry(c_db);
-        qry.exec("DROP INDEX cloud_drive_item_pk");
-        qDebug() << "main" << qry.lastError() << qry.lastQuery();
-        qry.exec("DROP TABLE cloud_drive_item");
-        qDebug() << "main" << qry.lastError() << qry.lastQuery();
-    }
-    c_db.close();
-
-//    m_settings->setValue("dropbox.fullaccess.enabled", false);
-//    qDebug() << "main setting dropbox.fullaccess.enabled" << m_settings->value("dropbox.fullaccess.enabled");
-
-    qDebug() << "main TEST -------------------------------------------------------";
-#elif defined(Q_WS_HARMATTAN)
-    // Rollback to DAT bak for testing.
-    qDebug() << "main TEST -------------------------------------------------------";
-    bool ok = false;
-
-//    ok = QFile("/home/developer/.config/MeekiMobile/FilesPlus.conf").remove();
-//    qDebug() << "main remove /home/developer/.config/MeekiMobile/FilesPlus.conf" << ok;
-
-//    ok = QFile("/home/user/.config/MeekiMobile/FilesPlus.conf").remove();
-//    qDebug() << "main remove /home/user/.config/MeekiMobile/FilesPlus.conf" << ok;
-
-    ok = QFile("/home/user/.folderpie/FolderPieCache.db").remove();
-    qDebug() << "main remove /home/user/.folderpie/FolderPieCache.db" << ok;
-
-    ok = QFile("/home/user/.filesplus/CloudDriveModel.dat").remove();
-    qDebug() << "main remove /home/user/.filesplus/CloudDriveModel.dat" << ok;
-
-    // For testing existing user case.
-//    ok = QFile("/home/user/.filesplus/CloudDriveModel.dat.bak").copy("/home/user/.filesplus/CloudDriveModel.dat");
-//    qDebug() << "main copy /home/user/.filesplus/CloudDriveModel.dat.bak to CloudDriveModel.dat" << ok;
-
-    // For testing newly user case.
-//    ok = QFile("/home/user/.filesplus/DropboxClient.dat").remove();
-//    qDebug() << "main remove /home/user/.filesplus/DropboxClient.dat" << ok;
-
-    ok = QFile("/home/user/.filesplus/CloudDriveModel.db").remove();
-    qDebug() << "main remove CloudDriveModel.db" << ok;
-
-//    m_settings->setValue("dropbox.fullaccess.enabled", false);
-//    qDebug() << "main setting dropbox.fullaccess.enabled" << m_settings->value("dropbox.fullaccess.enabled");
-
-    qDebug() << "main TEST -------------------------------------------------------";
-#endif
-*/
 
     for (int i = 0; i < argc; i++) {
         qDebug() << "main argv i" << i << argv[i];
@@ -304,6 +305,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qmlRegisterType<BluetoothClient>("BluetoothClient", 1, 0, "BluetoothClient");
     qmlRegisterType<MessageClient>("MessageClient", 1, 0, "MessageClient");
 #endif
+    qmlRegisterType<CompressedFolderModel>("CompressedFolderModel", 1, 0, "CompressedFolderModel");
 
     // Application initialization.
     QScopedPointer<QApplication> app(createApplication(argc, argv));

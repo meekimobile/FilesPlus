@@ -70,6 +70,27 @@ symbian {
     MMP_RULES += "LIBRARY efsrv.lib"
 }
 
+# Add file compression library.
+symbian {
+    # Add QuaZip library.
+    INCLUDEPATH += ../quazip-0.5.1/quazip
+    LIBS += -lquazip.lib
+
+    # Add UnRar library.
+    INCLUDEPATH += ../unrar
+    LIBS += -lunrar.lib
+}
+
+contains(MEEGO_EDITION, harmattan) {
+    # Add QuaZip library.
+    INCLUDEPATH += . ../quazip-0.5.1/quazip
+    LIBS += -L../quazip-build-harmattan/quazip -lquazip
+
+    # Add UnRar library.
+    INCLUDEPATH += . ../unrar
+    LIBS += -L../unrar-build-harmattan -lunrar
+}
+
 # The .cpp file which was generated for your project. Feel free to hack it.
 SOURCES += main.cpp \
     piechart.cpp \
@@ -105,7 +126,10 @@ SOURCES += main.cpp \
     cacheimageworker.cpp \
     contenttypehelper.cpp \
     bookmarksmodel.cpp \
-    clouddrivemodelitem.cpp
+    clouddrivemodelitem.cpp \
+    compressedfoldermodel.cpp \
+    compressedfoldermodelworker.cpp \
+    compressedfoldermodelitem.cpp
 
 symbian {
 SOURCES += \
@@ -151,7 +175,10 @@ HEADERS += \
     cacheimageworker.h \
     contenttypehelper.h \
     bookmarksmodel.h \
-    clouddrivemodelitem.h
+    clouddrivemodelitem.h \
+    compressedfoldermodel.h \
+    compressedfoldermodelworker.h \
+    compressedfoldermodelitem.h
 
 symbian {
 HEADERS += \

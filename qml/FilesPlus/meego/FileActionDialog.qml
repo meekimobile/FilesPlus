@@ -159,22 +159,29 @@ Dialog {
     }
     
     function getText() {
-        // Exmaple of clipboard entry { "action": "cut", "sourcePath": sourcePath }
-        // Exmaple of clipboard entry { "action": "cut", "type": "Dropbox", "uid": "asdfdg", "sourcePath": sourcePath, "sourcePathName": sourcePathName }
+        // Example of clipboard entry { "action": "cut", "sourcePath": sourcePath }
+        // Example of clipboard entry { "action": "cut", "type": "Dropbox", "uid": "asdfdg", "sourcePath": sourcePath, "sourcePathName": sourcePathName }
+        // Example of clipboard entry { "action": "extract", "sourcePath": compressedFilePath, "extractFileList": extractFileList }
         var text = "";
         if (clipboard.count == 1) {
+            // Add action name.
             text = getActionName(clipboard.get(0).action, clipboard.get(0).type, clipboard.get(0).uid);
+            // Add cloud source.
             if (clipboard.get(0).type) {
                 text = text + ((cloudDriveModel.getClientType(clipboard.get(0).type) != selectedCloudType || clipboard.get(0).uid != selectedUid) ? (" (" + clipboard.get(0).type + " " + clipboard.get(0).uid + ")") : "");
             }
-            text = text + " " + (clipboard.get(0).sourcePathName ? clipboard.get(0).sourcePathName : clipboard.get(0).sourcePath)
-                    + ((clipboard.get(0).action == "delete")?"":("\n" + qsTr("to") + " " + targetPathName))
+            // Add content.
+            text = text + " "
+                    + (clipboard.get(0).sourcePathName ? clipboard.get(0).sourcePathName : clipboard.get(0).sourcePath)
+                    + ((clipboard.get(0).action == "extract") ? (" (" + qsTr("%n item(s)", "", clipboard.get(0).extractFileList.length) + ")") : "")
+                    + ((clipboard.get(0).action == "delete") ? "" : ("\n" + qsTr("to") + " " + targetPathName))
                     + " ?";
         } else {
             console.debug("fileActionDialog getText selectedCloudType " + selectedCloudType + " " + cloudDriveModel.getCloudName(selectedCloudType) + " " + selectedUid);
             var cutCount = 0;
             var copyCount = 0;
             var deleteCount = 0;
+            var extractCount = 0;
             var uploadCount = 0;
             var downloadCount = 0;
             var migrateCount = 0;
@@ -203,6 +210,8 @@ Dialog {
                         cutCount++;
                     } else if (clipboard.get(i).action == "delete") {
                         deleteCount++;
+                    } else if (clipboard.get(i).action == "extract") {
+                        extractCount++;
                     }
                 }
             }
@@ -211,9 +220,10 @@ Dialog {
             if (downloadCount>0) text = text + qsTr("Download %n item(s)", "", downloadCount) + "\n";
             if (migrateCount>0) text = text + qsTr("Migrate %n item(s)", "", migrateCount) + "\n";
             if (deleteCount>0) text = text + qsTr("Delete %n item(s)", "", deleteCount) + "\n";
+            if (extractCount>0) text = text + qsTr("Extract %n item(s)", "", extractCount) + "\n";
             if (copyCount>0) text = text + qsTr("Copy %n item(s)", "", copyCount) + "\n";
             if (cutCount>0) text = text + qsTr("Move %n item(s)", "", cutCount) + "\n";
-            if (uploadCount+downloadCount+migrateCount+copyCount+cutCount > 0) text = text + qsTr("to") + " " + targetPathName;
+            if (uploadCount+downloadCount+migrateCount+copyCount+cutCount+extractCount > 0) text = text + qsTr("to") + " " + targetPathName;
             text = text + " ?";
         }
         
@@ -247,6 +257,7 @@ Dialog {
                 if (actionText == "copy") return qsTr("Copy");
                 else if (actionText == "cut") return qsTr("Move");
                 else if (actionText == "delete") return qsTr("Delete");
+                else if (actionText == "extract") return qsTr("Extract");
                 else return qsTr("Invalid action");
             }
         }
@@ -285,7 +296,7 @@ Dialog {
             // Check if there is existing file on target folder. Then show overwrite dialog.
             fileActionDialog.sourcePath = clipboard.get(0).sourcePath;
             fileActionDialog.sourcePathName = (clipboard.get(0).sourcePathName) ? clipboard.get(0).sourcePathName : cloudDriveModel.getFileName(clipboard.get(0).sourcePath);
-            if (!canCopy()) {
+            if (!canCopy() && clipboard.get(0).action != "extract") {
                 fileActionDialog.isOverwrite = true;
                 fileName.forceActiveFocus();
                 fileName.text = getNewName();
