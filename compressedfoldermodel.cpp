@@ -8,6 +8,8 @@ CompressedFolderModel::CompressedFolderModel(QObject *parent) :
     QAbstractListModel(parent)
 {
     m_thread = new QThread(this);
+    connect(m_thread, SIGNAL(started()), this, SIGNAL(isRunningChanged()));
+    connect(m_thread, SIGNAL(finished()), this, SIGNAL(isRunningChanged()));
 
     // Initialize cloud drive model item list.
     QHash<int, QByteArray> roles;
@@ -21,6 +23,11 @@ CompressedFolderModel::CompressedFolderModel(QObject *parent) :
     setRoleNames(roles);
 
     m_modelItemList = new QList<CompressedFolderModelItem>();
+}
+
+bool CompressedFolderModel::isRunning()
+{
+    return m_thread->isRunning();
 }
 
 int CompressedFolderModel::rowCount(const QModelIndex &parent) const

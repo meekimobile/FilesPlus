@@ -109,9 +109,14 @@ Page {
                 id: refreshButtonTimer
                 interval: 100
                 repeat: true
-                running: false
+                running: fsModel.running || compressedFolderModel.running
                 onTriggered: {
                     refreshButton.rotation = 360 + (refreshButton.rotation - 12);
+                }
+                onRunningChanged: {
+                    if (!running) {
+                        refreshButton.rotation = 0;
+                    }
                 }
             }
 
@@ -775,12 +780,12 @@ Page {
     }
 
     function fetchDirSizeStartedSlot() {
-        refreshButtonTimer.restart();
+//        refreshButtonTimer.restart();
     }
 
     function fetchDirSizeFinishedSlot() {
-        refreshButtonTimer.stop();
-        refreshButton.rotation = 0;
+//        refreshButtonTimer.stop();
+//        refreshButton.rotation = 0;
 
         // Refresh itemList to show changes on ListView.
         fsModel.refreshItems();

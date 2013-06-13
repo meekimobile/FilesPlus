@@ -40,6 +40,12 @@ public:
         TrashFile
     };
 
+    enum FileAttribute {
+        Hidden,
+        System,
+        ReadOnly
+    };
+
     FolderSizeModelThread(QObject *parent = 0);
     ~FolderSizeModelThread();
 
@@ -72,6 +78,8 @@ public:
     void setSourcePath(const QString sourcePath);
     void setTargetPath(const QString targetPath);
     void run();
+
+    bool setFileAttribute(QString localFilePath, FileAttribute attribute, bool value);
 signals:
     void loadDirSizeCacheFinished();
     void initializeDBStarted();
@@ -115,7 +123,7 @@ private:
     bool move(const QString sourcePath, const QString targetPath);
     bool copy(int method, const QString sourcePath, const QString targetPath);
     bool copyFile(int method, const QString sourcePath, const QString targetPath);
-    bool deleteDir(const QString sourcePath, bool suppressSignal = false);
+    bool deleteDir(const QString sourcePath, bool suppressSignal = false, bool forceDeleteReadOnly = false);
     bool trash(const QString sourcePath, const QString targetPath);
     void delay(const int interval = 100);
 

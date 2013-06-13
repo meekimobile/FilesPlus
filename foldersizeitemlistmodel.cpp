@@ -60,6 +60,8 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(deleteFinished(int,QString,QString,int)), this, SLOT(deleteFinishedFilter(int,QString,QString,int)) );
     connect(&m, SIGNAL(trashFinished(int,QString,QString,QString,int)), this, SLOT(trashFinishedFilter(int,QString,QString,QString,int)) );
     connect(&m, SIGNAL(finished()), this, SLOT(jobDone()) );
+    connect(&m, SIGNAL(started()), this, SIGNAL(isRunningChanged()));
+    connect(&m, SIGNAL(finished()), this, SIGNAL(isRunningChanged()));
 
     // Enqueue jobs. Queued jobs will proceed after folderPage is loaded.
     m_jobQueue.enqueue(FolderSizeJob(createNonce(), FolderSizeModelThread::LoadDirSizeCache, "", ""));
@@ -860,40 +862,15 @@ void FolderSizeItemListModel::emptyTrash()
 
 bool FolderSizeItemListModel::setFileAttribute(QString localFilePath, FileAttribute attribute, bool value)
 {
-#ifdef Q_OS_SYMBIAN
-    QString nativeLocalFilePath = QDir::toNativeSeparators(localFilePath);
-
-    TPtrC pLocalFilePath (static_cast<const TUint16*>(nativeLocalFilePath.utf16()), nativeLocalFilePath.length());
-    TBuf<100> buf;
-    buf.Copy(pLocalFilePath);
-
-    RFs fs;
-    TInt res;
-    TUint postAtts;
-    fs.Connect();
-
-    // NOTE RFs::SetAtt() must use path with native separator.
-    if (attribute == ReadOnly) {
-//        qDebug() << "FolderSizeItemListModel::setFileAttribute ReadOnly" << localFilePath << value;
-        if (value) {
-            res = fs.SetAtt(buf, KEntryAttReadOnly | KEntryAttNormal, KEntryAttNormal);
-        } else {
-            res = fs.SetAtt(buf, KEntryAttNormal, KEntryAttReadOnly);
-        }
-    } else if (attribute == Hidden) {
-//        qDebug() << "FolderSizeItemListModel::setFileAttribute Hidden" << localFilePath << value;
-        if (value) {
-            res = fs.SetAtt(buf, KEntryAttHidden, KEntryAttNormal);
-        } else {
-            res = fs.SetAtt(buf, KEntryAttNormal, KEntryAttHidden);
-        }
+    switch (attribute) {
+    case Hidden:
+        return m.setFileAttribute(localFilePath, FolderSizeModelThread::Hidden, value);
+    case ReadOnly:
+        return m.setFileAttribute(localFilePath, FolderSizeModelThread::ReadOnly, value);
+    case System:
+        return m.setFileAttribute(localFilePath, FolderSizeModelThread::System, value);
     }
-    fs.Att(buf, postAtts);
-    RDebug::Print(_L("FolderSizeItemListModel::setFileAttribute %S %d %04x"), &buf, res, postAtts);
-    fs.Close();
 
-    return (res >= 0);
-#endif
     return false;
 }
 

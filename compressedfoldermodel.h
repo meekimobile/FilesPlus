@@ -11,8 +11,11 @@ class CompressedFolderModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int count READ rowCount NOTIFY rowCountChanged)
+    Q_PROPERTY(int running READ isRunning NOTIFY isRunningChanged)
 public:
     explicit CompressedFolderModel(QObject *parent = 0);
+
+    bool isRunning();
 
     // List model methods.
     int rowCount(const QModelIndex & parent = QModelIndex()) const;
@@ -42,6 +45,7 @@ public:
     Q_INVOKABLE void refreshItems();
 signals:
     void rowCountChanged();
+    void isRunningChanged();
 
     void compressStarted(QString compressedFilePath);
     void compressFinished(QString compressedFilePath, int err);

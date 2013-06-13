@@ -278,6 +278,12 @@ Page {
             group: "Developer"
         }
         ListElement {
+            name: "FolderSizeModelThread.forceDeleteReadOnly.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
+        ListElement {
             name: "FtpClient.getItemListJson.showHiddenSystem.enabled"
             title: ""
             type: "switch"
@@ -380,6 +386,7 @@ Page {
         else if (name == "LocalFileImageProvider.CacheImageWorker.enabled") return qsTr("Queue local image caching") + appInfo.emptyStr;
         else if (name == "RemoteImageProvider.CacheImageWorker.enabled") return qsTr("Queue cloud image caching") + appInfo.emptyStr;
         else if (name == "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled") return qsTr("Show hidden files on local drive") + appInfo.emptyStr;
+        else if (name == "FolderSizeModelThread.forceDeleteReadOnly.enabled") return qsTr("Delete read-only files") + appInfo.emptyStr;
         else if (name == "FtpClient.getItemListJson.showHiddenSystem.enabled") return qsTr("Show hidden files on FTP") + appInfo.emptyStr;
         else if (name == "WebDavClient.createPropertyJson.showHiddenSystem.enabled") return qsTr("Show hidden files on WebDAV") + appInfo.emptyStr;
         else if (name == "FolderSizeItemListModel.deleteFile.use.trash.enabled") return qsTr("Delete by moving to trash") + appInfo.emptyStr;

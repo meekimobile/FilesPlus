@@ -3,6 +3,11 @@
 #include "foldersizeitemlistmodel.h"
 #include <QDebug>
 #include <QCoreApplication>
+#ifdef Q_OS_SYMBIAN
+#include <f32file.h>
+#include <e32base.h>
+#include <e32debug.h>
+#endif
 
 bool nameLessThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
 {
@@ -779,7 +784,7 @@ void FolderSizeModelThread::delay(const int interval)
 #endif
 }
 
-bool FolderSizeModelThread::deleteDir(const QString sourcePath, bool suppressSignal)
+bool FolderSizeModelThread::deleteDir(const QString sourcePath, bool suppressSignal, bool forceDeleteReadOnly)
 {
     qDebug() << "FolderSizeModelThread::deleteDir sourcePath" << sourcePath;
 
@@ -799,7 +804,7 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath, bool suppressSig
         QDir dir(sourcePath);
         dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
         foreach (QFileInfo item, dir.entryInfoList()) {
-            res = res && deleteDir(item.absoluteFilePath());
+            res = res && deleteDir(item.absoluteFilePath(), suppressSignal, forceDeleteReadOnly);
 
             if (!res) break;
         }
@@ -812,11 +817,21 @@ bool FolderSizeModelThread::deleteDir(const QString sourcePath, bool suppressSig
         // Delete dir.
         if (res) {
             res = res && sourceFileInfo.dir().rmdir(sourceFileInfo.fileName());
+            // Force delete if enabled.
+            if (forceDeleteReadOnly && !res) {
+                if (setFileAttribute(sourcePath, ReadOnly, false))
+                    res = sourceFileInfo.dir().rmdir(sourceFileInfo.fileName());
+            }
         }
     } else {
         // Delete file.
         QFile sourceFile(sourcePath);
         res = sourceFile.remove();
+        // Force delete if enabled.
+        if (forceDeleteReadOnly && !res) {
+            if (setFileAttribute(sourcePath, ReadOnly, false))
+                res = sourceFile.remove();
+        }
     }
 
     if (!res) {
@@ -1420,7 +1435,7 @@ void FolderSizeModelThread::run()
         // Delay to let deleteProgressDialog show before progressing.
         msleep(100);
 
-        if (deleteDir(m_sourcePath)) {
+        if (deleteDir(m_sourcePath, false, m_settings.value("FolderSizeModelThread.forceDeleteReadOnly.enabled", false).toBool())) {
             qDebug() << "FolderSizeModelThread::run delete sourcePath" << m_sourcePath << "is done.";
             emit deleteFinished(m_runMethod, m_sourcePath, "Deleting " + m_sourcePath + " is done.", 0);
 
@@ -1449,4 +1464,43 @@ void FolderSizeModelThread::run()
 
     // TODO Process events before thread is finished.
     QApplication::processEvents(QEventLoop::AllEvents, 50);
+}
+
+bool FolderSizeModelThread::setFileAttribute(QString localFilePath, FileAttribute attribute, bool value)
+{
+#ifdef Q_OS_SYMBIAN
+    QString nativeLocalFilePath = QDir::toNativeSeparators(localFilePath);
+
+    TPtrC pLocalFilePath (static_cast<const TUint16*>(nativeLocalFilePath.utf16()), nativeLocalFilePath.length());
+    TBuf<100> buf;
+    buf.Copy(pLocalFilePath);
+
+    RFs fs;
+    TInt res;
+    TUint postAtts;
+    fs.Connect();
+
+    // NOTE RFs::SetAtt() must use path with native separator.
+    if (attribute == ReadOnly) {
+//        qDebug() << "FolderSizeModelThread::setFileAttribute ReadOnly" << localFilePath << value;
+        if (value) {
+            res = fs.SetAtt(buf, KEntryAttReadOnly | KEntryAttNormal, KEntryAttNormal);
+        } else {
+            res = fs.SetAtt(buf, KEntryAttNormal, KEntryAttReadOnly);
+        }
+    } else if (attribute == Hidden) {
+//        qDebug() << "FolderSizeModelThread::setFileAttribute Hidden" << localFilePath << value;
+        if (value) {
+            res = fs.SetAtt(buf, KEntryAttHidden, KEntryAttNormal);
+        } else {
+            res = fs.SetAtt(buf, KEntryAttNormal, KEntryAttHidden);
+        }
+    }
+    fs.Att(buf, postAtts);
+    RDebug::Print(_L("FolderSizeModelThread::setFileAttribute %S %d %04x"), &buf, res, postAtts);
+    fs.Close();
+
+    return (res >= 0);
+#endif
+    return false;
 }
