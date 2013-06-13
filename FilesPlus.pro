@@ -77,8 +77,8 @@ symbian {
     LIBS += -lquazip.lib
 
     # Add UnRar library.
-    INCLUDEPATH += ../unrar
-    LIBS += -lunrar.lib
+#    INCLUDEPATH += ../unrar
+#    LIBS += -lunrar.lib
 }
 
 contains(MEEGO_EDITION, harmattan) {
