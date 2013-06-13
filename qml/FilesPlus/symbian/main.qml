@@ -950,6 +950,7 @@ PageStackWindow {
         onCompressFinished: {
             console.debug("compressedFolderModel onCompressFinished " + compressedFilePath + " err " + err);
             if (err == 0) {
+                fsModel.removeCache(compressedFilePath);
                 fsModel.refreshDir("compressedFolderModel onCompressFinished");
             }
         }
@@ -959,8 +960,11 @@ PageStackWindow {
         }
 
         onExtractFinished: {
-            console.debug("compressedFolderModel onExtractFinished " + compressedFilePath + " err " + err);
+            console.debug("compressedFolderModel onExtractFinished " + compressedFilePath + " err " + err + " extractedFileList " + extractedFileList);
             if (err == 0) {
+                for (var i = 0; i < extractedFileList.length; i++) {
+                    fsModel.removeCache(extractedFileList[i]);
+                }
                 fsModel.refreshDir("compressedFolderModel onExtractFinished");
             }
         }

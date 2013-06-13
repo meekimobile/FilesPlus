@@ -190,7 +190,7 @@ bool CompressedFolderModel::extract(QString compressedFilePath, QString sourcePa
         connect(worker, SIGNAL(finished()), worker, SLOT(deleteLater()));
         connect(worker, SIGNAL(finished()), m_thread, SLOT(quit()));
         connect(worker, SIGNAL(extractStarted(QString)), this, SIGNAL(extractStarted(QString)));
-        connect(worker, SIGNAL(extractFinished(QString,int)), this, SIGNAL(extractFinished(QString,int)));
+        connect(worker, SIGNAL(extractFinished(QString,int,QStringList)), this, SIGNAL(extractFinished(QString,int,QStringList)));
 
         m_thread->start(QThread::LowPriority);
 
@@ -219,7 +219,7 @@ bool CompressedFolderModel::extract(QString compressedFilePath, QStringList sour
         connect(worker, SIGNAL(finished()), worker, SLOT(deleteLater()));
         connect(worker, SIGNAL(finished()), m_thread, SLOT(quit()));
         connect(worker, SIGNAL(extractStarted(QString)), this, SIGNAL(extractStarted(QString)));
-        connect(worker, SIGNAL(extractFinished(QString,int)), this, SIGNAL(extractFinished(QString,int)));
+        connect(worker, SIGNAL(extractFinished(QString,int,QStringList)), this, SIGNAL(extractFinished(QString,int,QStringList)));
 
         m_thread->start(QThread::LowPriority);
 

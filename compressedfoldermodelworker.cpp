@@ -34,7 +34,7 @@ void CompressedFolderModelWorker::run()
             extractedList << extract(compressedFilePath, sourcePathList, targetParentPath);
         }
         qDebug() << "CompressedFolderModelWorker::run extracting is done. extractedList" << extractedList;
-        emit extractFinished(compressedFilePath, 0);
+        emit extractFinished(compressedFilePath, 0, extractedList);
         break;
     case List:
         emit listStarted(compressedFilePath);

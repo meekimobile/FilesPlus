@@ -8,6 +8,7 @@ MenuWithIcon {
     property int selectedIndex
     
     signal openCompressedFile()
+    signal openExternally()
     signal extract()
     
     content: MenuLayout {
@@ -17,6 +18,12 @@ MenuWithIcon {
             text: appInfo.emptyStr+qsTr("Open")
             onClicked: {
                 openCompressedFile();
+            }
+        }
+        MenuItemWithIcon {
+            text: appInfo.emptyStr+qsTr("Open (System)")
+            onClicked: {
+                openExternally();
             }
         }
         MenuItemWithIcon {

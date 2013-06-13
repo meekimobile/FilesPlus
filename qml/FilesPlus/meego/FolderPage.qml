@@ -390,6 +390,10 @@ Page {
             pageStack.push(Qt.resolvedUrl("CompressedFolderPage.qml"),
                            { compressedFilePath: item.absolutePath, compressedFileName: item.name });
         }
+        onOpenExternally: {
+            var item = fsModel.get(selectedIndex);
+            Qt.openUrlExternally(fsModel.getUrl(item.absolutePath));
+        }
         onExtract: {
             var item = fsModel.get(selectedIndex);
             compressedFolderModel.extract(item.absolutePath);
@@ -1129,6 +1133,9 @@ Page {
                         } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
                             pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
                                            { filePath: absolutePath, fileName: name });
+                        } else if (fileType.toUpperCase() === "ZIP") {
+                            compressedFileMenu.selectedIndex = index;
+                            compressedFileMenu.open();
                         } else {
                             Qt.openUrlExternally(fsModel.getUrl(absolutePath));
                         }

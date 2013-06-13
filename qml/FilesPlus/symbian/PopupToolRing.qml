@@ -95,6 +95,7 @@ Rectangle {
     signal bluetoothFile(string srcFilePath, int srcItemIndex)
     signal editFile(string srcFilePath, int srcItemIndex)
     signal showInfo(string srcFilePath, int srcItemIndex)
+    signal compress(string srcFilePath, int srcItemIndex)
 
     function open(panelX, panelY) {
 //        console.debug("popupToolRing open panelX " + panelX + " panelY " + panelY);
@@ -153,8 +154,8 @@ Rectangle {
     ListModel {
         id: toolsButtonModel
         ListElement { buttonName: "mark"; icon: "ok.svg" }
-        ListElement { buttonName: "newFolder"; icon: "folder_add.svg" }
         ListElement { buttonName: "editFile"; icon: "edit.svg" }
+        ListElement { buttonName: "compress"; icon: "compress.svg" }
         ListElement { buttonName: "cloud"; icon: "cloud_options.svg" }
         ListElement { buttonName: "share"; icon: "share.svg" }
         ListElement { buttonName: "rename"; icon: "rename.svg" }
@@ -273,6 +274,8 @@ Rectangle {
             editFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "info") {
             showInfo(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "compress") {
+            compress(selectedFilePath, selectedFileIndex);
         }
         popupToolPanel.visible = false;
     }

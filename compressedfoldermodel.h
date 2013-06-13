@@ -46,7 +46,7 @@ signals:
     void compressStarted(QString compressedFilePath);
     void compressFinished(QString compressedFilePath, int err);
     void extractStarted(QString compressedFilePath);
-    void extractFinished(QString compressedFilePath, int err);
+    void extractFinished(QString compressedFilePath, int err, QStringList extractedFileList);
     void listStarted(QString compressedFilePath);
     void listFinished(QString compressedFilePath, int err);
 public slots:

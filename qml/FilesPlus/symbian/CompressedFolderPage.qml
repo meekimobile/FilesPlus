@@ -163,7 +163,6 @@ Page {
 
         onMovementStarted: {
             if (currentItem) {
-                currentItem.pressed = false;
                 currentIndex = -1;
             }
         }
