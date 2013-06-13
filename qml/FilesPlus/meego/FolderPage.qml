@@ -1072,6 +1072,9 @@ Page {
                         } else if (fileType.toUpperCase() === "ZIP") {
                             compressedFileMenu.selectedIndex = index;
                             compressedFileMenu.open();
+                        } else if (fileType.toUpperCase() === "RAR") {
+                            // TODO Implement with file type association.
+                            compressedFolderModel.extract(absolutePath);
                         } else {
                             Qt.openUrlExternally(fsModel.getUrl(absolutePath));
                         }

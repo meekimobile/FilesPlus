@@ -38,6 +38,8 @@ signals:
 public slots:
     void start();
 private:
+    int m_listErrorCode;
+
     QStringList list(QString compressedFilePath);
     bool compress(QString compressedFilePath, QString sourcePath);
     bool compress(QString compressedFilePath, QStringList sourceFilePathList);
@@ -45,6 +47,7 @@ private:
     QStringList extract(QString compressedFilePath, QStringList sourcePathList, QString targetParentPath = "");
 
     QString getDefaultCompressedFilePath(QString sourcePath);
+    char *getCharPointer(QString s);
 };
 
 #endif // COMPRESSEDFOLDERMODELWORKER_H

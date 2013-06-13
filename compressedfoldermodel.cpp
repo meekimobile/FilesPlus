@@ -211,7 +211,7 @@ bool CompressedFolderModel::extract(QString compressedFilePath, QString sourcePa
 
 bool CompressedFolderModel::extract(QString compressedFilePath, QStringList sourcePathList, QString targetParentPath)
 {
-//    qDebug() << "CompressedFolderModel::extract" << compressedFilePath << sourcePathList << targetParentPath;
+    qDebug() << "CompressedFolderModel::extract" << compressedFilePath << sourcePathList << targetParentPath;
 
     if (!m_thread->isRunning()) {
         // NOTE Worker is created in main thread without parent. So it can be moved to worker thread.
