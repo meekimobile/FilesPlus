@@ -444,6 +444,34 @@ Page {
         }
     }
 
+    function openFileSlot(srcFilePath, selectedIndex) {
+        var viewableImageFileTypes = ["JPG", "PNG", "SVG", "GIF"];
+        var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
+
+        var item = fsModel.get(selectedIndex);
+
+        // If file is running, disable preview.
+        if (item.isRunning) return;
+
+        // TODO Implement with file type association.
+        if (viewableImageFileTypes.indexOf(item.fileType.toUpperCase()) != -1) {
+            // TODO Populate ImageViewModel with mediaUrl = image://local/...
+            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
+                           { model: fsModel, selectedFilePath: item.absolutePath });
+        } else if (viewableTextFileTypes.indexOf(item.fileType.toUpperCase()) != -1) {
+            pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
+                           { filePath: item.absolutePath, fileName: item.name });
+        } else if (item.fileType.toUpperCase() === "ZIP") {
+            compressedFileMenu.selectedIndex = selectedIndex;
+            compressedFileMenu.open();
+        } else if (item.fileType.toUpperCase() === "RAR") { // Disable RAR support on Symbian.
+            compressedFileMenu.selectedIndex = selectedIndex;
+            compressedFileMenu.open();
+        } else {
+            Qt.openUrlExternally(fsModel.getUrl(item.absolutePath));
+        }
+    }
+
     function orientationChangeSlot() {
         if (pieChartView && folderPage.state == "chart") {
             pieChartView.refreshItems();
@@ -1058,26 +1086,7 @@ Page {
                         fsListView.focusLocalPath = "."; // Put dummy path to avoid focus on lastCenterIndex.
                         changeDirSlot(name);
                     } else {
-                        // If file is running, disable preview.
-                        if (isRunning) return;
-
-                        // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
-                        if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                            // TODO Populate ImageViewModel with mediaUrl = image://local/...
-                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
-                                           { model: fsModel, selectedFilePath: absolutePath });
-                        } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                            pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
-                                           { filePath: absolutePath, fileName: name });
-                        } else if (fileType.toUpperCase() === "ZIP") {
-                            compressedFileMenu.selectedIndex = index;
-                            compressedFileMenu.open();
-                        } else if (fileType.toUpperCase() === "RAR") {
-                            // TODO Implement with file type association.
-                            compressedFolderModel.extract(absolutePath);
-                        } else {
-                            Qt.openUrlExternally(fsModel.getUrl(absolutePath));
-                        }
+                        openFileSlot(absolutePath, index);
                     }
                 }
             }
@@ -1130,23 +1139,7 @@ Page {
                         fsGridView.focusLocalPath = "."; // Put dummy path to avoid focus on lastCenterIndex.
                         changeDirSlot(name);
                     } else {
-                        // If file is running, disable preview.
-                        if (isRunning) return;
-
-                        // Implement internal viewers for image(JPG,PNG), text with addon(cloud drive, print)
-                        if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                            // TODO Populate ImageViewModel with mediaUrl = image://local/...
-                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
-                                           { model: fsModel, selectedFilePath: absolutePath });
-                        } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                            pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
-                                           { filePath: absolutePath, fileName: name });
-                        } else if (fileType.toUpperCase() === "ZIP") {
-                            compressedFileMenu.selectedIndex = index;
-                            compressedFileMenu.open();
-                        } else {
-                            Qt.openUrlExternally(fsModel.getUrl(absolutePath));
-                        }
+                        openFileSlot(absolutePath, index);
                     }
                 }
             }

@@ -83,6 +83,49 @@ Page {
         cloudDriveModel.browse(selectedCloudType, selectedUid, actualRemoteParentPath);
     }
 
+    function openFileSlot(srcFilePath, selectedIndex) {
+        var viewableImageFileTypes = ["JPG", "PNG", "SVG", "GIF"];
+        var viewableTextFileTypes = ["TXT", "HTML", "LOG", "CSV", "CONF", "INI"];
+
+        var item = cloudDriveModel.get(selectedIndex);
+
+        // If file is running, disable preview.
+        if (item.isRunning) return;
+
+        isBusy = true;
+
+        if (item.source) console.debug("cloudFolderPage openFileSlot source " + item.source);
+        if (item.alternative) console.debug("cloudFolderPage openFileSlot alternative " + item.alternative);
+        if (item.thumbnail) console.debug("cloudFolderPage openFileSlot thumbnail " + item.thumbnail);
+        if (item.preview) console.debug("cloudFolderPage openFileSlot preview " + item.preview);
+
+        // Check if it's viewable.
+        var url;
+        if (cloudDriveModel.isViewable(selectedCloudType)) {
+            if (viewableImageFileTypes.indexOf(item.fileType.toUpperCase()) != -1) {
+                // NOTE ImageViewPage will populate ImageViewModel with mediaUrl.
+                pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
+                               { model: cloudDriveModel, selectedCloudType: selectedCloudType, selectedUid: selectedUid, selectedFilePath: item.absolutePath });
+            } else if (viewableTextFileTypes.indexOf(item.fileType.toUpperCase()) != -1) {
+                // View with internal web viewer.
+                url = (item.source) ? item.source : cloudDriveModel.media(selectedCloudType, selectedUid, item.absolutePath);
+                if (url != "") {
+                    appInfo.addToClipboard(url);
+                    pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
+                }
+            } else {
+                // Shows options if both source and alternative are available.
+                openMenu.show();
+            }
+        } else {
+            // File is not viewable but may be browsable.
+            // Shows options if both source and alternative are available.
+            openMenu.show();
+        }
+
+        isBusy = false;
+    }
+
     function createRemoteFolder(newRemoteFolderName) {
         isBusy = true;
         cloudDriveModel.createFolder(selectedCloudType, selectedUid, "", remoteParentPath, newRemoteFolderName);
@@ -903,17 +946,6 @@ Page {
                 }
             }
 
-            function getMediaSource(source, remoteFilePath) {
-                var url = "";
-                if (source) {
-                    url = source;
-                } else {
-                    url = cloudDriveModel.media(selectedCloudType, selectedUid, remoteFilePath);
-                }
-//                console.debug("cloudFolderPage listItem getMediaSource url " + url);
-                return url;
-            }
-
             onPressAndHold: {
                 if (cloudDriveModel.state != "mark") {
                     cloudFolderView.currentIndex = index;
@@ -936,41 +968,7 @@ Page {
                         ListView.view.focusRemotePath = ".";
                         changeRemotePath(absolutePath);
                     } else {
-                        // If file is running, disable preview.
-                        if (isRunning) return;
-
-                        isBusy = true;
-
-                        if (source) console.debug("cloudFolderPage listItem onClicked source " + source);
-                        if (alternative) console.debug("cloudFolderPage listItem onClicked alternative " + alternative);
-                        if (thumbnail) console.debug("cloudFolderPage listItem onClicked thumbnail " + thumbnail);
-                        if (preview) console.debug("cloudFolderPage listItem onClicked preview " + preview);
-
-                        // Check if it's viewable.
-                        var url;
-                        if (cloudDriveModel.isViewable(selectedCloudType)) {
-                            if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                                // NOTE ImageViewPage will populate ImageViewModel with mediaUrl.
-                                pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
-                                               { model: cloudDriveModel, selectedCloudType: selectedCloudType, selectedUid: selectedUid, selectedFilePath: absolutePath });
-                            } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                                // View with internal web viewer.
-                                url = getMediaSource(source, absolutePath);
-                                if (url != "") {
-                                    appInfo.addToClipboard(url);
-                                    pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
-                                }
-                            } else {
-                                // Shows options if both source and alternative are available.
-                                openMenu.show();
-                            }
-                        } else {
-                            // File is not viewable but may be browsable.
-                            // Shows options if both source and alternative are available.
-                            openMenu.show();
-                        }
-
-                        isBusy = false;
+                        openFileSlot(absolutePath, index);
                     }
                 }
             }
@@ -1025,17 +1023,6 @@ Page {
                 }
             }
 
-            function getMediaSource(source, remoteFilePath) {
-                var url = "";
-                if (source) {
-                    url = source;
-                } else {
-                    url = cloudDriveModel.media(selectedCloudType, selectedUid, remoteFilePath);
-                }
-//                console.debug("cloudFolderPage gridItem getMediaSource url " + url);
-                return url;
-            }
-
             onPressAndHold: {
                 if (cloudDriveModel.state != "mark") {
                     cloudFolderGridView.currentIndex = index;
@@ -1058,41 +1045,7 @@ Page {
                         GridView.view.focusRemotePath = ".";
                         changeRemotePath(absolutePath);
                     } else {
-                        // If file is running, disable preview.
-                        if (isRunning) return;
-
-                        isBusy = true;
-
-                        if (source) console.debug("cloudFolderPage listItem onClicked source " + source);
-                        if (alternative) console.debug("cloudFolderPage listItem onClicked alternative " + alternative);
-                        if (thumbnail) console.debug("cloudFolderPage listItem onClicked thumbnail " + thumbnail);
-                        if (preview) console.debug("cloudFolderPage listItem onClicked preview " + preview);
-
-                        // Check if it's viewable.
-                        var url;
-                        if (cloudDriveModel.isViewable(selectedCloudType)) {
-                            if (viewableImageFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                                // NOTE ImageViewPage will populate ImageViewModel with mediaUrl.
-                                pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"),
-                                               { model: cloudDriveModel, selectedCloudType: selectedCloudType, selectedUid: selectedUid, selectedFilePath: absolutePath });
-                            } else if (viewableTextFileTypes.indexOf(fileType.toUpperCase()) != -1) {
-                                // View with internal web viewer.
-                                url = getMediaSource(source, absolutePath);
-                                if (url != "") {
-                                    appInfo.addToClipboard(url);
-                                    pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
-                                }
-                            } else {
-                                // Shows options if both source and alternative are available.
-                                openMenu.show();
-                            }
-                        } else {
-                            // File is not viewable but may be browsable.
-                            // Shows options if both source and alternative are available.
-                            openMenu.show();
-                        }
-
-                        isBusy = false;
+                        openFileSlot(absolutePath, index);
                     }
                 }
             }
