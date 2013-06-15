@@ -48,6 +48,7 @@ SelectionDialog {
             source: "image://theme/icon-m-common-favorite-mark-inverse"
             visible: favorite
             anchors.right: parent.right
+            anchors.rightMargin: 10
             anchors.verticalCenter: parent.verticalCenter
         }
 

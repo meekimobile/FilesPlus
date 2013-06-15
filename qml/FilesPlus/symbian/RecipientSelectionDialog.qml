@@ -26,7 +26,7 @@ SelectionDialog {
         Column {
             width: parent.width - favIcon.width
             anchors.left: parent.left
-            anchors.leftMargin: 16
+            anchors.leftMargin: 10
             anchors.verticalCenter: parent.verticalCenter
             spacing: 2
             ListItemText {
@@ -47,6 +47,7 @@ SelectionDialog {
             source: "favourite.svg"
             visible: favorite
             anchors.right: parent.right
+            anchors.rightMargin: 10
             anchors.verticalCenter: parent.verticalCenter
         }
 
