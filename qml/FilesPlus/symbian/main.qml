@@ -2554,9 +2554,6 @@ PageStackWindow {
         console.debug(Utility.nowText() + " window onCompleted");
         window.updateLoadingProgressSlot(qsTr("Loading"), 0.5);
 
-        // Set to portrait to show splash screen. Then it will set back to default once it's destroyed.
-        screen.allowedOrientations = Screen.Portrait;
-
         // Connect activation signal to slot.
         symbian.foregroundChanged.connect(activateSlot);
     }

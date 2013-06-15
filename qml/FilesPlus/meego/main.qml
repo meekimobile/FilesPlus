@@ -2286,10 +2286,6 @@ PageStackWindow {
         interval: 3000
 
         onLoaded: {
-            // Set theme.inverted = true -> black theme.
-            theme.inverted = appInfo.getSettingBoolValue("Theme.inverted", true);
-            appInfo.setSettingValue("Theme.inverted", theme.inverted);
-
             // Set timer to push pages later after shows splash screen.
             pushPagesTimer.start();
         }
@@ -2310,8 +2306,9 @@ PageStackWindow {
         console.debug(Utility.nowText() + " window onCompleted");
         window.updateLoadingProgressSlot(qsTr("Loading"), 0.5);
 
-        // Set to portrait to show splash screen. Then it will set back to default once it's destroyed.
-        screen.allowedOrientations = Screen.Portrait;
+        // Set theme.inverted = true -> black theme.
+        theme.inverted = appInfo.getSettingBoolValue("Theme.inverted", true);
+        appInfo.setSettingValue("Theme.inverted", theme.inverted);
 
         // Connect activation signal to slot.
         platformWindow.activeChanged.connect(activateSlot);

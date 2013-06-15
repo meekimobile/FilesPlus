@@ -4,7 +4,6 @@ import com.nokia.meego 1.0
 Page {
     id: aboutPage
     z: 3
-    orientationLock: PageOrientation.LockPortrait
     tools: ToolBarLayout {
         ToolIcon {
             id: back

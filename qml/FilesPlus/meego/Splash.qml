@@ -30,6 +30,7 @@ Rectangle {
     Label {
         id: loadingComponentName
         text: ""
+        color: "white" // It's always in white as splash BG is black.
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: loadingProgressBar.top
     }
@@ -59,7 +60,6 @@ Rectangle {
 
         onTriggered: {
             console.debug(Utility.nowText() + " splashScreen is loaded.");
-//            hideSplashScreen.start();
             loaded();
             console.debug(Utility.nowText() + " splashScreen hideSplashScreen.start()");
         }
@@ -84,9 +84,5 @@ Rectangle {
         onClicked: {
             hideSplashScreen.start();
         }
-    }
-
-    Component.onDestruction: {
-        screen.allowedOrientations = (Screen.Portrait || Screen.Landscape); // Reset to default.
     }
 }

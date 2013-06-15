@@ -311,7 +311,14 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     QScopedPointer<QApplication> app(createApplication(argc, argv));
 
 #ifdef Q_OS_SYMBIAN
-    QSplashScreen *splash = new QSplashScreen(QPixmap(":/qml/FilesPlus/splash_360x640.png"));
+    QSplashScreen *splash;
+    if (app.data()->desktop()->availableGeometry().width() > 360) {
+        // Landscape
+        splash = new QSplashScreen(QPixmap(":/qml/FilesPlus/splash_640x360.png"));
+    } else {
+        // Portrait
+        splash = new QSplashScreen(QPixmap(":/qml/FilesPlus/splash_360x640.png"));
+    }
     splash->showFullScreen();
 #elif defined(Q_WS_HARMATTAN)
     QSplashScreen *splash = new QSplashScreen(QPixmap(":/qml/FilesPlus/splash_854x480.png")); // Workaround: It shows in landscape by default.

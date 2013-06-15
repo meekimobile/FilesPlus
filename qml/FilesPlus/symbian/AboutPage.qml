@@ -4,7 +4,6 @@ import com.nokia.symbian 1.1
 Page {
     id: aboutPage
     z: 3
-    orientationLock: PageOrientation.LockPortrait
     tools: ToolBarLayout {
         ToolButton {
             id: back

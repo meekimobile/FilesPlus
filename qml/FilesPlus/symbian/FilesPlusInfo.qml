@@ -7,11 +7,59 @@ Rectangle {
 
     property string version
 
-    Column {
-        id: filePlusInfo
+    states: [
+        State {
+            name: "portrait"
+            when: window.inPortrait
+            PropertyChanges {
+                target: info1
+                width: parent.width
+            }
+            AnchorChanges {
+                target: info1
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: undefined
+            }
+            PropertyChanges {
+                target: info2
+                width: parent.width
+            }
+            AnchorChanges {
+                target: info2
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: undefined
+            }
+        },
+        State {
+            name: "landscape"
+            when: !window.inPortrait
+            PropertyChanges {
+                target: info1
+                width: parent.width / 2
+            }
+            AnchorChanges {
+                target: info1
+                anchors.horizontalCenter: undefined
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            PropertyChanges {
+                target: info2
+                width: parent.width / 2
+            }
+            AnchorChanges {
+                target: info2
+                anchors.horizontalCenter: undefined
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+    ]
+
+    Flow {
         width: parent.width
-        anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
+
+    Column {
+        id: info1
 
         Image {
             id: icon
@@ -39,6 +87,10 @@ Rectangle {
             font.bold: true
             font.pointSize: 10
         }
+    }
+
+    Column {
+        id: info2
 
         Text {
             id: description
@@ -136,5 +188,6 @@ Rectangle {
                 }
             }
         }
+    }
     }
 }
