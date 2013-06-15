@@ -37,7 +37,8 @@ public:
         MoveFile,
         DeleteFile,
         InitializeDB,
-        TrashFile
+        TrashFile,
+        EmptyDir
     };
 
     enum FileAttribute {
@@ -84,8 +85,8 @@ signals:
     void loadDirSizeCacheFinished();
     void initializeDBStarted();
     void initializeDBFinished();
-    void fetchDirSizeStarted();
-    void fetchDirSizeFinished();
+    void fetchDirSizeStarted(QString sourcePath);
+    void fetchDirSizeFinished(QString sourcePath);
     void copyStarted(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void copyProgress(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 bytesTotal, qint64 count, bool isSourceRoot);
@@ -94,6 +95,7 @@ signals:
     void deleteProgress(int fileAction, QString subLocalPath, QString msg, int err);
     void deleteFinished(int fileAction, QString localPath, QString msg, int err);
     void trashFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
+    void emptyDirFinished(int fileAction, QString sourcePath, QString msg, int err);
 private:
     FolderSizeItem getCachedDir(const QFileInfo dir, const bool clearCache = false);
     FolderSizeItem getFileItem(const QFileInfo fileInfo);
@@ -125,6 +127,7 @@ private:
     bool copyFile(int method, const QString sourcePath, const QString targetPath);
     bool deleteDir(const QString sourcePath, bool suppressSignal = false, bool forceDeleteReadOnly = false);
     bool trash(const QString sourcePath, const QString targetPath);
+    bool emptyDir(const QString sourcePath);
     void delay(const int interval = 100);
 
     void cleanItems();

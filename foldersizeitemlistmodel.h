@@ -223,12 +223,13 @@ private:
     void removeWatchedDirPath(QString dirPath);
 public slots:
     void loadDirSizeCacheFinishedFilter();
-    void fetchDirSizeFinishedFilter();
+    void fetchDirSizeFinishedFilter(QString sourcePath);
     void copyProgressFilter(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes, qint64 count, bool isSourceRoot);
     void deleteProgressFilter(int fileAction, QString sourceSubPath, QString msg, int err);
     void deleteFinishedFilter(int fileAction, QString sourcePath, QString msg, int err);
     void trashFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
+    void emptyDirFinishedFilter(int fileAction, QString sourcePath, QString msg, int err);
     void jobDone();
     void fsWatcherDirectoryChangedSlot(const QString &entry);
 Q_SIGNALS:
@@ -246,10 +247,11 @@ Q_SIGNALS:
     void deleteProgress(int fileAction, QString sourceSubPath, QString msg, int err);
     void deleteFinished(int fileAction, QString sourcePath, QString msg, int err);
     void trashFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
+    void emptyDirFinished(int fileAction, QString sourcePath, QString msg, int err);
     void createFinished(QString targetPath, QString msg, int err);
     void renameFinished(QString sourcePath, QString targetPath, QString msg, int err);
-    void fetchDirSizeStarted();
-    void fetchDirSizeFinished();
+    void fetchDirSizeStarted(QString dirPath);
+    void fetchDirSizeFinished(QString dirPath);
     void fetchDirSizeUpdated(QString dirPath);
     void proceedNextJobSignal();
     void directoryChanged(QString dirPath);

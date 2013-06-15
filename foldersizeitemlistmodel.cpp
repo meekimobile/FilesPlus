@@ -49,8 +49,8 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(loadDirSizeCacheFinished()), this, SLOT(loadDirSizeCacheFinishedFilter()) );
     connect(&m, SIGNAL(initializeDBStarted()), this, SIGNAL(initializeDBStarted()) );
     connect(&m, SIGNAL(initializeDBFinished()), this, SIGNAL(initializeDBFinished()) );
-    connect(&m, SIGNAL(fetchDirSizeStarted()), this, SIGNAL(fetchDirSizeStarted()) );
-    connect(&m, SIGNAL(fetchDirSizeFinished()), this, SLOT(fetchDirSizeFinishedFilter()) );
+    connect(&m, SIGNAL(fetchDirSizeStarted(QString)), this, SIGNAL(fetchDirSizeStarted(QString)) );
+    connect(&m, SIGNAL(fetchDirSizeFinished(QString)), this, SLOT(fetchDirSizeFinishedFilter(QString)) );
     connect(&m, SIGNAL(copyStarted(int,QString,QString,QString,int)), this, SIGNAL(copyStarted(int,QString,QString,QString,int)) );
     connect(&m, SIGNAL(copyProgress(int,QString,QString,qint64,qint64)), this, SLOT(copyProgressFilter(int,QString,QString,qint64,qint64)) , Qt::QueuedConnection);
     connect(&m, SIGNAL(copyFinished(int,QString,QString,QString,int,qint64,qint64,qint64,bool)), this, SLOT(copyFinishedFilter(int,QString,QString,QString,int,qint64,qint64,qint64,bool)) );
@@ -59,6 +59,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(deleteProgress(int,QString,QString,int)), this, SLOT(deleteProgressFilter(int,QString,QString,int)) );
     connect(&m, SIGNAL(deleteFinished(int,QString,QString,int)), this, SLOT(deleteFinishedFilter(int,QString,QString,int)) );
     connect(&m, SIGNAL(trashFinished(int,QString,QString,QString,int)), this, SLOT(trashFinishedFilter(int,QString,QString,QString,int)) );
+    connect(&m, SIGNAL(emptyDirFinished(int,QString,QString,int)), this, SLOT(emptyDirFinishedFilter(int,QString,QString,int)) );
     connect(&m, SIGNAL(finished()), this, SLOT(jobDone()) );
     connect(&m, SIGNAL(started()), this, SIGNAL(isRunningChanged()));
     connect(&m, SIGNAL(finished()), this, SIGNAL(isRunningChanged()));
@@ -841,23 +842,20 @@ bool FolderSizeItemListModel::trash(const QString sourcePath)
 
 void FolderSizeItemListModel::requestTrashStatus()
 {
-    emit trashChanged();
+    // Refresh cache item of trash folder.
+    FolderSizeJob job(createNonce(), FolderSizeModelThread::FetchDirSize, getTrashPath(), "");
+    m_jobQueue.enqueue(job);
+
+    emit proceedNextJobSignal();
 }
 
 void FolderSizeItemListModel::emptyTrash()
 {
-    QDir trashDir(getTrashPath());
-    trashDir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot);
+    // Enqueue job.
+    FolderSizeJob job(createNonce(), FolderSizeModelThread::EmptyDir, getTrashPath(), "");
+    m_jobQueue.enqueue(job);
 
-    suspendNextJob();
-    foreach (QString childName, trashDir.entryList()) {
-        QApplication::processEvents();
-
-        QString childPath = trashDir.absoluteFilePath(childName);
-        qDebug() << "FolderSizeItemListModel::emptyTrash delete childPath" << childPath;
-        deleteFile(childPath);
-    }
-    resumeNextJob();
+    emit proceedNextJobSignal();
 }
 
 bool FolderSizeItemListModel::setFileAttribute(QString localFilePath, FileAttribute attribute, bool value)
@@ -1200,12 +1198,17 @@ void FolderSizeItemListModel::loadDirSizeCacheFinishedFilter()
     refreshDir("FolderSizeItemListModel::loadDirSizeCacheFinishedFilter");
 }
 
-void FolderSizeItemListModel::fetchDirSizeFinishedFilter()
+void FolderSizeItemListModel::fetchDirSizeFinishedFilter(QString sourcePath)
 {
-    refreshItemList();
-    // Emited in refreshItemList() already.
-//    emit refreshCompleted();
-    emit fetchDirSizeFinished();
+    if (sourcePath == "" || sourcePath == currentDir()) {
+        refreshItemList();
+    }
+
+    if (sourcePath.startsWith(getTrashPath())) {
+        emit trashChanged();
+    }
+
+    emit fetchDirSizeFinished(sourcePath);
 }
 
 void FolderSizeItemListModel::copyProgressFilter(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal)
@@ -1282,6 +1285,10 @@ void FolderSizeItemListModel::deleteFinishedFilter(int fileAction, QString sourc
     // Remove cache of path up to root.
     removeCache(sourcePath);
 
+    if (sourcePath.startsWith(getTrashPath())) {
+        requestTrashStatus();
+    }
+
     // Emit deleteFinished
     emit deleteFinished(fileAction, sourcePath, msg, err);
 
@@ -1310,7 +1317,20 @@ void FolderSizeItemListModel::trashFinishedFilter(int fileAction, QString source
         removeCache(targetPath);
     }
 
+    requestTrashStatus();
+
     emit trashFinished(fileAction, sourcePath, targetPath, msg, err);
+}
+
+void FolderSizeItemListModel::emptyDirFinishedFilter(int fileAction, QString sourcePath, QString msg, int err)
+{
+    removeCache(sourcePath);
+
+    if (sourcePath.startsWith(getTrashPath())) {
+        requestTrashStatus();
+    }
+
+    emit emptyDirFinished(fileAction, sourcePath, msg, err);
 }
 
 void FolderSizeItemListModel::proceedNextJob()

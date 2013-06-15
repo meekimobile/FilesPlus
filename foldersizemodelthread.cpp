@@ -875,6 +875,26 @@ bool FolderSizeModelThread::trash(const QString sourcePath, const QString target
     }
 }
 
+bool FolderSizeModelThread::emptyDir(const QString sourcePath)
+{
+    QDir dir(sourcePath);
+    dir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
+
+    bool res = true;
+    foreach (QString childName, dir.entryList()) {
+        QApplication::processEvents();
+
+        QString childPath = dir.absoluteFilePath(childName);
+        qDebug() << "FolderSizeModelThread::emptyDir delete childPath" << childPath;
+
+        if (!deleteDir(childPath, true, m_settings.value("FolderSizeModelThread.forceDeleteReadOnly.enabled", false).toBool())) {
+            res = false;
+        }
+    }
+
+    return res;
+}
+
 bool FolderSizeModelThread::isDirSizeCacheExisting()
 {
     // Return true if cache is not empty or cache is loading.
@@ -1165,7 +1185,7 @@ void FolderSizeModelThread::fetchDirSize(const QString startPath, const bool cle
     QString sourcePath = (startPath.isEmpty()) ? currentDir() : startPath;
     qDebug() << QTime::currentTime() << "FolderSizeModelThread::fetchDirSize started sourcePath" << sourcePath << "clearCache" << clearCache;
 
-    emit fetchDirSizeStarted();
+    emit fetchDirSizeStarted(startPath);
 
     QFileInfo dirInfo(sourcePath);
     getCachedDir(dirInfo, clearCache);
@@ -1173,7 +1193,7 @@ void FolderSizeModelThread::fetchDirSize(const QString startPath, const bool cle
     // Reset after fetch.
     m_clearCache = false;
 
-    emit fetchDirSizeFinished();
+    emit fetchDirSizeFinished(startPath);
 
     qDebug() << QTime::currentTime() << "FolderSizeModelThread::fetchDirSize done sourcePath" << sourcePath;
 }
@@ -1455,6 +1475,21 @@ void FolderSizeModelThread::run()
         if (trash(m_sourcePath, m_targetPath)) {
             qDebug() << "FolderSizeModelThread::run trash sourcePath" << m_sourcePath << "to" << m_targetPath << "is done.";
             emit trashFinished(TrashFile, m_sourcePath, m_targetPath, tr("Move %1 to %2 is done successfully.").arg(m_sourcePath).arg(m_targetPath), 0);
+        } else {
+            qDebug() << "FolderSizeModelThread::run trash sourcePath" << m_sourcePath << "to" << m_targetPath << "is failed.";
+            emit trashFinished(TrashFile, m_sourcePath, m_targetPath, tr("Move %1 to %2 is failed.").arg(m_sourcePath).arg(m_targetPath), -1);
+        }
+        // Reset method parameters
+        m_sourcePath = "";
+        m_targetPath = "";
+        break;
+    case EmptyDir:
+        if (emptyDir(m_sourcePath)) {
+            qDebug() << "FolderSizeModelThread::run emptyDir sourcePath" << m_sourcePath << "is done.";
+            emit emptyDirFinished(EmptyDir, m_sourcePath, tr("Empty %1 is done successfully.").arg(m_sourcePath), 0);
+        } else {
+            qDebug() << "FolderSizeModelThread::run emptyDir sourcePath" << m_sourcePath << "is failed.";
+            emit emptyDirFinished(EmptyDir, m_sourcePath, tr("Empty %1 is failed.").arg(m_sourcePath), -1);
         }
         // Reset method parameters
         m_sourcePath = "";
