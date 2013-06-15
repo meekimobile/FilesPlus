@@ -22,12 +22,12 @@ Dialog {
 
     buttons: Row {
         id: buttonRow
-        width: parent.width - 20
+        width: parent.width
         height: 80
-        spacing: 5
+        spacing: 10
         anchors.horizontalCenter: parent.horizontalCenter
 
-        property int buttonWidth: (buttonTexts.length > 1) ? ((width / buttonTexts.length) - spacing) : width
+        property int buttonWidth: (buttonTexts.length > 1) ? ((width - (buttonTexts.length-1)*spacing) / buttonTexts.length) : width
 
         Repeater {
             model: buttonTexts
