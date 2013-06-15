@@ -259,7 +259,7 @@ Page {
                         TextField {
                             id: hostname
                             width: parent.width - contentItem.labelWidth
-                            placeholderText: appInfo.emptyStr+qsTr("Input hostname")
+                            placeholderText: appInfo.emptyStr+qsTr("Input hostname[:port][/path]")
                             readOnly: false
                             validator: RegExpValidator {
                                 regExp: /[\w.-:~]+/
@@ -336,6 +336,36 @@ Page {
                             width: parent.width - contentItem.labelWidth
                             placeholderText: appInfo.emptyStr+qsTr("Input auth. hostname")
                             readOnly: false
+                        }
+                    }
+                    Row {
+                        width: parent.width
+                        visible: (addAccountDialog.cloudType == CloudDriveModel.WebDAV)
+                        Label {
+                            text: appInfo.emptyStr+qsTr("Services")
+                            width: contentItem.labelWidth
+                            color: "white"
+                            elide: Text.ElideRight
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Row {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width - contentItem.labelWidth
+                            spacing: 5
+                            Button {
+                                id: quotaCheckbox
+                                text: appInfo.emptyStr+qsTr("Quota")
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: (parent.width - parent.spacing) / 2
+                                checkable: true
+                            }
+                            Button {
+                                id: shareCheckbox
+                                text: appInfo.emptyStr+qsTr("Share")
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: (parent.width - parent.spacing) / 2
+                                checkable: true
+                            }
                         }
                     }
                     Row {
@@ -435,6 +465,10 @@ Page {
             originalToken = token;
             authHostname.text = "";
             testConnectionButton.state = "ready";
+            if (addAccountDialog.cloudType == CloudDriveModel.WebDAV) {
+                quotaCheckbox.checked = cloudDriveModel.getConnectionBoolProperty(cloudType, connection, "quota.enabled", true); // Default as enabled.
+                shareCheckbox.checked = cloudDriveModel.getConnectionBoolProperty(cloudType, connection, "share.enabled", true); // Default as enabled.
+            }
         }
         onClosed: {
             addAccountDialog.connection = "";
@@ -447,6 +481,10 @@ Page {
             if (!addAccountDialog.validateForm()) return;
 
             cloudDriveModel.saveConnection(addAccountDialog.cloudType, connectionName.text, hostname.text, username.text, password.text, tokenInput.text);
+            if (addAccountDialog.cloudType == CloudDriveModel.WebDAV) {
+                cloudDriveModel.setConnectionProperty(cloudType, connection, "quota.enabled", quotaCheckbox.checked);
+                cloudDriveModel.setConnectionProperty(cloudType, connection, "share.enabled", shareCheckbox.checked);
+            }
             cloudDriveModel.refreshCloudDriveAccounts("cloudDriveAccountsPage addAccountDialog onConfirm");
         }
     }

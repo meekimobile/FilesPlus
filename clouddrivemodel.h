@@ -254,6 +254,9 @@ public:
     // FTP/WebDAV specific functions.
     Q_INVOKABLE bool testConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token, QString authHostname = "");
     Q_INVOKABLE void saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password,  QString token);
+    Q_INVOKABLE QVariant getConnectionProperty(CloudDriveModel::ClientTypes type, QString uid, QString name, QVariant defaultValue);
+    Q_INVOKABLE bool getConnectionBoolProperty(CloudDriveModel::ClientTypes type, QString uid, QString name, bool defaultValue);
+    Q_INVOKABLE void setConnectionProperty(CloudDriveModel::ClientTypes type, QString uid, QString name, QVariant value);
 
     // TODO Needed ?
     Q_INVOKABLE bool parseAuthorizationCode(CloudDriveModel::ClientTypes type, QString text);

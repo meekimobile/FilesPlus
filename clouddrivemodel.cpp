@@ -2225,6 +2225,13 @@ void CloudDriveModel::accountInfo(CloudDriveModel::ClientTypes type, QString uid
 
 void CloudDriveModel::quota(CloudDriveModel::ClientTypes type, QString uid)
 {
+    if (type == WebDAV && !getConnectionBoolProperty(type, uid, "quota.enabled", false)) {
+        CloudDriveJob job(createNonce(), Quota, type, uid, "", "", -1);
+        m_cloudDriveJobs->insert(job.jobId, job);
+        emit quotaReplySignal(job.jobId, 0, "", "{ }", 0, 0, 0);
+        return;
+    }
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), Quota, type, uid, "", "", -1);
     m_cloudDriveJobs->insert(job.jobId, job);
@@ -4215,6 +4222,24 @@ bool CloudDriveModel::testConnection(CloudDriveModel::ClientTypes type, QString 
 void CloudDriveModel::saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token)
 {
     getCloudClient(type)->saveConnection(uid, hostname, username, password, token);
+}
+
+QVariant CloudDriveModel::getConnectionProperty(CloudDriveModel::ClientTypes type, QString uid, QString name, QVariant defaultValue)
+{
+    QString clientObjectName = getCloudClient(type)->objectName();
+    return m_settings.value(QString("%1.%2.%3").arg(clientObjectName).arg(uid).arg(name), defaultValue);
+}
+
+bool CloudDriveModel::getConnectionBoolProperty(CloudDriveModel::ClientTypes type, QString uid, QString name, bool defaultValue)
+{
+    QString clientObjectName = getCloudClient(type)->objectName();
+    return m_settings.value(QString("%1.%2.%3").arg(clientObjectName).arg(uid).arg(name), defaultValue).toBool();
+}
+
+void CloudDriveModel::setConnectionProperty(CloudDriveModel::ClientTypes type, QString uid, QString name, QVariant value)
+{
+    QString clientObjectName = getCloudClient(type)->objectName();
+    m_settings.setValue(QString("%1.%2.%3").arg(clientObjectName).arg(uid).arg(name), value);
 }
 
 QString CloudDriveModel::getItemCacheKey(int type, QString uid, QString localPath)
