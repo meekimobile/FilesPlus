@@ -1281,6 +1281,12 @@ bool CloudDriveModel::isViewable(CloudDriveModel::ClientTypes type)
     return getCloudClient(type)->isViewable();
 }
 
+bool CloudDriveModel::isSharable(CloudDriveModel::ClientTypes type, QString uid)
+{
+    return (type != Ftp && type != WebDAV)
+            || (type == WebDAV && getConnectionBoolProperty(type, uid, "share.enabled", false));
+}
+
 bool CloudDriveModel::isImageUrlCachable(CloudDriveModel::ClientTypes type)
 {
     return getCloudClient(type)->isImageUrlCachable();
@@ -2985,6 +2991,20 @@ void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid,
 
 void CloudDriveModel::shareFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath)
 {
+    if (!isSharable(type, uid)) {
+        CloudDriveJob job(createNonce(), ShareFile, type, uid, localFilePath, remoteFilePath, -1);
+        m_cloudDriveJobs->insert(job.jobId, job);
+        emit shareFileReplySignal(job.jobId, -1, getCloudClient(type)->objectName() + " " + "Share link", tr("Service is not available."), "", 0);
+        return;
+    }
+
+    if (remoteFilePath == "") {
+        CloudDriveJob job(createNonce(), ShareFile, type, uid, localFilePath, remoteFilePath, -1);
+        m_cloudDriveJobs->insert(job.jobId, job);
+        emit shareFileReplySignal(job.jobId, -1, getCloudClient(type)->objectName() + " " + "Share link", tr("Cloud file ID is not available."), "", 0);
+        return;
+    }
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), ShareFile, type, uid, localFilePath, remoteFilePath, -1);
 //    job.isRunning = true;

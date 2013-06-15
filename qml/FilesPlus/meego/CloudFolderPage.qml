@@ -1060,8 +1060,10 @@ Page {
                 return cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, selectedFilePath);
             } else if (buttonName === "paste") {
                 return (clipboard.count > 0 && clipboard.get(0).action != "extract");
-            } else if (buttonName == "print") {
+            } else if (buttonName === "print") {
                 return !popupToolPanel.isDir && cloudDriveModel.isViewable(selectedCloudType);
+            } else if (buttonName === "share") {
+                return cloudDriveModel.isSharable(selectedCloudType, selectedUid);
             }
 
             return true;

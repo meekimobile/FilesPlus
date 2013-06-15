@@ -1282,19 +1282,19 @@ Page {
                 return isDir && cloudDriveModel.isConnected(selectedFilePath);
             } else if (buttonName === "paste") {
                 return (clipboard.count > 0 && isDir);
-            } else if (buttonName == "share") {
+            } else if (buttonName === "share") {
                 return fsModel.isFile(selectedFilePath) || cloudDriveModel.isConnected(selectedFilePath);
-            } else if (buttonName == "mail") {
+            } else if (buttonName === "mail") {
                 return cloudDriveModel.isConnected(selectedFilePath);
-            } else if (buttonName == "sms") {
+            } else if (buttonName === "sms") {
                 return cloudDriveModel.isConnected(selectedFilePath);
-            } else if (buttonName == "bluetooth") {
+            } else if (buttonName === "bluetooth") {
                 return fsModel.isFile(selectedFilePath);
-            } else if (buttonName == "editFile") {
+            } else if (buttonName === "editFile") {
                 return fsModel.isFile(selectedFilePath);
-            } else if (buttonName == "compress") {
+            } else if (buttonName === "compress") {
                 return !compressedFolderModel.isCompressedFile(selectedFilePath);
-            } else if (buttonName == "print") {
+            } else if (buttonName === "print") {
                 return fsModel.isFile(selectedFilePath);
             }
 
