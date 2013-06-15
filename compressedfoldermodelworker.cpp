@@ -1,6 +1,8 @@
 #include "compressedfoldermodelworker.h"
 #include <JlCompress.h>
+#if defined(Q_WS_HARMATTAN)
 #include <rar.hpp>
+#endif
 #include <QDebug>
 
 CompressedFolderModelWorker::CompressedFolderModelWorker(QObject *parent) :
@@ -95,6 +97,7 @@ QStringList CompressedFolderModelWorker::list(QString compressedFilePath)
         }
 
         delete zip;
+#if defined(Q_WS_HARMATTAN)
     } else if (compressedFilePath.endsWith(".rar", Qt::CaseInsensitive)) {
         try {
             QString commandLine = "unrar l " + compressedFilePath;
@@ -186,6 +189,7 @@ QStringList CompressedFolderModelWorker::list(QString compressedFilePath)
         } catch (...) {
             m_listErrorCode = -1;
         }
+#endif
     }
 
     qDebug() << "CompressedFolderModelWorker::list finished." << compressedFilePath << itemNameList << m_listErrorCode;
@@ -240,6 +244,7 @@ QStringList CompressedFolderModelWorker::extract(QString compressedFilePath, QSt
 //            qDebug() << "CompressedFolderModelWorker::extract extractFiles" << compressedFilePath << sourcePathList << targetParentPath;
             return JlCompress::extractFiles(compressedFilePath, sourcePathList, targetParentPath);
         }
+#if defined(Q_WS_HARMATTAN)
     } else if (compressedFilePath.endsWith(".rar", Qt::CaseInsensitive)) {
         try {
             // Create target parent path.
@@ -287,6 +292,7 @@ QStringList CompressedFolderModelWorker::extract(QString compressedFilePath, QSt
         } catch (...) {
             ErrHandler.SetErrorCode(RARX_FATAL);
         }
+#endif
     }
 
     return QStringList();
@@ -297,14 +303,4 @@ QString CompressedFolderModelWorker::getDefaultCompressedFilePath(QString source
     QFileInfo sourceInfo(sourcePath);
 
     return sourceInfo.absoluteDir().absoluteFilePath(sourceInfo.baseName() + ".zip");
-}
-
-char * CompressedFolderModelWorker::getCharPointer(QString s)
-{
-    char *c = s.toLocal8Bit().data();
-    if (QString(c).compare(s) != 0) {
-        return 0;
-    } else {
-        return c;
-    }
 }

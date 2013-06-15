@@ -1125,6 +1125,9 @@ Page {
                         } else if (fileType.toUpperCase() === "ZIP") {
                             compressedFileMenu.selectedIndex = index;
                             compressedFileMenu.open();
+//                        } else if (fileType.toUpperCase() === "RAR") { // Disable RAR support on Symbian.
+//                            compressedFileMenu.selectedIndex = index;
+//                            compressedFileMenu.open();
                         } else {
                             Qt.openUrlExternally(fsModel.getUrl(absolutePath));
                         }

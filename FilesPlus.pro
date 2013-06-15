@@ -77,6 +77,7 @@ symbian {
     LIBS += -lquazip.lib
 
     # Add UnRar library.
+#    DEFINES += SYMBIAN
 #    INCLUDEPATH += ../unrar
 #    LIBS += -lunrar.lib
 }

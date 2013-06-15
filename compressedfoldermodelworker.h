@@ -47,7 +47,6 @@ private:
     QStringList extract(QString compressedFilePath, QStringList sourcePathList, QString targetParentPath = "");
 
     QString getDefaultCompressedFilePath(QString sourcePath);
-    char *getCharPointer(QString s);
 };
 
 #endif // COMPRESSEDFOLDERMODELWORKER_H
