@@ -460,6 +460,12 @@ void FolderSizeItemListModel::changeDir(const QString &name, const int sortFlag)
     }
 }
 
+void FolderSizeItemListModel::clear()
+{
+    itemList.clear();
+    refreshItems();
+}
+
 void FolderSizeItemListModel::refreshDir(const QString caller, const bool clearCache, const bool clearItems)
 {
     qDebug() << "FolderSizeItemListModel::refreshDir clearCache" << clearCache << "sender" << sender() << "caller" << caller << "currentDir" << currentDir();

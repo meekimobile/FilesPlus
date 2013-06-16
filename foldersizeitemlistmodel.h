@@ -119,6 +119,7 @@ public:
 
     Q_INVOKABLE void refreshDir(const QString caller, const bool clearCache = false, const bool clearItems = false);
     Q_INVOKABLE void changeDir(const QString &name, const int sortFlag = -1);
+    Q_INVOKABLE void clear();
     Q_INVOKABLE QString getUrl(const QString absPath);
     Q_INVOKABLE bool isRoot(); // Overload method for verifying on currentDir.
     Q_INVOKABLE bool isRoot(const QString absPath);

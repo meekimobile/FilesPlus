@@ -262,8 +262,7 @@ Page {
                 }
                 if (type < 0) {
                     // Local bookmark.
-                    pageStack.replace(Qt.resolvedUrl("FolderPage.qml"), {}, true);
-                    fsModel.currentDir = path;
+                    pageStack.replace(Qt.resolvedUrl("FolderPage.qml"), { localPath: path }, true);
                 } else {
                     // Cloud bookmark.
                     pageStack.replace(Qt.resolvedUrl("CloudFolderPage.qml"), {

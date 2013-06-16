@@ -1333,6 +1333,6 @@ Page {
         window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("CloudFolderPage"), 0.1);
 
         // Proceeds queued jobs during constructions.
-        refreshSlot("cloudFolderPage onStatusChanged");
+        refreshSlot("cloudFolderPage onCompleted");
     }
 }

@@ -10,6 +10,8 @@ Page {
 
     property string name: "folderPage"
     property bool inverted: !theme.inverted
+    property string localPath
+    property bool isBusy
 
     state: "list"
     states: [
@@ -63,6 +65,12 @@ Page {
             // Check for cloud data migration.
             if (!appInfo.hasSettingValue("cloudItems.migration.confirmation") && cloudDriveModel.getCloudDriveItemsCount() > 0) {
                 cloudItemsMigrationConfirmation.open();
+            }
+
+            // Refresh file list once page is loaded.
+            if (localPath != "") {
+                fsModel.currentDir = localPath;
+                localPath = "";
             }
         }
     }
@@ -733,7 +741,7 @@ Page {
 
     function refreshBeginSlot() {
         console.debug("folderPage refreshBeginSlot");
-//            window.state = "busy";
+        isBusy = true;
 
         fsListView.lastCenterIndex = fsListView.indexAt(0, fsListView.contentY + (fsListView.height / 2));
 //            console.debug("QML FolderSizeItemListModel::refreshBegin fsListView.lastCenterIndex " + fsListView.lastCenterIndex);
@@ -741,7 +749,7 @@ Page {
 
     function refreshCompletedSlot() {
         console.debug("folderPage refreshCompletedSlot");
-//            window.state = "ready";
+        isBusy = false;
 
         // Reset ListView currentIndex.
         fsListView.currentIndex = -1;
@@ -755,13 +763,9 @@ Page {
     }
 
     function fetchDirSizeStartedSlot() {
-//        refreshButtonTimer.restart();
     }
 
     function fetchDirSizeFinishedSlot() {
-//        refreshButtonTimer.stop();
-//        refreshButton.rotation = 0;
-
         // Refresh itemList to show changes on ListView.
         fsModel.refreshItems();
     }
@@ -1142,6 +1146,32 @@ Page {
                         openFileSlot(absolutePath, index);
                     }
                 }
+            }
+        }
+    }
+
+    Rectangle {
+        id: busyPanel
+        color: "black"
+        opacity: 0.7
+        visible: isBusy
+        width: parent.width
+        height: parent.height - currentPath.height
+        anchors.top: currentPath.bottom
+
+        BusyIndicator {
+            id: busyIcon
+            visible: isBusy
+            running: isBusy
+            platformStyle: BusyIndicatorStyle { size: "large" }
+            anchors.centerIn: parent
+        }
+
+        MouseArea {
+            enabled: isBusy
+            anchors.fill: parent
+            onPressed: {
+                // do nothing.
             }
         }
     }
