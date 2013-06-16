@@ -152,12 +152,6 @@ Page {
             group: "CloudDrive"
         }
         ListElement {
-            name: "GCDClient.dirtyBeforeSync.enabled"
-            title: ""
-            type: "switch"
-            group: "CloudDrive"
-        }
-        ListElement {
             name: "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnCharging.enabled"
             title: ""
             type: "switch"
@@ -174,6 +168,12 @@ Page {
             title: ""
             type: "switch"
             group: "CloudDrive"
+        }
+        ListElement {
+            name: "Spacer"
+            title: ""
+            type: "spacer"
+            group: "Spacer"
         }
         ListElement {
             name: "FolderPie"
@@ -331,6 +331,18 @@ Page {
             type: "switch"
             group: "Developer"
         }
+        ListElement {
+            name: "GCDClient.dirtyBeforeSync.enabled"
+            title: ""
+            type: "switch"
+            group: "CloudDrive"
+        }
+        ListElement {
+            name: "GCDClient.patchFile.setModifiedDate.enabled"
+            title: ""
+            type: "switch"
+            group: "CloudDrive"
+        }
     }
 
     GridView {
@@ -361,6 +373,7 @@ Page {
         else if (name == "CloudDriveModel.metadata.root.connection.enabled") return qsTr("Sync to cloud storage root") + appInfo.emptyStr;
         else if (name == "CloudDriveModel.syncDirtyItems.enabled") return qsTr("Sync dirty items automatically") + appInfo.emptyStr;
         else if (name == "GCDClient.dirtyBeforeSync.enabled") return qsTr("Dirty before sync (GoogleDrive)") + appInfo.emptyStr;
+        else if (name == "GCDClient.patchFile.setModifiedDate.enabled") return qsTr("Set modified date to uploaded file  (GoogleDrive)") + appInfo.emptyStr;
         else if (name == "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnCharging.enabled") return qsTr("Schedule sync only on charging") + appInfo.emptyStr;
         else if (name == "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnBatteryOk.enabled") return qsTr("Schedule sync only if battery is OK (>40%)") + appInfo.emptyStr;
         else if (name == "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnWlan.enabled") return qsTr("Schedule sync only on WiFi") + appInfo.emptyStr;

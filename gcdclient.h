@@ -117,8 +117,8 @@ public slots:
 protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:
-    QString localPath;
     QHash<QString, QFile*> m_localFileHash;
+    QHash<QString, QDateTime> m_sourceFileTimestampHash;
     QHash<QString, QBuffer*> m_bufferHash;
     QString refreshTokenUid;
     QHash<QString, QByteArray> *m_propertyReplyHash;

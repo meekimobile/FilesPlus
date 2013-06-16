@@ -244,6 +244,9 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     if (!m_settings->contains("GCDClient.dirtyBeforeSync.enabled")) {
         m_settings->setValue("GCDClient.dirtyBeforeSync.enabled", QVariant(true));
     }
+    if (!m_settings->contains("GCDClient.patchFile.setModifiedDate.enabled")) {
+        m_settings->setValue("GCDClient.patchFile.setModifiedDate.enabled", QVariant(true));
+    }
     if (!m_settings->contains("temp.path")) {
 #ifdef Q_OS_SYMBIAN
         m_settings->setValue("temp.path", QVariant("E:/temp/.filesplus"));
