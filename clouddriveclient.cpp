@@ -260,7 +260,8 @@ QString CloudDriveClient::stringifyScriptValue(QScriptEngine &engine, QScriptVal
 QString CloudDriveClient::formatJSONDateString(QDateTime datetime)
 {
     // Format to JSON which match with javascript, QML format.
-    return datetime.toString("yyyy-MM-ddThh:mm:ss.zzzZ");
+    // NOTE It's RFC 3339 formatted timestamp
+    return datetime.toUTC().toString("yyyy-MM-ddThh:mm:ss.zzzZ");
 }
 
 bool CloudDriveClient::testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname)
