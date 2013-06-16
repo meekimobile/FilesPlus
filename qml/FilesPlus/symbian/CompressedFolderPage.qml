@@ -146,14 +146,6 @@ Page {
         width: parent.width
         height: parent.height - currentPath.height
         anchors.top: currentPath.bottom
-        highlightRangeMode: ListView.NoHighlightRange
-        highlightFollowsCurrentItem: true
-        highlightMoveDuration: 1
-        highlightMoveSpeed: 4000
-        highlight: Rectangle {
-            width: listView.width
-            gradient: highlightGradient
-        }
         clip: true
         focus: true
         cacheBuffer: height * 2
@@ -170,19 +162,6 @@ Page {
         ScrollDecorator {
             id: scrollbar
             flickableItem: listView
-        }
-    }
-
-    Gradient {
-        id: highlightGradient
-        GradientStop {
-            position: 0
-            color: "#0080D0"
-        }
-
-        GradientStop {
-            position: 1
-            color: "#53A3E6"
         }
     }
 
