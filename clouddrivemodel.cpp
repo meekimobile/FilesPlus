@@ -2231,7 +2231,8 @@ void CloudDriveModel::accountInfo(CloudDriveModel::ClientTypes type, QString uid
 
 void CloudDriveModel::quota(CloudDriveModel::ClientTypes type, QString uid)
 {
-    if (type == WebDAV && !getConnectionBoolProperty(type, uid, "quota.enabled", false)) {
+    if (type == Ftp
+            || (type == WebDAV && !getConnectionBoolProperty(type, uid, "quota.enabled", false))) {
         CloudDriveJob job(createNonce(), Quota, type, uid, "", "", -1);
         m_cloudDriveJobs->insert(job.jobId, job);
         emit quotaReplySignal(job.jobId, 0, "", "{ }", 0, 0, 0);
