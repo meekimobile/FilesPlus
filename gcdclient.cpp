@@ -1274,9 +1274,14 @@ void GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
 
 QString GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
-    qDebug() << "----- GCDClient::deleteFile -----";
+    qDebug() << "----- GCDClient::deleteFile -----" << nonce << uid << remoteFilePath << synchronous;
 
-    QString uri = deleteFileURI.arg(remoteFilePath);
+    QString uri;
+    if (m_settings.value("GCDClient.deleteFile.permanently.enabled", false).toBool()) {
+        uri = deleteFileURI.arg(remoteFilePath);
+    } else {
+        uri = trashFileURI.arg(remoteFilePath);
+    }
     qDebug() << "GCDClient::deleteFile uri " << uri;
 
     QByteArray postData;
@@ -1290,7 +1295,12 @@ QString GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    QNetworkReply *reply = manager->deleteResource(req);
+    QNetworkReply *reply;
+    if (m_settings.value("GCDClient.deleteFile.permanently.enabled", false).toBool()) {
+        reply = manager->deleteResource(req);
+    } else {
+        reply = manager->post(req, postData);
+    }
 
     // TODO Return if asynchronous.
     if (!synchronous) {
