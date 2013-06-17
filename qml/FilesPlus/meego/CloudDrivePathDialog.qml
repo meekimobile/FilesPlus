@@ -71,6 +71,9 @@ ConfirmDialog {
 
         selectedIsValid = true;
         selectedIndex = cloudDriveModel.findIndexByRemotePath(originalRemotePath);
+        selectedRemotePath = ""; // Requires to reset otherwise it will incorrectly select its parent path for syncing.
+        selectedRemotePathName = "";
+        selectedIsDir = false;
         if (selectedIndex > -1) {
             var selectedItem = cloudDriveModel.get(selectedIndex);
             selectedRemotePath = selectedItem.absolutePath;
