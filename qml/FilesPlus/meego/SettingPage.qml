@@ -382,7 +382,7 @@ Page {
         else if (name == "Theme.inverted") return qsTr("Theme") + appInfo.emptyStr;
         else if (name == "popup.timer.interval") return qsTr("Popup interval") + appInfo.emptyStr;
         else if (name == "listItem.compact.enabled") return qsTr("Compact list item") + appInfo.emptyStr;
-        else if (name == "GridView.compact.enabled") return qsTr("Grid view columns 3/4") + appInfo.emptyStr;
+        else if (name == "GridView.compact.enabled") return qsTr("Compact grid item") + appInfo.emptyStr;
         else if (name == "locale") return languageModel.getLanguage(appInfo.getLocale(), appInfo.getSystemLocale()) + appInfo.emptyStr;
         else if (name == "thumbnail.enabled") return qsTr("Show thumbnail on local drive") + appInfo.emptyStr;
         else if (name == "CloudFolderPage.thumbnail.enabled") return qsTr("Show thumbnail on cloud drive") + appInfo.emptyStr;

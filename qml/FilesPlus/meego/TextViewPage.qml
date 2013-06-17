@@ -71,7 +71,7 @@ Page {
 
             MenuItemWithIcon {
                 name: "saveForWindows"
-                text: appInfo.emptyStr+"Windows "+qsTr("format")
+                text: appInfo.emptyStr+qsTr("%1 format").arg("Windows")
                 onClicked: {
                     saveFileSlot(true);
                 }
@@ -79,7 +79,7 @@ Page {
 
             MenuItemWithIcon {
                 name: "saveForUnix"
-                text: appInfo.emptyStr+"UNIX "+qsTr("format")
+                text: appInfo.emptyStr+qsTr("%1 format").arg("UNIX")
                 onClicked: {
                     saveFileSlot(false);
                 }

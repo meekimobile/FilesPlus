@@ -159,8 +159,8 @@ Please click &apos;OK&apos; to continue.</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location line="+152"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+152"/>
+        <location line="+182"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+182"/>
         <source>Test</source>
         <translation>测试</translation>
     </message>
@@ -177,8 +177,8 @@ Please click &apos;OK&apos; to continue.</source>
         <translation>OAuth</translation>
     </message>
     <message>
-        <location line="-98"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="-98"/>
+        <location line="-128"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="-128"/>
         <source>Token</source>
         <translation>授权</translation>
     </message>
@@ -195,38 +195,36 @@ Please click &apos;OK&apos; to continue.</source>
         <translation>请输入连接名称</translation>
     </message>
     <message>
-        <location line="+298"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+295"/>
+        <location line="+336"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+333"/>
         <source>Not available</source>
         <translation>不可用</translation>
     </message>
     <message>
-        <location line="-279"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="-276"/>
         <source>Input hostname</source>
-        <translation>请输入服务器名</translation>
+        <translation type="obsolete">请输入服务器名</translation>
     </message>
     <message>
-        <location line="-59"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="-59"/>
+        <location line="-376"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="-373"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="+176"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+176"/>
+        <location line="+206"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+206"/>
         <source>Failed</source>
         <translation>失败</translation>
     </message>
     <message>
-        <location line="+77"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+77"/>
+        <location line="+85"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+85"/>
         <source>delta schedule</source>
         <translation>delta计划</translation>
     </message>
     <message>
-        <location line="-406"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="-405"/>
+        <location line="-444"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="-443"/>
         <source>Cloud Drive Accounts</source>
         <translation>&lt;b&gt;Cloud Drive&lt;/b&gt;账户</translation>
     </message>
@@ -255,8 +253,14 @@ Please click &apos;OK&apos; to continue.</source>
         <translation>删除&lt;b&gt;Cloud Drive&lt;/b&gt;账号</translation>
     </message>
     <message>
-        <location line="+136"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+136"/>
+        <location line="+125"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+125"/>
+        <source>Input hostname[:port][/path]</source>
+        <translation>请输入服务器名[:端口][/路径]</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+11"/>
         <source>Username</source>
         <translation>用户名</translation>
     </message>
@@ -267,8 +271,26 @@ Please click &apos;OK&apos; to continue.</source>
         <translation>OAuth服务器</translation>
     </message>
     <message>
-        <location line="+43"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+43"/>
+        <location line="+17"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+17"/>
+        <source>Services</source>
+        <translation>服务</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+12"/>
+        <source>Quota</source>
+        <translation>共享</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+7"/>
+        <source>Share</source>
+        <translation>分享</translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+37"/>
         <source>Success</source>
         <translation>成功</translation>
     </message>
@@ -285,8 +307,8 @@ Please click &apos;OK&apos; to continue.</source>
         <translation>初始化</translation>
     </message>
     <message>
-        <location line="-73"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="-73"/>
+        <location line="-103"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="-103"/>
         <source>Input username</source>
         <translation>请输入用户名</translation>
     </message>
@@ -424,12 +446,12 @@ Please click &apos;OK&apos; to continue.</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="+1563"/>
+        <location line="+1577"/>
         <source>Service is not implemented or host is not accessible.</source>
         <translation>服务器未生效或无法访问主机.</translation>
     </message>
     <message>
-        <location line="-1603"/>
+        <location line="-1617"/>
         <location line="+50"/>
         <source>Upload</source>
         <translation>上传</translation>
@@ -451,27 +473,38 @@ Please click &apos;OK&apos; to continue.</source>
         <translation>读取&lt;b&gt;Cloud Drive&lt;/b&gt;中的事件</translation>
     </message>
     <message>
-        <location line="+1971"/>
+        <location line="+1800"/>
+        <source>Service is not available.</source>
+        <translation>服务不可用.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Cloud file ID is not available.</source>
+        <translation>云文件ID不可用.</translation>
+    </message>
+    <message>
+        <location line="+192"/>
         <location line="+41"/>
-        <location line="+36"/>
+        <location line="+41"/>
         <location line="+52"/>
         <source>Metadata</source>
         <translation>数据</translation>
     </message>
     <message>
-        <location line="-128"/>
-        <location line="+129"/>
+        <location line="-133"/>
+        <location line="+134"/>
         <source>%1 was removed remotely.
 Link will be removed.</source>
         <translation>%1 已经远程删除
 链接将被删除.</translation>
     </message>
     <message>
-        <location line="-88"/>
-        <location line="+36"/>
+        <location line="-93"/>
+        <location line="+41"/>
         <source>%1 is cloud document format.
 It can&apos;t be downloaded.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1是云文档格式.
+它不能被下载.</translation>
     </message>
     <message>
         <location line="+211"/>
@@ -484,7 +517,7 @@ It can&apos;t be downloaded.</source>
         <translation>无法创建文件夹,已中止移动操作.</translation>
     </message>
     <message>
-        <location line="-2262"/>
+        <location line="-2295"/>
         <source>LoadCloudDriveItems</source>
         <translation>读取&lt;b&gt;Cloud Drive&lt;/b&gt;中的文件</translation>
     </message>
@@ -785,8 +818,8 @@ It can&apos;t be downloaded.</source>
         <translation type="obsolete">_复制</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+1315"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+1344"/>
+        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+1270"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+1299"/>
         <source>Not available</source>
         <translation>不可用</translation>
     </message>
@@ -800,13 +833,13 @@ It can&apos;t be downloaded.</source>
         <location line="+55"/>
         <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+55"/>
         <source>Reset image cache</source>
-        <translation type="unfinished"></translation>
+        <translation>重置图像缓存</translation>
     </message>
     <message>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+1"/>
         <source>Reset image cache on current folder?</source>
-        <translation type="unfinished"></translation>
+        <translation>重置当前文件夹中的图像缓存?</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -866,6 +899,49 @@ It can&apos;t be downloaded.</source>
         <location line="+0"/>
         <source>Cancel</source>
         <translation>取消</translation>
+    </message>
+</context>
+<context>
+    <name>CompressedFileMenu</name>
+    <message>
+        <location filename="../qml/FilesPlus/meego/CompressedFileMenu.qml" line="+21"/>
+        <location filename="../qml/FilesPlus/symbian/CompressedFileMenu.qml" line="+18"/>
+        <source>Open</source>
+        <translation>打开</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location filename="../qml/FilesPlus/symbian/CompressedFileMenu.qml" line="+6"/>
+        <source>Open (System)</source>
+        <translation>打开 (系统)</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location filename="../qml/FilesPlus/symbian/CompressedFileMenu.qml" line="+6"/>
+        <source>Extract</source>
+        <translatorcomment>uncompress</translatorcomment>
+        <translation>解压</translation>
+    </message>
+</context>
+<context>
+    <name>CompressedFolderPage</name>
+    <message>
+        <location filename="../qml/FilesPlus/meego/CompressedFolderPage.qml" line="+77"/>
+        <location filename="../qml/FilesPlus/symbian/CompressedFolderPage.qml" line="+74"/>
+        <source>Mark all</source>
+        <translation>标记全部</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <location filename="../qml/FilesPlus/symbian/CompressedFolderPage.qml" line="+0"/>
+        <source>Unmark all</source>
+        <translation>反选全部</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <location filename="../qml/FilesPlus/symbian/CompressedFolderPage.qml" line="+14"/>
+        <source>Copy marked items</source>
+        <translation>复制已选中文件</translation>
     </message>
 </context>
 <context>
@@ -995,8 +1071,8 @@ It can&apos;t be downloaded.</source>
 <context>
     <name>DrivePage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/DrivePage.qml" line="+325"/>
-        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+325"/>
+        <location filename="../qml/FilesPlus/meego/DrivePage.qml" line="+324"/>
+        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+324"/>
         <source>Monitoring</source>
         <translation>监控</translation>
     </message>
@@ -1007,15 +1083,15 @@ It can&apos;t be downloaded.</source>
         <translation>已开启监控.监控目录为 %1</translation>
     </message>
     <message>
-        <location line="-143"/>
-        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="-143"/>
+        <location line="-142"/>
+        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="-142"/>
         <source>Private drive</source>
         <translation>私人磁盘</translation>
     </message>
     <message>
-        <location line="+136"/>
+        <location line="+135"/>
         <location line="+7"/>
-        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+136"/>
+        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+135"/>
         <location line="+7"/>
         <source>You may turn off in Settings.</source>
         <translation>您可以到设置中关闭.</translation>
@@ -1027,12 +1103,13 @@ It can&apos;t be downloaded.</source>
         <translation>正在记录日志</translation>
     </message>
     <message>
-        <location line="-119"/>
-        <location line="+95"/>
-        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="-119"/>
-        <location line="+95"/>
+        <location line="-118"/>
+        <location line="+94"/>
+        <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="-118"/>
+        <location line="+94"/>
         <source>Trash</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>trash basket</translatorcomment>
+        <translation>垃圾篓</translation>
     </message>
     <message>
         <location line="-5"/>
@@ -1044,7 +1121,7 @@ It can&apos;t be downloaded.</source>
         <location line="+6"/>
         <location filename="../qml/FilesPlus/symbian/DrivePage.qml" line="+6"/>
         <source>Empty trash?</source>
-        <translation type="unfinished"></translation>
+        <translation>清空垃圾桶?</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -1067,18 +1144,34 @@ It can&apos;t be downloaded.</source>
         <source>OK</source>
         <translation>确定</translation>
     </message>
+    <message numerus="yes">
+        <location line="+155"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+99"/>
+        <source>%n item(s)</source>
+        <translation>
+            <numerusform>%n 文件</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+149"/>
-        <location line="+45"/>
-        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+94"/>
-        <location line="+45"/>
+        <location line="+1"/>
+        <location line="+49"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+1"/>
+        <location line="+49"/>
         <source>to</source>
         <translation>到</translation>
     </message>
+    <message numerus="yes">
+        <location line="-3"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-3"/>
+        <source>Extract %n item(s)</source>
+        <translation>
+            <numerusform>解压 %n 文件</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+13"/>
+        <location line="+16"/>
         <location line="+18"/>
-        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+13"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+16"/>
         <location line="+18"/>
         <source>Copy</source>
         <translation>复制</translation>
@@ -1091,9 +1184,15 @@ It can&apos;t be downloaded.</source>
         <source>Move</source>
         <translation>移动</translation>
     </message>
+    <message>
+        <location line="+2"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+2"/>
+        <source>Extract</source>
+        <translation>解压</translation>
+    </message>
     <message numerus="yes">
-        <location line="-34"/>
-        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-34"/>
+        <location line="-36"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-36"/>
         <source>Copy %n item(s)</source>
         <translation>
             <numerusform>复制 %n 文件</numerusform>
@@ -1104,62 +1203,62 @@ It can&apos;t be downloaded.</source>
         <location line="+3"/>
         <location line="+4"/>
         <location line="+6"/>
-        <location line="+5"/>
+        <location line="+6"/>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+18"/>
         <location line="+3"/>
         <location line="+4"/>
         <location line="+6"/>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Invalid action</source>
         <translation>无效的操作</translation>
     </message>
     <message>
-        <location line="-16"/>
-        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-16"/>
+        <location line="-17"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-17"/>
         <source>Migrate</source>
         <translation>移动</translation>
     </message>
     <message>
-        <location line="-212"/>
-        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-157"/>
+        <location line="-223"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-167"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="+209"/>
+        <location line="+220"/>
         <location line="+18"/>
-        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+154"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+164"/>
         <location line="+18"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="-156"/>
-        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-134"/>
+        <location line="-167"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-144"/>
         <source>Item exists, please input new name.</source>
         <translation>文件已存在,请输入新名称.</translation>
     </message>
     <message>
-        <location line="+145"/>
-        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+123"/>
+        <location line="+156"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+133"/>
         <source>Upload</source>
         <translation>上传</translation>
     </message>
     <message>
-        <location line="-129"/>
-        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-107"/>
+        <location line="-140"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-117"/>
         <source>Overwrite existing item</source>
         <translation>覆盖已存在的文件</translation>
     </message>
     <message>
-        <location line="+135"/>
-        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+113"/>
+        <location line="+146"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+123"/>
         <source>Download</source>
         <translation>下载</translation>
     </message>
     <message numerus="yes">
-        <location line="-31"/>
-        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-31"/>
+        <location line="-32"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-32"/>
         <source>Delete %n item(s)</source>
         <translation>
             <numerusform>删除 %n 文件</numerusform>
@@ -1182,22 +1281,22 @@ It can&apos;t be downloaded.</source>
         </translation>
     </message>
     <message>
-        <location line="-56"/>
-        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-56"/>
+        <location line="-65"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-65"/>
         <source>Multiple actions</source>
         <translation>多个操作</translation>
     </message>
     <message numerus="yes">
-        <location line="+60"/>
-        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+60"/>
+        <location line="+70"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+70"/>
         <source>Move %n item(s)</source>
         <translation>
             <numerusform>移动 %n 文件</numerusform>
         </translation>
     </message>
     <message numerus="yes">
-        <location line="-3"/>
-        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-3"/>
+        <location line="-4"/>
+        <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="-4"/>
         <source>Migrate %n item(s)</source>
         <translation>
             <numerusform>移动 %n 文件</numerusform>
@@ -1266,19 +1365,19 @@ It can&apos;t be downloaded.</source>
         <location line="+111"/>
         <location filename="../qml/FilesPlus/symbian/FilePropertiesDialog.qml" line="+111"/>
         <source>Attributes</source>
-        <translation type="unfinished"></translation>
+        <translation>属性</translation>
     </message>
     <message>
         <location line="+10"/>
         <location filename="../qml/FilesPlus/symbian/FilePropertiesDialog.qml" line="+10"/>
         <source>Hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>隐</translation>
     </message>
     <message>
         <location line="+12"/>
         <location filename="../qml/FilesPlus/symbian/FilePropertiesDialog.qml" line="+12"/>
         <source>Read Only</source>
-        <translation type="unfinished"></translation>
+        <translation>只读</translation>
     </message>
     <message numerus="yes">
         <location line="+31"/>
@@ -1292,8 +1391,8 @@ It can&apos;t be downloaded.</source>
 <context>
     <name>FilesPlusInfo</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/FilesPlusInfo.qml" line="+47"/>
-        <location filename="../qml/FilesPlus/symbian/FilesPlusInfo.qml" line="+47"/>
+        <location filename="../qml/FilesPlus/meego/FilesPlusInfo.qml" line="+99"/>
+        <location filename="../qml/FilesPlus/symbian/FilesPlusInfo.qml" line="+99"/>
         <source>FilesPlus provides extended functions beyond file manager.
    + Print with Google Cloud Print.
    + Sync with multiple cloud storages.
@@ -1311,22 +1410,22 @@ It can&apos;t be downloaded.</source>
 <context>
     <name>FolderPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/FolderPage.qml" line="+1536"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1593"/>
+        <location filename="../qml/FilesPlus/meego/FolderPage.qml" line="+1599"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1657"/>
         <source>Sync marked items</source>
         <translation>同步已选中文件</translation>
     </message>
     <message>
-        <location line="-1090"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1131"/>
+        <location line="-1094"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1136"/>
         <source>FilesPlus syncs your files via cloud storage service.
 You will be redirected to cloud account page.</source>
         <translation>&lt;b&gt;FilesPlus&lt;b&gt;通过&lt;b&gt;云存储&lt;/b&gt;同步您的文件
 将转到&lt;b&gt;云存储账号&lt;/b&gt;页面.</translation>
     </message>
     <message>
-        <location line="+1309"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1350"/>
+        <location line="+1313"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="+1355"/>
         <source>Schedule sync %1</source>
         <translation>计划同步 %1</translation>
     </message>
@@ -1343,18 +1442,18 @@ You will be redirected to cloud account page.</source>
         <translation>请选择已经连接或不连接目标云存储的文件.</translation>
     </message>
     <message>
-        <location line="-1493"/>
-        <location line="+792"/>
+        <location line="-1554"/>
+        <location line="+845"/>
         <location line="+61"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1538"/>
-        <location line="+833"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-1600"/>
+        <location line="+886"/>
         <location line="+61"/>
         <source>%1 is loaded.</source>
         <translation>已加载 %1.</translation>
     </message>
     <message>
-        <location line="-451"/>
-        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-488"/>
+        <location line="-447"/>
+        <location filename="../qml/FilesPlus/symbian/FolderPage.qml" line="-484"/>
         <source>Sync with Cloud</source>
         <translation>使用云同步</translation>
     </message>
@@ -1378,23 +1477,23 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>FolderSizeItemListModel</name>
     <message>
-        <location filename="../foldersizeitemlistmodel.cpp" line="+986"/>
+        <location filename="../foldersizeitemlistmodel.cpp" line="+967"/>
         <location line="+9"/>
         <source>_Copy</source>
         <translation>_复制</translation>
     </message>
     <message>
-        <location line="-239"/>
+        <location line="-211"/>
         <source>Rename %1 to %2 done.</source>
         <translation>%1 已重命名为 %2.</translation>
     </message>
     <message>
-        <location line="+241"/>
+        <location line="+213"/>
         <source>_Copy%1</source>
         <translation>_复制 %1</translation>
     </message>
     <message>
-        <location line="-307"/>
+        <location line="-279"/>
         <location line="+14"/>
         <location line="+25"/>
         <source>Create %1 failed.</source>
@@ -1434,25 +1533,25 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>FolderSizeModelThread</name>
     <message>
-        <location filename="../foldersizemodelthread.cpp" line="+828"/>
+        <location filename="../foldersizemodelthread.cpp" line="+843"/>
         <source>Deleting %1 is done.</source>
         <translation>已成功删除 %1.</translation>
     </message>
     <message>
-        <location line="+604"/>
+        <location line="+624"/>
         <source>Deleting %1 is aborted.</source>
         <translation>%1 删除失败.</translation>
     </message>
     <message>
-        <location line="-873"/>
+        <location line="-903"/>
         <location line="+75"/>
         <location line="+121"/>
-        <location line="+687"/>
+        <location line="+717"/>
         <source>Move %1 to %2 is done successfully.</source>
         <translation>%1 已成功移动到 %2.</translation>
     </message>
     <message>
-        <location line="-808"/>
+        <location line="-838"/>
         <location line="+121"/>
         <source>Copy %1 to %2 is done successfully.</source>
         <translation>%1 已成功复制到 %2.</translation>
@@ -1471,23 +1570,34 @@ And present in Pie view for easy understanding at glance.</source>
         <translation>%1 复制到 %2 失败.</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+75"/>
         <source>Deleting %1 is failed.</source>
         <translation>%1 删除失败.</translation>
     </message>
     <message>
-        <location line="-133"/>
+        <location line="+650"/>
+        <source>Empty %1 is done successfully.</source>
+        <translation>已成功清空 %1.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Empty %1 is failed.</source>
+        <translation>%1 清空失败.</translation>
+    </message>
+    <message>
+        <location line="-796"/>
         <source>Both source/target path can&apos;t be the same file.</source>
         <translation>源和目标路径不能为相同文件.</translation>
     </message>
     <message>
         <location line="-52"/>
         <location line="+120"/>
+        <location line="+716"/>
         <source>Move %1 to %2 is failed.</source>
         <translation>%1 移动到 %2失败.</translation>
     </message>
     <message>
-        <location line="-24"/>
+        <location line="-740"/>
         <source>Both source %1 and target %2 can&apos;t be read/written.</source>
         <translation>无法读取或写入源 %1 和目标路径 %2.</translation>
     </message>
@@ -1558,23 +1668,24 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>GCDClient</name>
     <message>
-        <location filename="../gcdclient.cpp" line="+584"/>
-        <location line="+280"/>
+        <location filename="../gcdclient.cpp" line="+561"/>
+        <location line="+286"/>
         <source>File Get</source>
-        <translation type="unfinished">下载文件</translation>
+        <translation>下载文件</translation>
     </message>
     <message>
-        <location line="-279"/>
-        <location line="+280"/>
+        <location line="-285"/>
+        <location line="+286"/>
         <source>%1 is cloud document format.
 It can&apos;t be downloaded.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1是云文档格式.
+它不能被下载.</translation>
     </message>
 </context>
 <context>
     <name>GCPClient</name>
     <message>
-        <location filename="../gcpclient.cpp" line="+343"/>
+        <location filename="../gcpclient.cpp" line="+338"/>
         <source>Refresh token is missing</source>
         <translation>授权访问信息已丢失</translation>
     </message>
@@ -1806,7 +1917,7 @@ It can&apos;t be downloaded.</source>
 <context>
     <name>PieChart</name>
     <message numerus="yes">
-        <location filename="../piechart.cpp" line="+321"/>
+        <location filename="../piechart.cpp" line="+323"/>
         <source>%n dir(s)</source>
         <translation>
             <numerusform>%n 文件夹</numerusform>
@@ -1927,52 +2038,64 @@ title %2 ?</source>
 <context>
     <name>SettingPage</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+668"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+688"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+688"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+708"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location line="-320"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-327"/>
+        <location line="-322"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-329"/>
         <source>Reset cloud print</source>
         <translation>重置&lt;b&gt;Cloud Print&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="+15"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+15"/>
+        <location line="+16"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+16"/>
         <source>Theme</source>
         <translation>主题风格</translation>
     </message>
     <message>
-        <location line="-11"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-11"/>
+        <location line="-12"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-12"/>
         <source>Show accounts</source>
         <translation>显示账号</translation>
     </message>
     <message>
-        <location line="+9"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+9"/>
+        <location line="+10"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+10"/>
         <source>FolderPie feature</source>
         <translation>饼图功能设定</translation>
     </message>
     <message>
-        <location line="+21"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+24"/>
+        <location line="+5"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+5"/>
+        <source>Compact grid item</source>
+        <translation>更紧凑的网格视图</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+19"/>
         <source>Show hidden files on local drive</source>
-        <translation type="unfinished"></translation>
+        <translation>本地驱动器上显示隐藏文件</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <source>Delete read-only files</source>
+        <translation>删除只读文件</translation>
     </message>
     <message>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Show hidden files on FTP</source>
-        <translation type="unfinished"></translation>
+        <translation>FTP器上显示隐藏文件</translation>
     </message>
     <message>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Show hidden files on WebDAV</source>
-        <translation type="unfinished"></translation>
+        <translation>WebDAV器上显示隐藏文件</translation>
     </message>
     <message>
         <location line="+36"/>
@@ -1981,21 +2104,21 @@ title %2 ?</source>
         <translation>监控</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-53"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-54"/>
         <source>Turn bluetooth on automatically</source>
         <translation>自动调用蓝牙</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="-365"/>
-        <location line="+316"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-327"/>
-        <location line="+330"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="-385"/>
+        <location line="+335"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-346"/>
+        <location line="+349"/>
         <source>Logging (Debug)</source>
         <translation>日志(调试)</translation>
     </message>
     <message>
-        <location line="-22"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-24"/>
+        <location line="-23"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-25"/>
         <source>Show cloud drive jobs</source>
         <translation>显示&lt;b&gt;Cloud Drive&lt;/b&gt;当前事件</translation>
     </message>
@@ -2012,44 +2135,44 @@ title %2 ?</source>
         <translation>打印网址</translation>
     </message>
     <message>
-        <location line="+15"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+15"/>
+        <location line="+16"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+16"/>
         <source>Reset current folder cache</source>
         <translation>重置当前文件夹缓存</translation>
     </message>
     <message>
-        <location line="+59"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+62"/>
+        <location line="+60"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+63"/>
         <source>Monitoring is enabled. Log file is </source>
         <translation>已启用监控,日志存储于</translation>
     </message>
     <message>
-        <location line="-57"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-60"/>
+        <location line="-58"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-61"/>
         <source>Popup interval</source>
         <translation>弹出间隔</translation>
     </message>
     <message>
-        <location line="+305"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+312"/>
+        <location line="+306"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+313"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="-293"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-298"/>
+        <location line="-294"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-299"/>
         <source>Show system drive on drive page</source>
         <translation>主界面显示系统文件目录</translation>
     </message>
     <message>
-        <location line="+291"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+296"/>
+        <location line="+292"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+297"/>
         <source>Languages</source>
         <translation>语言</translation>
     </message>
     <message>
-        <location line="-288"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-292"/>
+        <location line="-289"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-293"/>
         <source>Cache local images</source>
         <translation>缓存本地图片</translation>
     </message>
@@ -2060,14 +2183,14 @@ title %2 ?</source>
         <translation>&lt;b&gt;Cloud Drive&lt;/b&gt;中的显示缓存</translation>
     </message>
     <message>
-        <location line="-15"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-15"/>
+        <location line="-16"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-16"/>
         <source>Show cloud storage on drive page</source>
         <translation>主界面显示&lt;b&gt;Cloud Storage&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="+18"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+20"/>
+        <location line="+19"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+21"/>
         <source>Dropbox full access</source>
         <translation>启用Dropbox全功能权限</translation>
     </message>
@@ -2083,14 +2206,14 @@ title %2 ?</source>
         <translation>自动关闭蓝牙</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="-32"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-25"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="-33"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-26"/>
         <source>Show cloud print jobs</source>
         <translation>显示&lt;b&gt;Cloud Print&lt;/b&gt;事件</translation>
     </message>
     <message>
-        <location line="+263"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+270"/>
+        <location line="+265"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+272"/>
         <source>Russian</source>
         <translation>俄语</translation>
     </message>
@@ -2101,14 +2224,14 @@ title %2 ?</source>
         <translation>中文</translation>
     </message>
     <message>
-        <location line="-245"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-250"/>
+        <location line="-246"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-251"/>
         <source>Personalization</source>
         <translation>个性化设置</translation>
     </message>
     <message>
-        <location line="-318"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-332"/>
+        <location line="-337"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-351"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -2116,38 +2239,38 @@ Please confirm.</source>
         <translation>更改日志记录功能需要重启软件,退出请按下面&apos;确定&apos;按钮.</translation>
     </message>
     <message>
-        <location line="+297"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+309"/>
+        <location line="+315"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+327"/>
         <source>Auto-sync after refresh</source>
         <translation>刷新后自动同步</translation>
     </message>
     <message>
         <location line="+5"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+5"/>
+        <source>Set modified date to uploaded file  (GoogleDrive)</source>
+        <translation>设置上传文件的修改日期  (GoogleDrive)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Schedule sync only on charging</source>
-        <translation type="unfinished"></translation>
+        <translation>计划同步只在有电池充电</translation>
     </message>
     <message>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Schedule sync only if battery is OK (&gt;40%)</source>
-        <translation type="unfinished"></translation>
+        <translation>计划同步只有如果电池是OK (&gt;40%)</translation>
     </message>
     <message>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Schedule sync only on WiFi</source>
-        <translation type="unfinished"></translation>
+        <translation>计划同步只带WiFi</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <source>Grid view columns 3/4</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
+        <location line="+10"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+12"/>
         <source>Show status bar</source>
         <translation>显示状态栏</translation>
     </message>
@@ -2155,23 +2278,23 @@ Please confirm.</source>
         <location line="+7"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+8"/>
         <source>Show trash on drive page</source>
-        <translation type="unfinished"></translation>
+        <translation>主界面显示垃圾篓</translation>
     </message>
     <message>
         <location line="+3"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+3"/>
         <source>Queue local image caching</source>
-        <translation type="unfinished"></translation>
+        <translation>排队本地图像缓存</translation>
     </message>
     <message>
         <location line="+1"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Queue cloud image caching</source>
-        <translation type="unfinished"></translation>
+        <translation>排队远程图像缓存</translation>
     </message>
     <message>
-        <location line="-26"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-29"/>
+        <location line="-27"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-30"/>
         <source>Sync to cloud storage root</source>
         <translation>同步到&lt;b&gt;Cloud Storage Root&lt;/b&gt;</translation>
     </message>
@@ -2186,20 +2309,21 @@ Please confirm.</source>
         <translation type="obsolete">显示隐藏文件</translation>
     </message>
     <message>
-        <location line="+29"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+32"/>
+        <location line="+31"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+34"/>
         <source>Delete by moving to trash</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>Use trash basket</translatorcomment>
+        <translation>使用垃圾篓</translation>
     </message>
     <message>
-        <location line="-28"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-31"/>
+        <location line="-30"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-33"/>
         <source>Dirty before sync (GoogleDrive)</source>
-        <translation type="unfinished"></translation>
+        <translation>更改文件之前同步 (GoogleDrive)</translation>
     </message>
     <message numerus="yes">
-        <location line="+214"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+221"/>
+        <location line="+216"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+223"/>
         <source>%n sec.</source>
         <translation>
             <numerusform>%n 秒.</numerusform>
@@ -2212,14 +2336,14 @@ Please confirm.</source>
         <translation>英语</translation>
     </message>
     <message>
-        <location line="-550"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-569"/>
+        <location line="-570"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-589"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
     <message>
-        <location line="+326"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+340"/>
+        <location line="+345"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+359"/>
         <source>Developer</source>
         <translation>开发者</translation>
     </message>
@@ -2238,17 +2362,17 @@ Please confirm.</source>
     <message>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+11"/>
         <source>Show private drive on drive page</source>
-        <translation type="unfinished">主界面显示私人空间</translation>
+        <translation>主界面显示私人空间</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="-17"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-28"/>
+        <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="-18"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-29"/>
         <source>Sync all connected items</source>
         <translation>同步所有已连接的文件</translation>
     </message>
     <message>
-        <location line="+22"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+24"/>
+        <location line="+23"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+25"/>
         <source>Monitoring (RAM,CPU)</source>
         <translation>监控(RAM CPU)</translation>
     </message>
@@ -2292,21 +2416,21 @@ Please confirm.</source>
         <location filename="../qml/FilesPlus/meego/TextViewPage.qml" line="+17"/>
         <location filename="../qml/FilesPlus/symbian/TextViewPage.qml" line="+17"/>
         <source>Text Editor</source>
-        <translation type="unfinished"></translation>
+        <translation>文本编辑器</translation>
     </message>
     <message>
         <location line="+0"/>
         <location filename="../qml/FilesPlus/symbian/TextViewPage.qml" line="+0"/>
         <source>Can not write to file.</source>
-        <translation type="unfinished"></translation>
+        <translation>无法写入文件.</translation>
     </message>
     <message>
         <location line="+57"/>
         <location line="+8"/>
         <location filename="../qml/FilesPlus/symbian/TextViewPage.qml" line="+58"/>
         <location line="+8"/>
-        <source>format</source>
-        <translation type="unfinished"></translation>
+        <source>%1 format</source>
+        <translation>%1 格式</translation>
     </message>
 </context>
 <context>
@@ -2378,32 +2502,32 @@ Please confirm.</source>
 <context>
     <name>main</name>
     <message>
-        <location filename="../qml/FilesPlus/meego/main.qml" line="+262"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+266"/>
+        <location filename="../qml/FilesPlus/meego/main.qml" line="+263"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+267"/>
         <source>to</source>
         <translation>到</translation>
     </message>
     <message>
         <location line="-178"/>
-        <location line="+1603"/>
+        <location line="+1631"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="-178"/>
-        <location line="+1745"/>
+        <location line="+1773"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location line="-1601"/>
-        <location line="+1637"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1743"/>
-        <location line="+1779"/>
+        <location line="-1629"/>
+        <location line="+1665"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1771"/>
+        <location line="+1807"/>
         <source>Move</source>
         <translation>移动</translation>
     </message>
     <message>
-        <location line="-1633"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1775"/>
+        <location line="-1661"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1803"/>
         <source>Trash</source>
-        <translation type="unfinished"></translation>
+        <translation>垃圾篓</translation>
     </message>
     <message>
         <location line="+429"/>
@@ -2412,12 +2536,12 @@ Please confirm.</source>
         <translation>退出</translation>
     </message>
     <message>
-        <location line="+737"/>
+        <location line="+765"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
         <location line="+3"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+879"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+907"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
@@ -2444,23 +2568,23 @@ Please confirm.</source>
         <translation>未找到PIN码.</translation>
     </message>
     <message>
-        <location line="-447"/>
+        <location line="-475"/>
         <location line="+17"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-589"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-617"/>
         <location line="+17"/>
         <source>Cloud data conversion</source>
         <translation>数据云转换</translation>
     </message>
     <message>
-        <location line="+1132"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1274"/>
+        <location line="+1160"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1302"/>
         <source>Delta</source>
         <translation>Delta</translation>
     </message>
     <message>
-        <location line="-901"/>
+        <location line="-899"/>
         <location line="+38"/>
-        <location line="+161"/>
+        <location line="+159"/>
         <location line="+170"/>
         <location line="+36"/>
         <location line="+19"/>
@@ -2480,9 +2604,9 @@ Please confirm.</source>
         <location line="+23"/>
         <location line="+33"/>
         <location line="+3"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-901"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-899"/>
         <location line="+38"/>
-        <location line="+161"/>
+        <location line="+159"/>
         <location line="+170"/>
         <location line="+36"/>
         <location line="+19"/>
@@ -2512,12 +2636,12 @@ Please confirm.</source>
         <translation>分享</translation>
     </message>
     <message>
-        <location line="-1513"/>
+        <location line="-1541"/>
         <location line="+72"/>
         <location line="+52"/>
         <location line="+8"/>
         <location line="+68"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1655"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1683"/>
         <location line="+72"/>
         <location line="+52"/>
         <location line="+8"/>
@@ -2530,23 +2654,23 @@ Please confirm.</source>
         <translation type="obsolete">无法创建文件夹,已中止移动操作.</translation>
     </message>
     <message>
-        <location line="+365"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+507"/>
+        <location line="+395"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+537"/>
         <source>Can&apos;t print %1
 File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
         <translation>无法打印 %1 ,不支持此类型文件.只支持jpeg,png,text和pdf格式.</translation>
     </message>
     <message numerus="yes">
-        <location line="-325"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-467"/>
+        <location line="-355"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-497"/>
         <source>There are %n running job(s).</source>
         <translation>
             <numerusform>当前正在执行 %n 个事件.</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+819"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+961"/>
+        <location line="+847"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+989"/>
         <source>Account Info</source>
         <translation>账号信息</translation>
     </message>
@@ -2561,32 +2685,32 @@ File type is not supported. Only JPEG, PNG, Text and PDF are supported.</source>
         <translation>授权访问</translation>
     </message>
     <message numerus="yes">
-        <location line="-799"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-941"/>
+        <location line="-827"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-969"/>
         <source>There are %n queued job(s).</source>
         <translation>
             <numerusform>当前队列中有 %n 个事件.</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+1013"/>
+        <location line="+1041"/>
         <location line="+9"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1155"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1183"/>
         <location line="+9"/>
         <source>Please proceed with sync.</source>
         <translation>请继续使用同步操作.</translation>
     </message>
     <message>
-        <location line="-688"/>
+        <location line="-686"/>
         <location line="+20"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-688"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-686"/>
         <location line="+20"/>
         <source>Print with CloudPrint</source>
         <translation>使用&lt;b&gt;Cloud Print&lt;/b&gt;打印</translation>
     </message>
     <message>
-        <location line="+500"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+500"/>
+        <location line="+498"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+498"/>
         <source>Account Quota</source>
         <translation></translation>
     </message>
@@ -2598,8 +2722,8 @@ Please proceed your sync action.</source>
         <translation>已授权用户&lt;b&gt;Cloud Drive&lt;/b&gt;权限,请继续同步操作.</translation>
     </message>
     <message>
-        <location line="-709"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-851"/>
+        <location line="-737"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-879"/>
         <source>Abort file action ?</source>
         <translation>中断文件操作?</translation>
     </message>
@@ -2610,29 +2734,29 @@ Please proceed your sync action.</source>
         <translation>首次加载中</translation>
     </message>
     <message>
-        <location line="+366"/>
+        <location line="+396"/>
         <location line="+5"/>
-        <location line="+393"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+508"/>
+        <location line="+391"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+538"/>
         <location line="+5"/>
-        <location line="+393"/>
+        <location line="+391"/>
         <source>Refresh Token</source>
         <translation>刷新授权</translation>
     </message>
     <message>
-        <location line="-686"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-828"/>
+        <location line="-714"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-856"/>
         <source>Change to have full access to your Dropbox?</source>
         <translation>获取访问您的Dropbox全功能权限?</translation>
     </message>
     <message>
-        <location line="+1656"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1896"/>
+        <location line="+1680"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1924"/>
         <source>Loading</source>
         <translation>正在加载中</translation>
     </message>
     <message>
-        <location line="-439"/>
+        <location line="-435"/>
         <location line="+33"/>
         <location line="+3"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="-537"/>
@@ -2648,8 +2772,8 @@ Please proceed your sync action.</source>
         <translation>正在加载,请稍后.</translation>
     </message>
     <message>
-        <location line="-1671"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1915"/>
+        <location line="-1699"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1943"/>
         <source>Thank you for download FilesPlus.
 This is first time running, FilesPlus needs to load information from your drive.
 
@@ -2665,8 +2789,8 @@ Please click OK to continue.</source>
         <translation>Dropbox程序授权</translation>
     </message>
     <message>
-        <location line="+1469"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1611"/>
+        <location line="+1497"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1639"/>
         <source>Add bookmark</source>
         <translation>添加书签</translation>
     </message>
@@ -2688,23 +2812,23 @@ Please click OK to continue.</source>
         <translation>浏览</translation>
     </message>
     <message>
-        <location line="-996"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1138"/>
+        <location line="-1024"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1166"/>
         <source>Create</source>
         <translation>创建文件夹</translation>
     </message>
     <message>
         <location line="-319"/>
-        <location line="+1669"/>
+        <location line="+1697"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="-319"/>
-        <location line="+1811"/>
+        <location line="+1839"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="-902"/>
+        <location line="-900"/>
         <location line="+20"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-902"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-900"/>
         <location line="+20"/>
         <source>FilesPlus prints via Google CloudPrint service.
 Please enable printer on your desktop with Chrome or with CloudPrint-ready printer.
@@ -2712,9 +2836,9 @@ You will be redirected to authorization page.</source>
         <translation>&lt;b&gt;FilesPlus&lt;/b&gt;使用的是&lt;b&gt;Google Cloud Print 服务&lt;/b&gt;.&lt;br&gt;请启用桌面Chrome或&lt;b&gt; Cloud Print&lt;/b&gt;连接打印&lt;br&gt;将会转到授权页.</translation>
     </message>
     <message>
-        <location line="-247"/>
+        <location line="-277"/>
         <location line="+44"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-389"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-419"/>
         <location line="+44"/>
         <source>FilesPlus needs to convert its database. It will not effect your data.</source>
         <translation>FilesPlus 需要转换数据库,此操作不会影响您的数据.</translation>
@@ -2736,7 +2860,7 @@ You will be redirected to authorization page.</source>
         <translation>重命名</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1981"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+2009"/>
         <source>Transfering requires Bluetooth.
 
 Please click &apos;OK&apos; to turn Bluetooth on.</source>
@@ -2745,20 +2869,20 @@ Please click &apos;OK&apos; to turn Bluetooth on.</source>
 请按&apos;确定&apos;开启蓝牙.</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/meego/main.qml" line="+1376"/>
+        <location filename="../qml/FilesPlus/meego/main.qml" line="+1404"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="-22"/>
         <source>Please download file with below link.</source>
         <translation>请使用下面链接下载文件.</translation>
     </message>
     <message>
-        <location line="-1164"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1747"/>
+        <location line="-1192"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1775"/>
         <source>Change to have app access to your Dropbox?</source>
         <translation>授权程序的Dropbox全功能访问权限?</translation>
     </message>
     <message>
-        <location line="+220"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+362"/>
+        <location line="+250"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+392"/>
         <source>Print Error</source>
         <translation>打印错误</translation>
     </message>
@@ -2770,16 +2894,16 @@ Link will be removed.</source>
     </message>
     <message>
         <location line="+67"/>
-        <location line="+399"/>
+        <location line="+397"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+67"/>
-        <location line="+399"/>
+        <location line="+397"/>
         <source>Token was refreshed.</source>
         <translation>授权信息已刷新.</translation>
     </message>
     <message>
-        <location line="-1027"/>
+        <location line="-1055"/>
         <location line="+72"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1169"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1197"/>
         <location line="+72"/>
         <source>failed</source>
         <translation>已失败</translation>
@@ -2813,29 +2937,29 @@ Please click OK to continue.</source>
 请按&apos;确定&apos;继续.</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1821"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1849"/>
         <location line="+13"/>
         <source>Bluetooth transfering</source>
         <translation>正在通过蓝牙传送</translation>
     </message>
     <message>
-        <location line="-1559"/>
+        <location line="-1587"/>
         <source>Other recipient</source>
         <translation>其他接收人</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/meego/main.qml" line="+402"/>
-        <location line="+1206"/>
+        <location filename="../qml/FilesPlus/meego/main.qml" line="+432"/>
+        <location line="+1204"/>
         <location line="+8"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+269"/>
-        <location line="+1206"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+299"/>
+        <location line="+1204"/>
         <location line="+8"/>
         <source>Printing</source>
         <translation>正在打印</translation>
     </message>
     <message>
-        <location line="-1527"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1669"/>
+        <location line="-1555"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1697"/>
         <source>You have changed Dropbox access method.
 Please re-authorize your accounts before proceed your actions.</source>
         <translation>您已经修改了&lt;b&gt;Dropbox&lt;/b&gt;授权模式
@@ -2857,19 +2981,19 @@ Please re-authorize your accounts before proceed your actions.</source>
     </message>
     <message>
         <location line="-72"/>
-        <location line="+505"/>
-        <location line="+950"/>
+        <location line="+535"/>
+        <location line="+948"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="-72"/>
         <location line="+337"/>
         <location line="+83"/>
-        <location line="+227"/>
-        <location line="+950"/>
+        <location line="+257"/>
+        <location line="+948"/>
         <source>%1 is loaded.</source>
         <translation>%1 已上传.</translation>
     </message>
     <message>
-        <location line="-1367"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1509"/>
+        <location line="-1395"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1537"/>
         <source>Rollback changes</source>
         <translation>撤销更改</translation>
     </message>
@@ -2884,22 +3008,22 @@ Please re-authorize your accounts before proceed your actions.</source>
         <translation>正在删除</translation>
     </message>
     <message>
-        <location line="+780"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+922"/>
+        <location line="+808"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+950"/>
         <source>Metadata</source>
         <translation>数据</translation>
     </message>
     <message>
-        <location line="-934"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1076"/>
+        <location line="-962"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1104"/>
         <source>Cancel Cloud Drive Jobs</source>
         <translation>取消&lt;b&gt;Cloud Drive&lt;/b&gt;中的事件</translation>
     </message>
     <message>
-        <location line="+965"/>
+        <location line="+993"/>
         <location line="+9"/>
         <location line="+5"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1107"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1135"/>
         <location line="+9"/>
         <location line="+5"/>
         <source>Create Folder</source>
@@ -2918,8 +3042,8 @@ Please re-authorize your accounts before proceed your actions.</source>
         <translation>分享 %1 的文件</translation>
     </message>
     <message numerus="yes">
-        <location line="-1219"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1802"/>
+        <location line="-1247"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1830"/>
         <source>Cancel %n job(s) ?</source>
         <translation>
             <numerusform>取消 %n 事件?</numerusform>
