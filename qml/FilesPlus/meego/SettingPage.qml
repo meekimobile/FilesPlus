@@ -1,6 +1,5 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
-import com.nokia.extras 1.0
 
 Page {
     id: settingPage
@@ -682,71 +681,69 @@ Page {
         }
     }
 
-    TumblerDialog {
+    SelectionDialog {
         id: languageSelector
         titleText: appInfo.emptyStr+qsTr("Languages")
-        acceptButtonText: appInfo.emptyStr+qsTr("OK")
-        rejectButtonText: appInfo.emptyStr+qsTr("Cancel")
-        columns: [ languageColumn ]
+        model: languageModel
         onStatusChanged: {
             if (status == DialogStatus.Opening) {
-                columns[0].selectedIndex = languageModel.getIndexByLocale( (appInfo.getLocale() !== "") ? appInfo.getLocale() : appInfo.getSystemLocale() );
+                selectedIndex = languageModel.getIndexByLocale( (appInfo.getLocale() !== "") ? appInfo.getLocale() : appInfo.getSystemLocale() );
+                if (selectedIndex != -1) {
+                    var listView = content[0].children[0]; // For meego only.
+                    listView.positionViewAtIndex(selectedIndex, ListView.Contain);
+                }
             }
         }
 
         onAccepted: {
-            var index = columns[0].selectedIndex;
-            var selectedLocale = columns[0].items.get(index).locale;
+            var index = selectedIndex;
+            var selectedLocale = model.get(index).locale;
             console.debug("languageSelector onAccepted locale " + selectedLocale);
             appInfo.setLocale(selectedLocale);
         }
     }
 
-    TumblerColumn {
-        id: languageColumn
-        selectedIndex: 0
-        items: ListModel {
-            id: languageModel
-            ListElement { locale: "en"; value: "English" }
-            ListElement { locale: "ru"; value: "Русский" }
-            ListElement { locale: "ru_2"; value: "Русский (2)" }
-            ListElement { locale: "zh"; value: "中文(中国大陆)" }
-            ListElement { locale: "de"; value: "Deutsch" }
-            ListElement { locale: "it"; value: "Italiano" }
+    ListModel {
+        id: languageModel
+        ListElement { locale: "de"; name: "Deutsch" }
+        ListElement { locale: "en"; name: "English" }
+        ListElement { locale: "it"; name: "Italiano" }
+        ListElement { locale: "ru"; name: "Русский" }
+        ListElement { locale: "ru_2"; name: "Русский (2)" }
+        ListElement { locale: "zh"; name: "中文(中国大陆)" }
 
-            function getIndexByLocale(locale) {
-                // Find exact match language_country.
-                for (var i=0; i<languageModel.count; i++) {
-                    var item = languageModel.get(i);
-                    if (locale === item.locale) {
-                        return i;
-                    }
+        function getIndexByLocale(locale) {
+            // Find exact match language_country.
+            for (var i=0; i<languageModel.count; i++) {
+                var item = languageModel.get(i);
+                if (locale === item.locale) {
+                    return i;
                 }
-
-                // Find language only match.
-                for (i=0; i<languageModel.count; i++) {
-                    item = languageModel.get(i);
-                    if (locale.indexOf(item.locale) === 0) {
-                        return i;
-                    }
-                }
-
-                return -1;
             }
 
-            function getLanguage(locale, defaultLocale) {
-                var i = getIndexByLocale(locale)
+            // Find language only match.
+            for (i=0; i<languageModel.count; i++) {
+                item = languageModel.get(i);
+                if (locale.indexOf(item.locale) === 0) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        function getLanguage(locale, defaultLocale) {
+            var i = getIndexByLocale(locale)
+            if (i > -1) {
+                return languageModel.get(i).name;
+            } else {
+                i = getIndexByLocale(defaultLocale);
                 if (i > -1) {
-                    return languageModel.get(i).value;
-                } else {
-                    i = getIndexByLocale(defaultLocale);
-                    if (i > -1) {
-                        return languageModel.get(i).value;
-                    }
+                    return languageModel.get(i).name;
                 }
-
-                return "Locale not found";
             }
+
+            return "Locale not found";
         }
     }
 
