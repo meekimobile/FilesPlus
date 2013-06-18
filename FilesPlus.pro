@@ -130,7 +130,8 @@ SOURCES += main.cpp \
     clouddrivemodelitem.cpp \
     compressedfoldermodel.cpp \
     compressedfoldermodelworker.cpp \
-    compressedfoldermodelitem.cpp
+    compressedfoldermodelitem.cpp \
+    boxclient.cpp
 
 symbian {
 SOURCES += \
@@ -179,7 +180,8 @@ HEADERS += \
     clouddrivemodelitem.h \
     compressedfoldermodel.h \
     compressedfoldermodelworker.h \
-    compressedfoldermodelitem.h
+    compressedfoldermodelitem.h \
+    boxclient.h
 
 symbian {
 HEADERS += \

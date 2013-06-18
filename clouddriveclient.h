@@ -5,6 +5,7 @@
 #include <QtNetwork>
 #include <QScriptEngine>
 #include "tokenpair.h"
+#include "contenttypehelper.h"
 
 class CloudDriveClient : public QObject
 {
@@ -135,6 +136,7 @@ protected:
     QString createQueryString(QMap<QString, QString> sortMap);
     QString removeDoubleSlash(QString remoteFilePath);
     QString getFileType(QString localPath);
+    QString getContentType(QString fileName);
 
     virtual QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
     QString stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj);

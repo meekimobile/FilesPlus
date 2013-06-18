@@ -1,13 +1,12 @@
-#ifndef GCDClient_H
-#define GCDClient_H
+#ifndef BOXCLIENT_H
+#define BOXCLIENT_H
 
 #include "clouddriveclient.h"
 #include "tokenpair.h"
 #include "qnetworkreplywrapper.h"
 #include "sleeper.h"
-#include <QScriptEngine>
 
-class GCDClient : public CloudDriveClient
+class BoxClient : public CloudDriveClient
 {
     Q_OBJECT
 public:
@@ -16,8 +15,6 @@ public:
 
     static const QString RemoteRoot;
 
-    static const QString authorizationScope;
-
     static const QString authorizeURI;
     static const QString accessTokenURI;
     static const QString accountInfoURI;
@@ -25,22 +22,20 @@ public:
 
     static const QString fileGetURI;
     static const QString filePutURI;
+    static const QString filePutRevURI;
     static const QString filesURI;
     static const QString propertyURI;
     static const QString createFolderURI;
     static const QString copyFileURI;
     static const QString deleteFileURI;
-    static const QString patchFileURI;
     static const QString sharesURI;
-    static const QString trashFileURI;
-    static const QString startResumableUploadURI;
-    static const QString resumeUploadURI;
-    static const QString deltaURI;
+    static const QString patchURI;
+    static const QString thumbnailURI;
 
     static const qint64 DefaultChunkSize;
 
-    explicit GCDClient(QObject *parent = 0);
-    ~GCDClient();
+    explicit BoxClient(QObject *parent = 0);
+    ~BoxClient();
 
     void authorize(QString nonce, QString hostname);
     void accessToken(QString nonce, QString pin);
@@ -59,31 +54,18 @@ public:
 
     QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
-    void mergePropertyAndFilesJson(QString nonce, QString callback);
-    QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
-    QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous);
-    QNetworkReply * patchFile(QString nonce, QString uid, QString remoteFilePath, QByteArray postData);
+    void mergePropertyAndFilesJson(QString nonce, QString callback, QString uid);
+    QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous = false);
+    QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
+    void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
     QString fileGetReplySave(QNetworkReply *reply);
-    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
-    QNetworkReply * filePutMulipart(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
+    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false, QString sourceFilePath = "", QDateTime sourceFileTimestamp = QDateTime::currentDateTime());
 
     QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
-    QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, QString uploadId, qint64 offset);
-    QString filePutResumeStart(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString remoteParentPath, bool synchronous = false);
-    QString filePutResumeUpload(QString nonce, QString uid, QIODevice * source, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
-    QString filePutResumeStatus(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
-    QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
-
-    QString delta(QString nonce, QString uid, bool synchronous);
-    QString media(QString nonce, QString uid, QString remoteFilePath);
-    QString searchFileId(QString nonce, QString uid, QString remoteParentPath, QString remoteFileName);
 
     QString getRemoteRoot(QString uid);
-    bool isFilePutResumable(qint64 fileSize);
     bool isFileGetResumable(qint64 fileSize);
-    bool isDeltaSupported();
-    bool isDeltaEnabled(QString uid);
     bool isViewable();
     qint64 getChunkSize();
 signals:
@@ -95,7 +77,6 @@ public slots:
 
     void fileGetReplyFinished(QNetworkReply *reply);
     void filePutReplyFinished(QNetworkReply *reply);
-    void filePutMultipartReplyFinished(QNetworkReply *reply);
     void metadataReplyFinished(QNetworkReply *reply);
     void browseReplyFinished(QNetworkReply *reply);
 
@@ -109,34 +90,21 @@ public slots:
     void shareFileReplyFinished(QNetworkReply *reply);
 
     void fileGetResumeReplyFinished(QNetworkReply *reply);
-    void filePutResumeStartReplyFinished(QNetworkReply *reply);
-    void filePutResumeUploadReplyFinished(QNetworkReply *reply);
-    void filePutResumeStatusReplyFinished(QNetworkReply *reply);
-
-    QString deltaReplyFinished(QNetworkReply *reply);
 protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:
+    QString localPath;
     QHash<QString, QFile*> m_localFileHash;
-    QHash<QString, QDateTime> m_sourceFileTimestampHash;
     QHash<QString, QBuffer*> m_bufferHash;
     QString refreshTokenUid;
     QHash<QString, QByteArray> *m_propertyReplyHash;
     QHash<QString, QByteArray> *m_filesReplyHash;
-    QHash<QString, QString> *m_downloadUrlHash;
 
     QSettings m_settings;
 
     QString createTimestamp();
     QString createNormalizedQueryString(QMap<QString, QString> sortMap);
     QString encodeURI(const QString uri);
-    QString createQueryString(QMap<QString, QString> sortMap);
-    QMap<QString, QString> createMapFromJson(QString jsonText);
-    QHash<QString, QString> createHashFromScriptValue(QString parentName, QScriptValue sc);
-    QHash<QString, QString> createHashFromJson(QString jsonText);
-    QByteArray encodeMultiPart(QString boundary, QMap<QString, QString> paramMap, QString fileParameter, QString fileName, QByteArray fileData, QString contentType);
-    QString getRedirectedUrl(QString url);
-    bool isCloudOnly(QScriptValue jsonObj);
 };
 
-#endif // GCDClient_H
+#endif // BOXCLIENT_H

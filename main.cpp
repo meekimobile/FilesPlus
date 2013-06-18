@@ -17,8 +17,8 @@
 #ifdef Q_OS_SYMBIAN
 #include "bluetoothclient.h"
 #include "messageclient.h"
-#include "customqnetworkaccessmanagerfactory.h"
 #endif
+#include "customqnetworkaccessmanagerfactory.h"
 #include "compressedfoldermodel.h"
 
 static const QString AppName = "FilesPlus";
@@ -267,6 +267,10 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
                              "Mozilla/5.0 (Nokia Belle; U; N8-00; en-TH) AppleWebKit/534.3 (KHTML, like Gecko) FilesPlus Mobile Safari/534.3");
     }
 #endif
+    if (!m_settings->contains("CustomQNetworkAccessManager.userAgent.www.box.com")) {
+        m_settings->setValue("CustomQNetworkAccessManager.userAgent.www.box.com",
+                             "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_3_3 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8J2 Safari/6533.18.5");
+    }
     m_settings->sync();
 
     // Default database initialization.
@@ -377,10 +381,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     engine->addImageProvider(QLatin1String("local"), new LocalFileImageProvider(m_settings->value("image.cache.path").toString()));
     engine->addImageProvider(QLatin1String("remote"), new RemoteImageProvider(m_settings->value("image.cache.path").toString()));
 
-#ifdef Q_OS_SYMBIAN
-    // Add custom NAMF to change User-Agent to fix problem with Dropbox login page.
+    // Add custom NAMF to change User-Agent to fix problem with Dropbox, Box login page.
     viewer.engine()->setNetworkAccessManagerFactory(new CustomQNetworkAccessManagerFactory());
-#endif
 
     return app->exec();
 }

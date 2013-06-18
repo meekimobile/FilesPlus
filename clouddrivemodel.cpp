@@ -592,6 +592,7 @@ void CloudDriveModel::initializeCloudClients(QString nonce)
     initializeGoogleDriveClient();
     initializeFtpClient();
     initializeWebDAVClient();
+    initializeBoxClient();
 }
 
 void CloudDriveModel::connectCloudClientsSignal(CloudDriveClient *client)
@@ -682,6 +683,19 @@ void CloudDriveModel::initializeWebDAVClient()
 
     webDavClient = new WebDavClient(this);
     connectCloudClientsSignal(webDavClient);
+}
+
+void CloudDriveModel::initializeBoxClient()
+{
+    // TODO Generalize initialization.
+    qDebug() << "CloudDriveModel::initializeBoxClient";
+
+    if (boxClient != 0) {
+        boxClient->deleteLater();
+    }
+
+    boxClient = new BoxClient(this);
+    connectCloudClientsSignal(boxClient);
 }
 
 QString CloudDriveModel::createNonce() {
@@ -1121,6 +1135,8 @@ CloudDriveModel::ClientTypes CloudDriveModel::getClientType(int typeInt)
         return Ftp;
     case WebDAV:
         return WebDAV;
+    case Box:
+        return Box;
     }
 }
 
@@ -1138,6 +1154,8 @@ CloudDriveModel::ClientTypes CloudDriveModel::getClientType(QString typeText)
         return Ftp;
     } else if (typeText.indexOf(QRegExp("webdavclient|webdav", Qt::CaseInsensitive)) != -1) {
         return WebDAV;
+    } else if (typeText.indexOf(QRegExp("boxclient|box", Qt::CaseInsensitive)) != -1) {
+        return Box;
     }
 }
 
@@ -1153,6 +1171,8 @@ QString CloudDriveModel::getCloudName(int type) {
         return "FTP";
     case WebDAV:
         return "WebDAV";
+    case Box:
+        return "Box";
     default:
         return QString("Invalid type(%1)").arg(type);
     }
@@ -1284,7 +1304,7 @@ bool CloudDriveModel::isViewable(CloudDriveModel::ClientTypes type)
 bool CloudDriveModel::isSharable(CloudDriveModel::ClientTypes type, QString uid)
 {
     return (type != Ftp && type != WebDAV)
-            || (type == WebDAV && getConnectionBoolProperty(type, uid, "share.enabled", false));
+            || (type == WebDAV && getConnectionBoolProperty(type, uid, "share.enabled", true)); // Default as enabled.
 }
 
 bool CloudDriveModel::isImageUrlCachable(CloudDriveModel::ClientTypes type)
@@ -1955,9 +1975,11 @@ QStringList CloudDriveModel::getStoredUidList()
 {
     QStringList uidList;
 
+    // TODO Generalize.
     uidList.append(dbClient->getStoredUidList());
     uidList.append(gcdClient->getStoredUidList());
     uidList.append(skdClient->getStoredUidList());
+    uidList.append(boxClient->getStoredUidList());
     uidList.append(ftpClient->getStoredUidList());
     uidList.append(webDavClient->getStoredUidList());
 
@@ -2232,7 +2254,7 @@ void CloudDriveModel::accountInfo(CloudDriveModel::ClientTypes type, QString uid
 void CloudDriveModel::quota(CloudDriveModel::ClientTypes type, QString uid)
 {
     if (type == Ftp
-            || (type == WebDAV && !getConnectionBoolProperty(type, uid, "quota.enabled", false))) {
+            || (type == WebDAV && !getConnectionBoolProperty(type, uid, "quota.enabled", true))) { // Default as enabled.
         CloudDriveJob job(createNonce(), Quota, type, uid, "", "", -1);
         m_cloudDriveJobs->insert(job.jobId, job);
         emit quotaReplySignal(job.jobId, 0, "", "{ }", 0, 0, 0);
@@ -4689,6 +4711,8 @@ CloudDriveClient * CloudDriveModel::getCloudClient(ClientTypes type)
         return ftpClient;
     case WebDAV:
         return webDavClient;
+    case Box:
+        return boxClient;
     default:
         qDebug() << "CloudDriveModel::getCloudClient type" << type << "is not implemented yet.";
     }
@@ -4698,22 +4722,7 @@ CloudDriveClient * CloudDriveModel::getCloudClient(ClientTypes type)
 
 CloudDriveClient * CloudDriveModel::getCloudClient(const int type)
 {
-    switch (type) {
-    case Dropbox:
-        return dbClient;
-    case SkyDrive:
-        return skdClient;
-    case GoogleDrive:
-        return gcdClient;
-    case Ftp:
-        return ftpClient;
-    case WebDAV:
-        return webDavClient;
-    default:
-        qDebug() << "CloudDriveModel::getCloudClient type" << type << "is not implemented yet.";
-    }
-
-    return 0;
+    return getCloudClient(getClientType(type));
 }
 
 void CloudDriveModel::dispatchJob(const QString jobId)

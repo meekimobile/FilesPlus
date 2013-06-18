@@ -70,6 +70,7 @@ SelectionDialog {
                 width: 48
                 height: 48
                 source: cloudDriveModel.getCloudIcon(type)
+                fillMode: Image.PreserveAspectFit
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter

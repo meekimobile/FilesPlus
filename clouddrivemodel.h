@@ -27,6 +27,7 @@
 #include "skydriveclient.h"
 #include "ftpclient.h"
 #include "webdavclient.h"
+#include "boxclient.h"
 #include "cacheimageworker.h"
 
 using namespace QtMobility;
@@ -62,7 +63,8 @@ public:
         GoogleDrive,
         SkyDrive,
         Ftp,
-        WebDAV
+        WebDAV,
+        Box
     };
 
     enum SortFlags {
@@ -214,15 +216,17 @@ public:
     Q_INVOKABLE QString getFileType(QString localPath);
     Q_INVOKABLE qint64 getFileSize(QString localPath);
     Q_INVOKABLE QString getFileLastModified(QString localPath);
-    ClientTypes getClientType(int typeInt);
-    ClientTypes getClientType(QString typeText);
-    Q_INVOKABLE QString getCloudName(int type);
     Q_INVOKABLE QString getOperationName(int operation);
     Q_INVOKABLE QDateTime parseReplyDateString(CloudDriveModel::ClientTypes type, QString dateString);
     Q_INVOKABLE QString formatJSONDateString(QDateTime datetime);
     Q_INVOKABLE QString getPathFromUrl(QString urlString);
     Q_INVOKABLE QDateTime parseUTCDateString(QString utcString);
     Q_INVOKABLE QDateTime parseJSONDateString(QString jsonString);
+
+    // Cloud type.
+    ClientTypes getClientType(int typeInt);
+    ClientTypes getClientType(QString typeText);
+    Q_INVOKABLE QString getCloudName(int type);
 
     // Scheduler.
     Q_INVOKABLE int updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp);
@@ -476,6 +480,7 @@ private:
     SkyDriveClient *skdClient;
     FtpClient *ftpClient;
     WebDavClient *webDavClient;
+    BoxClient *boxClient;
     QString accessTokenPin;
 
     QMutex mutex;
@@ -496,6 +501,7 @@ private:
     void initializeGoogleDriveClient();
     void initializeFtpClient();
     void initializeWebDAVClient();
+    void initializeBoxClient();
 
     QString createNonce();
     void jobDone();

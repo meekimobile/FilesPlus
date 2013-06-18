@@ -246,6 +246,15 @@ QString CloudDriveClient::getFileType(QString localPath)
     return fileType;
 }
 
+QString CloudDriveClient::getContentType(QString fileName) {
+    QString contentType = ContentTypeHelper::getContentType(fileName);
+    if (contentType == "") {
+        contentType = "application/octet-stream";
+    }
+
+    return contentType;
+}
+
 QScriptValue CloudDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj)
 {
     // NOTE Date string must be in JSON format.
