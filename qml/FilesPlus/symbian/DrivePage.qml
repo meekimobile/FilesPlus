@@ -20,7 +20,10 @@ Page {
             var item = driveGrid.model.get(i);
             console.debug("drivePage updateAccountInfoSlot found item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
 
-            driveGrid.model.set(i, { availableSpace: (quota - shared - normal), totalSpace: quota });
+            if (quota && quota != -1) {
+                console.debug("drivePage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
+                driveGrid.model.set(i, { availableSpace: (quota - shared - normal), totalSpace: quota });
+            }
             if (email) {
                 driveGrid.model.set(i, { logicalDrive: email, email: email });
             }

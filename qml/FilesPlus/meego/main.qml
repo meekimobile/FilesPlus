@@ -1121,6 +1121,7 @@ PageStackWindow {
             }
         }
 
+        // NOTE Requires because (ClientTypes getClientType(string)) can't be used.
         function getClientType(typeText) {
             if (typeText) {
                 if (["dropboxclient","dropbox"].indexOf(typeText.toLowerCase()) != -1) {
@@ -1345,8 +1346,9 @@ PageStackWindow {
                             qsTr("CloudDrive user is authorized.\nPlease proceed your sync action."),
                             2000);
 
+                    // TODO May not need to refresh as every account needs to call accountInfo(). It will be refreshed there.
                     // Refresh to get newly authorized cloud drive.
-                    cloudDriveModel.refreshCloudDriveAccounts("window onAccessTokenReplySignal jobJson.type " + jobJson.type + " jobJson.uid " + jobJson.uid);
+//                    cloudDriveModel.refreshCloudDriveAccounts("window onAccessTokenReplySignal jobJson.type " + jobJson.type + " jobJson.uid " + jobJson.uid);
                 }
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Access Token"),
@@ -1363,7 +1365,30 @@ PageStackWindow {
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
             if (err == 0) {
-                // Do nothing.
+                var i = cloudDriveAccountsModel.findIndexByCloudTypeAndUid(jobJson.type, jobJson.uid);
+                if (i > -1) {
+                    var jsonObj = Utility.createJsonObj(msg);
+
+                    // Check if email is included, otherwise get from account.
+                    var email = jsonObj.email;
+                    if (!email) {
+                        var accountJsonObj = Utility.createJsonObj(cloudDriveModel.getStoredUid(jobJson.type, jobJson.uid));
+                        email = accountJsonObj.email;
+                    }
+
+                    // Send info to cloudDriveAccountsModel.
+                    cloudDriveAccountsModel.updateAccountInfoSlot(jobJson.type, jobJson.uid, jsonObj.name, email);
+
+                    // Send info to relevant pages.
+                    pageStack.find(function (page) {
+                        if (page.updateAccountInfoSlot) {
+                            page.updateAccountInfoSlot(jobJson.type, jobJson.uid, jsonObj.name, email);
+                        }
+                    });
+                } else {
+                    // Refresh to get newly authorized cloud drive.
+                    cloudDriveModel.refreshCloudDriveAccounts("window onAccountInfoReplySignal jobJson.type " + jobJson.type + " jobJson.uid " + jobJson.uid);
+                }
             } else if (err == 204) {
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
                 return;
@@ -1954,10 +1979,14 @@ PageStackWindow {
         }
 
         onMigrateProgressSignal: {
-            var p = findPage("folderPage");
-            if (p) {
-                p.updateMigrationProgressSlot(type, uid, localFilePath, remoteFilePath, count, total);
+            if (migrateProgressDialog.status != DialogStatus.Open) {
+                migrateProgressDialog.indeterminate = false;
+                migrateProgressDialog.min = 0;
+                migrateProgressDialog.open();
             }
+            migrateProgressDialog.source = localFilePath;
+            migrateProgressDialog.value = count;
+            migrateProgressDialog.max = total;
         }
 
         onCacheImageFinished: {
@@ -2056,11 +2085,11 @@ PageStackWindow {
         id: cloudDriveAccountsModel
 
         function parseCloudDriveAccountsModel(replicatedModel) {
-            // Check if authorized before parsing.
-            if (!cloudDriveModel.isAuthorized()) return;
-
             // Clear model.
             cloudDriveAccountsModel.clear();
+
+            // Check if authorized before parsing.
+            if (!cloudDriveModel.isAuthorized()) return;
 
             // Get uid list.
             var dbUidList = cloudDriveModel.getStoredUidList();
@@ -2095,20 +2124,29 @@ PageStackWindow {
             }
         }
 
-        function updateAccountInfoSlot(type, uid, name, email, shared, normal, quota) {
-    //        console.debug("drivePage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
+        function findIndexByCloudTypeAndUid(type, uid) {
             for (var i=0; i<cloudDriveAccountsModel.count; i++) {
                 var item = cloudDriveAccountsModel.get(i);
-    //            console.debug("drivePage updateAccountInfoSlot item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
                 if (item.uid == uid && item.driveType == 7 && item.cloudDriveType == type) {
-                    console.debug("window cloudDriveAccountsModel updateAccountInfoSlot found item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        function updateAccountInfoSlot(type, uid, name, email, shared, normal, quota) {
+    //        console.debug("drivePage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
+            var i = findIndexByCloudTypeAndUid(type, uid);
+            if (i > -1) {
+                if (quota && quota != -1) {
                     cloudDriveAccountsModel.set(i, { availableSpace: (quota - shared - normal), totalSpace: quota });
-                    if (email) {
-                        cloudDriveAccountsModel.set(i, { logicalDrive: email, email: email });
-                    }
-                    if (name) {
-                        cloudDriveAccountsModel.set(i, { name: name });
-                    }
+                }
+                if (email) {
+                    cloudDriveAccountsModel.set(i, { logicalDrive: email, email: email });
+                }
+                if (name) {
+                    cloudDriveAccountsModel.set(i, { name: name });
                 }
             }
         }

@@ -271,6 +271,7 @@ CommonDialog {
                 id: cloudIcon
                 anchors.verticalCenter: parent.verticalCenter
                 width: 30
+                fillMode: Image.PreserveAspectFit
                 height: !isCloudFolder ? 30 : 0
                 source: !isCloudFolder ? cloudDriveModel.getCloudIcon(type) : ""
                 visible: !isCloudFolder

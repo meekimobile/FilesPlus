@@ -728,17 +728,6 @@ Page {
         cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
     }
 
-    function updateMigrationProgressSlot(type, uid, localFilePath, remoteFilePath, count, total) {
-        if (migrateProgressDialog.status != DialogStatus.Open) {
-            migrateProgressDialog.indeterminate = false;
-            migrateProgressDialog.min = 0;
-            migrateProgressDialog.open();
-        }
-        migrateProgressDialog.source = localFilePath;
-        migrateProgressDialog.value = count;
-        migrateProgressDialog.max = total;
-    }
-
     function refreshBeginSlot() {
         console.debug("folderPage refreshBeginSlot");
         isBusy = true;
@@ -863,9 +852,6 @@ Page {
         visible: (folderPage.state == "chart")
         labelFont: "Sans Serif,16"
 
-        onChartClicked: {
-            console.debug("QML pieChartView.onChartClicked");
-        }
         onSliceClicked: {
             console.debug("QML pieChartView.onSliceClicked " + text + ", index=" + index + ", isDir=" + isDir);
             if (isDir) {
@@ -874,15 +860,6 @@ Page {
             } else {
                 folderPage.state = "list";
             }
-        }
-        onActiveFocusChanged: {
-            console.debug("QML pieChartView.onActiveFocusChanged");
-        }
-        onSceneActivated: {
-            console.debug("QML pieChartView.onSceneActivated");
-        }
-        onSwipe: {
-            console.debug("QML pieChartView.onSwipe " + swipeAngle);
         }
 
         Component.onCompleted: {
