@@ -2121,7 +2121,13 @@ PageStackWindow {
 
         onJobRemovedSignal: {
             // NOTE It's emitted from removeJob() to remove job from job model.
-            cloudDriveJobsModel.removeJob(nonce);
+            var removingIndex = cloudDriveJobsModel.findIndexByJobId(nonce);
+            var localFilePath = cloudDriveJobsModel.get(removingIndex).local_file_path;
+            // console.debug("cloudDriveModel onJobRemovedSignal nonce " + nonce + " localFilePath " + localFilePath);
+            var i = cloudDriveJobsModel.removeJob(nonce);
+            if (i >= 0) {
+                if (localFilePath) fsModel.refreshItem(localFilePath);
+            }
         }
 
         onMigrateProgressSignal: {
