@@ -33,10 +33,10 @@ Page {
 
     function toggleSortFlag() {
         if (state == "chart") {
-            fsModel.setSortFlag(FolderSizeItemListModel.SortBySize, false);
+            return fsModel.setSortFlag(FolderSizeItemListModel.SortBySize, false);
         } else {
             // TODO revert back to stored sortFlag.
-            fsModel.revertSortFlag();
+            return fsModel.revertSortFlag();
         }
     }
 

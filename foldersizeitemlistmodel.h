@@ -107,8 +107,8 @@ public:
     QString currentDir() const;
     void setCurrentDir(const QString &path);
     int getSortFlag() const;
-    Q_INVOKABLE void setSortFlag(const int sortFlag, const bool saveSortFlag = true);
-    Q_INVOKABLE void revertSortFlag();
+    Q_INVOKABLE bool setSortFlag(const int sortFlag, const bool saveSortFlag = true);
+    Q_INVOKABLE bool revertSortFlag();
     QStringList getNameFilters() const;
     void setNameFilters(const QStringList nameFilters);   
     Q_INVOKABLE QVariant get(const int index);

@@ -29,26 +29,41 @@ Page {
         Transition {
             from: "list"
             to: "grid"
-            ScriptAction { script: fsModel.refreshItems() }
+            ScriptAction { script: {
+                    fsListView.visible = false;
+                    fsModel.refreshItems();
+                    fsGridView.visible = true;
+                }
+            }
         },
         Transition {
             from: "grid"
             to: "chart"
-            ScriptAction { script: toggleSortFlag() }
+            ScriptAction { script: {
+                    fsGridView.visible = false;
+                    if (!toggleSortFlag()) fsModel.refreshItems();
+                    pieChartView.visible = true;
+                }
+            }
         },
         Transition {
             from: "chart"
             to: "list"
-            ScriptAction { script: toggleSortFlag() }
+            ScriptAction { script: {
+                    pieChartView.visible = false;
+                    if (!toggleSortFlag()) fsModel.refreshItems();
+                    fsListView.visible = true;
+                }
+            }
         }
     ]
 
     function toggleSortFlag() {
         if (state == "chart") {
-            fsModel.setSortFlag(FolderSizeItemListModel.SortBySize, false);
+            return fsModel.setSortFlag(FolderSizeItemListModel.SortBySize, false);
         } else {
             // TODO revert back to stored sortFlag.
-            fsModel.revertSortFlag();
+            return fsModel.revertSortFlag();
         }
     }
 
