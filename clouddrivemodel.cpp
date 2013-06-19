@@ -1,5 +1,6 @@
 #include "clouddrivemodel.h"
 #include <QScriptValueIterator>
+#include <QDesktopServices>
 
 bool jsonNameLessThan(const QScriptValue &o1, const QScriptValue &o2)
 {
@@ -142,12 +143,12 @@ const QString CloudDriveModel::IMAGE_CACHE_PATH = "/home/user/MyDocs/temp/.files
 const QString CloudDriveModel::JOB_DAT_PATH = "/home/user/.filesplus/CloudDriveJobs.dat";
 const int CloudDriveModel::MaxRunningJobCount = 1;
 #else
-const QString CloudDriveModel::ITEM_DAT_PATH = "CloudDriveModel.dat";
+const QString CloudDriveModel::ITEM_DAT_PATH = QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/CloudDriveModel.dat";
 const QString CloudDriveModel::ITEM_DB_PATH = "CloudDriveModel.db";
 const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
 const QString CloudDriveModel::TEMP_PATH = "E:/temp/.filesplus";
 const QString CloudDriveModel::IMAGE_CACHE_PATH = "E:/temp/.filesplus";
-const QString CloudDriveModel::JOB_DAT_PATH = "CloudDriveJobs.dat"; // It's in private folder.
+const QString CloudDriveModel::JOB_DAT_PATH = QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/CloudDriveJobs.dat"; // It's in private folder.
 const int CloudDriveModel::MaxRunningJobCount = 1;
 #endif
 const QString CloudDriveModel::DirtyHash = "FFFFFFFF";

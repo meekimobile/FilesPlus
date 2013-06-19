@@ -1,10 +1,11 @@
 #include "bluetoothclient.h"
+#include <QDesktopServices>
 
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
 const QString BluetoothClient::DATA_FILE_PATH = "/home/user/.filesplus/BluetoothClient.dat";
 #else
-const QString BluetoothClient::DATA_FILE_PATH = "BluetoothClient.dat";
+const QString BluetoothClient::DATA_FILE_PATH = QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/BluetoothClient.dat";
 #endif
 const int BluetoothClient::MAX_DISCOVERY_RETRY = 3;
 
