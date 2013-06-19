@@ -1,11 +1,12 @@
 #include "clouddriveclient.h"
+#include <QDesktopServices>
 
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
 const QString CloudDriveClient::KeyStoreFilePath = "/home/user/.filesplus/%1.dat";
 const int CloudDriveClient::FileWriteBufferSize = 32768;
 #else
-const QString CloudDriveClient::KeyStoreFilePath = "%1.dat";
+const QString CloudDriveClient::KeyStoreFilePath = QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/%1.dat";
 const int CloudDriveClient::FileWriteBufferSize = 32768;
 #endif
 
