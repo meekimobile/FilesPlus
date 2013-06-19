@@ -4,7 +4,6 @@
 #include <QCoreApplication>
 #include <QScriptEngine>
 #include <QScriptValueIterator>
-#include "contenttypehelper.h"
 
 const QString GCDClient::consumerKey = "196573379494.apps.googleusercontent.com";
 const QString GCDClient::consumerSecret = "il59cyz3dwBW6tsHBkZYGSWj";
@@ -179,15 +178,6 @@ QByteArray GCDClient::encodeMultiPart(QString boundary, QMap<QString, QString> p
     postData.append(CRLF);
 
     return postData;
-}
-
-QString GCDClient::getContentType(QString fileName) {
-    QString contentType = ContentTypeHelper::getContentType(fileName);
-    if (contentType == "") {
-        contentType = "application/octet-stream";
-    }
-
-    return contentType;
 }
 
 QString GCDClient::getRedirectedUrl(QString url)
@@ -1833,6 +1823,8 @@ void GCDClient::mergePropertyAndFilesJson(QString nonce, QString callback)
         mergedObj.setProperty("children", engine.newArray());
         int contentsCount = filesObj.property("items").toVariant().toList().length();
         for (int i = 0; i < contentsCount; i++) {
+            QApplication::processEvents();
+
             mergedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, filesObj.property("items").property(i)));
         }
 

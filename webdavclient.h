@@ -37,7 +37,7 @@ public:
     ~WebDavClient();
 
     bool testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname);
-    void saveConnection(QString id, QString hostname, QString username, QString password, QString token);
+    bool saveConnection(QString id, QString hostname, QString username, QString password, QString token);
 
     QString getRemoteRoot(QString uid);
     bool isRemoteAbsolutePath();

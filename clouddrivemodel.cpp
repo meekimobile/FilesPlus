@@ -587,6 +587,7 @@ void CloudDriveModel::saveCloudDriveJobs()
 void CloudDriveModel::initializeCloudClients(QString nonce)
 {
     // TODO Generalize to support plugable client.
+    defaultClient = new CloudDriveClient(this);
     initializeDropboxClient();
     initializeSkyDriveClient();
     initializeGoogleDriveClient();
@@ -1230,8 +1231,7 @@ QDateTime CloudDriveModel::parseReplyDateString(CloudDriveModel::ClientTypes typ
 
 QString CloudDriveModel::formatJSONDateString(QDateTime datetime)
 {
-    // Format to JSON which match with javascript, QML format.
-    return datetime.toString("yyyy-MM-ddThh:mm:ss.zzzZ");
+    return defaultClient->formatJSONDateString(datetime);
 }
 
 QString CloudDriveModel::getPathFromUrl(QString urlString)
@@ -1284,7 +1284,7 @@ bool CloudDriveModel::isViewable(CloudDriveModel::ClientTypes type)
 bool CloudDriveModel::isSharable(CloudDriveModel::ClientTypes type, QString uid)
 {
     return (type != Ftp && type != WebDAV)
-            || (type == WebDAV && getConnectionBoolProperty(type, uid, "share.enabled", false));
+            || (type == WebDAV && getConnectionBoolProperty(type, uid, "share.enabled", true)); // Default as enabled.
 }
 
 bool CloudDriveModel::isImageUrlCachable(CloudDriveModel::ClientTypes type)
@@ -1943,7 +1943,11 @@ QString CloudDriveModel::getDefaultRemoteFilePath(const QString &localFilePath)
 bool CloudDriveModel::isAuthorized()
 {
     // TODO check if any cloud drive is authorized.
-    return dbClient->isAuthorized() || skdClient->isAuthorized() || gcdClient->isAuthorized() || ftpClient->isAuthorized();
+    return dbClient->isAuthorized()
+            || skdClient->isAuthorized()
+            || gcdClient->isAuthorized()
+            || ftpClient->isAuthorized()
+            || webDavClient->isAuthorized();
 }
 
 bool CloudDriveModel::isAuthorized(CloudDriveModel::ClientTypes type)
@@ -2232,7 +2236,7 @@ void CloudDriveModel::accountInfo(CloudDriveModel::ClientTypes type, QString uid
 void CloudDriveModel::quota(CloudDriveModel::ClientTypes type, QString uid)
 {
     if (type == Ftp
-            || (type == WebDAV && !getConnectionBoolProperty(type, uid, "quota.enabled", false))) {
+            || (type == WebDAV && !getConnectionBoolProperty(type, uid, "quota.enabled", true))) { // Default as enabled.
         CloudDriveJob job(createNonce(), Quota, type, uid, "", "", -1);
         m_cloudDriveJobs->insert(job.jobId, job);
         emit quotaReplySignal(job.jobId, 0, "", "{ }", 0, 0, 0);
@@ -2442,7 +2446,7 @@ void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::Client
     QApplication::processEvents();
 
     CloudDriveClient *cloudClient = getCloudClient(type);
-    if (cloudClient == 0) {
+    if (!cloudClient->isAuthorized()) {
         return;
     }
 
@@ -2599,7 +2603,7 @@ QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, Q
     }
 
     CloudDriveClient *cloudClient = getCloudClient(type);
-    if (cloudClient == 0) {
+    if (!cloudClient->isAuthorized()) {
         return "";
     }
 
@@ -2896,7 +2900,9 @@ void CloudDriveModel::deleteLocal(CloudDriveModel::ClientTypes type, QString uid
 QString CloudDriveModel::thumbnail(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString format, QString size)
 {
     CloudDriveClient *client = getCloudClient(getClientType(type));
-    if (client == 0) return "";
+    if (!client->isAuthorized()) {
+        return "";
+    }
 
     return client->thumbnail(createNonce(), uid, remoteFilePath, format, size);
 }
@@ -2913,7 +2919,9 @@ void CloudDriveModel::cacheImage(QString remoteFilePath, QString url, int w, int
 QString CloudDriveModel::media(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath)
 {
     CloudDriveClient *client = getCloudClient(getClientType(type));
-    if (client == 0) return "";
+    if (!client->isAuthorized()) {
+        return "";
+    }
 
     return client->media(createNonce(), uid, remoteFilePath);
 }
@@ -4240,9 +4248,9 @@ bool CloudDriveModel::testConnection(CloudDriveModel::ClientTypes type, QString 
     return getCloudClient(type)->testConnection(uid, hostname, username, password, token, authHostname);
 }
 
-void CloudDriveModel::saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token)
+bool CloudDriveModel::saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token)
 {
-    getCloudClient(type)->saveConnection(uid, hostname, username, password, token);
+    return getCloudClient(type)->saveConnection(uid, hostname, username, password, token);
 }
 
 QVariant CloudDriveModel::getConnectionProperty(CloudDriveModel::ClientTypes type, QString uid, QString name, QVariant defaultValue)
@@ -4693,27 +4701,13 @@ CloudDriveClient * CloudDriveModel::getCloudClient(ClientTypes type)
         qDebug() << "CloudDriveModel::getCloudClient type" << type << "is not implemented yet.";
     }
 
-    return 0;
+    // NOTE Return default to avoid crash while invoking method on null pointer.
+    return defaultClient;
 }
 
 CloudDriveClient * CloudDriveModel::getCloudClient(const int type)
 {
-    switch (type) {
-    case Dropbox:
-        return dbClient;
-    case SkyDrive:
-        return skdClient;
-    case GoogleDrive:
-        return gcdClient;
-    case Ftp:
-        return ftpClient;
-    case WebDAV:
-        return webDavClient;
-    default:
-        qDebug() << "CloudDriveModel::getCloudClient type" << type << "is not implemented yet.";
-    }
-
-    return 0;
+    return getCloudClient(getClientType(type));
 }
 
 void CloudDriveModel::dispatchJob(const QString jobId)
@@ -4727,7 +4721,7 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
     // Generalize cloud client.
     CloudDriveClient *cloudClient = getCloudClient(job.type);
 
-    qDebug() << "CloudDriveModel::dispatchJob thread" << QThread::currentThread() << "job" << job.jobId << job.operation << getOperationName(job.operation) << job.type << (cloudClient == 0 ? "no client" : cloudClient->objectName());
+    qDebug() << "CloudDriveModel::dispatchJob thread" << QThread::currentThread() << "job" << job.jobId << job.operation << getOperationName(job.operation) << job.type << cloudClient->objectName();
 
     // Update job status and emit signal to update UI.
     job.isRunning = true;
@@ -4849,7 +4843,7 @@ void CloudDriveModel::suspendJob(const QString jobId)
 
     // Actually abort job.
     CloudDriveClient *client = getCloudClient(getClientType(job.type));
-    if (client != 0) {
+    if (client->isAuthorized()) {
         client->abort(jobId);
     }
 }

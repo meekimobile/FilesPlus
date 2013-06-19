@@ -12,6 +12,9 @@ const int CloudDriveClient::FileWriteBufferSize = 32768;
 CloudDriveClient::CloudDriveClient(QObject *parent) :
     QObject(parent)
 {
+    // Set object name for further reference.
+    setObjectName(this->metaObject()->className());
+
     m_replyHash = new QHash<QString, QNetworkReply*>();
 }
 
@@ -66,6 +69,10 @@ QString CloudDriveClient::getEmail(QString uid)
 
 int CloudDriveClient::removeUid(QString uid)
 {
+    if (!accessTokenPairMap.contains(uid)) {
+        return -1;
+    }
+
     qDebug() << QString(objectName()) << "::removeUid uid" << uid;
     int n = accessTokenPairMap.remove(uid);
 
@@ -246,6 +253,15 @@ QString CloudDriveClient::getFileType(QString localPath)
     return fileType;
 }
 
+QString CloudDriveClient::getContentType(QString fileName) {
+    QString contentType = ContentTypeHelper::getContentType(fileName);
+    if (contentType == "") {
+        contentType = "application/octet-stream";
+    }
+
+    return contentType;
+}
+
 QScriptValue CloudDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj)
 {
     // NOTE Date string must be in JSON format.
@@ -269,8 +285,9 @@ bool CloudDriveClient::testConnection(QString id, QString hostname, QString user
     return false;
 }
 
-void CloudDriveClient::saveConnection(QString id, QString hostname, QString username, QString password, QString token)
+bool CloudDriveClient::saveConnection(QString id, QString hostname, QString username, QString password, QString token)
 {
+    return false;
 }
 
 qint64 CloudDriveClient::getOffsetFromRange(QString rangeHeader)

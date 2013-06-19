@@ -1418,6 +1418,8 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
         parsedObj.setProperty("children", engine.newArray());
         int contentsCount = jsonObj.property("contents").toVariant().toList().length();
         for (int i = 0; i < contentsCount; i++) {
+            QApplication::processEvents();
+
             parsedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, jsonObj.property("contents").property(i)));
         }
 

@@ -58,7 +58,7 @@ public:
     // ClientTypes is stored on m_cloudDriveItems. Its sequence shouldn't be changed.
     // AnyClient is technically never stored. It should be the last type.
     enum ClientTypes {
-        Dropbox,
+        Dropbox = 0,
         GoogleDrive,
         SkyDrive,
         Ftp,
@@ -254,7 +254,7 @@ public:
 
     // FTP/WebDAV specific functions.
     Q_INVOKABLE bool testConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token, QString authHostname = "");
-    Q_INVOKABLE void saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password,  QString token);
+    Q_INVOKABLE bool saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password,  QString token);
     Q_INVOKABLE QVariant getConnectionProperty(CloudDriveModel::ClientTypes type, QString uid, QString name, QVariant defaultValue);
     Q_INVOKABLE bool getConnectionBoolProperty(CloudDriveModel::ClientTypes type, QString uid, QString name, bool defaultValue);
     Q_INVOKABLE void setConnectionProperty(CloudDriveModel::ClientTypes type, QString uid, QString name, QVariant value);
@@ -471,6 +471,7 @@ private:
     QHash<QString, bool> *m_isDirtyCache;
     QHash<QString, bool> *m_isSyncingCache;
 
+    CloudDriveClient *defaultClient;
     DropboxClient *dbClient;
     GCDClient *gcdClient;
     SkyDriveClient *skdClient;

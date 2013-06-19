@@ -995,6 +995,8 @@ void SkyDriveClient::mergePropertyAndFilesJson(QString nonce, QString callback, 
         mergedObj.setProperty("children", engine.newArray());
         int contentsCount = filesObj.property("data").toVariant().toList().length();
         for (int i = 0; i < contentsCount; i++) {
+            QApplication::processEvents();
+
             mergedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, filesObj.property("data").property(i)));
         }
 

@@ -761,7 +761,7 @@ bool FtpClient::testConnection(QString id, QString hostname, QString username, Q
     return res;
 }
 
-void FtpClient::saveConnection(QString id, QString hostname, QString username, QString password, QString token)
+bool FtpClient::saveConnection(QString id, QString hostname, QString username, QString password, QString token)
 {
     qDebug() << "----- FtpClient::saveConnection -----";
 
@@ -782,6 +782,8 @@ void FtpClient::saveConnection(QString id, QString hostname, QString username, Q
     }
 
     saveAccessPairMap();
+
+    return true;
 }
 
 QString FtpClient::getRemoteRoot(QString uid)

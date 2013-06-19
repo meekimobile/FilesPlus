@@ -135,7 +135,6 @@ private:
     QHash<QString, QString> createHashFromScriptValue(QString parentName, QScriptValue sc);
     QHash<QString, QString> createHashFromJson(QString jsonText);
     QByteArray encodeMultiPart(QString boundary, QMap<QString, QString> paramMap, QString fileParameter, QString fileName, QByteArray fileData, QString contentType);
-    QString getContentType(QString fileName);
     QString getRedirectedUrl(QString url);
     bool isCloudOnly(QScriptValue jsonObj);
 };

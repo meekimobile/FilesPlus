@@ -771,6 +771,8 @@ QString WebDavClient::createPropertyJson(QString replyBody, QString caller)
     int childrenArrayIndex = 0;
     n = n.nextSibling();
     while(!n.isNull()) {
+        QApplication::processEvents();
+
         QScriptValue childObj = parseCommonPropertyScriptValue(engine, createScriptValue(engine, n, caller));
         if (!m_settings.value("WebDavClient.createPropertyJson.showHiddenSystem.enabled", false).toBool()
                 && childObj.property("isHidden").toBool()) {
@@ -974,7 +976,7 @@ bool WebDavClient::testConnection(QString id, QString hostname, QString username
     }
 }
 
-void WebDavClient::saveConnection(QString id, QString hostname, QString username, QString password, QString token)
+bool WebDavClient::saveConnection(QString id, QString hostname, QString username, QString password, QString token)
 {
     qDebug() << "----- WebDavClient::saveConnection -----" << id << hostname << username << token;
 
@@ -1000,6 +1002,8 @@ void WebDavClient::saveConnection(QString id, QString hostname, QString username
     }
 
     saveAccessPairMap();
+
+    return true;
 }
 
 QString WebDavClient::getRemoteRoot(QString uid)
