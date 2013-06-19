@@ -1280,6 +1280,7 @@ QScriptValue SkyDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engin
 {
     QScriptValue parsedObj = engine.newObject();
 
+    QString jsonDateString = formatJSONDateString(parseReplyDateString(jsonObj.property("updated_time").toString()));
     QString alternative = jsonObj.property("link").toString();
     QString thumbnail128Url = jsonObj.property("images").property(1).property("source").toString();
     QString previewUrl = jsonObj.property("images").property(0).property("source").toString();
@@ -1290,7 +1291,7 @@ QScriptValue SkyDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engin
     parsedObj.setProperty("size", jsonObj.property("size"));
     parsedObj.setProperty("isDeleted", QScriptValue(false));
     parsedObj.setProperty("isDir", QScriptValue(jsonObj.property("type").toString().indexOf(QRegExp("folder|album")) == 0));
-    parsedObj.setProperty("lastModified", jsonObj.property("updated_time"));
+    parsedObj.setProperty("lastModified", QScriptValue(jsonDateString) );
     parsedObj.setProperty("hash", jsonObj.property("updated_time"));
     parsedObj.setProperty("source", jsonObj.property("source"));
     parsedObj.setProperty("alternative", QScriptValue(alternative));
@@ -1305,4 +1306,20 @@ QScriptValue SkyDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engin
 qint64 SkyDriveClient::getChunkSize()
 {
     return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();
+}
+
+QDateTime SkyDriveClient::parseReplyDateString(QString dateString)
+{
+    /*
+     *Example date string
+     * "2013-06-15T13:58:51+0000"
+    */
+
+    QString filteredDateString = dateString;
+    QDateTime datetime = QDateTime::fromString(filteredDateString, Qt::ISODate);
+    qDebug() << "SkyDriveClient::parseReplyDateString parse filteredDateString" << filteredDateString << "with ISODate to" << datetime;
+    datetime.setTimeSpec(Qt::UTC);
+    qDebug() << "SkyDriveClient::parseReplyDateString parse datetime.setTimeSpec(Qt::UTC)" << datetime;
+
+    return datetime;
 }

@@ -34,6 +34,7 @@ const QString DropboxClient::chunkedUploadURI = "https://api-content.dropbox.com
 const QString DropboxClient::commitChunkedUploadURI = "https://api-content.dropbox.com/1/commit_chunked_upload/%1%2"; // POST with upload_id.
 
 const qint64 DropboxClient::DefaultChunkSize = 4194304; // 4MB
+const QString DropboxClient::ReplyDateFormat = "ddd, dd MMM yyyy hh:mm:ss +0000";
 
 DropboxClient::DropboxClient(QObject *parent) :
     CloudDriveClient(parent)
@@ -1769,7 +1770,7 @@ QScriptValue DropboxClient::parseCommonPropertyScriptValue(QScriptEngine &engine
     QString thumbnail128Url = jsonObj.property("thumb_exists").toBool() ? thumbnail(nonce, uid, jsonObj.property("path").toString(), "png", "m") : "";
     QString previewUrl = jsonObj.property("thumb_exists").toBool() ? thumbnail(nonce, uid, jsonObj.property("path").toString(), "png", "l") : "";
 
-    QDateTime lastModified = parseReplyDateString(jsonObj.property("modified").toString());
+    QString jsonDateString = formatJSONDateString(parseReplyDateString(jsonObj.property("modified").toString()));
 
     parsedObj.setProperty("name", QScriptValue(getRemoteName(jsonObj.property("path").toString())));
     parsedObj.setProperty("absolutePath", jsonObj.property("path"));
@@ -1777,7 +1778,7 @@ QScriptValue DropboxClient::parseCommonPropertyScriptValue(QScriptEngine &engine
     parsedObj.setProperty("size", jsonObj.property("bytes"));
     parsedObj.setProperty("isDeleted", jsonObj.property("is_deleted"));
     parsedObj.setProperty("isDir", jsonObj.property("is_dir"));
-    parsedObj.setProperty("lastModified", QScriptValue(formatJSONDateString(lastModified)));
+    parsedObj.setProperty("lastModified", QScriptValue(jsonDateString));
     parsedObj.setProperty("hash", jsonObj.property("hash").isValid() ? jsonObj.property("hash") : jsonObj.property("rev"));
     parsedObj.setProperty("source", QScriptValue());
     parsedObj.setProperty("thumbnail", QScriptValue(thumbnailUrl));
@@ -1796,5 +1797,11 @@ qint64 DropboxClient::getChunkSize()
 QDateTime DropboxClient::parseReplyDateString(QString dateString)
 {
     // NOTE Dropbox uses UTC datestring in its reply.
-    return QDateTime::fromString(dateString, "ddd, dd MMM yyyy hh:mm:ss +0000");
+    QString filteredDateString = dateString;
+    QDateTime datetime = QDateTime::fromString(filteredDateString, ReplyDateFormat);
+    qDebug() << "DropboxClient::parseReplyDateString parse filteredDateString" << filteredDateString << "with" << ReplyDateFormat << "to" << datetime;
+    datetime.setTimeSpec(Qt::UTC);
+    qDebug() << "DropboxClient::parseReplyDateString parse datetime.setTimeSpec(Qt::UTC)" << datetime;
+
+    return datetime;
 }

@@ -38,6 +38,8 @@ public:
 
     static const qint64 DefaultChunkSize;
 
+    static const QString ReplyDateFormat;
+
     explicit DropboxClient(QObject *parent = 0);
     ~DropboxClient();
 

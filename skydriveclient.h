@@ -68,6 +68,7 @@ public:
     bool isFileGetResumable(qint64 fileSize);
     bool isViewable();
     qint64 getChunkSize();
+    QDateTime parseReplyDateString(QString dateString);
 signals:
 
 public slots:
