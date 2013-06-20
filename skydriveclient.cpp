@@ -994,7 +994,9 @@ void SkyDriveClient::mergePropertyAndFilesJson(QString nonce, QString callback, 
             mergedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, filesObj.property("data").property(i)));
         }
 
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue started.";
         QString replyBody = stringifyScriptValue(engine, mergedObj);
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done.";
 
         // Remove once used.
         m_propertyReplyHash->remove(nonce);

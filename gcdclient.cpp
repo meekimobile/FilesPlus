@@ -1785,7 +1785,9 @@ void GCDClient::mergePropertyAndFilesJson(QString nonce, QString callback)
             mergedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, filesObj.property("items").property(i)));
         }
 
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "GCDClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue started.";
         QString replyBody = stringifyScriptValue(engine, mergedObj);
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "GCDClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done.";
 
         // Remove once used.
         m_propertyReplyHash->remove(nonce);

@@ -1380,7 +1380,9 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
             parsedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, jsonObj.property("contents").property(i)));
         }
 
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue started.";
         replyBody = stringifyScriptValue(engine, parsedObj);
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done.";
     }
 
     emit metadataReplySignal(nonce, reply->error(), reply->errorString(), replyBody);

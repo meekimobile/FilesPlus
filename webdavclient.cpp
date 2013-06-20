@@ -790,7 +790,9 @@ QString WebDavClient::createPropertyJson(QString replyBody, QString caller)
     }
     jsonObj.setProperty("children", childrenArrayObj);
     // Stringify jsonObj.
+    qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "WebDavClient::createPropertyJson stringifyScriptValue started.";
     QString jsonText = stringifyScriptValue(engine, jsonObj);
+    qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "WebDavClient::createPropertyJson stringifyScriptValue done.";
 
     return jsonText;
 }
@@ -805,6 +807,8 @@ QString WebDavClient::createResponseJson(QString replyBody, QString caller)
     // Populate jsonObj starts from first child.
     QDomNode n = docElem.firstChild();
     while(!n.isNull()) {
+        QApplication::processEvents();
+
         jsonObj.setProperty(n.localName(), createScriptValue(engine, n, "createResponseJson"));
         n = n.nextSibling();
     }

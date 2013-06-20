@@ -1,5 +1,7 @@
 #include "clouddriveclient.h"
 #include <QDesktopServices>
+#include <QScriptValueIterator>
+#include <QApplication>
 
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
@@ -294,7 +296,52 @@ QScriptValue CloudDriveClient::parseCommonPropertyScriptValue(QScriptEngine &eng
 
 QString CloudDriveClient::stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj)
 {
+    // ISSUE It's very slow while running on Symbian with 500+ items.
+#if defined(Q_WS_HARMATTAN)
     return engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
+#elif defined(Q_OS_SYMBIAN)
+    QString jsonText;
+    QString jsonArrayText;
+    QScriptValueIterator it(jsonObj);
+    while (it.hasNext()) {
+        QApplication::processEvents();
+
+        it.next();
+
+        QScriptValue propertyValue = it.value();
+
+        if (jsonText != "") {
+            jsonText.append(", ");
+        }
+
+        if(propertyValue.isArray()) {
+            jsonArrayText = "";
+            for (int i=0; i<propertyValue.property("length").toInt32(); i++) {
+                QApplication::processEvents();
+
+                if (jsonArrayText != "") {
+                    jsonArrayText.append(", ");
+                }
+                QScriptValue v = propertyValue.property(i);
+                jsonArrayText.append(stringifyScriptValue(engine, v));
+            }
+            jsonText.append(QString("\"%1\": [%2]").arg(it.name()).arg(jsonArrayText));
+        } else if (propertyValue.isObject()) {
+            jsonText.append(QString("\"%1\": %2").arg(it.name()).arg(stringifyScriptValue(engine, propertyValue)));
+        } else if (propertyValue.isDate()) {
+            jsonText.append(QString("\"%1\": \"%2\"").arg(it.name()).arg(formatJSONDateString(propertyValue.toDateTime())));
+        } else if (propertyValue.isBool()) {
+            jsonText.append(QString("\"%1\": %2").arg(it.name()).arg(propertyValue.toBool()));
+        } else if (propertyValue.isNumber()) {
+            jsonText.append(QString("\"%1\": %2").arg(it.name()).arg(propertyValue.toNumber()));
+        } else {
+            // Default as string.
+            jsonText.append(QString("\"%1\": \"%2\"").arg(it.name()).arg(propertyValue.toString()));
+        }
+    }
+
+    return "{ " + jsonText + " }";
+#endif
 }
 
 QString CloudDriveClient::formatJSONDateString(QDateTime datetime)
