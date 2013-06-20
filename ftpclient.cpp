@@ -754,6 +754,13 @@ bool FtpClient::testConnection(QString id, QString hostname, QString username, Q
     qDebug() << "FtpClient::testConnection done state" << m_ftp->state();
 
     res = (m_ftp->state() == QFtp::LoggedIn);
+    if (!res) {
+        emit logRequestSignal("",
+                              "error",
+                              "FTP " + tr("Test connection"),
+                              m_ftp->errorString(),
+                              5000);
+    }
 
     m_ftp->close();
     m_ftp->deleteLater();

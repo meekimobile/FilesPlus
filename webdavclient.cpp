@@ -981,6 +981,11 @@ bool WebDavClient::testConnection(QString id, QString hostname, QString username
     if (reply->error() == QNetworkReply::NoError) {
         return true;
     } else {
+        emit logRequestSignal("",
+                              "error",
+                              "WebDAV " + tr("Test connection"),
+                              reply->errorString(),
+                              5000);
         return false;
     }
 }
