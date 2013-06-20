@@ -609,6 +609,10 @@ Page {
         cloudDrivePathDialog.open();
     }
 
+    function resetCloudDrivePathDialogBusySlot(caller) {
+        cloudDrivePathDialog.isBusy = false;
+    }
+
     function updateCloudDrivePathDialogSlot(remotePath) {
         console.debug("folderPage updateCloudDrivePathDialogSlot cloudDrivePathDialog.status " + cloudDrivePathDialog.status + " DialogStatus.Open " + DialogStatus.Open);
         if (cloudDrivePathDialog.status == DialogStatus.Open) {

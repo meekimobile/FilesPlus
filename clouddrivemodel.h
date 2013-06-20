@@ -114,6 +114,8 @@ public:
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
     Q_INVOKABLE QVariant get(const int index);
     Q_INVOKABLE void setProperty(const int index, QString roleName, QVariant value);
+    bool removeRow(int row, const QModelIndex & parent = QModelIndex());
+    bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
 
     QString getRemoteParentPath();
     void setRemoteParentPath(QString remoteParentPath);
@@ -322,6 +324,8 @@ public:
 
     // Model functions.
     Q_INVOKABLE void refreshItems();
+    Q_INVOKABLE int findIndexByRemotePath(QString remotePath);
+    Q_INVOKABLE int findIndexByRemotePathName(QString remotePathName);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void initializeDBStarted(QString nonce);
@@ -520,11 +524,6 @@ private:
     int m_selectedIndex;
     QString m_selectedRemotePath;
     void sortItemList(QList<CloudDriveModelItem> *itemList, int sortFlag);
-
-    // Unused JSON methods.
-    QString sortJsonText(QString &jsonText, int sortFlag);
-    void sortJsonItemList(QList<QScriptValue> &itemList, int sortFlag);
-    QString stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj);
 
     int compareMetadata(CloudDriveJob job, QScriptValue &jsonObj, QString localFilePath);
 };

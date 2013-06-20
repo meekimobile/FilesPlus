@@ -1375,27 +1375,6 @@ PageStackWindow {
             return parsedObj;
         }
 
-        function findIndexByRemotePath(remotePath) {
-//            console.debug("cloudDriveModel.findIndexByRemotePath cloudDriveModel.count " + cloudDriveModel.count);
-            for (var i=0; i<cloudDriveModel.count; i++) {
-                if (cloudDriveModel.get(i).absolutePath == remotePath) {
-                    return i;
-                }
-            }
-
-            return -1;
-        }
-
-        function findIndexByRemotePathName(remotePathName) {
-            for (var i=0; i<cloudDriveModel.count; i++) {
-                if (cloudDriveModel.get(i).name == remotePathName) {
-                    return i;
-                }
-            }
-
-            return -1;
-        }
-
         function findIndexByNameFilter(nameFilter, startIndex, backward) {
             backward = (!backward) ? false : true;
             var rx = new RegExp(nameFilter, "i");
@@ -1945,10 +1924,10 @@ PageStackWindow {
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
             if (err == 0) {
-                // Refresh cloudFolderPage.
-                var p = findPage("cloudFolderPage");
+                // Reset cloudDrivePathDialog.
+                var p = findPage("folderPage");
                 if (p) {
-                    p.refreshSlot("cloudDriveModel onDeleteFileReplySignal");
+                    p.resetCloudDrivePathDialogBusySlot("cloudDriveModel onDeleteFileReplySignal");
                 }
             } else if (err == 204) { // Refresh token
                 cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
@@ -1971,12 +1950,6 @@ PageStackWindow {
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
             });
-
-            var p = findPage("folderPage");
-            if (p) {
-                // Refresh cloudDrivePathDialog if it's opened.
-                p.updateCloudDrivePathDialogSlot();
-            }
         }
 
         onShareFileReplySignal: {
@@ -2122,11 +2095,11 @@ PageStackWindow {
         onJobRemovedSignal: {
             // NOTE It's emitted from removeJob() to remove job from job model.
             var removingIndex = cloudDriveJobsModel.findIndexByJobId(nonce);
-            var localFilePath = cloudDriveJobsModel.get(removingIndex).local_file_path;
+            var localFilePath = (removingIndex == -1) ? "" : cloudDriveJobsModel.get(removingIndex).local_file_path;
             // console.debug("cloudDriveModel onJobRemovedSignal nonce " + nonce + " localFilePath " + localFilePath);
             var i = cloudDriveJobsModel.removeJob(nonce);
             if (i >= 0) {
-                if (localFilePath) fsModel.refreshItem(localFilePath);
+                if (localFilePath != "") fsModel.refreshItem(localFilePath);
             }
         }
 

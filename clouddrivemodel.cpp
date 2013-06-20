@@ -385,6 +385,24 @@ void CloudDriveModel::setProperty(const int index, QString roleName, QVariant va
     }
 }
 
+bool CloudDriveModel::removeRow(int row, const QModelIndex &parent)
+{
+    return removeRows(row, 1, parent);
+}
+
+bool CloudDriveModel::removeRows(int row, int count, const QModelIndex &parent)
+{
+    beginRemoveRows(parent, row, row + count - 1);
+
+    for (int i = row; i < row+count; i++) {
+        m_modelItemList->removeAt(i);
+    }
+
+    endRemoveRows();
+
+    return true;
+}
+
 QString CloudDriveModel::getRemoteParentPath()
 {
     return m_remoteParentPath;
@@ -3665,6 +3683,14 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
+    // Remove deleted item from cloud folder page.
+    if (job.remoteFilePath != "") {
+        int i = findIndexByRemotePath(job.remoteFilePath);
+        if (i > -1) {
+            removeRow(i);
+        }
+    }
+
     // Disconnect deleted local path.
     if (job.remoteFilePath != "") {
         foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, job.remoteFilePath)) {
@@ -5133,55 +5159,25 @@ void CloudDriveModel::refreshItems()
     endResetModel();
 }
 
-QString CloudDriveModel::sortJsonText(QString &jsonText, int sortFlag)
+int CloudDriveModel::findIndexByRemotePath(QString remotePath)
 {
-    QScriptEngine engine;
-    QScriptValue parsedJsonObj = engine.evaluate("(" + jsonText + ")");
-
-    qDebug() << "CloudDriveModel::sortJsonText parsedJsonObj.children.length" << parsedJsonObj.property("children").property("length").toInteger();
-
-    QList<QScriptValue> itemList;
-    for (int i = 0; i < parsedJsonObj.property("children").property("length").toInteger(); i++) {
-        itemList.append(parsedJsonObj.property("children").property(i));
+    for (int i=0; i<m_modelItemList->count(); i++) {
+        if (m_modelItemList->at(i).absolutePath == remotePath) {
+            return i;
+        }
     }
 
-    sortJsonItemList(itemList, sortFlag);
-
-    QScriptValue sortedChildren = engine.newArray();
-    for (int i = 0; i < itemList.count(); i++) {
-        sortedChildren.setProperty(i, itemList.at(i));
-    }
-    parsedJsonObj.setProperty("children", sortedChildren);
-    qDebug() << "CloudDriveModel::sortJsonText sorted parsedJsonObj.children.length" << parsedJsonObj.property("children").property("length").toInteger();
-
-    return stringifyScriptValue(engine, parsedJsonObj);
+    return -1;
 }
 
-void CloudDriveModel::sortJsonItemList(QList<QScriptValue> &itemList, int sortFlag)
-{
-    QDateTime start = QDateTime::currentDateTime();
-    qDebug() << start.toString(Qt::ISODate) << "CloudDriveModel::sortJsonItemList sortFlag" << sortFlag << "itemList.length()" << itemList.length();
-
-    switch (sortFlag) {
-    case SortByName:
-        qSort(itemList.begin(), itemList.end(), jsonNameLessThan);
-        break;
-    case SortByNameWithDirectoryFirst:
-        qSort(itemList.begin(), itemList.end(), jsonNameLessThanWithDirectoryFirst);
-        break;
-    case SortByTime:
-        qSort(itemList.begin(), itemList.end(), jsonTimeGreaterThan);
-        break;
-    case SortByType:
-        qSort(itemList.begin(), itemList.end(), jsonTypeLessThan);
-        break;
-    case SortBySize:
-        qSort(itemList.begin(), itemList.end(), jsonSizeGreaterThan);
-        break;
+int CloudDriveModel::findIndexByRemotePathName(QString remotePathName) {
+    for (int i=0; i<m_modelItemList->count(); i++) {
+        if (m_modelItemList->at(i).name == remotePathName) {
+            return i;
+        }
     }
 
-    QDateTime end = QDateTime::currentDateTime();
-    qDebug() << end.toString(Qt::ISODate) << "CloudDriveModel::sortJsonItemList done elapse" << start.msecsTo(end) << "ms. itemList.length()" << itemList.length();
+    return -1;
 }
 
 void CloudDriveModel::sortItemList(QList<CloudDriveModelItem> *itemList, int sortFlag)
@@ -5209,11 +5205,6 @@ void CloudDriveModel::sortItemList(QList<CloudDriveModelItem> *itemList, int sor
 
     QDateTime end = QDateTime::currentDateTime();
     qDebug() << end.toString(Qt::ISODate) << "CloudDriveModel::sortItemList done elapse" << start.msecsTo(end) << "ms. itemList->length()" << itemList->length();
-}
-
-QString CloudDriveModel::stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj)
-{
-    return engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
 }
 
 int CloudDriveModel::compareMetadata(CloudDriveJob job, QScriptValue &jsonObj, QString localFilePath)
