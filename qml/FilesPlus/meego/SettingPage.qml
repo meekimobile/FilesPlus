@@ -253,6 +253,12 @@ Page {
             group: "Developer"
         }
         ListElement {
+            name: "Monitoring.enabled"
+            title: ""
+            type: "switch"
+            group: "Developer"
+        }
+        ListElement {
             name: "Logging.enabled"
             title: ""
             type: "switch"

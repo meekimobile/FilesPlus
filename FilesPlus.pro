@@ -1,6 +1,8 @@
 # Add modules
 QT += declarative network script sql xml
-QT += opengl
+contains(MEEGO_EDITION, harmattan) {
+    QT += opengl
+}
 
 # Add more folders to ship with the application, here
 i18n_folder.source = i18n/*.qm i18n/*.ts

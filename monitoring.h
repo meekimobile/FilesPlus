@@ -28,6 +28,13 @@ private:
     QTextStream out;
 #ifdef Q_OS_SYMBIAN
     TTimeIntervalMicroSeconds lastCpuTime;
+#elif defined(Q_WS_HARMATTAN)
+    QString statmPath;
+    QFile statm;
+    QString statPath;
+    QFile stat;
+    qint32 memoryPageSize;
+    qint32 lastCpuTime;
 #endif
 };
 

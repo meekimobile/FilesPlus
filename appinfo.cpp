@@ -175,7 +175,6 @@ bool AppInfo::hasSettingValue(const QString key)
 
 void AppInfo::toggleMonitoring()
 {
-#ifdef Q_OS_SYMBIAN
     qDebug() << "AppInfo m_settings isMonitoring()" << isMonitoring();
     if (isMonitoring()) {
         mon = new Monitoring();
@@ -189,7 +188,6 @@ void AppInfo::toggleMonitoring()
             qDebug() << "AppInfo m_settings mon" << mon << "is stopped.";
         }
     }
-#endif
 }
 
 void AppInfo::init()
