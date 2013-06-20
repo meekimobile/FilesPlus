@@ -57,38 +57,6 @@ GCDClient::~GCDClient()
     m_downloadUrlHash = 0;
 }
 
-QString GCDClient::createTimestamp() {
-    qint64 seconds = QDateTime::currentMSecsSinceEpoch() / 1000;
-
-    return QString("%1").arg(seconds);
-}
-
-QString GCDClient::createNormalizedQueryString(QMap<QString, QString> sortMap) {
-    QString queryString;
-    foreach (QString key, sortMap.keys()) {
-        if (queryString != "") queryString.append("&");
-        queryString.append(QUrl::toPercentEncoding(key)).append("=").append(QUrl::toPercentEncoding(sortMap[key]));
-    }
-
-    return queryString;
-}
-
-QString GCDClient::encodeURI(const QString uri) {
-    // Example: https://api.dropbox.com/1/metadata/sandbox/C/B/NES/Solomon's Key (E) [!].nes
-    // All non-alphanumeric except : and / must be encoded.
-    return QUrl::toPercentEncoding(uri, ":/");
-}
-
-QString GCDClient::createQueryString(QMap<QString, QString> sortMap) {
-    QString queryString;
-    foreach (QString key, sortMap.keys()) {
-        if (queryString != "") queryString.append("&");
-        queryString.append(key).append("=").append(sortMap[key]);
-    }
-
-    return queryString;
-}
-
 QMap<QString, QString> GCDClient::createMapFromJson(QString jsonText)
 {
     qDebug() << "GCDClient::createMapFromJson " << jsonText;
@@ -155,29 +123,6 @@ QHash<QString, QString> GCDClient::createHashFromJson(QString jsonText)
 //    qDebug() << "GCDClient::createHashFromJson " << hash;
 
     return hash;
-}
-
-QByteArray GCDClient::encodeMultiPart(QString boundary, QMap<QString, QString> paramMap, QString fileParameter, QString fileName, QByteArray fileData, QString contentType) {
-    //Encodes list of parameters and files for HTTP multipart format.
-    QByteArray postData;
-    QString CRLF = "\r\n";
-
-    foreach (QString key, paramMap.keys()) {
-        postData.append("--" + boundary).append(CRLF);
-        postData.append(QString("Content-Disposition: form-data; name=\"%1\"").arg(key)).append(CRLF);
-        postData.append(CRLF);
-        postData.append(paramMap[key]).append(CRLF);
-    }
-
-    postData.append("--" + boundary).append(CRLF);
-    postData.append(QString("Content-Disposition: form-data; name=\"%1\"; filename=\"%2\"").arg(fileParameter).arg(fileName) ).append(CRLF);
-    postData.append(QString("Content-Type: %1").arg(contentType) ).append(CRLF);
-    postData.append(CRLF);
-    postData.append(fileData).append(CRLF);
-    postData.append("--" + boundary + "--").append(CRLF);
-    postData.append(CRLF);
-
-    return postData;
 }
 
 QString GCDClient::getRedirectedUrl(QString url)
@@ -799,6 +744,7 @@ QNetworkReply *GCDClient::filePutMulipart(QString nonce, QString uid, QIODevice 
                 Sleeper::msleep(100);
             }
 
+            // TODO Delete buffer.
             m_bufferHash.remove(nonce);
 
             return reply;
@@ -1726,6 +1672,11 @@ void GCDClient::filePutReplyFinished(QNetworkReply *reply)
         // Remove used source file timestamp.
         m_sourceFileTimestampHash.remove(nonce);
 
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+
         reply = patchFile(nonce, uid, remoteFilePath, metadata);
         replyBody = QString::fromUtf8(reply->readAll());
         qDebug() << "GCDClient::filePutReplyFinished patchFile replyBody" << replyBody;
@@ -1742,6 +1693,12 @@ void GCDClient::filePutReplyFinished(QNetworkReply *reply)
     m_replyHash->remove(nonce);
     reply->deleteLater();
     reply->manager()->deleteLater();
+
+    qDebug() << "GCDClient::filePutReplyFinished "
+             << "m_localFileHash" << m_localFileHash.size() << "m_sourceFileTimestampHash" << m_sourceFileTimestampHash.size()
+             << "m_bufferHash" << m_bufferHash.size() << "m_downloadUrlHash" << m_downloadUrlHash->size()
+             << "m_filesReplyHash" << m_filesReplyHash->size() << "m_propertyReplyHash" << m_propertyReplyHash->size()
+             << "m_replyHash" << m_replyHash->size();
 }
 
 void GCDClient::filePutMultipartReplyFinished(QNetworkReply *reply)
@@ -1833,6 +1790,7 @@ void GCDClient::mergePropertyAndFilesJson(QString nonce, QString callback)
         // Remove once used.
         m_propertyReplyHash->remove(nonce);
         m_filesReplyHash->remove(nonce);
+        qDebug() << "GCDClient::mergePropertyAndFilesJson m_propertyReplyHash" << m_propertyReplyHash->size() << "m_filesReplyHash" << m_filesReplyHash->size();
 
         if (callback == "browse") {
             emit browseReplySignal(nonce, QNetworkReply::NoError, "", replyBody);
@@ -1860,6 +1818,7 @@ void GCDClient::propertyReplyFinished(QNetworkReply *reply)
         // Remove once used.
         m_propertyReplyHash->remove(nonce);
         m_filesReplyHash->remove(nonce);
+        qDebug() << "GCDClient::propertyReplyFinished m_propertyReplyHash" << m_propertyReplyHash->size() << "m_filesReplyHash" << m_filesReplyHash->size();
 
         // Property is mandatory. Emit error if error occurs.
         if (callback == "browse") {
@@ -1955,6 +1914,7 @@ void GCDClient::moveFileReplyFinished(QNetworkReply *reply)
     // Remove request buffer.
     if (m_bufferHash.contains(nonce)) {
         m_bufferHash[nonce]->close();
+        m_bufferHash[nonce]->deleteLater();
         m_bufferHash.remove(nonce);
     }
 
@@ -1983,6 +1943,7 @@ void GCDClient::copyFileReplyFinished(QNetworkReply *reply)
 
     // Remove request buffer.
     m_bufferHash[nonce]->close();
+    m_bufferHash[nonce]->deleteLater();
     m_bufferHash.remove(nonce);
 
     // TODO scheduled to delete later.
@@ -2115,6 +2076,12 @@ void GCDClient::filePutResumeUploadReplyFinished(QNetworkReply *reply)
             metadata.append("{");
             metadata.append(" \"modifiedDate\": \"" + formatJSONDateString(m_sourceFileTimestampHash[nonce]) + "\" ");
             metadata.append("}");
+
+            // Delete original reply (which is in m_replyHash).
+            m_replyHash->remove(nonce);
+            reply->deleteLater();
+            reply->manager()->deleteLater();
+
             reply = patchFile(nonce, uid, parsedObj.property("absolutePath").toString(), metadata);
             replyBody = reply->readAll();
             qDebug() << "GCDClient::filePutResumeUploadReplyFinished patchFile replyBody" << QString::fromUtf8(replyBody);

@@ -586,6 +586,11 @@ QString WebDavClient::fileGetReplySave(QNetworkReply *reply)
         localTargetFile->flush();
         localTargetFile->close();
 
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+
         // Return common json.
         reply = property(nonce, uid, remoteFilePath);
         QString propertyReplyBody = QString::fromUtf8(reply->readAll());
@@ -1152,6 +1157,11 @@ void WebDavClient::filePutReplyFinished(QNetworkReply *reply)
 
     QString replyBody;
     if (reply->error() == QNetworkReply::NoError) {
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+
         reply = property(nonce, uid, remoteFilePath);
         if (reply->error() == QNetworkReply::NoError) {
             replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()), "filePutReplyFinished");
@@ -1296,6 +1306,11 @@ void WebDavClient::moveFileReplyFinished(QNetworkReply *reply)
     QString replyBody;
     qDebug() << "WebDavClient::moveFileReplyFinished" << nonce << "replyBody" << replyBody << "statusCode" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     if (reply->error() == QNetworkReply::NoError) {
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+
         reply = property(nonce, uid, prepareRemotePath(uid, newRemoteFilePath));
         if (reply->error() == QNetworkReply::NoError) {
             replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()), "moveFile");
@@ -1324,6 +1339,11 @@ void WebDavClient::copyFileReplyFinished(QNetworkReply *reply)
     QString replyBody;
     qDebug() << "WebDavClient::copyFileReplyFinished" << nonce << "replyBody" << replyBody << "statusCode" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     if (reply->error() == QNetworkReply::NoError) {
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+
         reply = property(nonce, uid, prepareRemotePath(uid, newRemoteFilePath));
         if (reply->error() == QNetworkReply::NoError) {
             replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()), "copyFile");

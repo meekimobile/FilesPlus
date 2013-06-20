@@ -230,6 +230,29 @@ QString CloudDriveClient::createQueryString(QMap<QString, QString> sortMap) {
     return queryString;
 }
 
+QByteArray CloudDriveClient::encodeMultiPart(QString boundary, QMap<QString, QString> paramMap, QString fileParameter, QString fileName, QByteArray fileData, QString contentType) {
+    //Encodes list of parameters and files for HTTP multipart format.
+    QByteArray postData;
+    QString CRLF = "\r\n";
+
+    foreach (QString key, paramMap.keys()) {
+        postData.append("--" + boundary).append(CRLF);
+        postData.append(QString("Content-Disposition: form-data; name=\"%1\"").arg(key)).append(CRLF);
+        postData.append(CRLF);
+        postData.append(paramMap[key]).append(CRLF);
+    }
+
+    postData.append("--" + boundary).append(CRLF);
+    postData.append(QString("Content-Disposition: form-data; name=\"%1\"; filename=\"%2\"").arg(fileParameter).arg(fileName) ).append(CRLF);
+    postData.append(QString("Content-Type: %1").arg(contentType) ).append(CRLF);
+    postData.append(CRLF);
+    postData.append(fileData).append(CRLF);
+    postData.append("--" + boundary + "--").append(CRLF);
+    postData.append(CRLF);
+
+    return postData;
+}
+
 QString CloudDriveClient::removeDoubleSlash(QString remoteFilePath)
 {
     QString path = remoteFilePath;

@@ -47,7 +47,6 @@ public slots:
 protected:
 
 private:
-    QSettings m_settings;
     QHash<QString, QFtpWrapper*> *m_ftpHash;
     QHash<QString, QString> m_remoteRootHash;
     QHash<QString, QFile*> m_localFileHash;

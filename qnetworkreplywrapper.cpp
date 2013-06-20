@@ -8,7 +8,7 @@ QNetworkReplyWrapper::QNetworkReplyWrapper(QNetworkReply *reply, QObject *parent
     m_reply = reply;
     connect(m_reply, SIGNAL(uploadProgress(qint64,qint64)), this, SLOT(uploadProgressFilter(qint64,qint64)) );
     connect(m_reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgressFilter(qint64,qint64)) );
-    connect(m_reply, SIGNAL(destroyed()), this, SLOT(deleteLater()) );
+    connect(m_reply, SIGNAL(destroyed()), this, SLOT(destroyedFilter()) );
 
     // Initialize idle timer.
     m_idleTimer = new QTimer(this);
@@ -38,6 +38,12 @@ void QNetworkReplyWrapper::downloadProgressFilter(qint64 bytesReceived, qint64 b
 
     // Restart idle timer if there is any progress.
     m_idleTimer->start();
+}
+
+void QNetworkReplyWrapper::destroyedFilter()
+{
+    qDebug() << "QNetworkReplyWrapper::destroyedFilter" << this << "reply" << m_reply;
+    this->deleteLater();
 }
 
 void QNetworkReplyWrapper::idleTimerTimeoutSlot()

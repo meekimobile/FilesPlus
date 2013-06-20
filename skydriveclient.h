@@ -94,18 +94,10 @@ public slots:
 protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:
-    QString localPath;
     QHash<QString, QFile*> m_localFileHash;
     QHash<QString, QBuffer*> m_bufferHash;
-    QString refreshTokenUid;
     QHash<QString, QByteArray> *m_propertyReplyHash;
     QHash<QString, QByteArray> *m_filesReplyHash;
-
-    QSettings m_settings;
-
-    QString createTimestamp();
-    QString createNormalizedQueryString(QMap<QString, QString> sortMap);
-    QString encodeURI(const QString uri);
 };
 
 #endif // SkyDriveClient_H

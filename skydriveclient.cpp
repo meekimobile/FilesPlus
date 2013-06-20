@@ -49,28 +49,6 @@ SkyDriveClient::~SkyDriveClient()
     m_filesReplyHash = 0;
 }
 
-QString SkyDriveClient::createTimestamp() {
-    qint64 seconds = QDateTime::currentMSecsSinceEpoch() / 1000;
-
-    return QString("%1").arg(seconds);
-}
-
-QString SkyDriveClient::createNormalizedQueryString(QMap<QString, QString> sortMap) {
-    QString queryString;
-    foreach (QString key, sortMap.keys()) {
-        if (queryString != "") queryString.append("&");
-        queryString.append(QUrl::toPercentEncoding(key)).append("=").append(QUrl::toPercentEncoding(sortMap[key]));
-    }
-
-    return queryString;
-}
-
-QString SkyDriveClient::encodeURI(const QString uri) {
-    // Example: https://api.dropbox.com/1/metadata/sandbox/C/B/NES/Solomon's Key (E) [!].nes
-    // All non-alphanumeric except : and / must be encoded.
-    return QUrl::toPercentEncoding(uri, ":/");
-}
-
 void SkyDriveClient::authorize(QString nonce, QString hostname)
 {
     qDebug() << "----- SkyDriveClient::authorize -----";
@@ -575,6 +553,11 @@ QIODevice *SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFil
 
             QNetworkRequest redirectedRequest = reply->request();
             redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
+
+            // Delete original reply (which is in m_replyHash).
+            m_replyHash->remove(nonce);
+            reply->deleteLater();
+
             reply = reply->manager()->get(redirectedRequest);
             QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
             connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
@@ -894,6 +877,11 @@ void SkyDriveClient::fileGetReplyFinished(QNetworkReply *reply)
 
         QNetworkRequest redirectedRequest = reply->request();
         redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
+
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+
         reply = reply->manager()->get(redirectedRequest);
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
         connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
@@ -934,10 +922,16 @@ void SkyDriveClient::filePutReplyFinished(QNetworkReply *reply) {
         QScriptEngine engine;
         QScriptValue sc = engine.evaluate("(" + replyBody + ")");
         QString remoteFilePath = sc.property("id").toString();
+
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+
         // Get property synchronously.
         reply = property(nonce, uid, remoteFilePath, true, "filePutReplyFinished");
         replyBody = QString::fromUtf8(reply->readAll());
-        qDebug() << "GCDClient::filePutReplyFinished property replyBody" << replyBody;
+        qDebug() << "SkyDriveClient::filePutReplyFinished property replyBody" << replyBody;
         if (reply->error() == QNetworkReply::NoError) {
             QScriptValue jsonObj = engine.evaluate("(" + replyBody + ")");
             QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
@@ -1109,6 +1103,11 @@ QString SkyDriveClient::createFolderReplyFinished(QNetworkReply *reply, bool syn
         QScriptEngine engine;
         QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
         if (jsonObj.property("error").property("code").toString() == "resource_already_exists") {
+            // Delete original reply (which is in m_replyHash).
+            m_replyHash->remove(nonce);
+            reply->deleteLater();
+            reply->manager()->deleteLater();
+
             // Get existing folder's property.
             reply = files(nonce, uid, remoteParentPath, true);
             replyBody = QString::fromUtf8(reply->readAll());
@@ -1255,6 +1254,11 @@ void SkyDriveClient::fileGetResumeReplyFinished(QNetworkReply *reply)
 
         QNetworkRequest redirectedRequest = reply->request();
         redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
+
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+
         reply = reply->manager()->get(redirectedRequest);
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
         connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));

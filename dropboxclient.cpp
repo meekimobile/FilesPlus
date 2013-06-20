@@ -74,24 +74,6 @@ DropboxClient::~DropboxClient()
     saveAccessPairMap();
 }
 
-QString DropboxClient::createTimestamp() {
-    qint64 seconds = QDateTime::currentMSecsSinceEpoch() / 1000;
-
-    return QString("%1").arg(seconds);
-}
-
-QString DropboxClient::createNonce() {
-    QString ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    QString nonce;
-
-    for(int i = 0; i <= 16; ++i)
-    {
-        nonce += ALPHANUMERIC.at( qrand() % ALPHANUMERIC.length() );
-    }
-
-    return nonce;
-}
-
 QByteArray DropboxClient::createBaseString(QString method, QString uri, QString queryString) {
     QByteArray baseString;
     baseString.append(method);
@@ -161,26 +143,6 @@ QString DropboxClient::createSignatureWithPLAINTEXT(QString consumerSecret, QStr
     key.append(tokenSecret);
 
     return key;
-}
-
-QString DropboxClient::createNormalizedQueryString(QMap<QString, QString> sortMap) {
-    QString queryString;
-    foreach (QString key, sortMap.keys()) {
-        if (queryString != "") queryString.append("&");
-        queryString.append(QUrl::toPercentEncoding(key)).append("=").append(QUrl::toPercentEncoding(sortMap[key]));
-    }
-
-    return queryString;
-}
-
-QString DropboxClient::createQueryString(QMap<QString, QString> sortMap) {
-    QString queryString;
-    foreach (QString key, sortMap.keys()) {
-        if (queryString != "") queryString.append("&");
-        queryString.append(key).append("=").append(sortMap[key]);
-    }
-
-    return queryString;
 }
 
 QByteArray DropboxClient::createPostData(QString signature, QString queryString) {
@@ -287,12 +249,6 @@ void DropboxClient::accessToken(QString nonce, QString pin)
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QNetworkReply *reply = manager->post(req, postData);
-}
-
-QString DropboxClient::encodeURI(const QString uri) {
-    // Example: https://api.dropbox.com/1/metadata/sandbox/C/B/NES/Solomon's Key (E) [!].nes
-    // All non-alphanumeric except : and / must be encoded.
-    return QUrl::toPercentEncoding(uri, ":/");
 }
 
 QByteArray DropboxClient::createOAuthHeaderForUid(QString nonce, QString uid, QString method, QString uri, QMap<QString, QString> addParamMap) {

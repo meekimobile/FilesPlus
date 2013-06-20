@@ -123,9 +123,12 @@ signals:
 public slots:
 
 protected:
+    QString refreshTokenUid;
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;
     QHash<QString, QNetworkReply*> *m_replyHash;
+
+    QSettings m_settings;
 
     void loadAccessPairMap();
     void saveAccessPairMap();
@@ -135,6 +138,7 @@ protected:
     QString createNormalizedQueryString(QMap<QString, QString> sortMap);
     QString encodeURI(const QString uri);
     QString createQueryString(QMap<QString, QString> sortMap);
+    QByteArray encodeMultiPart(QString boundary, QMap<QString, QString> paramMap, QString fileParameter, QString fileName, QByteArray fileData, QString contentType);
     QString removeDoubleSlash(QString remoteFilePath);
     QString getFileType(QString localPath);
     QString getContentType(QString fileName);
