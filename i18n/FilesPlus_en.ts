@@ -1323,8 +1323,8 @@ It can&apos;t be downloaded.</translation>
         <location filename="../qml/FilesPlus/symbian/FileActionDialog.qml" line="+21"/>
         <source>%n item(s)</source>
         <translation>
-            <numerusform>%n item(s)</numerusform>
-            <numerusform></numerusform>
+            <numerusform>%n item</numerusform>
+            <numerusform>%n items</numerusform>
         </translation>
     </message>
     <message>
