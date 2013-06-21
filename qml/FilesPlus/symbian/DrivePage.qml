@@ -84,6 +84,9 @@ Page {
 
                 // Parse all storages.
                 refreshSlot("drivePage refreshButton onClicked");
+
+                // Request trash status.
+                fsModel.requestTrashStatus();
             }
         }
         ToolBarButton {
