@@ -260,6 +260,7 @@ Page {
                     var cloudUid = driveGridModel.get(index).uid;
                     var cloudDriveType = driveGridModel.get(index).cloudDriveType;
                     console.debug("driveSelection onDriveSelected " + driveName + " index " + index + " cloudUid " + cloudUid);
+                    cloudDriveModel.clear();
                     pageStack.push(Qt.resolvedUrl("CloudFolderPage.qml"), {
                                        remotePath: "",
                                        remoteParentPath: "",
@@ -271,6 +272,7 @@ Page {
                                        selectedModelIndex: -1
                                    });
                 } else { // Local drive is selected.
+                    fsModel.clear();
                     pageStack.push(Qt.resolvedUrl("FolderPage.qml"), { localPath: driveName });
                 }
             }

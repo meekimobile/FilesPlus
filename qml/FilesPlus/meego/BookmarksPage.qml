@@ -262,9 +262,11 @@ Page {
                 }
                 if (type < 0) {
                     // Local bookmark.
+                    fsModel.clear();
                     pageStack.replace(Qt.resolvedUrl("FolderPage.qml"), { localPath: path }, true);
                 } else {
                     // Cloud bookmark.
+                    cloudDriveModel.clear();
                     pageStack.replace(Qt.resolvedUrl("CloudFolderPage.qml"), {
                                        remotePath: "",
                                        remoteParentPath: path,

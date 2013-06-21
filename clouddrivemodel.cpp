@@ -403,6 +403,12 @@ bool CloudDriveModel::removeRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
+void CloudDriveModel::clear()
+{
+    m_modelItemList->clear();
+    refreshItems();
+}
+
 QString CloudDriveModel::getRemoteParentPath()
 {
     return m_remoteParentPath;

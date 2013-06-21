@@ -116,6 +116,7 @@ public:
     Q_INVOKABLE void setProperty(const int index, QString roleName, QVariant value);
     bool removeRow(int row, const QModelIndex & parent = QModelIndex());
     bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
+    Q_INVOKABLE void clear();
 
     QString getRemoteParentPath();
     void setRemoteParentPath(QString remoteParentPath);
