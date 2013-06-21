@@ -5,8 +5,8 @@ Page {
     id: settingPage
 
     property string name: "settingPage"
-    property int jobQueueCount: 0
-    property int cloudDriveItemCount: 0
+    property int jobQueueCount: cloudDriveModel.queuedJobCount
+    property int cloudDriveItemCount: cloudDriveModel.itemCount
     property bool inverted: !theme.inverted
 
     function getIndexByName(name) {
@@ -17,20 +17,6 @@ Page {
         }
 
         return -1;
-    }
-
-    function updateJobQueueCount(runningJobCount, jobQueueCount) {
-        var i = getIndexByName("cancelAllCloudDriveJobs");
-        if (i > -1) {
-            settingPage.jobQueueCount = jobQueueCount;
-        }
-    }
-
-    function updateCloudDriveItemCount(cloudDriveItemCount) {
-        var i = getIndexByName("syncAllConnectedItems");
-        if (i > -1) {
-            settingPage.cloudDriveItemCount = cloudDriveItemCount;
-        }
     }
 
     tools: ToolBarLayout {

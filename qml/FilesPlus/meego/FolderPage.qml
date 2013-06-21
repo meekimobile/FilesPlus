@@ -172,6 +172,9 @@ Page {
 
             TextIndicator {
                 id: cloudButtonIndicator
+                text: ((cloudDriveModel.runningJobCount + cloudDriveModel.queuedJobCount) > 0)
+                      ? (cloudDriveModel.runningJobCount + cloudDriveModel.queuedJobCount)
+                      : ""
                 color: "#00AAFF"
                 anchors.right: parent.right
                 anchors.rightMargin: 10
@@ -584,16 +587,6 @@ Page {
         uidDialog.open();
     }
 
-    function uploadFileSlot(srcFilePath, selectedIndex) {
-        console.debug("folderPage uploadFileSlot srcFilePath=" + srcFilePath);
-        syncFileSlot(srcFilePath, selectedIndex, CloudDriveModel.FilePut);
-    }
-
-    function downloadFileSlot(srcFilePath, selectedIndex) {
-        console.debug("folderPage downloadFileSlot srcFilePath=" + srcFilePath);
-        syncFileSlot(srcFilePath, selectedIndex, CloudDriveModel.FileGet);
-    }
-
     function cancelAllFolderSizeJobsSlot() {
         fsModel.cancelQueuedJobs();
         // Abort thread with rollbackFlag=false.
@@ -725,11 +718,6 @@ Page {
         } else {
             fsModel.refreshItem(index);
         }
-    }
-
-    function updateJobQueueCount(runningJobCount, jobQueueCount) {
-        // Update (runningJobCount + jobQueueCount) on cloudButton.
-        cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
     }
 
     function refreshBeginSlot() {
@@ -1335,11 +1323,11 @@ Page {
         }
 
         onUploadFile: {
-            uploadFileSlot(srcFilePath, srcItemIndex);
+            syncFileSlot(srcFilePath, srcItemIndex, CloudDriveModel.FilePut);
         }
 
         onDownloadFile: {
-            downloadFileSlot(srcFilePath, srcItemIndex);
+            syncFileSlot(srcFilePath, srcItemIndex, CloudDriveModel.FileGet);
         }
 
         onShareFile: {

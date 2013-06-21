@@ -38,6 +38,10 @@ class CloudDriveModel : public QAbstractListModel
     Q_ENUMS(SortFlags)
     Q_ENUMS(Operations)
     Q_PROPERTY(int count READ rowCount NOTIFY rowCountChanged)
+    Q_PROPERTY(int runningJobCount READ getRunningJobCount NOTIFY runningJobCountChanged)
+    Q_PROPERTY(int queuedJobCount READ getQueuedJobCount NOTIFY jobQueueStatusSignal)
+    Q_PROPERTY(int jobCount READ getJobCount NOTIFY jobQueueStatusSignal)
+    Q_PROPERTY(int itemCount READ getItemCount NOTIFY jobQueueStatusSignal)
     Q_PROPERTY(QString dirtyHash READ dirtyHash CONSTANT)
     Q_PROPERTY(QString remoteParentPath READ getRemoteParentPath WRITE setRemoteParentPath NOTIFY remoteParentPathChanged)
     Q_PROPERTY(QString remoteParentPathName READ getRemoteParentPathName WRITE setRemoteParentPathName NOTIFY remoteParentPathChanged)
@@ -244,7 +248,7 @@ public:
     Q_INVOKABLE void syncItems(); // NOTE Used by Settings
     Q_INVOKABLE void syncItems(CloudDriveModel::ClientTypes type); // NOTE Used by syncItems()
     Q_INVOKABLE void syncItem(const QString localFilePath); // NOTE Used by main.qml, FolderPage.qml
-    Q_INVOKABLE void syncItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath); // NOTE Used by syncDirtyItems()
+    Q_INVOKABLE void syncItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE bool syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, QString newHash = "", bool forcePut = false, bool forceGet = false); // NOTE Used by reply filter slots.
 
     // Migrate DAT to DB.
@@ -374,6 +378,9 @@ signals:
     void sortFlagChanged();
     void remoteParentPathChanged();
     void rowCountChanged();
+    void runningJobCountChanged();
+    void queuedJobCountChanged();
+    void jobCountChanged();
     void selectedIndexChanged();
 public slots:
     void proceedNextJob();
@@ -466,6 +473,7 @@ private:
     int updateItemToDB(const CloudDriveItem item, bool suppressMessages = false);
     int updateItemHashByLocalPathToDB(const QString localPath, const QString hash);
     int deleteItemToDB(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
+    int deleteItemWithChildrenFromDB(int type, QString uid, QString localPath);
     int countItemDB();
     int countItemByLocalPathDB(const QString localPath);
     int countItemByTypeAndUidAndRemotePathFromDB(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);

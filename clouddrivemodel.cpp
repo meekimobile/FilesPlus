@@ -755,11 +755,14 @@ QList<CloudDriveItem> CloudDriveModel::findItemWithChildren(CloudDriveModel::Cli
 
     // Get from DB first if it's not found find from DAT.
     // Get localPath
-    list.append(selectItemByPrimaryKeyFromDB(type, uid, localPath));
+    CloudDriveItem parentItem = selectItemByPrimaryKeyFromDB(type, uid, localPath);
+    if (parentItem.type == type && parentItem.uid == uid && parentItem.localPath == localPath) {
+        list.append(parentItem);
+    }
     qDebug() << "CloudDriveModel::findItemWithChildren localPath" << localPath << "list.count" << list.count();
     // Get it's children
     list.append(selectChildrenByPrimaryKeyFromDB(type, uid, localPath));
-    qDebug() << "CloudDriveModel::findItemWithChildren localPath" << localPath << " with children list.count" << list.count();
+    qDebug() << "CloudDriveModel::findItemWithChildren localPath" << localPath << "with children list.count" << list.count();
 
     // TODO Not work yet. If not found localPath, it will migrate all remains items which cause UI freezing.
     // Find from DAT.
@@ -1526,7 +1529,7 @@ void CloudDriveModel::removeItemWithChildren(CloudDriveModel::ClientTypes type, 
     int deleteCount = 0;
 
     foreach (CloudDriveItem item, findItemWithChildren(type, uid, localPath)) {
-//        qDebug() << "CloudDriveModel::removeItemWithChildren item" << item;
+        qDebug() << "CloudDriveModel::removeItemWithChildren item" << item;
 
         // Process events to avoid freezing UI.
         QApplication::processEvents(QEventLoop::AllEvents, 50);
@@ -1761,7 +1764,7 @@ void CloudDriveModel::syncDirtyItems()
             }
 
             // Sync dirty item.
-            syncItem(getClientType(item.type), item.uid, item.localPath);
+            metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
         }
 
         lastItem = item;
@@ -2064,7 +2067,7 @@ bool CloudDriveModel::cleanItem(const CloudDriveItem &item)
     if (isInvalid) {
         qDebug() << "CloudDriveModel::cleanItem remove item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
         m_cloudDriveItems->remove(item.localPath, item);
-        deleteItemToDB(getClientType(item.type), item.uid, item.localPath);
+        deleteItemWithChildrenFromDB(item.type, item.uid, item.localPath);
     } else {
         // TODO (Migration) Insert to DB.
 //        qDebug() << "CloudDriveModel::cleanItem migrate" << item;
@@ -2137,7 +2140,13 @@ void CloudDriveModel::syncItem(const QString localFilePath)
     // Queue localFilePath's items for metadata requesting.
     foreach (CloudDriveItem item, getItemList(localFilePath)) {
         qDebug() << "CloudDriveModel::syncItem item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
-        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+        CloudDriveClient *client = getCloudClient(getClientType(item.type));
+        if (client->isAuthorized() && client->getStoredUid(item.uid) != "") {
+            metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
+        } else {
+            qDebug() << "CloudDriveModel::syncItem skipped and disconnecting item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
+            deleteItemWithChildrenFromDB(item.type, item.uid, item.localPath);
+        }
     }
 }
 
@@ -2159,12 +2168,19 @@ bool CloudDriveModel::syncItemByRemotePath(CloudDriveModel::ClientTypes type, QS
 
     bool res = false;
     foreach (CloudDriveItem item, getItemListFromPS(qry)) {
-        if (newHash != "") {
-            qDebug() << "CloudDriveModel::syncItemByRemotePath updating hash" << newHash << "to item" << item;
-            updateItem(type, uid, item.localPath, newHash);
+        qDebug() << "CloudDriveModel::syncItemByRemotePath item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
+        CloudDriveClient *client = getCloudClient(getClientType(item.type));
+        if (client->isAuthorized() && client->getStoredUid(item.uid) != "") {
+            if (newHash != "") {
+                qDebug() << "CloudDriveModel::syncItemByRemotePath updating hash" << newHash << "to item" << item;
+                updateItem(type, uid, item.localPath, newHash);
+            }
+            metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1, forcePut, forceGet);
+            res = true;
+        } else {
+            qDebug() << "CloudDriveModel::syncItemByRemotePath skipped and disconnecting item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
+            deleteItemWithChildrenFromDB(item.type, item.uid, item.localPath);
         }
-        metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1, forcePut, forceGet);
-        res = true;
     }
 
     return res;
@@ -4627,6 +4643,31 @@ int CloudDriveModel::deleteItemToDB(CloudDriveModel::ClientTypes type, QString u
     return m_deletePS.numRowsAffected();
 }
 
+int CloudDriveModel::deleteItemWithChildrenFromDB(int type, QString uid, QString localPath)
+{
+    qDebug() << "CloudDriveModel::deleteItemWithChildrenFromDB" << type << uid << localPath;
+
+    int res = 0;
+    QSqlQuery qry("DELETE FROM cloud_drive_item WHERE type = :type AND uid = :uid AND local_path = :localPath", m_db);
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":localPath", localPath);
+    if (qry.exec()) {
+        res += qry.numRowsAffected();
+    }
+    QSqlQuery childrenQry("DELETE FROM cloud_drive_item WHERE type = :type AND uid = :uid AND local_path LIKE :localPath", m_db);
+    childrenQry.bindValue(":type", type);
+    childrenQry.bindValue(":uid", uid);
+    childrenQry.bindValue(":localPath", localPath + "/%");
+    if (childrenQry.exec()) {
+        res += childrenQry.numRowsAffected();
+    }
+
+    qDebug() << "CloudDriveModel::deleteItemWithChildrenFromDB" << type << uid << localPath << "res" << res;
+
+    return res;
+}
+
 int CloudDriveModel::countItemDB()
 {
     int c = 0;
@@ -4698,6 +4739,7 @@ void CloudDriveModel::jobDone() {
     mutex.lock();
     runningJobCount--;
     runningJobCount = (runningJobCount < 0) ? 0 : runningJobCount;
+    emit runningJobCountChanged();
     mutex.unlock();
 
     qDebug() << "CloudDriveModel::jobDone runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count();
@@ -4771,6 +4813,7 @@ void CloudDriveModel::proceedNextJob() {
     // Increase runningJobCount.
     mutex.lock();
     runningJobCount++;
+    emit runningJobCountChanged();
     mutex.unlock();
 
     // Dispatch job.

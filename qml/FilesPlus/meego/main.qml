@@ -1607,20 +1607,6 @@ PageStackWindow {
             fsModel.removeCache(localPath, true);
         }
 
-        onJobQueueStatusSignal: {
-            if (pageStack) {
-                var p = findPage("settingPage");
-                if (p) {
-                    p.updateCloudDriveItemCount(itemCount);
-                }
-
-                // Update job queue count on current page.
-                pageStack.find(function (page) {
-                    if (page.updateJobQueueCount) page.updateJobQueueCount(runningJobCount, jobQueueCount);
-                });
-            }
-        }
-
         onRefreshRequestSignal: {
             console.debug("window cloudDriveModel onRefreshRequestSignal " + nonce);
 

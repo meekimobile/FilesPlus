@@ -60,11 +60,6 @@ Page {
         }
     }
 
-    function updateJobQueueCount(runningJobCount, jobQueueCount) {
-        // Update (runningJobCount + jobQueueCount) on cloudButton.
-        cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
-    }
-
     ToolBarLayout {
         id: toolBarLayout
 
@@ -102,6 +97,9 @@ Page {
 
             TextIndicator {
                 id: cloudButtonIndicator
+                text: ((cloudDriveModel.runningJobCount + cloudDriveModel.queuedJobCount) > 0)
+                      ? (cloudDriveModel.runningJobCount + cloudDriveModel.queuedJobCount)
+                      : ""
                 color: "#00AAFF"
                 anchors.right: parent.right
                 anchors.rightMargin: 10
