@@ -11,6 +11,7 @@ SystemInfoHelper::SystemInfoHelper(QDeclarativeItem *parent) :
     QDeclarativeItem(parent)
 {
     m_ssi = new QSystemStorageInfo(this);
+    m_sdi = new QSystemDeviceInfo(this);
     m_fileInfoCache = new QCache<QString, QFileInfo>();
 }
 
@@ -226,3 +227,23 @@ void SystemInfoHelper::shareUrl(const QString &urlString, const QString &title, 
 #endif
 }
 
+int SystemInfoHelper::getKeyboardTypes()
+{
+    return m_sdi->keyboardTypes();
+}
+
+bool SystemInfoHelper::isKeyboardFlippedOpen()
+{
+    return m_sdi->isKeyboardFlippedOpen();
+}
+
+bool SystemInfoHelper::isWirelessKeyboardConnected()
+{
+    return m_sdi->isWirelessKeyboardConnected();
+}
+
+bool SystemInfoHelper::isSoftwareKeyboardRequired()
+{
+    return m_sdi->keyboardTypes() == QSystemDeviceInfo::SoftwareKeyboard;
+
+}
