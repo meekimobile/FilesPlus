@@ -236,9 +236,6 @@ PageStackWindow {
             return -1;
         }
 
-        onCurrentDirChanged: {
-        }
-
         onRefreshBegin: {
             var p = findPage("folderPage");
             if (p) {
@@ -1436,9 +1433,7 @@ PageStackWindow {
 
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
-            if (err == 0) {
-                cloudDriveModel.authorize(jobJson.type);
-            } else {
+            if (err != 0) {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Request Token"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
@@ -1462,7 +1457,7 @@ PageStackWindow {
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
             if (err == 0) {
-                // TODO Get account info and show in dialog.
+                // Get account info and show in dialog.
                 if (jobJson.operation == CloudDriveModel.RefreshToken) {
                     logWarn(getCloudName(jobJson.type) + " " + qsTr("Refresh Token"),
                             qsTr("Token was refreshed.") );
@@ -1470,10 +1465,6 @@ PageStackWindow {
                     logInfo(getCloudName(jobJson.type) + " " + qsTr("Access Token"),
                             qsTr("CloudDrive user is authorized.\nPlease proceed your sync action."),
                             2000);
-
-                    // TODO May not need to refresh as every account needs to call accountInfo(). It will be refreshed there.
-                    // Refresh to get newly authorized cloud drive.
-//                    cloudDriveModel.refreshCloudDriveAccounts("window onAccessTokenReplySignal jobJson.type " + jobJson.type + " jobJson.uid " + jobJson.uid);
                 }
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Access Token"),
@@ -1514,9 +1505,6 @@ PageStackWindow {
                     // Refresh to get newly authorized cloud drive.
                     cloudDriveModel.refreshCloudDriveAccounts("window onAccountInfoReplySignal jobJson.type " + jobJson.type + " jobJson.uid " + jobJson.uid);
                 }
-            } else if (err == 204) {
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
-                return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Account Info"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
@@ -1550,9 +1538,6 @@ PageStackWindow {
                         page.updateAccountInfoSlot(jobJson.type, jobJson.uid, jsonObj.name, jsonObj.email, sharedBytes, normalBytes, quotaBytes);
                     }
                 });
-            } else if (err == 204) {
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
-                return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Account Quota"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
@@ -1575,9 +1560,6 @@ PageStackWindow {
                         page.postBrowseReplySlot();
                     }
                 });
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
-                return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Browse"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
@@ -1610,9 +1592,6 @@ PageStackWindow {
                 if (p) {
                     p.refreshItemAfterFileGetSlot(jobJson.local_file_path);
                 }
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
-                return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("File Get"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
@@ -1641,10 +1620,6 @@ PageStackWindow {
                 if (p) {
                     p.refreshItemAfterFilePutSlot(jobJson);
                 }
-            } else if (err == 204) { // Refresh token
-                // TODO Whether it should stop and let user manually resume?
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
-                return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("File Put"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
@@ -1674,11 +1649,7 @@ PageStackWindow {
 
             console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " " + err + " " + errMsg + " " + msg);
 
-            if (err == 0) {
-                // Do nothing.
-            } else if (err == 203) {
-                // Do nothing.
-            } else {
+            if (err != 0) {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Metadata"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
@@ -1714,9 +1685,6 @@ PageStackWindow {
                         qsTr("Error") + " " + err + " " + errMsg + " " + msg +
                         "\n\n" +
                         qsTr("Please proceed with sync.") );
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
-                return;
             } else if (err == 299 && jobJson.type == CloudDriveModel.SkyDrive && msgJson.error && msgJson.error.code == "resource_already_exists") {
                 // SkyDrive Folder already exists. Do nothing
                 logError(getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
@@ -1780,18 +1748,8 @@ PageStackWindow {
             });
         }
 
-        onLocalChangedSignal: {
-            // TODO Disable becuase it can damage stored hash.
-            // Reset CloudDriveItem hash upto root.
-//            var paths = fsModel.getPathToRoot(localPath);
-//            for (var i=0; i<paths.length; i++) {
-//                console.debug("window cloudDriveModel onLocalChangedSignal updateItems paths[" + i + "] " + paths[i]);
-//                cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
-//            }
-        }
-
         onRefreshFolderCacheSignal: {
-            // TODO Remove folder cache.
+            // Remove folder cache.
             fsModel.removeCache(localPath, true);
         }
 
@@ -1859,9 +1817,6 @@ PageStackWindow {
                 if (p) {
                     p.refreshSlot("cloudDriveModel onCopyFileReplySignal");
                 }
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
-                return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Copy"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
@@ -1895,9 +1850,6 @@ PageStackWindow {
                 if (p) {
                     p.refreshSlot("cloudDriveModel onMoveFileReplySignal");
                 }
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
-                return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Move"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
@@ -1929,9 +1881,6 @@ PageStackWindow {
                 if (p) {
                     p.resetCloudDrivePathDialogBusySlot("cloudDriveModel onDeleteFileReplySignal");
                 }
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
-                return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Delete"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
@@ -1986,9 +1935,6 @@ PageStackWindow {
 
             if (err == 0) {
                 // TODO
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
-                return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Delta"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
@@ -2008,11 +1954,7 @@ PageStackWindow {
 
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
-            if (err == 0) {
-                // Do nothing.
-            } else if (err == 203) {
-                // Do nothing.
-            } else {
+            if (err != 0) {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Migrate"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
@@ -2037,13 +1979,6 @@ PageStackWindow {
                 if (p) {
                     p.refreshItemAfterFilePutSlot(jobJson);
                 }
-            } else if (err == 204) { // Refresh token
-                if (errorOnTarget) {
-                    cloudDriveModel.refreshToken(jobJson.target_type, jobJson.target_uid, jobJson.job_id);
-                } else {
-                    cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
-                }
-                return;
             } else {
                 if (errorOnTarget) {
                     logError(getCloudName(jobJson.target_type) + " " + qsTr("Migrate"),

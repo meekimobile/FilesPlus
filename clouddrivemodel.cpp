@@ -3140,6 +3140,14 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
             // Emit signal to refresh its parent folder cache.
             emit refreshFolderCacheSignal(job.localFilePath);
         }
+    } else if (err == QNetworkReply::AuthenticationRequiredError) {
+        // Check if token is expired (err 204), then refresh token.
+        refreshToken(getClientType(job.type), job.uid, job.jobId);
+        // Update job status but keep job for resume after token is refreshed.
+        job.isRunning = false;
+        updateJob(job);
+        jobDone();
+        return;
     } else {
         if (job.localFilePath != "") {
             removeItem(getClientType(job.type), job.uid, job.localFilePath);
@@ -3176,6 +3184,14 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
             job.newRemoteFilePath = remoteFilePath;
             addItem(getClientType(job.type), job.uid, job.localFilePath, remoteFilePath, hash);
         }
+    } else if (err == QNetworkReply::AuthenticationRequiredError) {
+        // Check if token is expired (err 204), then refresh token.
+        refreshToken(getClientType(job.type), job.uid, job.jobId);
+        // Update job status but keep job for resume after token is refreshed.
+        job.isRunning = false;
+        updateJob(job);
+        jobDone();
+        return;
     } else {
         if (job.localFilePath != "") {
             removeItem(getClientType(job.type), job.uid, job.localFilePath);
@@ -3394,6 +3410,16 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
 
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
+    // Check if token is expired (err 204), then refresh token.
+    if (err == QNetworkReply::AuthenticationRequiredError) {
+        refreshToken(getClientType(job.type), job.uid, job.jobId);
+        // Update job status but keep job for resume after token is refreshed.
+        job.isRunning = false;
+        updateJob(job);
+        jobDone();
+        return;
+    }
+
     // Update job running flag.
     job.isRunning = false;
     updateJob(job);
@@ -3564,6 +3590,14 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
             qDebug() << "CloudDriveModel::createFolderReplyFilter newRemotePath" << newRemotePath << "is under connected parent remote path. Sync its parent" << newRemoteParentPath;
             syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath, DirtyHash);
         }
+    } else if (err == QNetworkReply::AuthenticationRequiredError) {
+        // Check if token is expired (err 204), then refresh token.
+        refreshToken(getClientType(job.type), job.uid, job.jobId);
+        // Update job status but keep job for resume after token is refreshed.
+        job.isRunning = false;
+        updateJob(job);
+        jobDone();
+        return;
     }
 
     // Stop running.
@@ -3629,6 +3663,14 @@ void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg
                 }
             }
         }
+    } else if (err == QNetworkReply::AuthenticationRequiredError) {
+        // Check if token is expired (err 204), then refresh token.
+        refreshToken(getClientType(job.type), job.uid, job.jobId);
+        // Update job status but keep job for resume after token is refreshed.
+        job.isRunning = false;
+        updateJob(job);
+        jobDone();
+        return;
     }
 
     // Stop running.
@@ -3667,6 +3709,14 @@ void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg
             qDebug() << "CloudDriveModel::copyFileReplyFilter newRemotePath" << newRemotePath << "is under connected parent remote path. Sync its parent" << newRemoteParentPath;
             syncItemByRemotePath(getClientType(job.type), job.uid, newRemoteParentPath, DirtyHash);
         }
+    } else if (err == QNetworkReply::AuthenticationRequiredError) {
+        // Check if token is expired (err 204), then refresh token.
+        refreshToken(getClientType(job.type), job.uid, job.jobId);
+        // Update job status but keep job for resume after token is refreshed.
+        job.isRunning = false;
+        updateJob(job);
+        jobDone();
+        return;
     }
 
     // Stop running.
@@ -3682,6 +3732,16 @@ void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg
 void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    if (err == QNetworkReply::AuthenticationRequiredError) {
+        // Check if token is expired (err 204), then refresh token.
+        refreshToken(getClientType(job.type), job.uid, job.jobId);
+        // Update job status but keep job for resume after token is refreshed.
+        job.isRunning = false;
+        updateJob(job);
+        jobDone();
+        return;
+    }
 
     // Remove deleted item from cloud folder page.
     if (job.remoteFilePath != "") {
@@ -3718,6 +3778,16 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
 void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg, QString url, int expires)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    if (err == QNetworkReply::AuthenticationRequiredError) {
+        // Check if token is expired (err 204), then refresh token.
+        refreshToken(getClientType(job.type), job.uid, job.jobId);
+        // Update job status but keep job for resume after token is refreshed.
+        job.isRunning = false;
+        updateJob(job);
+        jobDone();
+        return;
+    }
 
     // Stop running.
     job.isRunning = false;
@@ -3806,6 +3876,14 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
 
         // Clear remotePathHash.
         remotePathHash.clear();
+    } else if (err == QNetworkReply::AuthenticationRequiredError) {
+        // Check if token is expired (err 204), then refresh token.
+        refreshToken(getClientType(job.type), job.uid, job.jobId);
+        // Update job status but keep job for resume after token is refreshed.
+        job.isRunning = false;
+        updateJob(job);
+        jobDone();
+        return;
     }
 
     // Update job running flag.
@@ -3821,6 +3899,20 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
 void CloudDriveModel::migrateFilePutReplyFilter(QString nonce, int err, QString errMsg, QString msg, bool errorOnTarget)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    if (err == QNetworkReply::AuthenticationRequiredError) {
+        // Check if token is expired (err 204), then refresh token.
+        if (errorOnTarget) {
+            refreshToken(getClientType(job.targetType), job.targetUid, job.jobId);
+        } else {
+            refreshToken(getClientType(job.type), job.uid, job.jobId);
+        }
+        // Update job status but keep job for resume after token is refreshed.
+        job.isRunning = false;
+        updateJob(job);
+        jobDone();
+        return;
+    }
 
     // Update job running flag.
     job.err = err;
@@ -4931,6 +5023,10 @@ void CloudDriveModel::requestTokenReplyFilter(QString nonce, int err, QString er
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
+    if (err == QNetworkReply::NoError) {
+        authorize(getClientType(job.type));
+    }
+
     job.isRunning = false;
     updateJob(job);
 
@@ -4997,6 +5093,16 @@ void CloudDriveModel::accountInfoReplyFilter(QString nonce, int err, QString err
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
+    // Check if token is expired (err 204), then refresh token.
+    if (err == QNetworkReply::AuthenticationRequiredError) {
+        refreshToken(getClientType(job.type), job.uid, job.jobId);
+        // Update job status but keep job for resume after token is refreshed.
+        job.isRunning = false;
+        updateJob(job);
+        jobDone();
+        return;
+    }
+
     job.isRunning = false;
     updateJob(job);
 
@@ -5010,7 +5116,15 @@ void CloudDriveModel::quotaReplyFilter(QString nonce, int err, QString errMsg, Q
 {
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
 
-    qDebug() << "CloudDriveModel::quotaReplyFilter thread" << QThread::currentThread() << "job" << job.jobId;
+    // Check if token is expired (err 204), then refresh token.
+    if (err == QNetworkReply::AuthenticationRequiredError) {
+        refreshToken(getClientType(job.type), job.uid, job.jobId);
+        // Update job status but keep job for resume after token is refreshed.
+        job.isRunning = false;
+        updateJob(job);
+        jobDone();
+        return;
+    }
 
     job.isRunning = false;
     updateJob(job);
