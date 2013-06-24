@@ -3257,7 +3257,13 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
             qDebug() << "CloudDriveModel::metadataReplyFilter" << getCloudName(job.type) << job.uid << jsonObj.property("absolutePath").toString() << "isDeleted" << jsonObj.property("isDeleted").toString();
 
             // If dir, should remove all sub items.
-            deleteLocal(getClientType(job.type), job.uid, job.localFilePath);
+            if (m_settings.value("CloudDriveModel.metadataRelyFilter.deleteLocalFile.enabled", true).toBool()) {
+                qDebug() << "CloudDriveModel::metadataReplyFilter" << nonce << "trash item" << job.type << job.uid << job.localFilePath;
+                deleteLocal(getClientType(job.type), job.uid, job.localFilePath);
+            } else {
+                qDebug() << "CloudDriveModel::metadataReplyFilter" << nonce << "disconnect item" << job.type << job.uid << job.localFilePath;
+                disconnect(getClientType(job.type), job.uid, job.localFilePath);
+            }
 
             // Notify removed link.
             emit logRequestSignal(nonce,
@@ -3365,22 +3371,30 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
         // Resume next jobs.
         resumeNextJob();
     } else if (err == 203) { // If metadata is not found, put it to cloud right away recursively.
-        // TODO Choose whether just remove link or proceed put?
-        // TODO How to differentiate from newly sync and remotely removed item?
         // Suspend next job.
         suspendNextJob();
 
         QString localParentPath = getParentLocalPath(job.localFilePath);
         QString remoteParentPath = "";
         QString remoteFileName = getFileName(job.localFilePath);
-        if (isRemoteAbsolutePath(getClientType(job.type))) {
-            remoteParentPath = getParentRemotePath(getClientType(job.type), job.remoteFilePath);
+
+        // NOTE
+        // Differentiate from newly sync and remotely removed item.
+        // By checking if there is a cloud item for localPath.
+        CloudDriveItem cloudItem = getItem(job.localFilePath, getClientType(job.type), job.uid);
+        if (job.localFilePath == cloudItem.localPath && job.type == cloudItem.type && job.uid == cloudItem.uid) {
+            // Existing connected item.
         } else {
-            remoteParentPath = getItemRemotePath(localParentPath, getClientType(job.type), job.uid);
+            // Not existing item.
+            if (isRemoteAbsolutePath(getClientType(job.type))) {
+                remoteParentPath = getParentRemotePath(getClientType(job.type), job.remoteFilePath);
+            } else {
+                remoteParentPath = getItemRemotePath(localParentPath, getClientType(job.type), job.uid);
+            }
         }
         qDebug() << "CloudDriveModel::metadataReplyFilter" << err << errMsg << msg << "locaParentPath" << localParentPath << "remoteParentPath" << remoteParentPath;
 
-        // Proceed put if remoteParentPath is available. Otherwise remote the link.
+        // Proceed put if remoteParentPath is available. Otherwise remove the link.
         if (remoteParentPath != "") {
             qDebug() << "CloudDriveModel::metadataReplyFilter" << getCloudName(job.type) << "put" << job.localFilePath << "to" << job.remoteFilePath;
             if (isDir(job.localFilePath)) {
@@ -3391,7 +3405,13 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
             }
         } else {
             // If dir, should remove all sub items.
-            disconnect(getClientType(job.type), job.uid, job.localFilePath);
+            if (m_settings.value("CloudDriveModel.metadataRelyFilter.deleteLocalFile.enabled", true).toBool()) {
+                qDebug() << "CloudDriveModel::metadataReplyFilter" << nonce << "trash item" << job.type << job.uid << job.localFilePath;
+                deleteLocal(getClientType(job.type), job.uid, job.localFilePath);
+            } else {
+                qDebug() << "CloudDriveModel::metadataReplyFilter" << nonce << "disconnect item" << job.type << job.uid << job.localFilePath;
+                disconnect(getClientType(job.type), job.uid, job.localFilePath);
+            }
 
             // Notify removed link.
             emit logRequestSignal(nonce,
@@ -3852,7 +3872,7 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
                     } else {
                         foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, remoteFilePath, isRemotePathCaseInsensitive(getClientType(job.type)))) {
                             // Configurable file removing.
-                            if (m_settings.value("CloudDriveModel::deltaReplyFilter.deleteLocalFile.enabled", true).toBool()) {
+                            if (m_settings.value("CloudDriveModel.deltaReplyFilter.deleteLocalFile.enabled", true).toBool()) {
                                 qDebug() << "CloudDriveModel::deltaReplyFilter" << nonce << "trash item" << item.type << item.uid << item.localPath << "remotePath" << item.remotePath << "hash" << item.hash;
                                 deleteLocal(getClientType(item.type), item.uid, item.localPath);
                             } else {
