@@ -566,7 +566,7 @@ PageStackWindow {
         id: cancelQueuedCloudDriveJobsConfirmation
         titleText: appInfo.emptyStr+qsTr("Cancel Cloud Drive Jobs")
         onOpening: {
-            contentText = appInfo.emptyStr+qsTr("Cancel %n job(s) ?", "", cloudDriveModel.getQueuedJobCount());
+            contentText = appInfo.emptyStr+qsTr("Cancel %n job(s) ?", "", cloudDriveModel.jobCount);
         }
         onConfirm: {
             cloudDriveModel.cancelQueuedJobs();

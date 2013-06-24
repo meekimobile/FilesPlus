@@ -427,10 +427,8 @@ Page {
 
             TextIndicator {
                 id: cloudButtonIndicator
-                text: ((cloudDriveModel.runningJobCount + cloudDriveModel.queuedJobCount) > 0)
-                      ? (cloudDriveModel.runningJobCount + cloudDriveModel.queuedJobCount)
-                      : ""
-                color: "#00AAFF"
+                text: (cloudDriveModel.jobCount > 0) ? cloudDriveModel.jobCount : ""
+                color: ((cloudDriveModel.runningJobCount + cloudDriveModel.queuedJobCount) > 0) ? "#00AAFF" : "red"
                 anchors.right: parent.right
                 anchors.rightMargin: 10
                 anchors.bottom: parent.bottom
