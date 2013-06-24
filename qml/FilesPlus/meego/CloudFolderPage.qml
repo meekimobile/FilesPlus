@@ -1022,7 +1022,7 @@ Page {
 
             onListItemIconError: {
                 if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
-                    cloudDriveModel.cacheImage(absolutePath, thumbnail128, 128, 128, cloudFolderPage.name); // Use original size because previewUrl is already specified with size.
+                    cloudDriveModel.cacheImage(absolutePath, thumbnail128, 160, 160, cloudFolderPage.name); // Use original size because previewUrl is already specified with size.
                 }
             }
         }

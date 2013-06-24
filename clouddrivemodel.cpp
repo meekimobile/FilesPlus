@@ -5329,6 +5329,7 @@ void CloudDriveModel::clearCachedImagesOnCurrentRemotePath(bool clearThumbnail, 
         }
         if (clearThumbnail128) {
             QFile(CacheImageWorker::getCachedRemotePath(item.thumbnail128, QSize(128, 128), m_settings.value("image.cache.path", IMAGE_CACHE_PATH).toString())).remove();
+            QFile(CacheImageWorker::getCachedRemotePath(item.thumbnail128, QSize(160, 160), m_settings.value("image.cache.path", IMAGE_CACHE_PATH).toString())).remove();
         }
         if (clearPreview) {
             QFile(CacheImageWorker::getCachedRemotePath(item.preview, QSize(-1, -1), m_settings.value("image.cache.path", IMAGE_CACHE_PATH).toString())).remove();
