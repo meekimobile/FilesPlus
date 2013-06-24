@@ -1,6 +1,7 @@
 filesplus (1.2.4) unstable; urgency=low
-  * Implement shareUI to avoid using libqtcontacts-tracker
+  * Implement shareUI to avoid slow startup.
   * Add grid view.
+  * Bookmarks.
   * Improve stablility while synchronize on folder with 500+ items.
   * Add zip/unzip/unrar supports.
   * Fix defects.
