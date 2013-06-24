@@ -1373,7 +1373,7 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
         QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
         QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
         parsedObj.setProperty("children", engine.newArray());
-        int contentsCount = jsonObj.property("contents").toVariant().toList().length();
+        int contentsCount = jsonObj.property("contents").property("length").toInteger();
         for (int i = 0; i < contentsCount; i++) {
             QApplication::processEvents();
 
@@ -1410,7 +1410,7 @@ void DropboxClient::browseReplyFinished(QNetworkReply *reply)
         QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
         QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
         parsedObj.setProperty("children", engine.newArray());
-        int contentsCount = jsonObj.property("contents").toVariant().toList().length();
+        int contentsCount = jsonObj.property("contents").property("length").toInteger();
         for (int i = 0; i < contentsCount; i++) {
             parsedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, jsonObj.property("contents").property(i)));
         }
@@ -1579,7 +1579,7 @@ QString DropboxClient::deltaReplyFinished(QNetworkReply *reply)
         }
 
         // Get entries count.
-        int entriesCount = sourceObj.property("entries").toVariant().toList().length();
+        int entriesCount = sourceObj.property("entries").property("length").toInteger();
         qDebug() << "DropboxClient::deltaReplyFinished entriesCount" << entriesCount;
 
         // Process sourceObj.

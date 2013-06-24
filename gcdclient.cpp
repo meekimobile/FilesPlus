@@ -1778,7 +1778,7 @@ void GCDClient::mergePropertyAndFilesJson(QString nonce, QString callback)
 
         mergedObj = parseCommonPropertyScriptValue(engine, propertyObj);
         mergedObj.setProperty("children", engine.newArray());
-        int contentsCount = filesObj.property("items").toVariant().toList().length();
+        int contentsCount = filesObj.property("items").property("length").toInteger();
         for (int i = 0; i < contentsCount; i++) {
             QApplication::processEvents();
 
@@ -2162,7 +2162,7 @@ QString GCDClient::deltaReplyFinished(QNetworkReply *reply)
         }
 
         // Get entries count.
-        int entriesCount = sourceObj.property("items").toVariant().toList().length();
+        int entriesCount = sourceObj.property("items").property("length").toInteger();
         qDebug() << "GCDClient::deltaReplyFinished entriesCount" << entriesCount;
 
         // Process sourceObj.

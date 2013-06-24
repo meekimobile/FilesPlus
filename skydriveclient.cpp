@@ -987,7 +987,7 @@ void SkyDriveClient::mergePropertyAndFilesJson(QString nonce, QString callback, 
 
         mergedObj = parseCommonPropertyScriptValue(engine, propertyObj);
         mergedObj.setProperty("children", engine.newArray());
-        int contentsCount = filesObj.property("data").toVariant().toList().length();
+        int contentsCount = filesObj.property("data").property("length").toInteger();
         for (int i = 0; i < contentsCount; i++) {
             QApplication::processEvents();
 
@@ -1117,7 +1117,7 @@ QString SkyDriveClient::createFolderReplyFinished(QNetworkReply *reply, bool syn
             if (reply->error() == QNetworkReply::NoError) {
                 QScriptEngine engine;
                 QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
-                int contentsCount = jsonObj.property("data").toVariant().toList().length();
+                int contentsCount = jsonObj.property("data").property("length").toInteger();
                 for (int i = 0; i < contentsCount; i++) {
                     QScriptValue item = jsonObj.property("data").property(i);
                     if (item.property("name").toString() == newRemoteFileName) {
