@@ -286,6 +286,9 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
         m_settings->setValue("CustomQNetworkAccessManager.userAgent.www.dropbox.com",
                              "Mozilla/5.0 (Nokia Belle; U; N8-00; en-TH) AppleWebKit/534.3 (KHTML, like Gecko) FilesPlus Mobile Safari/534.3");
     }
+    if (!m_settings->contains("RemoteImageProvider.CacheImageWorker.enabled")) {
+        m_settings->setValue("RemoteImageProvider.CacheImageWorker.enabled", QVariant(true));
+    }
 #endif
     m_settings->sync();
 
