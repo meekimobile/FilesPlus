@@ -114,8 +114,8 @@ Item {
     Image {
         id: cutCopyIcon
         z: 1
-        width: 32
-        height: 32
+        width: 30
+        height: 30
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.margins: subIconMargin
@@ -126,8 +126,8 @@ Item {
     Image {
         id: markIcon
         z: 1
-        width: 32
-        height: 32
+        width: 30
+        height: 30
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.margins: subIconMargin
@@ -138,8 +138,8 @@ Item {
     Image {
         id: syncIcon
         z: 1
-        width: 32
-        height: 32
+        width: 30
+        height: 30
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: subIconMargin
@@ -151,8 +151,8 @@ Item {
     Image {
         id: runningIcon
         z: 1
-        width: 32
-        height: 32
+        width: 30
+        height: 30
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: subIconMargin
