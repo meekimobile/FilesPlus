@@ -600,7 +600,7 @@ Page {
             }
             Slider {
                 id: sliderValue
-                width: parent.width * 0.65
+                width: parent.width * 0.5
                 anchors.verticalCenter: parent.verticalCenter
                 valueIndicatorText: getOptionValueText(name, value)
                 valueIndicatorVisible: true
