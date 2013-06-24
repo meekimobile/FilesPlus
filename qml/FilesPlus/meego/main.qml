@@ -1503,7 +1503,7 @@ PageStackWindow {
 
             console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " " + err + " " + errMsg + " " + msg);
 
-            if (err != 0) {
+            if (err != 0 && err != 203) {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Metadata"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
