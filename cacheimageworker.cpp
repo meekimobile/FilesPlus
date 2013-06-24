@@ -179,7 +179,8 @@ void CacheImageWorker::cacheLocalImage(const QString &filePath, const QSize &req
     QImageReader ir(filePath);
     if (ir.canRead()) {
         // Calculate new thumbnail size with KeepAspectRatio.
-        QSize defaultSize(DEFAULT_CACHE_IMAGE_SIZE, DEFAULT_CACHE_IMAGE_SIZE);
+        int defaultImageSize = m_settings.value("local.image.preview.size", DEFAULT_CACHE_IMAGE_SIZE).toInt();
+        QSize defaultSize(defaultImageSize, defaultImageSize);
         if (!requestedSize.isValid() && (ir.size().width() > defaultSize.width() || ir.size().height() > defaultSize.height())) {
             QSize newSize = ir.size();
             newSize.scale(defaultSize, Qt::KeepAspectRatio);
