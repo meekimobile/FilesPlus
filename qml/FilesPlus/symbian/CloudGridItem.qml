@@ -9,6 +9,7 @@ Item {
     property string filePath: absolutePath
     property string gridViewState: ""
     property alias gridItemIconSource: gridItemIcon.source
+    property real gridItemIconSourceSize: 128
     property alias gridItemIconAsynchronous: gridItemIcon.asynchronous
     property bool gridItemIconBusyVisible: false
     property alias actionIconSource: cutCopyIcon.source
@@ -77,8 +78,8 @@ Item {
     Image {
         id: gridItemIcon
         source: appInfo.emptySetting+getIconSource((new Date()).getTime())
-        sourceSize.width: isImageUrlCachable ? 128 : undefined // Expected size of thumbnail128 from cloud service.
-        sourceSize.height: isImageUrlCachable ? 128 : undefined
+        sourceSize.width: isImageUrlCachable ? gridItemIconSourceSize : undefined // Expected size of thumbnail128 from cloud service.
+        sourceSize.height: isImageUrlCachable ? gridItemIconSourceSize : undefined
         anchors.centerIn: parent
         asynchronous: true
         smooth: false
@@ -171,6 +172,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         elide: Text.ElideRight
+        opacity: showPreview ? 0.5 : 1
     }
 
     MouseArea {
