@@ -270,6 +270,9 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     if (!m_settings->contains("RemoteImageProvider.CacheImageWorker.enabled")) { // NOTE To avoid crash while loading remote image asynchronously.
         m_settings->setValue("RemoteImageProvider.CacheImageWorker.enabled", QVariant(true));
     }
+    if (!m_settings->contains("CloudDriveClient.stringifyScriptValue.useCustomLogic")) {
+        m_settings->setValue("CloudDriveClient.stringifyScriptValue.useCustomLogic", QVariant(true));
+    }
     if (!m_settings->contains("temp.path")) {
 #ifdef Q_OS_SYMBIAN
         m_settings->setValue("temp.path", QVariant("E:/temp/.filesplus"));
