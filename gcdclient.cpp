@@ -1771,8 +1771,11 @@ void GCDClient::mergePropertyAndFilesJson(QString nonce, QString callback)
         QScriptValue mergedObj;
         QScriptValue propertyObj;
         QScriptValue filesObj;
-        qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
-        qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
+        qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "started.";
+        if (m_settings.value("GCDClient.mergePropertyAndFilesJson.logReplyBody.enabled", false).toBool()) {
+            qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
+            qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
+        }
         propertyObj = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
         filesObj = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
 
