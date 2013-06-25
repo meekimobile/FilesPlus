@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QCryptographicHash>
 #include "sleeper.h"
+#include "cacheimageworker.h"
 
 RemoteImageProvider::RemoteImageProvider(QString cachePath) : QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
 {
@@ -13,16 +14,8 @@ RemoteImageProvider::RemoteImageProvider(QString cachePath) : QDeclarativeImageP
 
 QString RemoteImageProvider::getCachedPath(const QString &id, const QSize &requestedSize)
 {
-    QUrl url(id);
-    QByteArray hash = QCryptographicHash::hash(url.host().append(url.path()).toUtf8(), QCryptographicHash::Md5).toHex();
-    QString cachedImagePath;
-    if (requestedSize.isValid()) {
-        cachedImagePath = QString("%1/%2_%3x%4.png").arg(m_cachePath).arg(QString(hash)).arg(requestedSize.width()).arg(requestedSize.height());
-    } else {
-        cachedImagePath = QString("%1/%2.png").arg(m_cachePath).arg(QString(hash));
-    }
-
-    return cachedImagePath;
+    // NOTE Reuse CacheImageWorker's method.
+    return CacheImageWorker::getCachedRemotePath(id, requestedSize, m_cachePath);
 }
 
 QImage RemoteImageProvider::getCachedImage(const QString &id, const QSize &requestedSize)
