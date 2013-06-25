@@ -267,6 +267,9 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     if (!m_settings->contains("GCDClient.deleteFile.permanently.enabled")) {
         m_settings->setValue("GCDClient.deleteFile.permanently.enabled", QVariant(true));
     }
+    if (!m_settings->contains("RemoteImageProvider.CacheImageWorker.enabled")) { // NOTE To avoid crash while loading remote image asynchronously.
+        m_settings->setValue("RemoteImageProvider.CacheImageWorker.enabled", QVariant(true));
+    }
     if (!m_settings->contains("temp.path")) {
 #ifdef Q_OS_SYMBIAN
         m_settings->setValue("temp.path", QVariant("E:/temp/.filesplus"));
@@ -285,9 +288,6 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     if (!m_settings->contains("CustomQNetworkAccessManager.userAgent.www.dropbox.com")) {
         m_settings->setValue("CustomQNetworkAccessManager.userAgent.www.dropbox.com",
                              "Mozilla/5.0 (Nokia Belle; U; N8-00; en-TH) AppleWebKit/534.3 (KHTML, like Gecko) FilesPlus Mobile Safari/534.3");
-    }
-    if (!m_settings->contains("RemoteImageProvider.CacheImageWorker.enabled")) {
-        m_settings->setValue("RemoteImageProvider.CacheImageWorker.enabled", QVariant(true));
     }
 #endif
     m_settings->sync();
