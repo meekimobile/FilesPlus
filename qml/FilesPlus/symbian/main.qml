@@ -1647,7 +1647,7 @@ PageStackWindow {
             // Get job json.
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
-            console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " " + err + " " + errMsg + " " + msg);
+            console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " " + err + " " + errMsg);
 
             if (err != 0 && err != 203) {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Metadata"),

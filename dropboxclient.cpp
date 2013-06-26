@@ -1367,7 +1367,9 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "DropboxClient::metadataReplyFinished replyBody" << replyBody;
+    if (m_settings.value("Logging.enabled", false).toBool()) {
+        qDebug() << "DropboxClient::metadataReplyFinished replyBody" << replyBody;
+    }
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
         QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");

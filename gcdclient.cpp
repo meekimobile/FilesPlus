@@ -1303,7 +1303,7 @@ QNetworkReply * GCDClient::files(QString nonce, QString uid, QString remoteFileP
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
     sortMap["key"] = consumerKey;
-    sortMap["maxResults"] = "1000"; // TODO Implement using pageToken. Workaround, using default value 1000.
+    sortMap["maxResults"] = "10000"; // TODO Implement using pageToken. Workaround, using default value 10000 (the same as Dropbox).
     sortMap["q"] = QUrl::toPercentEncoding(QString("'%1' in parents and trashed = false").arg((remoteFilePath == "") ? RemoteRoot : remoteFilePath));
     QString queryString = createQueryString(sortMap);
     qDebug() << "GCDClient::files" << nonce << "queryString" << queryString;
@@ -1772,7 +1772,7 @@ void GCDClient::mergePropertyAndFilesJson(QString nonce, QString callback)
         QScriptValue propertyObj;
         QScriptValue filesObj;
         qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "started.";
-        if (m_settings.value("GCDClient.mergePropertyAndFilesJson.logReplyBody.enabled", false).toBool()) {
+        if (m_settings.value("Logging.enabled", false).toBool()) {
             qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
             qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
         }

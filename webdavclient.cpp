@@ -1199,7 +1199,9 @@ void WebDavClient::propertyReplyFinished(QNetworkReply *reply)
     qDebug() << "WebDavClient::propertyReplyFinished" << nonce << callback << uid << remoteFilePath << "reply" << reply << QString(" Error=%1").arg(reply->error());
 
     QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "WebDavClient::propertyReplyFinished nonce" << nonce << "replyBody" << replyBody << "contentType" << reply->header(QNetworkRequest::ContentTypeHeader).toString();
+    qDebug() << "WebDavClient::propertyReplyFinished nonce" << nonce
+             << "contentType" << reply->header(QNetworkRequest::ContentTypeHeader).toString()
+             << (m_settings.value("Logging.enabled", false).toBool() ? ("replyBody " + replyBody) : "");
 
     // Parse XML and convert to JSON.
     if (reply->error() == QNetworkReply::NoError && reply->header(QNetworkRequest::ContentTypeHeader).toString().indexOf("xml") != -1) {

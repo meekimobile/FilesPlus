@@ -1447,6 +1447,8 @@ int CloudDriveModel::getJobCount() const
 void CloudDriveModel::cancelQueuedJobs()
 {
     while (!m_jobQueue->isEmpty()) {
+        QApplication::processEvents();
+
         CloudDriveJob job = m_cloudDriveJobs->value(m_jobQueue->dequeue());
         if (!job.isRunning) {
             removeJob("CloudDriveModel::cancelQueuedJobs", job.jobId);
@@ -1461,6 +1463,8 @@ void CloudDriveModel::removeJobs(bool removeAll)
     qDebug() << "CloudDriveModel::removeJobs removeAll" << removeAll;
     // Remove unqueued jobs.
     foreach (CloudDriveJob job, m_cloudDriveJobs->values()) {
+        QApplication::processEvents();
+
         if (removeAll || !job.isRunning) {
             removeJob("CloudDriveModel::removeJobs", job.jobId);
         }
@@ -2443,7 +2447,8 @@ QStringList CloudDriveModel::getLocalPathList(QString localParentPath)
 
 void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut, QString data)
 {
-    qDebug() << "----- CloudDriveModel::syncFromLocal -----" << type << uid << localPath << "remoteParentPath" << remoteParentPath << "forcePut" << forcePut << "data" << data;
+    qDebug() << "----- CloudDriveModel::syncFromLocal -----" << type << uid << localPath << "remoteParentPath" << remoteParentPath << "forcePut" << forcePut << "data.length()" << data.length()
+             << (m_settings.value("Logging.enabled", false).toBool() ? data : "");
 
     if (localPath == "") {
         qDebug() << "CloudDriveModel::syncFromLocal localPath" << localPath << "is empty. Operation is aborted.";
@@ -3242,7 +3247,8 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
 
     // Parse and process metadata.
     if (err == QNetworkReply::NoError) {
-        qDebug() << "CloudDriveModel::metadataReplyFilter" << getCloudName(job.type) << nonce << err << errMsg << msg;
+        qDebug() << "CloudDriveModel::metadataReplyFilter" << getCloudName(job.type) << nonce << err << errMsg
+                 << (m_settings.value("Logging.enabled", false).toBool() ? msg : "");
 
         // Found metadata.
         // Parse to common json object.
@@ -3342,7 +3348,7 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
 
                 // Sync based on local contents.
                 // TODO Issue: syncFromLocal can't detect deleted remote file before it still has connection, then syncFromLocal will skip it.
-                qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "remotePathList" << remotePathList;
+                qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "remotePathList.length()" << remotePathList.length();
                 syncFromLocal(getClientType(job.type), job.uid, job.localFilePath, jsonObj.property("parentPath").toString(), job.modelIndex, job.forcePut, remotePathList);
             } else { // Sync file.
                 // Check if it's cloud format.

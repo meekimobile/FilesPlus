@@ -980,8 +980,11 @@ void SkyDriveClient::mergePropertyAndFilesJson(QString nonce, QString callback, 
         QScriptValue mergedObj;
         QScriptValue propertyObj;
         QScriptValue filesObj;
-        qDebug() << "SkyDriveClient::mergePropertyAndFilesJson propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
-        qDebug() << "SkyDriveClient::mergePropertyAndFilesJson filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
+        qDebug() << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "started.";
+        if (m_settings.value("Logging.enabled", false).toBool()) {
+            qDebug() << "SkyDriveClient::mergePropertyAndFilesJson propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
+            qDebug() << "SkyDriveClient::mergePropertyAndFilesJson filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
+        }
         propertyObj = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
         filesObj = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
 
