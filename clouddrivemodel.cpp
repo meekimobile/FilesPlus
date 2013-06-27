@@ -2716,7 +2716,14 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
         }
     } else {
         // Get whole data to file with synchronous method.
-        sourceClient->fileGet(nonce, uid, remoteFilePath, tempFilePath, true);
+        QString result = sourceClient->fileGet(nonce, uid, remoteFilePath, tempFilePath, true);
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + result + ")");
+        if (jsonObj.property("error").isValid()) {
+            migrateFilePutReplyFilter(nonce, jsonObj.property("error").toInteger(), jsonObj.property("error_string").toString(), "");
+            return;
+        }
+
         job.downloadOffset = QFileInfo(tempFilePath).size();
         updateJob(job);
     }
