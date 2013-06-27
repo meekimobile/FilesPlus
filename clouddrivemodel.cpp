@@ -4264,6 +4264,8 @@ void CloudDriveModel::fixDamagedDB()
         qDebug() << "CloudDriveModel::fixDamagedDB find duplicated unique key failed. Error" << query.lastError() << query.lastQuery();
     }
 
+    m_db.commit();
+
     // Process pending events.
     QApplication::processEvents();
 }
