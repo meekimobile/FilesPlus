@@ -33,10 +33,10 @@ Page {
 
     function toggleSortFlag() {
         if (state == "chart") {
-            fsModel.setSortFlag(FolderSizeItemListModel.SortBySize, false);
+            return fsModel.setSortFlag(FolderSizeItemListModel.SortBySize, false);
         } else {
             // TODO revert back to stored sortFlag.
-            fsModel.revertSortFlag();
+            return fsModel.revertSortFlag();
         }
     }
 
@@ -172,7 +172,8 @@ Page {
 
             TextIndicator {
                 id: cloudButtonIndicator
-                color: "#00AAFF"
+                text: (cloudDriveModel.jobCount > 0) ? cloudDriveModel.jobCount : ""
+                color: ((cloudDriveModel.runningJobCount + cloudDriveModel.queuedJobCount) > 0) ? "#00AAFF" : "red"
                 anchors.right: parent.right
                 anchors.rightMargin: 10
                 anchors.bottom: parent.bottom
@@ -584,16 +585,6 @@ Page {
         uidDialog.open();
     }
 
-    function uploadFileSlot(srcFilePath, selectedIndex) {
-        console.debug("folderPage uploadFileSlot srcFilePath=" + srcFilePath);
-        syncFileSlot(srcFilePath, selectedIndex, CloudDriveModel.FilePut);
-    }
-
-    function downloadFileSlot(srcFilePath, selectedIndex) {
-        console.debug("folderPage downloadFileSlot srcFilePath=" + srcFilePath);
-        syncFileSlot(srcFilePath, selectedIndex, CloudDriveModel.FileGet);
-    }
-
     function cancelAllFolderSizeJobsSlot() {
         fsModel.cancelQueuedJobs();
         // Abort thread with rollbackFlag=false.
@@ -607,6 +598,10 @@ Page {
     function postBrowseReplySlot() {
         cloudDrivePathDialog.postBrowseReplySlot();
         cloudDrivePathDialog.open();
+    }
+
+    function resetCloudDrivePathDialogBusySlot(caller) {
+        cloudDrivePathDialog.isBusy = false;
     }
 
     function updateCloudDrivePathDialogSlot(remotePath) {
@@ -721,22 +716,6 @@ Page {
         } else {
             fsModel.refreshItem(index);
         }
-    }
-
-    function updateJobQueueCount(runningJobCount, jobQueueCount) {
-        // Update (runningJobCount + jobQueueCount) on cloudButton.
-        cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
-    }
-
-    function updateMigrationProgressSlot(type, uid, localFilePath, remoteFilePath, count, total) {
-        if (migrateProgressDialog.status != DialogStatus.Open) {
-            migrateProgressDialog.indeterminate = false;
-            migrateProgressDialog.min = 0;
-            migrateProgressDialog.open();
-        }
-        migrateProgressDialog.source = localFilePath;
-        migrateProgressDialog.value = count;
-        migrateProgressDialog.max = total;
     }
 
     function refreshBeginSlot() {
@@ -863,9 +842,6 @@ Page {
         visible: (folderPage.state == "chart")
         labelFont: "Sans Serif,16"
 
-        onChartClicked: {
-            console.debug("QML pieChartView.onChartClicked");
-        }
         onSliceClicked: {
             console.debug("QML pieChartView.onSliceClicked " + text + ", index=" + index + ", isDir=" + isDir);
             if (isDir) {
@@ -874,15 +850,6 @@ Page {
             } else {
                 folderPage.state = "list";
             }
-        }
-        onActiveFocusChanged: {
-            console.debug("QML pieChartView.onActiveFocusChanged");
-        }
-        onSceneActivated: {
-            console.debug("QML pieChartView.onSceneActivated");
-        }
-        onSwipe: {
-            console.debug("QML pieChartView.onSwipe " + swipeAngle);
         }
 
         Component.onCompleted: {
@@ -1354,11 +1321,11 @@ Page {
         }
 
         onUploadFile: {
-            uploadFileSlot(srcFilePath, srcItemIndex);
+            syncFileSlot(srcFilePath, srcItemIndex, CloudDriveModel.FilePut);
         }
 
         onDownloadFile: {
-            downloadFileSlot(srcFilePath, srcItemIndex);
+            syncFileSlot(srcFilePath, srcItemIndex, CloudDriveModel.FileGet);
         }
 
         onShareFile: {

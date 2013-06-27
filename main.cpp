@@ -80,40 +80,54 @@ void testReset()
 //    ok = QFile("C:/Data/.config/MeekiMobile/FilesPlus.conf").remove();
 //    qDebug() << "main testReset remove C:/Data/.config/MeekiMobile/FilesPlus.conf" << ok;
 
-    QSqlDatabase f_db = QSqlDatabase::addDatabase("QSQLITE", "folderpie_cache");
-    f_db.setDatabaseName("FolderPieCache.db");
-    ok = f_db.open();
-    if (ok) {
-        QSqlQuery qry(f_db);
-        qry.exec("DROP INDEX folderpie_cache_pk");
-        qDebug() << "main" << qry.lastError() << qry.lastQuery();
-        qry.exec("DROP TABLE folderpie_cache");
-        qDebug() << "main" << qry.lastError() << qry.lastQuery();
+    QString privateDrivePath = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+    qDebug() << "main testReset privateDrive" << privateDrivePath;
+    QDir privateDir(privateDrivePath);
+    QStringList nameFilters;
+    nameFilters << "*.dat" << "*.db";
+    privateDir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
+    privateDir.setNameFilters(nameFilters);
+    foreach (QFileInfo privateItem, privateDir.entryInfoList()) {
+        QFile(privateItem.absoluteFilePath()).copy("E:/" + privateItem.fileName());
+        qDebug() << "main testReset copy" << privateItem.absoluteFilePath() << "to E:/";
+        privateDir.remove(privateItem.fileName());
+        qDebug() << "main testReset remove" << privateItem.absoluteFilePath();
     }
-    f_db.close();
 
-    ok = QFile("CloudDriveModel.dat").remove();
-    qDebug() << "main testReset remove CloudDriveModel.dat" << ok;
+//    QSqlDatabase f_db = QSqlDatabase::addDatabase("QSQLITE", "folderpie_cache");
+//    f_db.setDatabaseName("FolderPieCache.db");
+//    ok = f_db.open();
+//    if (ok) {
+//        QSqlQuery qry(f_db);
+//        qry.exec("DROP INDEX folderpie_cache_pk");
+//        qDebug() << "main" << qry.lastError() << qry.lastQuery();
+//        qry.exec("DROP TABLE folderpie_cache");
+//        qDebug() << "main" << qry.lastError() << qry.lastQuery();
+//    }
+//    f_db.close();
+
+//    ok = QFile("CloudDriveModel.dat").remove();
+//    qDebug() << "main testReset remove CloudDriveModel.dat" << ok;
 
     // For testing existing user case.
-    ok = QFile("CloudDriveModel.dat.bak").copy("CloudDriveModel.dat");
-    qDebug() << "main testReset copy CloudDriveModel.dat.bak to CloudDriveModel.dat" << ok;
+//    ok = QFile("CloudDriveModel.dat.bak").copy("CloudDriveModel.dat");
+//    qDebug() << "main testReset copy CloudDriveModel.dat.bak to CloudDriveModel.dat" << ok;
 
     // For testing newly user case.
 //    ok = QFile("DropboxClient.dat").remove();
 //    qDebug() << "main testReset remove DropboxClient.dat" << ok;
 
-    QSqlDatabase c_db = QSqlDatabase::addDatabase("QSQLITE", "cloud_drive_model");
-    c_db.setDatabaseName("CloudDriveModel.db");
-    ok = c_db.open();
-    if (ok) {
-        QSqlQuery qry(c_db);
-        qry.exec("DROP INDEX cloud_drive_item_pk");
-        qDebug() << "main" << qry.lastError() << qry.lastQuery();
-        qry.exec("DROP TABLE cloud_drive_item");
-        qDebug() << "main" << qry.lastError() << qry.lastQuery();
-    }
-    c_db.close();
+//    QSqlDatabase c_db = QSqlDatabase::addDatabase("QSQLITE", "cloud_drive_model");
+//    c_db.setDatabaseName("CloudDriveModel.db");
+//    ok = c_db.open();
+//    if (ok) {
+//        QSqlQuery qry(c_db);
+//        qry.exec("DROP INDEX cloud_drive_item_pk");
+//        qDebug() << "main" << qry.lastError() << qry.lastQuery();
+//        qry.exec("DROP TABLE cloud_drive_item");
+//        qDebug() << "main" << qry.lastError() << qry.lastQuery();
+//    }
+//    c_db.close();
 
 //    m_settings->setValue("dropbox.fullaccess.enabled", false);
 //    qDebug() << "main testReset setting dropbox.fullaccess.enabled" << m_settings->value("dropbox.fullaccess.enabled");
@@ -157,6 +171,9 @@ void testReset()
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
     qDebug() << QTime::currentTime() << "main started.";
+
+    // For testing only.
+//    testReset();
 
     // Set properties for QSettings.
     QCoreApplication::setOrganizationName("MeekiMobile");
@@ -246,6 +263,15 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     }
     if (!m_settings->contains("GCDClient.patchFile.setModifiedDate.enabled")) {
         m_settings->setValue("GCDClient.patchFile.setModifiedDate.enabled", QVariant(true));
+    }
+    if (!m_settings->contains("GCDClient.deleteFile.permanently.enabled")) {
+        m_settings->setValue("GCDClient.deleteFile.permanently.enabled", QVariant(true));
+    }
+    if (!m_settings->contains("RemoteImageProvider.CacheImageWorker.enabled")) { // NOTE To avoid crash while loading remote image asynchronously.
+        m_settings->setValue("RemoteImageProvider.CacheImageWorker.enabled", QVariant(true));
+    }
+    if (!m_settings->contains("CloudDriveClient.stringifyScriptValue.useCustomLogic")) {
+        m_settings->setValue("CloudDriveClient.stringifyScriptValue.useCustomLogic", QVariant(true));
     }
     if (!m_settings->contains("temp.path")) {
 #ifdef Q_OS_SYMBIAN

@@ -38,6 +38,8 @@ public:
 
     static const qint64 DefaultChunkSize;
 
+    static const QString ReplyDateFormat;
+
     explicit DropboxClient(QObject *parent = 0);
     ~DropboxClient();
 
@@ -111,7 +113,6 @@ protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:
     TokenPair requestTokenPair;
-    QString localPath;
     QHash<QString, QFile*> m_localFileHash;
 
     bool isFullAccess;
@@ -119,12 +120,6 @@ private:
     QString consumerSecret;
     QString dropboxRoot;
 
-    QSettings m_settings;
-
-    QString createTimestamp();
-    QString createNonce();
-    QString createNormalizedQueryString(QMap<QString, QString> sortMap);
-    QString createQueryString(QMap<QString, QString> sortMap);
     QByteArray createBaseString(QString method, QString uri, QString queryString);
     QString createSignature(QString signatureMethod, QString consumerSecret, QString tokenSecret, QByteArray baseString);
     QString createSignatureWithHMACSHA1(QString consumerSecret, QString tokenSecret, QByteArray baseString);
@@ -132,7 +127,6 @@ private:
     QByteArray createPostData(QString signature, QString queryString);
     QByteArray createOAuthHeaderString(QMap<QString, QString> sortMap);
     QByteArray createOAuthHeaderForUid(QString nonce, QString uid, QString method, QString uri, QMap<QString, QString> addParamMap = QMap<QString, QString>());
-    QString encodeURI(const QString uri);
     QString getParentRemotePath(QString remotePath);
     QString getRemoteName(QString remotePath);
 };

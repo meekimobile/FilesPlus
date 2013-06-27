@@ -6,6 +6,7 @@
 #include <QScriptEngine>
 #include "tokenpair.h"
 #include "contenttypehelper.h"
+#include "clouddrivemodelitem.h"
 
 class CloudDriveClient : public QObject
 {
@@ -23,6 +24,7 @@ public:
     QString getEmail(QString uid);
     int removeUid(QString uid);
 
+    QString formatJSONDateString(QDateTime datetime);
     virtual QDateTime parseReplyDateString(QString dateString);
 
     virtual bool isRemoteAbsolutePath();
@@ -36,9 +38,10 @@ public:
     virtual bool isViewable();
     virtual bool isImageUrlCachable();
     virtual bool isUnicodeSupported();
+    virtual bool isMediaEnabled(QString uid);
 
     virtual bool testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname);
-    virtual void saveConnection(QString id, QString hostname, QString username, QString password, QString token);
+    virtual bool saveConnection(QString id, QString hostname, QString username, QString password, QString token);
 
     virtual void requestToken(QString nonce);
     virtual void authorize(QString nonce, QString hostname);
@@ -48,18 +51,16 @@ public:
     virtual void quota(QString nonce, QString uid);
     virtual QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
     virtual void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
-    virtual void metadata(QString nonce, QString uid, QString remoteFilePath);
+    virtual void metadata(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
     virtual void browse(QString nonce, QString uid, QString remoteFilePath);
-    virtual void createFolder(QString nonce, QString uid, QString newRemoteParentPath, QString newRemoteFolderName);
+    virtual QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous = false);
     virtual void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     virtual void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
-    virtual void deleteFile(QString nonce, QString uid, QString remoteFilePath);
+    virtual QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
     virtual void shareFile(QString nonce, QString uid, QString remoteFilePath);
     virtual QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size);
     virtual QString media(QString nonce, QString uid, QString remoteFilePath);
     virtual QString delta(QString nonce, QString uid, bool synchronous = false);
-
-    virtual QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
 
     virtual QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
     /*
@@ -122,9 +123,12 @@ signals:
 public slots:
 
 protected:
+    QString refreshTokenUid;
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;
     QHash<QString, QNetworkReply*> *m_replyHash;
+
+    QSettings m_settings;
 
     void loadAccessPairMap();
     void saveAccessPairMap();
@@ -134,15 +138,17 @@ protected:
     QString createNormalizedQueryString(QMap<QString, QString> sortMap);
     QString encodeURI(const QString uri);
     QString createQueryString(QMap<QString, QString> sortMap);
+    QByteArray encodeMultiPart(QString boundary, QMap<QString, QString> paramMap, QString fileParameter, QString fileName, QByteArray fileData, QString contentType);
     QString removeDoubleSlash(QString remoteFilePath);
     QString getFileType(QString localPath);
     QString getContentType(QString fileName);
 
     virtual QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
     QString stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj);
-    QString formatJSONDateString(QDateTime datetime);
     qint64 getOffsetFromRange(QString rangeHeader);
     QString getPathFromUrl(QString urlString);
+    QDateTime parseJSONDateString(QString jsonString);
+    CloudDriveModelItem * parseCloudDriveModelItem(QScriptEngine &engine, QScriptValue jsonObj);
 private:
 
 };

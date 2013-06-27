@@ -5,8 +5,8 @@ Page {
     id: settingPage
 
     property string name: "settingPage"
-    property int jobQueueCount: 0
-    property int cloudDriveItemCount: 0
+    property int jobQueueCount: cloudDriveModel.queuedJobCount
+    property int cloudDriveItemCount: cloudDriveModel.itemCount
     property bool inverted: !theme.inverted
 
     function getIndexByName(name) {
@@ -17,20 +17,6 @@ Page {
         }
 
         return -1;
-    }
-
-    function updateJobQueueCount(runningJobCount, jobQueueCount) {
-        var i = getIndexByName("cancelAllCloudDriveJobs");
-        if (i > -1) {
-            settingPage.jobQueueCount = jobQueueCount;
-        }
-    }
-
-    function updateCloudDriveItemCount(cloudDriveItemCount) {
-        var i = getIndexByName("syncAllConnectedItems");
-        if (i > -1) {
-            settingPage.cloudDriveItemCount = cloudDriveItemCount;
-        }
     }
 
     tools: ToolBarLayout {
@@ -62,283 +48,295 @@ Page {
         id: settingModel
         ListElement {
             name: "CloudPrint"
-            title: ""
+            options: ""
             type: "section"
             group: "CloudPrint"
         }
         ListElement {
             name: "showCloudPrintJobs"
-            title: ""
+            options: ""
             type: "button"
             group: "CloudPrint"
         }
         ListElement {
             name: "printFromURL"
-            title: ""
+            options: ""
             type: "button"
             group: "CloudPrint"
         }
         ListElement {
             name: "resetCloudPrint"
-            title: ""
+            options: ""
             type: "button"
             group: "CloudPrint"
         }
         ListElement {
             name: "Spacer"
-            title: ""
+            options: ""
             type: "spacer"
             group: "Spacer"
         }
         ListElement {
             name: "CloudDrive"
-            title: ""
+            options: ""
             type: "section"
             group: "CloudDrive"
         }
         ListElement {
             name: "showCloudDriveJobs"
-            title: ""
+            options: ""
             type: "button"
             group: "CloudDrive"
         }
         ListElement {
             name: "cancelAllCloudDriveJobs"
-            title: ""
+            options: ""
             type: "button"
             group: "CloudDrive"
         }
         ListElement {
             name: "syncAllConnectedItems"
-            title: ""
+            options: ""
             type: "button"
             group: "CloudDrive"
         }
         ListElement {
             name: "showCloudDriveAccounts"
-            title: ""
+            options: ""
             type: "button"
             group: "CloudDrive"
         }
 //        ListElement {
 //            name: "sync.after.refresh"
-//            title: ""
+//            options: ""
 //            type: "switch"
 //            group: "CloudDrive"
 //        }
         ListElement {
             name: "CloudFolderPage.thumbnail.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "CloudDrive"
         }
         ListElement {
             name: "drivepage.clouddrive.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "CloudDrive"
         }
         ListElement {
             name: "CloudDriveModel.metadata.root.connection.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "CloudDrive"
         }
         ListElement {
             name: "CloudDriveModel.syncDirtyItems.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "CloudDrive"
         }
         ListElement {
             name: "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnCharging.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "CloudDrive"
         }
         ListElement {
             name: "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnBatteryOk.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "CloudDrive"
         }
         ListElement {
             name: "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnWlan.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "CloudDrive"
         }
         ListElement {
             name: "Spacer"
-            title: ""
+            options: ""
             type: "spacer"
             group: "Spacer"
         }
         ListElement {
             name: "FolderPie"
-            title: ""
+            options: ""
             type: "section"
             group: "FolderPie"
         }
         ListElement {
             name: "resetCache"
-            title: ""
+            options: ""
             type: "button"
             group: "FolderPie"
         }
         ListElement {
             name: "Personalization"
-            title: ""
+            options: ""
             type: "section"
             group: "Personalization"
         }
         ListElement {
             name: "locale"
-            title: ""
+            options: ""
             type: "button"
             group: "Personalization"
         }
         ListElement {
             name: "Theme.inverted"
-            title: ""
+            options: ""
             type: "switch"
             group: "Personalization"
         }
         ListElement {
             name: "popup.timer.interval"
-            title: ""
-            type: "popupInterval"
+            options: "2,10,1,5" // min,max,step,default
+            type: "slider"
             group: "Personalization"
         }
         ListElement {
             name: "listItem.compact.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Personalization"
         }
         ListElement {
             name: "GridView.compact.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Personalization"
         }
         ListElement {
             name: "thumbnail.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Personalization"
         }
         ListElement {
             name: "statusbar.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Personalization"
         }
         ListElement {
             name: "Spacer"
-            title: ""
+            options: ""
             type: "spacer"
             group: "Spacer"
         }
         ListElement {
             name: "Spacer"
-            title: ""
+            options: ""
             type: "spacer"
             group: "Spacer"
         }
         ListElement {
             name: "Developer"
-            title: ""
+            options: ""
             type: "section"
             group: "Developer"
         }
         ListElement {
+            name: "Monitoring.enabled"
+            options: ""
+            type: "switch"
+            group: "Developer"
+        }
+        ListElement {
             name: "Logging.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Developer"
         }
         ListElement {
             name: "dropbox.fullaccess.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Developer"
         }
         ListElement {
             name: "drivepage.systemdrive.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Developer"
         }
         ListElement {
             name: "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Developer"
         }
         ListElement {
             name: "FolderSizeModelThread.forceDeleteReadOnly.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Developer"
         }
         ListElement {
             name: "FtpClient.getItemListJson.showHiddenSystem.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Developer"
         }
         ListElement {
             name: "WebDavClient.createPropertyJson.showHiddenSystem.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Developer"
         }
         ListElement {
             name: "drivepage.trash.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Developer"
         }
         ListElement {
             name: "FolderSizeItemListModel.deleteFile.use.trash.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Developer"
         }
         ListElement {
             name: "WebDavClient.ignoreSSLSelfSignedCertificateErrors"
-            title: ""
+            options: ""
             type: "switch"
             group: "Developer"
         }
         ListElement {
             name: "LocalFileImageProvider.cache.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Developer"
         }
         ListElement {
+            name: "local.image.preview.size"
+            options: "480,854,187,854"
+            type: "slider"
+            group: "Developer"
+        }
+        ListElement {
             name: "LocalFileImageProvider.CacheImageWorker.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Developer"
         }
         ListElement {
             name: "RemoteImageProvider.CacheImageWorker.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "Developer"
         }
         ListElement {
             name: "GCDClient.dirtyBeforeSync.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "CloudDrive"
         }
         ListElement {
             name: "GCDClient.patchFile.setModifiedDate.enabled"
-            title: ""
+            options: ""
             type: "switch"
             group: "CloudDrive"
         }
@@ -395,6 +393,7 @@ Page {
         else if (name == "drivepage.trash.enabled") return qsTr("Show trash on drive page") + appInfo.emptyStr;
         else if (name == "WebDavClient.ignoreSSLSelfSignedCertificateErrors") return qsTr("Ignore WebDAV SSL self-signed certificate errors") + appInfo.emptyStr;
         else if (name == "LocalFileImageProvider.cache.enabled") return qsTr("Cache local images") + appInfo.emptyStr;
+        else if (name == "local.image.preview.size") return qsTr("Local image preview size") + appInfo.emptyStr;
         else if (name == "LocalFileImageProvider.CacheImageWorker.enabled") return qsTr("Queue local image caching") + appInfo.emptyStr;
         else if (name == "RemoteImageProvider.CacheImageWorker.enabled") return qsTr("Queue cloud image caching") + appInfo.emptyStr;
         else if (name == "FolderSizeModelThread.getDirContent.showHiddenSystem.enabled") return qsTr("Show hidden files on local drive") + appInfo.emptyStr;
@@ -462,6 +461,11 @@ Page {
         }
     }
 
+    function getOptionValueText(name, value) {
+        if (name == "popup.timer.interval") return qsTr("%n sec.", "", value) + appInfo.emptyStr;
+        else return value;
+    }
+
     Component {
         id: settingListItemDelegate
 
@@ -474,7 +478,7 @@ Page {
                 width: parent.width
                 anchors.centerIn: parent
                 property variant name
-                property variant title
+                property variant options
                 property variant type
                 property variant group
             }
@@ -487,8 +491,8 @@ Page {
 
             Binding {
                 target: itemLoader
-                property: "title"
-                value: title
+                property: "options"
+                value: options
             }
 
             Binding {
@@ -504,14 +508,14 @@ Page {
             }
 
             Component.onCompleted: {
-//                console.debug("settingListItemDelegate onCompleted " + name + " " + type + " " + title + " " + group);
+//                console.debug("settingListItemDelegate onCompleted " + name + " " + type + " " + options + " " + group);
                 if (type == "section") {
                     itemLoader.sourceComponent = settingListSectionDelegate;
                 } else if (type == "button") {
                     itemLoader.sourceComponent = buttonItemDelegate;
                 } else if (type == "switch") {
                     itemLoader.sourceComponent = switchItemDelegate;
-                } else if (type == "popupInterval") {
+                } else if (type == "slider") {
                     itemLoader.sourceComponent = sliderItemDelegate;
                 } else if (type == "locale") {
                     itemLoader.sourceComponent = localeSelectorItemDelegate;
@@ -527,7 +531,7 @@ Page {
             width: parent.width - 20
             height: 60
             anchors.centerIn: parent
-            text: (title=="") ? getTitle(name) : title
+            text: getTitle(name)
             onClicked: {
                 buttonClickedHandler(name);
             }
@@ -547,7 +551,7 @@ Page {
                 height: parent.height
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                text: (title=="") ? getTitle(name) : title
+                text: getTitle(name)
             }
             Switch {
                 id: settingValue
@@ -578,16 +582,13 @@ Page {
                 height: parent.height
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                text: (title=="") ? getTitle(name) : title
+                text: getTitle(name)
             }
             Slider {
                 id: sliderValue
-                width: parent.width * 0.65
+                width: parent.width * 0.5
                 anchors.verticalCenter: parent.verticalCenter
-                minimumValue: 2
-                maximumValue: 10
-                stepSize: 1
-                valueIndicatorText: appInfo.emptyStr+qsTr("%n sec.", "", value)
+                valueIndicatorText: getOptionValueText(name, value)
                 valueIndicatorVisible: true
 
                 onPressedChanged: {
@@ -598,7 +599,12 @@ Page {
                 }
 
                 Component.onCompleted: {
-                    value = appInfo.getSettingValue(name, 5);
+                    // options: min,max,step,default
+                    var optionValues = options.split(',');
+                    minimumValue = optionValues[0];
+                    maximumValue = optionValues[1];
+                    stepSize = optionValues[2];
+                    value = appInfo.getSettingValue(name, optionValues[3]);
                     console.debug("settingPage sliderItemDelegate sliderValue onCompleted value " + value);
                 }
             }
@@ -688,10 +694,6 @@ Page {
         onStatusChanged: {
             if (status == DialogStatus.Opening) {
                 selectedIndex = languageModel.getIndexByLocale( (appInfo.getLocale() !== "") ? appInfo.getLocale() : appInfo.getSystemLocale() );
-                if (selectedIndex != -1) {
-                    var listView = content[0].children[0]; // For meego only.
-                    listView.positionViewAtIndex(selectedIndex, ListView.Contain);
-                }
             }
         }
 
@@ -744,12 +746,6 @@ Page {
             }
 
             return "Locale not found";
-        }
-    }
-
-    onStatusChanged: {
-        if (status == PageStatus.Active) {
-            cloudDriveModel.requestJobQueueStatus();
         }
     }
 }

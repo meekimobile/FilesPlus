@@ -37,7 +37,7 @@ public:
     ~WebDavClient();
 
     bool testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname);
-    void saveConnection(QString id, QString hostname, QString username, QString password, QString token);
+    bool saveConnection(QString id, QString hostname, QString username, QString password, QString token);
 
     QString getRemoteRoot(QString uid);
     bool isRemoteAbsolutePath();
@@ -96,8 +96,6 @@ private:
     QHash<QString, QString> m_remoteRootHash;
     QHash<QString, QFile*> m_localFileHash;
     QHash<QString, QBuffer*> m_bufferHash;
-
-    QSettings m_settings;
 
     QByteArray createAuthHeader(QString uid);
     QScriptValue createScriptValue(QScriptEngine &engine, QDomNode &n, QString caller);

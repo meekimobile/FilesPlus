@@ -73,16 +73,16 @@ ListItem {
             Image {
                 id: cutCopyIcon
                 z: 1
-                width: 32
-                height: 32
+                width: 30
+                height: 30
                 visible: (source != "")
                 source: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath) : ""
             }
             Image {
                 id: markIcon
                 z: 1
-                width: 32
-                height: 32
+                width: 30
+                height: 30
                 anchors.left: parent.left
                 anchors.bottom: parent.bottom
                 visible: (listViewState == "mark" && isChecked)

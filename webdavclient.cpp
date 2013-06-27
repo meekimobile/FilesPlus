@@ -586,6 +586,11 @@ QString WebDavClient::fileGetReplySave(QNetworkReply *reply)
         localTargetFile->flush();
         localTargetFile->close();
 
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+
         // Return common json.
         reply = property(nonce, uid, remoteFilePath);
         QString propertyReplyBody = QString::fromUtf8(reply->readAll());
@@ -771,6 +776,8 @@ QString WebDavClient::createPropertyJson(QString replyBody, QString caller)
     int childrenArrayIndex = 0;
     n = n.nextSibling();
     while(!n.isNull()) {
+        QApplication::processEvents();
+
         QScriptValue childObj = parseCommonPropertyScriptValue(engine, createScriptValue(engine, n, caller));
         if (!m_settings.value("WebDavClient.createPropertyJson.showHiddenSystem.enabled", false).toBool()
                 && childObj.property("isHidden").toBool()) {
@@ -783,7 +790,9 @@ QString WebDavClient::createPropertyJson(QString replyBody, QString caller)
     }
     jsonObj.setProperty("children", childrenArrayObj);
     // Stringify jsonObj.
+    qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "WebDavClient::createPropertyJson stringifyScriptValue started.";
     QString jsonText = stringifyScriptValue(engine, jsonObj);
+    qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "WebDavClient::createPropertyJson stringifyScriptValue done.";
 
     return jsonText;
 }
@@ -798,6 +807,8 @@ QString WebDavClient::createResponseJson(QString replyBody, QString caller)
     // Populate jsonObj starts from first child.
     QDomNode n = docElem.firstChild();
     while(!n.isNull()) {
+        QApplication::processEvents();
+
         jsonObj.setProperty(n.localName(), createScriptValue(engine, n, "createResponseJson"));
         n = n.nextSibling();
     }
@@ -970,11 +981,16 @@ bool WebDavClient::testConnection(QString id, QString hostname, QString username
     if (reply->error() == QNetworkReply::NoError) {
         return true;
     } else {
+        emit logRequestSignal("",
+                              "error",
+                              "WebDAV " + tr("Test connection"),
+                              reply->errorString(),
+                              5000);
         return false;
     }
 }
 
-void WebDavClient::saveConnection(QString id, QString hostname, QString username, QString password, QString token)
+bool WebDavClient::saveConnection(QString id, QString hostname, QString username, QString password, QString token)
 {
     qDebug() << "----- WebDavClient::saveConnection -----" << id << hostname << username << token;
 
@@ -1000,6 +1016,8 @@ void WebDavClient::saveConnection(QString id, QString hostname, QString username
     }
 
     saveAccessPairMap();
+
+    return true;
 }
 
 QString WebDavClient::getRemoteRoot(QString uid)
@@ -1148,6 +1166,11 @@ void WebDavClient::filePutReplyFinished(QNetworkReply *reply)
 
     QString replyBody;
     if (reply->error() == QNetworkReply::NoError) {
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+
         reply = property(nonce, uid, remoteFilePath);
         if (reply->error() == QNetworkReply::NoError) {
             replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()), "filePutReplyFinished");
@@ -1176,7 +1199,9 @@ void WebDavClient::propertyReplyFinished(QNetworkReply *reply)
     qDebug() << "WebDavClient::propertyReplyFinished" << nonce << callback << uid << remoteFilePath << "reply" << reply << QString(" Error=%1").arg(reply->error());
 
     QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "WebDavClient::propertyReplyFinished nonce" << nonce << "replyBody" << replyBody << "contentType" << reply->header(QNetworkRequest::ContentTypeHeader).toString();
+    qDebug() << "WebDavClient::propertyReplyFinished nonce" << nonce
+             << "contentType" << reply->header(QNetworkRequest::ContentTypeHeader).toString()
+             << (m_settings.value("Logging.enabled", false).toBool() ? ("replyBody " + replyBody) : "");
 
     // Parse XML and convert to JSON.
     if (reply->error() == QNetworkReply::NoError && reply->header(QNetworkRequest::ContentTypeHeader).toString().indexOf("xml") != -1) {
@@ -1292,6 +1317,11 @@ void WebDavClient::moveFileReplyFinished(QNetworkReply *reply)
     QString replyBody;
     qDebug() << "WebDavClient::moveFileReplyFinished" << nonce << "replyBody" << replyBody << "statusCode" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     if (reply->error() == QNetworkReply::NoError) {
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+
         reply = property(nonce, uid, prepareRemotePath(uid, newRemoteFilePath));
         if (reply->error() == QNetworkReply::NoError) {
             replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()), "moveFile");
@@ -1320,6 +1350,11 @@ void WebDavClient::copyFileReplyFinished(QNetworkReply *reply)
     QString replyBody;
     qDebug() << "WebDavClient::copyFileReplyFinished" << nonce << "replyBody" << replyBody << "statusCode" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     if (reply->error() == QNetworkReply::NoError) {
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+
         reply = property(nonce, uid, prepareRemotePath(uid, newRemoteFilePath));
         if (reply->error() == QNetworkReply::NoError) {
             replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()), "copyFile");

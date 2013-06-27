@@ -9,11 +9,6 @@ Page {
     property string name: "cloudDriveJobsPage"
     property bool inverted: !theme.inverted
 
-    function updateJobQueueCount(runningJobCount, jobQueueCount) {
-        // Update (runningJobCount + jobQueueCount) on cloudButton.
-        cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
-    }
-
     onStatusChanged: {
         if (status == PageStatus.Active) {
             cloudDriveModel.requestJobQueueStatus();
@@ -38,7 +33,8 @@ Page {
 
             TextIndicator {
                 id: cloudButtonIndicator
-                color: "#00AAFF"
+                text: (cloudDriveModel.jobCount > 0) ? cloudDriveModel.jobCount : ""
+                color: ((cloudDriveModel.runningJobCount + cloudDriveModel.queuedJobCount) > 0) ? "#00AAFF" : "red"
                 anchors.right: parent.right
                 anchors.rightMargin: 10
                 anchors.bottom: parent.bottom

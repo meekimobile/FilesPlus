@@ -34,6 +34,7 @@ const QString DropboxClient::chunkedUploadURI = "https://api-content.dropbox.com
 const QString DropboxClient::commitChunkedUploadURI = "https://api-content.dropbox.com/1/commit_chunked_upload/%1%2"; // POST with upload_id.
 
 const qint64 DropboxClient::DefaultChunkSize = 4194304; // 4MB
+const QString DropboxClient::ReplyDateFormat = "ddd, dd MMM yyyy hh:mm:ss +0000";
 
 DropboxClient::DropboxClient(QObject *parent) :
     CloudDriveClient(parent)
@@ -71,24 +72,6 @@ DropboxClient::~DropboxClient()
 {
     // Save accessTokenPair to file
     saveAccessPairMap();
-}
-
-QString DropboxClient::createTimestamp() {
-    qint64 seconds = QDateTime::currentMSecsSinceEpoch() / 1000;
-
-    return QString("%1").arg(seconds);
-}
-
-QString DropboxClient::createNonce() {
-    QString ALPHANUMERIC = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    QString nonce;
-
-    for(int i = 0; i <= 16; ++i)
-    {
-        nonce += ALPHANUMERIC.at( qrand() % ALPHANUMERIC.length() );
-    }
-
-    return nonce;
 }
 
 QByteArray DropboxClient::createBaseString(QString method, QString uri, QString queryString) {
@@ -160,26 +143,6 @@ QString DropboxClient::createSignatureWithPLAINTEXT(QString consumerSecret, QStr
     key.append(tokenSecret);
 
     return key;
-}
-
-QString DropboxClient::createNormalizedQueryString(QMap<QString, QString> sortMap) {
-    QString queryString;
-    foreach (QString key, sortMap.keys()) {
-        if (queryString != "") queryString.append("&");
-        queryString.append(QUrl::toPercentEncoding(key)).append("=").append(QUrl::toPercentEncoding(sortMap[key]));
-    }
-
-    return queryString;
-}
-
-QString DropboxClient::createQueryString(QMap<QString, QString> sortMap) {
-    QString queryString;
-    foreach (QString key, sortMap.keys()) {
-        if (queryString != "") queryString.append("&");
-        queryString.append(key).append("=").append(sortMap[key]);
-    }
-
-    return queryString;
 }
 
 QByteArray DropboxClient::createPostData(QString signature, QString queryString) {
@@ -286,12 +249,6 @@ void DropboxClient::accessToken(QString nonce, QString pin)
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QNetworkReply *reply = manager->post(req, postData);
-}
-
-QString DropboxClient::encodeURI(const QString uri) {
-    // Example: https://api.dropbox.com/1/metadata/sandbox/C/B/NES/Solomon's Key (E) [!].nes
-    // All non-alphanumeric except : and / must be encoded.
-    return QUrl::toPercentEncoding(uri, ":/");
 }
 
 QByteArray DropboxClient::createOAuthHeaderForUid(QString nonce, QString uid, QString method, QString uri, QMap<QString, QString> addParamMap) {
@@ -1410,18 +1367,24 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "DropboxClient::metadataReplyFinished replyBody" << replyBody;
+    if (m_settings.value("Logging.enabled", false).toBool()) {
+        qDebug() << "DropboxClient::metadataReplyFinished replyBody" << replyBody;
+    }
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
         QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
         QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
         parsedObj.setProperty("children", engine.newArray());
-        int contentsCount = jsonObj.property("contents").toVariant().toList().length();
+        int contentsCount = jsonObj.property("contents").property("length").toInteger();
         for (int i = 0; i < contentsCount; i++) {
+            QApplication::processEvents();
+
             parsedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, jsonObj.property("contents").property(i)));
         }
 
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue started.";
         replyBody = stringifyScriptValue(engine, parsedObj);
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done.";
     }
 
     emit metadataReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
@@ -1449,7 +1412,7 @@ void DropboxClient::browseReplyFinished(QNetworkReply *reply)
         QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
         QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
         parsedObj.setProperty("children", engine.newArray());
-        int contentsCount = jsonObj.property("contents").toVariant().toList().length();
+        int contentsCount = jsonObj.property("contents").property("length").toInteger();
         for (int i = 0; i < contentsCount; i++) {
             parsedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, jsonObj.property("contents").property(i)));
         }
@@ -1618,7 +1581,7 @@ QString DropboxClient::deltaReplyFinished(QNetworkReply *reply)
         }
 
         // Get entries count.
-        int entriesCount = sourceObj.property("entries").toVariant().toList().length();
+        int entriesCount = sourceObj.property("entries").property("length").toInteger();
         qDebug() << "DropboxClient::deltaReplyFinished entriesCount" << entriesCount;
 
         // Process sourceObj.
@@ -1767,7 +1730,7 @@ QScriptValue DropboxClient::parseCommonPropertyScriptValue(QScriptEngine &engine
     QString thumbnail128Url = jsonObj.property("thumb_exists").toBool() ? thumbnail(nonce, uid, jsonObj.property("path").toString(), "png", "m") : "";
     QString previewUrl = jsonObj.property("thumb_exists").toBool() ? thumbnail(nonce, uid, jsonObj.property("path").toString(), "png", "l") : "";
 
-    QDateTime lastModified = parseReplyDateString(jsonObj.property("modified").toString());
+    QString jsonDateString = formatJSONDateString(parseReplyDateString(jsonObj.property("modified").toString()));
 
     parsedObj.setProperty("name", QScriptValue(getRemoteName(jsonObj.property("path").toString())));
     parsedObj.setProperty("absolutePath", jsonObj.property("path"));
@@ -1775,7 +1738,7 @@ QScriptValue DropboxClient::parseCommonPropertyScriptValue(QScriptEngine &engine
     parsedObj.setProperty("size", jsonObj.property("bytes"));
     parsedObj.setProperty("isDeleted", jsonObj.property("is_deleted"));
     parsedObj.setProperty("isDir", jsonObj.property("is_dir"));
-    parsedObj.setProperty("lastModified", QScriptValue(formatJSONDateString(lastModified)));
+    parsedObj.setProperty("lastModified", QScriptValue(jsonDateString));
     parsedObj.setProperty("hash", jsonObj.property("hash").isValid() ? jsonObj.property("hash") : jsonObj.property("rev"));
     parsedObj.setProperty("source", QScriptValue());
     parsedObj.setProperty("thumbnail", QScriptValue(thumbnailUrl));
@@ -1794,5 +1757,11 @@ qint64 DropboxClient::getChunkSize()
 QDateTime DropboxClient::parseReplyDateString(QString dateString)
 {
     // NOTE Dropbox uses UTC datestring in its reply.
-    return QDateTime::fromString(dateString, "ddd, dd MMM yyyy hh:mm:ss +0000");
+    QString filteredDateString = dateString;
+    QDateTime datetime = QDateTime::fromString(filteredDateString, ReplyDateFormat);
+    qDebug() << "DropboxClient::parseReplyDateString parse filteredDateString" << filteredDateString << "with" << ReplyDateFormat << "to" << datetime;
+    datetime.setTimeSpec(Qt::UTC);
+    qDebug() << "DropboxClient::parseReplyDateString parse datetime.setTimeSpec(Qt::UTC)" << datetime;
+
+    return datetime;
 }

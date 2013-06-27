@@ -3,6 +3,7 @@
 #include "foldersizeitemlistmodel.h"
 #include <QDebug>
 #include <QCoreApplication>
+#include <QDesktopServices>
 #ifdef Q_OS_SYMBIAN
 #include <f32file.h>
 #include <e32base.h>
@@ -77,7 +78,7 @@ const int FolderSizeModelThread::FILE_READ_BUFFER = 1048576;
 const int FolderSizeModelThread::FILE_COPY_DELAY = 50;
 const int FolderSizeModelThread::FILE_DELETE_DELAY = 200;
 #else
-const QString FolderSizeModelThread::CACHE_FILE_PATH = "FolderPieCache.dat";
+const QString FolderSizeModelThread::CACHE_FILE_PATH = QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/FolderPieCache.dat";
 const QString FolderSizeModelThread::CACHE_DB_PATH = "FolderPieCache.db"; // Symbian supports only default database file location.
 const QString FolderSizeModelThread::CACHE_DB_CONNECTION_NAME = "folderpie_cache";
 const QString FolderSizeModelThread::DEFAULT_CURRENT_DIR = "E:/";

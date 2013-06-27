@@ -5,6 +5,7 @@
 #include <QCache>
 #include <QFileInfo>
 #include <QSystemStorageInfo>
+#include <QSystemDeviceInfo>
 
 using namespace QtMobility;
 
@@ -28,12 +29,18 @@ public:
 
     Q_INVOKABLE void shareFile(const QString &absolutePath);
     Q_INVOKABLE void shareUrl(const QString &urlString, const QString &title = "", const QString &desc = "");
+
+    Q_INVOKABLE int getKeyboardTypes();
+    Q_INVOKABLE bool isKeyboardFlippedOpen();
+    Q_INVOKABLE bool isWirelessKeyboardConnected();
+    Q_INVOKABLE bool isSoftwareKeyboardRequired();
 signals:
     
 public slots:
     
 private:
     QSystemStorageInfo *m_ssi;
+    QSystemDeviceInfo *m_sdi;
     QCache<QString, QFileInfo> *m_fileInfoCache;
 };
 

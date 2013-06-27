@@ -39,6 +39,10 @@ class CloudDriveModel : public QAbstractListModel
     Q_ENUMS(SortFlags)
     Q_ENUMS(Operations)
     Q_PROPERTY(int count READ rowCount NOTIFY rowCountChanged)
+    Q_PROPERTY(int runningJobCount READ getRunningJobCount NOTIFY runningJobCountChanged)
+    Q_PROPERTY(int queuedJobCount READ getQueuedJobCount NOTIFY jobQueueStatusSignal)
+    Q_PROPERTY(int jobCount READ getJobCount NOTIFY jobQueueStatusSignal)
+    Q_PROPERTY(int itemCount READ getItemCount NOTIFY jobQueueStatusSignal)
     Q_PROPERTY(QString dirtyHash READ dirtyHash CONSTANT)
     Q_PROPERTY(QString remoteParentPath READ getRemoteParentPath WRITE setRemoteParentPath NOTIFY remoteParentPathChanged)
     Q_PROPERTY(QString remoteParentPathName READ getRemoteParentPathName WRITE setRemoteParentPathName NOTIFY remoteParentPathChanged)
@@ -59,7 +63,7 @@ public:
     // ClientTypes is stored on m_cloudDriveItems. Its sequence shouldn't be changed.
     // AnyClient is technically never stored. It should be the last type.
     enum ClientTypes {
-        Dropbox,
+        Dropbox = 0,
         GoogleDrive,
         SkyDrive,
         Ftp,
@@ -116,6 +120,9 @@ public:
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
     Q_INVOKABLE QVariant get(const int index);
     Q_INVOKABLE void setProperty(const int index, QString roleName, QVariant value);
+    bool removeRow(int row, const QModelIndex & parent = QModelIndex());
+    bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex());
+    Q_INVOKABLE void clear();
 
     QString getRemoteParentPath();
     void setRemoteParentPath(QString remoteParentPath);
@@ -245,7 +252,7 @@ public:
     Q_INVOKABLE void syncItems(); // NOTE Used by Settings
     Q_INVOKABLE void syncItems(CloudDriveModel::ClientTypes type); // NOTE Used by syncItems()
     Q_INVOKABLE void syncItem(const QString localFilePath); // NOTE Used by main.qml, FolderPage.qml
-    Q_INVOKABLE void syncItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath); // NOTE Used by syncDirtyItems()
+    Q_INVOKABLE void syncItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE bool syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, QString newHash = "", bool forcePut = false, bool forceGet = false); // NOTE Used by reply filter slots.
 
     // Migrate DAT to DB.
@@ -258,7 +265,7 @@ public:
 
     // FTP/WebDAV specific functions.
     Q_INVOKABLE bool testConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password, QString token, QString authHostname = "");
-    Q_INVOKABLE void saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password,  QString token);
+    Q_INVOKABLE bool saveConnection(CloudDriveModel::ClientTypes type, QString uid, QString hostname, QString username, QString password,  QString token);
     Q_INVOKABLE QVariant getConnectionProperty(CloudDriveModel::ClientTypes type, QString uid, QString name, QVariant defaultValue);
     Q_INVOKABLE bool getConnectionBoolProperty(CloudDriveModel::ClientTypes type, QString uid, QString name, bool defaultValue);
     Q_INVOKABLE void setConnectionProperty(CloudDriveModel::ClientTypes type, QString uid, QString name, QVariant value);
@@ -326,6 +333,8 @@ public:
 
     // Model functions.
     Q_INVOKABLE void refreshItems();
+    Q_INVOKABLE int findIndexByRemotePath(QString remotePath);
+    Q_INVOKABLE int findIndexByRemotePathName(QString remotePathName);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void initializeDBStarted(QString nonce);
@@ -373,6 +382,9 @@ signals:
     void sortFlagChanged();
     void remoteParentPathChanged();
     void rowCountChanged();
+    void runningJobCountChanged();
+    void queuedJobCountChanged();
+    void jobCountChanged();
     void selectedIndexChanged();
 public slots:
     void proceedNextJob();
@@ -465,6 +477,7 @@ private:
     int updateItemToDB(const CloudDriveItem item, bool suppressMessages = false);
     int updateItemHashByLocalPathToDB(const QString localPath, const QString hash);
     int deleteItemToDB(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
+    int deleteItemWithChildrenFromDB(int type, QString uid, QString localPath);
     int countItemDB();
     int countItemByLocalPathDB(const QString localPath);
     int countItemByTypeAndUidAndRemotePathFromDB(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
@@ -475,6 +488,7 @@ private:
     QHash<QString, bool> *m_isDirtyCache;
     QHash<QString, bool> *m_isSyncingCache;
 
+    CloudDriveClient *defaultClient;
     DropboxClient *dbClient;
     GCDClient *gcdClient;
     SkyDriveClient *skdClient;
@@ -525,11 +539,6 @@ private:
     int m_selectedIndex;
     QString m_selectedRemotePath;
     void sortItemList(QList<CloudDriveModelItem> *itemList, int sortFlag);
-
-    // Unused JSON methods.
-    QString sortJsonText(QString &jsonText, int sortFlag);
-    void sortJsonItemList(QList<QScriptValue> &itemList, int sortFlag);
-    QString stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj);
 
     int compareMetadata(CloudDriveJob job, QScriptValue &jsonObj, QString localFilePath);
 };

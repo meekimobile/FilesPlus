@@ -143,6 +143,17 @@ Rectangle {
                 }
             }
             Image {
+                source: "Box_Logo_Blue_100x50.png"
+                anchors.verticalCenter: parent.verticalCenter
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton
+                    onClicked: {
+                        Qt.openUrlExternally("http://www.box.com");
+                    }
+                }
+            }
+            Image {
                 source: "ftp_icon.png"
                 anchors.verticalCenter: parent.verticalCenter
             }

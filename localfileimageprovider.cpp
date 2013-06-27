@@ -4,12 +4,10 @@
 #include <QRegExp>
 #include <QImageReader>
 
-//const int LocalFileImageProvider::MAX_CACHE_COST = 10;
-//const QString LocalFileImageProvider::DEFAULT_CACHE_PATH = "LocalFileImageProvider";
 #if defined(Q_WS_HARMATTAN)
-const int LocalFileImageProvider::DEFAULT_CACHE_IMAGE_SIZE = 480; // Make it configurable
+const int LocalFileImageProvider::DEFAULT_CACHE_IMAGE_SIZE = 854; // Make it configurable
 #else
-const int LocalFileImageProvider::DEFAULT_CACHE_IMAGE_SIZE = 480; // Make it configurable
+const int LocalFileImageProvider::DEFAULT_CACHE_IMAGE_SIZE = 640; // Make it configurable
 #endif
 
 LocalFileImageProvider::LocalFileImageProvider(QString cachePath) : QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
@@ -92,7 +90,8 @@ QImage LocalFileImageProvider::requestImage(const QString &id, QSize *size, cons
 
     if (ir.canRead()) {
         // Calculate new thumbnail size with KeepAspectRatio.
-        QSize defaultSize(DEFAULT_CACHE_IMAGE_SIZE, DEFAULT_CACHE_IMAGE_SIZE);
+        int defaultImageSize = m_settings.value("local.image.preview.size", DEFAULT_CACHE_IMAGE_SIZE).toInt();
+        QSize defaultSize(defaultImageSize, defaultImageSize);
         if (!requestedSize.isValid() && (ir.size().width() > defaultSize.width() || ir.size().height() > defaultSize.height())) {
             QSize newSize = ir.size();
             newSize.scale(defaultSize, Qt::KeepAspectRatio);

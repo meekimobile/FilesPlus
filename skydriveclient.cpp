@@ -49,28 +49,6 @@ SkyDriveClient::~SkyDriveClient()
     m_filesReplyHash = 0;
 }
 
-QString SkyDriveClient::createTimestamp() {
-    qint64 seconds = QDateTime::currentMSecsSinceEpoch() / 1000;
-
-    return QString("%1").arg(seconds);
-}
-
-QString SkyDriveClient::createNormalizedQueryString(QMap<QString, QString> sortMap) {
-    QString queryString;
-    foreach (QString key, sortMap.keys()) {
-        if (queryString != "") queryString.append("&");
-        queryString.append(QUrl::toPercentEncoding(key)).append("=").append(QUrl::toPercentEncoding(sortMap[key]));
-    }
-
-    return queryString;
-}
-
-QString SkyDriveClient::encodeURI(const QString uri) {
-    // Example: https://api.dropbox.com/1/metadata/sandbox/C/B/NES/Solomon's Key (E) [!].nes
-    // All non-alphanumeric except : and / must be encoded.
-    return QUrl::toPercentEncoding(uri, ":/");
-}
-
 void SkyDriveClient::authorize(QString nonce, QString hostname)
 {
     qDebug() << "----- SkyDriveClient::authorize -----";
@@ -520,7 +498,7 @@ QIODevice *SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFil
 {
     qDebug() << "----- SkyDriveClient::fileGet -----" << nonce << uid << remoteFilePath << offset << "synchronous" << synchronous;
 
-    // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
+    // Get property for using in fileGetReplyFinished().
     if (!synchronous) {
         QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "fileGet");
         if (propertyReply->error() == QNetworkReply::NoError) {
@@ -575,6 +553,11 @@ QIODevice *SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFil
 
             QNetworkRequest redirectedRequest = reply->request();
             redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
+
+            // Delete original reply (which is in m_replyHash).
+            m_replyHash->remove(nonce);
+            reply->deleteLater();
+
             reply = reply->manager()->get(redirectedRequest);
             QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
             connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
@@ -894,6 +877,11 @@ void SkyDriveClient::fileGetReplyFinished(QNetworkReply *reply)
 
         QNetworkRequest redirectedRequest = reply->request();
         redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
+
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+
         reply = reply->manager()->get(redirectedRequest);
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
         connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
@@ -934,10 +922,16 @@ void SkyDriveClient::filePutReplyFinished(QNetworkReply *reply) {
         QScriptEngine engine;
         QScriptValue sc = engine.evaluate("(" + replyBody + ")");
         QString remoteFilePath = sc.property("id").toString();
+
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+
         // Get property synchronously.
         reply = property(nonce, uid, remoteFilePath, true, "filePutReplyFinished");
         replyBody = QString::fromUtf8(reply->readAll());
-        qDebug() << "GCDClient::filePutReplyFinished property replyBody" << replyBody;
+        qDebug() << "SkyDriveClient::filePutReplyFinished property replyBody" << replyBody;
         if (reply->error() == QNetworkReply::NoError) {
             QScriptValue jsonObj = engine.evaluate("(" + replyBody + ")");
             QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
@@ -986,19 +980,26 @@ void SkyDriveClient::mergePropertyAndFilesJson(QString nonce, QString callback, 
         QScriptValue mergedObj;
         QScriptValue propertyObj;
         QScriptValue filesObj;
-        qDebug() << "SkyDriveClient::mergePropertyAndFilesJson propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
-        qDebug() << "SkyDriveClient::mergePropertyAndFilesJson filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
+        qDebug() << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "started.";
+        if (m_settings.value("Logging.enabled", false).toBool()) {
+            qDebug() << "SkyDriveClient::mergePropertyAndFilesJson propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
+            qDebug() << "SkyDriveClient::mergePropertyAndFilesJson filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
+        }
         propertyObj = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
         filesObj = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
 
         mergedObj = parseCommonPropertyScriptValue(engine, propertyObj);
         mergedObj.setProperty("children", engine.newArray());
-        int contentsCount = filesObj.property("data").toVariant().toList().length();
+        int contentsCount = filesObj.property("data").property("length").toInteger();
         for (int i = 0; i < contentsCount; i++) {
+            QApplication::processEvents();
+
             mergedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, filesObj.property("data").property(i)));
         }
 
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue started.";
         QString replyBody = stringifyScriptValue(engine, mergedObj);
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done.";
 
         // Remove once used.
         m_propertyReplyHash->remove(nonce);
@@ -1107,6 +1108,11 @@ QString SkyDriveClient::createFolderReplyFinished(QNetworkReply *reply, bool syn
         QScriptEngine engine;
         QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
         if (jsonObj.property("error").property("code").toString() == "resource_already_exists") {
+            // Delete original reply (which is in m_replyHash).
+            m_replyHash->remove(nonce);
+            reply->deleteLater();
+            reply->manager()->deleteLater();
+
             // Get existing folder's property.
             reply = files(nonce, uid, remoteParentPath, true);
             replyBody = QString::fromUtf8(reply->readAll());
@@ -1114,7 +1120,7 @@ QString SkyDriveClient::createFolderReplyFinished(QNetworkReply *reply, bool syn
             if (reply->error() == QNetworkReply::NoError) {
                 QScriptEngine engine;
                 QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
-                int contentsCount = jsonObj.property("data").toVariant().toList().length();
+                int contentsCount = jsonObj.property("data").property("length").toInteger();
                 for (int i = 0; i < contentsCount; i++) {
                     QScriptValue item = jsonObj.property("data").property(i);
                     if (item.property("name").toString() == newRemoteFileName) {
@@ -1253,6 +1259,11 @@ void SkyDriveClient::fileGetResumeReplyFinished(QNetworkReply *reply)
 
         QNetworkRequest redirectedRequest = reply->request();
         redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
+
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+
         reply = reply->manager()->get(redirectedRequest);
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
         connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
@@ -1278,6 +1289,7 @@ QScriptValue SkyDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engin
 {
     QScriptValue parsedObj = engine.newObject();
 
+    QString jsonDateString = formatJSONDateString(parseReplyDateString(jsonObj.property("updated_time").toString()));
     QString alternative = jsonObj.property("link").toString();
     QString thumbnail128Url = jsonObj.property("images").property(1).property("source").toString();
     QString previewUrl = jsonObj.property("images").property(0).property("source").toString();
@@ -1288,7 +1300,7 @@ QScriptValue SkyDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engin
     parsedObj.setProperty("size", jsonObj.property("size"));
     parsedObj.setProperty("isDeleted", QScriptValue(false));
     parsedObj.setProperty("isDir", QScriptValue(jsonObj.property("type").toString().indexOf(QRegExp("folder|album")) == 0));
-    parsedObj.setProperty("lastModified", jsonObj.property("updated_time"));
+    parsedObj.setProperty("lastModified", QScriptValue(jsonDateString) );
     parsedObj.setProperty("hash", jsonObj.property("updated_time"));
     parsedObj.setProperty("source", jsonObj.property("source"));
     parsedObj.setProperty("alternative", QScriptValue(alternative));
@@ -1303,4 +1315,20 @@ QScriptValue SkyDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engin
 qint64 SkyDriveClient::getChunkSize()
 {
     return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();
+}
+
+QDateTime SkyDriveClient::parseReplyDateString(QString dateString)
+{
+    /*
+     *Example date string
+     * "2013-06-15T13:58:51+0000"
+    */
+
+    QString filteredDateString = dateString;
+    QDateTime datetime = QDateTime::fromString(filteredDateString, Qt::ISODate);
+    qDebug() << "SkyDriveClient::parseReplyDateString parse filteredDateString" << filteredDateString << "with ISODate to" << datetime;
+    datetime.setTimeSpec(Qt::UTC);
+    qDebug() << "SkyDriveClient::parseReplyDateString parse datetime.setTimeSpec(Qt::UTC)" << datetime;
+
+    return datetime;
 }

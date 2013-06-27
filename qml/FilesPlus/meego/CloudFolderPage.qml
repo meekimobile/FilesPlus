@@ -197,11 +197,6 @@ Page {
         cloudDriveModel.resumeNextJob();
     }
 
-    function updateJobQueueCount(runningJobCount, jobQueueCount) {
-        // Update (runningJobCount + jobQueueCount) on cloudButton.
-        cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
-    }
-
     function updateItemSlot(jobJson, caller) {
         if (!jobJson) return;
 //        console.debug("cloudFolderPage updateItemSlot caller " + caller + " jobJson " + JSON.stringify(jobJson));
@@ -411,7 +406,8 @@ Page {
 
             TextIndicator {
                 id: cloudButtonIndicator
-                color: "#00AAFF"
+                text: (cloudDriveModel.jobCount > 0) ? cloudDriveModel.jobCount : ""
+                color: ((cloudDriveModel.runningJobCount + cloudDriveModel.queuedJobCount) > 0) ? "#00AAFF" : "red"
                 anchors.right: parent.right
                 anchors.rightMargin: 10
                 anchors.bottom: parent.bottom
@@ -1026,7 +1022,7 @@ Page {
 
             onListItemIconError: {
                 if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
-                    cloudDriveModel.cacheImage(absolutePath, thumbnail128, 128, 128, cloudFolderPage.name); // Use original size because previewUrl is already specified with size.
+                    cloudDriveModel.cacheImage(absolutePath, thumbnail128, 160, 160, cloudFolderPage.name); // Use original size because previewUrl is already specified with size.
                 }
             }
         }

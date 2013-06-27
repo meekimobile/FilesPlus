@@ -211,7 +211,7 @@ Page {
             }
 
             width: parent.width - 20 // For Symbian only.
-            height: (window.inPortrait) ? Math.min(250, maxContentHeight) : Math.min(180, maxContentHeight) // For Symbian only.
+            height: (window.inPortrait) ? Math.min((addAccountDialog.cloudType == CloudDriveModel.Ftp) ? 250 : 290, maxContentHeight) : Math.min(180, maxContentHeight) // For Symbian only.
             anchors.horizontalCenter: parent.horizontalCenter
 
             Flickable {

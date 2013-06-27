@@ -21,6 +21,7 @@ signals:
 public slots:
     void uploadProgressFilter(qint64 bytesSent, qint64 bytesTotal);
     void downloadProgressFilter(qint64 bytesReceived, qint64 bytesTotal);
+    void destroyedFilter();
 
     void idleTimerTimeoutSlot();
 private:

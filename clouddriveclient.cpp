@@ -1,17 +1,23 @@
 #include "clouddriveclient.h"
+#include <QDesktopServices>
+#include <QScriptValueIterator>
+#include <QApplication>
 
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
 const QString CloudDriveClient::KeyStoreFilePath = "/home/user/.filesplus/%1.dat";
 const int CloudDriveClient::FileWriteBufferSize = 32768;
 #else
-const QString CloudDriveClient::KeyStoreFilePath = "%1.dat";
+const QString CloudDriveClient::KeyStoreFilePath = QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/%1.dat";
 const int CloudDriveClient::FileWriteBufferSize = 32768;
 #endif
 
 CloudDriveClient::CloudDriveClient(QObject *parent) :
     QObject(parent)
 {
+    // Set object name for further reference.
+    setObjectName(this->metaObject()->className());
+
     m_replyHash = new QHash<QString, QNetworkReply*>();
 }
 
@@ -66,6 +72,10 @@ QString CloudDriveClient::getEmail(QString uid)
 
 int CloudDriveClient::removeUid(QString uid)
 {
+    if (!accessTokenPairMap.contains(uid)) {
+        return -1;
+    }
+
     qDebug() << QString(objectName()) << "::removeUid uid" << uid;
     int n = accessTokenPairMap.remove(uid);
 
@@ -130,6 +140,11 @@ bool CloudDriveClient::isImageUrlCachable()
 }
 
 bool CloudDriveClient::isUnicodeSupported()
+{
+    return true;
+}
+
+bool CloudDriveClient::isMediaEnabled(QString uid)
 {
     return true;
 }
@@ -222,6 +237,29 @@ QString CloudDriveClient::createQueryString(QMap<QString, QString> sortMap) {
     return queryString;
 }
 
+QByteArray CloudDriveClient::encodeMultiPart(QString boundary, QMap<QString, QString> paramMap, QString fileParameter, QString fileName, QByteArray fileData, QString contentType) {
+    //Encodes list of parameters and files for HTTP multipart format.
+    QByteArray postData;
+    QString CRLF = "\r\n";
+
+    foreach (QString key, paramMap.keys()) {
+        postData.append("--" + boundary).append(CRLF);
+        postData.append(QString("Content-Disposition: form-data; name=\"%1\"").arg(key)).append(CRLF);
+        postData.append(CRLF);
+        postData.append(paramMap[key]).append(CRLF);
+    }
+
+    postData.append("--" + boundary).append(CRLF);
+    postData.append(QString("Content-Disposition: form-data; name=\"%1\"; filename=\"%2\"").arg(fileParameter).arg(fileName) ).append(CRLF);
+    postData.append(QString("Content-Type: %1").arg(contentType) ).append(CRLF);
+    postData.append(CRLF);
+    postData.append(fileData).append(CRLF);
+    postData.append("--" + boundary + "--").append(CRLF);
+    postData.append(CRLF);
+
+    return postData;
+}
+
 QString CloudDriveClient::removeDoubleSlash(QString remoteFilePath)
 {
     QString path = remoteFilePath;
@@ -263,7 +301,52 @@ QScriptValue CloudDriveClient::parseCommonPropertyScriptValue(QScriptEngine &eng
 
 QString CloudDriveClient::stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj)
 {
-    return engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
+    // ISSUE It's very slow while running on Symbian with 500+ items. And also on Meego with 100+ items.
+    if (m_settings.value("CloudDriveClient.stringifyScriptValue.useCustomLogic", false).toBool()) {
+        QString jsonText;
+        QString jsonArrayText;
+        QScriptValueIterator it(jsonObj);
+        while (it.hasNext()) {
+            QApplication::processEvents();
+
+            it.next();
+
+            QScriptValue propertyValue = it.value();
+
+            if (jsonText != "") {
+                jsonText.append(", ");
+            }
+
+            if(propertyValue.isArray()) {
+                jsonArrayText = "";
+                for (int i=0; i<propertyValue.property("length").toInt32(); i++) {
+                    QApplication::processEvents();
+
+                    if (jsonArrayText != "") {
+                        jsonArrayText.append(", ");
+                    }
+                    QScriptValue v = propertyValue.property(i);
+                    jsonArrayText.append(stringifyScriptValue(engine, v));
+                }
+                jsonText.append(QString("\"%1\": [%2]").arg(it.name()).arg(jsonArrayText));
+            } else if (propertyValue.isObject()) {
+                jsonText.append(QString("\"%1\": %2").arg(it.name()).arg(stringifyScriptValue(engine, propertyValue)));
+            } else if (propertyValue.isDate()) {
+                jsonText.append(QString("\"%1\": \"%2\"").arg(it.name()).arg(formatJSONDateString(propertyValue.toDateTime())));
+            } else if (propertyValue.isBool()) {
+                jsonText.append(QString("\"%1\": %2").arg(it.name()).arg(propertyValue.toBool()));
+            } else if (propertyValue.isNumber()) {
+                jsonText.append(QString("\"%1\": %2").arg(it.name()).arg(propertyValue.toNumber()));
+            } else {
+                // Default as string.
+                jsonText.append(QString("\"%1\": \"%2\"").arg(it.name()).arg(propertyValue.toString()));
+            }
+        }
+
+        return "{ " + jsonText + " }";
+    } else {
+        return engine.evaluate("JSON.stringify").call(QScriptValue(), QScriptValueList() << jsonObj).toString();
+    }
 }
 
 QString CloudDriveClient::formatJSONDateString(QDateTime datetime)
@@ -278,8 +361,9 @@ bool CloudDriveClient::testConnection(QString id, QString hostname, QString user
     return false;
 }
 
-void CloudDriveClient::saveConnection(QString id, QString hostname, QString username, QString password, QString token)
+bool CloudDriveClient::saveConnection(QString id, QString hostname, QString username, QString password, QString token)
 {
+    return false;
 }
 
 qint64 CloudDriveClient::getOffsetFromRange(QString rangeHeader)
@@ -309,6 +393,37 @@ QString CloudDriveClient::getPathFromUrl(QString urlString)
     } else {
         return urlString;
     }
+}
+
+QDateTime CloudDriveClient::parseJSONDateString(QString jsonString)
+{
+    return QDateTime::fromString(jsonString, Qt::ISODate);
+}
+
+CloudDriveModelItem *CloudDriveClient::parseCloudDriveModelItem(QScriptEngine &engine, QScriptValue jsonObj)
+{
+    CloudDriveModelItem *modelItem = new CloudDriveModelItem();
+    modelItem->name = jsonObj.property("name").toString();
+    modelItem->absolutePath = jsonObj.property("absolutePath").toString();
+    modelItem->parentPath = jsonObj.property("parentPath").toString();
+    modelItem->size = jsonObj.property("size").toInteger();
+    modelItem->lastModified = parseJSONDateString(jsonObj.property("lastModified").toString());
+    modelItem->isDir = jsonObj.property("isDir").toBool();
+    modelItem->hash = jsonObj.property("hash").toString();
+    modelItem->fileType = jsonObj.property("fileType").toString();
+    modelItem->isDeleted = jsonObj.property("isDeleted").toBool();
+    modelItem->isHidden = jsonObj.property("isHidden").toBool();
+    modelItem->isReadOnly = jsonObj.property("isReadOnly").toBool();
+    modelItem->source = jsonObj.property("source").toString();
+    modelItem->alternative = jsonObj.property("alternative").toString();
+    modelItem->thumbnail = jsonObj.property("thumbnail").toString();
+    modelItem->thumbnail128 = jsonObj.property("thumbnail128").toString();
+    modelItem->preview = jsonObj.property("preview").toString();
+    modelItem->downloadUrl = jsonObj.property("downloadUrl").toString();
+    modelItem->webContentLink = jsonObj.property("webContentLink").toString();
+    modelItem->embedLink = jsonObj.property("embedLink").toString();
+
+    return modelItem;
 }
 
 void CloudDriveClient::requestToken(QString nonce)
@@ -423,7 +538,7 @@ QString CloudDriveClient::media(QString nonce, QString uid, QString remoteFilePa
     return "";
 }
 
-void CloudDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath)
+void CloudDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath, QString localFilePath)
 {
     emit metadataReplySignal(nonce, -1, objectName() + " " + "Metadata", "Service is not implemented.");
 }
@@ -431,11 +546,6 @@ void CloudDriveClient::metadata(QString nonce, QString uid, QString remoteFilePa
 void CloudDriveClient::browse(QString nonce, QString uid, QString remoteFilePath)
 {
     emit browseReplySignal(nonce, -1, objectName() + " " + "Browse", "Service is not implemented.");
-}
-
-void CloudDriveClient::createFolder(QString nonce, QString uid, QString newRemoteParentPath, QString newRemoteFolderName)
-{
-    emit createFolderReplySignal(nonce, -1, objectName() + " " + "Create folder", "Service is not implemented.");
 }
 
 void CloudDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName)
@@ -448,9 +558,10 @@ void CloudDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePa
     emit copyFileReplySignal(nonce, -1, objectName() + " " + "Copy", "Service is not implemented.");
 }
 
-void CloudDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
+QString CloudDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
     emit deleteFileReplySignal(nonce, -1, objectName() + " " + "Delete", "Service is not implemented.");
+    return "";
 }
 
 void CloudDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)

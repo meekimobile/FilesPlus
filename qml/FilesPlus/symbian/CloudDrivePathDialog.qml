@@ -312,9 +312,9 @@ ConfirmDialog {
             syncIconVisible: isConnected
             syncIconSource: "cloud.svg"
             actionIconSource: (clipboard.count > 0) ? appInfo.emptySetting+clipboard.getActionIcon(absolutePath, cloudDriveModel.getCloudName(selectedCloudType), selectedUid) : ""
-            listItemIconSource: appInfo.emptySetting+listItem.getIconSource(timestamp)
             inverted: false
             omitShowingZeroSizeDir: true
+            isImageUrlCachable: cloudDriveModel.isImageUrlCachable(selectedCloudType)
 
             // Override to support cloud items.
             function getIconSource(timestamp) {

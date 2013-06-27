@@ -544,7 +544,7 @@ int FolderSizeItemListModel::getSortFlag() const
     return m.sortFlag();
 }
 
-void FolderSizeItemListModel::setSortFlag(const int sortFlag, const bool saveSortFlag)
+bool FolderSizeItemListModel::setSortFlag(const int sortFlag, const bool saveSortFlag)
 {
     if (m.setSortFlag(sortFlag, saveSortFlag)) {
         m.sortItemList(itemList);
@@ -557,9 +557,9 @@ void FolderSizeItemListModel::setSortFlag(const int sortFlag, const bool saveSor
     }
 }
 
-void FolderSizeItemListModel::revertSortFlag()
+bool FolderSizeItemListModel::revertSortFlag()
 {
-    setSortFlag(m.getSortFlagFromDB(m.currentDir(), m.sortFlag()));
+    return setSortFlag(m.getSortFlagFromDB(m.currentDir(), m.sortFlag()));
 }
 
 QStringList FolderSizeItemListModel::getNameFilters() const

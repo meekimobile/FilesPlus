@@ -57,38 +57,6 @@ GCDClient::~GCDClient()
     m_downloadUrlHash = 0;
 }
 
-QString GCDClient::createTimestamp() {
-    qint64 seconds = QDateTime::currentMSecsSinceEpoch() / 1000;
-
-    return QString("%1").arg(seconds);
-}
-
-QString GCDClient::createNormalizedQueryString(QMap<QString, QString> sortMap) {
-    QString queryString;
-    foreach (QString key, sortMap.keys()) {
-        if (queryString != "") queryString.append("&");
-        queryString.append(QUrl::toPercentEncoding(key)).append("=").append(QUrl::toPercentEncoding(sortMap[key]));
-    }
-
-    return queryString;
-}
-
-QString GCDClient::encodeURI(const QString uri) {
-    // Example: https://api.dropbox.com/1/metadata/sandbox/C/B/NES/Solomon's Key (E) [!].nes
-    // All non-alphanumeric except : and / must be encoded.
-    return QUrl::toPercentEncoding(uri, ":/");
-}
-
-QString GCDClient::createQueryString(QMap<QString, QString> sortMap) {
-    QString queryString;
-    foreach (QString key, sortMap.keys()) {
-        if (queryString != "") queryString.append("&");
-        queryString.append(key).append("=").append(sortMap[key]);
-    }
-
-    return queryString;
-}
-
 QMap<QString, QString> GCDClient::createMapFromJson(QString jsonText)
 {
     qDebug() << "GCDClient::createMapFromJson " << jsonText;
@@ -155,29 +123,6 @@ QHash<QString, QString> GCDClient::createHashFromJson(QString jsonText)
 //    qDebug() << "GCDClient::createHashFromJson " << hash;
 
     return hash;
-}
-
-QByteArray GCDClient::encodeMultiPart(QString boundary, QMap<QString, QString> paramMap, QString fileParameter, QString fileName, QByteArray fileData, QString contentType) {
-    //Encodes list of parameters and files for HTTP multipart format.
-    QByteArray postData;
-    QString CRLF = "\r\n";
-
-    foreach (QString key, paramMap.keys()) {
-        postData.append("--" + boundary).append(CRLF);
-        postData.append(QString("Content-Disposition: form-data; name=\"%1\"").arg(key)).append(CRLF);
-        postData.append(CRLF);
-        postData.append(paramMap[key]).append(CRLF);
-    }
-
-    postData.append("--" + boundary).append(CRLF);
-    postData.append(QString("Content-Disposition: form-data; name=\"%1\"; filename=\"%2\"").arg(fileParameter).arg(fileName) ).append(CRLF);
-    postData.append(QString("Content-Type: %1").arg(contentType) ).append(CRLF);
-    postData.append(CRLF);
-    postData.append(fileData).append(CRLF);
-    postData.append("--" + boundary + "--").append(CRLF);
-    postData.append(CRLF);
-
-    return postData;
 }
 
 QString GCDClient::getRedirectedUrl(QString url)
@@ -799,6 +744,7 @@ QNetworkReply *GCDClient::filePutMulipart(QString nonce, QString uid, QIODevice 
                 Sleeper::msleep(100);
             }
 
+            // TODO Delete buffer.
             m_bufferHash.remove(nonce);
 
             return reply;
@@ -1357,7 +1303,7 @@ QNetworkReply * GCDClient::files(QString nonce, QString uid, QString remoteFileP
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
     sortMap["key"] = consumerKey;
-    sortMap["maxResults"] = "1000"; // TODO Implement using pageToken. Workaround, using default value 1000.
+    sortMap["maxResults"] = "10000"; // TODO Implement using pageToken. Workaround, using default value 10000 (the same as Dropbox).
     sortMap["q"] = QUrl::toPercentEncoding(QString("'%1' in parents and trashed = false").arg((remoteFilePath == "") ? RemoteRoot : remoteFilePath));
     QString queryString = createQueryString(sortMap);
     qDebug() << "GCDClient::files" << nonce << "queryString" << queryString;
@@ -1726,6 +1672,11 @@ void GCDClient::filePutReplyFinished(QNetworkReply *reply)
         // Remove used source file timestamp.
         m_sourceFileTimestampHash.remove(nonce);
 
+        // Delete original reply (which is in m_replyHash).
+        m_replyHash->remove(nonce);
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+
         reply = patchFile(nonce, uid, remoteFilePath, metadata);
         replyBody = QString::fromUtf8(reply->readAll());
         qDebug() << "GCDClient::filePutReplyFinished patchFile replyBody" << replyBody;
@@ -1742,6 +1693,12 @@ void GCDClient::filePutReplyFinished(QNetworkReply *reply)
     m_replyHash->remove(nonce);
     reply->deleteLater();
     reply->manager()->deleteLater();
+
+    qDebug() << "GCDClient::filePutReplyFinished "
+             << "m_localFileHash" << m_localFileHash.size() << "m_sourceFileTimestampHash" << m_sourceFileTimestampHash.size()
+             << "m_bufferHash" << m_bufferHash.size() << "m_downloadUrlHash" << m_downloadUrlHash->size()
+             << "m_filesReplyHash" << m_filesReplyHash->size() << "m_propertyReplyHash" << m_propertyReplyHash->size()
+             << "m_replyHash" << m_replyHash->size();
 }
 
 void GCDClient::filePutMultipartReplyFinished(QNetworkReply *reply)
@@ -1814,23 +1771,31 @@ void GCDClient::mergePropertyAndFilesJson(QString nonce, QString callback)
         QScriptValue mergedObj;
         QScriptValue propertyObj;
         QScriptValue filesObj;
-        qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
-        qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
+        qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "started.";
+        if (m_settings.value("Logging.enabled", false).toBool()) {
+            qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
+            qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
+        }
         propertyObj = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
         filesObj = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
 
         mergedObj = parseCommonPropertyScriptValue(engine, propertyObj);
         mergedObj.setProperty("children", engine.newArray());
-        int contentsCount = filesObj.property("items").toVariant().toList().length();
+        int contentsCount = filesObj.property("items").property("length").toInteger();
         for (int i = 0; i < contentsCount; i++) {
+            QApplication::processEvents();
+
             mergedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, filesObj.property("items").property(i)));
         }
 
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "GCDClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue started.";
         QString replyBody = stringifyScriptValue(engine, mergedObj);
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "GCDClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done.";
 
         // Remove once used.
         m_propertyReplyHash->remove(nonce);
         m_filesReplyHash->remove(nonce);
+        qDebug() << "GCDClient::mergePropertyAndFilesJson m_propertyReplyHash" << m_propertyReplyHash->size() << "m_filesReplyHash" << m_filesReplyHash->size();
 
         if (callback == "browse") {
             emit browseReplySignal(nonce, QNetworkReply::NoError, "", replyBody);
@@ -1858,6 +1823,7 @@ void GCDClient::propertyReplyFinished(QNetworkReply *reply)
         // Remove once used.
         m_propertyReplyHash->remove(nonce);
         m_filesReplyHash->remove(nonce);
+        qDebug() << "GCDClient::propertyReplyFinished m_propertyReplyHash" << m_propertyReplyHash->size() << "m_filesReplyHash" << m_filesReplyHash->size();
 
         // Property is mandatory. Emit error if error occurs.
         if (callback == "browse") {
@@ -1953,6 +1919,7 @@ void GCDClient::moveFileReplyFinished(QNetworkReply *reply)
     // Remove request buffer.
     if (m_bufferHash.contains(nonce)) {
         m_bufferHash[nonce]->close();
+        m_bufferHash[nonce]->deleteLater();
         m_bufferHash.remove(nonce);
     }
 
@@ -1981,6 +1948,7 @@ void GCDClient::copyFileReplyFinished(QNetworkReply *reply)
 
     // Remove request buffer.
     m_bufferHash[nonce]->close();
+    m_bufferHash[nonce]->deleteLater();
     m_bufferHash.remove(nonce);
 
     // TODO scheduled to delete later.
@@ -2113,6 +2081,12 @@ void GCDClient::filePutResumeUploadReplyFinished(QNetworkReply *reply)
             metadata.append("{");
             metadata.append(" \"modifiedDate\": \"" + formatJSONDateString(m_sourceFileTimestampHash[nonce]) + "\" ");
             metadata.append("}");
+
+            // Delete original reply (which is in m_replyHash).
+            m_replyHash->remove(nonce);
+            reply->deleteLater();
+            reply->manager()->deleteLater();
+
             reply = patchFile(nonce, uid, parsedObj.property("absolutePath").toString(), metadata);
             replyBody = reply->readAll();
             qDebug() << "GCDClient::filePutResumeUploadReplyFinished patchFile replyBody" << QString::fromUtf8(replyBody);
@@ -2191,7 +2165,7 @@ QString GCDClient::deltaReplyFinished(QNetworkReply *reply)
         }
 
         // Get entries count.
-        int entriesCount = sourceObj.property("items").toVariant().toList().length();
+        int entriesCount = sourceObj.property("items").property("length").toInteger();
         qDebug() << "GCDClient::deltaReplyFinished entriesCount" << entriesCount;
 
         // Process sourceObj.

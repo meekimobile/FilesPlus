@@ -120,21 +120,13 @@ private:
     QHash<QString, QFile*> m_localFileHash;
     QHash<QString, QDateTime> m_sourceFileTimestampHash;
     QHash<QString, QBuffer*> m_bufferHash;
-    QString refreshTokenUid;
     QHash<QString, QByteArray> *m_propertyReplyHash;
     QHash<QString, QByteArray> *m_filesReplyHash;
     QHash<QString, QString> *m_downloadUrlHash;
 
-    QSettings m_settings;
-
-    QString createTimestamp();
-    QString createNormalizedQueryString(QMap<QString, QString> sortMap);
-    QString encodeURI(const QString uri);
-    QString createQueryString(QMap<QString, QString> sortMap);
     QMap<QString, QString> createMapFromJson(QString jsonText);
     QHash<QString, QString> createHashFromScriptValue(QString parentName, QScriptValue sc);
     QHash<QString, QString> createHashFromJson(QString jsonText);
-    QByteArray encodeMultiPart(QString boundary, QMap<QString, QString> paramMap, QString fileParameter, QString fileName, QByteArray fileData, QString contentType);
     QString getRedirectedUrl(QString url);
     bool isCloudOnly(QScriptValue jsonObj);
 };

@@ -21,6 +21,7 @@ public:
     QString newRemoteFileName;
     int targetType;
     QString targetUid;
+    bool isDir;
     bool isRunning;
     int modelIndex;
     qint64 bytes;

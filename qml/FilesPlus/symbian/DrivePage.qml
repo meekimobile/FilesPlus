@@ -20,7 +20,10 @@ Page {
             var item = driveGrid.model.get(i);
             console.debug("drivePage updateAccountInfoSlot found item i " + i + " uid " + item.uid + " driveType " + item.driveType + " cloudDriveType " + item.cloudDriveType);
 
-            driveGrid.model.set(i, { availableSpace: (quota - shared - normal), totalSpace: quota });
+            if (quota && quota != -1) {
+                console.debug("drivePage updateAccountInfoSlot uid " + uid + " type " + type + " shared " + shared + " normal " + normal + " quota " + quota);
+                driveGrid.model.set(i, { availableSpace: (quota - shared - normal), totalSpace: quota });
+            }
             if (email) {
                 driveGrid.model.set(i, { logicalDrive: email, email: email });
             }
@@ -57,11 +60,6 @@ Page {
         }
     }
 
-    function updateJobQueueCount(runningJobCount, jobQueueCount) {
-        // Update (runningJobCount + jobQueueCount) on cloudButton.
-        cloudButtonIndicator.text = ((runningJobCount + jobQueueCount) > 0) ? (runningJobCount + jobQueueCount) : "";
-    }
-
     ToolBarLayout {
         id: toolBarLayout
 
@@ -81,6 +79,9 @@ Page {
 
                 // Parse all storages.
                 refreshSlot("drivePage refreshButton onClicked");
+
+                // Request trash status.
+                fsModel.requestTrashStatus();
             }
         }
         ToolBarButton {
@@ -96,7 +97,8 @@ Page {
 
             TextIndicator {
                 id: cloudButtonIndicator
-                color: "#00AAFF"
+                text: (cloudDriveModel.jobCount > 0) ? cloudDriveModel.jobCount : ""
+                color: ((cloudDriveModel.runningJobCount + cloudDriveModel.queuedJobCount) > 0) ? "#00AAFF" : "red"
                 anchors.right: parent.right
                 anchors.rightMargin: 10
                 anchors.bottom: parent.bottom
@@ -257,6 +259,7 @@ Page {
                     var cloudUid = driveGridModel.get(index).uid;
                     var cloudDriveType = driveGridModel.get(index).cloudDriveType;
                     console.debug("driveSelection onDriveSelected " + driveName + " index " + index + " cloudUid " + cloudUid);
+                    cloudDriveModel.clear();
                     pageStack.push(Qt.resolvedUrl("CloudFolderPage.qml"), {
                                        remotePath: "",
                                        remoteParentPath: "",
@@ -268,6 +271,7 @@ Page {
                                        selectedModelIndex: -1
                                    });
                 } else { // Local drive is selected.
+                    fsModel.clear();
                     pageStack.push(Qt.resolvedUrl("FolderPage.qml"), { localPath: driveName });
                 }
             }

@@ -5,6 +5,7 @@
 #include "tokenpair.h"
 #include "qnetworkreplywrapper.h"
 #include "sleeper.h"
+#include <QBool>
 
 class BoxClient : public CloudDriveClient
 {
@@ -44,29 +45,33 @@ public:
     void quota(QString nonce, QString uid);
     QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
-    void metadata(QString nonce, QString uid, QString remoteFilePath);
+    void metadata(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
-    void createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName);
-    void moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName);
-    void copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName);
-    void deleteFile(QString nonce, QString uid, QString remoteFilePath);
-    void shareFile(QString nonce, QString uid, QString remoteFilePath);
-
-    QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
-    QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
-    void mergePropertyAndFilesJson(QString nonce, QString callback, QString uid);
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous = false);
     QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
+    void moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName);
+    void copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName);
+    void shareFile(QString nonce, QString uid, QString remoteFilePath);
+//    QString delta(QString nonce, QString uid, bool synchronous = false);
+    QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format = "jpeg", QString size = "s"); // format = {jpeg|png}, size = {xs|s|m|l|xl}
+    QString media(QString nonce, QString uid, QString remoteFilePath);
+
+    bool isRemoteDir(QString nonce, QString uid, QString remoteFilePath);
+    QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
+    QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool isDir, bool synchronous = false, QString callback = "");
+    void mergePropertyAndFilesJson(QString nonce, QString callback, QString uid);
     void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
     QString fileGetReplySave(QNetworkReply *reply);
-    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false, QString sourceFilePath = "", QDateTime sourceFileTimestamp = QDateTime::currentDateTime());
+    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
 
     QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
 
     QString getRemoteRoot(QString uid);
     bool isFileGetResumable(qint64 fileSize);
     bool isViewable();
+    bool isMediaEnabled(QString uid);
+    bool isImageUrlCachable();
     qint64 getChunkSize();
 signals:
 
@@ -99,12 +104,7 @@ private:
     QString refreshTokenUid;
     QHash<QString, QByteArray> *m_propertyReplyHash;
     QHash<QString, QByteArray> *m_filesReplyHash;
-
-    QSettings m_settings;
-
-    QString createTimestamp();
-    QString createNormalizedQueryString(QMap<QString, QString> sortMap);
-    QString encodeURI(const QString uri);
+    QHash<QString, bool> *m_isDirHash;
 };
 
 #endif // BOXCLIENT_H
