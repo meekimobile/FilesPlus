@@ -400,28 +400,28 @@ QDateTime CloudDriveClient::parseJSONDateString(QString jsonString)
     return QDateTime::fromString(jsonString, Qt::ISODate);
 }
 
-CloudDriveModelItem *CloudDriveClient::parseCloudDriveModelItem(QScriptEngine &engine, QScriptValue jsonObj)
+CloudDriveModelItem CloudDriveClient::parseCloudDriveModelItem(QScriptEngine &engine, QScriptValue jsonObj)
 {
-    CloudDriveModelItem *modelItem = new CloudDriveModelItem();
-    modelItem->name = jsonObj.property("name").toString();
-    modelItem->absolutePath = jsonObj.property("absolutePath").toString();
-    modelItem->parentPath = jsonObj.property("parentPath").toString();
-    modelItem->size = jsonObj.property("size").toInteger();
-    modelItem->lastModified = parseJSONDateString(jsonObj.property("lastModified").toString());
-    modelItem->isDir = jsonObj.property("isDir").toBool();
-    modelItem->hash = jsonObj.property("hash").toString();
-    modelItem->fileType = jsonObj.property("fileType").toString();
-    modelItem->isDeleted = jsonObj.property("isDeleted").toBool();
-    modelItem->isHidden = jsonObj.property("isHidden").toBool();
-    modelItem->isReadOnly = jsonObj.property("isReadOnly").toBool();
-    modelItem->source = jsonObj.property("source").toString();
-    modelItem->alternative = jsonObj.property("alternative").toString();
-    modelItem->thumbnail = jsonObj.property("thumbnail").toString();
-    modelItem->thumbnail128 = jsonObj.property("thumbnail128").toString();
-    modelItem->preview = jsonObj.property("preview").toString();
-    modelItem->downloadUrl = jsonObj.property("downloadUrl").toString();
-    modelItem->webContentLink = jsonObj.property("webContentLink").toString();
-    modelItem->embedLink = jsonObj.property("embedLink").toString();
+    CloudDriveModelItem modelItem;
+    modelItem.name = jsonObj.property("name").toString();
+    modelItem.absolutePath = jsonObj.property("absolutePath").toString();
+    modelItem.parentPath = jsonObj.property("parentPath").toString();
+    modelItem.size = jsonObj.property("size").toInteger();
+    modelItem.lastModified = parseJSONDateString(jsonObj.property("lastModified").toString());
+    modelItem.isDir = jsonObj.property("isDir").toBool();
+    modelItem.hash = jsonObj.property("hash").toString();
+    modelItem.fileType = jsonObj.property("fileType").toString();
+    modelItem.isDeleted = jsonObj.property("isDeleted").toBool();
+    modelItem.isHidden = jsonObj.property("isHidden").toBool();
+    modelItem.isReadOnly = jsonObj.property("isReadOnly").toBool();
+    modelItem.source = jsonObj.property("source").toString();
+    modelItem.alternative = jsonObj.property("alternative").toString();
+    modelItem.thumbnail = jsonObj.property("thumbnail").toString();
+    modelItem.thumbnail128 = jsonObj.property("thumbnail128").toString();
+    modelItem.preview = jsonObj.property("preview").toString();
+    modelItem.downloadUrl = jsonObj.property("downloadUrl").toString();
+    modelItem.webContentLink = jsonObj.property("webContentLink").toString();
+    modelItem.embedLink = jsonObj.property("embedLink").toString();
 
     return modelItem;
 }
@@ -538,7 +538,7 @@ QString CloudDriveClient::media(QString nonce, QString uid, QString remoteFilePa
     return "";
 }
 
-void CloudDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath, QString localFilePath)
+void CloudDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath)
 {
     emit metadataReplySignal(nonce, -1, objectName() + " " + "Metadata", "Service is not implemented.");
 }

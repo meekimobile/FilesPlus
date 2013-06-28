@@ -3,6 +3,7 @@
 
 #include <QDebug>
 #include <QDateTime>
+#include <QStringList>
 
 class CloudDriveJob
 {
@@ -46,11 +47,12 @@ public:
 
     QString nextJobId;
 
-    QString data;
+    QStringList remotePathList;
 
     bool isAborted;
 
     bool suppressDeleteLocal;
+    bool suppressRemoveJob;
 
     QString toJsonText();
 };

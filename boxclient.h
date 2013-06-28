@@ -44,8 +44,11 @@ public:
     void accountInfo(QString nonce, QString uid);
     void quota(QString nonce, QString uid);
     QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
+    QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
+    QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
-    void metadata(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
+    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
+    void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
     QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous = false);
     QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
@@ -53,19 +56,15 @@ public:
     void copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName);
     void shareFile(QString nonce, QString uid, QString remoteFilePath);
 //    QString delta(QString nonce, QString uid, bool synchronous = false);
-    QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format = "jpeg", QString size = "s"); // format = {jpeg|png}, size = {xs|s|m|l|xl}
+    QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format = "png", QString size = "64x64"); // format = {png}, size = {32x32,64x64,128x128,256x256}
     QString media(QString nonce, QString uid, QString remoteFilePath);
 
     bool isRemoteDir(QString nonce, QString uid, QString remoteFilePath);
-    QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
-    QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool isDir, bool synchronous = false, QString callback = "");
+    QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, int offset, bool synchronous, QString callback);
+    QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool isDir, bool synchronous, QString callback);
     void mergePropertyAndFilesJson(QString nonce, QString callback, QString uid);
     void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
-    QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
     QString fileGetReplySave(QNetworkReply *reply);
-    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
-
-    QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
 
     QString getRemoteRoot(QString uid);
     bool isFileGetResumable(qint64 fileSize);
@@ -73,6 +72,7 @@ public:
     bool isMediaEnabled(QString uid);
     bool isImageUrlCachable();
     qint64 getChunkSize();
+    QDateTime parseReplyDateString(QString dateString);
 signals:
 
 public slots:
@@ -82,8 +82,6 @@ public slots:
 
     void fileGetReplyFinished(QNetworkReply *reply);
     void filePutReplyFinished(QNetworkReply *reply);
-    void metadataReplyFinished(QNetworkReply *reply);
-    void browseReplyFinished(QNetworkReply *reply);
 
     void propertyReplyFinished(QNetworkReply *reply);
     void filesReplyFinished(QNetworkReply *reply);

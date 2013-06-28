@@ -792,7 +792,7 @@ QString WebDavClient::createPropertyJson(QString replyBody, QString caller)
     // Stringify jsonObj.
     qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "WebDavClient::createPropertyJson stringifyScriptValue started.";
     QString jsonText = stringifyScriptValue(engine, jsonObj);
-    qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "WebDavClient::createPropertyJson stringifyScriptValue done.";
+    qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "WebDavClient::createPropertyJson stringifyScriptValue done." << jsonText.size();
 
     return jsonText;
 }

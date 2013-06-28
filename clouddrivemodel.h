@@ -286,8 +286,8 @@ public:
     Q_INVOKABLE void browse(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
 
     Q_INVOKABLE QStringList getLocalPathList(QString localParentPath);
-    Q_INVOKABLE void syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, QString data = "*");
-    Q_INVOKABLE void syncFromLocal_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, bool isRootLocalPath = true, QString data = "*");
+    Q_INVOKABLE void syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, QStringList remotePathList = QStringList("*"));
+    Q_INVOKABLE void syncFromLocal_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, bool isRootLocalPath = true, QStringList remotePathList = QStringList("*"));
 
     Q_INVOKABLE void createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, QString newRemoteFolderName);
     // createFolder_Block expected to get created remote path as result. If folder already exists, return existing folder path.
@@ -359,8 +359,8 @@ signals:
 
     void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void metadataReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void browseReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void metadataReplySignal(QString nonce, int err, QString errMsg, QString msg, bool suppressRemoveJob);
+    void browseReplySignal(QString nonce, int err, QString errMsg, QString msg, bool suppressRemoveJob);
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
     void createFolderReplySignal(QString nonce, int err, QString errMsg, QString msg);
@@ -369,7 +369,7 @@ signals:
     void deleteFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg, QString url, int expires);
     void deltaReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void migrateFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void migrateFileReplySignal(QString nonce, int err, QString errMsg, QString msg, bool suppressRemoveJob);
     void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg, bool errorOnTarget);
 
     void migrateStartedSignal(qint64 total);

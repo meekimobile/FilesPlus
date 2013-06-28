@@ -624,6 +624,8 @@ void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath)
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(metadataReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
     QNetworkReply *reply = manager->get(req);
 }
@@ -1364,6 +1366,8 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
     qDebug() << "DropboxClient::metadataReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
@@ -1372,6 +1376,8 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
     }
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
+        engine.globalObject().setProperty("nonce", QScriptValue(nonce));
+        engine.globalObject().setProperty("uid", QScriptValue(uid));
         QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
         QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
         parsedObj.setProperty("children", engine.newArray());
@@ -1382,9 +1388,9 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
             parsedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, jsonObj.property("contents").property(i)));
         }
 
-        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue started.";
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::metadataReplyFinished" << nonce << "stringifyScriptValue started.";
         replyBody = stringifyScriptValue(engine, parsedObj);
-        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done.";
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::metadataReplyFinished" << nonce << "stringifyScriptValue done." << replyBody.size();
     }
 
     emit metadataReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
@@ -1404,7 +1410,9 @@ void DropboxClient::browseReplyFinished(QNetworkReply *reply)
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "DropboxClient::browseReplyFinished replyBody" << replyBody;
+    if (m_settings.value("Logging.enabled", false).toBool()) {
+        qDebug() << "DropboxClient::browseReplyFinished replyBody" << replyBody;
+    }
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
         engine.globalObject().setProperty("nonce", QScriptValue(nonce));
@@ -1414,10 +1422,14 @@ void DropboxClient::browseReplyFinished(QNetworkReply *reply)
         parsedObj.setProperty("children", engine.newArray());
         int contentsCount = jsonObj.property("contents").property("length").toInteger();
         for (int i = 0; i < contentsCount; i++) {
+            QApplication::processEvents();
+
             parsedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, jsonObj.property("contents").property(i)));
         }
 
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::browseReplyFinished" << nonce << "stringifyScriptValue started.";
         replyBody = stringifyScriptValue(engine, parsedObj);
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::browseReplyFinished" << nonce << "stringifyScriptValue done." << replyBody.size();
     }
 
     emit browseReplySignal(nonce, reply->error(), reply->errorString(), replyBody);

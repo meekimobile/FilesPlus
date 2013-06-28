@@ -28,6 +28,8 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->retryCount = 0;
     this->isAborted = false;
     this->suppressDeleteLocal = false;
+    this->suppressRemoveJob = false;
+    this->remotePathList = QStringList("*");
 }
 
 QString CloudDriveJob::toJsonText()

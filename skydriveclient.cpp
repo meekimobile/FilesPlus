@@ -773,6 +773,9 @@ void SkyDriveClient::accessTokenReplyFinished(QNetworkReply *reply)
 
             // Reset refreshTokenUid.
             refreshTokenUid = "";
+
+            // Save tokens.
+            saveAccessPairMap();
         }
 
         // Get email from accountInfo will be requested by CloudDriveModel.accessTokenReplyFilter().
@@ -980,7 +983,7 @@ void SkyDriveClient::mergePropertyAndFilesJson(QString nonce, QString callback, 
         QScriptValue mergedObj;
         QScriptValue propertyObj;
         QScriptValue filesObj;
-        qDebug() << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "started.";
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "started.";
         if (m_settings.value("Logging.enabled", false).toBool()) {
             qDebug() << "SkyDriveClient::mergePropertyAndFilesJson propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
             qDebug() << "SkyDriveClient::mergePropertyAndFilesJson filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
@@ -999,7 +1002,7 @@ void SkyDriveClient::mergePropertyAndFilesJson(QString nonce, QString callback, 
 
         qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue started.";
         QString replyBody = stringifyScriptValue(engine, mergedObj);
-        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done.";
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done." << replyBody.size();
 
         // Remove once used.
         m_propertyReplyHash->remove(nonce);

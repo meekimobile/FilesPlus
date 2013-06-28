@@ -203,19 +203,36 @@ void BoxClient::filePut(QString nonce, QString uid, QString localFilePath, QStri
     }
 }
 
-void BoxClient::metadata(QString nonce, QString uid, QString remoteFilePath, QString localFilePath) {
-    qDebug() << "----- BoxClient::metadata -----" << nonce << uid << remoteFilePath << localFilePath;
+void BoxClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
+    qDebug() << "----- BoxClient::metadata -----" << nonce << uid << remoteFilePath;
 
     if (remoteFilePath.isEmpty()) {
         emit metadataReplySignal(nonce, -1, "remoteFilePath is empty.", "");
         return;
     }
 
-    // Check if localFilePath is not directory, then proceed with empty JSON object.
-    bool isDir = localFilePath != "" && QFileInfo(localFilePath).isDir();
-    property(nonce, uid, remoteFilePath, isDir, false, "metadata");
+    // Check if remoteFilePath is a directory, then proceed getting property.
+    bool isDir = false;
+    if (m_isDirHash->contains(remoteFilePath)) {
+        isDir = m_isDirHash->value(remoteFilePath);
+        // Proceed getting property.
+        property(nonce, uid, remoteFilePath, isDir, false, "metadata");
+    } else {
+        // Try getting property as dir.
+        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, true, "metadata");
+        if (propertyReply->error() == QNetworkReply::NoError) {
+            // Proceed getting property as dir.
+            isDir = true;
+            propertyReplyFinished(propertyReply);
+        } else {
+            // Proceed getting property as file.
+            property(nonce, uid, remoteFilePath, false, false, "metadata");
+        }
+    }
+
+    // Get files if remoteFilePath is dir. Otherwise, proceed with empty JSON object.
     if (isDir) {
-        files(nonce, uid, remoteFilePath, false, "metadata");
+        files(nonce, uid, remoteFilePath, 0, false, "metadata");
     } else {
         m_filesReplyHash->insert(nonce, QString("{}").toAscii());
         mergePropertyAndFilesJson(nonce, "metadata", uid);
@@ -229,17 +246,49 @@ void BoxClient::browse(QString nonce, QString uid, QString remoteFilePath)
     // Default remoteFilePath if it's empty from DrivePage.
     remoteFilePath = (remoteFilePath == "") ? RemoteRoot : remoteFilePath;
 
-    property(nonce, uid, remoteFilePath, true, false, "browse");
-    files(nonce, uid, remoteFilePath, false, "browse");
+    // Check if remoteFilePath is a directory, then proceed getting property.
+    bool isDir = false;
+    if (m_isDirHash->contains(remoteFilePath)) {
+        isDir = m_isDirHash->value(remoteFilePath);
+        // Proceed getting property.
+        property(nonce, uid, remoteFilePath, isDir, false, "browse");
+    } else {
+        // Try getting property as dir.
+        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, true, "browse");
+        if (propertyReply->error() == QNetworkReply::NoError) {
+            // Proceed getting property as dir.
+            isDir = true;
+            propertyReplyFinished(propertyReply);
+        } else {
+            // Proceed getting property as file.
+            property(nonce, uid, remoteFilePath, false, false, "browse");
+        }
+    }
+
+    // Get files if remoteFilePath is dir. Otherwise, proceed with empty JSON object.
+    if (isDir) {
+        files(nonce, uid, remoteFilePath, 0, false, "browse");
+    } else {
+        m_filesReplyHash->insert(nonce, QString("{}").toAscii());
+        mergePropertyAndFilesJson(nonce, "browse", uid);
+    }
 }
 
-QNetworkReply * BoxClient::files(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
+QNetworkReply * BoxClient::files(QString nonce, QString uid, QString remoteFilePath, int offset, bool synchronous, QString callback)
 {
-    qDebug() << "----- BoxClient::files -----" << nonce << uid << remoteFilePath << synchronous << callback;
+    qDebug() << "----- BoxClient::files -----" << nonce << uid << remoteFilePath << offset << synchronous << callback;
+
+    int limit = 100;
+    if (callback == "metadata") {
+        limit = m_settings.value("BoxClient.metadata.files.limit", 500).toInt();
+    } else if (callback == "browse") {
+        limit = m_settings.value("BoxClient.browse.files.limit", 500).toInt();
+    }
 
     QString uri = filesURI.arg(remoteFilePath);
     uri = encodeURI(uri);
     uri += "?fields=type,id,etag,sha1,name,modified_at,size,shared_link,parent,item_status";
+    uri += QString("&offset=%1&limit=%2").arg(offset).arg(limit);
     qDebug() << "BoxClient::files" << nonce << "uri" << uri;
 
     // Send request.
@@ -251,6 +300,7 @@ QNetworkReply * BoxClient::files(QString nonce, QString uid, QString remoteFileP
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(callback));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(uid));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3), QVariant(remoteFilePath));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
 
@@ -823,6 +873,9 @@ void BoxClient::accessTokenReplyFinished(QNetworkReply *reply)
 
             // Reset refreshTokenUid.
             refreshTokenUid = "";
+
+            // Save tokens.
+            saveAccessPairMap();
         }
 
         // Get email from accountInfo will be requested by CloudDriveModel.accessTokenReplyFilter().
@@ -986,31 +1039,6 @@ void BoxClient::filePutReplyFinished(QNetworkReply *reply) {
     reply->manager()->deleteLater();
 }
 
-void BoxClient::metadataReplyFinished(QNetworkReply *reply) {
-    qDebug() << "BoxClient::metadataReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-
-    emit metadataReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
-
-    // Scheduled to delete later.
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-}
-
-void BoxClient::browseReplyFinished(QNetworkReply *reply)
-{
-    qDebug() << "BoxClient::browseReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-
-    emit browseReplySignal(nonce, reply->error(), reply->errorString(), reply->readAll());
-
-    // Scheduled to delete later.
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-}
-
 void BoxClient::mergePropertyAndFilesJson(QString nonce, QString callback, QString uid)
 {
     if (m_propertyReplyHash->contains(nonce) && m_filesReplyHash->contains(nonce)) {
@@ -1020,7 +1048,7 @@ void BoxClient::mergePropertyAndFilesJson(QString nonce, QString callback, QStri
         QScriptValue mergedObj;
         QScriptValue propertyObj;
         QScriptValue filesObj;
-        qDebug() << "BoxClient::mergePropertyAndFilesJson" << nonce << "started.";
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "BoxClient::mergePropertyAndFilesJson" << nonce << "started.";
         if (m_settings.value("Logging.enabled", false).toBool()) {
             qDebug() << "BoxClient::mergePropertyAndFilesJson propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
             qDebug() << "BoxClient::mergePropertyAndFilesJson filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
@@ -1029,20 +1057,23 @@ void BoxClient::mergePropertyAndFilesJson(QString nonce, QString callback, QStri
         filesObj = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
 
         mergedObj = parseCommonPropertyScriptValue(engine, propertyObj);
-        m_isDirHash->insert(mergedObj.property("absolutePath").toString(), mergedObj.property("isDir").toBool());
+        int totalCount = filesObj.property("total_count").toInteger();
+        int offset = filesObj.property("offset").toInteger();
+        int limit = filesObj.property("limit").toInteger();
+        mergedObj.setProperty("totalCount", QScriptValue(totalCount));
+        mergedObj.setProperty("offset", QScriptValue(offset));
+        mergedObj.setProperty("limit", QScriptValue(limit));
         mergedObj.setProperty("children", engine.newArray());
-        int contentsCount = filesObj.property("total_count").toInteger();
+        int contentsCount = filesObj.property("entries").property("length").toInteger();
         for (int i = 0; i < contentsCount; i++) {
-            QScriptValue childObj = parseCommonPropertyScriptValue(engine, filesObj.property("entries").property(i));
-            mergedObj.property("children").setProperty(i, childObj);
-            m_isDirHash->insert(childObj.property("absolutePath").toString(), childObj.property("isDir").toBool());
+            QApplication::processEvents();
+
+            mergedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, filesObj.property("entries").property(i)));
         }
 
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "BoxClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue started.";
         QString replyBody = stringifyScriptValue(engine, mergedObj);
-
-        // Remove once used.
-        m_propertyReplyHash->remove(nonce);
-        m_filesReplyHash->remove(nonce);
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "BoxClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done." << replyBody.size();
 
         if (callback == "browse") {
             emit browseReplySignal(nonce, QNetworkReply::NoError, "", replyBody);
@@ -1050,6 +1081,20 @@ void BoxClient::mergePropertyAndFilesJson(QString nonce, QString callback, QStri
             emit metadataReplySignal(nonce, QNetworkReply::NoError, "", replyBody);
         } else {
             qDebug() << "BoxClient::mergePropertyAndFilesJson invalid callback" << callback;
+        }
+
+        // Check if it requires next chunk, then proceed with next offset.
+        int nextOffset = offset + limit;
+        if (nextOffset < totalCount) {
+            // Remove only files reply.
+            m_filesReplyHash->remove(nonce);
+
+            // Proceed getting next chunk.
+            files(nonce, uid, mergedObj.property("absolutePath").toString(), nextOffset, false, callback);
+        } else {
+            // Remove once used.
+            m_propertyReplyHash->remove(nonce);
+            m_filesReplyHash->remove(nonce);
         }
     }
 }
@@ -1095,6 +1140,7 @@ void BoxClient::filesReplyFinished(QNetworkReply *reply)
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString callback = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3)).toString();
 
     if (reply->error() == QNetworkReply::NoError) {
         m_filesReplyHash->insert(nonce, reply->readAll());
@@ -1149,15 +1195,16 @@ QString BoxClient::createFolderReplyFinished(QNetworkReply *reply, bool synchron
         QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
         if (jsonObj.property("error").property("code").toString() == "resource_already_exists") {
             // Get existing folder's property.
-            reply = files(nonce, uid, remoteParentPath, true);
+            // TODO Implement to support offset,limit.
+            reply = files(nonce, uid, remoteParentPath, 0, true, "createFolderReplyFinished");
             replyBody = QString::fromUtf8(reply->readAll());
             qDebug() << "BoxClient::createFolderReplyFinished" << nonce << "files replyBody" << replyBody;
             if (reply->error() == QNetworkReply::NoError) {
                 QScriptEngine engine;
                 QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
-                int contentsCount = jsonObj.property("data").toVariant().toList().length();
+                int contentsCount = jsonObj.property("entries").property("length").toInteger();
                 for (int i = 0; i < contentsCount; i++) {
-                    QScriptValue item = jsonObj.property("data").property(i);
+                    QScriptValue item = jsonObj.property("entries").property(i);
                     if (item.property("name").toString() == newRemoteFileName) {
                         QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, item);
                         replyBody = stringifyScriptValue(engine, parsedObj);
@@ -1313,7 +1360,11 @@ QScriptValue BoxClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     QString uid = engine.globalObject().property("uid").toString();
 
     bool isDir = jsonObj.property("type").toString().indexOf(QRegExp("folder|album")) == 0;
-    QString hash = isDir ? jsonObj.property("etag").toString() : jsonObj.property("sha1").toString();
+    // Save item isDir to hash.
+    m_isDirHash->insert(jsonObj.property("id").toString(), isDir);
+
+    QString jsonDateString = formatJSONDateString(parseReplyDateString(jsonObj.property("modified_at").toString()));
+    QString hash = isDir ? jsonObj.property("modified_at").toString() : jsonObj.property("sha1").toString();
     QString thumbnailUrl = (!isDir) ? thumbnail(nonce, uid, jsonObj.property("id").toString(), "png", "64x64") : "";
     QString thumbnail128Url = (!isDir) ? thumbnail(nonce, uid, jsonObj.property("id").toString(), "png", "128x128") : "";
     QString previewUrl = (!isDir) ? thumbnail(nonce, uid, jsonObj.property("id").toString(), "png", "256x256") : "";
@@ -1324,14 +1375,13 @@ QScriptValue BoxClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     parsedObj.setProperty("size", jsonObj.property("size"));
     parsedObj.setProperty("isDeleted", QScriptValue(jsonObj.property("item_status").toString() == "trashed"));
     parsedObj.setProperty("isDir", QScriptValue(isDir));
-    parsedObj.setProperty("lastModified", jsonObj.property("modified_at"));
+    parsedObj.setProperty("lastModified", QScriptValue(jsonDateString));
     parsedObj.setProperty("hash", QScriptValue(hash));
     parsedObj.setProperty("source", QScriptValue());
     parsedObj.setProperty("alternative", QScriptValue());
     parsedObj.setProperty("thumbnail", QScriptValue(thumbnailUrl));
     parsedObj.setProperty("thumbnail128", QScriptValue(thumbnail128Url));
     parsedObj.setProperty("preview", QScriptValue(previewUrl));
-    parsedObj.setProperty("sharedLink", jsonObj.property("shared_link").property("url"));
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("name").toString())));
 
     return parsedObj;
@@ -1362,7 +1412,7 @@ QString BoxClient::thumbnail(QString nonce, QString uid, QString remoteFilePath,
         uri += QString("?min_height=%1&min_width=%2").arg(splittedSize.at(0)).arg(splittedSize.at(0));
     }
     uri += "&access_token=" + accessTokenPairMap[uid].token;
-    qDebug() << "BoxClient::thumbnail uri" << uri;
+//    qDebug() << "BoxClient::thumbnail uri" << uri;
 
     return uri;
 }
@@ -1429,4 +1479,18 @@ QString BoxClient::media(QString nonce, QString uid, QString remoteFilePath)
     reply->manager()->deleteLater();
 
     return url;
+}
+
+QDateTime BoxClient::parseReplyDateString(QString dateString)
+{
+    /*
+     *Example date string
+     * "2013-06-27T03:08:59-07:00"
+    */
+
+    QString filteredDateString = dateString;
+    QDateTime datetime = QDateTime::fromString(filteredDateString, Qt::ISODate);
+    qDebug() << "BoxClient::parseReplyDateString parse filteredDateString" << filteredDateString << "with ISODate to" << datetime << "toUTC" << datetime.toUTC();
+
+    return datetime.toUTC();
 }

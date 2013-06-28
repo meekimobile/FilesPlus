@@ -1501,6 +1501,9 @@ void GCDClient::accessTokenReplyFinished(QNetworkReply *reply)
 
             // Reset refreshTokenUid.
             refreshTokenUid = "";
+
+            // Save tokens.
+            saveAccessPairMap();
         }
 
         // NOTE uid and email will be requested to accountInfo by CloudDriveModel.accessTokenReplyFilter().
@@ -1790,7 +1793,7 @@ void GCDClient::mergePropertyAndFilesJson(QString nonce, QString callback)
 
         qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "GCDClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue started.";
         QString replyBody = stringifyScriptValue(engine, mergedObj);
-        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "GCDClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done.";
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "GCDClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done." << replyBody.size();
 
         // Remove once used.
         m_propertyReplyHash->remove(nonce);

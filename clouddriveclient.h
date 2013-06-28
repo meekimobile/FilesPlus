@@ -51,7 +51,7 @@ public:
     virtual void quota(QString nonce, QString uid);
     virtual QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
     virtual void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
-    virtual void metadata(QString nonce, QString uid, QString remoteFilePath, QString localFilePath);
+    virtual void metadata(QString nonce, QString uid, QString remoteFilePath);
     virtual void browse(QString nonce, QString uid, QString remoteFilePath);
     virtual QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous = false);
     virtual void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
@@ -94,6 +94,7 @@ public:
     virtual bool abort(QString nonce);
 
     qint64 writeToFile(QIODevice *source, QString targetFilePath, qint64 offset);
+    CloudDriveModelItem parseCloudDriveModelItem(QScriptEngine &engine, QScriptValue jsonObj);
 signals:
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);
@@ -148,7 +149,6 @@ protected:
     qint64 getOffsetFromRange(QString rangeHeader);
     QString getPathFromUrl(QString urlString);
     QDateTime parseJSONDateString(QString jsonString);
-    CloudDriveModelItem * parseCloudDriveModelItem(QScriptEngine &engine, QScriptValue jsonObj);
 private:
 
 };

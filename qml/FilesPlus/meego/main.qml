@@ -1436,7 +1436,9 @@ PageStackWindow {
             }
 
             // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onBrowseReplySignal", jobJson.job_id);
+            if (!suppressRemoveJob) {
+                cloudDriveModel.removeJob("cloudDriveModel.onBrowseReplySignal", jobJson.job_id);
+            }
         }
 
         onFileGetReplySignal: {
@@ -1512,9 +1514,8 @@ PageStackWindow {
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
-            // Remove finished job.
-            // TODO Remove only success job.
-            if (err == 0 || err == 203) {
+            // Remove only success job.
+            if ((err == 0 || err == 203) && !suppressRemoveJob) {
                 cloudDriveModel.removeJob("cloudDriveModel.onMetadataReplySignal", jobJson.job_id);
             }
 
@@ -1801,7 +1802,9 @@ PageStackWindow {
             }
 
             // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onMigrateFileReplySignal", jobJson.job_id);
+            if (!suppressRemoveJob) {
+                cloudDriveModel.removeJob("cloudDriveModel.onMigrateFileReplySignal", jobJson.job_id);
+            }
 
             // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
