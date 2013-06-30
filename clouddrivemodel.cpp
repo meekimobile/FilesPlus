@@ -181,7 +181,6 @@ CloudDriveModel::CloudDriveModel(QObject *parent) :
 
     // Initialize scheduler queue.
     initScheduler();
-    m_scheduledItems = new QQueue<CloudDriveItem>();
 
     // Enqueue initialization jobs. Queued jobs will proceed after foldePage is loaded.
     CloudDriveJob loadCloudDriveItemsJob(createNonce(), LoadCloudDriveItems, -1, "", "", "", -1);
@@ -520,6 +519,8 @@ void CloudDriveModel::loadCloudDriveJobs(QString nonce)
         if (sc.isArray()) {
             int len = sc.toVariant().toList().length();
             for (i = 0; i < len; i++) {
+                QApplication::processEvents();
+
                 QScriptValue item = sc.property(i);
                 CloudDriveJob job(item.property("job_id").toString(),
                                   item.property("operation").toInt32(),
@@ -580,6 +581,8 @@ void CloudDriveModel::saveCloudDriveJobs()
         file.write("[ ");
         int c = 0;
         foreach (CloudDriveJob job, m_cloudDriveJobs->values()) {
+            QApplication::processEvents();
+
             // Clean up job.
             if (job.jobId == "") continue;
 
@@ -2785,7 +2788,6 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
                 migrateFilePutReplyFilter(nonce, targetReply->error(), targetReply->errorString(), targetReply->readAll());
             } else {
                 // Invoke slot to reset running and emit signal.
-                // TODO How to shows if error occurs from target?
                 migrateFilePutReplyFilter(nonce, targetReply->error(), getCloudName(job.targetType) + " " + targetReply->errorString(), getCloudName(job.targetType).append(" ").append(targetReply->readAll()) );
             }
 
@@ -2901,7 +2903,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
     // Default target remote path for client with remote absolute path. (Ex. Dropbox, FTP)
     QString targetRemoteFilePath = (targetClient->isRemoteAbsolutePath()) ? (targetRemoteParentPath + "/" + targetRemoteFileName) : "";
     if (uploadResult != "") {
-        // TODO Get range and check if resume upload is required.
+        // Get range and check if resume upload is required.
         qDebug() << "CloudDriveModel::migrateFileResume_Block uploadResult" << uploadResult;
         sc = engine.evaluate("(" + uploadResult + ")");
 
@@ -2911,9 +2913,9 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
         if (sc.property("offset").isValid()) {
             job.uploadOffset = sc.property("offset").toUInt32();
         }
-        if (sc.property("id").isValid()) { // Find targetRemoteFilePath from GoogleDrive reply.
-            targetRemoteFilePath = sc.property("id").toString();
-            job.uploadOffset = sc.property("fileSize").toUInt32(); // Get fileSize to uploadOffset.
+        if (sc.property("absolutePath").isValid()) { // Find targetRemoteFilePath from upload result. (GoogleDrive, Dropbox?)
+            targetRemoteFilePath = sc.property("absolutePath").toString();
+            job.uploadOffset = sc.property("size").toUInt32(); // Get file size to uploadOffset.
             qDebug() << "CloudDriveModel::migrateFileResume_Block uploaded file with targetRemoteFilePath" << targetRemoteFilePath;
         }
         // Update changed job.
@@ -2943,7 +2945,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
         qDebug() << "CloudDriveModel::migrateFileResume_Block commit uploading job" << job.toJsonText();
         QString commitResult = targetClient->filePutCommit(nonce, targetUid, targetRemoteFilePath, job.uploadId, true);
         if (commitResult != "") {
-            qDebug() << "GCDClient::migrateFileResume_Block commitResult" << commitResult;
+            qDebug() << "CloudDriveModel::migrateFileResume_Block commitResult" << commitResult;
             sc = engine.evaluate("(" + commitResult + ")");
 
             if (sc.property("error").isValid()) {
@@ -3652,13 +3654,16 @@ void CloudDriveModel::migrateFileReplyFilter(QString nonce, int err, QString err
             }
         }
 
-        // Update job running flag.
-        job.isRunning = false;
-        updateJob(job);
-        jobDone();
-        emit migrateFileReplySignal(nonce, err, errMsg, "{}", suppressRemoveJob);
-        // Resume next jobs.
-        resumeNextJob();
+        // Resume queued jobs once all items have been queued.
+        if (nextOffset >= totalCount) {
+            // Update job running flag.
+            job.isRunning = false;
+            updateJob(job);
+            jobDone();
+            emit migrateFileReplySignal(nonce, err, errMsg, "{}", suppressRemoveJob);
+            // Resume next jobs.
+            resumeNextJob();
+        }
     } else if (err == QNetworkReply::AuthenticationRequiredError) { // Refresh token
         refreshToken(getClientType(job.type), job.uid, job.jobId);
         // Update job running flag.
@@ -5064,10 +5069,14 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
         }
         break;
     case Disconnect:
+        // TODO Remove item with children with 1 command. It must also clear cache.
+//        deleteItemWithChildrenFromDB(job.type, job.uid, job.localFilePath);
         removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
         refreshRequestFilter(job.jobId);
         break;
     case DeleteLocal:
+        // TODO Remove item with children with 1 command. It must also clear cache.
+//        deleteItemWithChildrenFromDB(job.type, job.uid, job.localFilePath);
         removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
         if (!isConnected(job.localFilePath)) {
             requestMoveToTrash(job.jobId, job.localFilePath);

@@ -429,7 +429,6 @@ private:
     QMultiMap<QString, CloudDriveItem> *m_cloudDriveItems;
     QHash<QString, CloudDriveJob> *m_cloudDriveJobs;
     QQueue<QString> *m_jobQueue;
-    QQueue<CloudDriveItem> *m_scheduledItems;
     int runningJobCount;
     bool m_isSuspended;
     bool m_isAborted;

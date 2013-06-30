@@ -72,6 +72,7 @@ public:
     QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, QString uploadId, qint64 offset);
     QString filePutResumeStart(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString remoteParentPath, bool synchronous = false);
     QString filePutResumeUpload(QString nonce, QString uid, QIODevice * source, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
+    QString filePutResumePatch(QNetworkReply *reply);
     QString filePutResumeStatus(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
     QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
 
@@ -110,7 +111,7 @@ public slots:
 
     void fileGetResumeReplyFinished(QNetworkReply *reply);
     void filePutResumeStartReplyFinished(QNetworkReply *reply);
-    void filePutResumeUploadReplyFinished(QNetworkReply *reply);
+    QString filePutResumeUploadReplyFinished(QNetworkReply *reply);
     void filePutResumeStatusReplyFinished(QNetworkReply *reply);
 
     QString deltaReplyFinished(QNetworkReply *reply);
@@ -118,6 +119,7 @@ protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:
     QHash<QString, QFile*> m_localFileHash;
+    QHash<QString, QString> m_sourceFileNameHash;
     QHash<QString, QDateTime> m_sourceFileTimestampHash;
     QHash<QString, QBuffer*> m_bufferHash;
     QHash<QString, QByteArray> *m_propertyReplyHash;
