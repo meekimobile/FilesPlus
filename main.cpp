@@ -21,6 +21,7 @@
 #include "customqnetworkaccessmanagerfactory.h"
 #include "compressedfoldermodel.h"
 
+static const QString OrgName = "MeekiMobile";
 static const QString AppName = "FilesPlus";
 
 bool suppressWarningMsg;
@@ -176,7 +177,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
 //    testReset();
 
     // Set properties for QSettings.
-    QCoreApplication::setOrganizationName("MeekiMobile");
+    QCoreApplication::setOrganizationName(OrgName);
     QCoreApplication::setApplicationName(AppName);
 
     // Initializes settings.
@@ -410,5 +411,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     // Add custom NAMF to change User-Agent to fix problem with Dropbox, Box login page.
     viewer.engine()->setNetworkAccessManagerFactory(new CustomQNetworkAccessManagerFactory());
 
-    return app->exec();
+    int exitCode = app->exec();
+    qDebug() << "main app->exec() exitCode" << exitCode;
+    return exitCode;
 }

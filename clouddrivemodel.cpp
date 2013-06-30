@@ -1000,17 +1000,32 @@ bool CloudDriveModel::isParentConnected(QString localPath)
     return false;
 }
 
+void CloudDriveModel::clearLocalPathFlagCache(QHash<QString, bool> *localPathFlagCache, QString localPath)
+{
+    QHash<QString, bool>::iterator it = localPathFlagCache->find(localPath);
+    while (it != localPathFlagCache->end()) {
+        QApplication::processEvents();
+
+        QString k = it.key();
+        if (k == localPath || k.startsWith(localPath + "/")) {
+            qDebug() << "CloudDriveModel::clearLocalPathFlagCache erase" << k;
+            localPathFlagCache->remove(k);
+            ++it;
+        } else {
+            break;
+        }
+    }
+}
+
 void CloudDriveModel::clearConnectedRemoteDirtyCache(QString localPath)
 {
     // TODO Implement clear localPath with childrens.
-//    QHash<QString, int>::const_iterator i = hash.find("HDR");
-//    while (i != hash.end() && i.key() == "HDR") {
-//        cout << i.value() << endl;
-//        ++i;
-//    }
-    m_isConnectedCache->remove(localPath);
-    m_isDirtyCache->remove(localPath);
-    m_isSyncingCache->remove(localPath);
+    clearLocalPathFlagCache(m_isConnectedCache, localPath);
+    clearLocalPathFlagCache(m_isDirtyCache, localPath);
+    clearLocalPathFlagCache(m_isSyncingCache, localPath);
+//    m_isConnectedCache->remove(localPath);
+//    m_isDirtyCache->remove(localPath);
+//    m_isSyncingCache->remove(localPath);
 }
 
 bool CloudDriveModel::isRemoteRoot(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
@@ -1558,24 +1573,29 @@ void CloudDriveModel::removeItemWithChildren(CloudDriveModel::ClientTypes type, 
 {
     if (localPath == "") return;
 
-    int removeCount = 0;
-    int deleteCount = 0;
+//    int removeCount = 0;
+//    int deleteCount = 0;
 
-    foreach (CloudDriveItem item, findItemWithChildren(type, uid, localPath)) {
-        qDebug() << "CloudDriveModel::removeItemWithChildren item" << item;
+//    foreach (CloudDriveItem item, findItemWithChildren(type, uid, localPath)) {
+//        qDebug() << "CloudDriveModel::removeItemWithChildren item" << item;
 
-        // Process events to avoid freezing UI.
-        QApplication::processEvents(QEventLoop::AllEvents, 50);
+//        // Process events to avoid freezing UI.
+//        QApplication::processEvents(QEventLoop::AllEvents, 50);
 
-        // TODO Remove only localPath's children which have specified type and uid.
-        removeCount += m_cloudDriveItems->remove(item.localPath, item);
-        deleteCount += deleteItemToDB(type, uid, item.localPath);
+//        // TODO Remove only localPath's children which have specified type and uid.
+//        removeCount += m_cloudDriveItems->remove(item.localPath, item);
+//        deleteCount += deleteItemToDB(type, uid, item.localPath);
 
-        // Remove cache for furthur refresh.
-        clearConnectedRemoteDirtyCache(item.localPath);
-    }
+//        // Remove cache for furthur refresh.
+//        clearConnectedRemoteDirtyCache(item.localPath);
+//    }
 
-    qDebug() << "CloudDriveModel::removeItemWithChildren removeCount" << removeCount << "deleteCount" << deleteCount;
+//    qDebug() << "CloudDriveModel::removeItemWithChildren removeCount" << removeCount << "deleteCount" << deleteCount;
+
+    // TODO Remove item with children with 1 command. It must also clear cache.
+    deleteItemWithChildrenFromDB(type, uid, localPath);
+    // Remove cache for furthur refresh.
+    clearConnectedRemoteDirtyCache(localPath);
 }
 
 void CloudDriveModel::removeItems(QString localPath)
@@ -1618,7 +1638,6 @@ void CloudDriveModel::updateItem(CloudDriveModel::ClientTypes type, QString uid,
     if (item.localPath != "") {
         m_cloudDriveItems->remove(item.localPath, item); // Remove found item.
         item.hash = hash;
-        m_cloudDriveItems->insert(item.localPath, item); // Insert updates item.
     }
     int updateCount = updateItemToDB(item);
 
@@ -2103,7 +2122,7 @@ bool CloudDriveModel::cleanItem(const CloudDriveItem &item)
     if (isInvalid) {
         qDebug() << "CloudDriveModel::cleanItem remove item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
         m_cloudDriveItems->remove(item.localPath, item);
-        deleteItemWithChildrenFromDB(item.type, item.uid, item.localPath);
+        deleteItemWithChildrenFromDB(getClientType(item.type), item.uid, item.localPath);
     } else {
         // TODO (Migration) Insert to DB.
 //        qDebug() << "CloudDriveModel::cleanItem migrate" << item;
@@ -2181,7 +2200,7 @@ void CloudDriveModel::syncItem(const QString localFilePath)
             metadata(getClientType(item.type), item.uid, item.localPath, item.remotePath, -1);
         } else {
             qDebug() << "CloudDriveModel::syncItem skipped and disconnecting item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
-            deleteItemWithChildrenFromDB(item.type, item.uid, item.localPath);
+            deleteItemWithChildrenFromDB(getClientType(item.type), item.uid, item.localPath);
         }
     }
 }
@@ -2215,7 +2234,7 @@ bool CloudDriveModel::syncItemByRemotePath(CloudDriveModel::ClientTypes type, QS
             res = true;
         } else {
             qDebug() << "CloudDriveModel::syncItemByRemotePath skipped and disconnecting item localPath" << item.localPath << "remotePath" << item.remotePath << "type" << item.type << "uid" << item.uid << "hash" << item.hash;
-            deleteItemWithChildrenFromDB(item.type, item.uid, item.localPath);
+            deleteItemWithChildrenFromDB(getClientType(item.type), item.uid, item.localPath);
         }
     }
 
@@ -4741,7 +4760,7 @@ int CloudDriveModel::deleteItemToDB(CloudDriveModel::ClientTypes type, QString u
     return m_deletePS.numRowsAffected();
 }
 
-int CloudDriveModel::deleteItemWithChildrenFromDB(int type, QString uid, QString localPath)
+int CloudDriveModel::deleteItemWithChildrenFromDB(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
 {
     qDebug() << "CloudDriveModel::deleteItemWithChildrenFromDB" << type << uid << localPath;
 
@@ -4759,6 +4778,23 @@ int CloudDriveModel::deleteItemWithChildrenFromDB(int type, QString uid, QString
     childrenQry.bindValue(":localPath", localPath + "/%");
     if (childrenQry.exec()) {
         res += childrenQry.numRowsAffected();
+        // Remove related cache items.
+    }
+
+    QString itemKey = getItemCacheKey(type, uid, localPath);
+
+    QHash<QString, CloudDriveItem>::iterator it = m_itemCache->find(itemKey);
+    while (it != m_itemCache->end()) {
+        QApplication::processEvents();
+
+        QString k = it.key();
+        if (k == itemKey || k.startsWith(itemKey + "/")) {
+            qDebug() << "CloudDriveModel::deleteItemWithChildrenFromDB erase cache" << k;
+            m_itemCache->remove(k);
+            ++it;
+        } else {
+            break;
+        }
     }
 
     qDebug() << "CloudDriveModel::deleteItemWithChildrenFromDB" << type << uid << localPath << "res" << res;
@@ -5069,14 +5105,10 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
         }
         break;
     case Disconnect:
-        // TODO Remove item with children with 1 command. It must also clear cache.
-//        deleteItemWithChildrenFromDB(job.type, job.uid, job.localFilePath);
         removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
         refreshRequestFilter(job.jobId);
         break;
     case DeleteLocal:
-        // TODO Remove item with children with 1 command. It must also clear cache.
-//        deleteItemWithChildrenFromDB(job.type, job.uid, job.localFilePath);
         removeItemWithChildren(getClientType(job.type), job.uid, job.localFilePath);
         if (!isConnected(job.localFilePath)) {
             requestMoveToTrash(job.jobId, job.localFilePath);

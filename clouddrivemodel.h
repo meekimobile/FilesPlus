@@ -155,6 +155,7 @@ public:
     Q_INVOKABLE bool isSyncing(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE bool isParentConnected(QString localPath);
     void clearConnectedRemoteDirtyCache(QString localPath);
+    void clearLocalPathFlagCache(QHash<QString, bool> *localPathFlagCache, QString localPath);
     Q_INVOKABLE bool isRemoteRoot(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     Q_INVOKABLE bool canSync(QString localPath);
     Q_INVOKABLE QString getFirstJobJson(QString localPath);
@@ -476,7 +477,7 @@ private:
     int updateItemToDB(const CloudDriveItem item, bool suppressMessages = false);
     int updateItemHashByLocalPathToDB(const QString localPath, const QString hash);
     int deleteItemToDB(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
-    int deleteItemWithChildrenFromDB(int type, QString uid, QString localPath);
+    int deleteItemWithChildrenFromDB(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     int countItemDB();
     int countItemByLocalPathDB(const QString localPath);
     int countItemByTypeAndUidAndRemotePathFromDB(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
