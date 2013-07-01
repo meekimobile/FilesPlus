@@ -64,30 +64,28 @@ public:
     void accountInfo(QString nonce, QString uid);
     void quota(QString nonce, QString uid);
     QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
+    QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
+    QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
+    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
+    QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, QString uploadId, qint64 offset);
+    QString filePutResumeStart(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString remoteParentPath, bool synchronous = false);
+    QString filePutResumeUpload(QString nonce, QString uid, QIODevice * source, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
+    QString filePutResumeStatus(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
+    QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
-    void createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName);
+    QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
     void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
-    void deleteFile(QString nonce, QString uid, QString remoteFilePath);
+    QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
     void shareFile(QString nonce, QString uid, QString remoteFilePath);
     QString delta(QString nonce, QString uid, bool synchronous = false);
     QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format = "jpeg", QString size = "s"); // format = {jpeg|png}, size = {xs|s|m|l|xl}
     QString media(QString nonce, QString uid, QString remoteFilePath);
 
     QNetworkReply *property(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
-    QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
-    QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
     QString fileGetReplySave(QNetworkReply *reply);
-    QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
-
-    QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
-    QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, QString uploadId, qint64 offset);
-    QString filePutResumeStart(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString remoteParentPath, bool synchronous = false);
-    QString filePutResumeUpload(QString nonce, QString uid, QIODevice * source, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
-    QString filePutResumeStatus(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString uploadId, qint64 offset, bool synchronous = false);
-    QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
 signals:
 
 public slots:
@@ -102,11 +100,10 @@ public slots:
     QString createFolderReplyFinished(QNetworkReply *reply, bool synchronous = false);
     void moveFileReplyFinished(QNetworkReply *reply);
     void copyFileReplyFinished(QNetworkReply *reply);
-    void deleteFileReplyFinished(QNetworkReply *reply);
+    QString deleteFileReplyFinished(QNetworkReply *reply, bool synchronous = false);
     void shareFileReplyFinished(QNetworkReply *reply);
     void fileGetResumeReplyFinished(QNetworkReply *reply);
     void filePutResumeReplyFinished(QNetworkReply *reply);
-
     QString deltaReplyFinished(QNetworkReply *reply);
     QString mediaReplyFinished(QNetworkReply *reply);
 protected:

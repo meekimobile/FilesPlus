@@ -53,6 +53,10 @@ public:
     virtual void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
     virtual void metadata(QString nonce, QString uid, QString remoteFilePath);
     virtual void browse(QString nonce, QString uid, QString remoteFilePath);
+    /*
+     *createFolder in synchronous mode should return existing folder property
+     *if folder with the same name exists.
+     */
     virtual QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous = false);
     virtual void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     virtual void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);

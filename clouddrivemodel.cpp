@@ -3696,7 +3696,7 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
     QString newRemoteParentPath;
     bool isDir;
 
-    if (err == 0) {
+    if (err == QNetworkReply::NoError) {
         // Add connection if localFilePath is specified because createFolder was invoked in syncFromLocal.
         // NOTE It's not required to create cloud item for created folder. Because further sync operation will do.
         sc = engine.evaluate("(" + msg + ")");
@@ -5073,7 +5073,7 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
         cloudClient->copyFile(job.jobId, job.uid, job.remoteFilePath, job.newRemoteFilePath, job.newRemoteFileName);
         break;
     case DeleteFile:
-        cloudClient->deleteFile(job.jobId, job.uid, job.remoteFilePath, job.isDir);
+        cloudClient->deleteFile(job.jobId, job.uid, job.remoteFilePath);
         break;
     case ShareFile:
         cloudClient->shareFile(job.jobId, job.uid, job.remoteFilePath);

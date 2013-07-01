@@ -1195,23 +1195,40 @@ QString BoxClient::createFolderReplyFinished(QNetworkReply *reply, bool synchron
         QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
         if (jsonObj.property("error").property("code").toString() == "resource_already_exists") {
             // Get existing folder's property.
-            // TODO Implement to support offset,limit.
-            reply = files(nonce, uid, remoteParentPath, 0, true, "createFolderReplyFinished");
-            replyBody = QString::fromUtf8(reply->readAll());
-            qDebug() << "BoxClient::createFolderReplyFinished" << nonce << "files replyBody" << replyBody;
-            if (reply->error() == QNetworkReply::NoError) {
-                QScriptEngine engine;
-                QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
-                int contentsCount = jsonObj.property("entries").property("length").toInteger();
-                for (int i = 0; i < contentsCount; i++) {
-                    QScriptValue item = jsonObj.property("entries").property(i);
-                    if (item.property("name").toString() == newRemoteFileName) {
-                        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, item);
-                        replyBody = stringifyScriptValue(engine, parsedObj);
-                        break;
-                    }
+            int nextOffset = 0;
+            int totalCount = 1;
+            bool isFound = false;
+            while (!isFound && nextOffset < totalCount) {
+                // Delete existing reply.
+                reply->deleteLater();
+                reply->manager()->deleteLater();
+
+                // Find existing folder ID.
+                reply = files(nonce, uid, remoteParentPath, nextOffset, true, "createFolderReplyFinished");
+                replyBody = QString::fromUtf8(reply->readAll());
+                qDebug() << "BoxClient::createFolderReplyFinished" << nonce << "files replyBody" << replyBody;
+                if (reply->error() == QNetworkReply::NoError) {
+                    QScriptEngine engine;
+                    QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
+                    totalCount = jsonObj.property("total_count").toInteger();
+                    int offset = jsonObj.property("offset").toInteger();
+                    int limit = jsonObj.property("limit").toInteger();
+                    nextOffset = offset + limit;
+
+                    int contentsCount = jsonObj.property("entries").property("length").toInteger();
+                    for (int i = 0; i < contentsCount; i++) {
+                        QApplication::processEvents();
+
+                        QScriptValue item = jsonObj.property("entries").property(i);
+                        if (item.property("name").toString() == newRemoteFileName) {
+                            QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, item);
+                            replyBody = stringifyScriptValue(engine, parsedObj);
+                            isFound = true;
+                            break;
+                        }
+                    } // for
                 }
-            }
+            } // while
         }
     }
 

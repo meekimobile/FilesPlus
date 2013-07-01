@@ -341,11 +341,6 @@ void GCDClient::browse(QString nonce, QString uid, QString remoteFilePath)
     files(nonce, uid, remoteFilePath, false, "browse");
 }
 
-void GCDClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
-{
-    createFolder(nonce, uid, remoteParentPath, newRemoteFolderName, false);
-}
-
 QString GCDClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
     qDebug() << "----- GCDClient::createFolder -----" << remoteParentPath << newRemoteFolderName;
@@ -1198,11 +1193,6 @@ void GCDClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QSt
     }
 }
 
-void GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
-{
-    deleteFile(nonce, uid, remoteFilePath, false);
-}
-
 QString GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
     qDebug() << "----- GCDClient::deleteFile -----" << nonce << uid << remoteFilePath << synchronous;
@@ -1879,6 +1869,7 @@ QString GCDClient::createFolderReplyFinished(QNetworkReply *reply, bool synchron
     qDebug() << "GCDClient::createFolderReplyFinished" << nonce << reply << QString(" Error=%1").arg(reply->error());
 
     // Parse common property json.
+    // NOTE createFolder() has already searched for existing folder.
     QString replyBody = QString::fromUtf8(reply->readAll());
     qDebug() << "GCDClient::createFolderReplyFinished" << nonce << "replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {

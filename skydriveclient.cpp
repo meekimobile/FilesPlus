@@ -302,11 +302,6 @@ QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString rem
     return reply;
 }
 
-void SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
-{
-    createFolder(nonce, uid, remoteParentPath, newRemoteFolderName, false);
-}
-
 QString SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
     qDebug() << "----- SkyDriveClient::createFolder -----" << nonce << uid << remoteParentPath << newRemoteFolderName << synchronous;
@@ -429,11 +424,6 @@ void SkyDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath
         req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
         QNetworkReply *reply = manager->sendCustomRequest(req, "COPY", m_bufferHash[nonce]);
     }
-}
-
-void SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
-{
-    deleteFile(nonce, uid, remoteFilePath, false);
 }
 
 QString SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
