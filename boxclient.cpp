@@ -23,6 +23,7 @@ const QString BoxClient::deleteFileURI = "https://api.box.com/2.0/%1/%2"; // DEL
 const QString BoxClient::copyFileURI = "https://api.box.com/2.0/%1/%2/copy"; // POST %1=files/folders %2=ID with parent destination folder ID in content.
 const QString BoxClient::sharesURI = "https://api.box.com/2.0/%1/%2"; // PUT %1=files/folders %2=ID with {"shared_link": {"access": "open"}} (also use for media)
 const QString BoxClient::patchURI = "https://api.box.com/2.0/%1/%2"; // PUT %1=files/folders %2=ID (also use for move, rename)
+const QString BoxClient::deltaURI = "https://api.box.com/2.0/events"; // GET with stream_position
 const QString BoxClient::thumbnailURI = "https://api.box.com/2.0/files/%1/thumbnail.%2";
 
 const qint64 BoxClient::DefaultChunkSize = 4194304; // 4MB
@@ -810,6 +811,16 @@ bool BoxClient::isFileGetResumable(qint64 fileSize)
     return (fileSize == -1 || fileSize >= getChunkSize());
 }
 
+bool BoxClient::isDeltaSupported()
+{
+    return true;
+}
+
+bool BoxClient::isDeltaEnabled(QString uid)
+{
+    return m_settings.value(QString("%1.%2.delta.enabled").arg(objectName()).arg(uid), QVariant(false)).toBool();
+}
+
 bool BoxClient::isViewable()
 {
     return true;
@@ -846,6 +857,48 @@ void BoxClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QNetworkReply *reply = manager->put(req, postString.toUtf8());
+}
+
+QString BoxClient::delta(QString nonce, QString uid, bool synchronous)
+{
+    qDebug() << "----- BoxClient::delta -----" << nonce << uid << synchronous;
+
+    QString uri = deltaURI;
+    // Skip to last if it's in reset state and doesn't opt to process.
+    bool syncOnReset = m_settings.value(QString("%1.%2.syncOnReset").arg(objectName()).arg(uid), QVariant(false)).toBool();
+    bool isReset = !m_settings.contains(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid)) || m_settings.value(QString("%1.%2.reset").arg(objectName()).arg(uid), QVariant(false)).toBool();
+    if (isReset && !syncOnReset) {
+        // Reset without sync.
+        uri += QString("?stream_position=%1").arg("now");
+    } else if (m_settings.contains(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid))) {
+        QString nextDeltaCursor = m_settings.value(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid)).toString();
+        uri += QString("?stream_position=%1").arg(nextDeltaCursor);
+    }
+    qDebug() << "BoxClient::delta" << nonce << "uri" << uri;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deltaReplyFinished(QNetworkReply*)));
+    }
+    QNetworkRequest req = QNetworkRequest(QUrl(uri));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    QNetworkReply *reply = manager->get(req);
+
+    // Return if asynchronous.
+    if (!synchronous) {
+        return "";
+    }
+
+    while (!reply->isFinished()) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    // Emit signal and return replyBody.
+    return deltaReplyFinished(reply);
 }
 
 void BoxClient::accessTokenReplyFinished(QNetworkReply *reply)
@@ -1333,6 +1386,79 @@ void BoxClient::shareFileReplyFinished(QNetworkReply *reply)
     // Scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+}
+
+QString BoxClient::deltaReplyFinished(QNetworkReply *reply)
+{
+    qDebug() << "BoxClient::deltaReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
+
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "BoxClient::deltaReplyFinished" << nonce << "replyBody" << replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue sourceObj = engine.evaluate("(" + replyBody + ")");
+
+        // Check reset state.
+        bool syncOnReset = m_settings.value(QString("%1.%2.syncOnReset").arg(objectName()).arg(uid), QVariant(false)).toBool();
+        bool isReset = !m_settings.contains(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid)) || m_settings.value(QString("%1.%2.reset").arg(objectName()).arg(uid), QVariant(false)).toBool();
+        if (isReset) {
+            qDebug() << "BoxClient::deltaReplyFinished" << nonce << "isReset" << isReset << "set to update state only.";
+            m_settings.setValue(QString("%1.%2.reset").arg(objectName()).arg(uid), QVariant(true));
+        }
+
+        // Get entries count.
+        int entriesCount = sourceObj.property("entries").property("length").toInteger();
+        qDebug() << "BoxClient::deltaReplyFinished entriesCount" << entriesCount;
+
+        // Process sourceObj.
+        QScriptValue parsedObj = engine.newObject();
+        QScriptValue childrenObj = engine.newArray();
+        for (int i = 0; (!isReset || syncOnReset) && i < entriesCount; i++) {
+            QScriptValue sourceChildObj = sourceObj.property("entries").property(i);
+            QString absolutePath = sourceChildObj.property("source").property("id").toString();
+            QString parentPath = sourceChildObj.property("source").property("parent").property("id").toString();
+            bool isDeleted = sourceChildObj.property("event_type").toString() == "DELETE"
+                              || sourceChildObj.property("event_type").toString() == "ITEM_TRASH";
+
+            QScriptValue parsedChildObj = engine.newObject();
+            parsedChildObj.setProperty("changeId", sourceChildObj.property("event_id"));
+            parsedChildObj.setProperty("isDeleted", QScriptValue(isDeleted));
+            parsedChildObj.setProperty("absolutePath", QScriptValue(absolutePath));
+            parsedChildObj.setProperty("parentPath", QScriptValue(parentPath));
+            childrenObj.setProperty(i, parsedChildObj);
+        }
+        parsedObj.setProperty("children", childrenObj);
+        parsedObj.setProperty("nextDeltaCursor", sourceObj.property("next_stream_position"));
+        parsedObj.setProperty("reset", QScriptValue(isReset));
+
+        // Check hasMore and reset state.
+        bool hasMore = (sourceObj.property("next_stream_position").toString() != "" && entriesCount > 0);
+        parsedObj.setProperty("hasMore", QScriptValue(hasMore));
+        if (isReset) {
+            if (hasMore) {
+                qDebug() << "BoxClient::deltaReplyFinished hasMore" << hasMore << "proceed update state only.";
+            } else {
+                qDebug() << "BoxClient::deltaReplyFinished hasMore" << hasMore << "reset to normal state.";
+                m_settings.setValue(QString("%1.%2.reset").arg(objectName()).arg(uid), QVariant(false));
+            }
+        }
+
+        // Save nextDeltaCursor
+        m_settings.setValue(QString("%1.%2.nextDeltaCursor").arg(objectName()).arg(uid), QVariant(parsedObj.property("nextDeltaCursor").toString()));
+
+        replyBody = stringifyScriptValue(engine, parsedObj);
+    }
+
+    emit deltaReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+
+    // scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return replyBody;
 }
 
 void BoxClient::fileGetResumeReplyFinished(QNetworkReply *reply)
