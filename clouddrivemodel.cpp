@@ -194,10 +194,10 @@ CloudDriveModel::CloudDriveModel(QObject *parent) :
     m_jobQueue->enqueue(initializeDBJob.jobId);
 
     // Initialize itemCache.
-    m_itemCache = new QHash<QString, CloudDriveItem>();
-    m_isConnectedCache = new QHash<QString, bool>();
-    m_isDirtyCache = new QHash<QString, bool>();
-    m_isSyncingCache = new QHash<QString, bool>();
+    m_itemCache = new QMap<QString, CloudDriveItem>();
+    m_isConnectedCache = new QMap<QString, bool>();
+    m_isDirtyCache = new QMap<QString, bool>();
+    m_isSyncingCache = new QMap<QString, bool>();
 
     // Initialize cloud drive model item list.
     QHash<int, QByteArray> roles;
@@ -1000,32 +1000,36 @@ bool CloudDriveModel::isParentConnected(QString localPath)
     return false;
 }
 
-void CloudDriveModel::clearLocalPathFlagCache(QHash<QString, bool> *localPathFlagCache, QString localPath)
+void CloudDriveModel::clearLocalPathFlagCache(QMap<QString, bool> *localPathFlagCache, QString localPath, bool includeChildren)
 {
-    QHash<QString, bool>::iterator it = localPathFlagCache->find(localPath);
-    while (it != localPathFlagCache->end()) {
-        QApplication::processEvents();
+    if (includeChildren) {
+        QMap<QString, bool>::iterator it = localPathFlagCache->find(localPath);
+        while (it != localPathFlagCache->end()) {
+            QApplication::processEvents();
 
-        QString k = it.key();
-        if (k == localPath || k.startsWith(localPath + "/")) {
-            qDebug() << "CloudDriveModel::clearLocalPathFlagCache erase" << k;
-            localPathFlagCache->remove(k);
+            QMap<QString, bool>::iterator prev = it;
             ++it;
-        } else {
-            break;
+
+            QString k = prev.key();
+            if (k == localPath || k.startsWith(localPath + "/")) {
+                //            qDebug() << "CloudDriveModel::clearLocalPathFlagCache erase cache key" << k;
+                localPathFlagCache->erase(prev);
+            } else {
+                //            qDebug() << "CloudDriveModel::clearLocalPathFlagCache break cache key" << k;
+                break;
+            }
         }
+    } else {
+        localPathFlagCache->remove(localPath);
     }
 }
 
-void CloudDriveModel::clearConnectedRemoteDirtyCache(QString localPath)
+void CloudDriveModel::clearConnectedRemoteDirtyCache(QString localPath, bool includeChildren)
 {
-    // TODO Implement clear localPath with childrens.
-    clearLocalPathFlagCache(m_isConnectedCache, localPath);
-    clearLocalPathFlagCache(m_isDirtyCache, localPath);
-    clearLocalPathFlagCache(m_isSyncingCache, localPath);
-//    m_isConnectedCache->remove(localPath);
-//    m_isDirtyCache->remove(localPath);
-//    m_isSyncingCache->remove(localPath);
+    // Implement clear localPath with children.
+    clearLocalPathFlagCache(m_isConnectedCache, localPath, includeChildren);
+    clearLocalPathFlagCache(m_isDirtyCache, localPath, includeChildren);
+    clearLocalPathFlagCache(m_isSyncingCache, localPath, includeChildren);
 }
 
 bool CloudDriveModel::isRemoteRoot(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
@@ -1529,9 +1533,7 @@ void CloudDriveModel::addItem(QString localPath, CloudDriveItem item)
     }
 
     // Remove cache for furthur refresh.
-    m_isConnectedCache->remove(localPath);
-    m_isDirtyCache->remove(localPath);
-    m_isSyncingCache->remove(localPath);
+    clearConnectedRemoteDirtyCache(localPath);
 }
 
 void CloudDriveModel::addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash, bool addOnly)
@@ -1552,9 +1554,7 @@ void CloudDriveModel::addItem(CloudDriveModel::ClientTypes type, QString uid, QS
     }
 
     // Remove cache for furthur refresh.
-    m_isConnectedCache->remove(localPath);
-    m_isDirtyCache->remove(localPath);
-    m_isSyncingCache->remove(localPath);
+    clearConnectedRemoteDirtyCache(localPath);
 }
 
 void CloudDriveModel::removeItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
@@ -1605,9 +1605,7 @@ void CloudDriveModel::removeItems(QString localPath)
         m_cloudDriveItems->remove(item.localPath, item);
 
         // Remove cache for furthur refresh.
-        m_isConnectedCache->remove(item.localPath);
-        m_isDirtyCache->remove(item.localPath);
-        m_isSyncingCache->remove(item.localPath);
+        clearConnectedRemoteDirtyCache(item.localPath);
     }
 
     if (getItemList(localPath).isEmpty()) {
@@ -1642,9 +1640,7 @@ void CloudDriveModel::updateItem(CloudDriveModel::ClientTypes type, QString uid,
     int updateCount = updateItemToDB(item);
 
     // Remove cache for furthur refresh.
-    m_isConnectedCache->remove(localPath);
-    m_isDirtyCache->remove(localPath);
-    m_isSyncingCache->remove(localPath);
+    clearConnectedRemoteDirtyCache(localPath);
 
     qDebug() << "CloudDriveModel::updateItem updateCount" << updateCount;
 }
@@ -1661,9 +1657,7 @@ void CloudDriveModel::updateItems(QString localPath, QString hash)
     updateItemHashByLocalPathToDB(localPath, hash);
 
     // Remove cache for furthur refresh.
-    m_isConnectedCache->remove(localPath);
-    m_isDirtyCache->remove(localPath);
-    m_isSyncingCache->remove(localPath);
+    clearConnectedRemoteDirtyCache(localPath);
 
     if (!items.isEmpty()) {
         qDebug() << "CloudDriveModel::updateItems items" << getItemList(localPath);
@@ -1702,9 +1696,7 @@ void CloudDriveModel::updateItemWithChildren(CloudDriveModel::ClientTypes type, 
         updateCount += res;
 
         // Remove cache for furthur refresh.
-        m_isConnectedCache->remove(item.localPath);
-        m_isDirtyCache->remove(item.localPath);
-        m_isSyncingCache->remove(item.localPath);
+        clearConnectedRemoteDirtyCache(item.localPath);
     }
 
     qDebug() << "CloudDriveModel::updateItemWithChildren updateCount" << updateCount;
@@ -2377,8 +2369,7 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show cloud_wait.
-    m_isConnectedCache->remove(localFilePath);
-    m_isSyncingCache->remove(localFilePath);
+    clearConnectedRemoteDirtyCache(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 }
 
@@ -2423,8 +2414,7 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show cloud_wait.
-    m_isConnectedCache->remove(localFilePath);
-    m_isSyncingCache->remove(localFilePath);
+    clearConnectedRemoteDirtyCache(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 }
 
@@ -2687,9 +2677,8 @@ void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString ui
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 
-    // TODO Does it need?
-    m_isSyncingCache->remove(localPath);
     // Emit signal to show cloud_wait.
+    clearConnectedRemoteDirtyCache(localPath);
     emit jobEnqueuedSignal(job.jobId, localPath);
 }
 
@@ -3058,7 +3047,7 @@ void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, Q
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show cloud_wait.
-    m_isSyncingCache->remove(localFilePath);
+    clearConnectedRemoteDirtyCache(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 }
 
@@ -3084,7 +3073,7 @@ void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, Q
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show cloud_wait.
-    m_isSyncingCache->remove(localFilePath);
+    clearConnectedRemoteDirtyCache(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 }
 
@@ -3102,7 +3091,7 @@ void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid,
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show cloud_wait.
-    m_isSyncingCache->remove(localFilePath);
+    clearConnectedRemoteDirtyCache(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 }
 
@@ -3157,8 +3146,7 @@ void CloudDriveModel::filePutResume(CloudDriveModel::ClientTypes type, QString u
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show cloud_wait.
-    m_isConnectedCache->remove(localFilePath);
-    m_isSyncingCache->remove(localFilePath);
+    clearConnectedRemoteDirtyCache(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 }
 
@@ -3172,8 +3160,7 @@ void CloudDriveModel::fileGetResume(CloudDriveModel::ClientTypes type, QString u
     m_jobQueue->enqueue(job.jobId);
 
     // Emit signal to show cloud_wait.
-    m_isConnectedCache->remove(localFilePath);
-    m_isSyncingCache->remove(localFilePath);
+    clearConnectedRemoteDirtyCache(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
 }
 
@@ -4778,21 +4765,23 @@ int CloudDriveModel::deleteItemWithChildrenFromDB(CloudDriveModel::ClientTypes t
     childrenQry.bindValue(":localPath", localPath + "/%");
     if (childrenQry.exec()) {
         res += childrenQry.numRowsAffected();
-        // Remove related cache items.
     }
 
+    // Remove related cache items.
     QString itemKey = getItemCacheKey(type, uid, localPath);
-
-    QHash<QString, CloudDriveItem>::iterator it = m_itemCache->find(itemKey);
+    QMap<QString, CloudDriveItem>::iterator it = m_itemCache->find(itemKey);
     while (it != m_itemCache->end()) {
         QApplication::processEvents();
 
-        QString k = it.key();
+        QMap<QString, CloudDriveItem>::iterator prev = it;
+        ++it;
+
+        QString k = prev.key();
         if (k == itemKey || k.startsWith(itemKey + "/")) {
-            qDebug() << "CloudDriveModel::deleteItemWithChildrenFromDB erase cache" << k;
-            m_itemCache->remove(k);
-            ++it;
+            qDebug() << "CloudDriveModel::deleteItemWithChildrenFromDB erase cache key" << k;
+            m_itemCache->erase(prev);
         } else {
+            qDebug() << "CloudDriveModel::deleteItemWithChildrenFromDB break cache key" << k;
             break;
         }
     }

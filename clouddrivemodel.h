@@ -154,8 +154,8 @@ public:
     Q_INVOKABLE bool isSyncing(QString localPath);
     Q_INVOKABLE bool isSyncing(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE bool isParentConnected(QString localPath);
-    void clearConnectedRemoteDirtyCache(QString localPath);
-    void clearLocalPathFlagCache(QHash<QString, bool> *localPathFlagCache, QString localPath);
+    void clearConnectedRemoteDirtyCache(QString localPath, bool includeChildren = true);
+    void clearLocalPathFlagCache(QMap<QString, bool> *localPathFlagCache, QString localPath, bool includeChildren = true);
     Q_INVOKABLE bool isRemoteRoot(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     Q_INVOKABLE bool canSync(QString localPath);
     Q_INVOKABLE QString getFirstJobJson(QString localPath);
@@ -483,10 +483,10 @@ private:
     int countItemByTypeAndUidAndRemotePathFromDB(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     QString getItemCacheKey(int type, QString uid, QString localPath);
 
-    QHash<QString, CloudDriveItem> *m_itemCache;
-    QHash<QString, bool> *m_isConnectedCache;
-    QHash<QString, bool> *m_isDirtyCache;
-    QHash<QString, bool> *m_isSyncingCache;
+    QMap<QString, CloudDriveItem> *m_itemCache;
+    QMap<QString, bool> *m_isConnectedCache;
+    QMap<QString, bool> *m_isDirtyCache;
+    QMap<QString, bool> *m_isSyncingCache;
 
     CloudDriveClient *defaultClient;
     DropboxClient *dbClient;
