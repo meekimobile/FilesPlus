@@ -208,6 +208,7 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
     req.setRawHeader("Accept", QByteArray("*/*"));
     req.setRawHeader("Depth", QString("%1").arg(depth).toAscii());
     QNetworkReply *reply = manager->sendCustomRequest(req, "PROPFIND", m_bufferHash[nonce]);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
 
     // Return if asynchronous.
     if (!synchronous) {
