@@ -59,10 +59,10 @@ public:
     QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
-    QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous);
+    QString createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous = false);
     void moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName);
     void copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName);
-    QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous);
+    QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
     void shareFile(QString nonce, QString uid, QString remoteFilePath);
     QString delta(QString nonce, QString uid, bool synchronous);
     QString media(QString nonce, QString uid, QString remoteFilePath);
