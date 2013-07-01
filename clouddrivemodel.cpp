@@ -2714,9 +2714,9 @@ QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, Q
     return "";
 }
 
-void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
+void CloudDriveModel::migrateFilePut_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
 {
-    qDebug() << "CloudDriveModel::migrateFile_Block" << nonce << type << uid << remoteFilePath << remoteFileSize << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
+    qDebug() << "CloudDriveModel::migrateFilePut_Block" << nonce << type << uid << remoteFilePath << remoteFileSize << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
 
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     CloudDriveClient *sourceClient = getCloudClient(type);
@@ -2740,15 +2740,15 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
                 migrateFilePutReplyFilter(nonce, sourceReply->error(), sourceReply->errorString(), sourceReply->readAll());
                 return;
             }
-            qDebug() << "CloudDriveModel::migrateFile_Block chunk is downloaded. size" << source->size() << "bytesAvailable" << source->bytesAvailable() << "job" << job.toJsonText();
+            qDebug() << "CloudDriveModel::migrateFilePut_Block chunk is downloaded. size" << source->size() << "bytesAvailable" << source->bytesAvailable() << "job" << job.toJsonText();
 
             // Stream source to a file on localPath.
-            qDebug() << "CloudDriveModel::migrateFile_Block tempFilePath" << tempFilePath;
+            qDebug() << "CloudDriveModel::migrateFilePut_Block tempFilePath" << tempFilePath;
             qint64 totalBytes = sourceClient->writeToFile(source, tempFilePath, job.downloadOffset);
             if (totalBytes >= 0) {
-                qDebug() << "CloudDriveModel::migrateFile_Block chunk is written at offset" << job.downloadOffset << "totalBytes"  << totalBytes << "to" << tempFilePath;
+                qDebug() << "CloudDriveModel::migrateFilePut_Block chunk is written at offset" << job.downloadOffset << "totalBytes"  << totalBytes << "to" << tempFilePath;
             } else {
-                qDebug() << "CloudDriveModel::migrateFile_Block can't open tempFilePath" << tempFilePath;
+                qDebug() << "CloudDriveModel::migrateFilePut_Block can't open tempFilePath" << tempFilePath;
                 migrateFilePutReplyFilter(nonce, -1, QString("Can't open temp file %1").arg(tempFilePath), "{ }");
                 return;
             }
@@ -2773,7 +2773,7 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
         job.downloadOffset = QFileInfo(tempFilePath).size();
         updateJob(job);
     }
-    qDebug() << "CloudDriveModel::migrateFile_Block source is downloaded to temp file. tempFilePath" << tempFilePath << "size" << job.downloadOffset << "remoteFileSize" << remoteFileSize;
+    qDebug() << "CloudDriveModel::migrateFilePut_Block source is downloaded to temp file. tempFilePath" << tempFilePath << "size" << job.downloadOffset << "remoteFileSize" << remoteFileSize;
 
     // Check isAborted.
     if (m_isAborted) {
@@ -2811,13 +2811,13 @@ void CloudDriveModel::migrateFile_Block(QString nonce, CloudDriveModel::ClientTy
     // TODO Temp file should also be removed if job is removed manually.
     if (job.uploadOffset == job.downloadOffset) {
         QFile(tempFilePath).remove();
-        qDebug() << "CloudDriveModel::migrateFile_Block job" << nonce << "done." << tempFilePath << "is removed.";
+        qDebug() << "CloudDriveModel::migrateFilePut_Block job" << nonce << "done." << tempFilePath << "is removed.";
     }
 }
 
-void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
+void CloudDriveModel::migrateFilePutResume_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
 {
-    qDebug() << "CloudDriveModel::migrateFileResume_Block" << nonce << type << uid << remoteFilePath << remoteFileSize << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
+    qDebug() << "CloudDriveModel::migrateFilePutResume_Block" << nonce << type << uid << remoteFilePath << remoteFileSize << targetType << targetUid << targetRemoteParentPath << targetRemoteFileName;
 
     // Migrates using resumable methods.
     // TODO Source and target chunk size may not be the same.
@@ -2826,13 +2826,13 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
     CloudDriveClient *targetClient = getCloudClient(targetType);
     QScriptEngine engine;
     QScriptValue sc;
-    qDebug() << "CloudDriveModel::migrateFileResume_Block job" << job.toJsonText();
+    qDebug() << "CloudDriveModel::migrateFilePutResume_Block job" << job.toJsonText();
 
     // Start uploading session and get upload_id.
     if (job.uploadId == "") {
         QString startResult = targetClient->filePutResumeStart(nonce, targetUid, targetRemoteFileName, remoteFileSize, targetRemoteParentPath, true);
         if (startResult != "") {
-            qDebug() << "CloudDriveModel::migrateFileResume_Block startResult" << startResult;
+            qDebug() << "CloudDriveModel::migrateFilePutResume_Block startResult" << startResult;
             sc = engine.evaluate("(" + startResult + ")");
 
             if (sc.property("upload_id").isValid()) {
@@ -2851,7 +2851,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
         QString statusResult = targetClient->filePutResumeStatus(nonce, targetUid, targetRemoteFileName, remoteFileSize, job.uploadId, job.uploadOffset, true);
         if (statusResult != "") {
             // TODO Get range and check if resume upload is required.
-            qDebug() << "CloudDriveModel::migrateFileResume_Block statusResult" << statusResult;
+            qDebug() << "CloudDriveModel::migrateFilePutResume_Block statusResult" << statusResult;
             sc = engine.evaluate("(" + statusResult + ")");
 
             if (sc.property("offset").isValid()) {
@@ -2885,7 +2885,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
         migrateFilePutReplyFilter(nonce, -1, tr("Service is not implemented or host is not accessible."), "{ }");
         return;
     } else {
-        qDebug() << "CloudDriveModel::migrateFileResume_Block chunk is downloaded. source->metaObject()->className()" << source->metaObject()->className() << "size" << source->size() << "bytesAvailable" << source->bytesAvailable() << "job" << job.toJsonText();
+        qDebug() << "CloudDriveModel::migrateFilePutResume_Block chunk is downloaded. source->metaObject()->className()" << source->metaObject()->className() << "size" << source->size() << "bytesAvailable" << source->bytesAvailable() << "job" << job.toJsonText();
         // TODO Handle source error.
         if (QNetworkReply *sourceReply = dynamic_cast<QNetworkReply*>(source)) {
             if (sourceReply->error() != QNetworkReply::NoError) {
@@ -2912,7 +2912,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
     QString targetRemoteFilePath = (targetClient->isRemoteAbsolutePath()) ? (targetRemoteParentPath + "/" + targetRemoteFileName) : "";
     if (uploadResult != "") {
         // Get range and check if resume upload is required.
-        qDebug() << "CloudDriveModel::migrateFileResume_Block uploadResult" << uploadResult;
+        qDebug() << "CloudDriveModel::migrateFilePutResume_Block uploadResult" << uploadResult;
         sc = engine.evaluate("(" + uploadResult + ")");
 
         if (sc.property("upload_id").isValid()) {
@@ -2924,7 +2924,7 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
         if (sc.property("absolutePath").isValid()) { // Find targetRemoteFilePath from upload result. (GoogleDrive, Dropbox?)
             targetRemoteFilePath = sc.property("absolutePath").toString();
             job.uploadOffset = sc.property("size").toUInt32(); // Get file size to uploadOffset.
-            qDebug() << "CloudDriveModel::migrateFileResume_Block uploaded file with targetRemoteFilePath" << targetRemoteFilePath;
+            qDebug() << "CloudDriveModel::migrateFilePutResume_Block uploaded file with targetRemoteFilePath" << targetRemoteFilePath;
         }
         // Update changed job.
         m_cloudDriveJobs->insert(job.jobId, job);
@@ -2943,17 +2943,17 @@ void CloudDriveModel::migrateFileResume_Block(QString nonce, CloudDriveModel::Cl
     // Check whether resume or commit.
     if (job.uploadOffset < job.bytesTotal) {
         // Enqueue and resume job.
-        qDebug() << "CloudDriveModel::migrateFileResume_Block resume uploading job" << job.toJsonText();
+        qDebug() << "CloudDriveModel::migrateFilePutResume_Block resume uploading job" << job.toJsonText();
         m_jobQueue->enqueue(job.jobId);
         updateJob(job);
         jobDone();
         return;
     } else {
         // Invoke to handle successful uploading.
-        qDebug() << "CloudDriveModel::migrateFileResume_Block commit uploading job" << job.toJsonText();
+        qDebug() << "CloudDriveModel::migrateFilePutResume_Block commit uploading job" << job.toJsonText();
         QString commitResult = targetClient->filePutCommit(nonce, targetUid, targetRemoteFilePath, job.uploadId, true);
         if (commitResult != "") {
-            qDebug() << "CloudDriveModel::migrateFileResume_Block commitResult" << commitResult;
+            qDebug() << "CloudDriveModel::migrateFilePutResume_Block commitResult" << commitResult;
             sc = engine.evaluate("(" + commitResult + ")");
 
             if (sc.property("error").isValid()) {
@@ -5088,9 +5088,9 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
         // TODO Notify user before start migration.
         // Check if it's resumable for any file size.
         if (cloudClient->isFileGetResumable() && getCloudClient(job.targetType)->isFilePutResumable()) {
-            migrateFileResume_Block(job.jobId, getClientType(job.type), job.uid, job.remoteFilePath, job.bytesTotal, getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
+            migrateFilePutResume_Block(job.jobId, getClientType(job.type), job.uid, job.remoteFilePath, job.bytesTotal, getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
         } else {
-            migrateFile_Block(job.jobId, getClientType(job.type), job.uid, job.remoteFilePath, job.bytesTotal, getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
+            migrateFilePut_Block(job.jobId, getClientType(job.type), job.uid, job.remoteFilePath, job.bytesTotal, getClientType(job.targetType), job.targetUid, job.newRemoteFilePath, job.newRemoteFileName);
         }
         break;
     case Disconnect:
