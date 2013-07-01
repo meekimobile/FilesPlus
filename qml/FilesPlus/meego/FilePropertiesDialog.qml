@@ -45,9 +45,9 @@ CommonDialog {
         property int labelWidth: width * 0.35
         property real maxContentHeight: filePropertiesDIalog.parent.height - 130 // Title + Buttons height = 130. For Meego only.
 
-        onHeightChanged: {
-            console.debug("filePropertiesDIalog contentItem onHeightChanged " + height + " maxContentHeight " + maxContentHeight + " filePropertiesDIalog.width " + filePropertiesDIalog.width + " filePropertiesDIalog.height " + filePropertiesDIalog.height + " window.inPortrait " + window.inPortrait);
-        }
+//        onHeightChanged: {
+//            console.debug("filePropertiesDIalog contentItem onHeightChanged " + height + " maxContentHeight " + maxContentHeight + " filePropertiesDIalog.width " + filePropertiesDIalog.width + " filePropertiesDIalog.height " + filePropertiesDIalog.height + " window.inPortrait " + window.inPortrait);
+//        }
 
         width: parent.width // For Meego only.
         height: Math.min(contentColumn.height, maxContentHeight) // For Meego only.

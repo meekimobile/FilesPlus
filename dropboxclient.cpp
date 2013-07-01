@@ -624,6 +624,8 @@ void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath)
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(metadataReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
     QNetworkReply *reply = manager->get(req);
 }
@@ -646,11 +648,6 @@ void DropboxClient::browse(QString nonce, QString uid, QString remoteFilePath)
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "GET", uri));
     QNetworkReply *reply = manager->get(req);
-}
-
-void DropboxClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
-{
-    createFolder(nonce, uid, remoteParentPath, newRemoteFolderName, false);
 }
 
 void DropboxClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName)
@@ -725,32 +722,47 @@ void DropboxClient::copyFile(QString nonce, QString uid, QString remoteFilePath,
     QNetworkReply *reply = manager->post(req, postData);
 }
 
-void DropboxClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
+QString DropboxClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
-    qDebug() << "----- DropboxClient::deleteFile -----";
+    qDebug() << "----- DropboxClient::deleteFile -----" << nonce << uid << remoteFilePath << synchronous;
 
     QString uri = deleteFileURI;
-    qDebug() << "DropboxClient::deleteFile uri " << uri;
+    qDebug() << "DropboxClient::deleteFile uri" << uri;
 
     // Construct normalized query string.
     QMap<QString, QString> sortMap;
     sortMap["root"] = dropboxRoot;
     sortMap["path"] = remoteFilePath;
     QString queryString = createNormalizedQueryString(sortMap);
-    qDebug() << "queryString " << queryString;
+    qDebug() << "DropboxClient::deleteFile queryString" << queryString;
 
     QByteArray postData;
     postData.append(queryString);
-    qDebug() << "postData" << postData;
+    qDebug() << "DropboxClient::deleteFile postData" << postData;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deleteFileReplyFinished(QNetworkReply*)) );
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deleteFileReplyFinished(QNetworkReply*)) );
+    }
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "POST", uri, sortMap));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QNetworkReply *reply = manager->post(req, postData);
+
+    // Return if asynchronous.
+    if (!synchronous) {
+        return "";
+    }
+
+    while (!reply->isFinished()) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    // Emit signal and return replyBody.
+    return deleteFileReplyFinished(reply, synchronous);
 }
 
 void DropboxClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
@@ -1095,11 +1107,11 @@ QString DropboxClient::createFolder(QString nonce, QString uid, QString remotePa
     sortMap["root"] = dropboxRoot;
     sortMap["path"] = remoteParentPath + "/" + newRemoteFolderName;
     QString queryString = createNormalizedQueryString(sortMap);
-    qDebug() << "queryString " << queryString;
+    qDebug() << "DropboxClient::createFolder queryString " << queryString;
 
     QByteArray postData;
     postData.append(queryString);
-    qDebug() << "postData" << postData;
+    qDebug() << "DropboxClient::createFolder postData" << postData;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -1364,6 +1376,8 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
     qDebug() << "DropboxClient::metadataReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
@@ -1372,6 +1386,8 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
     }
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
+        engine.globalObject().setProperty("nonce", QScriptValue(nonce));
+        engine.globalObject().setProperty("uid", QScriptValue(uid));
         QScriptValue jsonObj = engine.evaluate("(" + replyBody  + ")");
         QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
         parsedObj.setProperty("children", engine.newArray());
@@ -1382,9 +1398,9 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
             parsedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, jsonObj.property("contents").property(i)));
         }
 
-        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue started.";
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::metadataReplyFinished" << nonce << "stringifyScriptValue started.";
         replyBody = stringifyScriptValue(engine, parsedObj);
-        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done.";
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::metadataReplyFinished" << nonce << "stringifyScriptValue done." << replyBody.size();
     }
 
     emit metadataReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
@@ -1404,7 +1420,9 @@ void DropboxClient::browseReplyFinished(QNetworkReply *reply)
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "DropboxClient::browseReplyFinished replyBody" << replyBody;
+    if (m_settings.value("Logging.enabled", false).toBool()) {
+        qDebug() << "DropboxClient::browseReplyFinished replyBody" << replyBody;
+    }
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
         engine.globalObject().setProperty("nonce", QScriptValue(nonce));
@@ -1414,10 +1432,14 @@ void DropboxClient::browseReplyFinished(QNetworkReply *reply)
         parsedObj.setProperty("children", engine.newArray());
         int contentsCount = jsonObj.property("contents").property("length").toInteger();
         for (int i = 0; i < contentsCount; i++) {
+            QApplication::processEvents();
+
             parsedObj.property("children").setProperty(i, parseCommonPropertyScriptValue(engine, jsonObj.property("contents").property(i)));
         }
 
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::browseReplyFinished" << nonce << "stringifyScriptValue started.";
         replyBody = stringifyScriptValue(engine, parsedObj);
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "DropboxClient::browseReplyFinished" << nonce << "stringifyScriptValue done." << replyBody.size();
     }
 
     emit browseReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
@@ -1444,7 +1466,7 @@ QString DropboxClient::createFolderReplyFinished(QNetworkReply *reply, bool sync
         QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
         replyBody = stringifyScriptValue(engine, parsedObj);
     } else if (reply->error() == QNetworkReply::ContentOperationNotPermittedError) {
-        // Get property.
+        // Get property as there is existing folder with the same name.
         reply = property(nonce, uid, remoteFilePath, true);
         replyBody = QString::fromUtf8(reply->readAll());
         qDebug() << "DropboxClient::createFolderReplyFinished" << nonce << "property replyBody" << replyBody;
@@ -1512,7 +1534,7 @@ void DropboxClient::copyFileReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void DropboxClient::deleteFileReplyFinished(QNetworkReply *reply)
+QString DropboxClient::deleteFileReplyFinished(QNetworkReply *reply, bool synchronous)
 {
     qDebug() << "DropboxClient::deleteFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
 
@@ -1528,11 +1550,13 @@ void DropboxClient::deleteFileReplyFinished(QNetworkReply *reply)
         replyBody = stringifyScriptValue(engine, parsedObj);
     }
 
-    emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+    if (!synchronous) emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+
+    return replyBody;
 }
 
 void DropboxClient::shareFileReplyFinished(QNetworkReply *reply)

@@ -302,11 +302,6 @@ QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString rem
     return reply;
 }
 
-void SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
-{
-    createFolder(nonce, uid, remoteParentPath, newRemoteFolderName, false);
-}
-
 QString SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
     qDebug() << "----- SkyDriveClient::createFolder -----" << nonce << uid << remoteParentPath << newRemoteFolderName << synchronous;
@@ -431,11 +426,6 @@ void SkyDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath
     }
 }
 
-void SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
-{
-    deleteFile(nonce, uid, remoteFilePath, false);
-}
-
 QString SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
     qDebug() << "----- SkyDriveClient::deleteFile -----" << nonce << uid << remoteFilePath << synchronous;
@@ -498,7 +488,7 @@ QIODevice *SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFil
 {
     qDebug() << "----- SkyDriveClient::fileGet -----" << nonce << uid << remoteFilePath << offset << "synchronous" << synchronous;
 
-    // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
+    // Get property for using in fileGetReplyFinished().
     if (!synchronous) {
         QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "fileGet");
         if (propertyReply->error() == QNetworkReply::NoError) {
@@ -773,6 +763,9 @@ void SkyDriveClient::accessTokenReplyFinished(QNetworkReply *reply)
 
             // Reset refreshTokenUid.
             refreshTokenUid = "";
+
+            // Save tokens.
+            saveAccessPairMap();
         }
 
         // Get email from accountInfo will be requested by CloudDriveModel.accessTokenReplyFilter().
@@ -980,7 +973,7 @@ void SkyDriveClient::mergePropertyAndFilesJson(QString nonce, QString callback, 
         QScriptValue mergedObj;
         QScriptValue propertyObj;
         QScriptValue filesObj;
-        qDebug() << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "started.";
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "started.";
         if (m_settings.value("Logging.enabled", false).toBool()) {
             qDebug() << "SkyDriveClient::mergePropertyAndFilesJson propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
             qDebug() << "SkyDriveClient::mergePropertyAndFilesJson filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
@@ -999,7 +992,7 @@ void SkyDriveClient::mergePropertyAndFilesJson(QString nonce, QString callback, 
 
         qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue started.";
         QString replyBody = stringifyScriptValue(engine, mergedObj);
-        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done.";
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "SkyDriveClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done." << replyBody.size();
 
         // Remove once used.
         m_propertyReplyHash->remove(nonce);

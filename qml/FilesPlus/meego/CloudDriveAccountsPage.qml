@@ -60,12 +60,16 @@ Page {
                 type: CloudDriveModel.Dropbox
             }
             ListElement {
+                name: "GoogleDrive"
+                type: CloudDriveModel.GoogleDrive
+            }
+            ListElement {
                 name: "SkyDrive"
                 type: CloudDriveModel.SkyDrive
             }
             ListElement {
-                name: "GoogleDrive"
-                type: CloudDriveModel.GoogleDrive
+                name: "Box"
+                type: CloudDriveModel.Box
             }
             ListElement {
                 name: "FTP"
@@ -109,13 +113,12 @@ Page {
             var type = model.get(selectedIndex).type;
             switch (type) {
             case CloudDriveModel.Dropbox:
-                cloudDriveModel.requestToken(CloudDriveModel.Dropbox);
+                cloudDriveModel.requestToken(type);
                 break;
             case CloudDriveModel.SkyDrive:
-                cloudDriveModel.authorize(CloudDriveModel.SkyDrive);
-                break;
             case CloudDriveModel.GoogleDrive:
-                cloudDriveModel.authorize(CloudDriveModel.GoogleDrive);
+            case CloudDriveModel.Box:
+                cloudDriveModel.authorize(type);
                 break;
             case CloudDriveModel.Ftp:
                 addAccountDialog.show(type);

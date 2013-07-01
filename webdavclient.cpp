@@ -208,6 +208,7 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
     req.setRawHeader("Accept", QByteArray("*/*"));
     req.setRawHeader("Depth", QString("%1").arg(depth).toAscii());
     QNetworkReply *reply = manager->sendCustomRequest(req, "PROPFIND", m_bufferHash[nonce]);
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
 
     // Return if asynchronous.
     if (!synchronous) {
@@ -242,11 +243,6 @@ void WebDavClient::browse(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "----- WebDavClient::browse -----" << nonce << uid << remoteFilePath;
 
     property(nonce, uid, remoteFilePath, "", 1, false, "browse");
-}
-
-void WebDavClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
-{
-    createFolder(nonce, uid, remoteParentPath, newRemoteFolderName, false);
 }
 
 void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName)
@@ -341,7 +337,7 @@ void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, 
     QNetworkReply *reply = manager->sendCustomRequest(req, "COPY");
 }
 
-void WebDavClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
+QString WebDavClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
     qDebug() << "----- WebDavClient::deleteFile -----" << uid << remoteFilePath;
 
@@ -355,15 +351,34 @@ void WebDavClient::deleteFile(QString nonce, QString uid, QString remoteFilePath
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deleteFileReplyFinished(QNetworkReply*)));
+    if (!synchronous) {
+        connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deleteFileReplyFinished(QNetworkReply*)));
+    }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    // Configure to ignore errors for self-signed certificate.
+    if (synchronous && m_settings.value(objectName() + ".ignoreSSLSelfSignedCertificateErrors", QVariant(false)).toBool()) {
+        req.setSslConfiguration(getSelfSignedSslConfiguration(req.sslConfiguration()));
+    }
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
     req.setRawHeader("Authorization", authHeader);
     req.setRawHeader("Accept", QByteArray("*/*"));
     QNetworkReply *reply = manager->deleteResource(req);
+
+    // Return if asynchronous.
+    if (!synchronous) {
+        return "";
+    }
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    // Emit signal and return replyBody.
+    return deleteFileReplyFinished(reply, synchronous);
 }
 
 void WebDavClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
@@ -792,7 +807,7 @@ QString WebDavClient::createPropertyJson(QString replyBody, QString caller)
     // Stringify jsonObj.
     qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "WebDavClient::createPropertyJson stringifyScriptValue started.";
     QString jsonText = stringifyScriptValue(engine, jsonObj);
-    qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "WebDavClient::createPropertyJson stringifyScriptValue done.";
+    qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "WebDavClient::createPropertyJson stringifyScriptValue done." << jsonText.size();
 
     return jsonText;
 }
@@ -1277,6 +1292,10 @@ QString WebDavClient::createFolderReplyFinished(QNetworkReply *reply, bool synch
     QString replyBody;
     qDebug() << "WebDavClient::createFolderReplyFinished" << nonce << "replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {
+        // Delete existing reply.
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+
         // Get created folder's property.
         reply = property(nonce, uid, remoteFilePath);
         if (reply->error() == QNetworkReply::NoError) {
@@ -1285,6 +1304,10 @@ QString WebDavClient::createFolderReplyFinished(QNetworkReply *reply, bool synch
             replyBody = createResponseJson(QString::fromUtf8(reply->readAll()), "createFolderReplyFinished");
         }
     } else if (reply->error() == QNetworkReply::ContentOperationNotPermittedError) {
+        // Delete existing reply.
+        reply->deleteLater();
+        reply->manager()->deleteLater();
+
         // Get existing folder's property.
         reply = property(nonce, uid, remoteFilePath);
         if (reply->error() == QNetworkReply::NoError) {
@@ -1372,7 +1395,7 @@ void WebDavClient::copyFileReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void WebDavClient::deleteFileReplyFinished(QNetworkReply *reply)
+QString WebDavClient::deleteFileReplyFinished(QNetworkReply *reply, bool synchronous)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -1382,11 +1405,14 @@ void WebDavClient::deleteFileReplyFinished(QNetworkReply *reply)
     qDebug() << "WebDavClient::deleteFileReplyFinished" << nonce << "replyBody" << replyBody;
     replyBody = createResponseJson(replyBody, "deleteFile");
 
-    emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
+    // Emit signal only for asynchronous request.
+    if (!synchronous) emit deleteFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // Scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+
+    return replyBody;
 }
 
 void WebDavClient::shareFileReplyFinished(QNetworkReply *reply)

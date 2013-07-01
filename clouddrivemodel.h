@@ -27,6 +27,7 @@
 #include "skydriveclient.h"
 #include "ftpclient.h"
 #include "webdavclient.h"
+#include "boxclient.h"
 #include "cacheimageworker.h"
 
 using namespace QtMobility;
@@ -66,7 +67,8 @@ public:
         GoogleDrive,
         SkyDrive,
         Ftp,
-        WebDAV
+        WebDAV,
+        Box
     };
 
     enum SortFlags {
@@ -152,7 +154,8 @@ public:
     Q_INVOKABLE bool isSyncing(QString localPath);
     Q_INVOKABLE bool isSyncing(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE bool isParentConnected(QString localPath);
-    void clearConnectedRemoteDirtyCache(QString localPath);
+    void clearConnectedRemoteDirtyCache(QString localPath, bool includeChildren = true);
+    void clearLocalPathFlagCache(QMap<QString, bool> *localPathFlagCache, QString localPath, bool includeChildren = true);
     Q_INVOKABLE bool isRemoteRoot(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     Q_INVOKABLE bool canSync(QString localPath);
     Q_INVOKABLE QString getFirstJobJson(QString localPath);
@@ -221,15 +224,17 @@ public:
     Q_INVOKABLE QString getFileType(QString localPath);
     Q_INVOKABLE qint64 getFileSize(QString localPath);
     Q_INVOKABLE QString getFileLastModified(QString localPath);
-    ClientTypes getClientType(int typeInt);
-    ClientTypes getClientType(QString typeText);
-    Q_INVOKABLE QString getCloudName(int type);
     Q_INVOKABLE QString getOperationName(int operation);
     Q_INVOKABLE QDateTime parseReplyDateString(CloudDriveModel::ClientTypes type, QString dateString);
     Q_INVOKABLE QString formatJSONDateString(QDateTime datetime);
     Q_INVOKABLE QString getPathFromUrl(QString urlString);
     Q_INVOKABLE QDateTime parseUTCDateString(QString utcString);
     Q_INVOKABLE QDateTime parseJSONDateString(QString jsonString);
+
+    // Cloud type.
+    ClientTypes getClientType(int typeInt);
+    ClientTypes getClientType(QString typeText);
+    Q_INVOKABLE QString getCloudName(int type);
 
     // Scheduler.
     Q_INVOKABLE int updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp);
@@ -282,8 +287,8 @@ public:
     Q_INVOKABLE void browse(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
 
     Q_INVOKABLE QStringList getLocalPathList(QString localParentPath);
-    Q_INVOKABLE void syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, QString data = "*");
-    Q_INVOKABLE void syncFromLocal_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, bool isRootLocalPath = true, QString data = "*");
+    Q_INVOKABLE void syncFromLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, QStringList remotePathList = QStringList("*"));
+    Q_INVOKABLE void syncFromLocal_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut = false, bool isRootLocalPath = true, QStringList remotePathList = QStringList("*"));
 
     Q_INVOKABLE void createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, QString newRemoteFolderName);
     // createFolder_Block expected to get created remote path as result. If folder already exists, return existing folder path.
@@ -305,8 +310,8 @@ public:
 
     Q_INVOKABLE void migrateFile(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
     Q_INVOKABLE void migrateFilePut(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 bytesTotal, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
-    void migrateFile_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
-    void migrateFileResume_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
+    void migrateFilePut_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
+    void migrateFilePutResume_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName);
 
     Q_INVOKABLE void disconnect(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath = "");
     Q_INVOKABLE void deleteLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
@@ -355,8 +360,8 @@ signals:
 
     void fileGetReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void filePutReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void metadataReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void browseReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void metadataReplySignal(QString nonce, int err, QString errMsg, QString msg, bool suppressRemoveJob);
+    void browseReplySignal(QString nonce, int err, QString errMsg, QString msg, bool suppressRemoveJob);
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
     void createFolderReplySignal(QString nonce, int err, QString errMsg, QString msg);
@@ -365,7 +370,7 @@ signals:
     void deleteFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void shareFileReplySignal(QString nonce, int err, QString errMsg, QString msg, QString url, int expires);
     void deltaReplySignal(QString nonce, int err, QString errMsg, QString msg);
-    void migrateFileReplySignal(QString nonce, int err, QString errMsg, QString msg);
+    void migrateFileReplySignal(QString nonce, int err, QString errMsg, QString msg, bool suppressRemoveJob);
     void migrateFilePutReplySignal(QString nonce, int err, QString errMsg, QString msg, bool errorOnTarget);
 
     void migrateStartedSignal(qint64 total);
@@ -425,7 +430,6 @@ private:
     QMultiMap<QString, CloudDriveItem> *m_cloudDriveItems;
     QHash<QString, CloudDriveJob> *m_cloudDriveJobs;
     QQueue<QString> *m_jobQueue;
-    QQueue<CloudDriveItem> *m_scheduledItems;
     int runningJobCount;
     bool m_isSuspended;
     bool m_isAborted;
@@ -473,16 +477,16 @@ private:
     int updateItemToDB(const CloudDriveItem item, bool suppressMessages = false);
     int updateItemHashByLocalPathToDB(const QString localPath, const QString hash);
     int deleteItemToDB(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
-    int deleteItemWithChildrenFromDB(int type, QString uid, QString localPath);
+    int deleteItemWithChildrenFromDB(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     int countItemDB();
     int countItemByLocalPathDB(const QString localPath);
     int countItemByTypeAndUidAndRemotePathFromDB(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     QString getItemCacheKey(int type, QString uid, QString localPath);
 
-    QHash<QString, CloudDriveItem> *m_itemCache;
-    QHash<QString, bool> *m_isConnectedCache;
-    QHash<QString, bool> *m_isDirtyCache;
-    QHash<QString, bool> *m_isSyncingCache;
+    QMap<QString, CloudDriveItem> *m_itemCache;
+    QMap<QString, bool> *m_isConnectedCache;
+    QMap<QString, bool> *m_isDirtyCache;
+    QMap<QString, bool> *m_isSyncingCache;
 
     CloudDriveClient *defaultClient;
     DropboxClient *dbClient;
@@ -490,6 +494,7 @@ private:
     SkyDriveClient *skdClient;
     FtpClient *ftpClient;
     WebDavClient *webDavClient;
+    BoxClient *boxClient;
     QString accessTokenPin;
 
     QMutex mutex;
@@ -510,6 +515,7 @@ private:
     void initializeGoogleDriveClient();
     void initializeFtpClient();
     void initializeWebDAVClient();
+    void initializeBoxClient();
 
     QString createNonce();
     void jobDone();

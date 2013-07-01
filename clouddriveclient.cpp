@@ -144,6 +144,11 @@ bool CloudDriveClient::isUnicodeSupported()
     return true;
 }
 
+bool CloudDriveClient::isMediaEnabled(QString uid)
+{
+    return true;
+}
+
 void CloudDriveClient::loadAccessPairMap() {
 //    qDebug() << QTime::currentTime() << objectName() << "::loadAccessPairMap";
 
@@ -390,6 +395,37 @@ QString CloudDriveClient::getPathFromUrl(QString urlString)
     }
 }
 
+QDateTime CloudDriveClient::parseJSONDateString(QString jsonString)
+{
+    return QDateTime::fromString(jsonString, Qt::ISODate);
+}
+
+CloudDriveModelItem CloudDriveClient::parseCloudDriveModelItem(QScriptEngine &engine, QScriptValue jsonObj)
+{
+    CloudDriveModelItem modelItem;
+    modelItem.name = jsonObj.property("name").toString();
+    modelItem.absolutePath = jsonObj.property("absolutePath").toString();
+    modelItem.parentPath = jsonObj.property("parentPath").toString();
+    modelItem.size = jsonObj.property("size").toInteger();
+    modelItem.lastModified = parseJSONDateString(jsonObj.property("lastModified").toString());
+    modelItem.isDir = jsonObj.property("isDir").toBool();
+    modelItem.hash = jsonObj.property("hash").toString();
+    modelItem.fileType = jsonObj.property("fileType").toString();
+    modelItem.isDeleted = jsonObj.property("isDeleted").toBool();
+    modelItem.isHidden = jsonObj.property("isHidden").toBool();
+    modelItem.isReadOnly = jsonObj.property("isReadOnly").toBool();
+    modelItem.source = jsonObj.property("source").toString();
+    modelItem.alternative = jsonObj.property("alternative").toString();
+    modelItem.thumbnail = jsonObj.property("thumbnail").toString();
+    modelItem.thumbnail128 = jsonObj.property("thumbnail128").toString();
+    modelItem.preview = jsonObj.property("preview").toString();
+    modelItem.downloadUrl = jsonObj.property("downloadUrl").toString();
+    modelItem.webContentLink = jsonObj.property("webContentLink").toString();
+    modelItem.embedLink = jsonObj.property("embedLink").toString();
+
+    return modelItem;
+}
+
 void CloudDriveClient::requestToken(QString nonce)
 {
     emit requestTokenReplySignal(nonce, -1, objectName() + " " + "Request Token", "Service is not implemented.");
@@ -512,11 +548,6 @@ void CloudDriveClient::browse(QString nonce, QString uid, QString remoteFilePath
     emit browseReplySignal(nonce, -1, objectName() + " " + "Browse", "Service is not implemented.");
 }
 
-void CloudDriveClient::createFolder(QString nonce, QString uid, QString newRemoteParentPath, QString newRemoteFolderName)
-{
-    emit createFolderReplySignal(nonce, -1, objectName() + " " + "Create folder", "Service is not implemented.");
-}
-
 void CloudDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName)
 {
     emit moveFileReplySignal(nonce, -1, objectName() + " " + "Move", "Service is not implemented.");
@@ -527,9 +558,10 @@ void CloudDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePa
     emit copyFileReplySignal(nonce, -1, objectName() + " " + "Copy", "Service is not implemented.");
 }
 
-void CloudDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
+QString CloudDriveClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
     emit deleteFileReplySignal(nonce, -1, objectName() + " " + "Delete", "Service is not implemented.");
+    return "";
 }
 
 void CloudDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)

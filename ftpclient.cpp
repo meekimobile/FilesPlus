@@ -431,11 +431,6 @@ void FtpClient::browse(QString nonce, QString uid, QString remoteFilePath)
     m_ftpHash->remove(m_ftp->getNonce());
 }
 
-void FtpClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
-{
-    createFolder(nonce, uid, remoteParentPath, newRemoteFolderName, false);
-}
-
 void FtpClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteFilePath, QString newRemoteFileName)
 {
     emit moveFileReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, tr("FTP doesn't support move command."), "");
@@ -446,15 +441,15 @@ void FtpClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QSt
     emit copyFileReplySignal(nonce, QNetworkReply::ContentOperationNotPermittedError, tr("FTP doesn't support copy command."), "");
 }
 
-void FtpClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
+QString FtpClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
-    qDebug() << "----- FtpClient::deleteFile -----" << uid << remoteFilePath;
+    qDebug() << "----- FtpClient::deleteFile -----" << nonce << uid << remoteFilePath << synchronous;
 
     QFtpWrapper *m_ftp = connectToHost(nonce, uid);
     // Check state if it's accessible.
     if (m_ftp->state() != QFtp::LoggedIn) {
         emit deleteFileReplySignal(nonce, QNetworkReply::HostNotFoundError, tr("Host is not accessible."), "");
-        return;
+        return "";
     }
 
     deleteRecursive(m_ftp, remoteFilePath);
@@ -462,6 +457,8 @@ void FtpClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
     m_ftp->close();
     m_ftp->deleteLater();
     m_ftpHash->remove(m_ftp->getNonce());
+
+    return "";
 }
 
 void FtpClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
@@ -513,7 +510,7 @@ QString FtpClient::createFolder(QString nonce, QString uid, QString remoteParent
     } else {
         qDebug() << "FtpClient::createFolder" << nonce << "error" << m_ftp->error() << m_ftp->errorString();
 
-        // Try getting property.
+        // Try getting property if folder with same name exists.
         QString propertyJson = property(nonce, uid, newRemoteFolderPath);
         if (propertyJson != "") {
             result = propertyJson;

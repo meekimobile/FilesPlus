@@ -3,6 +3,7 @@
 
 #include <QDebug>
 #include <QDateTime>
+#include <QStringList>
 
 class CloudDriveJob
 {
@@ -21,6 +22,7 @@ public:
     QString newRemoteFileName;
     int targetType;
     QString targetUid;
+    bool isDir;
     bool isRunning;
     int modelIndex;
     qint64 bytes;
@@ -45,11 +47,12 @@ public:
 
     QString nextJobId;
 
-    QString data;
+    QStringList remotePathList;
 
     bool isAborted;
 
     bool suppressDeleteLocal;
+    bool suppressRemoveJob;
 
     QString toJsonText();
 };

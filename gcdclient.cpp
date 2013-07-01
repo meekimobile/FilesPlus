@@ -341,11 +341,6 @@ void GCDClient::browse(QString nonce, QString uid, QString remoteFilePath)
     files(nonce, uid, remoteFilePath, false, "browse");
 }
 
-void GCDClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName)
-{
-    createFolder(nonce, uid, remoteParentPath, newRemoteFolderName, false);
-}
-
 QString GCDClient::createFolder(QString nonce, QString uid, QString remoteParentPath, QString newRemoteFolderName, bool synchronous)
 {
     qDebug() << "----- GCDClient::createFolder -----" << remoteParentPath << newRemoteFolderName;
@@ -392,7 +387,7 @@ QString GCDClient::createFolder(QString nonce, QString uid, QString remoteParent
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=UTF-8");
     QNetworkReply *reply = manager->post(req, postData);
 
     // TODO Return if asynchronous.
@@ -431,10 +426,10 @@ void GCDClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QSt
 
 QNetworkReply * GCDClient::patchFile(QString nonce, QString uid, QString remoteFilePath, QByteArray postData)
 {
-    qDebug() << "----- GCDClient::patchFile -----" << remoteFilePath << postData;
+    qDebug() << "----- GCDClient::patchFile -----" << nonce << uid << remoteFilePath << postData;
 
     QString uri = patchFileURI.arg(remoteFilePath).arg(m_settings.value("GCDClient.patchFile.setModifiedDate.enabled", false).toString());
-    qDebug() << "GCDClient::patchFile uri " << uri;
+    qDebug() << "GCDClient::patchFile" << nonce << "uri" << uri;
 
     // Insert buffer to hash.
     QBuffer *postDataBuf = new QBuffer();
@@ -450,7 +445,7 @@ QNetworkReply * GCDClient::patchFile(QString nonce, QString uid, QString remoteF
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3), QVariant(postData));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=UTF-8");
     QNetworkReply *reply = manager->sendCustomRequest(req, "PATCH", postDataBuf);
 
     while (!reply->isFinished()) {
@@ -543,7 +538,7 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
 
 QString GCDClient::fileGetReplySave(QNetworkReply *reply)
 {
-    qDebug() << "GCDClient::fileGetReplySave " << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "GCDClient::fileGetReplySave" << reply << QString(" Error=%1").arg(reply->error());
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
@@ -658,7 +653,9 @@ QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source,
             QByteArray metadata;
             metadata.append("{");
             metadata.append(" \"title\": \"" + remoteFileName.toUtf8() + "\", ");
-            metadata.append(" \"modifiedDate\": \"" + formatJSONDateString(m_sourceFileTimestampHash[nonce]) + "\", ");
+            if (m_sourceFileTimestampHash.contains(nonce)) {
+                metadata.append(" \"modifiedDate\": \"" + formatJSONDateString(m_sourceFileTimestampHash[nonce]) + "\", ");
+            }
             metadata.append(" \"parents\": [{ \"id\": \"" + remoteParentPath.toUtf8() + "\" }] ");
             metadata.append("}");
             qDebug() << "GCDClient::filePut nonce" << nonce << "patch metadata" << metadata;
@@ -696,7 +693,9 @@ QNetworkReply *GCDClient::filePutMulipart(QString nonce, QString uid, QIODevice 
         QByteArray metadata;
         metadata.append("{");
         metadata.append(" \"title\": \"" + remoteFileName.toUtf8() + "\", ");
-        metadata.append(" \"modifiedDate\": \"" + formatJSONDateString(m_sourceFileTimestampHash[nonce]) + "\", ");
+        if (m_sourceFileTimestampHash.contains(nonce)) {
+            metadata.append(" \"modifiedDate\": \"" + formatJSONDateString(m_sourceFileTimestampHash[nonce]) + "\", ");
+        }
         metadata.append(" \"parents\": [{ \"id\": \"" + remoteParentPath.toUtf8() + "\" }] ");
         metadata.append("}");
         qDebug() << "GCDClient::filePutMulipart metadata " << metadata;
@@ -891,12 +890,10 @@ QString GCDClient::filePutResumeStart(QString nonce, QString uid, QString fileNa
       "parents": [{"id":"0ADK06pfg"}]
     }
 */
-    QByteArray postData;
-    postData.append("{");
-    postData.append(" \"title\": \"" + fileName.toUtf8() + "\", ");
-    postData.append(" \"parents\": [{\"id\":\"" + remoteParentPath.toUtf8() + "\"}] ");
-    postData.append("}");
-    qDebug() << "GCDClient::filePutResumeStart postData" << postData;
+    // NOTE It can't support unicode file name. Stores fileName to be patched in filePutResumeUploadReplyFinished().
+    m_sourceFileNameHash[nonce] = fileName;
+    QString postString = QString("{ \"parents\": [{\"id\":\"%1\"}] }").arg(remoteParentPath);
+    qDebug() << "GCDClient::filePutResumeStart postString" << postString;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -908,9 +905,16 @@ QString GCDClient::filePutResumeStart(QString nonce, QString uid, QString fileNa
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setRawHeader("X-Upload-Content-Type", contentType.toAscii() );
     req.setRawHeader("X-Upload-Content-Length", QString("%1").arg(bytesTotal).toAscii() );
-    req.setHeader(QNetworkRequest::ContentLengthHeader, postData.length());
-    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    QNetworkReply *reply = (fileId != "") ? manager->put(req, postData) : manager->post(req, postData);
+    req.setHeader(QNetworkRequest::ContentLengthHeader, postString.toUtf8().length());
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=UTF-8");
+    QNetworkReply *reply;
+    if (fileId != "") {
+        reply = manager->put(req, postString.toUtf8());
+        qDebug() << "GCDClient::filePutResumeStart" << nonce << "found existing file id" << fileId << ". PUT";
+    } else {
+        reply = manager->post(req, postString.toUtf8());
+        qDebug() << "GCDClient::filePutResumeStart" << nonce << "no existing file. POST";
+    }
 
     // Return immediately if it's not synchronous.
     if (!synchronous) return "";
@@ -921,11 +925,13 @@ QString GCDClient::filePutResumeStart(QString nonce, QString uid, QString fileNa
     }
 
     // Construct result.
+    // TODO To patch title, modified date.
     QString result = "";
     if (reply->error() == QNetworkReply::NoError) {
         QString uploadUrl = reply->header(QNetworkRequest::LocationHeader).toString();
         result = QString("{ \"upload_id\": \"%1\" }").arg(uploadUrl);
     } else {
+        qDebug() << "GCDClient::filePutResumeStart" << nonce << uid << fileName << bytesTotal << remoteParentPath << "error" << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
         result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
     }
 
@@ -962,6 +968,7 @@ QString GCDClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *so
     QNetworkRequest req = QNetworkRequest(url);
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(synchronous));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentLengthHeader, chunkSize);
     req.setHeader(QNetworkRequest::ContentTypeHeader, QVariant(getContentType(fileName)));
@@ -984,24 +991,7 @@ QString GCDClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *so
     }
 
     // Construct result.
-    QString result = "";
-    if (reply->error() == QNetworkReply::NoError) {
-        if (reply->hasRawHeader("Range")) {
-            QStringList ranges = QString::fromAscii(reply->rawHeader("Range")).split("-");
-            qint64 offset = ranges.at(1).toUInt() + 1;
-            qDebug() << "GCDClient::filePutResumeUpload ranges" << ranges << "offset" << offset;
-            result = QString("{ \"offset\": %1 }").arg(offset);
-        } else {
-            result = QString::fromUtf8(reply->readAll());
-        }
-    } else {
-        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
-    }
-
-    // Scheduled to delete later.
-    m_replyHash->remove(nonce);
-    reply->deleteLater();
-    reply->manager()->deleteLater();
+    QString result = filePutResumeUploadReplyFinished(reply);
 
     return result;
 }
@@ -1198,14 +1188,9 @@ void GCDClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QSt
         QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
         req.setAttribute(QNetworkRequest::User, QVariant(nonce));
         req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-        req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=UTF-8");
         QNetworkReply *reply = manager->sendCustomRequest(req, "POST", m_bufferHash[nonce]);
     }
-}
-
-void GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath)
-{
-    deleteFile(nonce, uid, remoteFilePath, false);
 }
 
 QString GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
@@ -1292,7 +1277,7 @@ void GCDClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=UTF-8");
     QNetworkReply *reply = manager->post(req, postData);
 }
 
@@ -1501,6 +1486,9 @@ void GCDClient::accessTokenReplyFinished(QNetworkReply *reply)
 
             // Reset refreshTokenUid.
             refreshTokenUid = "";
+
+            // Save tokens.
+            saveAccessPairMap();
         }
 
         // NOTE uid and email will be requested to accountInfo by CloudDriveModel.accessTokenReplyFilter().
@@ -1665,7 +1653,9 @@ void GCDClient::filePutReplyFinished(QNetworkReply *reply)
         QByteArray metadata;
         metadata.append("{");
         metadata.append(" \"title\": \"" + remoteFileName.toUtf8() + "\", ");
-        metadata.append(" \"modifiedDate\": \"" + formatJSONDateString(m_sourceFileTimestampHash[nonce]) + "\", ");
+        if (m_sourceFileTimestampHash.contains(nonce)) {
+            metadata.append(" \"modifiedDate\": \"" + formatJSONDateString(m_sourceFileTimestampHash[nonce]) + "\", ");
+        }
         metadata.append(" \"parents\": [{ \"id\": \"" + remoteParentPath.toUtf8() + "\" }] ");
         metadata.append("}");
 
@@ -1790,7 +1780,7 @@ void GCDClient::mergePropertyAndFilesJson(QString nonce, QString callback)
 
         qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "GCDClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue started.";
         QString replyBody = stringifyScriptValue(engine, mergedObj);
-        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "GCDClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done.";
+        qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "GCDClient::mergePropertyAndFilesJson" << nonce << "stringifyScriptValue done." << replyBody.size();
 
         // Remove once used.
         m_propertyReplyHash->remove(nonce);
@@ -1879,6 +1869,7 @@ QString GCDClient::createFolderReplyFinished(QNetworkReply *reply, bool synchron
     qDebug() << "GCDClient::createFolderReplyFinished" << nonce << reply << QString(" Error=%1").arg(reply->error());
 
     // Parse common property json.
+    // NOTE createFolder() has already searched for existing folder.
     QString replyBody = QString::fromUtf8(reply->readAll());
     qDebug() << "GCDClient::createFolderReplyFinished" << nonce << "replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {
@@ -2053,59 +2044,22 @@ void GCDClient::filePutResumeStartReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void GCDClient::filePutResumeUploadReplyFinished(QNetworkReply *reply)
+QString GCDClient::filePutResumeUploadReplyFinished(QNetworkReply *reply)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    bool synchronous = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toBool();
 
-    QByteArray replyBody = reply->readAll();
-    qDebug() << "GCDClient::filePutResumeUploadReplyFinished" << reply << QString(" Error=%1").arg(reply->error()) << "replyBody" << QString::fromUtf8(replyBody) << "hasRange" << reply->hasRawHeader("Range");
+    QString replyBody = filePutResumePatch(reply);
 
-    if (reply->error() == QNetworkReply::NoError) {
-        // TODO Get range and check if resume upload is required.
-        if (reply->hasRawHeader("Range")) {
-            QStringList ranges = QString::fromAscii(reply->rawHeader("Range")).split("-");
-            qint64 offset = ranges.at(1).toUInt() + 1;
-            qDebug() << "GCDClient::filePutResumeUploadReplyFinished ranges" << ranges << "offset" << offset;
-
-            // Emit signal with offset to resume upload.
-            emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString("{ \"offset\": %1 }").arg(offset) );
-        } else {
-            // Emit signal with successful upload reply which include uploaded file's common property json.
-            QScriptEngine engine;
-            QScriptValue jsonObj = engine.evaluate("(" + QString::fromUtf8(replyBody) + ")");
-            QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
-
-            // Patch uploaded file's modified date.
-            QByteArray metadata;
-            metadata.append("{");
-            metadata.append(" \"modifiedDate\": \"" + formatJSONDateString(m_sourceFileTimestampHash[nonce]) + "\" ");
-            metadata.append("}");
-
-            // Delete original reply (which is in m_replyHash).
-            m_replyHash->remove(nonce);
-            reply->deleteLater();
-            reply->manager()->deleteLater();
-
-            reply = patchFile(nonce, uid, parsedObj.property("absolutePath").toString(), metadata);
-            replyBody = reply->readAll();
-            qDebug() << "GCDClient::filePutResumeUploadReplyFinished patchFile replyBody" << QString::fromUtf8(replyBody);
-            if (reply->error() == QNetworkReply::NoError) {
-                jsonObj = engine.evaluate("(" + QString::fromUtf8(replyBody) + ")");
-                parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
-            }
-
-            emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), stringifyScriptValue(engine, parsedObj));
-        }
-    } else {
-        // REMARK Use QString::fromUtf8() to support unicode text.
-        emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), QString::fromUtf8(replyBody));
-    }
+    if (!synchronous) emit filePutResumeReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
 
     // Close source file.
-    QFile *localTargetFile = m_localFileHash[nonce];
-    localTargetFile->close();
-    m_localFileHash.remove(nonce);
+    if (m_localFileHash.contains(nonce)) {
+        QFile *localTargetFile = m_localFileHash[nonce];
+        localTargetFile->close();
+        m_localFileHash.remove(nonce);
+    }
 
     // Remove used source file timestamp.
     m_sourceFileTimestampHash.remove(nonce);
@@ -2114,6 +2068,66 @@ void GCDClient::filePutResumeUploadReplyFinished(QNetworkReply *reply)
     m_replyHash->remove(nonce);
     reply->deleteLater();
     reply->manager()->deleteLater();
+
+    return replyBody;
+}
+
+QString GCDClient::filePutResumePatch(QNetworkReply *reply)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    qDebug() << "GCDClient::filePutResumePatch" << nonce << uid << "reply" << reply << QString(" Error=%1").arg(reply->error());
+
+    QString replyBody = QString::fromUtf8(reply->readAll());
+
+    if (reply->error() == QNetworkReply::NoError) {
+        // Get range and check if resume upload is required.
+        if (reply->hasRawHeader("Range")) {
+            QStringList ranges = QString::fromAscii(reply->rawHeader("Range")).split("-");
+            qint64 offset = ranges.at(1).toUInt() + 1;
+            qDebug() << "GCDClient::filePutResumePatch" << nonce << "ranges" << ranges << "offset" << offset;
+            replyBody = QString("{ \"offset\": %1 }").arg(offset);
+        } else {
+            QScriptEngine engine;
+            QScriptValue jsonObj = engine.evaluate("(" + replyBody + ")");
+            QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+
+            // Patch uploaded file's name, modified date.
+            QByteArray metadata;
+            metadata.append("{");
+            if (m_sourceFileTimestampHash.contains(nonce)) {
+                metadata.append(QString(" \"modifiedDate\": \"%1\", ").arg(formatJSONDateString(m_sourceFileTimestampHash[nonce])).toUtf8());
+            }
+            metadata.append(QString(" \"title\": \"%1\" ").arg(m_sourceFileNameHash[nonce]).toUtf8());
+            metadata.append("}");
+
+            QNetworkReply *patchReply = patchFile(nonce, uid, parsedObj.property("absolutePath").toString(), metadata);
+            replyBody = QString::fromUtf8(patchReply->readAll());
+            if (patchReply->error() == QNetworkReply::NoError) {
+                qDebug() << "GCDClient::filePutResumePatch" << nonce << "patchFile success replyBody" << replyBody;
+                jsonObj = engine.evaluate("(" + replyBody + ")");
+                parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+                replyBody = stringifyScriptValue(engine, parsedObj);
+            } else {
+                qDebug() << "GCDClient::filePutResumePatch" << nonce << "patchFile error" << patchReply->error() << patchReply->errorString() << "replyBody" << replyBody;
+                replyBody = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(patchReply->error()).arg(patchReply->errorString());
+            }
+
+            // Scheduled to delete later.
+            patchReply->deleteLater();
+            patchReply->manager()->deleteLater();
+        }
+    } else {
+        qDebug() << "GCDClient::filePutResumePatch" << nonce << "error" << reply->error() << reply->errorString() << "replyBody" << replyBody;
+        replyBody = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
+    }
+
+    // Scheduled to delete later.
+    m_replyHash->remove(nonce);
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return replyBody;
 }
 
 void GCDClient::filePutResumeStatusReplyFinished(QNetworkReply *reply)

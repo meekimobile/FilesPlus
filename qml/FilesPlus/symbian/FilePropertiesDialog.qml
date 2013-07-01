@@ -47,9 +47,9 @@ CommonDialog {
         property int labelWidth: width * 0.35
         property real maxContentHeight: screen.height - (inputContext.visible ? inputContext.height : 0) - 130 // Title + Buttons height = 130. For Symbian only.
 
-        onHeightChanged: {
-            console.debug("filePropertiesDIalog contentItem onHeightChanged " + height + " maxContentHeight " + maxContentHeight + " inputContext.height " + inputContext.height + " filePropertiesDIalog.width " + filePropertiesDIalog.width + " filePropertiesDIalog.height " + filePropertiesDIalog.height + " window.inPortrait " + window.inPortrait);
-        }
+//        onHeightChanged: {
+//            console.debug("filePropertiesDIalog contentItem onHeightChanged " + height + " maxContentHeight " + maxContentHeight + " inputContext.height " + inputContext.height + " filePropertiesDIalog.width " + filePropertiesDIalog.width + " filePropertiesDIalog.height " + filePropertiesDIalog.height + " window.inPortrait " + window.inPortrait);
+//        }
 
         width: parent.width - 20 // For Symbian only.
         height: Math.min(contentColumn.height, maxContentHeight) // For Symbian only.

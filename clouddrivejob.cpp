@@ -16,6 +16,7 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->newRemoteFilePath = "";
     this->newRemoteFileName = "";
     this->isRunning = false;
+    this->isDir = false;
     this->modelIndex = modelIndex;
     this->bytes = 0;
     this->bytesTotal = 0;
@@ -27,6 +28,8 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->retryCount = 0;
     this->isAborted = false;
     this->suppressDeleteLocal = false;
+    this->suppressRemoveJob = false;
+    this->remotePathList = QStringList("*");
 }
 
 QString CloudDriveJob::toJsonText()
@@ -35,6 +38,7 @@ QString CloudDriveJob::toJsonText()
     jsonText.append("{ ");
     jsonText.append(QString("\"job_id\": \"%1\", ").arg(jobId));
     jsonText.append(QString("\"is_running\": %1, ").arg( (isRunning)?"true":"false" ));
+    jsonText.append(QString("\"is_dir\": %1, ").arg( (isDir)?"true":"false" ));
     jsonText.append(QString("\"uid\": \"%1\", ").arg(uid));
     jsonText.append(QString("\"type\": %1, ").arg(type));
     jsonText.append(QString("\"operation\": %1, ").arg(operation));

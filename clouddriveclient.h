@@ -5,7 +5,6 @@
 #include <QtNetwork>
 #include <QScriptEngine>
 #include "tokenpair.h"
-#include "contenttypehelper.h"
 
 class CloudDriveClient : public QObject
 {
@@ -23,7 +22,6 @@ public:
     QString getEmail(QString uid);
     int removeUid(QString uid);
 
-    QString formatJSONDateString(QDateTime datetime);
     virtual QDateTime parseReplyDateString(QString dateString);
 
     virtual bool isRemoteAbsolutePath();
@@ -39,7 +37,7 @@ public:
     virtual bool isUnicodeSupported();
 
     virtual bool testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname);
-    virtual bool saveConnection(QString id, QString hostname, QString username, QString password, QString token);
+    virtual void saveConnection(QString id, QString hostname, QString username, QString password, QString token);
 
     virtual void requestToken(QString nonce);
     virtual void authorize(QString nonce, QString hostname);
@@ -123,12 +121,9 @@ signals:
 public slots:
 
 protected:
-    QString refreshTokenUid;
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;
     QHash<QString, QNetworkReply*> *m_replyHash;
-
-    QSettings m_settings;
 
     void loadAccessPairMap();
     void saveAccessPairMap();
@@ -138,13 +133,12 @@ protected:
     QString createNormalizedQueryString(QMap<QString, QString> sortMap);
     QString encodeURI(const QString uri);
     QString createQueryString(QMap<QString, QString> sortMap);
-    QByteArray encodeMultiPart(QString boundary, QMap<QString, QString> paramMap, QString fileParameter, QString fileName, QByteArray fileData, QString contentType);
     QString removeDoubleSlash(QString remoteFilePath);
     QString getFileType(QString localPath);
-    QString getContentType(QString fileName);
 
     virtual QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
     QString stringifyScriptValue(QScriptEngine &engine, QScriptValue &jsonObj);
+    QString formatJSONDateString(QDateTime datetime);
     qint64 getOffsetFromRange(QString rangeHeader);
     QString getPathFromUrl(QString urlString);
 private:
