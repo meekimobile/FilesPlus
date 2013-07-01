@@ -5,7 +5,6 @@
 #include "tokenpair.h"
 #include "qnetworkreplywrapper.h"
 #include "sleeper.h"
-#include <QBool>
 
 class BoxClient : public CloudDriveClient
 {
@@ -31,6 +30,7 @@ public:
     static const QString deleteFileURI;
     static const QString sharesURI;
     static const QString patchURI;
+    static const QString deltaURI;
     static const QString thumbnailURI;
 
     static const qint64 DefaultChunkSize;
@@ -55,7 +55,7 @@ public:
     void moveFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName);
     void copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName);
     void shareFile(QString nonce, QString uid, QString remoteFilePath);
-//    QString delta(QString nonce, QString uid, bool synchronous = false);
+    QString delta(QString nonce, QString uid, bool synchronous = false);
     QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format = "png", QString size = "64x64"); // format = {png}, size = {32x32,64x64,128x128,256x256}
     QString media(QString nonce, QString uid, QString remoteFilePath);
 
@@ -68,6 +68,8 @@ public:
 
     QString getRemoteRoot(QString uid);
     bool isFileGetResumable(qint64 fileSize);
+    bool isDeltaSupported();
+    bool isDeltaEnabled(QString uid);
     bool isViewable();
     bool isMediaEnabled(QString uid);
     bool isImageUrlCachable();
@@ -91,15 +93,14 @@ public slots:
     void copyFileReplyFinished(QNetworkReply *reply);
     void deleteFileReplyFinished(QNetworkReply *reply);
     void shareFileReplyFinished(QNetworkReply *reply);
+    QString deltaReplyFinished(QNetworkReply *reply);
 
     void fileGetResumeReplyFinished(QNetworkReply *reply);
 protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:
-    QString localPath;
     QHash<QString, QFile*> m_localFileHash;
     QHash<QString, QBuffer*> m_bufferHash;
-    QString refreshTokenUid;
     QHash<QString, QByteArray> *m_propertyReplyHash;
     QHash<QString, QByteArray> *m_filesReplyHash;
     QHash<QString, bool> *m_isDirHash;
