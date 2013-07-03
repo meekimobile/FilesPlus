@@ -411,7 +411,5 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     // Add custom NAMF to change User-Agent to fix problem with Dropbox, Box login page.
     viewer.engine()->setNetworkAccessManagerFactory(new CustomQNetworkAccessManagerFactory());
 
-    int exitCode = app->exec();
-    qDebug() << "main app->exec() exitCode" << exitCode;
-    return exitCode;
+    return app->exec();
 }
