@@ -27,6 +27,7 @@ const QString BoxClient::deltaURI = "https://api.box.com/2.0/events"; // GET wit
 const QString BoxClient::thumbnailURI = "https://api.box.com/2.0/files/%1/thumbnail.%2";
 
 const qint64 BoxClient::DefaultChunkSize = 4194304; // 4MB
+const qint64 BoxClient::DefaultMaxUploadSize = 20971520; // 20MB which support ~20 sec(s) video clip.
 
 BoxClient::BoxClient(QObject *parent) :
     CloudDriveClient(parent)
@@ -688,6 +689,21 @@ QString BoxClient::fileGetReplySave(QNetworkReply *reply)
 QNetworkReply *BoxClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
 {
     qDebug() << "----- BoxClient::filePut -----" << nonce << uid << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
+
+    qint64 maxFileSize = m_settings.value(QString("%1.maxUploadFileSize").arg(objectName()), DefaultMaxUploadSize).toULongLong();
+    if (bytesTotal > maxFileSize) {
+        emit filePutReplySignal(nonce, QNetworkReply::UnknownContentError,
+                                tr("File size is too large (> %n MB). Please upload by using BOX web.", "", qRound(maxFileSize / 1048576)), "");
+
+        // Close source file.
+        if (m_localFileHash.contains(nonce)) {
+            QFile *localTargetFile = m_localFileHash[nonce];
+            localTargetFile->close();
+            m_localFileHash.remove(nonce);
+        }
+
+        return 0;
+    }
 
     QString uri = filePutURI;
     uri = encodeURI(uri);

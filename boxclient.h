@@ -34,6 +34,7 @@ public:
     static const QString thumbnailURI;
 
     static const qint64 DefaultChunkSize;
+    static const qint64 DefaultMaxUploadSize;
 
     explicit BoxClient(QObject *parent = 0);
     ~BoxClient();
