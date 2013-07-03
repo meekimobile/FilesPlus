@@ -227,6 +227,7 @@ Page {
         delegate: imageFlickDelegate
         pressDelay: 200
         interactive: showGrid
+        clip: true
 
         function getViewIndex() {
             var cx = contentX + parent.width / 2;

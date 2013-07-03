@@ -186,7 +186,7 @@ QScriptValue GCDClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     parsedObj.setProperty("alternative", jsonObj.property("alternateLink"));
     parsedObj.setProperty("thumbnail", jsonObj.property("thumbnailLink"));
     parsedObj.setProperty("thumbnail128", jsonObj.property("thumbnailLink"));
-    parsedObj.setProperty("preview", jsonObj.property("embedLink")); // NOTE Use same URL as thumbnail as it return 2xx x 1xx picture.
+    parsedObj.setProperty("preview", jsonObj.property("thumbnailLink")); // NOTE Use same URL as thumbnail as it return 220 x 220 picture.
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("title").toString())));
     parsedObj.setProperty("mimeType", jsonObj.property("mimeType"));
     parsedObj.setProperty("isCloudOnly", QScriptValue(isCloudOnly(jsonObj)));
@@ -1762,10 +1762,10 @@ void GCDClient::mergePropertyAndFilesJson(QString nonce, QString callback)
         QScriptValue propertyObj;
         QScriptValue filesObj;
         qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "started.";
-        if (m_settings.value("Logging.enabled", false).toBool()) {
+//        if (m_settings.value("Logging.enabled", false).toBool()) {
             qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
             qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
-        }
+//        }
         propertyObj = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
         filesObj = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
 
