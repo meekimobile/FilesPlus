@@ -1538,6 +1538,7 @@ QScriptValue BoxClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     QString thumbnailUrl = (!isDir) ? thumbnail(nonce, uid, jsonObj.property("id").toString(), "png", "64x64") : "";
     QString thumbnail128Url = (!isDir) ? thumbnail(nonce, uid, jsonObj.property("id").toString(), "png", "128x128") : "";
     QString previewUrl = (!isDir) ? thumbnail(nonce, uid, jsonObj.property("id").toString(), "png", "256x256") : "";
+    QString alternative = jsonObj.property("shared_link").property("url").toString();
 
     parsedObj.setProperty("name", jsonObj.property("name"));
     parsedObj.setProperty("absolutePath", jsonObj.property("id"));
@@ -1548,7 +1549,7 @@ QScriptValue BoxClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     parsedObj.setProperty("lastModified", QScriptValue(jsonDateString));
     parsedObj.setProperty("hash", QScriptValue(hash));
     parsedObj.setProperty("source", QScriptValue());
-    parsedObj.setProperty("alternative", QScriptValue());
+    parsedObj.setProperty("alternative", QScriptValue(alternative));
     parsedObj.setProperty("thumbnail", QScriptValue(thumbnailUrl));
     parsedObj.setProperty("thumbnail128", QScriptValue(thumbnail128Url));
     parsedObj.setProperty("preview", QScriptValue(previewUrl));

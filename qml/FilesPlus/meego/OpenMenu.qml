@@ -4,7 +4,7 @@ import com.nokia.meego 1.0
 MenuWithIcon {
     id: openMenu
     z: 2
-    
+
     signal openMedia()
     signal openWeb()
     signal copyURL()
@@ -24,7 +24,7 @@ MenuWithIcon {
         }
         
         MenuItemWithIcon {
-            name: "openAlternative"
+            name: "openWeb"
             text: appInfo.emptyStr+qsTr("Open on web")
             onClicked: {
                 openWeb();

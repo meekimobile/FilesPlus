@@ -256,6 +256,16 @@ function getIndexInArray(array, propertyName, propertyValue) {
     return -1;
 }
 
+function addItemToArray(array1D, value) {
+    if (!array1D || !value) {
+        return array1D;
+    }
+
+    array1D.push(value);
+
+    return array1D;
+}
+
 function ifUndefined(o, defaultValue) {
     return (!o) ? defaultValue : o;
 }

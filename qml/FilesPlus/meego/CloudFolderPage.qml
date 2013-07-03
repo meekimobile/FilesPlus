@@ -109,13 +109,11 @@ Page {
                     pageStack.push(Qt.resolvedUrl("WebViewPage.qml"));
                 }
             } else {
-                // Shows options if both source and alternative are available.
-                openMenu.show();
+                // Open direct link with system web browser.
+                if (item.source) {
+                    Qt.openUrlExternally(item.source);
+                }
             }
-        } else {
-            // File is not viewable but may be browsable.
-            // Shows options if both source and alternative are available.
-            openMenu.show();
         }
 
         isBusy = false;
@@ -664,21 +662,38 @@ Page {
             var source = cloudDriveModel.get(selectedIndex).source;
             var alternative = cloudDriveModel.get(selectedIndex).alternative;
 
-            source = (source) ? source : cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
-            cloudDriveModel.setProperty(selectedIndex, "source", source);
-            console.debug("cloudFolderPage openMenu show source " + cloudDriveModel.get(selectedIndex).source + " alternative " + cloudDriveModel.get(selectedIndex).alternative);
-
-            if (source != "" && (!alternative || alternative == "")) {
-                openMedia();
-            } else if (source == "" && alternative != "") {
-                openWeb();
-            } else {
-                open();
+            // Get direct media link if it's available.
+            if (cloudDriveModel.isMediaEnabled(selectedCloudType, selectedUid)) {
+                source = (source) ? source : cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
+                cloudDriveModel.setProperty(selectedIndex, "source", source);
             }
+            // Get share link if it's available.
+            // TODO Refactor shareFIle() to synchronous mode.
+//            if (cloudDriveModel.isSharable(selectedCloudType, selectedUid)) {
+//                alternative = (alternative) ? alternative : cloudDriveModel.shareFile(selectedCloudType, selectedUid, absolutePath);
+//                cloudDriveModel.setProperty(selectedIndex, "alternative", alternative);
+//            }
+            console.debug("cloudFolderPage openMenu show source " + source);
+            console.debug("cloudFolderPage openMenu show alternative " + alternative);
+
+            // Disable menus if link is not available.
+            disabledMenus = [];
+            if (source == "") {
+                disabledMenus = Utility.addItemToArray(disabledMenus, "openMedia");
+            }
+            if (alternative == "") {
+                disabledMenus = Utility.addItemToArray(disabledMenus, "openWeb");
+            }
+            console.debug("cloudFolderPage openMenu disabledMenus " + disabledMenus);
+
+            // Suppress menu if all menu items are disabled.
+            var menuItems = content[0].children;
+            if (disabledMenus.length < menuItems.length) open();
         }
 
         onOpenMedia: {
-            Qt.openUrlExternally(cloudDriveModel.get(selectedIndex).source);
+            var absolutePath = cloudDriveModel.get(selectedIndex).absolutePath;
+            openFileSlot(absolutePath, selectedIndex);
         }
         onOpenWeb: {
             Qt.openUrlExternally(cloudDriveModel.get(selectedIndex).alternative);
@@ -938,7 +953,7 @@ Page {
                         ListView.view.focusRemotePath = ".";
                         changeRemotePath(absolutePath);
                     } else {
-                        openFileSlot(absolutePath, index);
+                        openMenu.show();
                     }
                 }
             }
@@ -1015,7 +1030,7 @@ Page {
                         GridView.view.focusRemotePath = ".";
                         changeRemotePath(absolutePath);
                     } else {
-                        openFileSlot(absolutePath, index);
+                        openMenu.show();
                     }
                 }
             }

@@ -1363,6 +1363,11 @@ bool CloudDriveModel::isSharable(CloudDriveModel::ClientTypes type, QString uid)
             || (type == WebDAV && getConnectionBoolProperty(type, uid, "share.enabled", true)); // Default as enabled.
 }
 
+bool CloudDriveModel::isMediaEnabled(CloudDriveModel::ClientTypes type, QString uid)
+{
+    return getCloudClient(type)->isMediaEnabled(uid);
+}
+
 bool CloudDriveModel::isImageUrlCachable(CloudDriveModel::ClientTypes type)
 {
     return getCloudClient(type)->isImageUrlCachable();
@@ -3016,7 +3021,7 @@ void CloudDriveModel::cacheImage(QString remoteFilePath, QString url, int w, int
 
 QString CloudDriveModel::media(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath)
 {
-    CloudDriveClient *client = getCloudClient(getClientType(type));
+    CloudDriveClient *client = getCloudClient(type);
     if (!client->isAuthorized()) {
         return "";
     }

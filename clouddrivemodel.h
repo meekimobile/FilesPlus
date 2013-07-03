@@ -209,6 +209,7 @@ public:
     Q_INVOKABLE bool isConfigurable(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE bool isViewable(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE bool isSharable(CloudDriveModel::ClientTypes type, QString uid);
+    Q_INVOKABLE bool isMediaEnabled(CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE bool isImageUrlCachable(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE bool isUnicodeSupported(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE bool isDirtyBeforeSync(CloudDriveModel::ClientTypes type);
