@@ -765,30 +765,44 @@ QString DropboxClient::deleteFile(QString nonce, QString uid, QString remoteFile
     return deleteFileReplyFinished(reply, synchronous);
 }
 
-void DropboxClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
+QString DropboxClient::shareFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
-    qDebug() << "----- DropboxClient::shareFile -----" << nonce << uid << remoteFilePath;
+    qDebug() << "----- DropboxClient::shareFile -----" << nonce << uid << remoteFilePath << synchronous;
 
     if (remoteFilePath.isEmpty()) {
-        emit shareFileReplySignal(nonce, -1, "remoteFilePath is empty.", "", "", 0);
-        return;
+        if (!synchronous) emit shareFileReplySignal(nonce, -1, "remoteFilePath is empty.", "", "", 0);
+        return "";
     }
 
     // root dropbox(Full access) or sandbox(App folder access)
     QString uri = sharesURI.arg(dropboxRoot).arg(remoteFilePath);
-//    uri = encodeURI(uri);
-    qDebug() << "DropboxClient::shareFile uri " << uri;
+    qDebug() << "DropboxClient::shareFile" << nonce << "uri" << uri;
 
     QByteArray postData;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)));
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)));
+    }
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", createOAuthHeaderForUid(nonce, uid, "POST", uri));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
     QNetworkReply *reply = manager->post(req, postData);
+
+    // Return if asynchronous.
+    if (!synchronous) {
+        return "";
+    }
+
+    while (!reply->isFinished()) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    // Emit signal and return replyBody.
+    return shareFileReplyFinished(reply, synchronous);
 }
 
 QString DropboxClient::delta(QString nonce, QString uid, bool synchronous)
@@ -1559,11 +1573,11 @@ QString DropboxClient::deleteFileReplyFinished(QNetworkReply *reply, bool synchr
     return replyBody;
 }
 
-void DropboxClient::shareFileReplyFinished(QNetworkReply *reply)
+QString DropboxClient::shareFileReplyFinished(QNetworkReply *reply, bool synchronous)
 {
-    qDebug() << "DropboxClient::shareFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "DropboxClient::shareFileReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
+
     QString replyBody = QString::fromUtf8(reply->readAll());
     QScriptEngine engine;
     QScriptValue sc;
@@ -1576,11 +1590,13 @@ void DropboxClient::shareFileReplyFinished(QNetworkReply *reply)
         expires = -1;
     }
 
-    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody, url, expires);
+    if (!synchronous) emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody, url, expires);
 
     // scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+
+    return url;
 }
 
 QString DropboxClient::deltaReplyFinished(QNetworkReply *reply)

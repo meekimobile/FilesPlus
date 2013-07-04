@@ -3029,6 +3029,42 @@ QString CloudDriveModel::media(CloudDriveModel::ClientTypes type, QString uid, Q
     return client->media(createNonce(), uid, remoteFilePath);
 }
 
+QString CloudDriveModel::shareFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, bool synchronous)
+{
+    if (!isSharable(type, uid)) {
+        CloudDriveJob job(createNonce(), ShareFile, type, uid, localFilePath, remoteFilePath, -1);
+        m_cloudDriveJobs->insert(job.jobId, job);
+        emit shareFileReplySignal(job.jobId, -1, getCloudClient(type)->objectName() + " " + "Share link", tr("Service is not available."), "", 0);
+        return "";
+    }
+
+    if (remoteFilePath == "") {
+        CloudDriveJob job(createNonce(), ShareFile, type, uid, localFilePath, remoteFilePath, -1);
+        m_cloudDriveJobs->insert(job.jobId, job);
+        emit shareFileReplySignal(job.jobId, -1, getCloudClient(type)->objectName() + " " + "Share link", tr("Cloud file ID is not available."), "", 0);
+        return "";
+    }
+
+    // Check if it's synchronous request.
+    if (synchronous) {
+        CloudDriveClient *client = getCloudClient(type);
+        if (!client->isAuthorized()) {
+            return "";
+        }
+
+        return client->shareFile(createNonce(), uid, remoteFilePath, synchronous);
+    }
+
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), ShareFile, type, uid, localFilePath, remoteFilePath, -1);
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->enqueue(job.jobId);
+
+    // Emit signal to show cloud_wait.
+    clearConnectedRemoteDirtyCache(localFilePath);
+    emit jobEnqueuedSignal(job.jobId, localFilePath);
+}
+
 void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteParentPath, QString newRemoteFileName)
 {
     if (remoteFilePath == "") {
@@ -3092,33 +3128,6 @@ void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid,
     // Enqueue job.
     CloudDriveJob job(createNonce(), DeleteFile, type, uid, localFilePath, remoteFilePath, -1);
     job.suppressDeleteLocal = suppressDeleteLocal;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show cloud_wait.
-    clearConnectedRemoteDirtyCache(localFilePath);
-    emit jobEnqueuedSignal(job.jobId, localFilePath);
-}
-
-void CloudDriveModel::shareFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath)
-{
-    if (!isSharable(type, uid)) {
-        CloudDriveJob job(createNonce(), ShareFile, type, uid, localFilePath, remoteFilePath, -1);
-        m_cloudDriveJobs->insert(job.jobId, job);
-        emit shareFileReplySignal(job.jobId, -1, getCloudClient(type)->objectName() + " " + "Share link", tr("Service is not available."), "", 0);
-        return;
-    }
-
-    if (remoteFilePath == "") {
-        CloudDriveJob job(createNonce(), ShareFile, type, uid, localFilePath, remoteFilePath, -1);
-        m_cloudDriveJobs->insert(job.jobId, job);
-        emit shareFileReplySignal(job.jobId, -1, getCloudClient(type)->objectName() + " " + "Share link", tr("Cloud file ID is not available."), "", 0);
-        return;
-    }
-
-    // Enqueue job.
-    CloudDriveJob job(createNonce(), ShareFile, type, uid, localFilePath, remoteFilePath, -1);
-//    job.isRunning = true;
     m_cloudDriveJobs->insert(job.jobId, job);
     m_jobQueue->enqueue(job.jobId);
 

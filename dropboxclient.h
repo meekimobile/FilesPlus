@@ -79,7 +79,7 @@ public:
     void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
-    void shareFile(QString nonce, QString uid, QString remoteFilePath);
+    QString shareFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
     QString delta(QString nonce, QString uid, bool synchronous = false);
     QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format = "jpeg", QString size = "s"); // format = {jpeg|png}, size = {xs|s|m|l|xl}
     QString media(QString nonce, QString uid, QString remoteFilePath);
@@ -101,7 +101,7 @@ public slots:
     void moveFileReplyFinished(QNetworkReply *reply);
     void copyFileReplyFinished(QNetworkReply *reply);
     QString deleteFileReplyFinished(QNetworkReply *reply, bool synchronous = false);
-    void shareFileReplyFinished(QNetworkReply *reply);
+    QString shareFileReplyFinished(QNetworkReply *reply, bool synchronous = false);
     void fileGetResumeReplyFinished(QNetworkReply *reply);
     void filePutResumeReplyFinished(QNetworkReply *reply);
     QString deltaReplyFinished(QNetworkReply *reply);

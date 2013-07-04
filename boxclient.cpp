@@ -854,9 +854,9 @@ bool BoxClient::isImageUrlCachable()
     return true;
 }
 
-void BoxClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
+QString BoxClient::shareFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
-    qDebug() << "----- BoxClient::shareFile -----" << nonce << uid << remoteFilePath;
+    qDebug() << "----- BoxClient::shareFile -----" << nonce << uid << remoteFilePath << synchronous;
 
     // Check if remoteFilePath is directory.
     bool isDir = isRemoteDir(nonce, uid, remoteFilePath);
@@ -869,12 +869,27 @@ void BoxClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)));
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)));
+    }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QNetworkReply *reply = manager->put(req, postString.toUtf8());
+
+    // Return if asynchronous.
+    if (!synchronous) {
+        return "";
+    }
+
+    while (!reply->isFinished()) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    // Emit signal and return replyBody.
+    return shareFileReplyFinished(reply, synchronous);
 }
 
 QString BoxClient::delta(QString nonce, QString uid, bool synchronous)
@@ -1387,11 +1402,11 @@ void BoxClient::deleteFileReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void BoxClient::shareFileReplyFinished(QNetworkReply *reply)
+QString BoxClient::shareFileReplyFinished(QNetworkReply *reply, bool synchronous)
 {
-    qDebug() << "BoxClient::shareFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "BoxClient::shareFileReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
+
     QString replyBody = QString::fromUtf8(reply->readAll());
     QScriptEngine engine;
     QScriptValue sc;
@@ -1404,11 +1419,13 @@ void BoxClient::shareFileReplyFinished(QNetworkReply *reply)
         expires = -1;
     }
 
-    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody, url, expires);
+    if (!synchronous) emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody, url, expires);
 
     // Scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+
+    return url;
 }
 
 QString BoxClient::deltaReplyFinished(QNetworkReply *reply)

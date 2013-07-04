@@ -429,6 +429,7 @@ Page {
 
     CompressedFileMenu {
         id: compressedFileMenu
+        selectedIndex: (folderPage.state == "list") ? fsListView.currentIndex : fsGridView.currentIndex
 
         onOpenCompressedFile: {
             var item = fsModel.get(selectedIndex);
@@ -442,6 +443,32 @@ Page {
         onExtract: {
             var item = fsModel.get(selectedIndex);
             compressedFolderModel.extract(item.absolutePath);
+        }
+    }
+
+    OpenMenu {
+        id: openMenu
+        selectedIndex: (folderPage.state == "list") ? fsListView.currentIndex : fsGridView.currentIndex
+
+        function show() {
+            var compressedFileTypes = ["ZIP"]; // Disable RAR support on Symbian.
+
+            var fileType = fsModel.get(selectedIndex).fileType;
+
+            if (compressedFileTypes.indexOf(fileType.toUpperCase()) != -1) {
+                compressedFileMenu.open();
+            } else {
+                openMenu.open();
+            }
+        }
+
+        onOpenMedia: {
+            var absolutePath = fsModel.get(selectedIndex).absolutePath;
+            openFileSlot(absolutePath, selectedIndex);
+        }
+        onOpenSystem: {
+            var absolutePath = fsModel.get(selectedIndex).absolutePath;
+            Qt.openUrlExternally(fsModel.getUrl(absolutePath));
         }
     }
 
@@ -501,12 +528,6 @@ Page {
         } else if (viewableTextFileTypes.indexOf(item.fileType.toUpperCase()) != -1) {
             pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
                            { filePath: item.absolutePath, fileName: item.name });
-        } else if (item.fileType.toUpperCase() === "ZIP") {
-            compressedFileMenu.selectedIndex = selectedIndex;
-            compressedFileMenu.open();
-//        } else if (item.fileType.toUpperCase() === "RAR") { // Disable RAR support on Symbian.
-//            compressedFileMenu.selectedIndex = selectedIndex;
-//            compressedFileMenu.open();
         } else {
             Qt.openUrlExternally(fsModel.getUrl(item.absolutePath));
         }
@@ -1125,7 +1146,7 @@ Page {
                         fsListView.focusLocalPath = "."; // Put dummy path to avoid focus on lastCenterIndex.
                         changeDirSlot(name);
                     } else {
-                        openFileSlot(absolutePath, index);
+                        openMenu.show();
                     }
                 }
             }
@@ -1178,7 +1199,7 @@ Page {
                         fsGridView.focusLocalPath = "."; // Put dummy path to avoid focus on lastCenterIndex.
                         changeDirSlot(name);
                     } else {
-                        openFileSlot(absolutePath, index);
+                        openMenu.show();
                     }
                 }
             }

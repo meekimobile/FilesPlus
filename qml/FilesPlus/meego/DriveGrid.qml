@@ -24,8 +24,8 @@ Rectangle {
         highlight: Rectangle {
             gradient: highlightGradient
         }
-        highlightFollowsCurrentItem: false
-        highlightMoveDuration: 0
+        highlightFollowsCurrentItem: true
+        highlightMoveDuration: 1
         focus: true
         currentIndex: -1
 
@@ -34,7 +34,7 @@ Rectangle {
         onMovementStarted: {
             if (currentItem) {
                 busy = false;
-                currentItem.state = "normal";
+                currentIndex = -1;
             }
         }
     }
@@ -65,20 +65,6 @@ Rectangle {
             width: driveGrid.cellWidth
             height: driveGrid.cellHeight
             color: "transparent"
-
-            state: "normal"
-            states: [
-                State {
-                    name: "highlight"
-                    PropertyChanges {
-                        target: driveCellItem
-                        gradient: highlightGradient
-                    }
-                },
-                State {
-                    name: "normal"
-                }
-            ]
 
             Row {
                 anchors.fill: parent
@@ -175,7 +161,6 @@ Rectangle {
                 onPressed: {
                     if (!busy) {
                         busy = true;
-                        driveCellItem.state = "highlight";
                         driveGrid.currentIndex = index;
                     } else {
                         mouse.accepted = false;
@@ -183,17 +168,16 @@ Rectangle {
                 }
 
                 onClicked: {
-                    // console.debug("driveCellItem clicked " + (parent.x + mouseX) + ", " + (parent.y + mouseY) );
-                    driveGrid.currentItem.state = "normal";
                     driveGrid.currentDriveName = model.logicalDrive;
                     driveGridRect.driveSelected(model.logicalDrive, index);
+                    driveGrid.currentIndex = -1;
                 }
 
                 onPressAndHold: {
                     busy = false; // Reset busy because this action still stay in current page.
-                    driveGrid.currentItem.state = "normal";
                     driveGrid.currentDriveName = model.logicalDrive;
                     driveGridRect.drivePressAndHold(model.logicalDrive, index);
+                    driveGrid.currentIndex = -1;
                 }
             }
         }

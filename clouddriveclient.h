@@ -61,7 +61,7 @@ public:
     virtual void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     virtual void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     virtual QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
-    virtual void shareFile(QString nonce, QString uid, QString remoteFilePath);
+    virtual QString shareFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
     virtual QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size);
     virtual QString media(QString nonce, QString uid, QString remoteFilePath);
     virtual QString delta(QString nonce, QString uid, bool synchronous = false);

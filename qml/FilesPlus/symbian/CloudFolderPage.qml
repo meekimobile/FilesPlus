@@ -678,49 +678,33 @@ Page {
 
     OpenMenu {
         id: openMenu
-
-        property int selectedIndex: (cloudFolderPage.state == "list") ? cloudFolderView.currentIndex : cloudFolderGridView.currentIndex
+        selectedIndex: (cloudFolderPage.state == "list") ? cloudFolderView.currentIndex : cloudFolderGridView.currentIndex
 
         function show() {
+            open();
+        }
+
+        onOpenMedia: {
+            // Get direct media link if it's available.
             var absolutePath = cloudDriveModel.get(selectedIndex).absolutePath;
             var source = cloudDriveModel.get(selectedIndex).source;
-            var alternative = cloudDriveModel.get(selectedIndex).alternative;
-
-            // Get direct media link if it's available.
             if (cloudDriveModel.isMediaEnabled(selectedCloudType, selectedUid)) {
                 source = (source) ? source : cloudDriveModel.media(selectedCloudType, selectedUid, absolutePath);
                 cloudDriveModel.setProperty(selectedIndex, "source", source);
             }
-            // Get share link if it's available.
-            // TODO Refactor shareFIle() to synchronous mode.
-//            if (cloudDriveModel.isSharable(selectedCloudType, selectedUid)) {
-//                alternative = (alternative) ? alternative : cloudDriveModel.shareFile(selectedCloudType, selectedUid, absolutePath);
-//                cloudDriveModel.setProperty(selectedIndex, "alternative", alternative);
-//            }
             console.debug("cloudFolderPage openMenu show source " + source);
-            console.debug("cloudFolderPage openMenu show alternative " + alternative);
-
-            // Disable menus if link is not available.
-            disabledMenus = [];
-            if (source == "") {
-                disabledMenus = Utility.addItemToArray(disabledMenus, "openMedia");
-            }
-            if (alternative == "") {
-                disabledMenus = Utility.addItemToArray(disabledMenus, "openWeb");
-            }
-            console.debug("cloudFolderPage openMenu disabledMenus " + disabledMenus);
-
-            // Suppress menu if all menu items are disabled.
-            var menuItems = content[0].children;
-            if (disabledMenus.length < menuItems.length) open();
-        }
-
-        onOpenMedia: {
-            var absolutePath = cloudDriveModel.get(selectedIndex).absolutePath;
             openFileSlot(absolutePath, selectedIndex);
         }
-        onOpenWeb: {
-            Qt.openUrlExternally(cloudDriveModel.get(selectedIndex).alternative);
+        onOpenSystem: {
+            // Get share link as alternative if it's available.
+            var absolutePath = cloudDriveModel.get(selectedIndex).absolutePath;
+            var alternative = cloudDriveModel.get(selectedIndex).alternative;
+            if (cloudDriveModel.isSharable(selectedCloudType, selectedUid)) {
+                alternative = (alternative) ? alternative : cloudDriveModel.shareFile(selectedCloudType, selectedUid, "", absolutePath, true); // TODO localPath is not required?
+                cloudDriveModel.setProperty(selectedIndex, "alternative", alternative);
+            }
+            console.debug("cloudFolderPage openMenu show alternative " + alternative);
+            Qt.openUrlExternally(alternative);
         }
     }
 

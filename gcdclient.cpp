@@ -1240,12 +1240,12 @@ QString GCDClient::deleteFile(QString nonce, QString uid, QString remoteFilePath
     return QString::fromUtf8(reply->readAll());
 }
 
-void GCDClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
+QString GCDClient::shareFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
-    qDebug() << "----- GCDClient::shareFile -----" << uid << remoteFilePath;
+    qDebug() << "----- GCDClient::shareFile -----" << nonce << uid << remoteFilePath << synchronous;
     if (remoteFilePath.isEmpty()) {
-        emit shareFileReplySignal(nonce, -1, "remoteFilePath is empty.", "", "", 0);
-        return;
+        if (!synchronous) emit shareFileReplySignal(nonce, -1, "remoteFilePath is empty.", "", "", 0);
+        return "";
     }
 
     QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, "shareFile");
@@ -1254,9 +1254,9 @@ void GCDClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
         m_propertyReplyHash->insert(nonce, propertyReply->readAll());
         propertyReply->deleteLater();
     } else {
-        emit shareFileReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()), "", 0);
+        if (!synchronous) emit shareFileReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()), "", 0);
         propertyReply->deleteLater();
-        return;
+        return "";
     }
 
     QString uri = sharesURI.arg(remoteFilePath);
@@ -1269,16 +1269,31 @@ void GCDClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
     postData.append(" \"value\": \"me\", ");
     postData.append(" \"withLink\": true ");
     postData.append("}");
-    qDebug() << "GCDClient::copyFile postData" << postData;
+    qDebug() << "GCDClient::shareFile postData" << postData;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)) );
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)) );
+    }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=UTF-8");
     QNetworkReply *reply = manager->post(req, postData);
+
+    // Return if asynchronous.
+    if (!synchronous) {
+        return "";
+    }
+
+    while (!reply->isFinished()) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    // Emit signal and return replyBody.
+    return shareFileReplyFinished(reply, synchronous);
 }
 
 QNetworkReply * GCDClient::files(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
@@ -1762,10 +1777,10 @@ void GCDClient::mergePropertyAndFilesJson(QString nonce, QString callback)
         QScriptValue propertyObj;
         QScriptValue filesObj;
         qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "started.";
-//        if (m_settings.value("Logging.enabled", false).toBool()) {
+        if (m_settings.value("Logging.enabled", false).toBool()) {
             qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "propertyJson" << QString::fromUtf8(m_propertyReplyHash->value(nonce));
             qDebug() << "GCDClient::mergePropertyAndFilesJson" << nonce << "filesJson" << QString::fromUtf8(m_filesReplyHash->value(nonce));
-//        }
+        }
         propertyObj = engine.evaluate("(" + QString::fromUtf8(m_propertyReplyHash->value(nonce)) + ")");
         filesObj = engine.evaluate("(" + QString::fromUtf8(m_filesReplyHash->value(nonce)) + ")");
 
@@ -1970,11 +1985,11 @@ void GCDClient::deleteFileReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void GCDClient::shareFileReplyFinished(QNetworkReply *reply)
+QString GCDClient::shareFileReplyFinished(QNetworkReply *reply, bool synchronous)
 {
-    qDebug() << "GCDClient::shareFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "GCDClient::shareFileReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
+
     QString replyBody = QString::fromUtf8(reply->readAll());
     QScriptEngine engine;
     QScriptValue sc;
@@ -1985,6 +2000,7 @@ void GCDClient::shareFileReplyFinished(QNetworkReply *reply)
         replyBody = QString::fromUtf8(m_propertyReplyHash->value(nonce));
 
         sc = engine.evaluate("(" + replyBody + ")");
+        // TODO Should it use alternateLink as using in parseCommonPropertyScriptValue()?
         if (sc.property("webContentLink").isValid()) {
             // For file.
             url = sc.property("webContentLink").toString();
@@ -1995,14 +2011,16 @@ void GCDClient::shareFileReplyFinished(QNetworkReply *reply)
         expires = -1;
     }
 
-    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody, url, expires);
+    if (!synchronous) emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody, url, expires);
 
     // Remove temp property.
     m_propertyReplyHash->remove(nonce);
 
-    // TODO scheduled to delete later.
+    // Scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+
+    return url;
 }
 
 void GCDClient::fileGetResumeReplyFinished(QNetworkReply *reply)

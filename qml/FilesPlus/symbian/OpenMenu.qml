@@ -5,10 +5,11 @@ MenuWithIcon {
     id: openMenu
     z: 2
 
+    property int selectedIndex
+
     signal openMedia()
-    signal openWeb()
-    signal copyURL()
-    
+    signal openSystem()
+
     content: MenuLayout {
         MenuItemWithIcon {
             name: "openMedia"
@@ -19,10 +20,10 @@ MenuWithIcon {
         }
         
         MenuItemWithIcon {
-            name: "openWeb"
-            text: appInfo.emptyStr+qsTr("Open on web")
+            name: "openSystem"
+            text: appInfo.emptyStr+qsTr("Open (System)")
             onClicked: {
-                openWeb();
+                openSystem();
             }
         }
     }

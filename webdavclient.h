@@ -62,7 +62,7 @@ public:
     void moveFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     void copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
-    void shareFile(QString nonce, QString uid, QString remoteFilePath);
+    QString shareFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false);
     QString media(QString nonce, QString uid, QString remoteFilePath);
 
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, QString requestBody = "", int depth = 0, bool synchronous = true, QString callback = "");
@@ -85,7 +85,7 @@ public slots:
     void moveFileReplyFinished(QNetworkReply *reply);
     void copyFileReplyFinished(QNetworkReply *reply);
     QString deleteFileReplyFinished(QNetworkReply *reply, bool synchronous = false);
-    void shareFileReplyFinished(QNetworkReply *reply);
+    QString shareFileReplyFinished(QNetworkReply *reply, bool synchronous = false);
 
     void fileGetResumeReplyFinished(QNetworkReply *reply);
 protected:

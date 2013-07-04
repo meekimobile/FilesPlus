@@ -303,7 +303,6 @@ public:
     Q_INVOKABLE void moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     Q_INVOKABLE void copyFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteParentPath, QString newRemoteFileName);
     Q_INVOKABLE void deleteFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, bool suppressDeleteLocal = false);
-    Q_INVOKABLE void shareFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath);
     Q_INVOKABLE void delta(CloudDriveModel::ClientTypes type, QString uid);
 
     void filePutResume(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, QString uploadId = "", qint64 offset = 0);
@@ -319,7 +318,8 @@ public:
 
     Q_INVOKABLE QString thumbnail(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString format, QString size); // Used by DropboxClient and ImageViewPage.qml.
     Q_INVOKABLE void cacheImage(QString remoteFilePath, QString url, int w, int h, QString caller);
-    Q_INVOKABLE QString media(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);    
+    Q_INVOKABLE QString media(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
+    Q_INVOKABLE QString shareFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, bool synchronous = false);
 
     Q_INVOKABLE int getSortFlag(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
     Q_INVOKABLE void setSortFlag(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, int sortFlag);

@@ -720,22 +720,39 @@ bool SkyDriveClient::isViewable()
     return true;
 }
 
-void SkyDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath)
+QString SkyDriveClient::shareFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
 {
-    qDebug() << "----- SkyDriveClient::shareFile -----" << nonce << uid << remoteFilePath;
+    qDebug() << "----- SkyDriveClient::shareFile -----" << nonce << uid << remoteFilePath << synchronous;
 
-    // TODO root dropbox(Full access) or sandbox(App folder access)
     QString uri = sharesURI.arg(remoteFilePath);
     uri = encodeURI(uri);
-    qDebug() << "SkyDriveClient::shareFile uri " << uri;
+    qDebug() << "SkyDriveClient::shareFile" << nonce << "uri" << uri;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)));
+    if (!synchronous) {
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)));
+    }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
+
+    // Return if asynchronous.
+    if (!synchronous) {
+        return "";
+    }
+
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return shareFileReplyFinished(reply, synchronous);
 }
 
 void SkyDriveClient::accessTokenReplyFinished(QNetworkReply *reply)
@@ -1215,11 +1232,11 @@ void SkyDriveClient::deleteFileReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void SkyDriveClient::shareFileReplyFinished(QNetworkReply *reply)
+QString SkyDriveClient::shareFileReplyFinished(QNetworkReply *reply, bool synchronous)
 {
-    qDebug() << "SkyDriveClient::shareFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "SkyDriveClient::shareFileReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
+
     QString replyBody = QString::fromUtf8(reply->readAll());
     QScriptEngine engine;
     QScriptValue sc;
@@ -1232,11 +1249,13 @@ void SkyDriveClient::shareFileReplyFinished(QNetworkReply *reply)
         expires = -1;
     }
 
-    emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody, url, expires);
+    if (!synchronous) emit shareFileReplySignal(nonce, reply->error(), reply->errorString(), replyBody, url, expires);
 
-    // TODO scheduled to delete later.
+    // Scheduled to delete later.
     reply->deleteLater();
     reply->manager()->deleteLater();
+
+    return url;
 }
 
 void SkyDriveClient::fileGetResumeReplyFinished(QNetworkReply *reply)
