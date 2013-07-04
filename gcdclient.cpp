@@ -533,6 +533,11 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
         Sleeper::msleep(100);
     }
 
+    if (synchronous) {
+        // Remove finished reply from hash.
+        m_replyHash->remove(nonce);
+    }
+
     return reply;
 }
 
@@ -644,6 +649,9 @@ QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source,
     if (synchronous) {
         // Close source file.
         source->close();
+
+        // Remove finished reply from hash.
+        m_replyHash->remove(nonce);
 
         if (reply->error() == QNetworkReply::NoError) {
             QScriptEngine engine;

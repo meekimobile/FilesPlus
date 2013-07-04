@@ -617,6 +617,9 @@ QIODevice *BoxClient::fileGet(QString nonce, QString uid, QString remoteFilePath
                 QApplication::processEvents(QEventLoop::AllEvents, 100);
                 Sleeper::msleep(100);
             }
+
+            // Remove finished reply from hash.
+            m_replyHash->remove(nonce);
         }
     }
 

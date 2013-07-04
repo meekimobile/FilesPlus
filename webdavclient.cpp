@@ -570,6 +570,11 @@ QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFileP
         Sleeper::msleep(100);
     }
 
+    if (synchronous) {
+        // Remove finished reply from hash.
+        m_replyHash->remove(nonce);
+    }
+
     return reply;
 }
 
@@ -693,6 +698,9 @@ QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *sour
     if (synchronous) {
         // Close source file.
         source->close();
+
+        // Remove finished reply from hash.
+        m_replyHash->remove(nonce);
     }
 
     return reply;

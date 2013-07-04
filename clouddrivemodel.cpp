@@ -2938,6 +2938,7 @@ void CloudDriveModel::migrateFilePutResume_Block(QString nonce, CloudDriveModel:
             int err = sc.property("error").toInt32();
             QString errString = sc.property("error_string").toString();
             job.uploadOffset = -1; // Failed upload needs to get status on resume.
+            m_cloudDriveJobs->insert(job.jobId, job); // Update changed job.
             migrateFilePutReplyFilter(job.jobId, err, errString, "", true);
             return;
         }

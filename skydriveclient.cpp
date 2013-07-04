@@ -559,6 +559,9 @@ QIODevice *SkyDriveClient::fileGet(QString nonce, QString uid, QString remoteFil
                 QApplication::processEvents(QEventLoop::AllEvents, 100);
                 Sleeper::msleep(100);
             }
+
+            // Remove finished reply from hash.
+            m_replyHash->remove(nonce);
         }
     }
 
@@ -656,6 +659,11 @@ QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *so
     while (synchronous && !reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
+    }
+
+    if (synchronous) {
+        // Remove finished reply from hash.
+        m_replyHash->remove(nonce);
     }
 
     return reply;

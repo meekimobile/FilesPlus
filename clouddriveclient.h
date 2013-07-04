@@ -126,7 +126,7 @@ signals:
 
     void logRequestSignal(QString nonce, QString logType, QString titleText, QString message, int autoCloseInterval);
 public slots:
-
+    void monitorTimerTimeoutSlot();
 protected:
     QString refreshTokenUid;
     QMap<QString, QString> m_paramMap;
@@ -134,6 +134,8 @@ protected:
     QHash<QString, QNetworkReply*> *m_replyHash;
 
     QSettings m_settings;
+
+    QTimer m_monitorTimer;
 
     void loadAccessPairMap();
     void saveAccessPairMap();

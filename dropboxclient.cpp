@@ -383,6 +383,11 @@ QIODevice *DropboxClient::fileGet(QString nonce, QString uid, QString remoteFile
         Sleeper::msleep(100);
     }
 
+    if (synchronous) {
+        // Remove finished reply from hash.
+        m_replyHash->remove(nonce);
+    }
+
     return reply;
 }
 
@@ -442,6 +447,11 @@ QNetworkReply *DropboxClient::filePut(QString nonce, QString uid, QIODevice *sou
     while (synchronous && !reply->isFinished()) {
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
+    }
+
+    if (synchronous) {
+        // Remove finished reply from hash.
+        m_replyHash->remove(nonce);
     }
 
     return reply;

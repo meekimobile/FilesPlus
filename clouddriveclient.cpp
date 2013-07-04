@@ -19,6 +19,10 @@ CloudDriveClient::CloudDriveClient(QObject *parent) :
     setObjectName(this->metaObject()->className());
 
     m_replyHash = new QHash<QString, QNetworkReply*>();
+
+//    connect(&m_monitorTimer, SIGNAL(timeout()), this, SLOT(monitorTimerTimeoutSlot()) );
+//    m_monitorTimer.setInterval(4000);
+//    m_monitorTimer.start();
 }
 
 CloudDriveClient::~CloudDriveClient()
@@ -636,4 +640,9 @@ qint64 CloudDriveClient::writeToFile(QIODevice *source, QString targetFilePath, 
         return -1;
     }
 
+}
+
+void CloudDriveClient::monitorTimerTimeoutSlot()
+{
+    qDebug() << "CloudDriveClient::monitorTimerTimeoutSlot m_replyHash->size()" << m_replyHash->size();
 }

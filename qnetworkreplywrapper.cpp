@@ -9,6 +9,7 @@ QNetworkReplyWrapper::QNetworkReplyWrapper(QNetworkReply *reply, QObject *parent
     connect(m_reply, SIGNAL(uploadProgress(qint64,qint64)), this, SLOT(uploadProgressFilter(qint64,qint64)) );
     connect(m_reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgressFilter(qint64,qint64)) );
     connect(m_reply, SIGNAL(destroyed()), this, SLOT(destroyedFilter()) );
+    qDebug() << "QNetworkReplyWrapper::QNetworkReplyWrapper" << this << "reply" << m_reply;
 
     // Initialize idle timer.
     m_idleTimer = new QTimer(this);
@@ -52,12 +53,12 @@ void QNetworkReplyWrapper::idleTimerTimeoutSlot()
     if (m_reply != 0) {
         QString nonce = m_reply->request().attribute(QNetworkRequest::User).toString();
         if (m_reply->isFinished()) {
-            qDebug() << "QNetworkReplyWrapper::idleTimerTimeoutSlot nonce" << nonce << "reply" << m_reply << "is finished. Operation is ignored.";
+            qDebug() << "QNetworkReplyWrapper::idleTimerTimeoutSlot" << this << "nonce" << nonce << "reply" << m_reply << "is finished. Operation is ignored.";
         } else {
             m_reply->abort();
-            qDebug() << "QNetworkReplyWrapper::idleTimerTimeoutSlot nonce" << nonce << "reply" << m_reply << "is aborted.";
+            qDebug() << "QNetworkReplyWrapper::idleTimerTimeoutSlot" << this << "nonce" << nonce << "reply" << m_reply << "is aborted.";
         }
     } else {
-        qDebug() << "QNetworkReplyWrapper::idleTimerTimeoutSlot reply = 0. Operation is ignored.";
+        qDebug() << "QNetworkReplyWrapper::idleTimerTimeoutSlot" << this << "reply = 0. Operation is ignored.";
     }
 }
