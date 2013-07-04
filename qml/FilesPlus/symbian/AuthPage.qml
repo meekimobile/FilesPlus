@@ -98,6 +98,22 @@ Page {
         return "PinNotFound";
     }
 
+    function parseOAuth2Code(url) {
+        console.debug("authPage parseOAuth2Code url " + url + " typeof " + (typeof url));
+        var text = url + "";
+        var caps = text.match("[\\?&]code=([^&]*)");
+        if (caps) {
+            console.debug("authPage parseOAuth2Code caps " + caps + " caps.length " + caps.length);
+            var code = caps[1];
+            if (code && code != "") {
+                console.debug("authPage parseOAuth2Code code " + code);
+                return code;
+            }
+        }
+
+        return "PinNotFound";
+    }
+
     onStatusChanged: {
         if (status == PageStatus.Active) {
             privacyConsent.open();
@@ -228,6 +244,10 @@ Page {
                     var pin = authPage.parseWebDAVCode(url);
                     pinInputPanel.pin = pin;
 //                    okButton.visible = pinInputPanel.visible;
+                } else if (authPage.redirectFrom == "BoxClient") {
+                    // BoxClient handler
+                    console.debug("BoxClient authPage.url " + authPage.url + " authPage.redirectFrom " + authPage.redirectFrom);
+                    pinInputPanel.pin = authPage.parseOAuth2Code(url);
                 }
             }
         }

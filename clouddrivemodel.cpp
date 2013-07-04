@@ -3063,6 +3063,8 @@ QString CloudDriveModel::shareFile(CloudDriveModel::ClientTypes type, QString ui
     // Emit signal to show cloud_wait.
     clearConnectedRemoteDirtyCache(localFilePath);
     emit jobEnqueuedSignal(job.jobId, localFilePath);
+
+    return "";
 }
 
 void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteParentPath, QString newRemoteFileName)

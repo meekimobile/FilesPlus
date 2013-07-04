@@ -1261,6 +1261,8 @@ PageStackWindow {
                 return "ftp_icon.png";
             case CloudDriveModel.WebDAV:
                 return "webdav_icon.png";
+            case CloudDriveModel.Box:
+                return "Box_Logo_Blue_100x50.png";
             }
         }
 
@@ -1277,6 +1279,8 @@ PageStackWindow {
                     return CloudDriveModel.Ftp;
                 } else if (["webdavclient","webdav"].indexOf(typeText.toLowerCase()) != -1) {
                     return CloudDriveModel.WebDAV;
+                } else if (["boxclient","box"].indexOf(typeText.toLowerCase()) != -1) {
+                    return CloudDriveModel.Box;
                 }
             }
 
@@ -1578,7 +1582,9 @@ PageStackWindow {
             }
 
             // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onBrowseReplySignal", jobJson.job_id);
+            if (!suppressRemoveJob) {
+                cloudDriveModel.removeJob("cloudDriveModel.onBrowseReplySignal", jobJson.job_id);
+            }
         }
 
         onFileGetReplySignal: {
@@ -1654,9 +1660,8 @@ PageStackWindow {
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
-            // Remove finished job.
-            // TODO Remove only success job.
-            if (err == 0 || err == 203) {
+            // Remove only success job.
+            if ((err == 0 || err == 203) && !suppressRemoveJob) {
                 cloudDriveModel.removeJob("cloudDriveModel.onMetadataReplySignal", jobJson.job_id);
             }
 
@@ -1897,9 +1902,6 @@ PageStackWindow {
                 showRecipientSelectionDialogSlot(jobJson.type, jobJson.uid, jobJson.local_file_path,
                                                  (jobJson.local_file_path.indexOf("/") >= 0) ? cloudDriveModel.getFileName(jobJson.local_file_path) : jobJson.local_file_path,
                                                  url);
-            } else if (err == 204) { // Refresh token
-                cloudDriveModel.refreshToken(jobJson.type, jobJson.uid, jobJson.job_id);
-                return;
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Share"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
@@ -1946,7 +1948,9 @@ PageStackWindow {
             }
 
             // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onMigrateFileReplySignal", jobJson.job_id);
+            if (!suppressRemoveJob) {
+                cloudDriveModel.removeJob("cloudDriveModel.onMigrateFileReplySignal", jobJson.job_id);
+            }
 
             // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
