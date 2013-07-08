@@ -25,10 +25,10 @@ QHash<QString, QString> ContentTypeHelper::parseContentTypeHash(const QString &l
                 // Parse line.
                 tokens = line.split(QRegExp("\\s+"));
                 if (tokens.count() > 1) {
-                    qDebug() << "ContentTypeHelper::parseContentTypeHash accepted line" << line << tokens;
+//                    qDebug() << "ContentTypeHelper::parseContentTypeHash accepted line" << line << tokens;
                     for (int i = 1; i < tokens.count(); i++) {
                         contentTypeHash.insert(tokens.at(i), tokens.at(0));
-                        qDebug() << "ContentTypeHelper::parseContentTypeHash inserted" << tokens.at(i) << "=" << tokens.at(0);
+//                        qDebug() << "ContentTypeHelper::parseContentTypeHash inserted" << tokens.at(i) << "=" << tokens.at(0);
                     }
                 } else {
 //                    qDebug() << "ContentTypeHelper::parseContentTypeHash skipped line" << line << tokens;

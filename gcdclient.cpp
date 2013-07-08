@@ -613,6 +613,7 @@ QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source,
     // Search for fileId.
     QString fileId = searchFileId(nonce, uid, remoteParentPath, remoteFileName);
     fileId = (fileId != "") ? ("/" + fileId) : fileId;
+    qDebug() << "GCDClient::filePut nonce" << nonce << "fileId" << fileId;
 
     QString uri = filePutURI.arg(fileId) + "?uploadType=media";
     qDebug() << "GCDClient::filePut nonce" << nonce << "uri" << uri;
