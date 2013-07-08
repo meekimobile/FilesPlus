@@ -12,8 +12,9 @@ class QNetworkReplyWrapper : public QObject
 public:
     static const int DefaultTimeoutMSec;
 
-    explicit QNetworkReplyWrapper(QNetworkReply *reply, QObject *parent = 0);
-    
+    explicit QNetworkReplyWrapper(QNetworkReply *reply, bool noTimeout = false, QObject *parent = 0);
+
+    QNetworkReply * data();
 signals:
     void uploadProgress(QString nonce, qint64 bytesSent, qint64 bytesTotal);
     void downloadProgress(QString nonce, qint64 bytesReceived, qint64 bytesTotal);
