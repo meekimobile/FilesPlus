@@ -115,7 +115,7 @@ public:
     Q_INVOKABLE QVariant getProperty(const int index, FolderSizeItemRoles role);
     Q_INVOKABLE void setProperty(const int index, FolderSizeItemRoles role, QVariant value);
     Q_INVOKABLE void setProperty(const QString localPath, FolderSizeItemRoles role, QVariant value);
-    Q_INVOKABLE void setProperty(const int index, QVariant valueJson);
+    Q_INVOKABLE void set(const int index, QVariant valueJson);
 
     Q_INVOKABLE void refreshDir(const QString caller, const bool clearCache = false, const bool clearItems = false);
     Q_INVOKABLE void changeDir(const QString &name, const int sortFlag = -1);
