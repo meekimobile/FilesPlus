@@ -32,6 +32,7 @@ public:
     static const QString patchURI;
     static const QString deltaURI;
     static const QString thumbnailURI;
+    static const QString searchURI;
 
     static const qint64 DefaultChunkSize;
     static const qint64 DefaultMaxUploadSize;
@@ -46,7 +47,6 @@ public:
     void quota(QString nonce, QString uid);
     QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
-    QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
     void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
@@ -61,14 +61,16 @@ public:
     QString media(QString nonce, QString uid, QString remoteFilePath);
 
     bool isRemoteDir(QString nonce, QString uid, QString remoteFilePath);
+    QString searchFileId(QString nonce, QString uid, QString remoteParentPath, QString remoteFileName);
     QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, int offset, bool synchronous, QString callback);
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool isDir, bool synchronous, QString callback);
     void mergePropertyAndFilesJson(QString nonce, QString callback, QString uid);
     void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
-    QString fileGetReplySave(QNetworkReply *reply);
+    QNetworkReply * getRedirectedReply(QNetworkReply *reply);
+    QString fileGetReplySaveChunk(QNetworkReply *reply);
+    QString fileGetReplySaveStream(QNetworkReply *reply);
 
     QString getRemoteRoot(QString uid);
-    bool isFileGetResumable(qint64 fileSize);
     bool isDeltaSupported();
     bool isDeltaEnabled(QString uid);
     bool isViewable();
@@ -95,8 +97,6 @@ public slots:
     void deleteFileReplyFinished(QNetworkReply *reply);
     QString shareFileReplyFinished(QNetworkReply *reply, bool synchronous);
     QString deltaReplyFinished(QNetworkReply *reply);
-
-    void fileGetResumeReplyFinished(QNetworkReply *reply);
 protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
 private:

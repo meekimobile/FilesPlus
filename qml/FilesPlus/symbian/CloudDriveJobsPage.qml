@@ -287,6 +287,17 @@ Page {
                 }
             }
 
+            Timer {
+                id: refreshTimer
+                interval: 500
+                repeat: true
+                running: is_running
+                onTriggered: {
+                    var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(job_id));
+                    cloudDriveJobsModel.updateJob(jobJson);
+                }
+            }
+
             onClicked: {
                 console.debug("cloudDriveJobsPage listItem onClicked jobJson " + cloudDriveModel.getJobJson(job_id) );
                 showBytes = !showBytes;

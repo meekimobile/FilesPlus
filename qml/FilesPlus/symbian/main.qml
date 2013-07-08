@@ -1729,30 +1729,6 @@ PageStackWindow {
             }
         }
 
-        onDownloadProgress: {
-//            console.debug("window cloudDriveModel onDownloadProgress " + nonce + " " + bytesReceived + " / " + bytesTotal);
-
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
-            cloudDriveJobsModel.updateJobProgressBar(jobJson);
-
-            // Update ProgressBar on listItem and its parent.
-            pageStack.find(function (page) {
-                if (page.updateItemProgressBarSlot) page.updateItemProgressBarSlot(jobJson);
-            });
-        }
-
-        onUploadProgress: {
-//            console.debug("window cloudDriveModel onUploadProgress " + nonce + " " + bytesSent + " / " + bytesTotal);
-
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
-            cloudDriveJobsModel.updateJobProgressBar(jobJson);
-
-            // Update ProgressBar on listItem and its parent.
-            pageStack.find(function (page) {
-                if (page.updateItemProgressBarSlot) page.updateItemProgressBarSlot(jobJson);
-            });
-        }
-
         onRefreshFolderCacheSignal: {
             // Remove folder cache.
             fsModel.removeCache(localPath, true);

@@ -127,6 +127,9 @@ signals:
     void logRequestSignal(QString nonce, QString logType, QString titleText, QString message, int autoCloseInterval);
 public slots:
     void monitorTimerTimeoutSlot();
+
+    void uploadProgressFilter(qint64 bytesSent, qint64 bytesTotal);
+    void downloadProgressFilter(qint64 bytesReceived, qint64 bytesTotal);
 protected:
     QString refreshTokenUid;
     QMap<QString, QString> m_paramMap;

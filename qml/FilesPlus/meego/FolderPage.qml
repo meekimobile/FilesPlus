@@ -679,42 +679,6 @@ Page {
         }
     }
 
-    function updateItemProgressBarSlot(jobJson) {
-        if (!jobJson) return;
-        if (jobJson.local_file_path == "") return;
-
-        // Update ProgressBar on listItem.
-        var runningOperation = fsModel.mapToFolderSizeListModelOperation(jobJson.operation);
-        var modelIndex = fsModel.getIndexOnCurrentDir(jobJson.local_file_path);
-        if (modelIndex == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
-            fsModel.clearIndexOnCurrentDir();
-            modelIndex = fsModel.getIndexOnCurrentDir(jobJson.local_file_path);
-        }
-        if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-            fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
-            fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, runningOperation);
-            fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningValueRole, jobJson.bytes);
-            fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningMaxValueRole, jobJson.bytes_total);
-            fsModel.refreshItem(modelIndex);
-        }
-
-        // Show indicator on parent up to root.
-        // Skip i=0 as it's notified above already.
-        var pathList = fsModel.getPathToRoot(jobJson.local_file_path);
-        for(var i=1; i<pathList.length; i++) {
-            modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-            if (modelIndex == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
-                fsModel.clearIndexOnCurrentDir();
-                modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-            }
-            if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, runningOperation);
-                fsModel.refreshItem(modelIndex);
-            }
-        }
-    }
-
     function refreshItemSlot(caller, localPath) {
 //        console.debug("folderPage refreshItemSlot caller " + caller + " " + localPath);
         if (localPath) {
@@ -1055,6 +1019,28 @@ Page {
             }
             isImageUrlCachable: true
             opacity: isHidden ? 0.5 : 1
+
+            Component.onCompleted: {
+                var jobId = cloudDriveModel.getRunningJob(absolutePath);
+                if (jobId !== "") {
+                    fsModel.setProperty(index, FolderSizeItemListModel.IsRunningRole, true);
+                }
+            }
+
+            Timer {
+                id: refreshTimer
+                interval: 500
+                repeat: true
+                running: isRunning
+                onTriggered: {
+                    var jobId = cloudDriveModel.getRunningJob(absolutePath);
+                    var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(jobId));
+                    var runningOperation = fsModel.mapToFolderSizeListModelOperation(jobJson.operation);
+                    fsModel.setProperty(index, FolderSizeItemListModel.RunningOperationRole, runningOperation);
+                    fsModel.setProperty(index, FolderSizeItemListModel.RunningValueRole, jobJson.bytes);
+                    fsModel.setProperty(index, FolderSizeItemListModel.RunningMaxValueRole, jobJson.bytes_total);
+                }
+            }
 
             onPressAndHold: {
                 if (fsModel.state != "mark") {

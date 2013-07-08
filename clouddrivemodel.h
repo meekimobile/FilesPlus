@@ -156,9 +156,10 @@ public:
     Q_INVOKABLE bool isParentConnected(QString localPath);
     void clearConnectedRemoteDirtyCache(QString localPath, bool includeChildren = true);
     void clearLocalPathFlagCache(QMap<QString, bool> *localPathFlagCache, QString localPath, bool includeChildren = true);
+    int clearRunningJobCache(QString localPath);
     Q_INVOKABLE bool isRemoteRoot(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     Q_INVOKABLE bool canSync(QString localPath);
-    Q_INVOKABLE QString getFirstJobJson(QString localPath);
+    Q_INVOKABLE QString getRunningJob(QString localPath);
     Q_INVOKABLE QString getJobJson(QString jobId);
     void updateJob(CloudDriveJob job, bool emitJobUpdatedSignal = true);
     Q_INVOKABLE void removeJob(QString caller, QString nonce);
@@ -488,6 +489,7 @@ private:
     QMap<QString, bool> *m_isConnectedCache;
     QMap<QString, bool> *m_isDirtyCache;
     QMap<QString, bool> *m_isSyncingCache;
+    QMap<QString, QString> *m_runningJobCache;
 
     CloudDriveClient *defaultClient;
     DropboxClient *dbClient;

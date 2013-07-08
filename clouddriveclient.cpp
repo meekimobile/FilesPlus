@@ -646,3 +646,22 @@ void CloudDriveClient::monitorTimerTimeoutSlot()
 {
     qDebug() << "CloudDriveClient::monitorTimerTimeoutSlot m_replyHash->size()" << m_replyHash->size();
 }
+
+void CloudDriveClient::uploadProgressFilter(qint64 bytesSent, qint64 bytesTotal)
+{
+    QString nonce = dynamic_cast<QNetworkReply *>(sender())->request().attribute(QNetworkRequest::User).toString();
+
+//    qDebug() << "CloudDriveClient::uploadProgressFilter" << sender() << nonce << bytesSent << bytesTotal;
+
+    emit uploadProgress(nonce, bytesSent, bytesTotal);
+}
+
+void CloudDriveClient::downloadProgressFilter(qint64 bytesReceived, qint64 bytesTotal)
+{
+    QString nonce = dynamic_cast<QNetworkReply *>(sender())->request().attribute(QNetworkRequest::User).toString();
+
+//    qDebug() << "CloudDriveClient::downloadProgressFilter" << sender() << nonce << bytesReceived << bytesTotal;
+
+    emit downloadProgress(nonce, bytesReceived, bytesTotal);
+}
+

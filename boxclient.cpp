@@ -25,6 +25,7 @@ const QString BoxClient::sharesURI = "https://api.box.com/2.0/%1/%2"; // PUT %1=
 const QString BoxClient::patchURI = "https://api.box.com/2.0/%1/%2"; // PUT %1=files/folders %2=ID (also use for move, rename)
 const QString BoxClient::deltaURI = "https://api.box.com/2.0/events"; // GET with stream_position
 const QString BoxClient::thumbnailURI = "https://api.box.com/2.0/files/%1/thumbnail.%2";
+const QString BoxClient::searchURI = "https://api.box.com/2.0/search"; // GET with ?query=%1
 
 const qint64 BoxClient::DefaultChunkSize = 4194304; // 4MB
 const qint64 BoxClient::DefaultMaxUploadSize = 20971520; // 20MB which support ~20 sec(s) video clip.
@@ -170,16 +171,17 @@ QString BoxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, Q
 
     // Create localTargetFile for file getting.
     m_localFileHash[nonce] = new QFile(localFilePath);
+    qint64 offset = (m_localFileHash[nonce]->exists()) ? m_localFileHash[nonce]->size() : -1;
 
     // Send request.
-    QNetworkReply *reply = dynamic_cast<QNetworkReply *>( fileGet(nonce, uid, remoteFilePath, -1, synchronous) );
+    QNetworkReply *reply = dynamic_cast<QNetworkReply *>( fileGet(nonce, uid, remoteFilePath, offset, synchronous) );
 
     if (!synchronous) {
         return "";
     }
 
     // Construct result.
-    QString result = fileGetReplySave(reply);
+    QString result = fileGetReplySaveStream(reply);
 
     // scheduled to delete later.
     m_replyHash->remove(nonce);
@@ -545,98 +547,51 @@ QIODevice *BoxClient::fileGet(QString nonce, QString uid, QString remoteFilePath
 {
     qDebug() << "----- BoxClient::fileGet -----" << nonce << uid << remoteFilePath << offset << "synchronous" << synchronous;
 
-    // Get property for using in fileGetReplyFinished().
-    if (!synchronous) {
-        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, false, true, "fileGet");
-        if (propertyReply->error() == QNetworkReply::NoError) {
-            // For further using in fileGetReplyFinished.
-            m_propertyReplyHash->insert(nonce, propertyReply->readAll());
-            propertyReply->deleteLater();
-        } else {
-            if (!synchronous) {
-                emit fileGetReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));
-                propertyReply->deleteLater();
-                return 0;
-            } else {
-                return propertyReply;
-            }
-        }
-    }
-
     QString uri = fileGetURI.arg(remoteFilePath);
     uri = encodeURI(uri);
     qDebug() << "BoxClient::fileGet" << nonce << "uri" << uri;
 
-    // Send request.
+    // Get redirected request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    if (!synchronous) {
-        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetReplyFinished(QNetworkReply*)));
-    }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     if (offset >= 0) {
-        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1);
-        qDebug() << "BoxClient::fileGet rangeHeader" << rangeHeader;
+        QString rangeHeader = QString("bytes=%1-").arg(offset);
+        qDebug() << "BoxClient::fileGet" << nonce << "rangeHeader" << rangeHeader;
         req.setRawHeader("Range", rangeHeader.toAscii() );
     }
     req.setRawHeader("Accept-Encoding", "gzip, deflate");
     QNetworkReply *reply = manager->get(req);
-    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
+    reply = getRedirectedReply(reply);
 
-    // Store reply for further usage.
-    m_replyHash->insert(nonce, reply);
+    // Wait until readyRead().
+    QEventLoop loop;
+    connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
+    loop.exec();
 
-    // Redirect to download URL.
-    while (synchronous && !reply->isFinished()) {
-        QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper::msleep(100);
-    }
-
-    if (synchronous) {
-        QVariant possibleRedirectUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
-        if(!possibleRedirectUrl.toUrl().isEmpty()) {
-            qDebug() << "BoxClient::fileGet redirectUrl" << possibleRedirectUrl.toUrl();
-
-            QNetworkRequest redirectedRequest = reply->request();
-            redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
-
-            // Delete original reply (which is in m_replyHash).
-            m_replyHash->remove(nonce);
-            reply->deleteLater();
-
-            reply = reply->manager()->get(redirectedRequest);
-            QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-            connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
-
-            // Store reply for further usage.
-            m_replyHash->insert(nonce, reply);
-
-            while (!reply->isFinished()) {
-                QApplication::processEvents(QEventLoop::AllEvents, 100);
-                Sleeper::msleep(100);
-            }
-
-            // Remove finished reply from hash.
-            m_replyHash->remove(nonce);
-        }
+    if (!synchronous) {
+        fileGetReplyFinished(reply);
     }
 
     return reply;
 }
 
-QString BoxClient::fileGetReplySave(QNetworkReply *reply)
+QString BoxClient::fileGetReplySaveChunk(QNetworkReply *reply)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
 
     QString result;
     if (reply->error() == QNetworkReply::NoError) {
-        qDebug() << "BoxClient::fileGetReplySave reply bytesAvailable" << reply->bytesAvailable();
+        qDebug() << "BoxClient::fileGetReplySaveChunk" << nonce << "reply bytesAvailable" << reply->bytesAvailable();
 
         // Find offset.
         qint64 offset = getOffsetFromRange(QString::fromAscii(reply->request().rawHeader("Range")));
-        qDebug() << "BoxClient::fileGetReplySave reply request offset" << offset;
+        qDebug() << "BoxClient::fileGetReplySaveChunk" << nonce << "reply request offset" << offset;
 
         // Stream replyBody to a file on localPath.
         qint64 totalBytes = reply->bytesAvailable();
@@ -653,7 +608,10 @@ QString BoxClient::fileGetReplySave(QNetworkReply *reply)
             // Read first buffer.
             qint64 c = reply->read(buf, sizeof(buf));
             while (c > 0) {
+                qDebug() << "BoxClient::fileGetReplySaveChunk" << nonce << "reply readBytes" << c;
+
                 writtenBytes += localTargetFile->write(buf, c);
+                qDebug() << "BoxClient::fileGetReplySaveChunk" << nonce << "reply writtenBytes" << writtenBytes;
 
                 // Tell event loop to process event before it will process time consuming task.
                 QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
@@ -663,22 +621,110 @@ QString BoxClient::fileGetReplySave(QNetworkReply *reply)
             }
         }
 
-        qDebug() << "BoxClient::fileGetReplySave reply writtenBytes" << writtenBytes << "totalBytes" << totalBytes << "localTargetFile size" << localTargetFile->size();
+        qDebug() << "BoxClient::fileGetReplySaveChunk" << nonce << "reply writtenBytes" << writtenBytes << "totalBytes" << totalBytes << "localTargetFile size" << localTargetFile->size();
 
         // Close target file.
         localTargetFile->flush();
         localTargetFile->close();
 
         QString propertyReplyBody = QString::fromUtf8(m_propertyReplyHash->value(nonce));
-        qDebug() << "BoxClient::fileGetReplySave propertyReplyBody" << propertyReplyBody;
+        qDebug() << "BoxClient::fileGetReplySaveChunk" << nonce << "propertyReplyBody" << propertyReplyBody;
 
         // Return common json.
-        QScriptEngine engine;
-        QScriptValue jsonObj = engine.evaluate("(" + propertyReplyBody + ")");
-        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
-        result = stringifyScriptValue(engine, parsedObj);
+        if (reply->error() == QNetworkReply::NoError) {
+            QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, false, true, "fileGet");
+            if (propertyReply->error() == QNetworkReply::NoError) {
+                QScriptEngine engine;
+                QScriptValue jsonObj = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
+                QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+                result = stringifyScriptValue(engine, parsedObj);
+            } else {
+                result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(propertyReply->error()).arg(propertyReply->errorString());
+            }
+            propertyReply->deleteLater();
+        } else {
+            qDebug() << "BoxClient::fileGetReplySaveStream" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
+        }
     } else {
-        qDebug() << "BoxClient::fileGetReplySave nonce" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
+        qDebug() << "BoxClient::fileGetReplySaveChunk" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
+        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
+    }
+
+    // Remove once used.
+    m_localFileHash.remove(nonce);
+    m_propertyReplyHash->remove(nonce);
+
+    return result;
+}
+
+QString BoxClient::fileGetReplySaveStream(QNetworkReply *reply)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+
+    QString result;
+    if (reply->error() == QNetworkReply::NoError) {
+        // Find offset.
+        qint64 offset = getOffsetFromRange(QString::fromAscii(reply->request().rawHeader("Range")));
+        qDebug() << "BoxClient::fileGetReplySaveStream" << nonce << "reply request offset" << offset;
+
+        // Stream replyBody to a file on localPath.
+        qint64 totalBytes = reply->request().header(QNetworkRequest::ContentLengthHeader).toInt();
+        qint64 writtenBytes = 0;
+        char buf[FileWriteBufferSize];
+        QFile *localTargetFile = m_localFileHash[nonce];
+        if (localTargetFile->open(QIODevice::ReadWrite)) {
+            // Move to offset.
+            localTargetFile->seek(offset);
+
+            while (!reply->isFinished() || reply->bytesAvailable() > 0) {
+                if (reply->bytesAvailable() == 0) {
+                    QApplication::processEvents();
+                    continue;
+                }
+
+                qint64 c = reply->read(buf, sizeof(buf));
+                while (c > 0) {
+                    qDebug() << "BoxClient::fileGetReplySaveStream" << nonce << "reply readBytes" << c;
+
+                    writtenBytes += localTargetFile->write(buf, c);
+                    qDebug() << "BoxClient::fileGetReplySaveStream" << nonce << "reply writtenBytes" << writtenBytes;
+
+                    // Tell event loop to process event before it will process time consuming task.
+                    QApplication::processEvents();
+
+                    // Read next buffer.
+                    c = reply->read(buf, sizeof(buf));
+                }
+            }
+        }
+
+        qDebug() << "BoxClient::fileGetReplySaveStream" << nonce << "reply writtenBytes" << writtenBytes << "totalBytes" << totalBytes << "localTargetFile size" << localTargetFile->size();
+
+        // Close target file.
+        localTargetFile->flush();
+        localTargetFile->close();
+
+        // Return common json.
+        if (reply->error() == QNetworkReply::NoError) {
+            QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, false, true, "fileGet");
+            if (propertyReply->error() == QNetworkReply::NoError) {
+                QScriptEngine engine;
+                QScriptValue jsonObj = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
+                QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+                result = stringifyScriptValue(engine, parsedObj);
+            } else {
+                result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(propertyReply->error()).arg(propertyReply->errorString());
+            }
+            propertyReply->deleteLater();
+        } else {
+            qDebug() << "BoxClient::fileGetReplySaveStream" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
+        }
+    } else {
+        qDebug() << "BoxClient::fileGetReplySaveStream" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
         result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
     }
 
@@ -708,14 +754,22 @@ QNetworkReply *BoxClient::filePut(QString nonce, QString uid, QIODevice *source,
         return 0;
     }
 
-    QString uri = filePutURI;
+    // Search existing file ID.
+    QString fileId = searchFileId(nonce, uid, remoteParentPath, remoteFileName);
+
+    QString uri;
+    if (fileId == "") {
+        uri = filePutURI;
+    } else {
+        uri = filePutRevURI.arg(fileId);
+    }
     uri = encodeURI(uri);
     qDebug() << "BoxClient::filePut uri" << uri;
 
     QNetworkReply *reply = 0;
     qint64 fileSize = source->size();
     QString contentType = getContentType(remoteFileName);
-    qDebug() << "BoxClient::filePut remoteFileName" << remoteFileName << "contentType" << contentType << "fileSize" << fileSize;
+    qDebug() << "BoxClient::filePut" << nonce << "remoteFileName" << remoteFileName << "contentType" << contentType << "fileSize" << fileSize;
 
     // Requires to submit job with multipart.
     QString boundary = "----------" + nonce;
@@ -737,6 +791,7 @@ QNetworkReply *BoxClient::filePut(QString nonce, QString uid, QIODevice *source,
     m_bufferHash[nonce]->write(QString(CRLF).toAscii());
     m_bufferHash[nonce]->write(QString("--" + boundary + "--" + CRLF).toAscii());
     m_bufferHash[nonce]->close();
+    qDebug() << "BoxClient::filePut" << nonce << "buffer size" << m_bufferHash[nonce]->size();
 
     if (m_bufferHash[nonce]->open(QIODevice::ReadOnly)) {
         // Send request.
@@ -750,9 +805,9 @@ QNetworkReply *BoxClient::filePut(QString nonce, QString uid, QIODevice *source,
         req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
         req.setHeader(QNetworkRequest::ContentTypeHeader, "multipart/form-data; boundary=\"" + boundary + "\"");
         req.setHeader(QNetworkRequest::ContentLengthHeader, m_bufferHash[nonce]->size());
-        reply = manager->post(req, m_bufferHash[nonce]->readAll());
+        reply = manager->post(req, m_bufferHash[nonce]->data());
+        connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SLOT(uploadProgressFilter(qint64,qint64)));
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-        connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
 
         // Store reply for further usage.
         m_replyHash->insert(nonce, reply);
@@ -777,59 +832,9 @@ QNetworkReply *BoxClient::filePut(QString nonce, QString uid, QIODevice *source,
     return reply;
 }
 
-QIODevice *BoxClient::fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset)
-{
-    qDebug() << "----- BoxClient::fileGetResume -----" << nonce << uid << remoteFilePath << "to" << localFilePath << "offset" << offset;
-
-    // remoteFilePath is not a URL. Procees getting property to get downloadUrl.
-    QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, false, true, "fileGetResume");
-    if (propertyReply->error() == QNetworkReply::NoError) {
-        // For further using in fileGetReplyFinished.
-        m_propertyReplyHash->insert(nonce, propertyReply->readAll());
-        propertyReply->deleteLater();
-    } else {
-        emit fileGetReplySignal(nonce, propertyReply->error(), propertyReply->errorString(), QString::fromUtf8(propertyReply->readAll()));
-        propertyReply->deleteLater();
-        return 0;
-    }
-
-    QString uri = fileGetURI.arg(remoteFilePath);
-    uri = encodeURI(uri);
-    qDebug() << "BoxClient::fileGetResume uri " << uri;
-
-    // Create localTargetFile for file getting.
-    m_localFileHash[nonce] = new QFile(localFilePath);
-
-    // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetResumeReplyFinished(QNetworkReply*)));
-    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
-    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    if (offset >= 0) {
-        QString rangeHeader = QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1);
-        qDebug() << "BoxClient::fileGetResume rangeHeader" << rangeHeader;
-        req.setRawHeader("Range", rangeHeader.toAscii() );
-    }
-    req.setRawHeader("Accept-Encoding", "gzip, deflate");
-    QNetworkReply *reply = manager->get(req);
-    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
-
-    // Store reply for further usage.
-    m_replyHash->insert(nonce, reply);
-
-    return reply;
-}
-
 QString BoxClient::getRemoteRoot(QString uid)
 {
     return RemoteRoot;
-}
-
-bool BoxClient::isFileGetResumable(qint64 fileSize)
-{
-    return (fileSize == -1 || fileSize >= getChunkSize());
 }
 
 bool BoxClient::isDeltaSupported()
@@ -1056,36 +1061,46 @@ void BoxClient::quotaReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void BoxClient::fileGetReplyFinished(QNetworkReply *reply)
+QNetworkReply * BoxClient::getRedirectedReply(QNetworkReply *reply)
 {
-    qDebug() << "BoxClient::fileGetReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
+    // Wait until finished().
+    while (!reply->isFinished()) {
+        QApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
 
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-
-    // Detect redirection.
     QVariant possibleRedirectUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
     if(!possibleRedirectUrl.toUrl().isEmpty()) {
-        qDebug() << "BoxClient::fileGetReplyFinished redirectUrl" << possibleRedirectUrl.toUrl();
+        qDebug() << "BoxClient::getRedirectedReply" << nonce << "redirectUrl" << possibleRedirectUrl.toUrl();
 
         QNetworkRequest redirectedRequest = reply->request();
         redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
+        redirectedRequest.setAttribute(QNetworkRequest::DoNotBufferUploadDataAttribute, QVariant(true));
 
-        // Delete existing reply..
+        // Delete existing reply.
         m_replyHash->remove(nonce);
         reply->deleteLater();
 
         reply = reply->manager()->get(redirectedRequest);
+        connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgressFilter(qint64,qint64)));
         QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-        connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
         // Store reply for further usage.
         m_replyHash->insert(nonce, reply);
-
-        return;
     }
 
-    // Construct result.
-    QString result = fileGetReplySave(reply);
+    return reply;
+}
+
+void BoxClient::fileGetReplyFinished(QNetworkReply *reply)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    qDebug() << "BoxClient::fileGetReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
+
+    // Stream to file.
+    QString result = fileGetReplySaveStream(reply);
 
     emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), result);
 
@@ -1504,44 +1519,6 @@ QString BoxClient::deltaReplyFinished(QNetworkReply *reply)
     return replyBody;
 }
 
-void BoxClient::fileGetResumeReplyFinished(QNetworkReply *reply)
-{
-    qDebug() << "BoxClient::fileGetResumeReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-
-    // Detect redirection.
-    QVariant possibleRedirectUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
-    if(!possibleRedirectUrl.toUrl().isEmpty()) {
-        qDebug() << "BoxClient::fileGetResumeReplyFinished redirectUrl" << possibleRedirectUrl.toUrl();
-
-        // Delete existing reply..
-        m_replyHash->remove(nonce);
-        reply->deleteLater();
-
-        QNetworkRequest redirectedRequest = reply->request();
-        redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
-        reply = reply->manager()->get(redirectedRequest);
-        QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-        connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
-
-        // Store reply for further usage.
-        m_replyHash->insert(nonce, reply);
-
-        return;
-    }
-
-    // Construct result.
-    QString result = fileGetReplySave(reply);
-
-    emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), result);
-
-    // Scheduled to delete later.
-    m_replyHash->remove(nonce);
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-}
-
 QScriptValue BoxClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj)
 {
     QScriptValue parsedObj = engine.newObject();
@@ -1652,7 +1629,7 @@ QString BoxClient::media(QString nonce, QString uid, QString remoteFilePath)
     int expires = 0;
     if (reply->error() == QNetworkReply::NoError) {
         QString replyBody = QString::fromUtf8(reply->readAll());
-        qDebug() << "BoxClient::mediaReplyFinished nonce" << nonce << "replyBody" << replyBody;
+        qDebug() << "BoxClient::media nonce" << nonce << "replyBody" << replyBody;
 
         QScriptEngine engine;
         QScriptValue sc = engine.evaluate("(" + replyBody + ")");
@@ -1670,6 +1647,61 @@ QString BoxClient::media(QString nonce, QString uid, QString remoteFilePath)
     reply->manager()->deleteLater();
 
     return url;
+}
+
+QString BoxClient::searchFileId(QString nonce, QString uid, QString remoteParentPath, QString remoteFileName)
+{
+    qDebug() << "----- BoxClient::searchFileId -----" << nonce << uid << remoteParentPath << remoteFileName;
+
+    if (remoteParentPath.isEmpty()) {
+        qDebug() << "BoxClient::searchFileId" << nonce << uid << "remoteParentPath is empty. Operation is aborted.";
+        return "";
+    }
+
+    if (remoteFileName.isEmpty()) {
+        qDebug() << "BoxClient::searchFileId" << nonce << uid << "remoteFileName is empty. Operation is aborted.";
+        return "";
+    }
+
+    QString uri = searchURI + "?query=" + QUrl::toPercentEncoding(remoteFileName);
+    qDebug() << "BoxClient::searchFileId uri" << uri;
+
+    // Send request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    QNetworkReply *reply = manager->get(req);
+
+    while (!reply->isFinished()) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        Sleeper::msleep(100);
+    }
+
+    QString fileId = "";
+    if (reply->error() == QNetworkReply::NoError) {
+        QString replyBody = QString::fromUtf8(reply->readAll());
+        qDebug() << "BoxClient::searchFileId nonce" << nonce << "replyBody" << replyBody;
+
+        QScriptEngine engine;
+        QScriptValue sc = engine.evaluate("(" + replyBody + ")");
+        int contentsCount = sc.property("entries").property("length").toInteger();
+        for (int i = 0; i < contentsCount; i++) {
+            QApplication::processEvents();
+
+            QScriptValue entry = sc.property("entries").property(i);
+            if (entry.property("name").toString() == remoteFileName
+                    && entry.property("parent").property("id").toString() == remoteParentPath) {
+                fileId = entry.property("id").toString();
+            }
+        }
+    }
+
+    // Scheduled to delete later.
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return fileId;
 }
 
 QDateTime BoxClient::parseReplyDateString(QString dateString)
