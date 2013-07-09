@@ -1313,6 +1313,8 @@ QString CloudDriveModel::getOperationName(int operation) {
         return tr("Commit upload");
     case FileGetResume:
         return tr("Download");
+    case RemoveJobs:
+        return tr("Cancel Cloud Drive Jobs");
     default:
         return "invalid";
     }
@@ -1489,7 +1491,7 @@ void CloudDriveModel::removeJob(QString caller, QString nonce)
         return;
     }
 
-    qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce;
+//    qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce;
 
     // Abort job.
     suspendJob(nonce);
@@ -1537,20 +1539,17 @@ int CloudDriveModel::getJobCount() const
 
 void CloudDriveModel::cancelQueuedJobs()
 {
-    while (!m_jobQueue->isEmpty()) {
-        QApplication::processEvents();
-
-        CloudDriveJob job = m_cloudDriveJobs->value(m_jobQueue->dequeue());
-        if (!job.isRunning) {
-            removeJob("CloudDriveModel::cancelQueuedJobs", job.jobId);
-        }
-    }
-
-    qDebug() << "CloudDriveModel::cancelQueuedJobs done m_jobQueue->count()" << m_jobQueue->count() << "m_cloudDriveJobs->count()" << m_cloudDriveJobs->count();
+    // Enqueue job.
+    CloudDriveJob job(createNonce(), RemoveJobs, -1, "", "", "", -1);
+    m_cloudDriveJobs->insert(job.jobId, job);
+    m_jobQueue->insert(0, job.jobId);
+    emit jobEnqueuedSignal(job.jobId, "");
 }
 
 void CloudDriveModel::removeJobs(bool removeAll)
 {
+    suspendNextJob();
+
     qDebug() << "CloudDriveModel::removeJobs removeAll" << removeAll;
     // Remove unqueued jobs.
     foreach (CloudDriveJob job, m_cloudDriveJobs->values()) {
@@ -1560,6 +1559,8 @@ void CloudDriveModel::removeJobs(bool removeAll)
             removeJob("CloudDriveModel::removeJobs", job.jobId);
         }
     }
+
+    resumeNextJob();
 }
 
 void CloudDriveModel::addItem(QString localPath, CloudDriveItem item)
@@ -5030,6 +5031,7 @@ void CloudDriveModel::proceedNextJob() {
     case DeleteLocal:
     case SyncFromLocal:
     case MigrateFilePut:
+    case RemoveJobs:
         t->setDirectInvokation(true);
         break;
     }
@@ -5202,6 +5204,11 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
     case FilePutCommit:
         cloudClient->filePutCommit(job.jobId, job.uid, job.newRemoteFilePath, job.uploadId);
         break;
+    case RemoveJobs:
+        m_jobQueue->clear();
+        removeJobs();
+        jobDone();
+        removeJob("CloudDriveModel::dispatchJob", job.jobId);
     }
 }
 

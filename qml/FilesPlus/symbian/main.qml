@@ -574,8 +574,6 @@ PageStackWindow {
         }
         onConfirm: {
             cloudDriveModel.cancelQueuedJobs();
-            cloudDriveModel.removeJobs();
-            cloudDriveModel.requestJobQueueStatus();
         }
     }
 

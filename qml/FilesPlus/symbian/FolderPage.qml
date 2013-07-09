@@ -579,11 +579,11 @@ Page {
             var isConnected = cloudDriveModel.isConnected(localPath);
             var isSyncing = cloudDriveModel.isSyncing(localPath);
             var isDirty = cloudDriveModel.isDirty(localPath, lastModified);
-//            console.debug("folderPage synconnectedItemsSlot localPath " + localPath + " isConnected " + isConnected + " isSyncing " + isSyncing);
+//            console.debug("folderPage syncConnectedItemsSlot localPath " + localPath + " isConnected " + isConnected + " isSyncing " + isSyncing);
             if (isConnected && !isSyncing) {
                 if (!onlyDirty || isDirty) {
                     cloudDriveModel.syncItem(localPath);
-                    console.debug("folderPage synconnectedItemsSlot localPath " + localPath + " isConnected " + isConnected + " is queued for syncing.");
+                    console.debug("folderPage syncConnectedItemsSlot localPath " + localPath + " isConnected " + isConnected + " is queued for syncing.");
                 }
             }
         }

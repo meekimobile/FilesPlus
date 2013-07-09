@@ -109,7 +109,8 @@ public:
         FilePutResume,
         FilePutCommit,
         FileGetResume,
-        FileGetCommit
+        FileGetCommit,
+        RemoveJobs
     };
 
     explicit CloudDriveModel(QObject *parent = 0);
