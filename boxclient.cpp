@@ -1531,7 +1531,7 @@ QScriptValue BoxClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     m_isDirHash->insert(jsonObj.property("id").toString(), isDir);
 
     QString jsonDateString = formatJSONDateString(parseReplyDateString(jsonObj.property("modified_at").toString()));
-    QString hash = isDir ? jsonObj.property("modified_at").toString() : jsonObj.property("sha1").toString();
+    QString hash = jsonObj.property("etag").toString();
     QString thumbnailUrl = (!isDir) ? thumbnail(nonce, uid, jsonObj.property("id").toString(), "png", "64x64") : "";
     QString thumbnail128Url = (!isDir) ? thumbnail(nonce, uid, jsonObj.property("id").toString(), "png", "128x128") : "";
     QString previewUrl = (!isDir) ? thumbnail(nonce, uid, jsonObj.property("id").toString(), "png", "256x256") : "";
@@ -1716,4 +1716,27 @@ QDateTime BoxClient::parseReplyDateString(QString dateString)
     qDebug() << "BoxClient::parseReplyDateString parse filteredDateString" << filteredDateString << "with ISODate to" << datetime << "toUTC" << datetime.toUTC();
 
     return datetime.toUTC();
+}
+
+int BoxClient::compareFileMetadata(CloudDriveJob &job, QScriptValue &jsonObj, QString localFilePath, CloudDriveItem &item)
+{
+    QFileInfo localFileInfo(localFilePath);
+    int result = 0;
+
+    // If ((rev is newer) or there is no local file), get from remote.
+    if (job.forceGet
+            || (jsonObj.property("hash").toString() > item.hash)
+            || !localFileInfo.isFile()) {
+        // Download changed remote item to localFilePath.
+        result = -1;
+    } else if (job.forcePut
+               || (jsonObj.property("hash").toString() < item.hash)) {
+        // ISSUE Once downloaded a file, its local timestamp will be after remote immediately. This approach may not work.
+        // Upload changed local item to remoteParentPath with item name.
+        result = 1;
+    } else {
+        // Update remote has to local hash on cloudDriveItem.
+    }
+
+    return result;
 }

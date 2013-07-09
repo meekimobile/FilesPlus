@@ -665,3 +665,46 @@ void CloudDriveClient::downloadProgressFilter(qint64 bytesReceived, qint64 bytes
     emit downloadProgress(nonce, bytesReceived, bytesTotal);
 }
 
+int CloudDriveClient::compareDirMetadata(CloudDriveJob &job, QScriptValue &jsonObj, QString localFilePath, CloudDriveItem &item)
+{
+    int result = 0;
+
+    QDir localDir(localFilePath);
+    localDir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
+    int itemCount = localDir.entryList().count();
+    // If (hash is different), get from remote.
+    if (job.forceGet || (jsonObj.property("hash").toString() != item.hash) || (jsonObj.property("children").property("length").toInteger() != itemCount)) {
+        // Proceed getting metadata.
+        result = -1;
+    } else {
+        // Update remote has to local hash on cloudDriveItem.
+    }
+
+    return result;
+}
+
+int CloudDriveClient::compareFileMetadata(CloudDriveJob &job, QScriptValue &jsonObj, QString localFilePath, CloudDriveItem &item)
+{
+    QFileInfo localFileInfo(localFilePath);
+    QDateTime jsonObjLastModified = parseJSONDateString(jsonObj.property("lastModified").toString());
+    int result = 0;
+
+    // If ((rev is newer and size is changed) or there is no local file), get from remote.
+    if (job.forceGet
+            || (jsonObj.property("hash").toString() > item.hash && jsonObj.property("size").toInt32() != localFileInfo.size())
+            || !localFileInfo.isFile()) {
+        // Download changed remote item to localFilePath.
+        result = -1;
+    } else if (job.forcePut
+               || (jsonObj.property("hash").toString() < item.hash && jsonObj.property("size").toInt32() != localFileInfo.size())
+               || (jsonObjLastModified < localFileInfo.lastModified() && jsonObj.property("size").toInt32() != localFileInfo.size())
+               ) {
+        // ISSUE Once downloaded a file, its local timestamp will be after remote immediately. This approach may not work.
+        // Upload changed local item to remoteParentPath with item name.
+        result = 1;
+    } else {
+        // Update remote has to local hash on cloudDriveItem.
+    }
+
+    return result;
+}

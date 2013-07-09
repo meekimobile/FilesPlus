@@ -78,6 +78,7 @@ public:
     bool isImageUrlCachable();
     qint64 getChunkSize();
     QDateTime parseReplyDateString(QString dateString);
+    int compareFileMetadata(CloudDriveJob &job, QScriptValue &jsonObj, QString localFilePath, CloudDriveItem &item);
 signals:
 
 public slots:

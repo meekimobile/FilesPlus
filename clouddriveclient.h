@@ -7,6 +7,8 @@
 #include "tokenpair.h"
 #include "contenttypehelper.h"
 #include "clouddrivemodelitem.h"
+#include "clouddrivejob.h"
+#include "clouddriveitem.h"
 
 class CloudDriveClient : public QObject
 {
@@ -99,6 +101,9 @@ public:
 
     qint64 writeToFile(QIODevice *source, QString targetFilePath, qint64 offset);
     CloudDriveModelItem parseCloudDriveModelItem(QScriptEngine &engine, QScriptValue jsonObj);
+
+    virtual int compareDirMetadata(CloudDriveJob &job, QScriptValue &jsonObj, QString localFilePath, CloudDriveItem &item);
+    virtual int compareFileMetadata(CloudDriveJob &job, QScriptValue &jsonObj, QString localFilePath, CloudDriveItem &item);
 signals:
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectSignal(QString nonce, QString url, QString redirectFrom);

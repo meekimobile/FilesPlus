@@ -3485,7 +3485,7 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
                 } else {
                     // If ((rev is newer and size is changed) or there is no local file), get from remote.
                     int r = compareMetadata(job, jsonObj, job.localFilePath);
-                    qDebug() << "CloudDriveModel::metadataReplyFilter file" << getCloudName(job.type) << nonce << "sync file remote path" << jsonObj.property("absolutePath").toString() << "hash" << jsonObj.property("hash").toString() << "local path" << job.localFilePath << "hash" + parentItem.hash << "forcePut" << job.forcePut << "forceGet" << job.forceGet << "compare result" << r;
+                    qDebug() << "CloudDriveModel::metadataReplyFilter file" << getCloudName(job.type) << nonce << "sync file remote path" << jsonObj.property("absolutePath").toString() << "hash" << jsonObj.property("hash").toString() << "local path" << job.localFilePath << "hash" << parentItem.hash << "forcePut" << job.forcePut << "forceGet" << job.forceGet << "compare result" << r;
                     if (r < 0) {
                         fileGet(getClientType(job.type), job.uid, jsonObj.property("absolutePath").toString(), jsonObj.property("size").toInt32(), job.localFilePath, job.modelIndex);
                     } else if (r > 0) {
@@ -5580,49 +5580,30 @@ void CloudDriveModel::sortItemList(QList<CloudDriveModelItem> *itemList, int sor
 
 int CloudDriveModel::compareMetadata(CloudDriveJob job, QScriptValue &jsonObj, QString localFilePath)
 {
+    CloudDriveClient *client = getCloudClient(job.type);
     QFileInfo localFileInfo(localFilePath);
     CloudDriveItem item = getItem(localFilePath, getClientType(job.type), job.uid);
     QDateTime jsonObjLastModified = parseJSONDateString(jsonObj.property("lastModified").toString());
+    int result = 0;
 
     if (jsonObj.property("isDir").toBool()) {
         QDir localDir(localFilePath);
         localDir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
         int itemCount = localDir.entryList().count();
+        result = client->compareDirMetadata(job, jsonObj, localFilePath, item);
         qDebug() << "CloudDriveModel::compareMetadata dir"
+                 << getCloudName(job.type)
                  << "remote path" << jsonObj.property("absolutePath").toString() << "hash" << jsonObj.property("hash").toString() << "childrenCount" << jsonObj.property("children").property("length").toInteger() << "lastModified" << jsonObj.property("lastModified").toString() << jsonObjLastModified
                  << "local path" << localFilePath << "hash" << item.hash << "itemCount" << itemCount << "lastModified" << localFileInfo.lastModified()
-                 << "compare(remote < local)" << (jsonObjLastModified < localFileInfo.lastModified())
-                 << "forcePut" << job.forcePut << "forceGet" << job.forceGet;
-        // If (hash is different), get from remote.
-        if (job.forceGet || (jsonObj.property("hash").toString() != item.hash) || (jsonObj.property("children").property("length").toInteger() != itemCount)) {
-            // Proceed getting metadata.
-            return -1;
-        } else {
-            // Update remote has to local hash on cloudDriveItem.
-            return 0;
-        }
+                 << "forcePut" << job.forcePut << "forceGet" << job.forceGet << "result" << result;
     } else {
+        result = client->compareFileMetadata(job, jsonObj, localFilePath, item);
         qDebug() << "CloudDriveModel::compareMetadata file"
+                 << getCloudName(job.type)
                  << "remote path" << jsonObj.property("absolutePath").toString() << "hash" << jsonObj.property("hash").toString() << "size" << jsonObj.property("size").toInt32() << "lastModified" << jsonObj.property("lastModified").toString() << jsonObjLastModified
                  << "local path" << localFilePath << "hash" << item.hash << "size" << localFileInfo.size() << "lastModified" << localFileInfo.lastModified()
-                 << "compare(remote < local)" << (jsonObjLastModified < localFileInfo.lastModified())
-                 << "forcePut" << job.forcePut << "forceGet" << job.forceGet;
-        // If ((rev is newer and size is changed) or there is no local file), get from remote.
-        // TODO Avoid comparing size with BOX.
-        if (job.forceGet
-                || (jsonObj.property("hash").toString() > item.hash && jsonObj.property("size").toInt32() != localFileInfo.size())
-                || !localFileInfo.isFile()) {
-            // Download changed remote item to localFilePath.
-            return -1;
-        } else if (job.forcePut
-                   || (jsonObj.property("hash").toString() < item.hash && jsonObj.property("size").toInt32() != localFileInfo.size())
-                   || (jsonObjLastModified < localFileInfo.lastModified() && jsonObj.property("size").toInt32() != localFileInfo.size())) {
-            // ISSUE Once downloaded a file, its local timestamp will be after remote immediately. This approach may not work.
-            // Upload changed local item to remoteParentPath with item name.
-            return 1;
-        } else {
-            // Update remote has to local hash on cloudDriveItem.
-            return 0;
-        }
+                 << "forcePut" << job.forcePut << "forceGet" << job.forceGet << "result" << result;
     }
+
+    return result;
 }
