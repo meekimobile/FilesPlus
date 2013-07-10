@@ -16,6 +16,8 @@ class CloudDriveClient : public QObject
 public:
     static const QString KeyStoreFilePath;
     static const int FileWriteBufferSize;
+    static const qint64 DefaultChunkSize;
+    static const qint64 DefaultMaxUploadSize;
 
     explicit CloudDriveClient(QObject *parent = 0);
     virtual ~CloudDriveClient();
@@ -41,6 +43,8 @@ public:
     virtual bool isImageUrlCachable();
     virtual bool isUnicodeSupported();
     virtual bool isMediaEnabled(QString uid);
+    virtual bool isFileGetRedirected();
+    virtual qint64 getChunkSize();
 
     virtual bool testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname);
     virtual bool saveConnection(QString id, QString hostname, QString username, QString password, QString token);
@@ -51,8 +55,6 @@ public:
     virtual void refreshToken(QString nonce, QString uid);
     virtual void accountInfo(QString nonce, QString uid);
     virtual void quota(QString nonce, QString uid);
-    virtual QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
-    virtual void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
     virtual void metadata(QString nonce, QString uid, QString remoteFilePath);
     virtual void browse(QString nonce, QString uid, QString remoteFilePath);
     /*
@@ -68,15 +70,17 @@ public:
     virtual QString media(QString nonce, QString uid, QString remoteFilePath);
     virtual QString delta(QString nonce, QString uid, bool synchronous = false);
 
+    virtual QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
     virtual QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
+    virtual QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
+
+    virtual void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
     /*
      *filePut
      *source must be seeked to required offset before invoking this method.
      *bytesTotal is total source file size.
      */
     virtual QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
-
-    virtual QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
     virtual QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, QString uploadId, qint64 offset);
     /*
      *filePutResumeStart
@@ -98,6 +102,9 @@ public:
     virtual QString filePutCommit(QString nonce, QString uid, QString remoteFilePath, QString uploadId, bool synchronous = false);
 
     virtual bool abort(QString nonce);
+
+    virtual QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, int offset, bool synchronous, QString callback);
+    virtual QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool isDir, bool synchronous, QString callback);
 
     qint64 writeToFile(QIODevice *source, QString targetFilePath, qint64 offset);
     CloudDriveModelItem parseCloudDriveModelItem(QScriptEngine &engine, QScriptValue jsonObj);
@@ -135,11 +142,45 @@ public slots:
 
     void uploadProgressFilter(qint64 bytesSent, qint64 bytesTotal);
     void downloadProgressFilter(qint64 bytesReceived, qint64 bytesTotal);
+
+    QString fileGetReplyFinished(QNetworkReply *reply, bool synchronous = false);
+    void fileGetResumeReplyFinished(QNetworkReply *reply);
 protected:
+    QString consumerKey;
+    QString consumerSecret;
+
+    QString RemoteRoot;
+
+    QString authorizeURI;
+    QString accessTokenURI;
+    QString accountInfoURI;
+    QString quotaURI;
+    QString logoutURI;
+
+    QString fileGetURI;
+    QString filePutURI;
+    QString filePutRevURI;
+    QString filesURI;
+    QString propertyURI;
+    QString createFolderURI;
+    QString copyFileURI;
+    QString moveFileURI;
+    QString renameFileURI;
+    QString deleteFileURI;
+    QString sharesURI;
+    QString patchURI;
+    QString deltaURI;
+    QString thumbnailURI;
+    QString searchURI;
+
     QString refreshTokenUid;
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;
     QHash<QString, QNetworkReply*> *m_replyHash;
+    QHash<QString, QFile*> m_localFileHash;
+    QHash<QString, QBuffer*> m_bufferHash;
+    QHash<QString, QByteArray> *m_propertyReplyHash;
+    QHash<QString, QByteArray> *m_filesReplyHash;
 
     QSettings m_settings;
 
@@ -163,6 +204,10 @@ protected:
     qint64 getOffsetFromRange(QString rangeHeader);
     QString getPathFromUrl(QString urlString);
     QDateTime parseJSONDateString(QString jsonString);
+
+    QNetworkReply *getRedirectedReply(QNetworkReply *reply);
+    qint64 fileGetReplySaveChunk(QNetworkReply *reply, QFile *localTargetFile);
+    qint64 fileGetReplySaveStream(QNetworkReply *reply, QFile *localTargetFile);
 private:
 
 };

@@ -913,7 +913,7 @@ QString GCDClient::filePutResumeStart(QString nonce, QString uid, QString fileNa
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setRawHeader("X-Upload-Content-Type", contentType.toAscii() );
-    req.setRawHeader("X-Upload-Content-Length", QString("%1").arg(bytesTotal).toAscii() );
+//    req.setRawHeader("X-Upload-Content-Length", QString("%1").arg(bytesTotal).toAscii() ); // NOTE It's optional.
     req.setHeader(QNetworkRequest::ContentLengthHeader, postString.toUtf8().length());
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=UTF-8");
     QNetworkReply *reply;
@@ -965,9 +965,16 @@ QString GCDClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *so
     QUrl url(uri);
     qDebug() << "GCDClient::filePutResumeUpload url " << url;
 
-    qint64 chunkSize = qMin(bytesTotal-offset, getChunkSize());
-    QString contentRange = QString("bytes %1-%2/%3").arg(offset).arg(offset+chunkSize-1).arg(bytesTotal);
-    qDebug() << "GCDClient::filePutResumeUpload source->size()" << source->size() << "bytesTotal" << bytesTotal << "offset" << offset << "chunkSize" << chunkSize << "contentRange" << contentRange;
+    qint64 availableBytes = qMin(source->bytesAvailable(), bytesTotal-offset);
+    qint64 chunkSize = qMin(availableBytes, getChunkSize());
+    // NOTE Adjust last chunk's bytesTotal to support BOX,SkyDrive,WebDAV. As its downloaded file size may not be the same as reported by browsing.
+    qint64 actualBytesTotal = ((offset+chunkSize) < getChunkSize()) ? (offset+chunkSize) : bytesTotal;
+    QString contentRange = QString("bytes %1-%2/%3").arg(offset).arg(offset+chunkSize-1).arg(actualBytesTotal);
+    qDebug() << "GCDClient::filePutResumeUpload source->bytesAvailable()" << source->bytesAvailable()
+             << "source->size()" << source->size() << "source->pos()" << source->pos()
+             << "bytesTotal" << bytesTotal
+             << "offset" << offset << "chunkSize" << chunkSize
+             << "contentRange" << contentRange;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -1022,7 +1029,7 @@ QString GCDClient::filePutResumeStatus(QString nonce, QString uid, QString fileN
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentLengthHeader, 0);
-    req.setRawHeader("Content-Range", QString("bytes */%1").arg(bytesTotal).toAscii() );
+    req.setRawHeader("Content-Range", QString("bytes */*").toAscii() );
     QNetworkReply *reply = manager->put(req, QByteArray());
 
     // Return immediately if it's not synchronous.
@@ -2112,7 +2119,7 @@ QString GCDClient::filePutResumePatch(QNetworkReply *reply)
         if (reply->hasRawHeader("Range")) {
             QStringList ranges = QString::fromAscii(reply->rawHeader("Range")).split("-");
             qint64 offset = ranges.at(1).toUInt() + 1;
-            qDebug() << "GCDClient::filePutResumePatch" << nonce << "ranges" << ranges << "offset" << offset;
+            qDebug() << "GCDClient::filePutResumePatch" << nonce << "Range header" << reply->rawHeader("Range") << "ranges" << ranges << "offset" << offset;
             replyBody = QString("{ \"offset\": %1 }").arg(offset);
         } else {
             QScriptEngine engine;
@@ -2268,4 +2275,30 @@ QString GCDClient::deltaReplyFinished(QNetworkReply *reply)
 qint64 GCDClient::getChunkSize()
 {
     return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();
+}
+
+int GCDClient::compareFileMetadata(CloudDriveJob &job, QScriptValue &jsonObj, QString localFilePath, CloudDriveItem &item)
+{
+    QFileInfo localFileInfo(localFilePath);
+    QDateTime jsonObjLastModified = parseJSONDateString(jsonObj.property("lastModified").toString());
+    int result = 0;
+
+    // If ((rev is newer and size is changed) or there is no local file), get from remote.
+    if (job.forceGet
+            || (jsonObj.property("hash").toString() > item.hash && jsonObj.property("size").toInt32() != localFileInfo.size())
+            || !localFileInfo.isFile()) {
+        // Download changed remote item to localFilePath.
+        result = -1;
+    } else if (job.forcePut
+               || (jsonObj.property("hash").toString() < item.hash && jsonObj.property("size").toInt32() != localFileInfo.size())
+               || (jsonObjLastModified < localFileInfo.lastModified() && jsonObj.property("size").toInt32() != localFileInfo.size())
+               ) {
+        // ISSUE Once downloaded a file, its local timestamp will be after remote immediately. This approach may not work.
+        // Upload changed local item to remoteParentPath with item name.
+        result = 1;
+    } else {
+        // Update remote has to local hash on cloudDriveItem.
+    }
+
+    return result;
 }

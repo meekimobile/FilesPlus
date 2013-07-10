@@ -4,35 +4,30 @@
 #include <QCoreApplication>
 #include <QScriptEngine>
 
-const QString BoxClient::consumerKey = "6aer9l7aghmaivzvhgznxrc2x84gml9w";
-const QString BoxClient::consumerSecret = "TaDx246tayNNmgK43v8y1scnASJZJaAv";
-const QString BoxClient::RemoteRoot = "0";
-
-const QString BoxClient::authorizeURI = "https://www.box.com/api/oauth2/authorize";
-const QString BoxClient::accessTokenURI = "https://www.box.com/api/oauth2/token";
-const QString BoxClient::accountInfoURI = "https://api.box.com/2.0/users/me";
-const QString BoxClient::quotaURI = "https://api.box.com/2.0/users/me";
-
-const QString BoxClient::fileGetURI = "https://api.box.com/2.0/files/%1/content";
-const QString BoxClient::filePutURI = "https://upload.box.com/api/2.0/files/content"; // POST multipart
-const QString BoxClient::filePutRevURI = "https://upload.box.com/api/2.0/files/%1/content"; // POST multipart
-const QString BoxClient::filesURI = "https://api.box.com/2.0/folders/%1/items"; // GET
-const QString BoxClient::propertyURI = "https://api.box.com/2.0/%1/%2"; // GET %1=files/folders %2=ID
-const QString BoxClient::createFolderURI = "https://api.box.com/2.0/folders"; // POST with json with name = new folder name, parent object with id.
-const QString BoxClient::deleteFileURI = "https://api.box.com/2.0/%1/%2"; // DELETE %1=files/folders %2=ID
-const QString BoxClient::copyFileURI = "https://api.box.com/2.0/%1/%2/copy"; // POST %1=files/folders %2=ID with parent destination folder ID in content.
-const QString BoxClient::sharesURI = "https://api.box.com/2.0/%1/%2"; // PUT %1=files/folders %2=ID with {"shared_link": {"access": "open"}} (also use for media)
-const QString BoxClient::patchURI = "https://api.box.com/2.0/%1/%2"; // PUT %1=files/folders %2=ID (also use for move, rename)
-const QString BoxClient::deltaURI = "https://api.box.com/2.0/events"; // GET with stream_position
-const QString BoxClient::thumbnailURI = "https://api.box.com/2.0/files/%1/thumbnail.%2";
-const QString BoxClient::searchURI = "https://api.box.com/2.0/search"; // GET with ?query=%1
-
-const qint64 BoxClient::DefaultChunkSize = 4194304; // 4MB
-const qint64 BoxClient::DefaultMaxUploadSize = 20971520; // 20MB which support ~20 sec(s) video clip.
-
 BoxClient::BoxClient(QObject *parent) :
     CloudDriveClient(parent)
 {
+    consumerKey = "6aer9l7aghmaivzvhgznxrc2x84gml9w";
+    consumerSecret = "TaDx246tayNNmgK43v8y1scnASJZJaAv";
+    RemoteRoot = "0";
+    authorizeURI = "https://www.box.com/api/oauth2/authorize";
+    accessTokenURI = "https://www.box.com/api/oauth2/token";
+    accountInfoURI = "https://api.box.com/2.0/users/me";
+    quotaURI = "https://api.box.com/2.0/users/me";
+    fileGetURI = "https://api.box.com/2.0/files/%1/content";
+    filePutURI = "https://upload.box.com/api/2.0/files/content"; // POST multipart
+    filePutRevURI = "https://upload.box.com/api/2.0/files/%1/content"; // POST multipart
+    filesURI = "https://api.box.com/2.0/folders/%1/items"; // GET
+    propertyURI = "https://api.box.com/2.0/%1/%2"; // GET %1=files/folders %2=ID
+    createFolderURI = "https://api.box.com/2.0/folders"; // POST with json with name = new folder name, parent object with id.
+    deleteFileURI = "https://api.box.com/2.0/%1/%2"; // DELETE %1=files/folders %2=ID
+    copyFileURI = "https://api.box.com/2.0/%1/%2/copy"; // POST %1=files/folders %2=ID with parent destination folder ID in content.
+    sharesURI = "https://api.box.com/2.0/%1/%2"; // PUT %1=files/folders %2=ID with {"shared_link": {"access": "open"}} (also use for media)
+    patchURI = "https://api.box.com/2.0/%1/%2"; // PUT %1=files/folders %2=ID (also use for move, rename)
+    deltaURI = "https://api.box.com/2.0/events"; // GET with stream_position
+    thumbnailURI = "https://api.box.com/2.0/files/%1/thumbnail.%2";
+    searchURI = "https://api.box.com/2.0/search"; // GET with ?query=%1
+
     // Set object name for further reference.
     setObjectName(this->metaObject()->className());
 
@@ -163,32 +158,6 @@ void BoxClient::quota(QString nonce, QString uid)
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     QNetworkReply *reply = manager->get(req);
-}
-
-QString BoxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous)
-{
-    qDebug() << "----- BoxClient::fileGet -----" << nonce << uid << remoteFilePath << localFilePath << synchronous;
-
-    // Create localTargetFile for file getting.
-    m_localFileHash[nonce] = new QFile(localFilePath);
-    qint64 offset = (m_localFileHash[nonce]->exists()) ? m_localFileHash[nonce]->size() : -1;
-
-    // Send request.
-    QNetworkReply *reply = dynamic_cast<QNetworkReply *>( fileGet(nonce, uid, remoteFilePath, offset, synchronous) );
-
-    if (!synchronous) {
-        return "";
-    }
-
-    // Construct result.
-    QString result = fileGetReplySaveStream(reply);
-
-    // scheduled to delete later.
-    m_replyHash->remove(nonce);
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-
-    return result;
 }
 
 void BoxClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName) {
@@ -543,198 +512,6 @@ void BoxClient::renameFile(QString nonce, QString uid, QString remoteFilePath, Q
     QNetworkReply *reply = manager->put(req, postString.toUtf8());
 }
 
-QIODevice *BoxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)
-{
-    qDebug() << "----- BoxClient::fileGet -----" << nonce << uid << remoteFilePath << offset << "synchronous" << synchronous;
-
-    QString uri = fileGetURI.arg(remoteFilePath);
-    uri = encodeURI(uri);
-    qDebug() << "BoxClient::fileGet" << nonce << "uri" << uri;
-
-    // Get redirected request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
-    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
-    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
-    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    if (offset >= 0) {
-        QString rangeHeader = QString("bytes=%1-").arg(offset);
-        qDebug() << "BoxClient::fileGet" << nonce << "rangeHeader" << rangeHeader;
-        req.setRawHeader("Range", rangeHeader.toAscii() );
-    }
-    req.setRawHeader("Accept-Encoding", "gzip, deflate");
-    QNetworkReply *reply = manager->get(req);
-    reply = getRedirectedReply(reply);
-
-    // Wait until readyRead().
-    QEventLoop loop;
-    connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
-    loop.exec();
-
-    if (!synchronous) {
-        fileGetReplyFinished(reply);
-    }
-
-    return reply;
-}
-
-QString BoxClient::fileGetReplySaveChunk(QNetworkReply *reply)
-{
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
-    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
-
-    QString result;
-    if (reply->error() == QNetworkReply::NoError) {
-        qDebug() << "BoxClient::fileGetReplySaveChunk" << nonce << "reply bytesAvailable" << reply->bytesAvailable();
-
-        // Find offset.
-        qint64 offset = getOffsetFromRange(QString::fromAscii(reply->request().rawHeader("Range")));
-        qDebug() << "BoxClient::fileGetReplySaveChunk" << nonce << "reply request offset" << offset;
-
-        // Stream replyBody to a file on localPath.
-        qint64 totalBytes = reply->bytesAvailable();
-        qint64 writtenBytes = 0;
-        char buf[FileWriteBufferSize];
-        QFile *localTargetFile = m_localFileHash[nonce];
-        if (localTargetFile->open(QIODevice::ReadWrite)) {
-            // Issue: Writing to file with QDataStream << QByteArray will automatically prepend with 4-bytes prefix(size).
-            // Solution: Use QIODevice to write directly.
-
-            // Move to offset.
-            localTargetFile->seek(offset);
-
-            // Read first buffer.
-            qint64 c = reply->read(buf, sizeof(buf));
-            while (c > 0) {
-                qDebug() << "BoxClient::fileGetReplySaveChunk" << nonce << "reply readBytes" << c;
-
-                writtenBytes += localTargetFile->write(buf, c);
-                qDebug() << "BoxClient::fileGetReplySaveChunk" << nonce << "reply writtenBytes" << writtenBytes;
-
-                // Tell event loop to process event before it will process time consuming task.
-                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
-
-                // Read next buffer.
-                c = reply->read(buf, sizeof(buf));
-            }
-        }
-
-        qDebug() << "BoxClient::fileGetReplySaveChunk" << nonce << "reply writtenBytes" << writtenBytes << "totalBytes" << totalBytes << "localTargetFile size" << localTargetFile->size();
-
-        // Close target file.
-        localTargetFile->flush();
-        localTargetFile->close();
-
-        QString propertyReplyBody = QString::fromUtf8(m_propertyReplyHash->value(nonce));
-        qDebug() << "BoxClient::fileGetReplySaveChunk" << nonce << "propertyReplyBody" << propertyReplyBody;
-
-        // Return common json.
-        if (reply->error() == QNetworkReply::NoError) {
-            QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, false, true, "fileGet");
-            if (propertyReply->error() == QNetworkReply::NoError) {
-                QScriptEngine engine;
-                QScriptValue jsonObj = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
-                QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
-                result = stringifyScriptValue(engine, parsedObj);
-            } else {
-                result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(propertyReply->error()).arg(propertyReply->errorString());
-            }
-            propertyReply->deleteLater();
-        } else {
-            qDebug() << "BoxClient::fileGetReplySaveStream" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
-            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
-        }
-    } else {
-        qDebug() << "BoxClient::fileGetReplySaveChunk" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
-        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
-    }
-
-    // Remove once used.
-    m_localFileHash.remove(nonce);
-    m_propertyReplyHash->remove(nonce);
-
-    return result;
-}
-
-QString BoxClient::fileGetReplySaveStream(QNetworkReply *reply)
-{
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
-    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
-
-    QString result;
-    if (reply->error() == QNetworkReply::NoError) {
-        // Find offset.
-        qint64 offset = getOffsetFromRange(QString::fromAscii(reply->request().rawHeader("Range")));
-        qDebug() << "BoxClient::fileGetReplySaveStream" << nonce << "reply request offset" << offset;
-
-        // Stream replyBody to a file on localPath.
-        qint64 totalBytes = reply->request().header(QNetworkRequest::ContentLengthHeader).toInt();
-        qint64 writtenBytes = 0;
-        char buf[FileWriteBufferSize];
-        QFile *localTargetFile = m_localFileHash[nonce];
-        if (localTargetFile->open(QIODevice::ReadWrite)) {
-            // Move to offset.
-            localTargetFile->seek(offset);
-
-            while (!reply->isFinished() || reply->bytesAvailable() > 0) {
-                if (reply->bytesAvailable() == 0) {
-                    QApplication::processEvents();
-                    continue;
-                }
-
-                qint64 c = reply->read(buf, sizeof(buf));
-                while (c > 0) {
-                    qDebug() << "BoxClient::fileGetReplySaveStream" << nonce << "reply readBytes" << c;
-
-                    writtenBytes += localTargetFile->write(buf, c);
-                    qDebug() << "BoxClient::fileGetReplySaveStream" << nonce << "reply writtenBytes" << writtenBytes;
-
-                    // Tell event loop to process event before it will process time consuming task.
-                    QApplication::processEvents();
-
-                    // Read next buffer.
-                    c = reply->read(buf, sizeof(buf));
-                }
-            }
-        }
-
-        qDebug() << "BoxClient::fileGetReplySaveStream" << nonce << "reply writtenBytes" << writtenBytes << "totalBytes" << totalBytes << "localTargetFile size" << localTargetFile->size();
-
-        // Close target file.
-        localTargetFile->flush();
-        localTargetFile->close();
-
-        // Return common json.
-        if (reply->error() == QNetworkReply::NoError) {
-            QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, false, true, "fileGet");
-            if (propertyReply->error() == QNetworkReply::NoError) {
-                QScriptEngine engine;
-                QScriptValue jsonObj = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
-                QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
-                result = stringifyScriptValue(engine, parsedObj);
-            } else {
-                result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(propertyReply->error()).arg(propertyReply->errorString());
-            }
-            propertyReply->deleteLater();
-        } else {
-            qDebug() << "BoxClient::fileGetReplySaveStream" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
-            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
-        }
-    } else {
-        qDebug() << "BoxClient::fileGetReplySaveStream" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
-        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
-    }
-
-    // Remove once used.
-    m_localFileHash.remove(nonce);
-    m_propertyReplyHash->remove(nonce);
-
-    return result;
-}
-
 QNetworkReply *BoxClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
 {
     qDebug() << "----- BoxClient::filePut -----" << nonce << uid << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
@@ -858,6 +635,11 @@ bool BoxClient::isMediaEnabled(QString uid)
 }
 
 bool BoxClient::isImageUrlCachable()
+{
+    return true;
+}
+
+bool BoxClient::isFileGetRedirected()
 {
     return true;
 }
@@ -1057,55 +839,6 @@ void BoxClient::quotaReplyFinished(QNetworkReply *reply)
     }
 
     // Scheduled to delete later.
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-}
-
-QNetworkReply * BoxClient::getRedirectedReply(QNetworkReply *reply)
-{
-    // Wait until finished().
-    while (!reply->isFinished()) {
-        QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper::msleep(100);
-    }
-
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-    QVariant possibleRedirectUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
-    if(!possibleRedirectUrl.toUrl().isEmpty()) {
-        qDebug() << "BoxClient::getRedirectedReply" << nonce << "redirectUrl" << possibleRedirectUrl.toUrl();
-
-        QNetworkRequest redirectedRequest = reply->request();
-        redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
-        redirectedRequest.setAttribute(QNetworkRequest::DoNotBufferUploadDataAttribute, QVariant(true));
-
-        // Delete existing reply.
-        m_replyHash->remove(nonce);
-        reply->deleteLater();
-
-        reply = reply->manager()->get(redirectedRequest);
-        connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgressFilter(qint64,qint64)));
-        QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-
-        // Store reply for further usage.
-        m_replyHash->insert(nonce, reply);
-    }
-
-    return reply;
-}
-
-void BoxClient::fileGetReplyFinished(QNetworkReply *reply)
-{
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-
-    qDebug() << "BoxClient::fileGetReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
-
-    // Stream to file.
-    QString result = fileGetReplySaveStream(reply);
-
-    emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), result);
-
-    // Scheduled to delete later.
-    m_replyHash->remove(nonce);
     reply->deleteLater();
     reply->manager()->deleteLater();
 }
@@ -1555,11 +1288,6 @@ QScriptValue BoxClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     return parsedObj;
 }
 
-qint64 BoxClient::getChunkSize()
-{
-    return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();
-}
-
 QString BoxClient::thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size)
 {
     if (uid.isEmpty()) {
@@ -1716,27 +1444,4 @@ QDateTime BoxClient::parseReplyDateString(QString dateString)
     qDebug() << "BoxClient::parseReplyDateString parse filteredDateString" << filteredDateString << "with ISODate to" << datetime << "toUTC" << datetime.toUTC();
 
     return datetime.toUTC();
-}
-
-int BoxClient::compareFileMetadata(CloudDriveJob &job, QScriptValue &jsonObj, QString localFilePath, CloudDriveItem &item)
-{
-    QFileInfo localFileInfo(localFilePath);
-    int result = 0;
-
-    // If ((rev is newer) or there is no local file), get from remote.
-    if (job.forceGet
-            || (jsonObj.property("hash").toString() > item.hash)
-            || !localFileInfo.isFile()) {
-        // Download changed remote item to localFilePath.
-        result = -1;
-    } else if (job.forcePut
-               || (jsonObj.property("hash").toString() < item.hash)) {
-        // ISSUE Once downloaded a file, its local timestamp will be after remote immediately. This approach may not work.
-        // Upload changed local item to remoteParentPath with item name.
-        result = 1;
-    } else {
-        // Update remote has to local hash on cloudDriveItem.
-    }
-
-    return result;
 }

@@ -83,6 +83,7 @@ public:
     bool isDeltaEnabled(QString uid);
     bool isViewable();
     qint64 getChunkSize();
+    int compareFileMetadata(CloudDriveJob &job, QScriptValue &jsonObj, QString localFilePath, CloudDriveItem &item);
 signals:
 
 public slots:

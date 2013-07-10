@@ -2,6 +2,8 @@
 #include <QDesktopServices>
 #include <QScriptValueIterator>
 #include <QApplication>
+#include "qnetworkreplywrapper.h"
+#include "sleeper.h"
 
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
@@ -11,6 +13,8 @@ const int CloudDriveClient::FileWriteBufferSize = 32768;
 const QString CloudDriveClient::KeyStoreFilePath = QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/%1.dat";
 const int CloudDriveClient::FileWriteBufferSize = 32768;
 #endif
+const qint64 CloudDriveClient::DefaultChunkSize = 4194304; // 4MB
+const qint64 CloudDriveClient::DefaultMaxUploadSize = 20971520; // 20MB which support ~20 sec(s) video clip.
 
 CloudDriveClient::CloudDriveClient(QObject *parent) :
     QObject(parent)
@@ -151,6 +155,16 @@ bool CloudDriveClient::isUnicodeSupported()
 bool CloudDriveClient::isMediaEnabled(QString uid)
 {
     return true;
+}
+
+bool CloudDriveClient::isFileGetRedirected()
+{
+    return false;
+}
+
+qint64 CloudDriveClient::getChunkSize()
+{
+    return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();
 }
 
 void CloudDriveClient::loadAccessPairMap() {
@@ -462,14 +476,100 @@ void CloudDriveClient::quota(QString nonce, QString uid)
 
 QString CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous)
 {
-    emit fileGetReplySignal(nonce, -1, objectName() + " " + "File Get", "Service is not implemented.");
-    return "";
+    qDebug() << "----- CloudDriveClient::fileGet -----" << objectName() << nonce << uid << remoteFilePath << localFilePath << synchronous;
+
+    // Create localTargetFile for file getting.
+    m_localFileHash[nonce] = new QFile(localFilePath);
+    qint64 offset = (m_localFileHash[nonce]->exists()) ? m_localFileHash[nonce]->size() : -1;
+
+    // Send request.
+    QNetworkReply *reply = dynamic_cast<QNetworkReply *>( fileGet(nonce, uid, remoteFilePath, offset, synchronous) );
+
+    if (!synchronous) {
+        return "";
+    }
+
+    // Construct result.
+    QString result = fileGetReplyFinished(reply, synchronous);
+
+    return result;
 }
 
 QIODevice *CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)
 {
-    emit fileGetReplySignal(nonce, -1, objectName() + " " + "File Get", "Service is not implemented.");
-    return 0;
+    qDebug() << "----- CloudDriveClient::fileGet -----" << objectName() << nonce << uid << remoteFilePath << offset << "synchronous" << synchronous;
+
+    QString uri = fileGetURI.arg(remoteFilePath);
+    uri = encodeURI(uri);
+    qDebug() << "CloudDriveClient::fileGet" << objectName() << nonce << "uri" << uri;
+
+    // Get redirected request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    if (offset >= 0) {
+        QString rangeHeader = isFileGetResumable()
+                ? QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1)
+                : QString("bytes=%1-").arg(offset);
+        qDebug() << "CloudDriveClient::fileGet" << objectName() << nonce << "rangeHeader" << rangeHeader;
+        req.setRawHeader("Range", rangeHeader.toAscii() );
+    }
+    req.setRawHeader("Accept-Encoding", "gzip, deflate");
+    QNetworkReply *reply = manager->get(req);
+    reply = getRedirectedReply(reply);
+
+    if (!synchronous) {
+        // Wait until readyRead().
+        QEventLoop loop;
+        connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
+        loop.exec();
+
+        fileGetReplyFinished(reply, synchronous);
+    } else {
+        // Wait until finished().
+        while (!reply->isFinished()) {
+            QApplication::processEvents(QEventLoop::AllEvents, 100);
+            Sleeper::msleep(100);
+        }
+    }
+
+    return reply;
+}
+
+QIODevice *CloudDriveClient::fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset)
+{
+    qDebug() << "----- CloudDriveClient::fileGetResume -----" << objectName() << nonce << uid << remoteFilePath << "to" << localFilePath << "offset" << offset;
+
+    QString uri = fileGetURI.arg(remoteFilePath);
+    uri = encodeURI(uri);
+    qDebug() << "CloudDriveClient::fileGetResume" << objectName() << nonce << "uri" << uri;
+
+    // Create localTargetFile for file getting.
+    m_localFileHash[nonce] = new QFile(localFilePath);
+
+    // Get redirected request.
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
+    req.setAttribute(QNetworkRequest::User, QVariant(nonce));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
+    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    if (offset >= 0) {
+        QString rangeHeader = isFileGetResumable()
+                ? QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1)
+                : QString("bytes=%1-").arg(offset);
+        qDebug() << "CloudDriveClient::fileGetResume" << objectName() << nonce << "rangeHeader" << rangeHeader;
+        req.setRawHeader("Range", rangeHeader.toAscii() );
+    }
+    req.setRawHeader("Accept-Encoding", "gzip, deflate");
+    QNetworkReply *reply = manager->get(req);
+    reply = getRedirectedReply(reply);
+    connect(reply->manager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetResumeReplyFinished(QNetworkReply*)));
+
+    return reply;
 }
 
 void CloudDriveClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName)
@@ -480,12 +580,6 @@ void CloudDriveClient::filePut(QString nonce, QString uid, QString localFilePath
 QNetworkReply *CloudDriveClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal,  QString remoteParentPath, QString remoteFileName, bool synchronous)
 {
     emit filePutReplySignal(nonce, -1, objectName() + " " + "File Put", "Service is not implemented.");
-    return 0;
-}
-
-QIODevice *CloudDriveClient::fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset)
-{
-    emit fileGetResumeReplySignal(nonce, -1, objectName() + " " + "File Get Resume", "Service is not implemented.");
     return 0;
 }
 
@@ -530,6 +624,16 @@ bool CloudDriveClient::abort(QString nonce)
     } else {
         qDebug() << "CloudDriveClient::abort nonce" << nonce << "is not found. Operation is ignored.";
     }
+}
+
+QNetworkReply *CloudDriveClient::files(QString nonce, QString uid, QString remoteFilePath, int offset, bool synchronous, QString callback)
+{
+    return 0;
+}
+
+QNetworkReply *CloudDriveClient::property(QString nonce, QString uid, QString remoteFilePath, bool isDir, bool synchronous, QString callback)
+{
+    return 0;
 }
 
 QString CloudDriveClient::thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format, QString size)
@@ -665,6 +769,105 @@ void CloudDriveClient::downloadProgressFilter(qint64 bytesReceived, qint64 bytes
     emit downloadProgress(nonce, bytesReceived, bytesTotal);
 }
 
+QString CloudDriveClient::fileGetReplyFinished(QNetworkReply *reply, bool synchronous)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+
+    qDebug() << "CloudDriveClient::fileGetReplyFinished" << objectName() << nonce << reply << QString("Error=%1").arg(reply->error());
+
+    // Stream to file.
+    QFile *localTargetFile = m_localFileHash[nonce];
+    qint64 writtenBytes = fileGetReplySaveStream(reply, localTargetFile);
+    qDebug() << "CloudDriveClient::fileGetReplyFinished" << objectName() << nonce << "writtenBytes" << writtenBytes;
+
+    // Return common json.
+    QString result;
+    if (reply->error() == QNetworkReply::NoError) {
+        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, false, true, "fileGetReplyFinished");
+        if (propertyReply != 0 && propertyReply->error() == QNetworkReply::NoError) {
+            QScriptEngine engine;
+            QScriptValue jsonObj = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
+            QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+            result = stringifyScriptValue(engine, parsedObj);
+        } else if (propertyReply == 0) {
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(-1).arg("Service is not implemented.");
+        } else {
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(propertyReply->error()).arg(propertyReply->errorString());
+        }
+        propertyReply->deleteLater();
+        propertyReply->manager()->deleteLater();
+    } else {
+        qDebug() << "CloudDriveClient::fileGetReplyFinished" << objectName() << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
+        result = QString("{ \"error\": %1, \"error_string\": \"%2\", \"http_status_code\": %3 }")
+                .arg(reply->error())
+                .arg(reply->errorString())
+                .arg(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
+    }
+
+    if (!synchronous) emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), result);
+
+    // Scheduled to delete later.
+    m_propertyReplyHash->remove(nonce);
+    m_localFileHash.remove(nonce);
+    localTargetFile->deleteLater();
+    m_replyHash->remove(nonce);
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+
+    return result;
+}
+
+void CloudDriveClient::fileGetResumeReplyFinished(QNetworkReply *reply)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+
+    qDebug() << "CloudDriveClient::fileGetResumeReplyFinished" << objectName() << nonce << reply << QString("Error=%1").arg(reply->error());
+
+    // Stream to file.
+    QFile *localTargetFile = m_localFileHash[nonce];
+    qint64 writtenBytes = fileGetReplySaveChunk(reply, localTargetFile);
+    qDebug() << "CloudDriveClient::fileGetResumeReplyFinished" << objectName() << nonce << "writtenBytes" << writtenBytes;
+
+    // Return common json.
+    QString result;
+    if (reply->error() == QNetworkReply::NoError) {
+        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, false, true, "fileGetResumeReplyFinished");
+        if (propertyReply != 0 && propertyReply->error() == QNetworkReply::NoError) {
+            QScriptEngine engine;
+            QScriptValue jsonObj = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
+            QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+            result = stringifyScriptValue(engine, parsedObj);
+        } else if (propertyReply == 0) {
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(-1).arg("Service is not implemented.");
+        } else {
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(propertyReply->error()).arg(propertyReply->errorString());
+        }
+        propertyReply->deleteLater();
+        propertyReply->manager()->deleteLater();
+    } else {
+        qDebug() << "CloudDriveClient::fileGetResumeReplyFinished" << objectName() << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
+        result = QString("{ \"error\": %1, \"error_string\": \"%2\", \"http_status_code\": %3 }")
+                .arg(reply->error())
+                .arg(reply->errorString())
+                .arg(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
+    }
+
+    emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), result);
+
+    // Scheduled to delete later.
+    m_propertyReplyHash->remove(nonce);
+    m_localFileHash.remove(nonce);
+    localTargetFile->deleteLater();
+    m_replyHash->remove(nonce);
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
+
+
 int CloudDriveClient::compareDirMetadata(CloudDriveJob &job, QScriptValue &jsonObj, QString localFilePath, CloudDriveItem &item)
 {
     int result = 0;
@@ -686,19 +889,16 @@ int CloudDriveClient::compareDirMetadata(CloudDriveJob &job, QScriptValue &jsonO
 int CloudDriveClient::compareFileMetadata(CloudDriveJob &job, QScriptValue &jsonObj, QString localFilePath, CloudDriveItem &item)
 {
     QFileInfo localFileInfo(localFilePath);
-    QDateTime jsonObjLastModified = parseJSONDateString(jsonObj.property("lastModified").toString());
     int result = 0;
 
-    // If ((rev is newer and size is changed) or there is no local file), get from remote.
+    // If ((rev is newer) or there is no local file), get from remote.
     if (job.forceGet
-            || (jsonObj.property("hash").toString() > item.hash && jsonObj.property("size").toInt32() != localFileInfo.size())
+            || (jsonObj.property("hash").toString() > item.hash)
             || !localFileInfo.isFile()) {
         // Download changed remote item to localFilePath.
         result = -1;
     } else if (job.forcePut
-               || (jsonObj.property("hash").toString() < item.hash && jsonObj.property("size").toInt32() != localFileInfo.size())
-               || (jsonObjLastModified < localFileInfo.lastModified() && jsonObj.property("size").toInt32() != localFileInfo.size())
-               ) {
+               || (jsonObj.property("hash").toString() < item.hash)) {
         // ISSUE Once downloaded a file, its local timestamp will be after remote immediately. This approach may not work.
         // Upload changed local item to remoteParentPath with item name.
         result = 1;
@@ -707,4 +907,141 @@ int CloudDriveClient::compareFileMetadata(CloudDriveJob &job, QScriptValue &json
     }
 
     return result;
+}
+
+QNetworkReply * CloudDriveClient::getRedirectedReply(QNetworkReply *reply)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+
+    if (isFileGetRedirected()) {
+        // Wait until finished().
+        while (!reply->isFinished()) {
+            QApplication::processEvents(QEventLoop::AllEvents, 100);
+            Sleeper::msleep(100);
+        }
+
+        QVariant possibleRedirectUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+        if(!possibleRedirectUrl.toUrl().isEmpty()) {
+            qDebug() << "CloudDriveClient::getRedirectedReply" << nonce << "redirectUrl" << possibleRedirectUrl.toUrl();
+
+            QNetworkRequest redirectedRequest = reply->request();
+            redirectedRequest.setUrl(possibleRedirectUrl.toUrl());
+            redirectedRequest.setAttribute(QNetworkRequest::DoNotBufferUploadDataAttribute, QVariant(true));
+
+            // Delete existing reply.
+            m_replyHash->remove(nonce);
+            reply->deleteLater();
+
+            reply = reply->manager()->get(redirectedRequest);
+        }
+    }
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgressFilter(qint64,qint64)));
+    QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
+
+    // Store reply for further usage.
+    m_replyHash->insert(nonce, reply);
+
+    return reply;
+}
+
+qint64 CloudDriveClient::fileGetReplySaveChunk(QNetworkReply *reply, QFile *localTargetFile)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+
+    qint64 totalBytes = reply->bytesAvailable();
+    qint64 writtenBytes = 0;
+    if (reply->error() == QNetworkReply::NoError) {
+        qDebug() << "CloudDriveClient::fileGetReplySaveChunk" << objectName() << nonce << "reply bytesAvailable" << reply->bytesAvailable();
+
+        // Find offset.
+        qint64 offset = getOffsetFromRange(QString::fromAscii(reply->request().rawHeader("Range")));
+        qDebug() << "CloudDriveClient::fileGetReplySaveChunk" << objectName() << nonce << "reply request offset" << offset;
+
+        // Stream replyBody to a file on localPath.
+        char buf[FileWriteBufferSize];
+        QFile *localTargetFile = m_localFileHash[nonce];
+        if (localTargetFile->open(QIODevice::ReadWrite)) {
+            // Issue: Writing to file with QDataStream << QByteArray will automatically prepend with 4-bytes prefix(size).
+            // Solution: Use QIODevice to write directly.
+
+            // Move to offset.
+            localTargetFile->seek(offset);
+
+            // Read first buffer.
+            qint64 c = reply->read(buf, sizeof(buf));
+            while (c > 0) {
+                qDebug() << "CloudDriveClient::fileGetReplySaveChunk" << objectName() << nonce << "reply readBytes" << c;
+
+                writtenBytes += localTargetFile->write(buf, c);
+                qDebug() << "CloudDriveClient::fileGetReplySaveChunk" << objectName() << nonce << "reply writtenBytes" << writtenBytes;
+
+                // Tell event loop to process event before it will process time consuming task.
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+
+                // Read next buffer.
+                c = reply->read(buf, sizeof(buf));
+            }
+        }
+
+        qDebug() << "CloudDriveClient::fileGetReplySaveChunk" << objectName() << nonce << "reply writtenBytes" << writtenBytes << "totalBytes" << totalBytes << "localTargetFile size" << localTargetFile->size();
+
+        // Close target file.
+        localTargetFile->flush();
+        localTargetFile->close();
+    }
+
+    return writtenBytes;
+}
+
+qint64 CloudDriveClient::fileGetReplySaveStream(QNetworkReply *reply, QFile *localTargetFile)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+
+    qint64 totalBytes = reply->request().header(QNetworkRequest::ContentLengthHeader).toInt();
+    qint64 writtenBytes = 0;
+    if (reply->error() == QNetworkReply::NoError) {
+        // Find offset.
+        qint64 offset = getOffsetFromRange(QString::fromAscii(reply->request().rawHeader("Range")));
+        qDebug() << "CloudDriveClient::fileGetReplySaveStream" << objectName() << nonce << "reply request offset" << offset;
+
+        // Stream replyBody to a file on localPath.
+        char buf[FileWriteBufferSize];
+        if (localTargetFile->open(QIODevice::ReadWrite)) {
+            // Move to offset.
+            localTargetFile->seek(offset);
+
+            while (!reply->isFinished() || reply->bytesAvailable() > 0) {
+                if (reply->bytesAvailable() == 0) {
+                    QApplication::processEvents();
+                    continue;
+                }
+
+                qint64 c = reply->read(buf, sizeof(buf));
+                while (c > 0) {
+//                    qDebug() << "CloudDriveClient::fileGetReplySaveStream" << objectName() << nonce << "reply readBytes" << c;
+
+                    writtenBytes += localTargetFile->write(buf, c);
+//                    qDebug() << "CloudDriveClient::fileGetReplySaveStream" << objectName() << nonce << "reply writtenBytes" << writtenBytes;
+
+                    // Tell event loop to process event before it will process time consuming task.
+                    QApplication::processEvents();
+
+                    // Read next buffer.
+                    c = reply->read(buf, sizeof(buf));
+                }
+            }
+        }
+
+        qDebug() << "CloudDriveClient::fileGetReplySaveStream" << objectName() << nonce << "reply writtenBytes" << writtenBytes << "totalBytes" << totalBytes << "localTargetFile size" << localTargetFile->size();
+
+        // Close target file.
+        localTargetFile->flush();
+        localTargetFile->close();
+    }
+
+    return writtenBytes;
 }
