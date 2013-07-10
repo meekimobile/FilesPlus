@@ -23,6 +23,8 @@ CloudDriveClient::CloudDriveClient(QObject *parent) :
     setObjectName(this->metaObject()->className());
 
     m_replyHash = new QHash<QString, QNetworkReply*>();
+    m_propertyReplyHash = new QHash<QString, QByteArray>();
+    m_filesReplyHash = new QHash<QString, QByteArray>();
 
 //    connect(&m_monitorTimer, SIGNAL(timeout()), this, SLOT(monitorTimerTimeoutSlot()) );
 //    m_monitorTimer.setInterval(4000);
@@ -32,6 +34,8 @@ CloudDriveClient::CloudDriveClient(QObject *parent) :
 CloudDriveClient::~CloudDriveClient()
 {
     m_replyHash = 0;
+    m_propertyReplyHash = 0;
+    m_filesReplyHash = 0;
 }
 
 bool CloudDriveClient::isAuthorized()
@@ -574,7 +578,19 @@ QIODevice *CloudDriveClient::fileGetResume(QString nonce, QString uid, QString r
 
 void CloudDriveClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName)
 {
-    emit filePutReplySignal(nonce, -1, objectName() + " " + "File Put", "Service is not implemented.");
+    qDebug() << "----- CloudDriveClient::filePut -----" << objectName() << nonce << uid << localFilePath << remoteParentPath << remoteFileName;
+
+    m_localFileHash[nonce] = new QFile(localFilePath);
+    QFile *localSourceFile = m_localFileHash[nonce];
+    if (localSourceFile->open(QIODevice::ReadOnly)) {
+        qint64 fileSize = localSourceFile->size();
+
+        // Send request.
+        filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
+    } else {
+        qDebug() << "CloudDriveClient::filePut" << objectName() << nonce << "file" << localFilePath << "can't be opened.";
+        emit filePutReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");
+    }
 }
 
 QNetworkReply *CloudDriveClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal,  QString remoteParentPath, QString remoteFileName, bool synchronous)
@@ -769,6 +785,38 @@ void CloudDriveClient::downloadProgressFilter(qint64 bytesReceived, qint64 bytes
     emit downloadProgress(nonce, bytesReceived, bytesTotal);
 }
 
+QString CloudDriveClient::fileGetReplyResult(QNetworkReply *reply)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+
+    QString result;
+    if (reply->error() == QNetworkReply::NoError) {
+        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, false, true, "fileGetReplyResult");
+        if (propertyReply != 0 && propertyReply->error() == QNetworkReply::NoError) {
+            QScriptEngine engine;
+            QScriptValue jsonObj = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
+            QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+            result = stringifyScriptValue(engine, parsedObj);
+        } else if (propertyReply == 0) {
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(-1).arg("Service is not implemented.");
+        } else {
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(propertyReply->error()).arg(propertyReply->errorString());
+        }
+        propertyReply->deleteLater();
+        propertyReply->manager()->deleteLater();
+    } else {
+        qDebug() << "CloudDriveClient::fileGetReplyResult" << objectName() << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
+        result = QString("{ \"error\": %1, \"error_string\": \"%2\", \"http_status_code\": %3 }")
+                .arg(reply->error())
+                .arg(reply->errorString())
+                .arg(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
+    }
+
+    return result;
+}
+
 QString CloudDriveClient::fileGetReplyFinished(QNetworkReply *reply, bool synchronous)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
@@ -783,28 +831,7 @@ QString CloudDriveClient::fileGetReplyFinished(QNetworkReply *reply, bool synchr
     qDebug() << "CloudDriveClient::fileGetReplyFinished" << objectName() << nonce << "writtenBytes" << writtenBytes;
 
     // Return common json.
-    QString result;
-    if (reply->error() == QNetworkReply::NoError) {
-        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, false, true, "fileGetReplyFinished");
-        if (propertyReply != 0 && propertyReply->error() == QNetworkReply::NoError) {
-            QScriptEngine engine;
-            QScriptValue jsonObj = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
-            QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
-            result = stringifyScriptValue(engine, parsedObj);
-        } else if (propertyReply == 0) {
-            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(-1).arg("Service is not implemented.");
-        } else {
-            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(propertyReply->error()).arg(propertyReply->errorString());
-        }
-        propertyReply->deleteLater();
-        propertyReply->manager()->deleteLater();
-    } else {
-        qDebug() << "CloudDriveClient::fileGetReplyFinished" << objectName() << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
-        result = QString("{ \"error\": %1, \"error_string\": \"%2\", \"http_status_code\": %3 }")
-                .arg(reply->error())
-                .arg(reply->errorString())
-                .arg(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
-    }
+    QString result = fileGetReplyResult(reply);
 
     if (!synchronous) emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), result);
 
@@ -833,28 +860,7 @@ void CloudDriveClient::fileGetResumeReplyFinished(QNetworkReply *reply)
     qDebug() << "CloudDriveClient::fileGetResumeReplyFinished" << objectName() << nonce << "writtenBytes" << writtenBytes;
 
     // Return common json.
-    QString result;
-    if (reply->error() == QNetworkReply::NoError) {
-        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, false, true, "fileGetResumeReplyFinished");
-        if (propertyReply != 0 && propertyReply->error() == QNetworkReply::NoError) {
-            QScriptEngine engine;
-            QScriptValue jsonObj = engine.evaluate("(" + QString::fromUtf8(propertyReply->readAll()) + ")");
-            QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
-            result = stringifyScriptValue(engine, parsedObj);
-        } else if (propertyReply == 0) {
-            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(-1).arg("Service is not implemented.");
-        } else {
-            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(propertyReply->error()).arg(propertyReply->errorString());
-        }
-        propertyReply->deleteLater();
-        propertyReply->manager()->deleteLater();
-    } else {
-        qDebug() << "CloudDriveClient::fileGetResumeReplyFinished" << objectName() << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
-        result = QString("{ \"error\": %1, \"error_string\": \"%2\", \"http_status_code\": %3 }")
-                .arg(reply->error())
-                .arg(reply->errorString())
-                .arg(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
-    }
+    QString result = fileGetReplyResult(reply);
 
     emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), result);
 
@@ -867,6 +873,48 @@ void CloudDriveClient::fileGetResumeReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
+QString CloudDriveClient::filePutReplyResult(QNetworkReply *reply)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString replyBody = QString::fromUtf8(reply->readAll());
+    qDebug() << "CloudDriveClient::filePutReplyResult" << objectName() << nonce << "replyBody" << replyBody;
+    if (reply->error() == QNetworkReply::NoError) {
+        QScriptEngine engine;
+        QScriptValue jsonObj = engine.evaluate("(" + replyBody + ")");
+        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
+        replyBody = stringifyScriptValue(engine, parsedObj);
+    }
+
+    return replyBody;
+}
+
+void CloudDriveClient::filePutReplyFinished(QNetworkReply *reply)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "CloudDriveClient::filePutReplyFinished" << objectName() << nonce << reply << QString("Error=%1").arg(reply->error());
+
+    // Close source file.
+    if (m_localFileHash.contains(nonce)) {
+        QFile *localTargetFile = m_localFileHash[nonce];
+        localTargetFile->close();
+        m_localFileHash.remove(nonce);
+    }
+
+    QString result = filePutReplyResult(reply);
+
+    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), result);
+
+    // Remove request buffer.
+    if (m_bufferHash.contains(nonce)) {
+        m_bufferHash[nonce]->deleteLater();
+        m_bufferHash.remove(nonce);
+    }
+
+    // Scheduled to delete later.
+    m_replyHash->remove(nonce);
+    reply->deleteLater();
+    reply->manager()->deleteLater();
+}
 
 int CloudDriveClient::compareDirMetadata(CloudDriveJob &job, QScriptValue &jsonObj, QString localFilePath, CloudDriveItem &item)
 {

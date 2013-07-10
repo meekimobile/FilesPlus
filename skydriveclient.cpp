@@ -162,22 +162,6 @@ void SkyDriveClient::quota(QString nonce, QString uid)
     QNetworkReply *reply = manager->get(req);
 }
 
-void SkyDriveClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName) {
-    qDebug() << "----- SkyDriveClient::filePut -----" << localFilePath << "to" << remoteParentPath << remoteFileName;
-
-    m_localFileHash[nonce] = new QFile(localFilePath);
-    QFile *localSourceFile = m_localFileHash[nonce];
-    if (localSourceFile->open(QIODevice::ReadOnly)) {
-        qint64 fileSize = localSourceFile->size();
-
-        // Send request.
-        filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
-    } else {
-        qDebug() << "SkyDriveClient::filePut file " << localFilePath << " can't be opened.";
-        emit filePutReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");
-    }
-}
-
 void SkyDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
     qDebug() << "----- SkyDriveClient::metadata -----" << nonce << uid << remoteFilePath;
 
@@ -457,76 +441,13 @@ void SkyDriveClient::renameFile(QString nonce, QString uid, QString remoteFilePa
     QNetworkReply *reply = manager->put(req, postData);
 }
 
-QString SkyDriveClient::fileGetReplySave(QNetworkReply *reply)
-{
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-
-    QString result;
-    if (reply->error() == QNetworkReply::NoError) {
-        qDebug() << "SkyDriveClient::fileGetReplySave reply bytesAvailable" << reply->bytesAvailable();
-
-        // Find offset.
-        qint64 offset = getOffsetFromRange(QString::fromAscii(reply->request().rawHeader("Range")));
-        qDebug() << "SkyDriveClient::fileGetReplySave reply request offset" << offset;
-
-        // Stream replyBody to a file on localPath.
-        qint64 totalBytes = reply->bytesAvailable();
-        qint64 writtenBytes = 0;
-        char buf[FileWriteBufferSize];
-        QFile *localTargetFile = m_localFileHash[nonce];
-        if (localTargetFile->open(QIODevice::ReadWrite)) {
-            // Issue: Writing to file with QDataStream << QByteArray will automatically prepend with 4-bytes prefix(size).
-            // Solution: Use QIODevice to write directly.
-
-            // Move to offset.
-            localTargetFile->seek(offset);
-
-            // Read first buffer.
-            qint64 c = reply->read(buf, sizeof(buf));
-            while (c > 0) {
-                writtenBytes += localTargetFile->write(buf, c);
-
-                // Tell event loop to process event before it will process time consuming task.
-                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
-
-                // Read next buffer.
-                c = reply->read(buf, sizeof(buf));
-            }
-        }
-
-        qDebug() << "SkyDriveClient::fileGetReplySave reply writtenBytes" << writtenBytes << "totalBytes" << totalBytes << "localTargetFile size" << localTargetFile->size();
-
-        // Close target file.
-        localTargetFile->flush();
-        localTargetFile->close();
-
-        QString propertyReplyBody = QString::fromUtf8(m_propertyReplyHash->value(nonce));
-        qDebug() << "SkyDriveClient::fileGetReplySave propertyReplyBody" << propertyReplyBody;
-
-        // Return common json.
-        QScriptEngine engine;
-        QScriptValue jsonObj = engine.evaluate("(" + propertyReplyBody + ")");
-        QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
-        result = stringifyScriptValue(engine, parsedObj);
-    } else {
-        qDebug() << "SkyDriveClient::fileGetReplySave nonce" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
-        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
-    }
-
-    // Remove once used.
-    m_localFileHash.remove(nonce);
-    m_propertyReplyHash->remove(nonce);
-
-    return result;
-}
-
 QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
 {
     qDebug() << "----- SkyDriveClient::filePut -----" << nonce << uid << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
     QString uri = filePutURI.arg(remoteParentPath).arg(remoteFileName);
     uri = encodeURI(uri) + "?downsize_photo_uploads=false";
-    qDebug() << "SkyDriveClient::filePut uri " << uri;
+    qDebug() << "SkyDriveClient::filePut" << nonce << "uri" << uri;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
@@ -732,21 +653,13 @@ void SkyDriveClient::quotaReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void SkyDriveClient::filePutReplyFinished(QNetworkReply *reply) {
-    qDebug() << "SkyDriveClient::filePutReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
+QString SkyDriveClient::filePutReplyResult(QNetworkReply *reply)
+{
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
-
-    // Close source file.
-    if (m_localFileHash.contains(nonce)) {
-        QFile *localTargetFile = m_localFileHash[nonce];
-        localTargetFile->close();
-        m_localFileHash.remove(nonce);
-    }
-
     QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "SkyDriveClient::filePutReplyFinished replyBody" << replyBody;
+    qDebug() << "SkyDriveClient::filePutReplyFinished" << nonce << "replyBody" << replyBody;
+
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
         QScriptValue sc = engine.evaluate("(" + replyBody + ")");
@@ -760,7 +673,7 @@ void SkyDriveClient::filePutReplyFinished(QNetworkReply *reply) {
         // Get property synchronously.
         reply = property(nonce, uid, remoteFilePath, true, "filePutReplyFinished");
         replyBody = QString::fromUtf8(reply->readAll());
-        qDebug() << "SkyDriveClient::filePutReplyFinished property replyBody" << replyBody;
+        qDebug() << "SkyDriveClient::filePutReplyFinished" << nonce << "property replyBody" << replyBody;
         if (reply->error() == QNetworkReply::NoError) {
             QScriptValue jsonObj = engine.evaluate("(" + replyBody + ")");
             QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
@@ -768,12 +681,7 @@ void SkyDriveClient::filePutReplyFinished(QNetworkReply *reply) {
         }
     }
 
-    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
-
-    // Scheduled to delete later.
-    m_replyHash->remove(nonce);
-    reply->deleteLater();
-    reply->manager()->deleteLater();
+    return replyBody;
 }
 
 void SkyDriveClient::metadataReplyFinished(QNetworkReply *reply) {

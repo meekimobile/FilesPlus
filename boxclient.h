@@ -19,7 +19,6 @@ public:
     void accountInfo(QString nonce, QString uid);
     void quota(QString nonce, QString uid);
 
-    void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
@@ -32,10 +31,11 @@ public:
     QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format = "png", QString size = "64x64"); // format = {png}, size = {32x32,64x64,128x128,256x256}
     QString media(QString nonce, QString uid, QString remoteFilePath);
 
-    bool isRemoteDir(QString nonce, QString uid, QString remoteFilePath);
-    QString searchFileId(QString nonce, QString uid, QString remoteParentPath, QString remoteFileName);
     QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, int offset, bool synchronous, QString callback);
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool isDir, bool synchronous, QString callback);
+
+    bool isRemoteDir(QString nonce, QString uid, QString remoteFilePath);
+    QString searchFileId(QString nonce, QString uid, QString remoteParentPath, QString remoteFileName);
     void mergePropertyAndFilesJson(QString nonce, QString callback, QString uid);
     void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
 
@@ -54,8 +54,6 @@ public slots:
     void accountInfoReplyFinished(QNetworkReply *reply);
     void quotaReplyFinished(QNetworkReply *reply);
 
-    void filePutReplyFinished(QNetworkReply *reply);
-
     void propertyReplyFinished(QNetworkReply *reply);
     void filesReplyFinished(QNetworkReply *reply);
 
@@ -67,7 +65,10 @@ public slots:
     QString deltaReplyFinished(QNetworkReply *reply);
 protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
+    QString filePutReplyResult(QNetworkReply *reply);
 private:
+    QString filePutRevURI;
+
     QHash<QString, bool> *m_isDirHash;
 };
 

@@ -145,6 +145,7 @@ public slots:
 
     QString fileGetReplyFinished(QNetworkReply *reply, bool synchronous = false);
     void fileGetResumeReplyFinished(QNetworkReply *reply);
+    void filePutReplyFinished(QNetworkReply *reply);
 protected:
     QString consumerKey;
     QString consumerSecret;
@@ -155,11 +156,10 @@ protected:
     QString accessTokenURI;
     QString accountInfoURI;
     QString quotaURI;
-    QString logoutURI;
 
     QString fileGetURI;
     QString filePutURI;
-    QString filePutRevURI;
+    QString metadataURI;
     QString filesURI;
     QString propertyURI;
     QString createFolderURI;
@@ -172,13 +172,14 @@ protected:
     QString deltaURI;
     QString thumbnailURI;
     QString searchURI;
+    QString mediaURI;
 
     QString refreshTokenUid;
     QMap<QString, QString> m_paramMap;
     QMap<QString, TokenPair> accessTokenPairMap;
-    QHash<QString, QNetworkReply*> *m_replyHash;
     QHash<QString, QFile*> m_localFileHash;
     QHash<QString, QBuffer*> m_bufferHash;
+    QHash<QString, QNetworkReply*> *m_replyHash;
     QHash<QString, QByteArray> *m_propertyReplyHash;
     QHash<QString, QByteArray> *m_filesReplyHash;
 
@@ -208,6 +209,8 @@ protected:
     QNetworkReply *getRedirectedReply(QNetworkReply *reply);
     qint64 fileGetReplySaveChunk(QNetworkReply *reply, QFile *localTargetFile);
     qint64 fileGetReplySaveStream(QNetworkReply *reply, QFile *localTargetFile);
+    virtual QString fileGetReplyResult(QNetworkReply *reply);
+    virtual QString filePutReplyResult(QNetworkReply *reply);
 private:
 
 };

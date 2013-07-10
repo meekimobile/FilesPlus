@@ -13,32 +13,29 @@ const QString DropboxClient::SandboxConsumerKey = "u4f161p2wonac7p"; // Key from
 const QString DropboxClient::SandboxConsumerSecret = "itr3zb95dwequun"; // Secret from Dropbox
 const QString DropboxClient::SandboxRoot = "sandbox"; // For app folder access, root will be app folder.
 
-//const QString DropboxClient::signatureMethod = "HMAC-SHA1"; // Failed since 1-Sep-12
-const QString DropboxClient::signatureMethod = "PLAINTEXT";
-const QString DropboxClient::requestTokenURI = "https://api.dropbox.com/1/oauth/request_token";
-const QString DropboxClient::authorizeURI = "https://www.dropbox.com/1/oauth/authorize";
-const QString DropboxClient::accessTokenURI = "https://api.dropbox.com/1/oauth/access_token";
-const QString DropboxClient::accountInfoURI = "https://api.dropbox.com/1/account/info";
-const QString DropboxClient::fileGetURI = "https://api-content.dropbox.com/1/files/%1%2";
-const QString DropboxClient::filePutURI = "https://api-content.dropbox.com/1/files_put/%1%2"; // Parameter if any needs to be appended here. ?param=val
-const QString DropboxClient::metadataURI = "https://api.dropbox.com/1/metadata/%1%2";
-const QString DropboxClient::createFolderURI = "https://api.dropbox.com/1/fileops/create_folder";
-const QString DropboxClient::moveFileURI = "https://api.dropbox.com/1/fileops/move";
-const QString DropboxClient::copyFileURI = "https://api.dropbox.com/1/fileops/copy";
-const QString DropboxClient::deleteFileURI = "https://api.dropbox.com/1/fileops/delete";
-const QString DropboxClient::sharesURI = "https://api.dropbox.com/1/shares/%1%2";
-const QString DropboxClient::mediaURI = "https://api.dropbox.com/1/media/%1%2"; // POST
-const QString DropboxClient::thumbnailURI = "https://api-content.dropbox.com/1/thumbnails/%1%2"; // GET with format and size.
-const QString DropboxClient::deltaURI = "https://api.dropbox.com/1/delta"; // POST
-const QString DropboxClient::chunkedUploadURI = "https://api-content.dropbox.com/1/chunked_upload"; // PUT with upload_id and offset.
-const QString DropboxClient::commitChunkedUploadURI = "https://api-content.dropbox.com/1/commit_chunked_upload/%1%2"; // POST with upload_id.
-
-const qint64 DropboxClient::DefaultChunkSize = 4194304; // 4MB
-const QString DropboxClient::ReplyDateFormat = "ddd, dd MMM yyyy hh:mm:ss +0000";
-
 DropboxClient::DropboxClient(QObject *parent) :
     CloudDriveClient(parent)
 {
+    //signatureMethod = "HMAC-SHA1"; // Failed since 1-Sep-12
+    signatureMethod = "PLAINTEXT";
+    requestTokenURI = "https://api.dropbox.com/1/oauth/request_token";
+    authorizeURI = "https://www.dropbox.com/1/oauth/authorize";
+    accessTokenURI = "https://api.dropbox.com/1/oauth/access_token";
+    accountInfoURI = "https://api.dropbox.com/1/account/info";
+    fileGetURI = "https://api-content.dropbox.com/1/files/%1%2";
+    filePutURI = "https://api-content.dropbox.com/1/files_put/%1%2"; // Parameter if any needs to be appended here. ?param=val
+    metadataURI = "https://api.dropbox.com/1/metadata/%1%2";
+    createFolderURI = "https://api.dropbox.com/1/fileops/create_folder";
+    moveFileURI = "https://api.dropbox.com/1/fileops/move";
+    copyFileURI = "https://api.dropbox.com/1/fileops/copy";
+    deleteFileURI = "https://api.dropbox.com/1/fileops/delete";
+    sharesURI = "https://api.dropbox.com/1/shares/%1%2";
+    mediaURI = "https://api.dropbox.com/1/media/%1%2"; // POST
+    thumbnailURI = "https://api-content.dropbox.com/1/thumbnails/%1%2"; // GET with format and size.
+    deltaURI = "https://api.dropbox.com/1/delta"; // POST
+    chunkedUploadURI = "https://api-content.dropbox.com/1/chunked_upload"; // PUT with upload_id and offset.
+    commitChunkedUploadURI = "https://api-content.dropbox.com/1/commit_chunked_upload/%1%2"; // POST with upload_id.
+
     // Set object name for further reference.
     setObjectName(this->metaObject()->className());
 
@@ -325,31 +322,6 @@ void DropboxClient::quota(QString nonce, QString uid)
     QNetworkReply *reply = manager->get(req);
 }
 
-QString DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous)
-{
-    qDebug() << "----- DropboxClient::fileGet -----" << uid << remoteFilePath << localFilePath << synchronous;
-
-    // Create localTargetFile for file getting.
-    m_localFileHash[nonce] = new QFile(localFilePath);
-
-    // Send request.
-    QNetworkReply *reply = dynamic_cast<QNetworkReply *>( fileGet(nonce, uid, remoteFilePath, -1, synchronous) );
-
-    if (!synchronous) {
-        return "";
-    }
-
-    // Construct result.
-    QString result = fileGetReplySave(reply);
-
-    // scheduled to delete later.
-    m_replyHash->remove(nonce);
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-
-    return result;
-}
-
 QIODevice *DropboxClient::fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset, bool synchronous)
 {
     qDebug() << "----- DropboxClient::fileGet -----" << nonce << uid << remoteFilePath << offset << "synchronous" << synchronous;
@@ -401,23 +373,6 @@ QString DropboxClient::getDefaultLocalFilePath(const QString &remoteFilePath)
         return rx.cap(1).append(":").append(rx.cap(2));
     }
     return "";
-}
-
-void DropboxClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName)
-{
-    qDebug() << "----- DropboxClient::filePut -----" << uid << localFilePath << "to" << remoteParentPath << remoteFileName;
-
-    m_localFileHash[nonce] = new QFile(localFilePath);
-    QFile *localSourceFile = m_localFileHash[nonce];
-    if (localSourceFile->open(QIODevice::ReadOnly)) {
-        qint64 fileSize = localSourceFile->size();
-
-        // Send request.
-        filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
-    } else {
-        qDebug() << "DropboxClient::filePut file " << localFilePath << " can't be opened.";
-        emit filePutReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");
-    }
 }
 
 QNetworkReply *DropboxClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
@@ -581,7 +536,7 @@ bool DropboxClient::isImageUrlCachable()
     return true;
 }
 
-QNetworkReply * DropboxClient::property(QString nonce, QString uid, QString remoteFilePath, bool synchronous, QString callback)
+QNetworkReply * DropboxClient::property(QString nonce, QString uid, QString remoteFilePath, bool isDir, bool synchronous, QString callback)
 {
     qDebug() << "----- DropboxClient::property -----" << nonce << uid << remoteFilePath << synchronous;
 
@@ -1166,9 +1121,8 @@ QString DropboxClient::createFolder(QString nonce, QString uid, QString remotePa
 
 void DropboxClient::requestTokenReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::requestTokenReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "DropboxClient::requestTokenReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     // Load response parameters into map.
     QString replyBody = QString(reply->readAll());
@@ -1194,9 +1148,8 @@ void DropboxClient::requestTokenReplyFinished(QNetworkReply *reply)
 
 void DropboxClient::accessTokenReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::accessTokenReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "DropboxClient::accessTokenReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     // Load response parameters into map.
     QString replyBody = QString(reply->readAll());
@@ -1234,9 +1187,8 @@ void DropboxClient::accessTokenReplyFinished(QNetworkReply *reply)
 
 void DropboxClient::accountInfoReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::accountInfoReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "DropboxClient::accountInfoReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     QString replyBody = QString(reply->readAll());
 
@@ -1264,9 +1216,9 @@ void DropboxClient::accountInfoReplyFinished(QNetworkReply *reply)
 
 void DropboxClient::quotaReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::quotaReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "DropboxClient::quotaReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
+
     QString replyBody = QString::fromUtf8(reply->readAll());
 
     if (reply->error() == QNetworkReply::NoError) {
@@ -1286,52 +1238,15 @@ void DropboxClient::quotaReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-QString DropboxClient::fileGetReplySave(QNetworkReply *reply)
+QString DropboxClient::fileGetReplyResult(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::fileGetReplySave " << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
     QString result;
     if (reply->error() == QNetworkReply::NoError) {
         QString metadata;
         metadata.append(reply->rawHeader("x-dropbox-metadata"));
-        qDebug() << "DropboxClient::fileGetReplySave x-dropbox-metadata" << metadata;
-
-        // Find offset.
-        qint64 offset = getOffsetFromRange(QString::fromAscii(reply->request().rawHeader("Range")));
-        qDebug() << "DropboxClient::fileGetReplySave reply request offset" << offset;
-
-        // Stream replyBody to a file on localPath.
-        qint64 totalBytes = reply->bytesAvailable();
-        qint64 writtenBytes = 0;
-        char buf[FileWriteBufferSize];
-        QFile *localTargetFile = m_localFileHash[nonce];
-        if (localTargetFile->open(QIODevice::ReadWrite)) {
-            // Issue: Writing to file with QDataStream << QByteArray will automatically prepend with 4-bytes prefix(size).
-            // Solution: Use QIODevice to write directly.
-
-            // Move to offset.
-            localTargetFile->seek(offset);
-
-            // Read first buffer.
-            qint64 c = reply->read(buf, sizeof(buf));
-            while (c > 0) {
-                writtenBytes += localTargetFile->write(buf, c);
-
-                // Tell event loop to process event before it will process time consuming task.
-                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
-
-                // Read next buffer.
-                c = reply->read(buf, sizeof(buf));
-            }
-        }
-
-        qDebug() << "DropboxClient::fileGetReplySave reply writtenBytes" << writtenBytes << "totalBytes" << totalBytes << "localTargetFile size" << localTargetFile->size();
-
-        // Close target file.
-        localTargetFile->flush();
-        localTargetFile->close();
+        qDebug() << "DropboxClient::fileGetReplyResult" << nonce << "x-dropbox-metadata" << metadata;
 
         // Return common json.
         QScriptEngine engine;
@@ -1339,47 +1254,21 @@ QString DropboxClient::fileGetReplySave(QNetworkReply *reply)
         QScriptValue parsedObj = parseCommonPropertyScriptValue(engine, jsonObj);
         result = stringifyScriptValue(engine, parsedObj);
     } else {
-        qDebug() << "DropboxClient::fileGetReplySave nonce" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
-        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
+        qDebug() << "DropboxClient::fileGetReplyResult" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
+        result = QString("{ \"error\": %1, \"error_string\": \"%2\", \"http_status_code\": %3 }")
+                .arg(reply->error())
+                .arg(reply->errorString())
+                .arg(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
     }
-
-    // Remove once used.
-    m_localFileHash.remove(nonce);
 
     return result;
 }
 
-void DropboxClient::fileGetReplyFinished(QNetworkReply *reply) {
-    qDebug() << "DropboxClient::fileGetReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
+QString DropboxClient::filePutReplyResult(QNetworkReply *reply)
+{
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-
-    // Construct result.
-    QString result = fileGetReplySave(reply);
-
-    emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), result);
-
-    // Scheduled to delete later.
-    m_replyHash->remove(nonce);
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-}
-
-void DropboxClient::filePutReplyFinished(QNetworkReply *reply) {
-    qDebug() << "DropboxClient::filePutReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-
-    // Close source file.
-    if (m_localFileHash.contains(nonce)) {
-        QFile *localTargetFile = m_localFileHash[nonce];
-        localTargetFile->close();
-        m_localFileHash.remove(nonce);
-    }
-
-    // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "DropboxClient::filePutReplyFinished replyBody" << replyBody;
+    qDebug() << "DropboxClient::filePutReplyResult" << nonce << "replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {
         // Return common json.
         QScriptEngine engine;
@@ -1388,20 +1277,15 @@ void DropboxClient::filePutReplyFinished(QNetworkReply *reply) {
         replyBody = stringifyScriptValue(engine, parsedObj);
     }
 
-    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
-
-    // Scheduled to delete later.
-    m_replyHash->remove(nonce);
-    reply->deleteLater();
-    reply->manager()->deleteLater();
+    return replyBody;
 }
 
-void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
-    qDebug() << "DropboxClient::metadataReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
+void DropboxClient::metadataReplyFinished(QNetworkReply *reply)
+{
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
     QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+    qDebug() << "DropboxClient::metadataReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
@@ -1436,11 +1320,10 @@ void DropboxClient::metadataReplyFinished(QNetworkReply *reply) {
 
 void DropboxClient::browseReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::browseReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
     QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+    qDebug() << "DropboxClient::browseReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
@@ -1479,7 +1362,7 @@ QString DropboxClient::createFolderReplyFinished(QNetworkReply *reply, bool sync
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
     QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
 
-    qDebug() << "DropboxClient::createFolderReplyFinished" << nonce << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "DropboxClient::createFolderReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
@@ -1514,9 +1397,8 @@ QString DropboxClient::createFolderReplyFinished(QNetworkReply *reply, bool sync
 
 void DropboxClient::moveFileReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::moveFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "DropboxClient::moveFileReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
@@ -1537,9 +1419,8 @@ void DropboxClient::moveFileReplyFinished(QNetworkReply *reply)
 
 void DropboxClient::copyFileReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::copyFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "DropboxClient::copyFileReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
@@ -1560,9 +1441,8 @@ void DropboxClient::copyFileReplyFinished(QNetworkReply *reply)
 
 QString DropboxClient::deleteFileReplyFinished(QNetworkReply *reply, bool synchronous)
 {
-    qDebug() << "DropboxClient::deleteFileReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "DropboxClient::deleteFileReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     // Parse common property json.
     QString replyBody = QString::fromUtf8(reply->readAll());
@@ -1611,10 +1491,9 @@ QString DropboxClient::shareFileReplyFinished(QNetworkReply *reply, bool synchro
 
 QString DropboxClient::deltaReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::deltaReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    qDebug() << "DropboxClient::deltaReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     QString replyBody = QString::fromUtf8(reply->readAll());
     qDebug() << "DropboxClient::deltaReplyFinished replyBody" << replyBody;
@@ -1689,9 +1568,9 @@ QString DropboxClient::deltaReplyFinished(QNetworkReply *reply)
 
 QString DropboxClient::mediaReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::mediaReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "DropboxClient::mediaReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
+
     QString replyBody = QString::fromUtf8(reply->readAll());
     QScriptEngine engine;
     QScriptValue sc;
@@ -1712,28 +1591,10 @@ QString DropboxClient::mediaReplyFinished(QNetworkReply *reply)
     return url;
 }
 
-void DropboxClient::fileGetResumeReplyFinished(QNetworkReply *reply)
-{
-    qDebug() << "DropboxClient::fileGetResumeReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-
-    // Construct result.
-    QString result = fileGetReplySave(reply);
-
-    emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), result);
-
-    // Scheduled to delete later.
-    m_replyHash->remove(nonce);
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-}
-
 void DropboxClient::filePutResumeReplyFinished(QNetworkReply *reply)
 {
-    qDebug() << "DropboxClient::filePutResumeReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "DropboxClient::filePutResumeReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     // Close source file.
     if (m_localFileHash.contains(nonce)) {
@@ -1808,8 +1669,8 @@ QDateTime DropboxClient::parseReplyDateString(QString dateString)
 {
     // NOTE Dropbox uses UTC datestring in its reply.
     QString filteredDateString = dateString;
-    QDateTime datetime = QDateTime::fromString(filteredDateString, ReplyDateFormat);
-    qDebug() << "DropboxClient::parseReplyDateString parse filteredDateString" << filteredDateString << "with" << ReplyDateFormat << "to" << datetime;
+    QDateTime datetime = QDateTime::fromString(filteredDateString, "ddd, dd MMM yyyy hh:mm:ss +0000");
+    qDebug() << "DropboxClient::parseReplyDateString parse filteredDateString" << filteredDateString << "to" << datetime;
     datetime.setTimeSpec(Qt::UTC);
     qDebug() << "DropboxClient::parseReplyDateString parse datetime.setTimeSpec(Qt::UTC)" << datetime;
 

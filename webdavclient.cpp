@@ -1,29 +1,24 @@
 #include "webdavclient.h"
 #include <QApplication>
 
-const QString WebDavClient::ConsumerKey = "ce970eaaff0f4c1fbc8268bec6e804e4";
-const QString WebDavClient::ConsumerSecret = "13bd2edd92344f04b23ee3170521f7fe";
-
-const QString WebDavClient::authorizeURI = "https://%1/authorize"; // ?response_type=<token|code>&client_id=<client_id>[&display=popup][&state=<state>]
-const QString WebDavClient::accessTokenURI = "https://%1/token"; // POST with grant_type=authorization_code&code=<code>&client_id=<client_id>&client_secret=<client_secret> or basic auth with only grant_type=authorization_code&code=<code>
-const QString WebDavClient::accountInfoURI = "https://%1"; // GET with ?userinfo
-const QString WebDavClient::propertyURI = "https://%1%2"; // PROPFIND with arguments (hostname, path)
-const QString WebDavClient::createFolderURI = "https://%1%2"; // MKCOL with arguments (hostname, path)
-const QString WebDavClient::moveFileURI = "https://%1%2"; // MOVE with arguments (hostname, path) and destination in header
-const QString WebDavClient::copyFileURI = "https://%1%2"; // COPY with arguments (hostname, path) and destination in header
-const QString WebDavClient::deleteFileURI = "https://%1%2"; // DELETE with arguments (hostname, path)
-const QString WebDavClient::fileGetURI = "https://%1%2"; // GET with arguments (hostname, path)
-const QString WebDavClient::filePutURI = "https://%1%2"; // PUT with arguments (hostname, path)
-const QString WebDavClient::sharesURI = "https://%1%2"; // POST with arguments (hostname, path) and ?publish
-const QString WebDavClient::renameFileURI = "https://%1%2"; // PROPPATCH with arguments (hostname, path)
-
-const qint64 WebDavClient::DefaultChunkSize = 4194304; // 4194304=4MB, 1048576=1MB  TODO Optimize to have largest chink size which is still valid before token is expired.
-
-const QString WebDavClient::ReplyDateFormat = "ddd, dd MMM yyyy hh:mm:ss";
-
 WebDavClient::WebDavClient(QObject *parent) :
     CloudDriveClient(parent)
 {
+    consumerKey = "ce970eaaff0f4c1fbc8268bec6e804e4";
+    consumerSecret = "13bd2edd92344f04b23ee3170521f7fe";
+    authorizeURI = "https://%1/authorize"; // ?response_type=<token|code>&client_id=<client_id>[&display=popup][&state=<state>]
+    accessTokenURI = "https://%1/token"; // POST with grant_type=authorization_code&code=<code>&client_id=<client_id>&client_secret=<client_secret> or basic auth with only grant_type=authorization_code&code=<code>
+    accountInfoURI = "https://%1"; // GET with ?userinfo
+    propertyURI = "https://%1%2"; // PROPFIND with arguments (hostname, path)
+    createFolderURI = "https://%1%2"; // MKCOL with arguments (hostname, path)
+    moveFileURI = "https://%1%2"; // MOVE with arguments (hostname, path) and destination in header
+    copyFileURI = "https://%1%2"; // COPY with arguments (hostname, path) and destination in header
+    deleteFileURI = "https://%1%2"; // DELETE with arguments (hostname, path)
+    fileGetURI = "https://%1%2"; // GET with arguments (hostname, path)
+    filePutURI = "https://%1%2"; // PUT with arguments (hostname, path)
+    sharesURI = "https://%1%2"; // POST with arguments (hostname, path) and ?publish
+    renameFileURI = "https://%1%2"; // PROPPATCH with arguments (hostname, path)
+
     // Set object name for further reference.
     setObjectName(this->metaObject()->className());
 
@@ -45,7 +40,7 @@ void WebDavClient::authorize(QString nonce, QString hostname)
 
     QString queryString;
     queryString.append("response_type=code");
-    queryString.append("&client_id=" + ConsumerKey);
+    queryString.append("&client_id=" + consumerKey);
     queryString.append("&display=popup");
     queryString.append("&state=" + nonce);
 
@@ -69,8 +64,8 @@ void WebDavClient::accessToken(QString nonce, QString pin)
     QMap<QString, QString> sortMap;
     sortMap["grant_type"] = "authorization_code";
     sortMap["code"] = pin;
-    sortMap["client_id"] = ConsumerKey;
-    sortMap["client_secret"] = ConsumerSecret;
+    sortMap["client_id"] = consumerKey;
+    sortMap["client_secret"] = consumerSecret;
     QString queryString = createNormalizedQueryString(sortMap);
     qDebug() << "WebDavClient::accessToken queryString " << queryString;
 
@@ -122,48 +117,6 @@ void WebDavClient::quota(QString nonce, QString uid)
     QString requestBody = "<?xml version=\"1.0\" ?><D:propfind xmlns:D=\"DAV:\"><D:prop><D:quota-available-bytes/><D:quota-used-bytes/></D:prop></D:propfind>";
 
     property(nonce, uid, "/", requestBody, 0, false, "quota");
-}
-
-QString WebDavClient::fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous)
-{
-    qDebug() << "----- WebDavClient::fileGet -----" << nonce << uid << remoteFilePath << localFilePath << synchronous;
-
-    // Create localTargetFile for file getting.
-    m_localFileHash[nonce] = new QFile(localFilePath);
-
-    // Send request.
-    QNetworkReply *reply = dynamic_cast<QNetworkReply *>( fileGet(nonce, uid, remoteFilePath, -1, synchronous) );
-
-    if (!synchronous) {
-        return "";
-    }
-
-    // Construct result.
-    QString result = fileGetReplySave(reply);
-
-    // scheduled to delete later.
-    m_replyHash->remove(nonce);
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-
-    return result;
-}
-
-void WebDavClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName)
-{
-    qDebug() << "----- WebDavClient::filePut -----" << nonce << uid << localFilePath << remoteParentPath << remoteFileName;
-
-    m_localFileHash[nonce] = new QFile(localFilePath);
-    QFile *localSourceFile = m_localFileHash[nonce];
-    if (localSourceFile->open(QIODevice::ReadOnly)) {
-        qint64 fileSize = localSourceFile->size();
-
-        // Send request.
-        filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
-    } else {
-        qDebug() << "WebDavClient::filePut" << nonce << "file" << localFilePath << " can't be opened.";
-        emit filePutReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");
-    }
 }
 
 QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remoteFilePath, QString requestBody, int depth, bool synchronous, QString callback)
@@ -576,78 +529,6 @@ QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFileP
     }
 
     return reply;
-}
-
-QString WebDavClient::fileGetReplySave(QNetworkReply *reply)
-{
-    qDebug() << "WebDavClient::fileGetReplySave" << reply << QString(" Error=%1").arg(reply->error());
-
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
-    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
-
-    QString result;
-    if (reply->error() == QNetworkReply::NoError) {
-        qDebug() << "WebDavClient::fileGetReplySave reply bytesAvailable" << reply->bytesAvailable();
-
-        // Find offset.
-        qint64 offset = getOffsetFromRange(QString::fromAscii(reply->request().rawHeader("Range")));
-        qDebug() << "WebDavClient::fileGetReplySave reply request offset" << offset;
-
-        // Stream replyBody to a file on localPath.
-        qint64 totalBytes = reply->bytesAvailable();
-        qint64 writtenBytes = 0;
-        char buf[FileWriteBufferSize];
-        QFile *localTargetFile = m_localFileHash[nonce];
-        if (localTargetFile->open(QIODevice::ReadWrite)) {
-            // Issue: Writing to file with QDataStream << QByteArray will automatically prepend with 4-bytes prefix(size).
-            // Solution: Use QIODevice to write directly.
-
-            // Move to offset.
-            localTargetFile->seek(offset);
-
-            // Read first buffer.
-            qint64 c = reply->read(buf, sizeof(buf));
-            while (c > 0) {
-                writtenBytes += localTargetFile->write(buf, c);
-
-                // Tell event loop to process event before it will process time consuming task.
-                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
-
-                // Read next buffer.
-                c = reply->read(buf, sizeof(buf));
-            }
-        }
-
-        qDebug() << "WebDavClient::fileGetReplySave reply writtenBytes" << writtenBytes << "totalBytes" << totalBytes << "localTargetFile size" << localTargetFile->size();
-
-        // Close target file.
-        localTargetFile->flush();
-        localTargetFile->close();
-
-        // Delete original reply (which is in m_replyHash).
-        m_replyHash->remove(nonce);
-        reply->deleteLater();
-        reply->manager()->deleteLater();
-
-        // Return common json.
-        reply = property(nonce, uid, remoteFilePath);
-        QString propertyReplyBody = QString::fromUtf8(reply->readAll());
-        qDebug() << "WebDavClient::fileGetReplySave propertyReplyBody" << propertyReplyBody;
-        if (reply->error() == QNetworkReply::NoError) {
-            result = createPropertyJson(propertyReplyBody, "fileGetReplySave");
-        } else {
-            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
-        }
-    } else {
-        qDebug() << "WebDavClient::fileGetReplySave nonce" << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
-        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(reply->error()).arg(reply->errorString());
-    }
-
-    // Remove once used.
-    m_localFileHash.remove(nonce);
-
-    return result;
 }
 
 QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
@@ -1093,8 +974,8 @@ QDateTime WebDavClient::parseReplyDateString(QString dateString)
     QString filteredDateString = dateString;
     filteredDateString = filteredDateString.replace("GMT","").trimmed();
     qDebug() << "WebDavClient::parseReplyDateString filter dateString" << dateString << "to filteredDateString" << filteredDateString;
-    QDateTime datetime = QDateTime::fromString(filteredDateString, ReplyDateFormat);
-    qDebug() << "WebDavClient::parseReplyDateString parse filteredDateString" << filteredDateString << "with" << ReplyDateFormat << "to" << datetime;
+    QDateTime datetime = QDateTime::fromString(filteredDateString, "ddd, dd MMM yyyy hh:mm:ss");
+    qDebug() << "WebDavClient::parseReplyDateString parse filteredDateString" << filteredDateString << "to" << datetime;
     datetime.setTimeSpec(Qt::UTC);
     qDebug() << "WebDavClient::parseReplyDateString parse datetime.setTimeSpec(Qt::UTC)" << datetime;
 
@@ -1171,42 +1052,15 @@ void WebDavClient::accountInfoReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void WebDavClient::fileGetReplyFinished(QNetworkReply *reply)
-{
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-    qDebug() << "WebDavClient::fileGetReplyFinished" << nonce << "reply" << reply << QString(" Error=%1").arg(reply->error());
-
-    // TODO Content-Type: multipart/byteranges.
-
-    // Construct result.
-    QString result = fileGetReplySave(reply);
-
-    emit fileGetReplySignal(nonce, reply->error(), reply->errorString(), result);
-
-    // Scheduled to delete later.
-    m_replyHash->remove(nonce);
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-}
-
-void WebDavClient::filePutReplyFinished(QNetworkReply *reply)
+QString WebDavClient::filePutReplyResult(QNetworkReply *reply)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
     QString remoteParentPath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
     QString remoteFileName = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3)).toString();
-    qDebug() << "WebDavClient::filePutReplyFinished" << nonce << "reply" << reply << QString(" Error=%1").arg(reply->error());
-
     QString remoteFilePath = remoteParentPath + "/" + remoteFileName;
 
-    // Close source file.
-    if (m_localFileHash.contains(nonce)) {
-        QFile *localTargetFile = m_localFileHash[nonce];
-        localTargetFile->close();
-        m_localFileHash.remove(nonce);
-    }
-
-    QString replyBody;
+    QString result;
     if (reply->error() == QNetworkReply::NoError) {
         // Delete original reply (which is in m_replyHash).
         m_replyHash->remove(nonce);
@@ -1215,20 +1069,15 @@ void WebDavClient::filePutReplyFinished(QNetworkReply *reply)
 
         reply = property(nonce, uid, remoteFilePath);
         if (reply->error() == QNetworkReply::NoError) {
-            replyBody = createPropertyJson(QString::fromUtf8(reply->readAll()), "filePutReplyFinished");
+            result = createPropertyJson(QString::fromUtf8(reply->readAll()), "filePutReplyResult");
         } else {
-            replyBody = createResponseJson(QString::fromUtf8(reply->readAll()), "filePutReplyFinished");
+            result = createResponseJson(QString::fromUtf8(reply->readAll()), "filePutReplyResult");
         }
     } else {
-        replyBody = createResponseJson(QString::fromUtf8(reply->readAll()), "filePutReplyFinished");
+        result = createResponseJson(QString::fromUtf8(reply->readAll()), "filePutReplyResult");
     }
 
-    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
-
-    // Scheduled to delete later.
-    m_replyHash->remove(nonce);
-    reply->deleteLater();
-    reply->manager()->deleteLater();
+    return result;
 }
 
 void WebDavClient::propertyReplyFinished(QNetworkReply *reply)
@@ -1474,25 +1323,6 @@ QString WebDavClient::shareFileReplyFinished(QNetworkReply *reply, bool synchron
     return url;
 }
 
-void WebDavClient::fileGetResumeReplyFinished(QNetworkReply *reply)
-{
-    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-    qDebug() << "WebDavClient::fileGetResumeReplyFinished" << nonce << "reply" << reply << QString(" Error=%1").arg(reply->error());
-
-    // TODO Content-Type: multipart/byteranges.
-    qDebug() << "WebDavClient::fileGetResumeReplyFinished" << nonce << "ContentTypeHeader" << reply->header(QNetworkRequest::ContentTypeHeader);
-
-    // Construct result.
-    QString result = fileGetReplySave(reply);
-
-    emit fileGetResumeReplySignal(nonce, reply->error(), reply->errorString(), result);
-
-    // Scheduled to delete later.
-    m_replyHash->remove(nonce);
-    reply->deleteLater();
-    reply->manager()->deleteLater();
-}
-
 QScriptValue WebDavClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj)
 {
     QScriptValue parsedObj = engine.newObject();
@@ -1556,4 +1386,33 @@ void WebDavClient::sslErrorsReplyFilter(QList<QSslError> sslErrors)
 qint64 WebDavClient::getChunkSize()
 {
     return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();
+}
+
+QString WebDavClient::fileGetReplyResult(QNetworkReply *reply)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+
+    QString result;
+    if (reply->error() == QNetworkReply::NoError) {
+        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, false, true, "fileGetReplyResult");
+        if (propertyReply != 0 && propertyReply->error() == QNetworkReply::NoError) {
+            result = createPropertyJson(QString::fromUtf8(propertyReply->readAll()), "fileGetReplyResult");
+        } else if (propertyReply == 0) {
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(-1).arg("Service is not implemented.");
+        } else {
+            result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(propertyReply->error()).arg(propertyReply->errorString());
+        }
+        propertyReply->deleteLater();
+        propertyReply->manager()->deleteLater();
+    } else {
+        qDebug() << "WebDavClient::fileGetReplyResult" << objectName() << nonce << reply->error() << reply->errorString() << QString::fromUtf8(reply->readAll());
+        result = QString("{ \"error\": %1, \"error_string\": \"%2\", \"http_status_code\": %3 }")
+                .arg(reply->error())
+                .arg(reply->errorString())
+                .arg(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
+    }
+
+    return result;
 }

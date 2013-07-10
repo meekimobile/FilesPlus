@@ -160,22 +160,6 @@ void BoxClient::quota(QString nonce, QString uid)
     QNetworkReply *reply = manager->get(req);
 }
 
-void BoxClient::filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName) {
-    qDebug() << "----- BoxClient::filePut -----" << localFilePath << "to" << remoteParentPath << remoteFileName;
-
-    m_localFileHash[nonce] = new QFile(localFilePath);
-    QFile *localSourceFile = m_localFileHash[nonce];
-    if (localSourceFile->open(QIODevice::ReadOnly)) {
-        qint64 fileSize = localSourceFile->size();
-
-        // Send request.
-        filePut(nonce, uid, localSourceFile, fileSize, remoteParentPath, remoteFileName, false);
-    } else {
-        qDebug() << "BoxClient::filePut file " << localFilePath << " can't be opened.";
-        emit filePutReplySignal(nonce, -1, "Can't open file", localFilePath + " can't be opened.");
-    }
-}
-
 void BoxClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
     qDebug() << "----- BoxClient::metadata -----" << nonce << uid << remoteFilePath;
 
@@ -541,7 +525,7 @@ QNetworkReply *BoxClient::filePut(QString nonce, QString uid, QIODevice *source,
         uri = filePutRevURI.arg(fileId);
     }
     uri = encodeURI(uri);
-    qDebug() << "BoxClient::filePut uri" << uri;
+    qDebug() << "BoxClient::filePut" << nonce << "uri" << uri;
 
     QNetworkReply *reply = 0;
     qint64 fileSize = source->size();
@@ -843,21 +827,11 @@ void BoxClient::quotaReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 }
 
-void BoxClient::filePutReplyFinished(QNetworkReply *reply) {
-    qDebug() << "BoxClient::filePutReplyFinished" << reply << QString(" Error=%1").arg(reply->error());
-
+QString BoxClient::filePutReplyResult(QNetworkReply *reply)
+{
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
-
-    // Close source file.
-    if (m_localFileHash.contains(nonce)) {
-        QFile *localTargetFile = m_localFileHash[nonce];
-        localTargetFile->close();
-        m_localFileHash.remove(nonce);
-    }
-
     QString replyBody = QString::fromUtf8(reply->readAll());
-    qDebug() << "BoxClient::filePutReplyFinished replyBody" << replyBody;
+    qDebug() << "BoxClient::filePutReplyResult" << nonce << "replyBody" << replyBody;
     if (reply->error() == QNetworkReply::NoError) {
         QScriptEngine engine;
         QScriptValue sc = engine.evaluate("(" + replyBody + ")");
@@ -867,18 +841,7 @@ void BoxClient::filePutReplyFinished(QNetworkReply *reply) {
         }
     }
 
-    emit filePutReplySignal(nonce, reply->error(), reply->errorString(), replyBody);
-
-    // Remove request buffer.
-    if (m_bufferHash.contains(nonce)) {
-        m_bufferHash[nonce]->deleteLater();
-        m_bufferHash.remove(nonce);
-    }
-
-    // Scheduled to delete later.
-    m_replyHash->remove(nonce);
-    reply->deleteLater();
-    reply->manager()->deleteLater();
+    return replyBody;
 }
 
 void BoxClient::mergePropertyAndFilesJson(QString nonce, QString callback, QString uid)

@@ -18,7 +18,7 @@ public:
     void refreshToken(QString nonce, QString uid);
     void accountInfo(QString nonce, QString uid);
     void quota(QString nonce, QString uid);
-    void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
+
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
     void metadata(QString nonce, QString uid, QString remoteFilePath);
     void browse(QString nonce, QString uid, QString remoteFilePath);
@@ -30,9 +30,9 @@ public:
 
     QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, int offset, bool synchronous = false, QString callback = "");
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool isDir, bool synchronous = false, QString callback = "");
+
     void mergePropertyAndFilesJson(QString nonce, QString callback, QString uid);
     void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
-    QString fileGetReplySave(QNetworkReply *reply);
 
     QString getRemoteRoot(QString uid);
     bool isFileGetResumable(qint64 fileSize);
@@ -47,7 +47,6 @@ public slots:
     void accountInfoReplyFinished(QNetworkReply *reply);
     void quotaReplyFinished(QNetworkReply *reply);
 
-    void filePutReplyFinished(QNetworkReply *reply);
     void metadataReplyFinished(QNetworkReply *reply);
     void browseReplyFinished(QNetworkReply *reply);
 
@@ -61,8 +60,9 @@ public slots:
     QString shareFileReplyFinished(QNetworkReply *reply, bool synchronous = false);
 protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
+    QString filePutReplyResult(QNetworkReply *reply);
 private:
-
+    QString logoutURI;
 };
 
 #endif // SkyDriveClient_H

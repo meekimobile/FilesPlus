@@ -16,30 +16,6 @@ public:
     static const QString SandboxConsumerSecret;
     static const QString SandboxRoot;
 
-    static const QString signatureMethod;
-
-    static const QString requestTokenURI;
-    static const QString authorizeURI;
-    static const QString accessTokenURI;
-    static const QString accountInfoURI;
-    static const QString fileGetURI;
-    static const QString filePutURI;
-    static const QString metadataURI;
-    static const QString createFolderURI;
-    static const QString moveFileURI;
-    static const QString copyFileURI;
-    static const QString deleteFileURI;
-    static const QString sharesURI;
-    static const QString mediaURI;
-    static const QString thumbnailURI;
-    static const QString deltaURI;
-    static const QString chunkedUploadURI;
-    static const QString commitChunkedUploadURI;
-
-    static const qint64 DefaultChunkSize;
-
-    static const QString ReplyDateFormat;
-
     explicit DropboxClient(QObject *parent = 0);
     ~DropboxClient();
 
@@ -63,10 +39,8 @@ public:
     void accessToken(QString nonce, QString pin = "");
     void accountInfo(QString nonce, QString uid);
     void quota(QString nonce, QString uid);
-    QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
     QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
     QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
-    void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
     QNetworkReply * filePut(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
     QNetworkReply * filePutResume(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, QString uploadId, qint64 offset);
     QString filePutResumeStart(QString nonce, QString uid, QString fileName, qint64 bytesTotal, QString remoteParentPath, bool synchronous = false);
@@ -84,8 +58,7 @@ public:
     QString thumbnail(QString nonce, QString uid, QString remoteFilePath, QString format = "jpeg", QString size = "s"); // format = {jpeg|png}, size = {xs|s|m|l|xl}
     QString media(QString nonce, QString uid, QString remoteFilePath);
 
-    QNetworkReply *property(QString nonce, QString uid, QString remoteFilePath, bool synchronous = false, QString callback = "");
-    QString fileGetReplySave(QNetworkReply *reply);
+    QNetworkReply *property(QString nonce, QString uid, QString remoteFilePath, bool isDir, bool synchronous = false, QString callback = "");
 signals:
 
 public slots:
@@ -93,8 +66,6 @@ public slots:
     void accessTokenReplyFinished(QNetworkReply *reply);
     void accountInfoReplyFinished(QNetworkReply *reply);
     void quotaReplyFinished(QNetworkReply *reply);
-    void fileGetReplyFinished(QNetworkReply *reply);
-    void filePutReplyFinished(QNetworkReply *reply);
     void metadataReplyFinished(QNetworkReply *reply);
     void browseReplyFinished(QNetworkReply *reply);
     QString createFolderReplyFinished(QNetworkReply *reply, bool synchronous = false);
@@ -102,19 +73,22 @@ public slots:
     void copyFileReplyFinished(QNetworkReply *reply);
     QString deleteFileReplyFinished(QNetworkReply *reply, bool synchronous = false);
     QString shareFileReplyFinished(QNetworkReply *reply, bool synchronous = false);
-    void fileGetResumeReplyFinished(QNetworkReply *reply);
     void filePutResumeReplyFinished(QNetworkReply *reply);
     QString deltaReplyFinished(QNetworkReply *reply);
     QString mediaReplyFinished(QNetworkReply *reply);
 protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
+    QString fileGetReplyResult(QNetworkReply *reply);
+    QString filePutReplyResult(QNetworkReply *reply);
 private:
+    QString signatureMethod;
+    QString requestTokenURI;
+    QString chunkedUploadURI;
+    QString commitChunkedUploadURI;
+
     TokenPair requestTokenPair;
-    QHash<QString, QFile*> m_localFileHash;
 
     bool isFullAccess;
-    QString consumerKey;
-    QString consumerSecret;
     QString dropboxRoot;
 
     QByteArray createBaseString(QString method, QString uri, QString queryString);
