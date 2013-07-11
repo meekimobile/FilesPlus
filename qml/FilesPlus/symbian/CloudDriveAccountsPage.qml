@@ -245,7 +245,7 @@ Page {
                             placeholderText: appInfo.emptyStr+qsTr("Input connection name")
                             readOnly: false
                             validator: RegExpValidator {
-                                regExp: /[\w.-]+/
+                                regExp: /[\w.\-]+/
                             }
                         }
                     }
@@ -264,7 +264,7 @@ Page {
                             placeholderText: appInfo.emptyStr+qsTr("Input hostname[:port][/path]")
                             readOnly: false
                             validator: RegExpValidator {
-                                regExp: /[\w.-:~]+/
+                                regExp: /[\w.\-:~]+/
                             }
                         }
                     }
@@ -338,6 +338,9 @@ Page {
                             width: parent.width - contentItem.labelWidth
                             placeholderText: appInfo.emptyStr+qsTr("Input auth. hostname")
                             readOnly: false
+                            validator: RegExpValidator {
+                                regExp: /[\w.\-]+/
+                            }
                         }
                     }
                     Row {
