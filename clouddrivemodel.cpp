@@ -2130,8 +2130,6 @@ void CloudDriveModel::resumeNextJob(bool resetAbort)
     if (resetAbort) {
         m_isAborted = false;
     }
-
-    proceedNextJob();
 }
 
 void CloudDriveModel::cleanItems()
@@ -3950,15 +3948,15 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
     }
 
     // Disconnect deleted local path.
-    if (job.remoteFilePath != "") {
+    if (job.remoteFilePath != "") {        
         foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, job.remoteFilePath)) {
-            // Configurable file removing.
-            if (!job.suppressDeleteLocal && m_settings.value("CloudDriveModel.deleteFileReplyFilter.deleteLocalFile.enabled", true).toBool()) {
-                qDebug() << "CloudDriveModel::deleteFileReplyFilter" << nonce << "trash local item" << item.toJsonText();
-                deleteLocal(getClientType(item.type), item.uid, item.localPath);
-            } else {
-                qDebug() << "CloudDriveModel::deleteFileReplyFilter" << nonce << "remove link to existing local item" << item.toJsonText();
-                disconnect(getClientType(item.type), item.uid, item.localPath);
+            removeItemWithChildren(getClientType(item.type), item.uid, item.localPath);
+            // Request trash local path if it's not connected and not suppress deletion.
+            if (!job.suppressDeleteLocal
+                    && m_settings.value("CloudDriveModel.deleteFileReplyFilter.deleteLocalFile.enabled", true).toBool()
+                    && !isConnected(item.localPath)) {
+                qDebug() << "CloudDriveModel::deleteFileReplyFilter" << nonce << "trash local path" << item.localPath;
+                requestMoveToTrash(nonce, item.localPath);
             }
         }
     }

@@ -174,7 +174,7 @@ PageStackWindow {
 
         function openDeleteProgressDialog() {
             // Suppress dialog if FolderSizeItemListModel.deleteFIle uses trash.
-            if (appInfo.getSettingBoolValue("FolderSizeItemListModel.deleteFIle.use.trash.enabled", false)) {
+            if (appInfo.getSettingBoolValue("FolderSizeItemListModel.deleteFile.use.trash.enabled", false)) {
                 return;
             }
 
@@ -300,7 +300,7 @@ PageStackWindow {
                     // Delete file from clouds.
                     var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
                     for (var i=0; i<json.length; i++) {
-                        cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path);
+                        cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path, true); // NOTE suppressDeleteLocal=true
                     }
 
                     // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
@@ -370,7 +370,7 @@ PageStackWindow {
                 if (cloudDriveModel.isConnected(sourcePath)) {
                     var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
                     for (var i=0; i<json.length; i++) {
-                        cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path);
+                        cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path, true); // NOTE suppressDeleteLocal=true
                     }
 
                     // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
@@ -494,7 +494,7 @@ PageStackWindow {
                 if (cloudDriveModel.isConnected(sourcePath)) {
                     var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
                     for (var i=0; i<json.length; i++) {
-                        cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path);
+                        cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path, true); // NOTE suppressDeleteLocal=true
                     }
 
                     // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.

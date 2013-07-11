@@ -222,6 +222,10 @@ private:
     QStringList findSubDirList(QString dirPath);
     void addWatchedDirPath(QString dirPath);
     void removeWatchedDirPath(QString dirPath);
+
+    // Job queue processor.
+    QTimer m_jobQueueTimer;
+    void initJobQueueTimer();
 public slots:
     void loadDirSizeCacheFinishedFilter();
     void fetchDirSizeFinishedFilter(QString sourcePath);
@@ -254,7 +258,6 @@ Q_SIGNALS:
     void fetchDirSizeStarted(QString dirPath);
     void fetchDirSizeFinished(QString dirPath);
     void fetchDirSizeUpdated(QString dirPath);
-    void proceedNextJobSignal();
     void directoryChanged(QString dirPath);
     void runningJobCountChanged();
     void sortFlagChanged();

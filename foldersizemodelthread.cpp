@@ -861,7 +861,7 @@ bool FolderSizeModelThread::trash(const QString sourcePath, const QString target
     // TODO Does it need to support copy? Ex. trash C: file/folder.
     if (!QFileInfo(sourcePath).exists()) {
         qDebug() << "FolderSizeModelThread::trash not found sourcePath" << sourcePath << "Operation is ignored.";
-        return false;
+        return true;
     }
 
     if (QFileInfo(targetPath).exists()) {
