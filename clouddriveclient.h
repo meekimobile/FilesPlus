@@ -33,7 +33,6 @@ public:
 
     virtual bool isRemoteAbsolutePath();
     virtual bool isRemotePathCaseInsensitive();
-    virtual QString getRemoteRoot(QString id);
     virtual bool isFilePutResumable(qint64 fileSize = -1);
     virtual bool isFileGetResumable(qint64 fileSize = -1);
     virtual bool isDeltaSupported();
@@ -44,6 +43,7 @@ public:
     virtual bool isUnicodeSupported();
     virtual bool isMediaEnabled(QString uid);
     virtual bool isFileGetRedirected();
+    virtual QString getRemoteRoot(QString id);
     virtual qint64 getChunkSize();
 
     virtual bool testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname);
@@ -70,10 +70,12 @@ public:
     virtual QString media(QString nonce, QString uid, QString remoteFilePath);
     virtual QString delta(QString nonce, QString uid, bool synchronous = false);
 
+    // NOTE fileGet methods don't require implementation as it's mostly the same among clients.
     virtual QString fileGet(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, bool synchronous = false);
     virtual QIODevice * fileGet(QString nonce, QString uid, QString remoteFilePath, qint64 offset = -1, bool synchronous = false);
     virtual QIODevice * fileGetResume(QString nonce, QString uid, QString remoteFilePath, QString localFilePath, qint64 offset);
 
+    // NOTE filePut methods require implementation as it's different among clients.
     virtual void filePut(QString nonce, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName);
     /*
      *filePut
@@ -138,8 +140,6 @@ signals:
 
     void logRequestSignal(QString nonce, QString logType, QString titleText, QString message, int autoCloseInterval);
 public slots:
-    void monitorTimerTimeoutSlot();
-
     void uploadProgressFilter(qint64 bytesSent, qint64 bytesTotal);
     void downloadProgressFilter(qint64 bytesReceived, qint64 bytesTotal);
 
@@ -185,8 +185,6 @@ protected:
 
     QSettings m_settings;
 
-    QTimer m_monitorTimer;
-
     void loadAccessPairMap();
     void saveAccessPairMap();
 
@@ -206,6 +204,7 @@ protected:
     QString getPathFromUrl(QString urlString);
     QDateTime parseJSONDateString(QString jsonString);
 
+    virtual QByteArray createAuthHeader(QString uid);
     QNetworkReply *getRedirectedReply(QNetworkReply *reply);
     qint64 fileGetReplySaveChunk(QNetworkReply *reply, QFile *localTargetFile);
     qint64 fileGetReplySaveStream(QNetworkReply *reply, QFile *localTargetFile);

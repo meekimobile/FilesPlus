@@ -88,7 +88,7 @@ void BoxClient::accessToken(QString nonce, QString pin)
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    QNetworkReply *reply = manager->post(req, postData);
+    manager->post(req, postData);
 }
 
 void BoxClient::refreshToken(QString nonce, QString uid)
@@ -117,7 +117,7 @@ void BoxClient::refreshToken(QString nonce, QString uid)
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    QNetworkReply *reply = manager->post(req, postData);
+    manager->post(req, postData);
 }
 
 void BoxClient::accountInfo(QString nonce, QString uid)
@@ -141,7 +141,7 @@ void BoxClient::accountInfo(QString nonce, QString uid)
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessToken).toAscii() );
-    QNetworkReply *reply = manager->get(req);
+    manager->get(req);
 }
 
 void BoxClient::quota(QString nonce, QString uid)
@@ -157,7 +157,7 @@ void BoxClient::quota(QString nonce, QString uid)
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    QNetworkReply *reply = manager->get(req);
+    manager->get(req);
 }
 
 void BoxClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
@@ -390,7 +390,7 @@ void BoxClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QSt
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    QNetworkReply *reply = manager->put(req, postString.toUtf8());
+    manager->put(req, postString.toUtf8());
 }
 
 void BoxClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString targetRemoteParentPath, QString newRemoteFileName)
@@ -413,7 +413,7 @@ void BoxClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QSt
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    QNetworkReply *reply = manager->post(req, postString.toUtf8());
+    manager->post(req, postString.toUtf8());
 }
 
 bool BoxClient::isRemoteDir(QString nonce, QString uid, QString remoteFilePath)
@@ -421,13 +421,19 @@ bool BoxClient::isRemoteDir(QString nonce, QString uid, QString remoteFilePath)
     bool isDir = false;
     if (m_isDirHash->contains(remoteFilePath)) {
         isDir = m_isDirHash->value(remoteFilePath);
+        qDebug() << "BoxClient::isRemoteDir" << nonce << uid << remoteFilePath << "cached isDir" << isDir;
     } else {
-        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, true, "isDir");
+        // Request property with isDir=true. It's a directory if reply is success.
+        QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, true, true, "isRemoteDir");
         if (propertyReply->error() == QNetworkReply::NoError) {
             isDir = true;
         } else {
             qDebug() << "BoxClient::isDir" << nonce << uid << remoteFilePath << "propertyReply->error()" << propertyReply->error() << "remoteFilePath is not a directory.";
         }
+        // Store cached result.
+        m_isDirHash->insert(remoteFilePath, isDir);
+        qDebug() << "BoxClient::isRemoteDir" << nonce << uid << remoteFilePath << "isDir" << isDir;
+
         propertyReply->deleteLater();
         propertyReply->manager()->deleteLater();
     }
@@ -493,7 +499,7 @@ void BoxClient::renameFile(QString nonce, QString uid, QString remoteFilePath, Q
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    QNetworkReply *reply = manager->put(req, postString.toUtf8());
+    manager->put(req, postString.toUtf8());
 }
 
 QNetworkReply *BoxClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
@@ -591,11 +597,6 @@ QNetworkReply *BoxClient::filePut(QString nonce, QString uid, QIODevice *source,
     }
 
     return reply;
-}
-
-QString BoxClient::getRemoteRoot(QString uid)
-{
-    return RemoteRoot;
 }
 
 bool BoxClient::isDeltaSupported()

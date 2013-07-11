@@ -3,8 +3,6 @@
 //#include <QtNetwork>
 //#include "qnetworkreplywrapper.h"
 
-const QString FtpClient::FtpRoot = "~";
-
 FtpClient::FtpClient(QObject *parent) :
     CloudDriveClient(parent)
 {

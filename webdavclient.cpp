@@ -79,7 +79,7 @@ void WebDavClient::accessToken(QString nonce, QString pin)
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    QNetworkReply *reply = manager->post(req, postData);
+    manager->post(req, postData);
 }
 
 void WebDavClient::accountInfo(QString nonce, QString uid)
@@ -107,7 +107,7 @@ void WebDavClient::accountInfo(QString nonce, QString uid)
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
     req.setRawHeader("Authorization", authHeader);
-    QNetworkReply *reply = manager->get(req);
+    manager->get(req);
 }
 
 void WebDavClient::quota(QString nonce, QString uid)
@@ -247,7 +247,7 @@ void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, 
     req.setRawHeader("Authorization", authHeader);
     req.setRawHeader("Accept", QByteArray("*/*"));
     req.setRawHeader("Destination", destinationHeader);
-    QNetworkReply *reply = manager->sendCustomRequest(req, "MOVE");
+    manager->sendCustomRequest(req, "MOVE");
 }
 
 void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QString newRemoteParentPath, QString newRemoteFileName)
@@ -287,7 +287,7 @@ void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, 
     req.setRawHeader("Accept", QByteArray("*/*"));
     req.setRawHeader("Destination", destinationHeader);
     req.setRawHeader("Overwrite", "F");
-    QNetworkReply *reply = manager->sendCustomRequest(req, "COPY");
+    manager->sendCustomRequest(req, "COPY");
 }
 
 QString WebDavClient::deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous)
@@ -493,7 +493,7 @@ QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFileP
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
-        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetReplyFinished(QNetworkReply*)));
+//        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetReplyFinished(QNetworkReply*)));
     }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     // Configure to ignore errors for self-signed certificate.
@@ -512,18 +512,26 @@ QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFileP
     }
     // TODO TE: chunked, Accept-Encoding: gzip
     QNetworkReply *reply = manager->get(req);
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgressFilter(qint64,qint64)));
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
     // Store reply for further usage.
     m_replyHash->insert(nonce, reply);
 
-    while (synchronous && !reply->isFinished()) {
-        QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper::msleep(100);
-    }
+    if (!synchronous) {
+        // Wait until readyRead().
+        QEventLoop loop;
+        connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
+        loop.exec();
 
-    if (synchronous) {
+        fileGetReplyFinished(reply, synchronous);
+    } else {
+        // Wait until finished().
+        while (!reply->isFinished()) {
+            QApplication::processEvents(QEventLoop::AllEvents, 100);
+            Sleeper::msleep(100);
+        }
+
         // Remove finished reply from hash.
         m_replyHash->remove(nonce);
     }
@@ -565,8 +573,8 @@ QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *sour
     req.setHeader(QNetworkRequest::ContentLengthHeader, bytesTotal);
     // TODO Content-Encoding: gzip, Transfer-Encoding: chunked
     QNetworkReply *reply = manager->put(req, source);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SLOT(uploadProgressFilter(qint64,qint64)));
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
 
     // Store reply for further usage.
     m_replyHash->insert(nonce, reply);
@@ -620,8 +628,8 @@ QIODevice *WebDavClient::fileGetResume(QString nonce, QString uid, QString remot
     }
     // TODO TE: chunked, Accept-Encoding: gzip
     QNetworkReply *reply = manager->get(req);
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgressFilter(qint64,qint64)));
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
     // Store reply for further usage.
     m_replyHash->insert(nonce, reply);
@@ -986,7 +994,7 @@ void WebDavClient::accessTokenReplyFinished(QNetworkReply *reply)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = m_paramMap["authorize_uid"];
-    qDebug() << "WebDavClient::accessTokenReplyFinished" << nonce << "reply" << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "WebDavClient::accessTokenReplyFinished" << nonce << "reply" << reply << QString("Error=%1").arg(reply->error());
 
     // Load response parameters into map.
     QString replyBody = QString::fromUtf8(reply->readAll());
@@ -1024,7 +1032,7 @@ void WebDavClient::accountInfoReplyFinished(QNetworkReply *reply)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
-    qDebug() << "WebDavClient::accountInfoReplyFinished" << nonce << "reply" << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "WebDavClient::accountInfoReplyFinished" << nonce << "reply" << reply << QString("Error=%1").arg(reply->error());
 
     QString replyBody = QString::fromUtf8(reply->readAll());
 
@@ -1087,7 +1095,7 @@ void WebDavClient::propertyReplyFinished(QNetworkReply *reply)
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
     QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3)).toString();
 
-    qDebug() << "WebDavClient::propertyReplyFinished" << nonce << callback << uid << remoteFilePath << "reply" << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "WebDavClient::propertyReplyFinished" << nonce << callback << uid << remoteFilePath << "reply" << reply << QString("Error=%1").arg(reply->error());
 
     QString replyBody = QString::fromUtf8(reply->readAll());
     qDebug() << "WebDavClient::propertyReplyFinished nonce" << nonce
@@ -1163,7 +1171,7 @@ QString WebDavClient::createFolderReplyFinished(QNetworkReply *reply, bool synch
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
     QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
 
-    qDebug() << "WebDavClient::createFolderReplyFinished" << nonce << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "WebDavClient::createFolderReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     QString replyBody;
     qDebug() << "WebDavClient::createFolderReplyFinished" << nonce << "replyBody" << replyBody;
@@ -1211,7 +1219,7 @@ void WebDavClient::moveFileReplyFinished(QNetworkReply *reply)
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
     QString newRemoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
 
-    qDebug() << "WebDavClient::moveFileReplyFinished" << nonce << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "WebDavClient::moveFileReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     QString replyBody;
     qDebug() << "WebDavClient::moveFileReplyFinished" << nonce << "replyBody" << replyBody << "statusCode" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
@@ -1244,7 +1252,7 @@ void WebDavClient::copyFileReplyFinished(QNetworkReply *reply)
     QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
     QString newRemoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
 
-    qDebug() << "WebDavClient::copyFileReplyFinished" << nonce << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "WebDavClient::copyFileReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     QString replyBody;
     qDebug() << "WebDavClient::copyFileReplyFinished" << nonce << "replyBody" << replyBody << "statusCode" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
@@ -1275,7 +1283,7 @@ QString WebDavClient::deleteFileReplyFinished(QNetworkReply *reply, bool synchro
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
 
-    qDebug() << "WebDavClient::deleteFileReplyFinished" << nonce << reply << QString(" Error=%1").arg(reply->error());
+    qDebug() << "WebDavClient::deleteFileReplyFinished" << nonce << reply << QString("Error=%1").arg(reply->error());
 
     QString replyBody;
     qDebug() << "WebDavClient::deleteFileReplyFinished" << nonce << "replyBody" << replyBody;
@@ -1359,7 +1367,7 @@ QScriptValue WebDavClient::parseCommonPropertyScriptValue(QScriptEngine &engine,
 void WebDavClient::sslErrorsReplyFilter(QNetworkReply *reply, QList<QSslError> sslErrors)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-    qDebug() << "WebDavClient::sslErrorsReplyFilter nonce" << nonce << "reply" << reply << QString(" Error=%1").arg(reply->error()) << "sslErrors" << sslErrors;
+    qDebug() << "WebDavClient::sslErrorsReplyFilter nonce" << nonce << "reply" << reply << QString("Error=%1").arg(reply->error()) << "sslErrors" << sslErrors;
 
     // Configure to ignore errors for self-signed certificate.
     if (m_settings.value(objectName() + ".ignoreSSLSelfSignedCertificateErrors", QVariant(false)).toBool()) {
@@ -1381,11 +1389,6 @@ void WebDavClient::sslErrorsReplyFilter(QList<QSslError> sslErrors)
     foreach (QSslError sslError, sslErrors) {
         qDebug() << "WebDavClient::sslErrorsReplyFilter sslError" << sslError << sslError.certificate();
     }
-}
-
-qint64 WebDavClient::getChunkSize()
-{
-    return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();
 }
 
 QString WebDavClient::fileGetReplyResult(QNetworkReply *reply)

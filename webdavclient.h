@@ -18,11 +18,10 @@ public:
     bool testConnection(QString id, QString hostname, QString username, QString password, QString token, QString authHostname);
     bool saveConnection(QString id, QString hostname, QString username, QString password, QString token);
 
-    QString getRemoteRoot(QString uid);
     bool isRemoteAbsolutePath();
     bool isConfigurable();
     bool isFileGetResumable(qint64 fileSize);
-    qint64 getChunkSize();
+    QString getRemoteRoot(QString uid);
     QDateTime parseReplyDateString(QString dateString);
 
     void authorize(QString nonce, QString hostname);

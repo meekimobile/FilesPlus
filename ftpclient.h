@@ -10,8 +10,6 @@ class FtpClient : public CloudDriveClient
 {
     Q_OBJECT
 public:
-    static const QString FtpRoot;
-
     explicit FtpClient(QObject *parent = 0);
     ~FtpClient();
 
@@ -46,8 +44,7 @@ protected:
 
 private:
     QHash<QString, QFtpWrapper*> *m_ftpHash;
-    QHash<QString, QString> m_remoteRootHash;
-    QHash<QString, QFile*> m_localFileHash;
+    QHash<QString, QString> m_remoteRootHash; // NOTE Use UID as key.
 
     QFtpWrapper *connectToHost(QString nonce, QString uid);
     QString property(QString nonce, QString uid, QString remoteFilePath);

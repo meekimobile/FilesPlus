@@ -31,14 +31,9 @@ public:
     QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, int offset, bool synchronous = false, QString callback = "");
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool isDir, bool synchronous = false, QString callback = "");
 
-    void mergePropertyAndFilesJson(QString nonce, QString callback, QString uid);
-    void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
-
-    QString getRemoteRoot(QString uid);
     bool isFileGetResumable(qint64 fileSize);
     bool isFileGetRedirected();
     bool isViewable();
-    qint64 getChunkSize();
     QDateTime parseReplyDateString(QString dateString);
 signals:
 
@@ -63,6 +58,9 @@ protected:
     QString filePutReplyResult(QNetworkReply *reply);
 private:
     QString logoutURI;
+
+    void mergePropertyAndFilesJson(QString nonce, QString callback, QString uid);
+    void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
 };
 
 #endif // SkyDriveClient_H

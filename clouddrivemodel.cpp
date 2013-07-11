@@ -2877,7 +2877,6 @@ void CloudDriveModel::migrateFilePutResume_Block(QString nonce, CloudDriveModel:
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     CloudDriveClient *sourceClient = getCloudClient(type);
     CloudDriveClient *targetClient = getCloudClient(targetType);
-    QString tempFilePath = m_settings.value("temp.path", TEMP_PATH).toString() + "/" + nonce;
     QScriptEngine engine;
     QScriptValue sc;
     qDebug() << "CloudDriveModel::migrateFilePutResume_Block job" << job.toJsonText();

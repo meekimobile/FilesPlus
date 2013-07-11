@@ -89,7 +89,7 @@ void SkyDriveClient::accessToken(QString nonce, QString pin)
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    QNetworkReply *reply = manager->post(req, postData);
+    manager->post(req, postData);
 }
 
 void SkyDriveClient::refreshToken(QString nonce, QString uid)
@@ -119,7 +119,7 @@ void SkyDriveClient::refreshToken(QString nonce, QString uid)
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    QNetworkReply *reply = manager->post(req, postData);
+    manager->post(req, postData);
 }
 
 void SkyDriveClient::accountInfo(QString nonce, QString uid)
@@ -143,7 +143,7 @@ void SkyDriveClient::accountInfo(QString nonce, QString uid)
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessToken).toAscii() );
-    QNetworkReply *reply = manager->get(req);
+    manager->get(req);
 }
 
 void SkyDriveClient::quota(QString nonce, QString uid)
@@ -159,7 +159,7 @@ void SkyDriveClient::quota(QString nonce, QString uid)
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    QNetworkReply *reply = manager->get(req);
+    manager->get(req);
 }
 
 void SkyDriveClient::metadata(QString nonce, QString uid, QString remoteFilePath) {
@@ -348,7 +348,7 @@ void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath
         req.setAttribute(QNetworkRequest::User, QVariant(nonce));
         req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
         req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-        QNetworkReply *reply = manager->sendCustomRequest(req, "MOVE", m_bufferHash[nonce]);
+        manager->sendCustomRequest(req, "MOVE", m_bufferHash[nonce]);
     }
 }
 
@@ -379,7 +379,7 @@ void SkyDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath
         req.setAttribute(QNetworkRequest::User, QVariant(nonce));
         req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
         req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-        QNetworkReply *reply = manager->sendCustomRequest(req, "COPY", m_bufferHash[nonce]);
+        manager->sendCustomRequest(req, "COPY", m_bufferHash[nonce]);
     }
 }
 
@@ -438,7 +438,7 @@ void SkyDriveClient::renameFile(QString nonce, QString uid, QString remoteFilePa
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    QNetworkReply *reply = manager->put(req, postData);
+    manager->put(req, postData);
 }
 
 QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous)
@@ -460,8 +460,8 @@ QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *so
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
     req.setHeader(QNetworkRequest::ContentLengthHeader, bytesTotal);
     QNetworkReply *reply = manager->put(req, source);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SLOT(uploadProgressFilter(qint64,qint64)));
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
 
     // Store reply for further usage.
     m_replyHash->insert(nonce, reply);
@@ -477,11 +477,6 @@ QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *so
     }
 
     return reply;
-}
-
-QString SkyDriveClient::getRemoteRoot(QString uid)
-{
-    return RemoteRoot;
 }
 
 bool SkyDriveClient::isFileGetResumable(qint64 fileSize)
@@ -1010,11 +1005,6 @@ QScriptValue SkyDriveClient::parseCommonPropertyScriptValue(QScriptEngine &engin
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("name").toString())));
 
     return parsedObj;
-}
-
-qint64 SkyDriveClient::getChunkSize()
-{
-    return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();
 }
 
 QDateTime SkyDriveClient::parseReplyDateString(QString dateString)

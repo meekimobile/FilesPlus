@@ -217,7 +217,7 @@ void GCDClient::accessToken(QString nonce, QString pin)
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    QNetworkReply *reply = manager->post(req, postData);
+    manager->post(req, postData);
 }
 
 void GCDClient::refreshToken(QString nonce, QString uid)
@@ -251,7 +251,7 @@ void GCDClient::refreshToken(QString nonce, QString uid)
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    QNetworkReply *reply = manager->post(req, postData);
+    manager->post(req, postData);
 }
 
 void GCDClient::accountInfo(QString nonce, QString uid)
@@ -275,7 +275,7 @@ void GCDClient::accountInfo(QString nonce, QString uid)
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QByteArray().append("Bearer ").append(accessToken));
-    QNetworkReply *reply = manager->get(req);
+    manager->get(req);
 }
 
 void GCDClient::quota(QString nonce, QString uid)
@@ -291,7 +291,7 @@ void GCDClient::quota(QString nonce, QString uid)
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
-    QNetworkReply *reply = manager->get(req);
+    manager->get(req);
 }
 
 void GCDClient::metadata(QString nonce, QString uid, QString remoteFilePath)
@@ -484,9 +484,6 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    if (!synchronous) {
-        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetReplyFinished(QNetworkReply*)));
-    }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
@@ -498,18 +495,26 @@ QIODevice *GCDClient::fileGet(QString nonce, QString uid, QString remoteFilePath
         req.setRawHeader("Range", rangeHeader.toAscii() );
     }
     QNetworkReply *reply = manager->get(req);
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgressFilter(qint64,qint64)));
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
     // Store reply for further usage.
     m_replyHash->insert(nonce, reply);
 
-    while (synchronous && !reply->isFinished()) {
-        QApplication::processEvents(QEventLoop::AllEvents, 100);
-        Sleeper::msleep(100);
-    }
+    if (!synchronous) {
+        // Wait until readyRead().
+        QEventLoop loop;
+        connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
+        loop.exec();
 
-    if (synchronous) {
+        fileGetReplyFinished(reply, synchronous);
+    } else {
+        // Wait until finished().
+        while (!reply->isFinished()) {
+            QApplication::processEvents(QEventLoop::AllEvents, 100);
+            Sleeper::msleep(100);
+        }
+
         // Remove finished reply from hash.
         m_replyHash->remove(nonce);
     }
@@ -547,8 +552,8 @@ QNetworkReply *GCDClient::filePut(QString nonce, QString uid, QIODevice *source,
     req.setHeader(QNetworkRequest::ContentTypeHeader, QVariant(contentType));
     req.setHeader(QNetworkRequest::ContentLengthHeader, bytesTotal);
     QNetworkReply *reply = (fileId != "") ? manager->put(req, source) : manager->post(req, source);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SLOT(uploadProgressFilter(qint64,qint64)));
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
 
     // Store reply for further usage.
     m_replyHash->insert(nonce, reply);
@@ -652,8 +657,8 @@ QNetworkReply *GCDClient::filePutMulipart(QString nonce, QString uid, QIODevice 
             req.setHeader(QNetworkRequest::ContentTypeHeader, "multipart/related; boundary=\"" + boundary + "\"");
             req.setHeader(QNetworkRequest::ContentLengthHeader, postData.length());
             QNetworkReply *reply = (fileId != "") ? manager->put(req, m_bufferHash[nonce]->readAll()) : manager->post(req, m_bufferHash[nonce]->readAll());
+            connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SLOT(uploadProgressFilter(qint64,qint64)));
             QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-            connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
 
             // Store reply for further usage.
             m_replyHash->insert(nonce, reply);
@@ -731,8 +736,8 @@ QIODevice *GCDClient::fileGetResume(QString nonce, QString uid, QString remoteFi
         req.setRawHeader("Range", rangeHeader.toAscii() );
     }
     QNetworkReply *reply = manager->get(req);
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgressFilter(qint64,qint64)));
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(downloadProgress(QString,qint64,qint64)), this, SIGNAL(downloadProgress(QString,qint64,qint64)));
 
     // Store reply for further usage.
     m_replyHash->insert(nonce, reply);
@@ -904,8 +909,8 @@ QString GCDClient::filePutResumeUpload(QString nonce, QString uid, QIODevice *so
     req.setHeader(QNetworkRequest::ContentTypeHeader, QVariant(getContentType(fileName)));
     req.setRawHeader("Content-Range", contentRange.toAscii() );
     QNetworkReply *reply = manager->put(req, source);
+    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), this, SLOT(uploadProgressFilter(qint64,qint64)));
     QNetworkReplyWrapper *w = new QNetworkReplyWrapper(reply);
-    connect(w, SIGNAL(uploadProgress(QString,qint64,qint64)), this, SIGNAL(uploadProgress(QString,qint64,qint64)));
 
     // Store reply for further usage. Ex. abort from job page.
     m_replyHash->insert(nonce, reply);
@@ -1059,11 +1064,6 @@ QString GCDClient::media(QString nonce, QString uid, QString remoteFilePath)
     return uri;
 }
 
-QString GCDClient::getRemoteRoot(QString uid)
-{
-    return RemoteRoot;
-}
-
 bool GCDClient::isFilePutResumable(qint64 fileSize)
 {
     return (fileSize == -1 || fileSize >= getChunkSize());
@@ -1119,7 +1119,7 @@ void GCDClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QSt
         req.setAttribute(QNetworkRequest::User, QVariant(nonce));
         req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
         req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=UTF-8");
-        QNetworkReply *reply = manager->sendCustomRequest(req, "POST", m_bufferHash[nonce]);
+        manager->sendCustomRequest(req, "POST", m_bufferHash[nonce]);
     }
 }
 
@@ -2092,11 +2092,6 @@ QString GCDClient::deltaReplyFinished(QNetworkReply *reply)
     reply->manager()->deleteLater();
 
     return replyBody;
-}
-
-qint64 GCDClient::getChunkSize()
-{
-    return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();
 }
 
 int GCDClient::compareFileMetadata(CloudDriveJob &job, QScriptValue &jsonObj, QString localFilePath, CloudDriveItem &item)

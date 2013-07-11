@@ -19,9 +19,6 @@ public:
     explicit DropboxClient(QObject *parent = 0);
     ~DropboxClient();
 
-    QString getDefaultLocalFilePath(const QString &remoteFilePath);
-    QString getDefaultRemoteFilePath(const QString &localFilePath);
-
     bool isRemoteAbsolutePath();
     bool isRemotePathCaseInsensitive();
     bool isFilePutResumable(qint64 fileSize);
@@ -30,7 +27,6 @@ public:
     bool isDeltaEnabled(QString uid);
     bool isViewable();
     bool isImageUrlCachable();
-    qint64 getChunkSize();
 
     QDateTime parseReplyDateString(QString dateString);
 
@@ -91,10 +87,12 @@ private:
     bool isFullAccess;
     QString dropboxRoot;
 
+    QString getDefaultLocalFilePath(const QString &remoteFilePath);
+    QString getDefaultRemoteFilePath(const QString &localFilePath);
     QByteArray createBaseString(QString method, QString uri, QString queryString);
     QString createSignature(QString signatureMethod, QString consumerSecret, QString tokenSecret, QByteArray baseString);
-    QString createSignatureWithHMACSHA1(QString consumerSecret, QString tokenSecret, QByteArray baseString);
-    QString createSignatureWithPLAINTEXT(QString consumerSecret, QString tokenSecret, QByteArray baseString);
+    QByteArray createSignatureWithHMACSHA1(QString consumerSecret, QString tokenSecret, QByteArray baseString);
+    QByteArray createSignatureWithPLAINTEXT(QString consumerSecret, QString tokenSecret, QByteArray baseString);
     QByteArray createPostData(QString signature, QString queryString);
     QByteArray createOAuthHeaderString(QMap<QString, QString> sortMap);
     QByteArray createOAuthHeaderForUid(QString nonce, QString uid, QString method, QString uri, QMap<QString, QString> addParamMap = QMap<QString, QString>());

@@ -34,12 +34,6 @@ public:
     QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, int offset, bool synchronous, QString callback);
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool isDir, bool synchronous, QString callback);
 
-    bool isRemoteDir(QString nonce, QString uid, QString remoteFilePath);
-    QString searchFileId(QString nonce, QString uid, QString remoteParentPath, QString remoteFileName);
-    void mergePropertyAndFilesJson(QString nonce, QString callback, QString uid);
-    void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
-
-    QString getRemoteRoot(QString uid);
     bool isDeltaSupported();
     bool isDeltaEnabled(QString uid);
     bool isViewable();
@@ -61,7 +55,7 @@ public slots:
     void moveFileReplyFinished(QNetworkReply *reply);
     void copyFileReplyFinished(QNetworkReply *reply);
     void deleteFileReplyFinished(QNetworkReply *reply);
-    QString shareFileReplyFinished(QNetworkReply *reply, bool synchronous);
+    QString shareFileReplyFinished(QNetworkReply *reply, bool synchronous = false);
     QString deltaReplyFinished(QNetworkReply *reply);
 protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
@@ -69,7 +63,12 @@ protected:
 private:
     QString filePutRevURI;
 
-    QHash<QString, bool> *m_isDirHash;
+    QHash<QString, bool> *m_isDirHash; // NOTE Use remoteFilePath as key.
+
+    bool isRemoteDir(QString nonce, QString uid, QString remoteFilePath);
+    QString searchFileId(QString nonce, QString uid, QString remoteParentPath, QString remoteFileName);
+    void mergePropertyAndFilesJson(QString nonce, QString callback, QString uid);
+    void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
 };
 
 #endif // BOXCLIENT_H

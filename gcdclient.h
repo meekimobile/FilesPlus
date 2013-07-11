@@ -40,18 +40,11 @@ public:
     QNetworkReply * files(QString nonce, QString uid, QString remoteFilePath, int offset, bool synchronous, QString callback = "");
     QNetworkReply * property(QString nonce, QString uid, QString remoteFilePath, bool isDir, bool synchronous = false, QString callback = "");
 
-    void mergePropertyAndFilesJson(QString nonce, QString callback);
-    QNetworkReply * patchFile(QString nonce, QString uid, QString remoteFilePath, QByteArray postData);
-    QNetworkReply * filePutMulipart(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
-    QString searchFileId(QString nonce, QString uid, QString remoteParentPath, QString remoteFileName);
-
-    QString getRemoteRoot(QString uid);
     bool isFilePutResumable(qint64 fileSize);
     bool isFileGetResumable(qint64 fileSize);
     bool isDeltaSupported();
     bool isDeltaEnabled(QString uid);
     bool isViewable();
-    qint64 getChunkSize();
     int compareFileMetadata(CloudDriveJob &job, QScriptValue &jsonObj, QString localFilePath, CloudDriveItem &item);
 signals:
 
@@ -97,6 +90,10 @@ private:
     QHash<QString, QString> createHashFromScriptValue(QString parentName, QScriptValue sc);
     QHash<QString, QString> createHashFromJson(QString jsonText);
     bool isCloudOnly(QScriptValue jsonObj);
+    void mergePropertyAndFilesJson(QString nonce, QString callback);
+    QNetworkReply * patchFile(QString nonce, QString uid, QString remoteFilePath, QByteArray postData);
+    QNetworkReply * filePutMulipart(QString nonce, QString uid, QIODevice * source, qint64 bytesTotal, QString remoteParentPath, QString remoteFileName, bool synchronous = false);
+    QString searchFileId(QString nonce, QString uid, QString remoteParentPath, QString remoteFileName);
 };
 
 #endif // GCDClient_H

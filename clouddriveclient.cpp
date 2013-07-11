@@ -25,10 +25,6 @@ CloudDriveClient::CloudDriveClient(QObject *parent) :
     m_replyHash = new QHash<QString, QNetworkReply*>();
     m_propertyReplyHash = new QHash<QString, QByteArray>();
     m_filesReplyHash = new QHash<QString, QByteArray>();
-
-//    connect(&m_monitorTimer, SIGNAL(timeout()), this, SLOT(monitorTimerTimeoutSlot()) );
-//    m_monitorTimer.setInterval(4000);
-//    m_monitorTimer.start();
 }
 
 CloudDriveClient::~CloudDriveClient()
@@ -113,7 +109,7 @@ bool CloudDriveClient::isRemotePathCaseInsensitive()
 
 QString CloudDriveClient::getRemoteRoot(QString id)
 {
-    return "";
+    return RemoteRoot;
 }
 
 bool CloudDriveClient::isFilePutResumable(qint64 fileSize)
@@ -513,7 +509,7 @@ QIODevice *CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteF
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
-    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    req.setRawHeader("Authorization", createAuthHeader(uid));
     if (offset >= 0) {
         QString rangeHeader = isFileGetResumable()
                 ? QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1)
@@ -538,6 +534,9 @@ QIODevice *CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteF
             QApplication::processEvents(QEventLoop::AllEvents, 100);
             Sleeper::msleep(100);
         }
+
+        // Remove finished reply from hash.
+        m_replyHash->remove(nonce);
     }
 
     return reply;
@@ -560,7 +559,7 @@ QIODevice *CloudDriveClient::fileGetResume(QString nonce, QString uid, QString r
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
-    req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
+    req.setRawHeader("Authorization", createAuthHeader(uid));
     if (offset >= 0) {
         QString rangeHeader = isFileGetResumable()
                 ? QString("bytes=%1-%2").arg(offset).arg(offset+getChunkSize()-1)
@@ -760,11 +759,6 @@ qint64 CloudDriveClient::writeToFile(QIODevice *source, QString targetFilePath, 
         return -1;
     }
 
-}
-
-void CloudDriveClient::monitorTimerTimeoutSlot()
-{
-    qDebug() << "CloudDriveClient::monitorTimerTimeoutSlot m_replyHash->size()" << m_replyHash->size();
 }
 
 void CloudDriveClient::uploadProgressFilter(qint64 bytesSent, qint64 bytesTotal)
@@ -1020,10 +1014,10 @@ qint64 CloudDriveClient::fileGetReplySaveChunk(QNetworkReply *reply, QFile *loca
             // Read first buffer.
             qint64 c = reply->read(buf, sizeof(buf));
             while (c > 0) {
-                qDebug() << "CloudDriveClient::fileGetReplySaveChunk" << objectName() << nonce << "reply readBytes" << c;
+//                qDebug() << "CloudDriveClient::fileGetReplySaveChunk" << objectName() << nonce << "reply readBytes" << c;
 
                 writtenBytes += localTargetFile->write(buf, c);
-                qDebug() << "CloudDriveClient::fileGetReplySaveChunk" << objectName() << nonce << "reply writtenBytes" << writtenBytes;
+//                qDebug() << "CloudDriveClient::fileGetReplySaveChunk" << objectName() << nonce << "reply writtenBytes" << writtenBytes;
 
                 // Tell event loop to process event before it will process time consuming task.
                 QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
@@ -1092,4 +1086,9 @@ qint64 CloudDriveClient::fileGetReplySaveStream(QNetworkReply *reply, QFile *loc
     }
 
     return writtenBytes;
+}
+
+QByteArray CloudDriveClient::createAuthHeader(QString uid)
+{
+    return QString("Bearer " + accessTokenPairMap[uid].token).toAscii();
 }
