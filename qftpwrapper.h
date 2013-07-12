@@ -25,7 +25,7 @@ public:
     QString getUid();
     QList<QUrlInfo> getItemList();
     void resetIsDone();
-    bool waitForDone();
+    bool waitForDone(int waitCount = MaxWaitCount);
     QString getCommandName(Command cmd);
 
     bool isAborted();

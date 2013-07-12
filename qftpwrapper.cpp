@@ -8,6 +8,7 @@ QFtpWrapper::QFtpWrapper(QString nonce, QObject *parent) :
 {
     m_nonce = nonce;
     m_isDone = false;
+    m_isAborted = false;
     m_currentPath = "";
 
     connect(this, SIGNAL(commandStarted(int)), this, SLOT(commandStartedFilter(int)));
@@ -64,16 +65,17 @@ void QFtpWrapper::resetIsDone()
     m_isDone = false;
 }
 
-bool QFtpWrapper::waitForDone()
+bool QFtpWrapper::waitForDone(int waitCount)
 {
-    qDebug() << "QFtpWrapper::waitForDone" << m_nonce << m_isDone;
+    qDebug() << "QFtpWrapper::waitForDone" << m_nonce << m_isDone << waitCount;
 
-    int c = MaxWaitCount;
+    int c = waitCount;
     while (!m_isDone && c-- > 0) {
-        qDebug() << "QFtpWrapper::waitForDone" << m_nonce << m_isDone << c;
+//        qDebug() << "QFtpWrapper::waitForDone" << m_nonce << m_isDone << c << "/" << waitCount;
         QApplication::processEvents(QEventLoop::AllEvents, 100);
         Sleeper::msleep(100);
     }
+    qDebug() << "QFtpWrapper::waitForDone" << m_nonce << m_isDone << c << "/" << waitCount;
 
     // Check isDone then return true if it's actually done.
     if (m_isDone) {
@@ -181,6 +183,7 @@ bool QFtpWrapper::isAborted()
 
 void QFtpWrapper::setIsAborted(bool flag)
 {
+//    qDebug() << "QFtpWrapper::setIsAborted" << flag << sender();
     m_isAborted = flag;
 }
 
@@ -245,7 +248,7 @@ void QFtpWrapper::rawCommandReplyFilter(int replyCode, QString result)
 
 void QFtpWrapper::dataTransferProgressFilter(qint64 done, qint64 total)
 {
-    qDebug() << "QFtpWrapper::dataTransferProgressFilter" << currentCommand() << done << total;
+//    qDebug() << "QFtpWrapper::dataTransferProgressFilter" << currentCommand() << done << total;
     if (currentCommand() == QFtp::Get) {
         emit downloadProgress(m_nonce, done, total);
     } else if (currentCommand() == QFtp::Put) {
@@ -274,7 +277,7 @@ void QFtpWrapper::idleTimerTimeoutSlot()
 {
     // Abort connection if it's timeout.
     abort();
-    m_isAborted = true;
+    setIsAborted(true);
     m_isDone = true;
     qDebug() << "QFtpWrapper::idleTimerTimeoutSlot nonce" << m_nonce << "is aborted.";
 }
