@@ -8,6 +8,7 @@ Page {
 
     property string name: "cloudDriveJobsPage"
     property bool inverted: window.platformInverted
+    property bool showBytes: false
 
     onStatusChanged: {
         if (status == PageStatus.Active) {
@@ -30,6 +31,9 @@ Page {
         ToolBarButton {
             id: cloudButton
             buttonIconSource: (!inverted) ? "cloud.svg" : "cloud_inverted.svg"
+            onClicked: {
+                showBytes = !showBytes;
+            }
 
             TextIndicator {
                 id: cloudButtonIndicator
@@ -173,7 +177,6 @@ Page {
 
             property int mouseX
             property int mouseY
-            property bool showBytes: false
 
             Column {
                 width: parent.width
@@ -200,7 +203,7 @@ Page {
                         ProgressBar {
                             id: syncProgressBar
                             width: parent.width
-                            visible: is_running && !listItem.showBytes
+                            visible: is_running && !showBytes
                             value: bytes
                             minimumValue: 0
                             maximumValue: bytes_total
@@ -209,14 +212,14 @@ Page {
                             text: appInfo.emptyStr+Utility.formatFileSize(bytes, 1)+" / "+Utility.formatFileSize(bytes_total, 1)
                             width: parent.width
                             horizontalAlignment: Text.AlignRight
-                            visible: listItem.showBytes
+                            visible: is_running && showBytes
                             font.pointSize: 6
                             color: (!inverted) ? "white" : "black"
                         }
                         Text {
                             text: appInfo.emptyStr+(err != 0 ? qsTr("Error %1 %2").arg(err).arg(err_string) : "")
                             width: parent.width
-                            visible: !is_running && !listItem.showBytes
+                            visible: !is_running && !showBytes
                             font.pointSize: 6
                             elide: Text.ElideRight
                             color: (!inverted) ? "white" : "black"
@@ -300,11 +303,6 @@ Page {
 
             onClicked: {
                 console.debug("cloudDriveJobsPage listItem onClicked jobJson " + cloudDriveModel.getJobJson(job_id) );
-                showBytes = !showBytes;
-            }
-
-            onPressAndHold: {
-                console.debug("cloudDriveJobsPage listItem onPressAndHold jobJson " + cloudDriveModel.getJobJson(job_id) );
                 if (!is_running) {
                     jobListView.currentIndex = index;
                     jobListView.highlightFollowsCurrentItem = true;
