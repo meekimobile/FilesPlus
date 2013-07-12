@@ -2,13 +2,13 @@
 #include <QDeclarativeEngine>
 #include <QDebug>
 #include <QtSql>
+#include <QAbstractListModel>
 #include "qmlapplicationviewer.h"
 #include "piechart.h"
 #include "foldersizeitemlistmodel.h"
 #include "systeminfohelper.h"
 #include "gcpclient.h"
 #include "clouddrivemodel.h"
-#include <QAbstractListModel>
 #include "localfileimageprovider.h"
 #include "remoteimageprovider.h"
 #include "appinfo.h"
@@ -169,84 +169,8 @@ void testReset()
 #endif
 }
 
-Q_DECL_EXPORT int main(int argc, char *argv[])
+void initializeDefaultSettings(QSettings *m_settings)
 {
-    qDebug() << QTime::currentTime() << "main started.";
-
-    // For testing only.
-//    testReset();
-
-    // Set properties for QSettings.
-    QCoreApplication::setOrganizationName(OrgName);
-    QCoreApplication::setApplicationName(AppName);
-
-    // Initializes settings.
-#ifdef Q_OS_SYMBIAN
-    // Default logging is enabled on first startup. It will be uninstalled and disabled once DrivePage is loaded successfully.
-    QSettings *m_settings = new QSettings();
-    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
-    if (m_settings->value("Logging.enabled", true).toBool()) {
-        qDebug() << "main m_settings Logging.enabled=true";
-        qInstallMsgHandler(customMessageHandler);
-        suppressWarningMsg = m_settings->value("Logging.suppressWarning", true).toBool();
-    } else {
-        qDebug() << "main m_settings Logging.enabled=false";
-    }
-#elif defined(Q_WS_HARMATTAN)
-    // Default logging is enabled on first startup. It will be uninstalled and disabled once DrivePage is loaded successfully.
-    QSettings *m_settings = new QSettings();
-    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
-    if (m_settings->value("Logging.enabled", true).toBool()) {
-        qDebug() << "main m_settings Logging.enabled=true";
-        qInstallMsgHandler(customMessageHandler);
-        suppressWarningMsg = m_settings->value("Logging.suppressWarning", true).toBool();
-    } else {
-        qDebug() << "main m_settings Logging.enabled=false";
-    }
-#else
-    QSettings *m_settings = new QSettings();
-    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
-#endif
-
-    for (int i = 0; i < argc; i++) {
-        qDebug() << "main argv i" << i << argv[i];
-    }
-
-    // For testing only.
-    qDebug() << "main ApplicationBinaryLocation argv[0]" << argv[0];
-    qDebug() << "main ApplicationsLocation" << QDesktopServices::storageLocation(QDesktopServices::ApplicationsLocation) << "currentDir" << QDir().absolutePath();
-    qDebug() << "main DataLocation" << QDesktopServices::storageLocation(QDesktopServices::DataLocation);
-    qDebug() << "main HomeLocation" << QDesktopServices::storageLocation(QDesktopServices::HomeLocation);
-    qDebug() << "main DocumentsLocation" << QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
-    qDebug() << "main DesktopLocation" << QDesktopServices::storageLocation(QDesktopServices::DesktopLocation);
-    qDebug() << "main PicturesLocation" << QDesktopServices::storageLocation(QDesktopServices::PicturesLocation);
-    qDebug() << "main MusicLocation" << QDesktopServices::storageLocation(QDesktopServices::MusicLocation);
-    qDebug() << "main MoviesLocation" << QDesktopServices::storageLocation(QDesktopServices::MoviesLocation);
-
-    // Migrate DAT from C:/ to private folder.
-#ifdef Q_OS_SYMBIAN
-    QDir sourceDir("C:/");
-    foreach (QFileInfo fileInfo, sourceDir.entryInfoList(QStringList("*.dat"))) {
-        QString targetFilePath = QDir(QDesktopServices::storageLocation(QDesktopServices::DataLocation)).absoluteFilePath(fileInfo.fileName());
-        if (QFile(targetFilePath).exists()) {
-            QFile::rename(targetFilePath, targetFilePath + ".bak");
-            qDebug() << "main backup" << targetFilePath << "to" << targetFilePath + ".bak";
-        }
-        if (QFile::rename(fileInfo.absoluteFilePath(), targetFilePath)) {
-            // For file in same drive/partition.
-            qDebug() << "main moved" << fileInfo.absoluteFilePath() << "to" << targetFilePath;
-        } else if (QFile::copy(fileInfo.absoluteFilePath(), targetFilePath)) {
-            // For file in different drive/partition.
-            qDebug() << "main copied" << fileInfo.absoluteFilePath() << "to" << targetFilePath;
-            QFile(fileInfo.absoluteFilePath()).remove();
-            qDebug() << "main removed" << fileInfo.absoluteFilePath();
-        } else {
-            qDebug() << "main moving" << fileInfo.absoluteFilePath() << "to" << targetFilePath << "failed.";
-        }
-    }
-#endif
-
-    // Default setting values.
     if (!m_settings->contains("drivepage.clouddrive.enabled")) {
         m_settings->setValue("drivepage.clouddrive.enabled", QVariant(true));
     }
@@ -299,8 +223,10 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
                              "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_3_3 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8J2 Safari/6533.18.5");
     }
     m_settings->sync();
+}
 
-    // Default database initialization.
+void initializeDefaultDB()
+{
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
 #if defined(Q_WS_HARMATTAN)
     // Create cache database path if it's not exist.
@@ -324,6 +250,86 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
         qDebug() << "main initialize default database failed." << db.lastError().type() << db.lastError().text();
     }
     db.close();
+}
+
+Q_DECL_EXPORT int main(int argc, char *argv[])
+{
+    qDebug() << QTime::currentTime() << "main started.";
+
+    // For testing only.
+//    testReset();
+
+    // Set properties for QSettings.
+    QCoreApplication::setOrganizationName(OrgName);
+    QCoreApplication::setApplicationName(AppName);
+
+    // Initializes settings.
+    QSettings *m_settings = new QSettings();
+    qDebug() << "main m_settings fileName()" << m_settings->fileName() << "m_settings->status()" << m_settings->status();
+
+    // Initialize logging.
+#ifdef Q_OS_SYMBIAN
+    // Default logging is enabled on first startup. It will be uninstalled and disabled once DrivePage is loaded successfully.
+    if (m_settings->value("Logging.enabled", true).toBool()) {
+        qDebug() << "main m_settings Logging.enabled=true";
+        qInstallMsgHandler(customMessageHandler);
+        suppressWarningMsg = m_settings->value("Logging.suppressWarning", true).toBool();
+    } else {
+        qDebug() << "main m_settings Logging.enabled=false";
+    }
+#elif defined(Q_WS_HARMATTAN)
+    // Default logging is enabled on first startup. It will be uninstalled and disabled once DrivePage is loaded successfully.
+    if (m_settings->value("Logging.enabled", true).toBool()) {
+        qDebug() << "main m_settings Logging.enabled=true";
+        qInstallMsgHandler(customMessageHandler);
+        suppressWarningMsg = m_settings->value("Logging.suppressWarning", true).toBool();
+    } else {
+        qDebug() << "main m_settings Logging.enabled=false";
+    }
+#endif
+
+    // For testing only.
+    for (int i = 0; i < argc; i++) {
+        qDebug() << "main argv i" << i << argv[i];
+    }
+    qDebug() << "main ApplicationBinaryLocation argv[0]" << argv[0];
+    qDebug() << "main ApplicationsLocation" << QDesktopServices::storageLocation(QDesktopServices::ApplicationsLocation) << "currentDir" << QDir().absolutePath();
+    qDebug() << "main DataLocation" << QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+    qDebug() << "main HomeLocation" << QDesktopServices::storageLocation(QDesktopServices::HomeLocation);
+    qDebug() << "main DocumentsLocation" << QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+    qDebug() << "main DesktopLocation" << QDesktopServices::storageLocation(QDesktopServices::DesktopLocation);
+    qDebug() << "main PicturesLocation" << QDesktopServices::storageLocation(QDesktopServices::PicturesLocation);
+    qDebug() << "main MusicLocation" << QDesktopServices::storageLocation(QDesktopServices::MusicLocation);
+    qDebug() << "main MoviesLocation" << QDesktopServices::storageLocation(QDesktopServices::MoviesLocation);
+
+    // Migrate DAT from C:/ to private folder.
+#ifdef Q_OS_SYMBIAN
+    QDir sourceDir("C:/");
+    foreach (QFileInfo fileInfo, sourceDir.entryInfoList(QStringList("*.dat"))) {
+        QString targetFilePath = QDir(QDesktopServices::storageLocation(QDesktopServices::DataLocation)).absoluteFilePath(fileInfo.fileName());
+        if (QFile(targetFilePath).exists()) {
+            QFile::rename(targetFilePath, targetFilePath + ".bak");
+            qDebug() << "main backup" << targetFilePath << "to" << targetFilePath + ".bak";
+        }
+        if (QFile::rename(fileInfo.absoluteFilePath(), targetFilePath)) {
+            // For file in same drive/partition.
+            qDebug() << "main moved" << fileInfo.absoluteFilePath() << "to" << targetFilePath;
+        } else if (QFile::copy(fileInfo.absoluteFilePath(), targetFilePath)) {
+            // For file in different drive/partition.
+            qDebug() << "main copied" << fileInfo.absoluteFilePath() << "to" << targetFilePath;
+            QFile(fileInfo.absoluteFilePath()).remove();
+            qDebug() << "main removed" << fileInfo.absoluteFilePath();
+        } else {
+            qDebug() << "main moving" << fileInfo.absoluteFilePath() << "to" << targetFilePath << "failed.";
+        }
+    }
+#endif
+
+    // Default setting values.
+    initializeDefaultSettings(m_settings);
+
+    // Default database initialization.
+    initializeDefaultDB();
 
     // Registers QML types.
     qmlRegisterType<PieChart>("Charts", 1, 0, "PieChart");

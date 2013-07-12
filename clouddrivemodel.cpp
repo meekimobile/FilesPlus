@@ -184,14 +184,11 @@ CloudDriveModel::CloudDriveModel(QObject *parent) :
 
     // Enqueue initialization jobs. Queued jobs will proceed after foldePage is loaded.
     CloudDriveJob loadCloudDriveItemsJob(createNonce(), LoadCloudDriveItems, -1, "", "", "", -1);
-    m_cloudDriveJobs->insert(loadCloudDriveItemsJob.jobId, loadCloudDriveItemsJob);
-    m_jobQueue->enqueue(loadCloudDriveItemsJob.jobId);
+    addJob(loadCloudDriveItemsJob);
     CloudDriveJob loadCloudDriveJobsJob(createNonce(), LoadCloudDriveJobs, -1, "", "", "", -1);
-    m_cloudDriveJobs->insert(loadCloudDriveJobsJob.jobId, loadCloudDriveJobsJob);
-    m_jobQueue->enqueue(loadCloudDriveJobsJob.jobId);
+    addJob(loadCloudDriveJobsJob);
     CloudDriveJob initializeDBJob(createNonce(), InitializeDB, -1, "", "", "", -1);
-    m_cloudDriveJobs->insert(initializeDBJob.jobId, initializeDBJob);
-    m_jobQueue->enqueue(initializeDBJob.jobId);
+    addJob(initializeDBJob);
 
     // Initialize itemCache.
     m_itemCache = new QMap<QString, CloudDriveItem>();
@@ -547,9 +544,9 @@ void CloudDriveModel::loadCloudDriveJobs(QString nonce)
                 job.errString = item.property("err_string").toString();
                 job.errMessage = item.property("err_message").toString();
                 job.nextJobId = item.property("next_job_id").toString();
-                m_cloudDriveJobs->insert(job.jobId, job);
 
                 // Add job to jobModel for displaying on job page.
+                m_cloudDriveJobs->insert(job.jobId, job);
                 emit jobEnqueuedSignal(job.jobId, job.localFilePath);
             }
         }
@@ -1456,12 +1453,32 @@ QString CloudDriveModel::getJobJson(QString jobId)
     return job.toJsonText();
 }
 
-void CloudDriveModel::updateJob(CloudDriveJob job, bool emitJobUpdatedSignal)
+void CloudDriveModel::addJob(CloudDriveJob job, bool runAsNextJob, bool emitJobEnqueuedSignal)
 {
     mutex.lock();
-    // Remove cache for furthur refresh.
-    clearConnectedRemoteDirtyCache(job.localFilePath);
+    m_cloudDriveJobs->insert(job.jobId, job);
+    if (runAsNextJob) {
+        m_jobQueue->insert(0, job.jobId);
+    } else {
+        m_jobQueue->enqueue(job.jobId);
+    }
+    mutex.unlock();
 
+    if (job.localFilePath != "") {
+        clearConnectedRemoteDirtyCache(job.localFilePath);
+    }
+
+    if (emitJobEnqueuedSignal) {
+        emit jobEnqueuedSignal(job.jobId, job.localFilePath);
+    }
+}
+
+void CloudDriveModel::updateJob(CloudDriveJob job, bool emitJobUpdatedSignal, bool clearCache)
+{
+    mutex.lock();
+    if (clearCache) {
+        clearConnectedRemoteDirtyCache(job.localFilePath);
+    }
     if (job.isRunning) {
         job.lastStartedTime = QDateTime::currentDateTime();
     } else {
@@ -1541,9 +1558,7 @@ void CloudDriveModel::cancelQueuedJobs()
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), RemoveJobs, -1, "", "", "", -1);
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->insert(0, job.jobId);
-    emit jobEnqueuedSignal(job.jobId, "");
+    addJob(job, true);
 }
 
 void CloudDriveModel::removeJobs(bool removeAll)
@@ -2311,16 +2326,14 @@ void CloudDriveModel::requestToken(CloudDriveModel::ClientTypes type)
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), RequestToken, type, "", "", "", -1);
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
+    addJob(job);
 }
 
 void CloudDriveModel::authorize(CloudDriveModel::ClientTypes type)
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), Authorize, type, "", "", "", -1);
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
+    addJob(job);
 }
 
 bool CloudDriveModel::parseAuthorizationCode(CloudDriveModel::ClientTypes type, QString text)
@@ -2342,8 +2355,7 @@ void CloudDriveModel::accessToken(CloudDriveModel::ClientTypes type, QString pin
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), AccessToken, type, "", "", "", -1);
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
+    addJob(job);
 }
 
 void CloudDriveModel::refreshToken(CloudDriveModel::ClientTypes type, QString uid, QString nextNonce)
@@ -2351,16 +2363,14 @@ void CloudDriveModel::refreshToken(CloudDriveModel::ClientTypes type, QString ui
     // Enqueue job.
     CloudDriveJob job(createNonce(), RefreshToken, type, uid, "", "", -1);
     job.nextJobId = nextNonce;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->insert(0, job.jobId);
+    addJob(job, true);
 }
 
 void CloudDriveModel::accountInfo(CloudDriveModel::ClientTypes type, QString uid)
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), AccountInfo, type, uid, "", "", -1);
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
+    addJob(job);
 }
 
 void CloudDriveModel::quota(CloudDriveModel::ClientTypes type, QString uid)
@@ -2375,11 +2385,7 @@ void CloudDriveModel::quota(CloudDriveModel::ClientTypes type, QString uid)
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), Quota, type, uid, "", "", -1);
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show enqueued job.
-    emit jobEnqueuedSignal(job.jobId, "");
+    addJob(job);
 }
 
 void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFileSize, QString localFilePath, int modelIndex)
@@ -2404,15 +2410,9 @@ void CloudDriveModel::fileGet(CloudDriveModel::ClientTypes type, QString uid, QS
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), FileGet, type, uid, localFilePath, remoteFilePath, modelIndex);
-//    job.isRunning = true;
     job.downloadOffset = 0;
     job.bytesTotal = remoteFileSize;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show cloud_wait.
-    clearConnectedRemoteDirtyCache(localFilePath);
-    emit jobEnqueuedSignal(job.jobId, localFilePath);
+    addJob(job);
 }
 
 void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, int modelIndex)
@@ -2448,16 +2448,10 @@ void CloudDriveModel::filePut(CloudDriveModel::ClientTypes type, QString uid, QS
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), FilePut, type, uid, localFilePath, remoteParentPath, modelIndex);
-//    job.isRunning = true;
     job.newRemoteFileName = remoteFileName;
     job.uploadOffset = 0;
     job.bytesTotal = QFileInfo(localFilePath).size();
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show cloud_wait.
-    clearConnectedRemoteDirtyCache(localFilePath);
-    emit jobEnqueuedSignal(job.jobId, localFilePath);
+    addJob(job);
 }
 
 void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex, bool forcePut, bool forceGet)
@@ -2491,15 +2485,9 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), Metadata, type, uid, localFilePath, remoteFilePath, modelIndex);
-//    job.isRunning = true;
     job.forcePut = forcePut;
     job.forceGet = forceGet;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show cloud_wait.
-    clearConnectedRemoteDirtyCache(localFilePath);
-    emit jobEnqueuedSignal(job.jobId, localFilePath);
+    addJob(job);
 }
 
 void CloudDriveModel::browse(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath)
@@ -2507,8 +2495,8 @@ void CloudDriveModel::browse(CloudDriveModel::ClientTypes type, QString uid, QSt
     // Enqueue job.
     CloudDriveJob job(createNonce(), Browse, type, uid, "", remoteFilePath, -1);
     job.isRunning = true;
+    // Add job to jobModel for displaying on job page.
     m_cloudDriveJobs->insert(job.jobId, job);
-    updateJob(job);
     emit jobEnqueuedSignal(job.jobId, "");
 
     // Force start thread.
@@ -2551,13 +2539,7 @@ void CloudDriveModel::syncFromLocal(CloudDriveModel::ClientTypes type, QString u
     CloudDriveJob job(createNonce(), SyncFromLocal, type, uid, localPath, remoteParentPath, modelIndex);
     job.forcePut = forcePut;
     job.remotePathList = remotePathList;
-//    job.isRunning = true;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show cloud_wait.
-    clearConnectedRemoteDirtyCache(localPath);
-    emit jobEnqueuedSignal(job.jobId, localPath);
+    addJob(job);
 }
 
 void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, int modelIndex, bool forcePut, bool isRootLocalPath, QStringList remotePathList)
@@ -2715,13 +2697,7 @@ void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString ui
     // Enqueue job.
     CloudDriveJob job(createNonce(), CreateFolder, type, uid, localPath, remoteParentPath, -1);
     job.newRemoteFileName = newRemoteFolderName;
-//    job.isRunning = true;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show cloud_wait.
-    clearConnectedRemoteDirtyCache(localPath);
-    emit jobEnqueuedSignal(job.jobId, localPath);
+    addJob(job);
 }
 
 QString CloudDriveModel::createFolder_Block(CloudDriveModel::ClientTypes type, QString uid, QString remoteParentPath, QString newRemoteFolderName)
@@ -2810,7 +2786,10 @@ void CloudDriveModel::migrateFilePut_Block(QString nonce, CloudDriveModel::Clien
         if (QFile(tempFilePath).exists() && QFile(tempFilePath).size() == remoteFileSize) {
             // Found existing temp file.
         } else {
-            // Get whole data to file with synchronous method.
+            // Get whole data to file with synchronous method. By removing existing file before start getting.
+            QFile(tempFilePath).remove();
+            job.downloadOffset = 0;
+            updateJob(job);
             QString result = sourceClient->fileGet(nonce, uid, remoteFilePath, tempFilePath, true);
             QScriptEngine engine;
             QScriptValue jsonObj = engine.evaluate("(" + result + ")");
@@ -2838,7 +2817,9 @@ void CloudDriveModel::migrateFilePut_Block(QString nonce, CloudDriveModel::Clien
         if (targetReply == 0) {
             // FtpClient doens't provide QNetworkReply. It emits migrateFilePutReplySignal internally.
             job.uploadOffset = localSourceFile->size();
-            updateJob(job);
+            // NOTE #FP20130408 it left a job after filePut is done.
+            // It doesn't need to update as job is being removed by migrateFilePutReplySignal slot.
+//            updateJob(job);
         } else {
             if (targetReply->error() == QNetworkReply::NoError){
                 job.uploadOffset = localSourceFile->size();
@@ -3037,24 +3018,14 @@ void CloudDriveModel::disconnect(CloudDriveModel::ClientTypes type, QString uid,
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), Disconnect, type, uid, localPath, remotePath, -1);
-//    job.isRunning = true;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show in job page.
-    emit jobEnqueuedSignal(job.jobId, job.localFilePath);
+    addJob(job);
 }
 
 void CloudDriveModel::deleteLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), DeleteLocal, type, uid, localPath, "", -1);
-//    job.isRunning = true;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show in job page.
-    emit jobEnqueuedSignal(job.jobId, job.localFilePath);
+    addJob(job);
 }
 
 QString CloudDriveModel::thumbnail(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString format, QString size)
@@ -3114,12 +3085,7 @@ QString CloudDriveModel::shareFile(CloudDriveModel::ClientTypes type, QString ui
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), ShareFile, type, uid, localFilePath, remoteFilePath, -1);
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show cloud_wait.
-    clearConnectedRemoteDirtyCache(localFilePath);
-    emit jobEnqueuedSignal(job.jobId, localFilePath);
+    addJob(job);
 
     return "";
 }
@@ -3142,13 +3108,7 @@ void CloudDriveModel::moveFile(CloudDriveModel::ClientTypes type, QString uid, Q
     job.newLocalFilePath = newLocalFilePath;
     job.newRemoteFilePath = newRemoteParentPath;
     job.newRemoteFileName = newRemoteFileName;
-//    job.isRunning = true;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show cloud_wait.
-    clearConnectedRemoteDirtyCache(localFilePath);
-    emit jobEnqueuedSignal(job.jobId, localFilePath);
+    addJob(job);
 }
 
 void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, QString newLocalFilePath, QString newRemoteParentPath, QString newRemoteFileName)
@@ -3168,13 +3128,7 @@ void CloudDriveModel::copyFile(CloudDriveModel::ClientTypes type, QString uid, Q
     job.newLocalFilePath = newLocalFilePath;
     job.newRemoteFilePath = newRemoteParentPath;
     job.newRemoteFileName = newRemoteFileName;
-//    job.isRunning = true;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show cloud_wait.
-    clearConnectedRemoteDirtyCache(localFilePath);
-    emit jobEnqueuedSignal(job.jobId, localFilePath);
+    addJob(job);
 }
 
 void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, bool suppressDeleteLocal)
@@ -3187,24 +3141,14 @@ void CloudDriveModel::deleteFile(CloudDriveModel::ClientTypes type, QString uid,
     // Enqueue job.
     CloudDriveJob job(createNonce(), DeleteFile, type, uid, localFilePath, remoteFilePath, -1);
     job.suppressDeleteLocal = suppressDeleteLocal;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show cloud_wait.
-    clearConnectedRemoteDirtyCache(localFilePath);
-    emit jobEnqueuedSignal(job.jobId, localFilePath);
+    addJob(job);
 }
 
 void CloudDriveModel::delta(CloudDriveModel::ClientTypes type, QString uid)
 {
     // Enqueue job.
     CloudDriveJob job(createNonce(), Delta, type, uid, "", "", -1);
-//    job.isRunning = true;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show in job page.
-    emit jobEnqueuedSignal(job.jobId, "");
+    addJob(job);
 }
 
 void CloudDriveModel::filePutResume(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteParentPath, QString remoteFileName, QString uploadId, qint64 offset)
@@ -3215,12 +3159,7 @@ void CloudDriveModel::filePutResume(CloudDriveModel::ClientTypes type, QString u
     job.uploadId = uploadId;
     job.uploadOffset = offset;
     job.bytesTotal = QFileInfo(localFilePath).size();
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show cloud_wait.
-    clearConnectedRemoteDirtyCache(localFilePath);
-    emit jobEnqueuedSignal(job.jobId, localFilePath);
+    addJob(job);
 }
 
 void CloudDriveModel::fileGetResume(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 remoteFIleSize, QString localFilePath, qint64 offset)
@@ -3229,12 +3168,7 @@ void CloudDriveModel::fileGetResume(CloudDriveModel::ClientTypes type, QString u
     CloudDriveJob job(createNonce(), FileGetResume, type, uid, localFilePath, remoteFilePath, -1);
     job.downloadOffset = offset;
     job.bytesTotal = remoteFIleSize;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show cloud_wait.
-    clearConnectedRemoteDirtyCache(localFilePath);
-    emit jobEnqueuedSignal(job.jobId, localFilePath);
+    addJob(job);
 }
 
 void CloudDriveModel::migrateFile(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
@@ -3245,12 +3179,7 @@ void CloudDriveModel::migrateFile(CloudDriveModel::ClientTypes type, QString uid
     job.targetUid = targetUid;
     job.newRemoteFilePath = targetRemoteParentPath;
     job.newRemoteFileName = targetRemoteFileName;
-//    job.isRunning = true;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show cloud_wait.
-    emit jobEnqueuedSignal(job.jobId, "");
+    addJob(job);
 }
 
 void CloudDriveModel::migrateFilePut(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, qint64 bytesTotal, CloudDriveModel::ClientTypes targetType, QString targetUid, QString targetRemoteParentPath, QString targetRemoteFileName)
@@ -3264,12 +3193,7 @@ void CloudDriveModel::migrateFilePut(CloudDriveModel::ClientTypes type, QString 
     job.targetUid = targetUid;
     job.newRemoteFilePath = targetRemoteParentPath;
     job.newRemoteFileName = targetRemoteFileName;
-//    job.isRunning = true;
-    m_cloudDriveJobs->insert(job.jobId, job);
-    m_jobQueue->enqueue(job.jobId);
-
-    // Emit signal to show cloud_wait.
-    emit jobEnqueuedSignal(job.jobId, "");
+    addJob(job);
 }
 
 void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -5011,7 +4935,7 @@ void CloudDriveModel::proceedNextJob() {
         return;
     }
 
-    qDebug() << "CloudDriveModel::proceedNextJob proceed jobId" << nonce << "operation" << getOperationName(job.operation) << "runningJobCount" << runningJobCount;
+    qDebug() << "CloudDriveModel::proceedNextJob proceed jobId" << nonce << "operation" << getOperationName(job.operation) << "runningJobCount" << runningJobCount << "jobCount" << m_cloudDriveJobs->count();
 
     // Increase runningJobCount.
     mutex.lock();
