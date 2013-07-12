@@ -28,6 +28,9 @@ public:
     bool waitForDone();
     QString getCommandName(Command cmd);
 
+    bool isAborted();
+    void setIsAborted(bool flag);
+
     // Parameter storage.
     QString m_uid;
     QString m_localFilePath;
@@ -59,6 +62,7 @@ public slots:
     bool deleteRecursive(QString remoteFilePath = "");
 private:
     bool m_isDone;
+    bool m_isAborted;
     QString m_nonce;
     QString m_currentPath;
     QString m_lastRawCommand;

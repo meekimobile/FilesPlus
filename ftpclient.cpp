@@ -37,7 +37,7 @@ QString FtpClient::fileGetReplyFinished(QString nonce, bool error, bool synchron
     QString remoteFilePath = m_ftp->m_remoteFilePath;
     QString result;
 
-    if (!error) {
+    if (!error && !m_ftp->isAborted()) {
         if (m_ftp->getItemList().isEmpty()) {
             // remoteFilePath is not found.
             qDebug() << "FtpClient::fileGet" << uid << remoteFilePath << "is not found.";
@@ -48,6 +48,9 @@ QString FtpClient::fileGetReplyFinished(QString nonce, bool error, bool synchron
             result = getPropertyJson(getParentRemotePath(remoteFilePath), m_ftp->getItemList().first());
             if (!synchronous) emit fileGetReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), result);
         }
+    } else if (m_ftp->isAborted()) {
+        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(QFtp::UnknownError).arg("Operation is aborted.");
+        if (!synchronous) emit fileGetReplySignal(m_ftp->getNonce(), QFtp::UnknownError, "", result);
     } else {
         // NOTE json string doesn't support newline character.
         QString escapedErrorString =  m_ftp->errorString().replace("\n", " ");
@@ -161,7 +164,7 @@ void FtpClient::filePutReplyFinished(QString nonce, bool error, bool synchronous
     QString remoteFilePath = m_ftp->m_remoteFilePath;
     QString result;
 
-    if (!error) {
+    if (!error && !m_ftp->isAborted()) {
         if (m_ftp->getItemList().isEmpty()) {
             // remoteFilePath is not found.
             qDebug() << "FtpClient::filePut" << uid << remoteFilePath << "is not found.";
@@ -172,6 +175,9 @@ void FtpClient::filePutReplyFinished(QString nonce, bool error, bool synchronous
             result = getPropertyJson(getParentRemotePath(remoteFilePath), m_ftp->getItemList().first());
             if (!synchronous) emit filePutReplySignal(m_ftp->getNonce(), m_ftp->error(), m_ftp->errorString(), result);
         }
+    } else if (m_ftp->isAborted()) {
+        result = QString("{ \"error\": %1, \"error_string\": \"%2\" }").arg(QFtp::UnknownError).arg("Operation is aborted.");
+        if (!synchronous) emit filePutReplySignal(m_ftp->getNonce(), QFtp::UnknownError, "", result);
     } else {
         // NOTE json string doesn't support newline character.
         QString escapedErrorString =  m_ftp->errorString().replace("\n", " ");
@@ -232,17 +238,17 @@ QString FtpClient::mergePropertyAndFilesJson(QString propertyJsonText, QString f
     return stringifyScriptValue(engine, mergedObj);
 }
 
-// TODO Issue: #FP20130201 FTPClient abort() doesn't return as error. It is told as successful job ??
-//bool FtpClient::abort(QString nonce)
-//{
-//    if (m_ftpHash->contains(nonce)) {
-//        QFtpWrapper *ftp = m_ftpHash->value(nonce);
-//        ftp->abort();
-//        qDebug() << "FtpClient::abort nonce" << nonce << "is aborted.";
-//    } else {
-//        qDebug() << "FtpClient::abort nonce" << nonce << "is not found. Operation is ignored.";
-//    }
-//}
+bool FtpClient::abort(QString nonce)
+{
+    if (m_ftpHash->contains(nonce)) {
+        QFtpWrapper *ftp = m_ftpHash->value(nonce);
+        ftp->setIsAborted(true);
+        ftp->abort();
+        qDebug() << "FtpClient::abort nonce" << nonce << "is aborted.";
+    } else {
+        qDebug() << "FtpClient::abort nonce" << nonce << "is not found. Operation is ignored.";
+    }
+}
 
 QString FtpClient::property(QString nonce, QString uid, QString remoteFilePath)
 {
@@ -601,6 +607,7 @@ QFtpWrapper *FtpClient::connectToHost(QString nonce, QString uid)
 {
     if (m_ftpHash->contains(nonce)) {
         QFtpWrapper *ftp = m_ftpHash->value(nonce);
+        ftp->setIsAborted(false); // Reset abort flag.
         qDebug() << "FtpClient::connectToHost" << nonce << "return stored ftp object" << ftp;
         return ftp;
     }

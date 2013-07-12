@@ -34,7 +34,7 @@ public:
     QString deleteFile(QString nonce, QString uid, QString remoteFilePath, bool synchronous = true);
     void shareFile(QString nonce, QString uid, QString remoteFilePath);
 
-//    bool abort(QString nonce);
+    bool abort(QString nonce);
 signals:
 
 public slots:

@@ -174,6 +174,16 @@ QString QFtpWrapper::getCommandName(Command cmd)
     }
 }
 
+bool QFtpWrapper::isAborted()
+{
+    return m_isAborted;
+}
+
+void QFtpWrapper::setIsAborted(bool flag)
+{
+    m_isAborted = flag;
+}
+
 void QFtpWrapper::commandStartedFilter(int id)
 {
     qDebug() << "QFtpWrapper::commandStartedFilter" << m_nonce << id << "currentCommand" << currentCommand() << getCommandName(currentCommand());
@@ -235,6 +245,7 @@ void QFtpWrapper::rawCommandReplyFilter(int replyCode, QString result)
 
 void QFtpWrapper::dataTransferProgressFilter(qint64 done, qint64 total)
 {
+    qDebug() << "QFtpWrapper::dataTransferProgressFilter" << currentCommand() << done << total;
     if (currentCommand() == QFtp::Get) {
         emit downloadProgress(m_nonce, done, total);
     } else if (currentCommand() == QFtp::Put) {
@@ -263,6 +274,7 @@ void QFtpWrapper::idleTimerTimeoutSlot()
 {
     // Abort connection if it's timeout.
     abort();
+    m_isAborted = true;
     m_isDone = true;
     qDebug() << "QFtpWrapper::idleTimerTimeoutSlot nonce" << m_nonce << "is aborted.";
 }
