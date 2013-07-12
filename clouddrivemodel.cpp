@@ -4213,25 +4213,41 @@ void CloudDriveModel::schedulerTimeoutFilter()
         return;
     }
 
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_deviceInfo.batteryStatus()" << m_deviceInfo.batteryStatus();
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_deviceInfo.batteryLevel()" << m_deviceInfo.batteryLevel();
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_deviceInfo.currentPowerState()" << m_deviceInfo.currentPowerState();
+#if defined(Q_WS_HARMATTAN)
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.getChargerType()" << m_batteryInfo.getChargerType();
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.getChargingState()" << m_batteryInfo.getChargingState();
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.getBatteryState()" << m_batteryInfo.getBatteryState();
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.getRemainingCapacityPct()" << m_batteryInfo.getRemainingCapacityPct();
+#else
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.chargerType()" << m_batteryInfo.chargerType();
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.chargingState()" << m_batteryInfo.chargingState();
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.batteryStatus()" << m_batteryInfo.batteryStatus();
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.remainingCapacityPercent()" << m_batteryInfo.remainingCapacityPercent();
+#endif
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_networkInfo.currentMode()" << m_networkInfo.currentMode() << "m_networkInfo.networkStatus(currentMode)" << m_networkInfo.networkStatus(m_networkInfo.currentMode());
+    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_networkInfo.networkStatus(QSystemNetworkInfo::WlanMode)" << m_networkInfo.networkStatus(QSystemNetworkInfo::WlanMode);
+
     if (m_settings.value("CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnCharging.enabled", false).toBool()
-            && m_batteryInfo.chargingState() != QSystemBatteryInfo::Charging) {
-        qDebug() << "CloudDriveModel::schedulerTimeoutFilter suspended m_batteryInfo.batteryStatus()" << m_batteryInfo.batteryStatus() << "m_batteryInfo.remainingCapacityPercent()" << m_batteryInfo.remainingCapacityPercent();
+            && !isDeviceBatteryCharging()) {
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter suspended isDeviceBatteryCharging()" << isDeviceBatteryCharging();
         return;
     }
 
     if (m_settings.value("CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnBatteryOk.enabled", false).toBool()
-            && m_batteryInfo.batteryStatus() < QSystemBatteryInfo::BatteryOk) {
-        qDebug() << "CloudDriveModel::schedulerTimeoutFilter suspended m_batteryInfo.batteryStatus()" << m_batteryInfo.batteryStatus() << "m_batteryInfo.remainingCapacityPercent()" << m_batteryInfo.remainingCapacityPercent();
+            && m_deviceInfo.batteryStatus() < QSystemDeviceInfo::BatteryNormal) {
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter suspended m_deviceInfo.batteryStatus()" << m_deviceInfo.batteryStatus() << "m_deviceInfo.batteryLevel()" << m_deviceInfo.batteryLevel();
         return;
     }
 
     if (m_settings.value("CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnWlan.enabled", false).toBool()
-            && m_networkInfo.currentMode() != QSystemNetworkInfo::WlanMode) {
-        qDebug() << "CloudDriveModel::schedulerTimeoutFilter suspended m_networkInfo.currentMode()" << m_networkInfo.currentMode();
+            && m_networkInfo.networkStatus(QSystemNetworkInfo::WlanMode) != QSystemNetworkInfo::Connected) {
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter suspended m_networkInfo.networkStatus(QSystemNetworkInfo::WlanMode)" << m_networkInfo.networkStatus(QSystemNetworkInfo::WlanMode);
         return;
     }
 
-//    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_networkInfo.currentMode()" << m_networkInfo.currentMode() << "m_networkInfo.cellDataTechnology()" << m_networkInfo.cellDataTechnology() << "m_networkInfo.networkStatus(currentMode)" << m_networkInfo.networkStatus(m_networkInfo.currentMode());
 //    qDebug() << "CloudDriveModel::schedulerTimeoutFilter" << QDateTime::currentDateTime().toString("d/M/yyyy hh:mm:ss.zzz");
 
     // Set dirty to scheduled items.
@@ -4894,15 +4910,15 @@ void CloudDriveModel::proceedNextJob() {
     }
 
     if (m_settings.value("CloudDriveModel.proceedNextJob.syncOnlyOnCharging.enabled", false).toBool()
-            && m_batteryInfo.chargingState() != QSystemBatteryInfo::Charging) {
-        qDebug() << "CloudDriveModel::proceedNextJob suspended m_batteryInfo.batteryStatus()" << m_batteryInfo.batteryStatus() << "m_batteryInfo.remainingCapacityPercent()" << m_batteryInfo.remainingCapacityPercent();
+            && !isDeviceBatteryCharging()) {
+        qDebug() << "CloudDriveModel::proceedNextJob suspended isDeviceBatteryCharging()" << isDeviceBatteryCharging();
         // TODO Fail job.
         return;
     }
 
     if (m_settings.value("CloudDriveModel.proceedNextJob.syncOnlyOnBatteryOk.enabled", false).toBool()
-            && m_batteryInfo.batteryStatus() < QSystemBatteryInfo::BatteryOk) {
-        qDebug() << "CloudDriveModel::proceedNextJob suspended m_batteryInfo.batteryStatus()" << m_batteryInfo.batteryStatus() << "m_batteryInfo.remainingCapacityPercent()" << m_batteryInfo.remainingCapacityPercent();
+            && m_deviceInfo.batteryStatus() < QSystemDeviceInfo::BatteryNormal) {
+        qDebug() << "CloudDriveModel::proceedNextJob suspended m_deviceInfo.batteryStatus()" << m_deviceInfo.batteryStatus() << "m_deviceInfo.batteryLevel()" << m_deviceInfo.batteryLevel();
         // TODO Fail job.
         return;
     }
@@ -5540,4 +5556,13 @@ int CloudDriveModel::compareMetadata(CloudDriveJob job, QScriptValue &jsonObj, Q
     }
 
     return result;
+}
+
+bool CloudDriveModel::isDeviceBatteryCharging()
+{
+#if defined(Q_WS_HARMATTAN)
+    return (m_batteryInfo.getChargingState() == MeeGo::QmBattery::StateCharging);
+#else
+    return (m_batteryInfo.chargingState() == QSystemBatteryInfo::Charging);
+#endif
 }

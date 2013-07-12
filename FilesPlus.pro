@@ -55,6 +55,11 @@ contains(MEEGO_EDITION, harmattan) {
     CONFIG += shareuiinterface-maemo-meegotouch share-ui-plugin share-ui-common mdatauri
 }
 
+#battery
+contains(MEEGO_EDITION, harmattan) {
+    CONFIG += qmsystem2
+}
+
 # Added by Nokia Publisher Support's comments.
 # In case your SDK does not generate the component dependency from your project file.
 symbian {

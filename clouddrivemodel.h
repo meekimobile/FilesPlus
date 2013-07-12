@@ -15,8 +15,13 @@
 #include <QApplication>
 #include <QtSql>
 #include <QSettings>
+#include <QSystemDeviceInfo>
 #include <QSystemNetworkInfo>
+#if defined(Q_WS_HARMATTAN)
+#include <qmsystem2/qmbattery.h>
+#else
 #include <QSystemBatteryInfo>
+#endif
 #include "clouddriveitem.h"
 #include "clouddrivejob.h"
 #include "clouddrivemodelthread.h"
@@ -444,8 +449,13 @@ private:
     QThreadPool m_cacheImageThreadPool;
 
     // System information.
+    QSystemDeviceInfo m_deviceInfo;
     QSystemNetworkInfo m_networkInfo;
+#if defined(Q_WS_HARMATTAN)
+    MeeGo::QmBattery m_batteryInfo;
+#else
     QSystemBatteryInfo m_batteryInfo;
+#endif
 
     // Job queue processor.
     QTimer m_jobQueueTimer;
@@ -546,6 +556,9 @@ private:
     void sortItemList(QList<CloudDriveModelItem> *itemList, int sortFlag);
 
     int compareMetadata(CloudDriveJob job, QScriptValue &jsonObj, QString localFilePath);
+
+    // Mobile device information.
+    bool isDeviceBatteryCharging();
 };
 
 #endif // CLOUDDRIVEMODEL_H
