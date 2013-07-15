@@ -154,10 +154,10 @@ Page {
             preferredHeight: authPage.height
             visible: true
 
-            onContentsSizeChanged: {
-                console.debug("onContentsSizeChanged webView.contentsScale " + webView.contentsScale + " webView.contentsSize width height " + webView.contentsSize.width + " " + webView.contentsSize.height);
-                height = Math.max(flickable.height, contentsSize.height);
-            }
+//            onContentsSizeChanged: {
+//                console.debug("onContentsSizeChanged webView.contentsScale " + webView.contentsScale + " webView.contentsSize width height " + webView.contentsSize.width + " " + webView.contentsSize.height);
+//                height = Math.max(flickable.height, contentsSize.height);
+//            }
 
             onLoadStarted: {
                 webViewBusy.visible = true;
