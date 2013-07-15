@@ -106,12 +106,6 @@ Page {
             type: "button"
             group: "CloudDrive"
         }
-//        ListElement {
-//            name: "sync.after.refresh"
-//            options: ""
-//            type: "switch"
-//            group: "CloudDrive"
-//        }
         ListElement {
             name: "CloudFolderPage.thumbnail.enabled"
             options: ""
@@ -150,6 +144,24 @@ Page {
         }
         ListElement {
             name: "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnWlan.enabled"
+            options: ""
+            type: "switch"
+            group: "CloudDrive"
+        }
+        ListElement {
+            name: "CloudDriveModel.proceedNextJob.syncOnlyOnCharging.enabled"
+            options: ""
+            type: "switch"
+            group: "CloudDrive"
+        }
+        ListElement {
+            name: "CloudDriveModel.proceedNextJob.syncOnlyOnBatteryOk.enabled"
+            options: ""
+            type: "switch"
+            group: "CloudDrive"
+        }
+        ListElement {
+            name: "CloudDriveModel.proceedNextJob.syncOnlyOnWlan.enabled"
             options: ""
             type: "switch"
             group: "CloudDrive"
@@ -374,6 +386,9 @@ Page {
         else if (name == "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnCharging.enabled") return qsTr("Schedule sync only on charging") + appInfo.emptyStr;
         else if (name == "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnBatteryOk.enabled") return qsTr("Schedule sync only if battery is OK (>40%)") + appInfo.emptyStr;
         else if (name == "CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnWlan.enabled") return qsTr("Schedule sync only on WiFi") + appInfo.emptyStr;
+        else if (name == "CloudDriveModel.proceedNextJob.syncOnlyOnCharging.enabled") return qsTr("Sync only on charging") + appInfo.emptyStr;
+        else if (name == "CloudDriveModel.proceedNextJob.syncOnlyOnBatteryOk.enabled") return qsTr("Sync only if battery is OK (>40%)") + appInfo.emptyStr;
+        else if (name == "CloudDriveModel.proceedNextJob.syncOnlyOnWlan.enabled") return qsTr("Sync only on WiFi") + appInfo.emptyStr;
         else if (name == "FolderPie.enabled") return qsTr("FolderPie feature") + appInfo.emptyStr;
         else if (name == "resetCache") return qsTr("Reset current folder cache") + appInfo.emptyStr;
         else if (name == "Theme.inverted") return qsTr("Theme") + appInfo.emptyStr;

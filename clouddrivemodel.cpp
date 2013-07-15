@@ -4888,6 +4888,27 @@ void CloudDriveModel::jobDone() {
     qDebug() << "CloudDriveModel::jobDone runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count();
 }
 
+bool CloudDriveModel::isSyncOperation(int operation)
+{
+    switch (operation) {
+    case FileGet:
+    case FilePut:
+    case Metadata:
+    case ScheduleSync:
+    case MigrateFile:
+    case MigrateFilePut:
+    case Delta:
+    case SyncFromLocal:
+    case FilePutResume:
+    case FilePutCommit:
+    case FileGetResume:
+    case FileGetCommit:
+        return true;
+    default:
+        return false;
+    }
+}
+
 void CloudDriveModel::proceedNextJob() {
     // Proceed next job in queue. Any jobs which haven't queued will be ignored.
 //    if (runningJobCount > 0) {
@@ -4909,30 +4930,44 @@ void CloudDriveModel::proceedNextJob() {
         return;
     }
 
-    if (m_settings.value("CloudDriveModel.proceedNextJob.syncOnlyOnCharging.enabled", false).toBool()
-            && !isDeviceBatteryCharging()) {
-        qDebug() << "CloudDriveModel::proceedNextJob suspended isDeviceBatteryCharging()" << isDeviceBatteryCharging();
-        // TODO Fail job.
-        return;
-    }
-
-    if (m_settings.value("CloudDriveModel.proceedNextJob.syncOnlyOnBatteryOk.enabled", false).toBool()
-            && m_deviceInfo.batteryStatus() < QSystemDeviceInfo::BatteryNormal) {
-        qDebug() << "CloudDriveModel::proceedNextJob suspended m_deviceInfo.batteryStatus()" << m_deviceInfo.batteryStatus() << "m_deviceInfo.batteryLevel()" << m_deviceInfo.batteryLevel();
-        // TODO Fail job.
-        return;
-    }
-
-    if (m_settings.value("CloudDriveModel.proceedNextJob.syncOnlyOnWlan.enabled", false).toBool()
-            && m_networkInfo.currentMode() != QSystemNetworkInfo::WlanMode) {
-        qDebug() << "CloudDriveModel::proceedNextJob suspended m_networkInfo.currentMode()" << m_networkInfo.currentMode();
-        // TODO Fail job.
-        return;
-    }
-
-    // TODO Check retryCount before proceed.
     QString nonce = m_jobQueue->dequeue();
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
+
+    if (isSyncOperation(job.operation)
+            && m_settings.value("CloudDriveModel.proceedNextJob.syncOnlyOnCharging.enabled", false).toBool()
+            && !isDeviceBatteryCharging()) {
+        qDebug() << "CloudDriveModel::proceedNextJob suspended isDeviceBatteryCharging()" << isDeviceBatteryCharging();
+        job.err = -1;
+        job.errString = tr("Suspend");
+        job.errMessage = tr("Sync only on charging is enabled.");
+        updateJob(job);
+        emit logRequestSignal(nonce, "warn", job.errString, job.errMessage, 2000);
+        return;
+    }
+
+    if (isSyncOperation(job.operation)
+            && m_settings.value("CloudDriveModel.proceedNextJob.syncOnlyOnBatteryOk.enabled", false).toBool()
+            && m_deviceInfo.batteryStatus() < QSystemDeviceInfo::BatteryNormal) {
+        qDebug() << "CloudDriveModel::proceedNextJob suspended m_deviceInfo.batteryStatus()" << m_deviceInfo.batteryStatus() << "m_deviceInfo.batteryLevel()" << m_deviceInfo.batteryLevel();
+        job.err = -1;
+        job.errString = tr("Suspend");
+        job.errMessage = tr("Sync only if battery is OK (>40%) is enabled.");
+        updateJob(job);
+        emit logRequestSignal(nonce, "warn", job.errString, job.errMessage, 2000);
+        return;
+    }
+
+    if (isSyncOperation(job.operation)
+            && m_settings.value("CloudDriveModel.proceedNextJob.syncOnlyOnWlan.enabled", false).toBool()
+            && m_networkInfo.networkStatus(QSystemNetworkInfo::WlanMode) != QSystemNetworkInfo::Connected) {
+        qDebug() << "CloudDriveModel::proceedNextJob suspended m_networkInfo.networkStatus(QSystemNetworkInfo::WlanMode)" << m_networkInfo.networkStatus(QSystemNetworkInfo::WlanMode);
+        job.err = -1;
+        job.errString = tr("Suspend");
+        job.errMessage = tr("Sync only on WiFi is enabled.");
+        updateJob(job);
+        emit logRequestSignal(nonce, "warn", job.errString, job.errMessage, 2000);
+        return;
+    }
 
     // Check if it's invalid operation, then discard and return.
     if (getOperationName(job.operation) == "invalid") {

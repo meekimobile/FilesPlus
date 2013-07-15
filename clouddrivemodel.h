@@ -523,6 +523,8 @@ private:
     CloudDriveClient * getCloudClient(const int type);
     CloudDriveClient * getCloudClient(ClientTypes type);
 
+    bool isSyncOperation(int operation);
+
     void initializeCloudClients(QString nonce);
     void connectCloudClientsSignal(CloudDriveClient *client);
     void initializeDropboxClient();
