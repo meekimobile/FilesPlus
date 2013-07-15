@@ -23,4 +23,14 @@ ToolButton {
         isPressAndHold = true;
         pressAndHold();
     }
+
+    Rectangle {
+        id: checkableBG
+        color: "#00AAFF"
+        opacity: 0.2
+        visible: checked
+        width: parent.width
+        height: parent.height
+        y: 0
+    }
 }

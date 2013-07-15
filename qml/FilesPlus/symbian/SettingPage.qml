@@ -19,20 +19,83 @@ Page {
         return -1;
     }
 
+    state: "Personalization" // NOTE Default showing personalization.
+    states: [
+        State {
+            name: "Personalization"
+            PropertyChanges {
+                target: settingList
+                model: personalizationSettingModel
+            }
+        },
+        State {
+            name: "CloudPrint"
+            PropertyChanges {
+                target: settingList
+                model: cloudPrintSettingModel
+            }
+        },
+        State {
+            name: "CloudDrive"
+            PropertyChanges {
+                target: settingList
+                model: cloudDriveSettingModel
+            }
+        },
+        State {
+            name: "Developer"
+            PropertyChanges {
+                target: settingList
+                model: developerSettingModel
+            }
+        }
+    ]
+
     tools: ToolBarLayout {
-        ToolButton {
+        ToolBarButton {
             id: back
-            iconSource: "toolbar-back"
-            platformInverted: inverted
+            buttonIconSource: "toolbar-back"
             onClicked: {
                 pageStack.pop();
+            }
+        }
+        ToolBarButton {
+            id: personalizationTab
+            buttonIconSource: (!inverted) ? "favourite.svg" : "favourite_inverted.svg"
+            checked: (settingPage.state == "Personalization")
+            onClicked: {
+                settingPage.state = "Personalization";
+            }
+        }
+        ToolBarButton {
+            id: cloudPrintTab
+            buttonIconSource: (!inverted) ? "print.svg" : "print_inverted.svg"
+            checked: (settingPage.state == "CloudPrint")
+            onClicked: {
+                settingPage.state = "CloudPrint";
+            }
+        }
+        ToolBarButton {
+            id: cloudDriveTab
+            buttonIconSource: (!inverted) ? "cloud.svg" : "cloud_inverted.svg"
+            checked: (settingPage.state == "CloudDrive")
+            onClicked: {
+                settingPage.state = "CloudDrive";
+            }
+        }
+        ToolBarButton {
+            id: advancedTab
+            buttonIconSource: (!inverted) ? "toolbar_extension.svg" : "toolbar_extension_inverted.svg"
+            checked: (settingPage.state == "Developer")
+            onClicked: {
+                settingPage.state = "Developer";
             }
         }
     }
 
     TitlePanel {
         id: titlePanel
-        text: qsTr("Settings") + appInfo.emptyStr
+        text: qsTr("Settings") + " - " + getTitle(settingPage.state) + appInfo.emptyStr
         z: 1
     }
 
@@ -46,13 +109,7 @@ Page {
     }
 
     ListModel {
-        id: settingModel
-        ListElement {
-            name: "CloudPrint"
-            options: ""
-            type: "section"
-            group: "CloudPrint"
-        }
+        id: cloudPrintSettingModel
         ListElement {
             name: "showCloudPrintJobs"
             options: ""
@@ -71,18 +128,10 @@ Page {
             type: "button"
             group: "CloudPrint"
         }
-        ListElement {
-            name: "Spacer"
-            options: ""
-            type: "spacer"
-            group: "Spacer"
-        }
-        ListElement {
-            name: "CloudDrive"
-            options: ""
-            type: "section"
-            group: "CloudDrive"
-        }
+    }
+
+    ListModel {
+        id: cloudDriveSettingModel
         ListElement {
             name: "showCloudDriveJobs"
             options: ""
@@ -167,30 +216,10 @@ Page {
             type: "switch"
             group: "CloudDrive"
         }
-        ListElement {
-            name: "Spacer"
-            options: ""
-            type: "spacer"
-            group: "Spacer"
-        }
-        ListElement {
-            name: "FolderPie"
-            options: ""
-            type: "section"
-            group: "FolderPie"
-        }
-        ListElement {
-            name: "resetCache"
-            options: ""
-            type: "button"
-            group: "FolderPie"
-        }
-        ListElement {
-            name: "Personalization"
-            options: ""
-            type: "section"
-            group: "Personalization"
-        }
+    }
+
+    ListModel {
+        id: personalizationSettingModel
         ListElement {
             name: "locale"
             options: ""
@@ -245,11 +274,15 @@ Page {
             type: "switch"
             group: "Personalization"
         }
+    }
+
+    ListModel {
+        id: developerSettingModel
         ListElement {
-            name: "Developer"
+            name: "resetCache"
             options: ""
-            type: "section"
-            group: "Developer"
+            type: "button"
+            group: "FolderPie"
         }
         ListElement {
             name: "Monitoring.enabled"
@@ -259,12 +292,6 @@ Page {
         }
         ListElement {
             name: "Logging.enabled"
-            options: ""
-            type: "switch"
-            group: "Developer"
-        }
-        ListElement {
-            name: "dropbox.fullaccess.enabled"
             options: ""
             type: "switch"
             group: "Developer"
@@ -366,14 +393,18 @@ Page {
         width: parent.width
         height: parent.height - titlePanel.height
         anchors.top: titlePanel.bottom
-        model: settingModel
         delegate: settingListItemDelegate
         cacheBuffer: 1200
-        cellWidth: (window.inPortrait) ? parent.width : (parent.width / 2)
-        cellHeight: (window.inPortrait) ? 52 : 48
-        flow: (window.inPortrait) ? GridView.LeftToRight : GridView.TopToBottom
+        cellWidth: parent.width
+        cellHeight: 52
+        flow: GridView.LeftToRight
         snapMode: GridView.SnapToRow
         pressDelay: 100
+    }
+
+    ScrollDecorator {
+        id: scrollbar
+        flickableItem: settingList
     }
 
     function getTitle(name) {
