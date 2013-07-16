@@ -3233,7 +3233,7 @@ FilesPlus сейчас закроется.
         <location line="+2"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+2"/>
         <source>Queue local image caching</source>
-        <translation>Стоять в очереди отдаленный изображение по кэшированию</translation>
+        <translation>Стоять в очереди локальный изображение по кэшированию</translation>
     </message>
     <message>
         <location line="+1"/>
