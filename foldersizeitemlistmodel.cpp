@@ -682,7 +682,7 @@ bool FolderSizeItemListModel::createDir(const QString name)
     if (name.trimmed().isEmpty()) return false;
 
     QDir dir(currentDir());
-    bool res = dir.mkdir(name);
+    bool res = dir.mkdir(name.trimmed());
     if (res) {
         emit createFinished(dir.absoluteFilePath(name), tr("Create %1 done.").arg(name), 0);
     } else {
@@ -711,7 +711,7 @@ bool FolderSizeItemListModel::createEmptyFile(const QString name)
 
     QDir dir(currentDir());
 
-    QString absPath = dir.absoluteFilePath(name);
+    QString absPath = dir.absoluteFilePath(name.trimmed());
     qint64 c = -1;
     QFile file(absPath);
     if (file.open(QIODevice::WriteOnly)) {

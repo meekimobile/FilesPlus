@@ -1,5 +1,6 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
+import "Utility.js" as Utility
 
 CommonDialog {
     id: filePropertiesDIalog
@@ -21,8 +22,17 @@ CommonDialog {
     signal syncAdd()
     signal disconnect(int type, string uid, string absolutePath)
     signal scheduleSync(int type, string uid, string absolutePath)
+    signal changeSyncDirection(int type, string uid, string absolutePath, int syncDirection)
     signal toggleHidden(string absolutePath, bool value)
     signal toggleReadOnly(string absolutePath, bool value)
+
+    function getIcon(syncDirection) {
+        // SyncBoth, SyncForward, SyncBackward
+        var iconSources = ["call_logs.svg","upload.svg","download.svg"];
+        var iconSource = (theme.inverted) ? iconSources[syncDirection] : Utility.replace(iconSources[syncDirection], ".svg", "_inverted.svg");
+//        console.debug("filePropertiesDialog.getIcon " + syncDirection + " " + iconSource);
+        return iconSource;
+    }
 
     onStatusChanged: {
         if (status == DialogStatus.Opening) {
@@ -278,6 +288,7 @@ CommonDialog {
                 width: parent.width
                        - (cloudIcon.visible ? (cloudIcon.width + parent.spacing) : 0)
                        - (scheduleSyncButton.visible ? (scheduleSyncButton.width + parent.spacing) : 0)
+                       - (changeSyncDirectionButton.visible ? (changeSyncDirectionButton.width + parent.spacing) : 0)
                        - (disconnectButton.width + parent.spacing)
                 anchors.verticalCenter: parent.verticalCenter
                 Text {
@@ -294,6 +305,21 @@ CommonDialog {
                     font.pointSize: 16
                     color: "white"
                     elide: Text.ElideRight
+                }
+            }
+            Button {
+                id: changeSyncDirectionButton
+                width: 60
+                height: 60
+                iconSource: getIcon(syncDirection)
+                anchors.verticalCenter: parent.verticalCenter
+                visible: !isCloudFolder
+                onClicked: {
+                    if (isCloudFolder) {
+                        changeSyncDirection(selectedCloudType, selectedUid, absolutePath, syncDirection);
+                    } else {
+                        changeSyncDirection(type, uid, absolutePath, syncDirection);
+                    }
                 }
             }
             Button {

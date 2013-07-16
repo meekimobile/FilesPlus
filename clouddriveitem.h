@@ -19,8 +19,10 @@ public:
     QString remotePath;
     QString hash;
     QDateTime lastModified;
+    int syncDirection;
 
     QString toJsonText();
+    bool isValid();
 };
 
 QDataStream &operator<<(QDataStream &out, const CloudDriveItem &item);

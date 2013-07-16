@@ -1228,7 +1228,7 @@ QScriptValue BoxClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     m_isDirHash->insert(jsonObj.property("id").toString(), isDir);
 
     QString jsonDateString = formatJSONDateString(parseReplyDateString(jsonObj.property("modified_at").toString()));
-    QString hash = jsonObj.property("etag").toString();
+    QString hash = jsonObj.property("modified_at").toString(); // NOTE Use modified_at instead of etag as etag doesn't change once its children were changed.
     QString thumbnailUrl = (!isDir) ? thumbnail(nonce, uid, jsonObj.property("id").toString(), "png", "64x64") : "";
     QString thumbnail128Url = (!isDir) ? thumbnail(nonce, uid, jsonObj.property("id").toString(), "png", "128x128") : "";
     QString previewUrl = (!isDir) ? thumbnail(nonce, uid, jsonObj.property("id").toString(), "png", "256x256") : "";
@@ -1248,6 +1248,7 @@ QScriptValue BoxClient::parseCommonPropertyScriptValue(QScriptEngine &engine, QS
     parsedObj.setProperty("thumbnail128", QScriptValue(thumbnail128Url));
     parsedObj.setProperty("preview", QScriptValue(previewUrl));
     parsedObj.setProperty("fileType", QScriptValue(getFileType(jsonObj.property("name").toString())));
+    parsedObj.setProperty("isCloudOnly", QScriptValue(isCloudOnly(jsonObj)));
 
     return parsedObj;
 }
@@ -1408,4 +1409,12 @@ QDateTime BoxClient::parseReplyDateString(QString dateString)
     qDebug() << "BoxClient::parseReplyDateString parse filteredDateString" << filteredDateString << "with ISODate to" << datetime << "toUTC" << datetime.toUTC();
 
     return datetime.toUTC();
+}
+
+bool BoxClient::isCloudOnly(QScriptValue jsonObj)
+{
+    // Check if file is cloud only which can't be downloaded.
+    bool isCloudOnly = jsonObj.property("type").toString().startsWith("web_link");
+
+    return isCloudOnly;
 }

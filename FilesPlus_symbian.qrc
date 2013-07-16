@@ -174,5 +174,7 @@
         <file alias="qml/FilesPlus/CompressedFileMenu.qml">qml/FilesPlus/symbian/CompressedFileMenu.qml</file>
         <file alias="qml/FilesPlus/CompressedFolderPage.qml">qml/FilesPlus/symbian/CompressedFolderPage.qml</file>
         <file>qml/FilesPlus/Box_Logo_Blue_100x50.png</file>
+        <file>qml/FilesPlus/call_logs.svg</file>
+        <file>qml/FilesPlus/call_logs_inverted.svg</file>
     </qresource>
 </RCC>

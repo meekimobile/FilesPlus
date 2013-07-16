@@ -2,6 +2,8 @@
 
 CloudDriveItem::CloudDriveItem()
 {
+    this->type = -1;
+    this->syncDirection = 0;
 }
 
 CloudDriveItem::CloudDriveItem(int type, QString uid, QString localPath, QString remotePath, QString hash, QDateTime lastModified)
@@ -12,6 +14,7 @@ CloudDriveItem::CloudDriveItem(int type, QString uid, QString localPath, QString
     this->remotePath = remotePath;
     this->hash = hash;
     this->lastModified = lastModified;
+    this->syncDirection = 0;
 }
 
 bool CloudDriveItem::operator==(const CloudDriveItem &item)
@@ -27,10 +30,16 @@ QString CloudDriveItem::toJsonText()
     jsonText.append( QString("\"local_path\": \"%1\", ").arg(localPath) );
     jsonText.append( QString("\"remote_path\": \"%1\", ").arg(remotePath) );
     jsonText.append( QString("\"hash\": \"%1\", ").arg(hash) );
-    jsonText.append( QString("\"last_modified\": \"%1\"").arg(lastModified.toString()) );
+    jsonText.append( QString("\"last_modified\": \"%1\", ").arg(lastModified.toString()) );
+    jsonText.append( QString("\"sync_direction\": %1").arg(syncDirection) );
     jsonText.append(" }");
 
     return jsonText;
+}
+
+bool CloudDriveItem::isValid()
+{
+    return (localPath != "" && uid != "");
 }
 
 QDataStream &operator<<(QDataStream &out, const CloudDriveItem &item)
@@ -57,7 +66,7 @@ QDataStream &operator>>(QDataStream &in, CloudDriveItem &item)
 
 QDebug &operator<<(QDebug &out, const CloudDriveItem &item)
 {
-    out << "CloudDriveItem(" << item.type << "," << item.uid << "," << item.localPath << "," << item.remotePath << "," << item.hash << "," << item.lastModified << ")";
+    out << "CloudDriveItem(" << item.type << "," << item.uid << "," << item.localPath << "," << item.remotePath << "," << item.hash << "," << item.lastModified << "," << item.syncDirection << ")";
 
     return out;
 }

@@ -69,6 +69,7 @@ private:
     QString searchFileId(QString nonce, QString uid, QString remoteParentPath, QString remoteFileName);
     void mergePropertyAndFilesJson(QString nonce, QString callback, QString uid);
     void renameFile(QString nonce, QString uid, QString remoteFilePath, QString newName);
+    bool isCloudOnly(QScriptValue jsonObj);
 };
 
 #endif // BOXCLIENT_H

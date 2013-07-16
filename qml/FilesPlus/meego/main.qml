@@ -366,7 +366,11 @@ PageStackWindow {
                 if (cloudDriveModel.isConnected(sourcePath)) {
                     var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
                     for (var i=0; i<json.length; i++) {
-                        cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path, true); // NOTE suppressDeleteLocal=true
+                        if (json[i].sync_direction === CloudDriveModel.SyncBackward) {
+                            cloudDriveModel.disconnect(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path);
+                        } else {
+                            cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path, true); // NOTE suppressDeleteLocal=true
+                        }
                     }
 
                     // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
@@ -490,7 +494,11 @@ PageStackWindow {
                 if (cloudDriveModel.isConnected(sourcePath)) {
                     var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
                     for (var i=0; i<json.length; i++) {
-                        cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path, true); // NOTE suppressDeleteLocal=true
+                        if (json[i].sync_direction === CloudDriveModel.SyncBackward) {
+                            cloudDriveModel.disconnect(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path);
+                        } else {
+                            cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path, true); // NOTE suppressDeleteLocal=true
+                        }
                     }
 
                     // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.

@@ -525,6 +525,7 @@ QIODevice *CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteF
         // Wait until readyRead().
         QEventLoop loop;
         connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
+        connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
         loop.exec();
 
         fileGetReplyFinished(reply, synchronous);
@@ -918,9 +919,16 @@ int CloudDriveClient::compareDirMetadata(CloudDriveJob &job, QScriptValue &jsonO
     localDir.setFilter(QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::Hidden | QDir::System | QDir::NoDotAndDotDot);
     int itemCount = localDir.entryList().count();
     // If (hash is different), get from remote.
-    if (job.forceGet || (jsonObj.property("hash").toString() != item.hash) || (jsonObj.property("children").property("length").toInteger() != itemCount)) {
+    if (job.forceGet
+            || (jsonObj.property("hash").toString() > item.hash)
+            || (jsonObj.property("children").property("length").toInteger() != itemCount)) {
         // Proceed getting metadata.
         result = -1;
+    } else if (job.forcePut
+               || (jsonObj.property("hash").toString() < item.hash)
+               || (jsonObj.property("children").property("length").toInteger() != itemCount)) {
+        // Proceed getting metadata.
+        result = 1;
     } else {
         // Update remote has to local hash on cloudDriveItem.
     }

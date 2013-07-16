@@ -42,6 +42,7 @@ class CloudDriveModel : public QAbstractListModel
     Q_OBJECT
     Q_ENUMS(ClientTypes)
     Q_ENUMS(SortFlags)
+    Q_ENUMS(SyncDirections)
     Q_ENUMS(Operations)
     Q_PROPERTY(int count READ rowCount NOTIFY rowCountChanged)
     Q_PROPERTY(int runningJobCount READ getRunningJobCount NOTIFY runningJobCountChanged)
@@ -82,6 +83,12 @@ public:
         SortBySize,
         SortByType,
         SortByNameWithDirectoryFirst
+    };
+
+    enum SyncDirections {
+        SyncBoth = 0,
+        SyncForward = 1,
+        SyncBackward = 2
     };
 
     enum Operations {
@@ -143,7 +150,7 @@ public:
 
     QString dirtyHash() const;
 
-    void addItem(QString localPath, CloudDriveItem item);
+    void addItem(CloudDriveItem item);
     QList<CloudDriveItem> getItemList(QString localPath);
     CloudDriveItem getItem(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     QList<CloudDriveItem> findItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
@@ -175,7 +182,7 @@ public:
     Q_INVOKABLE int getRunningJobCount() const;
     Q_INVOKABLE int getJobCount() const;
     Q_INVOKABLE void cancelQueuedJobs();
-    Q_INVOKABLE void addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash, bool addOnly = false);
+    Q_INVOKABLE void addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash, int syncDirection, bool addOnly = false);
     Q_INVOKABLE void removeItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE void removeItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE void removeItems(QString localPath);
@@ -251,6 +258,9 @@ public:
     void dirtyScheduledItems(QString cronValue);
     void syncDirtyItems();
 
+    // Sync direction.
+    Q_INVOKABLE int updateItemSyncDirection(CloudDriveModel::ClientTypes type, QString uid, QString localPath, SyncDirections syncDirection);
+
     // Delta.
     Q_INVOKABLE bool isDeltaSupported(CloudDriveModel::ClientTypes type);
     bool isDeltaEnabled(CloudDriveModel::ClientTypes type, QString uid);
@@ -263,7 +273,7 @@ public:
     Q_INVOKABLE void syncItems(CloudDriveModel::ClientTypes type); // NOTE Used by syncItems()
     Q_INVOKABLE void syncItem(const QString localFilePath); // NOTE Used by main.qml, FolderPage.qml
     Q_INVOKABLE void syncItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
-    Q_INVOKABLE bool syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, QString newHash = "", bool forcePut = false, bool forceGet = false); // NOTE Used by reply filter slots.
+    Q_INVOKABLE bool syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, QString newHash = "", bool forcePut = false, bool forceGet = false); // NOTE Used by reply filter slots, cloudFolderPage.filePropertiesDialog.onSyncAll slot.
 
     // Migrate DAT to DB.
     Q_INVOKABLE int getCloudDriveItemsCount();
@@ -345,6 +355,7 @@ public:
     Q_INVOKABLE void refreshItems();
     Q_INVOKABLE int findIndexByRemotePath(QString remotePath);
     Q_INVOKABLE int findIndexByRemotePathName(QString remotePathName);
+    void removeItemCacheWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void initializeDBStarted(QString nonce);

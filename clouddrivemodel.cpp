@@ -1578,7 +1578,7 @@ void CloudDriveModel::removeJobs(bool removeAll)
     resumeNextJob();
 }
 
-void CloudDriveModel::addItem(QString localPath, CloudDriveItem item)
+void CloudDriveModel::addItem(CloudDriveItem item)
 {
     if (insertItemToDB(item) <= 0) {
         qDebug() << "CloudDriveModel::addItem insert failed" << item;
@@ -1592,10 +1592,10 @@ void CloudDriveModel::addItem(QString localPath, CloudDriveItem item)
     }
 
     // Remove cache for furthur refresh.
-    clearConnectedRemoteDirtyCache(localPath);
+    clearConnectedRemoteDirtyCache(item.localPath);
 }
 
-void CloudDriveModel::addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash, bool addOnly)
+void CloudDriveModel::addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash, int syncDirection, bool addOnly)
 {
     CloudDriveItem item = getItem(localPath, type, uid);
     if (item.localPath != "") {
@@ -1603,12 +1603,14 @@ void CloudDriveModel::addItem(CloudDriveModel::ClientTypes type, QString uid, QS
         if (!addOnly) {
             qDebug() << "CloudDriveModel::addItem found." << item;
             item = CloudDriveItem(type, uid, localPath, remotePath, hash, QDateTime::currentDateTime());
+            item.syncDirection = syncDirection;
             updateItemToDB(item);
         }
     } else {
         qDebug() << "CloudDriveModel::addItem not found.";
         // Not found, add it right away.
         item = CloudDriveItem(type, uid, localPath, remotePath, hash, QDateTime::currentDateTime());
+        item.syncDirection = syncDirection;
         insertItemToDB(item);
     }
 
@@ -1779,6 +1781,8 @@ int CloudDriveModel::updateItemCronExp(CloudDriveModel::ClientTypes type, QStrin
     qry.bindValue(":local_path", localPath);
     bool res = qry.exec();
     if (res) {
+        m_db.commit();
+        m_itemCache->remove(getItemCacheKey(type, uid, localPath));
         qDebug() << "CloudDriveModel::updateItemCronExpToDB done" << type << uid << localPath << cronExp << "numRowsAffected" << qry.numRowsAffected();
         return qry.numRowsAffected();
     } else {
@@ -1872,6 +1876,48 @@ void CloudDriveModel::syncDirtyItems()
 
         lastItem = item;
     }
+}
+
+int CloudDriveModel::updateItemSyncDirection(CloudDriveModel::ClientTypes type, QString uid, QString localPath, CloudDriveModel::SyncDirections syncDirection)
+{
+    int c = 0;
+    bool res = false;
+    QSqlQuery qry(m_db);
+
+    // Update itself.
+    qry.prepare("UPDATE cloud_drive_item SET sync_direction = :sync_direction WHERE type = :type AND uid = :uid AND local_path = :local_path");
+    qry.bindValue(":sync_direction", syncDirection);
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":local_path", localPath);
+    res = qry.exec();
+    if (res) {
+        qDebug() << "CloudDriveModel::updateItemSyncDirection done" << type << uid << localPath << syncDirection << "numRowsAffected" << qry.numRowsAffected();
+        c += qry.numRowsAffected();
+    } else {
+        qDebug() << "CloudDriveModel::updateItemSyncDirection failed" << type << uid << localPath << syncDirection << "error" << qry.lastError();
+        c += qry.numRowsAffected();
+    }
+
+    // Update its children.
+    qry.prepare("UPDATE cloud_drive_item SET sync_direction = :sync_direction WHERE type = :type AND uid = :uid AND local_path LIKE :local_path || '/%' ");
+    qry.bindValue(":sync_direction", syncDirection);
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":local_path", localPath);
+    res = qry.exec();
+    if (res) {
+        qDebug() << "CloudDriveModel::updateItemSyncDirection children done" << type << uid << localPath << syncDirection << "numRowsAffected" << qry.numRowsAffected();
+        c += qry.numRowsAffected();
+    } else {
+        qDebug() << "CloudDriveModel::updateItemSyncDirection children failed" << type << uid << localPath << syncDirection << "error" << qry.lastError();
+        c += qry.numRowsAffected();
+    }
+
+    m_db.commit();
+    removeItemCacheWithChildren(type, uid, localPath);
+
+    return c;
 }
 
 bool CloudDriveModel::isDeltaSupported(CloudDriveModel::ClientTypes type)
@@ -2576,7 +2622,9 @@ void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::Client
 
         // TODO create remote directory if no content or pending refresh metadata.
         CloudDriveItem parentCloudDriveItem = getItem(localPath, type, uid);
-        if (parentCloudDriveItem.localPath == "" || parentCloudDriveItem.hash == CloudDriveModel::DirtyHash) {
+        if (parentCloudDriveItem.syncDirection == SyncBackward) {
+            qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "suppress createFolder syncDirection" << parentCloudDriveItem.syncDirection;
+        } else if (parentCloudDriveItem.localPath == "" || parentCloudDriveItem.hash == CloudDriveModel::DirtyHash) {
             qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "not found parentCloudDriveItem. Invoke creatFolder.";
             // Get remoteParentPath from localParentPath's cloudDriveItem if it's not specified.
             remoteParentPath = (remoteParentPath == "") ? getItemRemotePath(info.absolutePath(), type, uid) : remoteParentPath;
@@ -2610,7 +2658,7 @@ void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::Client
 
                 hash = sc.property("hash").toString();
                 createdRemotePath = sc.property("absolutePath").toString();
-                addItem(type, uid, localPath, createdRemotePath, hash);
+                addItem(type, uid, localPath, createdRemotePath, hash, parentCloudDriveItem.syncDirection);
 
                 // Update parentCloudDriveItem.
                 parentCloudDriveItem = getItem(localPath, type, uid);
@@ -2638,11 +2686,19 @@ void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::Client
 
             QString localFilePath = item.absoluteFilePath();
             CloudDriveItem cloudDriveItem = getItem(localFilePath, type, uid);
+            if (!cloudDriveItem.isValid()) {
+                cloudDriveItem.syncDirection = parentCloudDriveItem.syncDirection;
+            }
             qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "item" << type << uid << localFilePath << "cloudDriveItem" << cloudDriveItem.toJsonText();
 
             // TODO Cache isSyncing(type, uid, localPath)
-            bool isNewItem = !isSyncing(type, uid, localFilePath) && cloudDriveItem.localPath == "" && (cloudDriveItem.hash == "" || cloudDriveItem.remotePath == "");
-            bool isDeletedItem = cloudDriveItem.remotePath != "" && remotePathList.indexOf(cloudDriveItem.remotePath) == -1 && remotePathList.indexOf("*") == -1;
+            bool isNewItem = cloudDriveItem.syncDirection != SyncBackward
+                    && !isSyncing(type, uid, localFilePath)
+                    && cloudDriveItem.localPath == ""
+                    && (cloudDriveItem.hash == "" || cloudDriveItem.remotePath == "");
+            bool isDeletedItem = cloudDriveItem.remotePath != ""
+                    && remotePathList.indexOf(cloudDriveItem.remotePath) == -1
+                    && remotePathList.indexOf("*") == -1;
 //            qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isNewItem" << isNewItem << "isDeletedItem" << isDeletedItem;
 
             // If dir/file don't have localHash which means it's not synced, put it right away.
@@ -2662,7 +2718,8 @@ void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::Client
                 }
             } else if (isDeletedItem) {
                 // Configurable file removing if it's deleted item (there is remotePathList and cloudDriveItem.remotePath not in list).
-                if (m_settings.value("CloudDriveModel.syncFromLocal.deleteLocalFile.enabled", true).toBool()) {
+                if (cloudDriveItem.syncDirection != SyncForward
+                        && m_settings.value("CloudDriveModel.syncFromLocal.deleteLocalFile.enabled", true).toBool()) {
                     qDebug() << "CloudDriveModel::syncFromLocal_Block" << nonce << "trash local item" << type << uid << localFilePath << "cloudDriveItem.hash" << cloudDriveItem.hash << "cloudDriveItem.remotePath" << cloudDriveItem.remotePath << "isDeletedItem" << isDeletedItem;
                     deleteLocal(type, uid, localFilePath);
                 } else {
@@ -2684,7 +2741,7 @@ void CloudDriveModel::syncFromLocal_Block(QString nonce, CloudDriveModel::Client
 
 void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remoteParentPath, QString newRemoteFolderName)
 {
-    if (newRemoteFolderName == "") {
+    if (newRemoteFolderName.trimmed() == "") {
         qDebug() << "CloudDriveModel::createFolder newRemoteFolderName" << newRemoteFolderName << "is empty. Operation is aborted.";
         return;
     }
@@ -2696,7 +2753,7 @@ void CloudDriveModel::createFolder(CloudDriveModel::ClientTypes type, QString ui
 
     // Enqueue job.
     CloudDriveJob job(createNonce(), CreateFolder, type, uid, localPath, remoteParentPath, -1);
-    job.newRemoteFileName = newRemoteFolderName;
+    job.newRemoteFileName = newRemoteFolderName.trimmed();
     addJob(job);
 }
 
@@ -3208,7 +3265,8 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
         if (job.localFilePath != "") {
             sc = engine.evaluate("(" + msg + ")");
             hash = sc.property("hash").toString();
-            addItem(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, hash);
+            addItem(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, hash,
+                    getItem(getParentLocalPath(job.localFilePath), getClientType(job.type), job.uid).syncDirection);
 
             // Emit signal to refresh its parent folder cache.
             emit refreshFolderCacheSignal(job.localFilePath);
@@ -3257,7 +3315,8 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
             remoteFilePath = sc.property("absolutePath").toString();
             hash = sc.property("hash").toString();
             job.newRemoteFilePath = remoteFilePath;
-            addItem(getClientType(job.type), job.uid, job.localFilePath, remoteFilePath, hash);
+            addItem(getClientType(job.type), job.uid, job.localFilePath, remoteFilePath, hash,
+                    getItem(getParentLocalPath(job.localFilePath), getClientType(job.type), job.uid).syncDirection);
         }
     } else if (err == QNetworkReply::AuthenticationRequiredError) {
         // Check if token is expired (err 204), then refresh token.
@@ -3306,15 +3365,21 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
         int nextOffset = offset + limit;
         suppressRemoveJob = (nextOffset < totalCount);
         CloudDriveItem parentItem = getItem(job.localFilePath, getClientType(job.type), job.uid);
+        if (!parentItem.isValid()) {
+            parentItem.syncDirection = getItem(getParentLocalPath(job.localFilePath), getClientType(job.type), job.uid).syncDirection;
+        }
 
         // Suspend next job.
         suspendNextJob();
 
         if (jsonObj.property("isDeleted").toBool()) {
-            qDebug() << "CloudDriveModel::metadataReplyFilter" << getCloudName(job.type) << job.uid << jsonObj.property("absolutePath").toString() << "isDeleted" << jsonObj.property("isDeleted").toString();
+            // Item was removed remotely.
+            qDebug() << "CloudDriveModel::metadataReplyFilter" << getCloudName(job.type) << job.uid << jsonObj.property("absolutePath").toString()
+                     << "isDeleted" << jsonObj.property("isDeleted").toString() << "syncDirection" << parentItem.syncDirection;
 
-            // If dir, should remove all sub items.
-            if (m_settings.value("CloudDriveModel.metadataRelyFilter.deleteLocalFile.enabled", true).toBool()) {
+            // Delete local item if direction is not SyncForward.
+            if (parentItem.syncDirection != SyncForward
+                    && m_settings.value("CloudDriveModel.metadataRelyFilter.deleteLocalFile.enabled", true).toBool()) {
                 qDebug() << "CloudDriveModel::metadataReplyFilter" << nonce << "trash item" << job.type << job.uid << job.localFilePath;
                 deleteLocal(getClientType(job.type), job.uid, job.localFilePath);
             } else {
@@ -3331,7 +3396,10 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
         } else {
             // Sync starts from itself.
             if (jsonObj.property("isDir").toBool()) { // Sync folder.
-                qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "sync folder remote path" << jsonObj.property("absolutePath").toString() << "hash" << jsonObj.property("hash").toString() << "local path" << job.localFilePath << " hash " << parentItem.hash << "children length" << jsonObj.property("children").property("length").toInteger() << "forcePut" << job.forcePut << "forceGet" << job.forceGet;
+                qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce
+                         << "sync folder remote path" << jsonObj.property("absolutePath").toString() << "hash" << jsonObj.property("hash").toString()
+                         << "local path" << job.localFilePath << " hash " << parentItem.hash << "children length" << jsonObj.property("children").property("length").toInteger()
+                         << "forcePut" << job.forcePut << "forceGet" << job.forceGet << "syncDirection" << parentItem.syncDirection;
 
                 // If there is no local folder, create it and connect.
                 if (!isDir(job.localFilePath)) {
@@ -3342,20 +3410,24 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
                 }
 
                 // Sync based on remote contents.
-                // TODO Should it detect jobJson.force_put or jobJson.force_get?
-                QStringList remotePathList; // Default remotePathList as * means keep all items.
+                QStringList remotePathList; // NOTE job.remotePathList is default as * means keep all items.
                 int r = compareMetadata(job, jsonObj, job.localFilePath);
                 if (r != 0) { // Sync all json(remote)'s contents.
                     for (int i=0; i<jsonObj.property("children").property("length").toInteger(); i++) {
                         QScriptValue item = jsonObj.property("children").property(i);
                         QString itemLocalPath = getAbsolutePath(job.localFilePath, item.property("name").toString());
                         CloudDriveItem childItem = getItem(itemLocalPath, getClientType(job.type), job.uid);
+                        if (!childItem.isValid()) {
+                            childItem.syncDirection = parentItem.syncDirection;
+                        }
                         remotePathList.append(item.property("absolutePath").toString());
                         if (item.property("isDir").toBool()) {
                             // This flow will trigger recursive metadata calling.
-                            // TODO Reduce data charges by skipping items with unchanged hash.
-                            // NOTE Dropbox's metadata return rev for chil dir(s) which is incomparable with hash. So it needs to get actual metadata for hash.
+                            // NOTE Dropbox's metadata return rev for child dir(s) which is incomparable with hash. So it needs to get actual metadata for hash.
                             int r = compareMetadata(job, item, itemLocalPath);
+                            qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce
+                                     << "sync children dir remote path" << item.property("absolutePath").toString() << "hash" << item.property("hash").toString() << "local path" << itemLocalPath << "hash" << childItem.hash
+                                     << "syncDirection" << childItem.syncDirection << "compare result" << r;
                             if (r != 0) {
                                 metadata(getClientType(job.type), job.uid, itemLocalPath, item.property("absolutePath").toString(), -1, job.forcePut, job.forceGet);
                             }
@@ -3369,18 +3441,20 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
                                                       tr("%1 is cloud document format.\nIt can't be downloaded.").arg(item.property("name").toString()),
                                                       2000);
                             } else {
-                                // If ((rev is newer and size is changed) or there is no local file), get from remote.
+                                // Check if file is not sync'd.
                                 int r = compareMetadata(job, item, itemLocalPath);
-                                qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "sync children file remote path" << item.property("absolutePath").toString() << "hash" << item.property("hash").toString() << "local path" << itemLocalPath << "hash" << childItem.hash << "compare result" << r;
-                                if (r < 0) {
+                                qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce
+                                         << "sync children file remote path" << item.property("absolutePath").toString() << "hash" << item.property("hash").toString() << "local path" << itemLocalPath << "hash" << childItem.hash
+                                         << "syncDirection" << childItem.syncDirection << "compare result" << r;
+                                if (r < 0 && childItem.syncDirection != SyncForward) { // remote file is changed and not SyncForward.
                                     fileGet(getClientType(job.type), job.uid, item.property("absolutePath").toString(), item.property("size").toInt32(), itemLocalPath, -1);
-                                } else if (r > 0) {
+                                } else if (r > 0 && childItem.syncDirection != SyncBackward) { // local file is changed and not SyncBackward.
                                     filePut(getClientType(job.type), job.uid, itemLocalPath, item.property("parentPath").toString(), item.property("name").toString(), -1);
                                 } else {
                                     // TODO Detect changed name.
                                     // 1) Rename local file.
                                     // 2) Update cloud drive item.
-                                    addItem(getClientType(job.type), job.uid, itemLocalPath, item.property("absolutePath").toString(), item.property("hash").toString());
+                                    addItem(getClientType(job.type), job.uid, itemLocalPath, item.property("absolutePath").toString(), item.property("hash").toString(), childItem.syncDirection);
                                 }
                             }
                         }
@@ -3389,21 +3463,29 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
                         QApplication::processEvents();
                     }
                 }
-                // Append remotePathList to job.
-                job.remotePathList.append(remotePathList);
-                updateJob(job, false);
+                // Append remotePathList to job if it's not empty. Otherwise, keep it with "*".
+                // NOTE job.remotePathList is default as * means keep all items.
+                if (!remotePathList.empty()) {
+                    job.remotePathList.removeAll("*");
+                    job.remotePathList.append(remotePathList);
+                    updateJob(job, false);
+                }
 
                 // Add or Update timestamp from local to cloudDriveItem.
                 // TODO Detect changed name.
                 // 1) Rename local folder.
                 // 2) Update cloud drive item of local folder and its children.  REMARK but it will have problem if local folder connected with multiple cloud folders.
-                addItem(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, jsonObj.property("hash").toString());
+                addItem(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, jsonObj.property("hash").toString(), parentItem.syncDirection);
 
                 // Sync based on local contents.
-                // TODO Issue: syncFromLocal can't detect deleted remote file before it still has connection, then syncFromLocal will skip it.
+                // TODO Issue: syncFromLocal can't detect deleted remote file if it still has connection, then syncFromLocal will skip it.
                 qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "job.remotePathList.length()" << job.remotePathList.length();
                 if (nextOffset >= totalCount) {
-                    syncFromLocal(getClientType(job.type), job.uid, job.localFilePath, jsonObj.property("parentPath").toString(), job.modelIndex, job.forcePut, job.remotePathList);
+//                    if (parentItem.syncDirection != SyncBackward) { // syncFromLocal if direction is not SyncBackward.
+                        syncFromLocal(getClientType(job.type), job.uid, job.localFilePath, jsonObj.property("parentPath").toString(), job.modelIndex, job.forcePut, job.remotePathList);
+//                    } else {
+//                        qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "suppress syncFromLocal syncDirection" << parentItem.syncDirection;
+//                    }
                 } else {
                     // Return as job is still running in background.
                     return;
@@ -3418,15 +3500,18 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
                                           tr("%1 is cloud document format.\nIt can't be downloaded.").arg(jsonObj.property("name").toString()),
                                           2000);
                 } else {
-                    // If ((rev is newer and size is changed) or there is no local file), get from remote.
+                    // Check if file is not sync'd.
                     int r = compareMetadata(job, jsonObj, job.localFilePath);
-                    qDebug() << "CloudDriveModel::metadataReplyFilter file" << getCloudName(job.type) << nonce << "sync file remote path" << jsonObj.property("absolutePath").toString() << "hash" << jsonObj.property("hash").toString() << "local path" << job.localFilePath << "hash" << parentItem.hash << "forcePut" << job.forcePut << "forceGet" << job.forceGet << "compare result" << r;
-                    if (r < 0) {
+                    qDebug() << "CloudDriveModel::metadataReplyFilter file" << getCloudName(job.type) << nonce << "sync file remote path" << jsonObj.property("absolutePath").toString() << "hash" << jsonObj.property("hash").toString() << "local path" << job.localFilePath << "hash" << parentItem.hash << "forcePut" << job.forcePut << "forceGet" << job.forceGet << "syncDirection" << parentItem.syncDirection << "compare result" << r;
+                    if (r < 0 && parentItem.syncDirection != SyncForward) { // remote file is changed and not SyncForward.
                         fileGet(getClientType(job.type), job.uid, jsonObj.property("absolutePath").toString(), jsonObj.property("size").toInt32(), job.localFilePath, job.modelIndex);
-                    } else if (r > 0) {
+                    } else if (r > 0 && parentItem.syncDirection != SyncBackward) { // local file is changed and not SyncBackward.
                         filePut(getClientType(job.type), job.uid, job.localFilePath, jsonObj.property("parentPath").toString(), jsonObj.property("name").toString(), job.modelIndex);
                     } else {
-                        addItem(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, jsonObj.property("hash").toString());
+                        // TODO Detect changed name.
+                        // 1) Rename local file.
+                        // 2) Update cloud drive item.
+                        addItem(getClientType(job.type), job.uid, job.localFilePath, job.remoteFilePath, jsonObj.property("hash").toString(), parentItem.syncDirection);
                     }
                 }
             }
@@ -3456,20 +3541,23 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
                 remoteParentPath = getItemRemotePath(localParentPath, getClientType(job.type), job.uid);
             }
         }
-        qDebug() << "CloudDriveModel::metadataReplyFilter" << err << errMsg << msg << "locaParentPath" << localParentPath << "remoteParentPath" << remoteParentPath;
+        qDebug() << "CloudDriveModel::metadataReplyFilter" << err << errMsg << msg << "localParentPath" << localParentPath << "remoteParentPath" << remoteParentPath;
 
         // Proceed put if remoteParentPath is available. Otherwise remove the link.
         if (remoteParentPath != "") {
-            qDebug() << "CloudDriveModel::metadataReplyFilter" << getCloudName(job.type) << "put" << job.localFilePath << "to" << job.remoteFilePath;
-            if (isDir(job.localFilePath)) {
-                // Remote folder will be created in syncFromLocal if it's required.
-                syncFromLocal(getClientType(job.type), job.uid, job.localFilePath, remoteParentPath, job.modelIndex);
-            } else {
-                filePut(getClientType(job.type), job.uid, job.localFilePath, remoteParentPath, remoteFileName, job.modelIndex);
+            if (cloudItem.syncDirection != SyncBackward) { // syncFromLocal if direction is not SyncBackward.
+                qDebug() << "CloudDriveModel::metadataReplyFilter" << getCloudName(job.type) << "put" << job.localFilePath << "to" << job.remoteFilePath;
+                if (isDir(job.localFilePath)) {
+                    // Remote folder will be created in syncFromLocal if it's required.
+                    syncFromLocal(getClientType(job.type), job.uid, job.localFilePath, remoteParentPath, job.modelIndex);
+                } else {
+                    filePut(getClientType(job.type), job.uid, job.localFilePath, remoteParentPath, remoteFileName, job.modelIndex);
+                }
             }
         } else {
-            // If dir, should remove all sub items.
-            if (m_settings.value("CloudDriveModel.metadataRelyFilter.deleteLocalFile.enabled", true).toBool()) {
+            // Delete local item if direction is not SyncForward.
+            if (cloudItem.syncDirection != SyncForward
+                    && m_settings.value("CloudDriveModel.metadataRelyFilter.deleteLocalFile.enabled", true).toBool()) {
                 qDebug() << "CloudDriveModel::metadataReplyFilter" << nonce << "trash item" << job.type << job.uid << job.localFilePath;
                 deleteLocal(getClientType(job.type), job.uid, job.localFilePath);
             } else {
@@ -4213,22 +4301,24 @@ void CloudDriveModel::schedulerTimeoutFilter()
         return;
     }
 
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_deviceInfo.batteryStatus()" << m_deviceInfo.batteryStatus();
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_deviceInfo.batteryLevel()" << m_deviceInfo.batteryLevel();
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_deviceInfo.currentPowerState()" << m_deviceInfo.currentPowerState();
+    if (m_settings.value("Logging.enabled", false).toBool()) {
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_deviceInfo.batteryStatus()" << m_deviceInfo.batteryStatus();
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_deviceInfo.batteryLevel()" << m_deviceInfo.batteryLevel();
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_deviceInfo.currentPowerState()" << m_deviceInfo.currentPowerState();
 #if defined(Q_WS_HARMATTAN)
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.getChargerType()" << m_batteryInfo.getChargerType();
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.getChargingState()" << m_batteryInfo.getChargingState();
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.getBatteryState()" << m_batteryInfo.getBatteryState();
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.getRemainingCapacityPct()" << m_batteryInfo.getRemainingCapacityPct();
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.getChargerType()" << m_batteryInfo.getChargerType();
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.getChargingState()" << m_batteryInfo.getChargingState();
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.getBatteryState()" << m_batteryInfo.getBatteryState();
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.getRemainingCapacityPct()" << m_batteryInfo.getRemainingCapacityPct();
 #else
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.chargerType()" << m_batteryInfo.chargerType();
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.chargingState()" << m_batteryInfo.chargingState();
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.batteryStatus()" << m_batteryInfo.batteryStatus();
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.remainingCapacityPercent()" << m_batteryInfo.remainingCapacityPercent();
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.chargerType()" << m_batteryInfo.chargerType();
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.chargingState()" << m_batteryInfo.chargingState();
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.batteryStatus()" << m_batteryInfo.batteryStatus();
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_batteryInfo.remainingCapacityPercent()" << m_batteryInfo.remainingCapacityPercent();
 #endif
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_networkInfo.currentMode()" << m_networkInfo.currentMode() << "m_networkInfo.networkStatus(currentMode)" << m_networkInfo.networkStatus(m_networkInfo.currentMode());
-    qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_networkInfo.networkStatus(QSystemNetworkInfo::WlanMode)" << m_networkInfo.networkStatus(QSystemNetworkInfo::WlanMode);
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_networkInfo.currentMode()" << m_networkInfo.currentMode() << "m_networkInfo.networkStatus(currentMode)" << m_networkInfo.networkStatus(m_networkInfo.currentMode());
+        qDebug() << "CloudDriveModel::schedulerTimeoutFilter m_networkInfo.networkStatus(QSystemNetworkInfo::WlanMode)" << m_networkInfo.networkStatus(QSystemNetworkInfo::WlanMode);
+    }
 
     if (m_settings.value("CloudDriveModel.schedulerTimeoutFilter.syncOnlyOnCharging.enabled", false).toBool()
             && !isDeviceBatteryCharging()) {
@@ -4382,7 +4472,7 @@ void CloudDriveModel::initializeDB(QString nonce)
     m_db = QSqlDatabase::addDatabase("QSQLITE", ITEM_DB_CONNECTION_NAME);
     m_db.setDatabaseName(ITEM_DB_PATH);
     bool ok = m_db.open();
-    qDebug() << "CloudDriveModel::initializeDB" << ok << "connectionName" << m_db.connectionName() << "databaseName" << m_db.databaseName() << "driverName" << m_db.driverName();
+    qDebug() << "CloudDriveModel::initializeDB" << ok << "connectionName" << m_db.connectionName() << "databaseName" << m_db.databaseName() << "driverName" << m_db.driverName() << "tables" << m_db.tables();
 
     QSqlQuery query(m_db);
     bool res = false;
@@ -4407,12 +4497,19 @@ void CloudDriveModel::initializeDB(QString nonce)
     // Process pending events.
     QApplication::processEvents();
 
-    // TODO Additional initialization.
+    // Add cron_exp.
     res = query.exec("ALTER TABLE cloud_drive_item ADD COLUMN cron_exp TEXT");
     if (res) {
         qDebug() << "CloudDriveModel::initializeDB adding column cloud_drive_item.cron_exp is done.";
     } else {
         qDebug() << "CloudDriveModel::initializeDB adding column cloud_drive_item.cron_exp is failed. Error" << query.lastError();
+    }
+    // Add sync_direction.
+    res = query.exec("ALTER TABLE cloud_drive_item ADD COLUMN sync_direction INTEGER");
+    if (res) {
+        qDebug() << "CloudDriveModel::initializeDB adding column cloud_drive_item.sync_direction is done.";
+    } else {
+        qDebug() << "CloudDriveModel::initializeDB adding column cloud_drive_item.sync_direction is failed. Error" << query.lastError();
     }
 
     // Process pending events.
@@ -4435,12 +4532,12 @@ void CloudDriveModel::initializeDB(QString nonce)
     m_selectChildrenByPrimaryKeyPS.prepare("SELECT * FROM cloud_drive_item c WHERE c.local_path like :local_path||'/%' and c.type = :type and c.uid = :uid ORDER BY c.local_path");
 
     m_insertPS = QSqlQuery(m_db);
-    m_insertPS.prepare("INSERT INTO cloud_drive_item(type, uid, local_path, remote_path, hash, last_modified)"
-                       " VALUES (:type, :uid, :local_path, :remote_path, :hash, :last_modified)");
+    m_insertPS.prepare("INSERT INTO cloud_drive_item(type, uid, local_path, remote_path, hash, last_modified, sync_direction)"
+                       " VALUES (:type, :uid, :local_path, :remote_path, :hash, :last_modified, :sync_direction)");
 
     m_updatePS = QSqlQuery(m_db);
     m_updatePS.prepare("UPDATE cloud_drive_item SET"
-                       " remote_path = :remote_path, hash = :hash, last_modified = :last_modified"
+                       " remote_path = :remote_path, hash = :hash, last_modified = :last_modified, sync_direction = :sync_direction"
                        " WHERE type = :type AND uid = :uid AND local_path = :local_path");
 
     m_updateHashByLocalPathPS = QSqlQuery(m_db);
@@ -4568,6 +4665,7 @@ QList<CloudDriveItem> CloudDriveModel::getItemListFromPS(QSqlQuery ps) {
                 item.remotePath = ps.value(rec.indexOf("remote_path")).toString();
                 item.hash = ps.value(rec.indexOf("hash")).toString();
                 item.lastModified = ps.value(rec.indexOf("last_modified")).toDateTime();
+                item.syncDirection = ps.value(rec.indexOf("sync_direction")).toInt();
 
                 QString itemCacheKey = getItemCacheKey(item.type, item.uid, item.localPath);
     //            qDebug() << "CloudDriveModel::getItemListFromPS key" << itemCacheKey << "item" << item;
@@ -4677,6 +4775,7 @@ int CloudDriveModel::insertItemToDB(const CloudDriveItem item, bool suppressMess
     m_insertPS.bindValue(":remote_path", item.remotePath);
     m_insertPS.bindValue(":hash", item.hash);
     m_insertPS.bindValue(":last_modified", item.lastModified);
+    m_insertPS.bindValue(":sync_direction", item.syncDirection);
     res = m_insertPS.exec();
     if (res) {
         if (!suppressMessages) {
@@ -4705,6 +4804,7 @@ int CloudDriveModel::updateItemToDB(const CloudDriveItem item, bool suppressMess
     m_updatePS.bindValue(":remote_path", item.remotePath);
     m_updatePS.bindValue(":hash", item.hash);
     m_updatePS.bindValue(":last_modified", item.lastModified);
+    m_updatePS.bindValue(":sync_direction", item.syncDirection);
     res = m_updatePS.exec();
     if (res) {
         if (!suppressMessages) {
@@ -4765,6 +4865,28 @@ int CloudDriveModel::deleteItemToDB(CloudDriveModel::ClientTypes type, QString u
     return m_deletePS.numRowsAffected();
 }
 
+void CloudDriveModel::removeItemCacheWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
+{
+    // NOTE It works if parent item is found. Otherwise, nothing will be removed.
+    QString itemKey = getItemCacheKey(type, uid, localPath);
+    QMap<QString, CloudDriveItem>::iterator it = m_itemCache->find(itemKey);
+    while (it != m_itemCache->end()) {
+        QApplication::processEvents();
+
+        QMap<QString, CloudDriveItem>::iterator prev = it;
+        ++it;
+
+        QString k = prev.key();
+        if (k == itemKey || k.startsWith(itemKey + "/")) {
+            qDebug() << "CloudDriveModel::removeItemCacheWithChildren erase cache key" << k;
+            m_itemCache->erase(prev);
+        } else {
+            qDebug() << "CloudDriveModel::removeItemCacheWithChildren break cache key" << k;
+            break;
+        }
+    }
+}
+
 int CloudDriveModel::deleteItemWithChildrenFromDB(CloudDriveModel::ClientTypes type, QString uid, QString localPath)
 {
     qDebug() << "CloudDriveModel::deleteItemWithChildrenFromDB" << type << uid << localPath;
@@ -4786,23 +4908,7 @@ int CloudDriveModel::deleteItemWithChildrenFromDB(CloudDriveModel::ClientTypes t
     }
 
     // Remove related cache items.
-    QString itemKey = getItemCacheKey(type, uid, localPath);
-    QMap<QString, CloudDriveItem>::iterator it = m_itemCache->find(itemKey);
-    while (it != m_itemCache->end()) {
-        QApplication::processEvents();
-
-        QMap<QString, CloudDriveItem>::iterator prev = it;
-        ++it;
-
-        QString k = prev.key();
-        if (k == itemKey || k.startsWith(itemKey + "/")) {
-            qDebug() << "CloudDriveModel::deleteItemWithChildrenFromDB erase cache key" << k;
-            m_itemCache->erase(prev);
-        } else {
-            qDebug() << "CloudDriveModel::deleteItemWithChildrenFromDB break cache key" << k;
-            break;
-        }
-    }
+    removeItemCacheWithChildren(type, uid, localPath);
 
     qDebug() << "CloudDriveModel::deleteItemWithChildrenFromDB" << type << uid << localPath << "res" << res;
 

@@ -1825,7 +1825,9 @@ Page {
                     var tokenPairJsonText = cloudDriveModel.getStoredUid(cloudItem.type, cloudItem.uid);
                     if (tokenPairJsonText != "") {
                         var uidJson = Utility.createJsonObj(tokenPairJsonText);
-                        var modelItem = { type: cloudItem.type, uid: cloudItem.uid, email: uidJson.email, absolutePath: (cloudItem.remote_path ? cloudItem.remote_path : qsTr("Not available")) };
+                        var modelItem = { type: cloudItem.type, uid: cloudItem.uid, email: uidJson.email,
+                            absolutePath: (cloudItem.remote_path ? cloudItem.remote_path : qsTr("Not available")),
+                            syncDirection: cloudItem.sync_direction };
                         cloudItemModel.append(modelItem);
                     }
                 }
@@ -1852,6 +1854,18 @@ Page {
             uidDialog.localPath = selectedItem.absolutePath;
             cloudDriveSchedulerDialog.localPathCronExp = cloudDriveModel.getItemCronExp(type, uid, selectedItem.absolutePath);
             cloudDriveSchedulerDialog.open();
+        }
+        onChangeSyncDirection: {
+            var newSyncDirection;
+            if (syncDirection === CloudDriveModel.SyncBoth) {
+                newSyncDirection = CloudDriveModel.SyncForward;
+            } else if (syncDirection === CloudDriveModel.SyncForward) {
+                newSyncDirection = CloudDriveModel.SyncBackward;
+            } else if (syncDirection === CloudDriveModel.SyncBackward) {
+                newSyncDirection = CloudDriveModel.SyncBoth;
+            }
+            cloudDriveModel.updateItemSyncDirection(type, uid, selectedItem.absolutePath, newSyncDirection);
+            populateCloudItemModel();
         }
         onToggleHidden: {
             var res = fsModel.setFileAttribute(absolutePath, FolderSizeItemListModel.Hidden, value);
