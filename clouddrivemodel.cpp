@@ -4026,7 +4026,8 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
         foreach (CloudDriveItem item, findItemsByRemotePath(getClientType(job.type), job.uid, job.remoteFilePath)) {
             removeItemWithChildren(getClientType(item.type), item.uid, item.localPath);
             // Request trash local path if it's not connected and not suppress deletion.
-            if (!job.suppressDeleteLocal
+            if (item.syncDirection != SyncForward
+                    && !job.suppressDeleteLocal
                     && m_settings.value("CloudDriveModel.deleteFileReplyFilter.deleteLocalFile.enabled", true).toBool()
                     && !isConnected(item.localPath)) {
                 qDebug() << "CloudDriveModel::deleteFileReplyFilter" << nonce << "trash local path" << item.localPath;

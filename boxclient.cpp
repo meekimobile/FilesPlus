@@ -1374,7 +1374,9 @@ QString BoxClient::searchFileId(QString nonce, QString uid, QString remoteParent
     QString fileId = "";
     if (reply->error() == QNetworkReply::NoError) {
         QString replyBody = QString::fromUtf8(reply->readAll());
-        qDebug() << "BoxClient::searchFileId nonce" << nonce << "replyBody" << replyBody;
+        if (m_settings.value("Logging.enabled", false).toBool()) {
+            qDebug() << "BoxClient::searchFileId nonce" << nonce << "replyBody" << replyBody;
+        }
 
         QScriptEngine engine;
         QScriptValue sc = engine.evaluate("(" + replyBody + ")");

@@ -17,12 +17,14 @@ public:
     QString uid;
     QString localFilePath;
     QString remoteFilePath;
+    QString remoteFileName;
     QString newLocalFilePath;
     QString newRemoteFilePath;
     QString newRemoteFileName;
     int targetType;
     QString targetUid;
     QString targetRemoteFilePath;
+    QString targetRemoteFileName;
     bool isDir;
     bool isRunning;
     int modelIndex;
