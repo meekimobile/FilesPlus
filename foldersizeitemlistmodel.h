@@ -130,6 +130,7 @@ public:
     void refreshIndexOnCurrentDir();
     Q_INVOKABLE void removeCache(const QString absPath, bool removeAll = false);
     Q_INVOKABLE bool isRunning();
+    Q_INVOKABLE int findIndexByNameFilter(QString nameFilter, int startIndex = -1, bool backward = false);
 
     // File/Dir manipulation methods.
     Q_INVOKABLE bool removeRow(int row, const QModelIndex & parent = QModelIndex());
@@ -228,6 +229,7 @@ private:
     void initJobQueueTimer();
 public slots:
     void loadDirSizeCacheFinishedFilter();
+    void initializeDBFinishedFilter();
     void fetchDirSizeFinishedFilter(QString sourcePath);
     void copyProgressFilter(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes, qint64 count, bool isSourceRoot);
@@ -250,8 +252,7 @@ Q_SIGNALS:
     void copyFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes, qint64 count, bool isSourceRoot = true);
     void deleteStarted(int fileAction, QString sourcePath);
     void deleteProgress(int fileAction, QString sourceSubPath, QString msg, int err);
-    void deleteFinished(int fileAction, QString sourcePath, QString msg, int err);
-    void trashFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
+    void deleteFinished(int fileAction, QString sourcePath, QString targetPath, QString msg, int err);
     void emptyDirFinished(int fileAction, QString sourcePath, QString msg, int err);
     void createFinished(QString targetPath, QString msg, int err);
     void renameFinished(QString sourcePath, QString targetPath, QString msg, int err);

@@ -688,27 +688,13 @@ Page {
         }
     }
 
-    function refreshItemAfterFileGetSlot(localPath) {
-        // Remove cache on target folders and its parents.
-        fsModel.removeCache(localPath);
-
-        // TODO Does it need to refresh to add gotten file to listview ?
-        var index = fsModel.getIndexOnCurrentDir(localPath);
-        if (index == FolderSizeItemListModel.IndexNotOnCurrentDir) {
-            // do nothing.
-        } else if (index == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
-            index = fsModel.addItem(localPath);
-        } else {
-            fsModel.refreshItem(index);
-        }
-    }
-
     function refreshBeginSlot() {
         console.debug("folderPage refreshBeginSlot");
         isBusy = true;
 
+        // Save current center index.
         fsListView.lastCenterIndex = fsListView.indexAt(0, fsListView.contentY + (fsListView.height / 2));
-//            console.debug("QML FolderSizeItemListModel::refreshBegin fsListView.lastCenterIndex " + fsListView.lastCenterIndex);
+        fsGridView.lastCenterIndex = fsGridView.indexAt(0, fsGridView.contentY + (fsGridView.height / 2));
     }
 
     function refreshCompletedSlot() {
@@ -718,20 +704,6 @@ Page {
         // Reset ListView currentIndex.
         fsListView.currentIndex = -1;
         fsGridView.currentIndex = -1;
-
-        // Auto-sync after refresh. Only dirty items will be sync'd.
-        // TODO Suppress in PieView.
-        if (appInfo.getSettingBoolValue("sync.after.refresh", false)) {
-            syncConnectedItemsSlot(true);
-        }
-    }
-
-    function fetchDirSizeStartedSlot() {
-    }
-
-    function fetchDirSizeFinishedSlot() {
-        // Refresh itemList to show changes on ListView.
-        fsModel.refreshItems();
     }
 
     function resetPopupToolPanelSlot() {
@@ -1444,8 +1416,6 @@ Page {
                 } else {
                     res = fsModel.createEmptyFile(nameField.text);
                 }
-
-                refreshSlot();
             }
         }
     }
@@ -1456,8 +1426,7 @@ Page {
 
         onConfirm: {
             if (nameField.text != "" && nameField.text != sourcePathName) {
-                var res = fsModel.renameFile(sourcePathName, nameField.text);
-                refreshSlot();
+                fsModel.renameFile(sourcePathName, nameField.text);
             }
         }
     }

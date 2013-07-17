@@ -381,6 +381,7 @@ ConfirmDialog {
                 var res = cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, absolutePath);
                 console.debug("cloudDrivePathItem absolutePath " + absolutePath + " isRemotePathConnected " + res);
                 if (!res) {
+                    cloudDrivePathListView.currentIndex = -1;
                     deleteCloudItemConfirmation.remotePath = absolutePath;
                     deleteCloudItemConfirmation.remotePathName = name;
                     deleteCloudItemConfirmation.open();
@@ -433,9 +434,6 @@ ConfirmDialog {
         onConfirm: {
             isBusy = true;
             deleteRemotePath(deleteCloudItemConfirmation.remotePath);
-        }
-        onReject: {
-            cloudDrivePathListView.currentIndex = -1;
         }
     }
 

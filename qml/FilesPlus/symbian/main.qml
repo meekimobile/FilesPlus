@@ -212,30 +212,6 @@ PageStackWindow {
             }
         }
 
-        function findIndexByNameFilter(nameFilter, startIndex, backward) {
-            backward = (!backward) ? false : true;
-            var rx = new RegExp(nameFilter, "i");
-            if (backward) {
-                startIndex = (!startIndex) ? (fsModel.count - 1) : startIndex;
-                startIndex = (startIndex < 0 || startIndex >= fsModel.count) ? (fsModel.count - 1) : startIndex;
-                for (var i=startIndex; i>=0; i--) {
-                    if (rx.test(fsModel.getProperty(i, FolderSizeItemListModel.NameRole))) {
-                        return i;
-                    }
-                }
-            } else {
-                startIndex = (!startIndex) ? 0 : startIndex;
-                startIndex = (startIndex < 0 || startIndex >= fsModel.count) ? 0 : startIndex;
-                for (var i=startIndex; i<fsModel.count; i++) {
-                    if (rx.test(fsModel.getProperty(i, FolderSizeItemListModel.NameRole))) {
-                        return i;
-                    }
-                }
-            }
-
-            return -1;
-        }
-
         onRefreshBegin: {
             var p = findPage("folderPage");
             if (p) {
@@ -287,9 +263,6 @@ PageStackWindow {
                 if (copyProgressDialog.status == DialogStatus.Open) {
                     copyProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " " + qsTr("failed") + ".\n";
                 }
-
-                // TODO stop queued jobs
-                fsModel.cancelQueuedJobs();
             }
 
             // TODO Connect to cloud if copied/moved file/folder is in connected folder.
@@ -350,7 +323,7 @@ PageStackWindow {
         }
 
         onDeleteFinished: {
-            console.debug("fsModel onDeleteFinished " + fileAction + " sourcePath " + sourcePath);
+            console.debug("fsModel onDeleteFinished " + fileAction + " " + getActionName(fileAction) + " sourcePath " + sourcePath);
 
             // Show message if error.
             if (err != 0) {
@@ -359,13 +332,9 @@ PageStackWindow {
                 if (deleteProgressDialog.status == DialogStatus.Open) {
                     deleteProgressDialog.message = getActionName(fileAction) + " " + sourcePath + " " + qsTr("failed") + ".\n";
                 }
-
-                // TODO stop queued jobs
-                fsModel.cancelQueuedJobs();
             }
 
             // Delete file from clouds.
-            // TODO Make it configurable.
             if (err == 0) {
                 if (cloudDriveModel.isConnected(sourcePath)) {
                     var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
@@ -391,24 +360,12 @@ PageStackWindow {
             console.debug("fsModel onCreateFinished targetPath " + targetPath + " err " + err + " msg " + msg);;
 
             if (err == 0) {
-                // If created item is not found, refresh.
-                var targetIndex = fsModel.getIndexOnCurrentDir(targetPath);
-                console.debug("fsModel onCreateFinished targetIndex " + targetIndex + " FolderSizeItemListModel.IndexOnCurrentDirButNotFound " + FolderSizeItemListModel.IndexOnCurrentDirButNotFound);
-                if (targetIndex === FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
-                    fsModel.clearIndexOnCurrentDir();
-                    fsModel.refreshDir("fsModel onCreateFinished");
-                }
-
-                // Reset cloudDriveModel hash on parent.
                 // Reset hash upto root.
                 var paths = fsModel.getPathToRoot(targetPath);
                 for (var i=0; i<paths.length; i++) {
                     console.debug("fsModel onCreateFinished updateItems paths[" + i + "] " + paths[i]);
                     cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
                 }
-
-                // TODO request cloudDriveModel.createFolder
-                // TODO Make it configurable.
             } else {
                 logError(qsTr("Create") + " " + qsTr("error"), msg);
             }
@@ -433,20 +390,6 @@ PageStackWindow {
             }
         }
 
-        onFetchDirSizeStarted: {
-            var p = findPage("folderPage");
-            if (p) {
-                p.fetchDirSizeStartedSlot();
-            }
-        }
-
-        onFetchDirSizeFinished: {
-            var p = findPage("folderPage");
-            if (p) {
-                p.fetchDirSizeFinishedSlot();
-            }
-        }
-
         onDirectoryChanged: {
             console.debug("window fsModel onDirectoryChanged " + dirPath);
 
@@ -462,10 +405,6 @@ PageStackWindow {
             }
         }
 
-        onInitializeDBFinished: {
-            fsModel.requestTrashStatus();
-        }
-
         onTrashChanged: {
             console.debug("window fsModel onTrashChanged");
 
@@ -477,40 +416,6 @@ PageStackWindow {
                 var p = findPage("drivePage");
                 if (p) {
                     p.updateLogicalDriveSlot(fsModel.getTrashPath(), trashAvailableSize, trashMaxSize);
-                }
-            }
-        }
-
-        onTrashFinished: {
-            console.debug("fsModel onTrashFinished " + fileAction + " sourcePath " + sourcePath);
-
-            // Show message if error.
-            if (err != 0) {
-                logError(getActionName(fileAction) + " " + qsTr("error"), msg);
-
-                // TODO stop queued jobs
-                fsModel.cancelQueuedJobs();
-            }
-
-            // Delete file from clouds.
-            // TODO Make it configurable.
-            if (err == 0) {
-                if (cloudDriveModel.isConnected(sourcePath)) {
-                    var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
-                    for (var i=0; i<json.length; i++) {
-                        if (json[i].sync_direction === CloudDriveModel.SyncBackward) {
-                            cloudDriveModel.disconnect(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path);
-                        } else {
-                            cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path, true); // NOTE suppressDeleteLocal=true
-                        }
-                    }
-
-                    // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
-                    var paths = fsModel.getPathToRoot(sourcePath);
-                    for (var i=1; i<paths.length; i++) {
-//                        console.debug("fsModel onTrashFinished updateItems paths[" + i + "] " + paths[i]);
-                        cloudDriveModel.updateItems(paths[i], cloudDriveModel.dirtyHash);
-                    }
                 }
             }
         }
@@ -1305,139 +1210,6 @@ PageStackWindow {
             }
         }
 
-        function parseCloudDriveMetadataJson(selectedCloudType, selectedUid, originalRemotePath, jsonText,  model) {
-            // Parse jsonText and return collected information.
-            var json = Utility.createJsonObj(jsonText);
-
-            var selectedIndex = -1;
-            var selectedRemotePath = "";
-            var selectedRemotePathName = "";
-            var selectedIsDir = false;
-            var selectedIsValid = true;
-            var remoteParentPath = "";
-            var remoteParentPathName = "";
-            var remoteParentParentPath = "";
-
-            // Generalize by using common metadata json.
-            var parsedObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, json);
-            remoteParentPath = parsedObj.absolutePath;
-            remoteParentPathName = cloudDriveModel.isRemoteAbsolutePath(selectedCloudType) ? parsedObj.absolutePath : parsedObj.name;
-            remoteParentParentPath = parsedObj.parentPath;
-            for (var i=0; i < parsedObj.children.length; i++) {
-                var modelItem = parsedObj.children[i];
-                model.append(modelItem);
-                if (modelItem.absolutePath == originalRemotePath) {
-                    selectedIndex = i;
-                    selectedRemotePath = modelItem.absolutePath;
-                    selectedRemotePathName = modelItem.name;
-                    selectedIsDir = modelItem.isDir;
-                }
-            }
-
-            var responseJson = { "selectedIndex": selectedIndex,
-                "selectedRemotePath": selectedRemotePath, "selectedRemotePathName": selectedRemotePathName, "selectedIsDir": selectedIsDir,
-                "remoteParentPath": remoteParentPath, "remoteParentPathName": remoteParentPathName, "remoteParentParentPath": remoteParentParentPath
-            };
-
-            return responseJson;
-        }
-
-        function parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj) {
-            // Parse common JSON object from cloud drive specific JSON object.
-            var parsedObj = {
-                "name": "", "absolutePath": "", "parentPath": "",
-                "isChecked": false, "source": "", "thumbnail": "", "preview": "", "alternative": "",
-                "fileType": "", "isRunning": false, "runningOperation": "", "runningValue": 0, "runningMaxValue": 0,
-                "subDirCount": 0, "subFileCount": 0, "isDirty": false,
-                "lastModified": (new Date()), "size": 0, "isDir": false,
-                "isDeleted": false,
-                "isConnected": false,
-                "timestamp": 0,
-                "hash": "",
-                "children": []
-            };
-
-            parsedObj.name = jsonObj.name;
-            parsedObj.absolutePath = jsonObj.absolutePath;
-            parsedObj.parentPath = jsonObj.parentPath;
-            parsedObj.size = jsonObj.size;
-            parsedObj.isDeleted = jsonObj.isDeleted;
-            parsedObj.isDir = jsonObj.isDir;
-            parsedObj.lastModified = Utility.parseDate(jsonObj.lastModified);
-            parsedObj.hash = jsonObj.hash;
-            parsedObj.source = jsonObj.source;
-            parsedObj.alternative = jsonObj.alternative;
-            parsedObj.thumbnail = jsonObj.thumbnail;
-            parsedObj.preview = jsonObj.preview;
-            parsedObj.fileType = jsonObj.fileType;
-            if (jsonObj.children) {
-                for(var i=0; i<jsonObj.children.length; i++) {
-                    var parsedChildObj = parseCommonCloudDriveMetadataJson(selectedCloudType, selectedUid, jsonObj.children[i]);
-                    parsedObj.children.push(parsedChildObj);
-                }
-            }
-            // Get connection status.
-            parsedObj.isConnected = cloudDriveModel.isRemotePathConnected(selectedCloudType, selectedUid, parsedObj.absolutePath);
-
-            return parsedObj;
-        }
-
-        function findIndexByNameFilter(nameFilter, startIndex, backward) {
-            backward = (!backward) ? false : true;
-            var rx = new RegExp(nameFilter, "i");
-            if (backward) {
-                startIndex = (!startIndex) ? (cloudDriveModel.count - 1) : startIndex;
-                startIndex = (startIndex < 0 || startIndex >= cloudDriveModel.count) ? (cloudDriveModel.count - 1) : startIndex;
-                for (var i=startIndex; i>=0; i--) {
-                    if (rx.test(cloudDriveModel.get(i).name)) {
-                        return i;
-                    }
-                }
-            } else {
-                startIndex = (!startIndex) ? 0 : startIndex;
-                startIndex = (startIndex < 0 || startIndex >= cloudDriveModel.count) ? 0 : startIndex;
-                for (var i=startIndex; i<cloudDriveModel.count; i++) {
-                    if (rx.test(cloudDriveModel.get(i).name)) {
-                        return i;
-                    }
-                }
-            }
-
-            return -1;
-        }
-
-        function getNewFileName(remotePathName) {
-//            console.debug("cloudDriveModel getNewFileName " + remotePathName);
-
-            var foundIndex = findIndexByRemotePathName(remotePathName);
-            if (foundIndex > -1) {
-                var newRemotePathName = "";
-                var tokens = remotePathName.split(".", 2);
-//                console.debug("cloudDriveModel getNewFileName tokens [" + tokens + "]");
-
-                if (tokens[0].lastIndexOf(qsTr("_Copy")) > -1) {
-                    var nameTokens = tokens[0].split(qsTr("_Copy"), 2);
-//                    console.debug("cloudDriveModel getNewFileName nameTokens [" + nameTokens + "]");
-
-                    if (nameTokens.length > 1 && !isNaN(parseInt(nameTokens[1]))) {
-                        newRemotePathName += nameTokens[0] + qsTr("_Copy") + (parseInt(nameTokens[1]) + 1);
-                    } else {
-                        newRemotePathName += nameTokens[0] + qsTr("_Copy") + "2";
-                    }
-                } else {
-                    newRemotePathName += tokens[0] + qsTr("_Copy");
-                }
-
-                if (tokens.length > 1) {
-                    newRemotePathName += "." + tokens[1];
-                }
-
-                return getNewFileName(newRemotePathName);
-            } else {
-                return remotePathName;
-            }
-        }
-
         onRequestTokenReplySignal: {
             console.debug("window cloudDriveModel onRequestTokenReplySignal " + err + " " + errMsg + " " + msg);
 
@@ -1447,18 +1219,12 @@ PageStackWindow {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Request Token"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
-
-            // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onRequestTokenReplySignal", jobJson.job_id);
         }
 
         onAuthorizeRedirectSignal: {
             console.debug("window cloudDriveModel onAuthorizeRedirectSignal " + url + " redirectFrom " + redirectFrom);
 
             pageStack.push(Qt.resolvedUrl("AuthPage.qml"), { url: url, redirectFrom: redirectFrom }, true);
-
-            // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onAuthorizeRedirectSignal", nonce);
         }
 
         onAccessTokenReplySignal: {
@@ -1480,9 +1246,6 @@ PageStackWindow {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Access Token"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
-
-            // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onAccessTokenReplySignal", jobJson.job_id);
         }
 
         onAccountInfoReplySignal: {
@@ -1519,9 +1282,6 @@ PageStackWindow {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Account Info"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
-
-            // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onAccountInfoReplySignal", jobJson.job_id);
         }
 
         onQuotaReplySignal: {
@@ -1552,9 +1312,6 @@ PageStackWindow {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Account Quota"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
-
-            // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onQuotaReplySignal", jobJson.job_id);
         }
 
         onBrowseReplySignal: {
@@ -1586,11 +1343,6 @@ PageStackWindow {
                     p.resetBusySlot("cloudDriveModel onBrowseReplySignal");
                 }
             }
-
-            // Remove finished job.
-            if (!suppressRemoveJob) {
-                cloudDriveModel.removeJob("cloudDriveModel.onBrowseReplySignal", jobJson.job_id);
-            }
         }
 
         onFileGetReplySignal: {
@@ -1599,20 +1351,10 @@ PageStackWindow {
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
             if (err == 0) {
-                // Remove cache on target folders and its parents.
-                var p = findPage("folderPage");
-                if (p) {
-                    p.refreshItemAfterFileGetSlot(jobJson.local_file_path);
-                }
+                fsModel.addItem(jobJson.local_file_path);
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("File Get"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
-            }
-
-            // Remove finished job.
-            // TODO Remove only success job.
-            if (err == 0) {
-                cloudDriveModel.removeJob("cloudDriveModel.onFileGetReplySignal", jobJson.job_id);
             }
 
             // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
@@ -1643,12 +1385,6 @@ PageStackWindow {
                 }
             }
 
-            // Remove finished job.
-            // TODO Remove only success job.
-            if (err == 0) {
-                cloudDriveModel.removeJob("cloudDriveModel.onFilePutReplySignal", jobJson.job_id);
-            }
-
             // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
@@ -1664,11 +1400,6 @@ PageStackWindow {
             if (err != 0 && err != 203) {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Metadata"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
-            }
-
-            // Remove only success job.
-            if ((err == 0 || err == 203) && !suppressRemoveJob) {
-                cloudDriveModel.removeJob("cloudDriveModel.onMetadataReplySignal", jobJson.job_id);
             }
 
             // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
@@ -1707,9 +1438,6 @@ PageStackWindow {
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
-            // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onCreateFolderReplySignal", jobJson.job_id);
-
             // TODO *** create SkyDrive folder freezes here *** TODO Does it need?
             // Update ProgressBar if localPath is specified.
             if (jobJson.type == CloudDriveModel.SkyDrive && pageStack.currentPage.name == "folderPage") {
@@ -1747,9 +1475,6 @@ PageStackWindow {
                 // Update item after removing job as isSyncing will check if job exists.
                 var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
-                // Remove finished job.
-                cloudDriveModel.removeJob("cloudDriveModel.onRefreshRequestSignal", jobJson.job_id);
-
                 // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
                 pageStack.find(function (page) {
                     if (page.updateItemSlot) page.updateItemSlot(jobJson, "window cloudDriveModel onRefreshRequestSignal");
@@ -1771,9 +1496,6 @@ PageStackWindow {
                 var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
                 fsModel.trash(localPath);
-
-                // Remove finished job.
-                cloudDriveModel.removeJob("cloudDriveModel.onMoveToTrashRequestSignal", jobJson.job_id);
             }
         }
 
@@ -1800,9 +1522,6 @@ PageStackWindow {
                     p.resetBusySlot("cloudDriveModel onCopyFileReplySignal");
                 }
             }
-
-            // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onCopyFileReplySignal", jobJson.job_id);
 
             // Update ProgressBar on NEW listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
@@ -1834,9 +1553,6 @@ PageStackWindow {
                 }
             }
 
-            // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onMoveFileReplySignal", jobJson.job_id);
-
             // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
@@ -1865,9 +1581,6 @@ PageStackWindow {
                 }
             }
 
-            // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onDeleteFileReplySignal", jobJson.job_id);
-
             // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
@@ -1889,9 +1602,6 @@ PageStackWindow {
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
-            // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onShareFileReplySignal", jobJson.job_id);
-
             // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
@@ -1910,9 +1620,6 @@ PageStackWindow {
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
             }
 
-            // Remove finished job.
-            cloudDriveModel.removeJob("cloudDriveModel.onDeltaReplySignal", jobJson.job_id);
-
             // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
             pageStack.find(function (page) {
                 if (page.updateItemSlot) page.updateItemSlot(jobJson);
@@ -1927,11 +1634,6 @@ PageStackWindow {
             if (err != 0) {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Migrate"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
-            }
-
-            // Remove finished job.
-            if (!suppressRemoveJob) {
-                cloudDriveModel.removeJob("cloudDriveModel.onMigrateFileReplySignal", jobJson.job_id);
             }
 
             // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
@@ -1959,12 +1661,6 @@ PageStackWindow {
                     logError(getCloudName(jobJson.type) + " " + qsTr("Migrate"),
                              qsTr("Error") + " " + err + " " + errMsg + " " + msg);
                 }
-            }
-
-            // Remove finished job.
-            // TODO Remove only success job.
-            if (err == 0) {
-                cloudDriveModel.removeJob("cloudDriveModel.onMigrateFilePutReplySignal", jobJson.job_id);
             }
 
             // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
@@ -2044,10 +1740,7 @@ PageStackWindow {
 
         onRefreshItemAfterFileGetSignal: {
             console.debug("window cloudDriveModel onRefreshItemAfterFileGetSignal nonce " + nonce + " localPath " + localPath);
-            var p = findPage("folderPage");
-            if (p) {
-                p.refreshItemAfterFileGetSlot(localPath);
-            }
+            fsModel.addItem(localPath);
         }
 
         Component.onCompleted: {
@@ -2099,17 +1792,6 @@ PageStackWindow {
             }
 
             return i;
-        }
-
-        function removeQueuedJobs() {
-            var i = 0;
-            while (i<cloudDriveJobsModel.count) {
-                var job = cloudDriveJobsModel.get(i);
-                if (!job.is_running) {
-                    console.debug("cloudDriveJobsModel removeQueuedJobs " + i + " " + job.job_id);
-                    cloudDriveModel.removeJob("window cloudDriveJobsModel removeQueuedJobs", job.job_id);
-                }
-            }
         }
     }
 

@@ -552,7 +552,7 @@ void CloudDriveModel::loadCloudDriveJobs(QString nonce)
         }
     }
 
-    qDebug() << "CloudDriveModel::loadCloudDriveJobs " << i;
+    qDebug() << "CloudDriveModel::loadCloudDriveJobs" << i;
 
     // Notify job done.
     jobDone();
@@ -1155,6 +1155,8 @@ bool CloudDriveModel::requestMoveToTrash(const QString nonce, const QString absP
     jobDone();
 
     emit moveToTrashRequestSignal(nonce, absPath);
+
+    removeJob("CloudDriveModel::requestMoveToTrash", nonce);
 }
 
 QString CloudDriveModel::getFileName(const QString absFilePath)
@@ -1162,6 +1164,37 @@ QString CloudDriveModel::getFileName(const QString absFilePath)
     QFileInfo fileInfo(absFilePath);
 
     return fileInfo.fileName();
+}
+
+QString CloudDriveModel::getNewFileName(const QString remotePathName)
+{
+    int foundIndex = findIndexByRemotePathName(remotePathName);
+    if (foundIndex > -1) {
+        QString newRemotePathName = "";
+        QStringList tokens = remotePathName.split(".");
+
+        if (tokens.at(0).lastIndexOf(tr("_Copy")) > -1) {
+            QStringList nameTokens = tokens.at(0).split(tr("_Copy"));
+
+            if (nameTokens.length() > 1 && nameTokens.at(1).toInt() != 0) {
+                qDebug() << "CloudDriveModel::getNewFileName" << remotePathName << nameTokens << nameTokens.at(1).toInt();
+                newRemotePathName += nameTokens.at(0) + tr("_Copy") + QString("%1").arg(nameTokens.at(1).toInt() + 1);
+            } else {
+                newRemotePathName += nameTokens.at(0) + tr("_Copy") + "2";
+            }
+        } else {
+            newRemotePathName += tokens.at(0) + tr("_Copy");
+        }
+
+        if (tokens.length() > 1) {
+            tokens.removeFirst();
+            newRemotePathName += "." + tokens.join(".");
+        }
+
+        return getNewFileName(newRemotePathName);
+    } else {
+        return remotePathName;
+    }
 }
 
 QString CloudDriveModel::getFileType(QString localPath)
@@ -1508,11 +1541,12 @@ void CloudDriveModel::removeJob(QString caller, QString nonce)
         return;
     }
 
-//    qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce;
+    qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce << "started.";
 
     // Abort job.
     suspendJob(nonce);
 
+    qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce << "managing job's data.";
     mutex.lock();
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     clearConnectedRemoteDirtyCache(job.localFilePath);
@@ -1523,6 +1557,7 @@ void CloudDriveModel::removeJob(QString caller, QString nonce)
     mutex.unlock();
 
     // Remove temp file if it exists.
+    qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce << "removing job's temp file.";
     QString tempFilePath = m_settings.value("temp.path", TEMP_PATH).toString() + "/" + nonce;
     if (QFileInfo(tempFilePath).exists()) {
         QFile(tempFilePath).remove();
@@ -2425,7 +2460,7 @@ void CloudDriveModel::quota(CloudDriveModel::ClientTypes type, QString uid)
             || (type == WebDAV && !getConnectionBoolProperty(type, uid, "quota.enabled", true))) { // Default as enabled.
         CloudDriveJob job(createNonce(), Quota, type, uid, "", "", -1);
         m_cloudDriveJobs->insert(job.jobId, job);
-        emit quotaReplySignal(job.jobId, 0, "", "{ }", 0, 0, 0);
+        quotaReplyFilter(job.jobId, 0, "", "{ }", 0, 0, 0);
         return;
     }
 
@@ -3298,6 +3333,11 @@ void CloudDriveModel::fileGetReplyFilter(QString nonce, int err, QString errMsg,
     jobDone();
 
     emit fileGetReplySignal(nonce, err, errMsg, msg);
+
+    // Remove finished job.
+    if (err == 0) {
+        removeJob("CloudDriveModel::fileGetReplyFilter", nonce);
+    }
 }
 
 void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -3343,6 +3383,11 @@ void CloudDriveModel::filePutReplyFilter(QString nonce, int err, QString errMsg,
     jobDone();
 
     emit filePutReplySignal(nonce, err, errMsg, msg);
+
+    // Remove finished job.
+    if (err == 0) {
+        removeJob("CloudDriveModel::filePutReplyFilter", nonce);
+    }
 }
 
 void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -3481,11 +3526,7 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
                 // TODO Issue: syncFromLocal can't detect deleted remote file if it still has connection, then syncFromLocal will skip it.
                 qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "job.remotePathList.length()" << job.remotePathList.length();
                 if (nextOffset >= totalCount) {
-//                    if (parentItem.syncDirection != SyncBackward) { // syncFromLocal if direction is not SyncBackward.
-                        syncFromLocal(getClientType(job.type), job.uid, job.localFilePath, jsonObj.property("parentPath").toString(), job.modelIndex, job.forcePut, job.remotePathList);
-//                    } else {
-//                        qDebug() << "CloudDriveModel::metadataReplyFilter dir" << getCloudName(job.type) << nonce << "suppress syncFromLocal syncDirection" << parentItem.syncDirection;
-//                    }
+                    syncFromLocal(getClientType(job.type), job.uid, job.localFilePath, jsonObj.property("parentPath").toString(), job.modelIndex, job.forcePut, job.remotePathList);
                 } else {
                     // Return as job is still running in background.
                     return;
@@ -3590,6 +3631,11 @@ void CloudDriveModel::metadataReplyFilter(QString nonce, int err, QString errMsg
     jobDone();
 
     emit metadataReplySignal(nonce, err, errMsg, msg, suppressRemoveJob);
+
+    // Remove only success job.
+    if ((err == 0 || err == 203) && !suppressRemoveJob) {
+        removeJob("CloudDriveModel::metadataReplyFilter", nonce);
+    }
 }
 
 void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -3685,6 +3731,11 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
         jobDone();
         emit browseReplySignal(nonce, err, errMsg, msg, false);
     }
+
+    // Remove finished job.
+    if (!suppressRemoveJob) {
+        removeJob("CloudDriveModel::browseReplyFilter", nonce);
+    }
 }
 
 void CloudDriveModel::migrateFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -3768,6 +3819,11 @@ void CloudDriveModel::migrateFileReplyFilter(QString nonce, int err, QString err
         jobDone();
         emit migrateFileReplySignal(nonce, err, errMsg, msg, false);
     }
+
+    // Remove finished job.
+    if (!suppressRemoveJob) {
+        removeJob("CloudDriveModel::migrateFileReplyFilter", nonce);
+    }
 }
 
 void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -3816,6 +3872,8 @@ void CloudDriveModel::createFolderReplyFilter(QString nonce, int err, QString er
     jobDone();
 
     emit createFolderReplySignal(nonce, err, errMsg, msg);
+
+    removeJob("CloudDriveModel::createFolderReplyFilter", nonce);
 }
 
 void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -3889,6 +3947,8 @@ void CloudDriveModel::moveFileReplyFilter(QString nonce, int err, QString errMsg
     jobDone();
 
     emit moveFileReplySignal(nonce, err, errMsg, msg);
+
+    removeJob("CloudDriveModel::moveFileReplyFilter", nonce);
 }
 
 void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -3935,6 +3995,8 @@ void CloudDriveModel::copyFileReplyFilter(QString nonce, int err, QString errMsg
     jobDone();
 
     emit copyFileReplySignal(nonce, err, errMsg, msg);
+
+    removeJob("CloudDriveModel::copyFileReplyFilter", nonce);
 }
 
 void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -3981,6 +4043,8 @@ void CloudDriveModel::deleteFileReplyFilter(QString nonce, int err, QString errM
     jobDone();
 
     emit deleteFileReplySignal(nonce, err, errMsg, msg);
+
+    removeJob("CloudDriveModel::deleteFileReplyFilter", nonce);
 }
 
 void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMsg, QString msg, QString url, int expires)
@@ -4005,6 +4069,8 @@ void CloudDriveModel::shareFileReplyFilter(QString nonce, int err, QString errMs
     jobDone();
 
     emit shareFileReplySignal(nonce, err, errMsg, msg, url, expires);
+
+    removeJob("CloudDriveModel::shareFileReplyFilter", nonce);
 }
 
 void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -4102,6 +4168,8 @@ void CloudDriveModel::deltaReplyFilter(QString nonce, int err, QString errMsg, Q
     jobDone();
 
     emit deltaReplySignal(nonce, err, errMsg, msg);
+
+    removeJob("CloudDriveModel::deltaReplyFilter", nonce);
 }
 
 void CloudDriveModel::migrateFilePutReplyFilter(QString nonce, int err, QString errMsg, QString msg, bool errorOnTarget)
@@ -4133,6 +4201,11 @@ void CloudDriveModel::migrateFilePutReplyFilter(QString nonce, int err, QString 
     jobDone();
 
     emit migrateFilePutReplySignal(nonce, err, errMsg, msg, errorOnTarget);
+
+    // Remove finished job.
+    if (err == 0) {
+        removeJob("CloudDriveModel::migrateFilePutReplyFilter", nonce);
+    }
 }
 
 void CloudDriveModel::fileGetResumeReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -4287,6 +4360,8 @@ void CloudDriveModel::refreshRequestFilter(QString nonce)
     jobDone();
 
     emit refreshRequestSignal(nonce);
+
+    removeJob("CloudDriveModel::refreshRequestFilter", nonce);
 }
 
 void CloudDriveModel::schedulerTimeoutFilter()
@@ -5298,7 +5373,10 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
 
 void CloudDriveModel::suspendJob(const QString jobId)
 {
+    qDebug() << "CloudDriveModel::suspendJob" << jobId;
+
     // Suspend job.
+    // TODO Why comment job updating below?
     CloudDriveJob job = m_cloudDriveJobs->value(jobId);
 //    job.isRunning = false;
 //    updateJob(job);
@@ -5379,6 +5457,8 @@ void CloudDriveModel::requestTokenReplyFilter(QString nonce, int err, QString er
     jobDone();
 
     emit requestTokenReplySignal(nonce, err, errMsg, msg);
+
+    removeJob("CloudDriveModel::requestTokenReplyFilter", nonce);
 }
 
 void CloudDriveModel::authorizeRedirectFilter(QString nonce, QString url, QString redirectFrom)
@@ -5392,6 +5472,8 @@ void CloudDriveModel::authorizeRedirectFilter(QString nonce, QString url, QStrin
     jobDone();
 
     emit authorizeRedirectSignal(nonce, url, redirectFrom);
+
+    removeJob("CloudDriveModel::authorizeRedirectFilter", nonce);
 }
 
 void CloudDriveModel::accessTokenReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -5434,6 +5516,8 @@ void CloudDriveModel::accessTokenReplyFilter(QString nonce, int err, QString err
     jobDone();
 
     emit accessTokenReplySignal(nonce, err, errMsg, msg);
+
+    removeJob("CloudDriveModel::accessTokenReplyFilter", nonce);
 }
 
 void CloudDriveModel::accountInfoReplyFilter(QString nonce, int err, QString errMsg, QString msg)
@@ -5457,6 +5541,8 @@ void CloudDriveModel::accountInfoReplyFilter(QString nonce, int err, QString err
     jobDone();
 
     emit accountInfoReplySignal(nonce, err, errMsg, msg);
+
+    removeJob("CloudDriveModel::accountInfoReplyFilter", nonce);
 }
 
 void CloudDriveModel::quotaReplyFilter(QString nonce, int err, QString errMsg, QString msg, qint64 normalBytes, qint64 sharedBytes, qint64 quotaBytes)
@@ -5480,6 +5566,8 @@ void CloudDriveModel::quotaReplyFilter(QString nonce, int err, QString errMsg, Q
     jobDone();
 
     emit quotaReplySignal(nonce, err, errMsg, msg, normalBytes, sharedBytes, quotaBytes);
+
+    removeJob("CloudDriveModel::quotaReplyFilter", nonce);
 }
 
 void CloudDriveModel::createTempPath()
@@ -5636,6 +5724,31 @@ int CloudDriveModel::findIndexByRemotePathName(QString remotePathName) {
     for (int i=0; i<m_modelItemList->count(); i++) {
         if (m_modelItemList->at(i).name == remotePathName) {
             return i;
+        }
+    }
+
+    return -1;
+}
+
+int CloudDriveModel::findIndexByNameFilter(QString nameFilter, int startIndex, bool backward)
+{
+    QRegExp rx(nameFilter, Qt::CaseInsensitive);
+
+    if (backward) {
+        startIndex = (startIndex == -1) ? (m_modelItemList->count() - 1) : startIndex;
+        startIndex = (startIndex < 0 || startIndex >= m_modelItemList->count()) ? (m_modelItemList->count() - 1) : startIndex;
+        for (int i=startIndex; i>=0; i--) {
+            if (rx.indexIn(m_modelItemList->at(i).name) != -1) {
+                return i;
+            }
+        }
+    } else {
+        startIndex = (startIndex == -1) ? 0 : startIndex;
+        startIndex = (startIndex < 0 || startIndex >= m_modelItemList->count()) ? 0 : startIndex;
+        for (int i=startIndex; i<m_modelItemList->count(); i++) {
+            if (rx.indexIn(m_modelItemList->at(i).name) != -1) {
+                return i;
+            }
         }
     }
 

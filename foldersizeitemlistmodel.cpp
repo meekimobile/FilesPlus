@@ -45,7 +45,7 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     // Connect model class with listModel.
     connect(&m, SIGNAL(loadDirSizeCacheFinished()), this, SLOT(loadDirSizeCacheFinishedFilter()) );
     connect(&m, SIGNAL(initializeDBStarted()), this, SIGNAL(initializeDBStarted()) );
-    connect(&m, SIGNAL(initializeDBFinished()), this, SIGNAL(initializeDBFinished()) );
+    connect(&m, SIGNAL(initializeDBFinished()), this, SLOT(initializeDBFinishedFilter()) );
     connect(&m, SIGNAL(fetchDirSizeStarted(QString)), this, SIGNAL(fetchDirSizeStarted(QString)) );
     connect(&m, SIGNAL(fetchDirSizeFinished(QString)), this, SLOT(fetchDirSizeFinishedFilter(QString)) );
     connect(&m, SIGNAL(copyStarted(int,QString,QString,QString,int)), this, SIGNAL(copyStarted(int,QString,QString,QString,int)) );
@@ -684,6 +684,7 @@ bool FolderSizeItemListModel::createDir(const QString name)
     QDir dir(currentDir());
     bool res = dir.mkdir(name.trimmed());
     if (res) {
+        addItem(dir.absoluteFilePath(name));
         emit createFinished(dir.absoluteFilePath(name), tr("Create %1 done.").arg(name), 0);
     } else {
         emit createFinished(currentDir() + "/" + name, tr("Create %1 failed.").arg(name), -1);
@@ -698,6 +699,7 @@ bool FolderSizeItemListModel::createDirPath(const QString absPath)
     QDir dir(getDirPath(absPath));
     bool res = dir.mkdir(getFileName(absPath));
     if (res) {
+        addItem(absPath);
         emit createFinished(absPath, tr("Create %1 done.").arg(absPath), 0);
     } else {
         emit createFinished(absPath, tr("Create %1 failed.").arg(absPath), -1);
@@ -722,6 +724,7 @@ bool FolderSizeItemListModel::createEmptyFile(const QString name)
 
     qDebug() << "FolderSizeItemListModel::createEmptyFile file" << absPath << "size" << c;
     if (c != -1) {
+        addItem(dir.absoluteFilePath(name));
         emit createFinished(dir.absoluteFilePath(name), tr("Create %1 done.").arg(name), 0);
         return true;
     } else {
@@ -750,6 +753,7 @@ bool FolderSizeItemListModel::renameFile(const QString fileName, const QString n
     qDebug() << "FolderSizeItemListModel::renameFile res" << res << "fileName" << fileName << "newFileName" << newFileName;
     if (res) {
         // TODO Move cache and its sub items cache to new names.
+        refreshDir("FolderSizeItemListModel::renameFile");
 
         // Emit signal to change CloudDriveItem.
         emit renameFinished( QDir::current().absoluteFilePath(fileName), QDir::current().absoluteFilePath(newFileName), tr("Rename %1 to %2 done.").arg(fileName).arg(newFileName), 0);
@@ -1145,6 +1149,31 @@ bool FolderSizeItemListModel::isRunning()
     return m.isRunning();
 }
 
+int FolderSizeItemListModel::findIndexByNameFilter(QString nameFilter, int startIndex, bool backward)
+{
+    QRegExp rx(nameFilter, Qt::CaseInsensitive);
+
+    if (backward) {
+        startIndex = (startIndex == -1) ? (itemList.count() - 1) : startIndex;
+        startIndex = (startIndex < 0 || startIndex >= itemList.count()) ? (itemList.count() - 1) : startIndex;
+        for (int i=startIndex; i>=0; i--) {
+            if (rx.indexIn(itemList.at(i).name) != -1) {
+                return i;
+            }
+        }
+    } else {
+        startIndex = (startIndex == -1) ? 0 : startIndex;
+        startIndex = (startIndex < 0 || startIndex >= itemList.count()) ? 0 : startIndex;
+        for (int i=startIndex; i<itemList.count(); i++) {
+            if (rx.indexIn(itemList.at(i).name) != -1) {
+                return i;
+            }
+        }
+    }
+
+    return -1;
+}
+
 void FolderSizeItemListModel::refreshItemList()
 {
     emit refreshBegin();
@@ -1185,10 +1214,24 @@ int FolderSizeItemListModel::addItem(const QString absPath)
 {
     QFileInfo item(absPath);
     qDebug() << "FolderSizeItemListModel::addItem" << item.absoluteFilePath() << item.isDir() << item.isFile();
-    itemList.append(m.getItem(item));
-    int index  = itemList.count()-1;
-    m_indexOnCurrentDirHash->insert(absPath, index);
-    refreshItems();
+
+    // Remove cache to force refresh on next request.
+    removeCache(absPath);
+
+    int index = getIndexOnCurrentDir(absPath);
+    if (index == IndexNotOnCurrentDir) {
+        // do nothing.
+    } else if (index == IndexOnCurrentDirButNotFound) {
+        itemList.append(m.getItem(item));
+        int index  = itemList.count()-1;
+        m_indexOnCurrentDirHash->insert(absPath, index);
+        // Emit data changed.
+        beginResetModel();
+        emit dataChanged(createIndex(rowCount()-1, 0), createIndex(rowCount()-1, 0));
+        endResetModel();
+    } else {
+        refreshItem(index);
+    }
 
     return index;
 }
@@ -1200,15 +1243,25 @@ void FolderSizeItemListModel::loadDirSizeCacheFinishedFilter()
     refreshDir("FolderSizeItemListModel::loadDirSizeCacheFinishedFilter");
 }
 
+void FolderSizeItemListModel::initializeDBFinishedFilter()
+{
+    emit initializeDBFinished();
+
+    requestTrashStatus();
+}
+
 void FolderSizeItemListModel::fetchDirSizeFinishedFilter(QString sourcePath)
 {
     if (sourcePath == "" || sourcePath == currentDir()) {
-        refreshItemList();
+        refreshItemList(); // TODO Why?
     }
 
     if (sourcePath.startsWith(getTrashPath())) {
         emit trashChanged();
     }
+
+    // Reset model.
+    refreshItems();
 
     emit fetchDirSizeFinished(sourcePath);
 }
@@ -1248,13 +1301,17 @@ void FolderSizeItemListModel::copyFinishedFilter(int fileAction, QString sourceP
     }
 
     emit copyFinished(fileAction, sourcePath, targetPath, msg, err, bytes, totalBytes, count, isSourceRoot);
+
+    // Stop queued job if error occurs.
+    if (err < 0) {
+        cancelQueuedJobs();
+    }
 }
 
 void FolderSizeItemListModel::deleteProgressFilter(int fileAction, QString sourceSubPath, QString msg, int err)
 {
     // TODO Suppress some overflow events.
 
-//    qDebug() << "FolderSizeItemListModel::deleteProgressFilter" << sourceSubPath;
     if (err >= 0) {
         int i = getIndexOnCurrentDir(sourceSubPath);
 
@@ -1268,19 +1325,13 @@ void FolderSizeItemListModel::deleteProgressFilter(int fileAction, QString sourc
     }
 
     // NOTE Not require as deleteFinishedFilter have done.
-    // Remove cache of path up to root.
 //    removeCache(sourceSubPath);
 
-    // Emit deleteFinished
     emit deleteProgress(fileAction, sourceSubPath, msg, err);
-
-//    qDebug() << "FolderSizeItemListModel::deleteProgressFilter" << sourceSubPath << "is done.";
 }
 
 void FolderSizeItemListModel::deleteFinishedFilter(int fileAction, QString sourcePath, QString msg, int err)
 {
-//    qDebug() << "FolderSizeItemListModel::deleteFinishedFilter" << sourcePath;
-
     // NOTE Not require as deleteProgressFilter have done.
     // Remove item from ListView.
 
@@ -1292,10 +1343,12 @@ void FolderSizeItemListModel::deleteFinishedFilter(int fileAction, QString sourc
 //        requestTrashStatus();
 //    }
 
-    // Emit deleteFinished
-    emit deleteFinished(fileAction, sourcePath, msg, err);
+    emit deleteFinished(fileAction, sourcePath, "", msg, err);
 
-    //    qDebug() << "FolderSizeItemListModel::deleteFinishedFilter" << sourcePath << "is done.";
+    // Stop queued job if error occurs.
+    if (err < 0) {
+        cancelQueuedJobs();
+    }
 }
 
 void FolderSizeItemListModel::trashFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err)
@@ -1303,7 +1356,6 @@ void FolderSizeItemListModel::trashFinishedFilter(int fileAction, QString source
     if (err >= 0) {
         // Remove item from ListView.
         int i = getIndexOnCurrentDir(sourcePath);
-//        qDebug() << "FolderSizeItemListModel::trashFinishedFilter" << sourcePath << "is at index" << i;
 
         if (i >= 0) {
             // Remove item from model.
@@ -1323,7 +1375,13 @@ void FolderSizeItemListModel::trashFinishedFilter(int fileAction, QString source
     // NOTE Trash will be fetched once it's shown.
 //    requestTrashStatus();
 
-    emit trashFinished(fileAction, sourcePath, targetPath, msg, err);
+    // Reuse deleteFinished as it can be differentiated by fileAction.
+    emit deleteFinished(fileAction, sourcePath, targetPath, msg, err);
+
+    // Stop queued job if error occurs.
+    if (err < 0) {
+        cancelQueuedJobs();
+    }
 }
 
 void FolderSizeItemListModel::emptyDirFinishedFilter(int fileAction, QString sourcePath, QString msg, int err)

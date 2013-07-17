@@ -633,9 +633,11 @@ bool CloudDriveClient::abort(QString nonce)
 {
     if (m_replyHash->contains(nonce)) {
         QNetworkReply *reply = m_replyHash->value(nonce);
-        reply->abort();
+        if (!reply->isFinished()) {
+            reply->abort();
+            qDebug() << "CloudDriveClient::abort nonce" << nonce << "is aborted.";
+        }
         m_replyHash->remove(nonce);
-        qDebug() << "CloudDriveClient::abort nonce" << nonce << "is aborted.";
         qDebug() << "CloudDriveClient::abort m_replyHash count" << m_replyHash->count();
     } else {
         qDebug() << "CloudDriveClient::abort nonce" << nonce << "is not found. Operation is ignored.";

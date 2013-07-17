@@ -185,6 +185,7 @@ public:
     Q_INVOKABLE void addItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString remotePath, QString hash, int syncDirection, bool addOnly = false);
     Q_INVOKABLE void removeItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE void removeItemWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
+    void removeItemCacheWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
     Q_INVOKABLE void removeItems(QString localPath);
     Q_INVOKABLE int removeItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     Q_INVOKABLE void updateItem(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString hash);
@@ -237,6 +238,7 @@ public:
     Q_INVOKABLE bool createDirPath(const QString absPath);
     Q_INVOKABLE bool requestMoveToTrash(const QString nonce, const QString absPath);
     Q_INVOKABLE QString getFileName(const QString absFilePath);
+    Q_INVOKABLE QString getNewFileName(const QString remotePathName);
     Q_INVOKABLE QString getFileType(QString localPath);
     Q_INVOKABLE qint64 getFileSize(QString localPath);
     Q_INVOKABLE QString getFileLastModified(QString localPath);
@@ -355,7 +357,7 @@ public:
     Q_INVOKABLE void refreshItems();
     Q_INVOKABLE int findIndexByRemotePath(QString remotePath);
     Q_INVOKABLE int findIndexByRemotePathName(QString remotePathName);
-    void removeItemCacheWithChildren(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
+    Q_INVOKABLE int findIndexByNameFilter(QString nameFilter, int startIndex = -1, bool backward = false);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void initializeDBStarted(QString nonce);
