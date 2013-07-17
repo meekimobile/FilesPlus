@@ -506,7 +506,7 @@ QNetworkReply *BoxClient::filePut(QString nonce, QString uid, QIODevice *source,
 {
     qDebug() << "----- BoxClient::filePut -----" << nonce << uid << remoteParentPath << remoteFileName << "synchronous" << synchronous << "source->bytesAvailable()" << source->bytesAvailable() << "bytesTotal" << bytesTotal;
 
-    qint64 maxFileSize = m_settings.value(QString("%1.maxUploadFileSize").arg(objectName()), DefaultMaxUploadSize).toULongLong();
+    qint64 maxFileSize = m_settings.value(QString("%1.maxUploadFileSize").arg(objectName()), DefaultMaxUploadSize / 1048576).toInt() * 1048576;
     if (bytesTotal > maxFileSize) {
         emit filePutReplySignal(nonce, QNetworkReply::UnknownContentError,
                                 tr("File size is too large (> %n MB). Please upload by using BOX web.", "", qRound(maxFileSize / 1048576)), "");

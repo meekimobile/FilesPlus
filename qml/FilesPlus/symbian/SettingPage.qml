@@ -386,6 +386,12 @@ Page {
             type: "switch"
             group: "CloudDrive"
         }
+        ListElement {
+            name: "BoxClient.maxUploadFileSize"
+            options: "10,30,10,20"
+            type: "slider"
+            group: "CloudDrive"
+        }
     }
 
     GridView {
@@ -457,6 +463,7 @@ Page {
         else if (name == "FtpClient.getItemListJson.showHiddenSystem.enabled") return qsTr("Show hidden files on FTP") + appInfo.emptyStr;
         else if (name == "WebDavClient.createPropertyJson.showHiddenSystem.enabled") return qsTr("Show hidden files on WebDAV") + appInfo.emptyStr;
         else if (name == "FolderSizeItemListModel.deleteFile.use.trash.enabled") return qsTr("Delete by moving to trash") + appInfo.emptyStr;
+        else if (name == "BoxClient.maxUploadFileSize") return qsTr("BOX max upload file size (MB)") + appInfo.emptyStr;
         else return qsTr(name) + appInfo.emptyStr;
     }
 
