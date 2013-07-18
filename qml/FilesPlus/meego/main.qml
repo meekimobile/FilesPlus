@@ -8,6 +8,7 @@ import BookmarksModel 1.0
 import FolderSizeItemListModel 1.0
 import SystemInfoHelper 1.0
 import CompressedFolderModel 1.0
+import CacheImageHelper 1.0
 import "Utility.js" as Utility
 
 PageStackWindow {
@@ -728,6 +729,21 @@ PageStackWindow {
                     fsModel.removeCache(extractedFileList[i]);
                 }
                 fsModel.refreshDir("compressedFolderModel onExtractFinished");
+            }
+        }
+    }
+
+    CacheImageHelper {
+        id: cacheImageHelper
+
+        onCacheImageFinished: {
+            console.debug("window cacheImageHelper onCacheImageFinished " + absoluteFilePath + " " + err + " " + errMsg + " caller " + caller);
+            // Refresh item only if there is no error.
+            if (err == 0) {
+                var p = findPage(caller);
+                if (p && p.refreshItem) {
+                    p.refreshItem(absoluteFilePath);
+                }
             }
         }
     }
@@ -1569,17 +1585,6 @@ PageStackWindow {
             migrateProgressDialog.source = localFilePath;
             migrateProgressDialog.value = count;
             migrateProgressDialog.max = total;
-        }
-
-        onCacheImageFinished: {
-            console.debug("window cloudDriveModel onCacheImageFinished " + absoluteFilePath + " " + err + " " + errMsg + " caller " + caller);
-            // Refresh item only if there is no error.
-            if (err == 0) {
-                var p = findPage(caller);
-                if (p && p.refreshItem) {
-                    p.refreshItem(absoluteFilePath);
-                }
-            }
         }
 
         onLogRequestSignal: {

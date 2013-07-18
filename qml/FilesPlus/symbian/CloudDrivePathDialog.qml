@@ -389,7 +389,7 @@ ConfirmDialog {
 
             onListItemIconError: {
                 if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
-                    cloudDriveModel.cacheImage(absolutePath, thumbnail, 48, 48, "folderPage"); // Use default icon size.
+                    cacheImageHelper.cacheImage(absolutePath, thumbnail, 48, 48, "folderPage"); // Use default icon size.
                 }
             }
         }

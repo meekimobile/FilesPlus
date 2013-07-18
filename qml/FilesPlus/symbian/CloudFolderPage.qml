@@ -970,7 +970,7 @@ Page {
 
             onListItemIconError: {
                 if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
-                    cloudDriveModel.cacheImage(absolutePath, thumbnail, 48, 48, cloudFolderPage.name); // Use default icon size.
+                    cacheImageHelper.cacheImage(absolutePath, thumbnail, 48, 48, cloudFolderPage.name); // Use default icon size.
                 }
             }
         }
@@ -1047,7 +1047,7 @@ Page {
 
             onListItemIconError: {
                 if (cloudDriveModel.isImageUrlCachable(selectedCloudType)) {
-                    cloudDriveModel.cacheImage(absolutePath, thumbnail128, 128, 128, cloudFolderPage.name); // Use original size because previewUrl is already specified with size.
+                    cacheImageHelper.cacheImage(absolutePath, thumbnail128, 128, 128, cloudFolderPage.name); // Use original size because previewUrl is already specified with size.
                 }
             }
         }

@@ -427,10 +427,10 @@ Page {
                                 var imageSource = imageFlickView.source + "";
                                 if (imageSource.indexOf("image://remote/") == 0) {
                                     // Cache preview image.
-                                    cloudDriveModel.cacheImage(absolutePath, preview, -1, -1, imageViewPage.name); // Use original size because previewUrl is already specified with size.
+                                    cacheImageHelper.cacheImage(absolutePath, preview, -1, -1, imageViewPage.name); // Use original size because previewUrl is already specified with size.
                                 } else if (imageSource.indexOf("image://local/") == 0) {
                                     // Cache preview image.
-                                    cloudDriveModel.cacheImage(absolutePath, absolutePath, -1, -1, imageViewPage.name); // Use original file path to generate cached image.
+                                    cacheImageHelper.cacheImage(absolutePath, absolutePath, -1, -1, imageViewPage.name); // Use original file path to generate cached image.
                                 }
                             }
                         }

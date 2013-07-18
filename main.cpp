@@ -20,6 +20,7 @@
 #endif
 #include "customqnetworkaccessmanagerfactory.h"
 #include "compressedfoldermodel.h"
+#include "cacheimagehelper.h"
 
 static const QString OrgName = "MeekiMobile";
 static const QString AppName = "FilesPlus";
@@ -346,6 +347,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qmlRegisterType<MessageClient>("MessageClient", 1, 0, "MessageClient");
 #endif
     qmlRegisterType<CompressedFolderModel>("CompressedFolderModel", 1, 0, "CompressedFolderModel");
+    qmlRegisterType<CacheImageHelper>("CacheImageHelper", 1, 0, "CacheImageHelper");
 
     // Application initialization.
     QScopedPointer<QApplication> app(createApplication(argc, argv));

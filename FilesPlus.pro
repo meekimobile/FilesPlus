@@ -138,7 +138,8 @@ SOURCES += main.cpp \
     compressedfoldermodel.cpp \
     compressedfoldermodelworker.cpp \
     compressedfoldermodelitem.cpp \
-    boxclient.cpp
+    boxclient.cpp \
+    cacheimagehelper.cpp
 
 symbian {
 SOURCES += \
@@ -188,7 +189,8 @@ HEADERS += \
     compressedfoldermodel.h \
     compressedfoldermodelworker.h \
     compressedfoldermodelitem.h \
-    boxclient.h
+    boxclient.h \
+    cacheimagehelper.h
 
 symbian {
 HEADERS += \

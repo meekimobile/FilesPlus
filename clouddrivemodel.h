@@ -33,7 +33,6 @@
 #include "ftpclient.h"
 #include "webdavclient.h"
 #include "boxclient.h"
-#include "cacheimageworker.h"
 
 using namespace QtMobility;
 
@@ -60,7 +59,6 @@ public:
     static const QString ITEM_DB_PATH;
     static const QString ITEM_DB_CONNECTION_NAME;
     static const QString TEMP_PATH;
-    static const QString IMAGE_CACHE_PATH;
     static const QString JOB_DAT_PATH;
     static const int MaxRunningJobCount;
     static const QString DirtyHash;
@@ -337,7 +335,6 @@ public:
     Q_INVOKABLE void deleteLocal(CloudDriveModel::ClientTypes type, QString uid, QString localPath);
 
     Q_INVOKABLE QString thumbnail(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString format, QString size); // Used by DropboxClient and ImageViewPage.qml.
-    Q_INVOKABLE void cacheImage(QString remoteFilePath, QString url, int w, int h, QString caller);
     Q_INVOKABLE QString media(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath);
     Q_INVOKABLE QString shareFile(CloudDriveModel::ClientTypes type, QString uid, QString localFilePath, QString remoteFilePath, bool synchronous = false);
 
@@ -371,7 +368,6 @@ signals:
     void refreshRequestSignal(QString nonce);
     void refreshItemAfterFileGetSignal(QString nonce, QString localPath);
     void moveToTrashRequestSignal(QString nonce, QString localPath);
-    void cacheImageFinished(QString absoluteFilePath, int err, QString errMsg, QString caller);
     void logRequestSignal(QString nonce, QString logType, QString titleText, QString message, int autoCloseInterval);
 
     void requestTokenReplySignal(QString nonce, int err, QString errMsg, QString msg);
@@ -445,9 +441,6 @@ public slots:
 
     // Scheduler
     void schedulerTimeoutFilter();
-
-    // Cache image.
-    void cacheImageFinishedFilter(QString absoluteFilePath, int err, QString errMsg, QString caller);
 private:
     QMultiMap<QString, CloudDriveItem> *m_cloudDriveItems;
     QHash<QString, CloudDriveJob> *m_cloudDriveJobs;
@@ -459,7 +452,6 @@ private:
 
     QHash<QString, QThread*> *m_threadHash;
     QThreadPool m_browseThreadPool;
-    QThreadPool m_cacheImageThreadPool;
 
     // System information.
     QSystemDeviceInfo m_deviceInfo;

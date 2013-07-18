@@ -1,6 +1,7 @@
 #include "clouddrivemodel.h"
 #include <QScriptValueIterator>
 #include <QDesktopServices>
+#include "cacheimageworker.h"
 
 bool jsonNameLessThan(const QScriptValue &o1, const QScriptValue &o2)
 {
@@ -139,7 +140,6 @@ const QString CloudDriveModel::ITEM_DAT_PATH = "/home/user/.filesplus/CloudDrive
 const QString CloudDriveModel::ITEM_DB_PATH = "/home/user/.filesplus/CloudDriveModel.db";
 const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
 const QString CloudDriveModel::TEMP_PATH = "/home/user/MyDocs/temp/.filesplus";
-const QString CloudDriveModel::IMAGE_CACHE_PATH = "/home/user/MyDocs/temp/.filesplus";
 const QString CloudDriveModel::JOB_DAT_PATH = "/home/user/.filesplus/CloudDriveJobs.dat";
 const int CloudDriveModel::MaxRunningJobCount = 1;
 #else
@@ -147,7 +147,6 @@ const QString CloudDriveModel::ITEM_DAT_PATH = QDesktopServices::storageLocation
 const QString CloudDriveModel::ITEM_DB_PATH = "CloudDriveModel.db";
 const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
 const QString CloudDriveModel::TEMP_PATH = "E:/temp/.filesplus";
-const QString CloudDriveModel::IMAGE_CACHE_PATH = "E:/temp/.filesplus";
 const QString CloudDriveModel::JOB_DAT_PATH = QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/CloudDriveJobs.dat"; // It's in private folder.
 const int CloudDriveModel::MaxRunningJobCount = 1;
 #endif
@@ -172,11 +171,6 @@ CloudDriveModel::CloudDriveModel(QObject *parent) :
     // Initialize thread pools and hash
     // TODO Refactor to avoid using QThreadPool as it causes panic in Symbian.
     m_browseThreadPool.setMaxThreadCount(1);
-#ifdef Q_OS_SYMBIAN
-    m_cacheImageThreadPool.setMaxThreadCount(3);
-#else
-    m_cacheImageThreadPool.setMaxThreadCount(3);
-#endif
     m_threadHash = new QHash<QString, QThread*>();
 
     // Initialize scheduler queue.
@@ -3130,15 +3124,6 @@ QString CloudDriveModel::thumbnail(CloudDriveModel::ClientTypes type, QString ui
     return client->thumbnail(createNonce(), uid, remoteFilePath, format, size);
 }
 
-void CloudDriveModel::cacheImage(QString remoteFilePath, QString url, int w, int h, QString caller)
-{
-    CacheImageWorker *worker = new CacheImageWorker(remoteFilePath, url, QSize(w,h), m_settings.value("image.cache.path", IMAGE_CACHE_PATH).toString(), caller);
-    connect(worker, SIGNAL(cacheImageFinished(QString,int,QString,QString)), SLOT(cacheImageFinishedFilter(QString,int,QString,QString)));
-    connect(worker, SIGNAL(refreshFolderCacheSignal(QString)), SIGNAL(refreshFolderCacheSignal(QString)));
-    m_cacheImageThreadPool.start(worker);
-    qDebug() << "CloudDriveModel::cacheImage m_cacheImageThreadPool" << m_cacheImageThreadPool.activeThreadCount() << "/" << m_cacheImageThreadPool.maxThreadCount();
-}
-
 QString CloudDriveModel::media(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath)
 {
     CloudDriveClient *client = getCloudClient(type);
@@ -4429,22 +4414,6 @@ void CloudDriveModel::schedulerTimeoutFilter()
     emit schedulerTimeoutSignal();
 }
 
-void CloudDriveModel::cacheImageFinishedFilter(QString absoluteFilePath, int err, QString errMsg, QString caller)
-{
-    qDebug() << "CloudDriveModel::cacheImageFinishedFilter started. m_cacheImageThreadPool" << m_cacheImageThreadPool.activeThreadCount() << "/" << m_cacheImageThreadPool.maxThreadCount();
-
-#ifdef Q_OS_SYMBIAN
-    // Remove all threads from pool once there is no active thread.
-    // NOTE To prevent thread panicking on Symbian. (#FP20130153)
-    if (m_cacheImageThreadPool.activeThreadCount() <= 0) {
-        m_cacheImageThreadPool.waitForDone();
-        qDebug() << "CloudDriveModel::cacheImageFinishedFilter waitForDone() is invoked. m_cacheImageThreadPool" << m_cacheImageThreadPool.activeThreadCount() << "/" << m_cacheImageThreadPool.maxThreadCount();
-    }
-#endif
-
-    emit cacheImageFinished(absoluteFilePath, err, errMsg, caller);
-}
-
 void CloudDriveModel::initJobQueueTimer()
 {
     connect(&m_jobQueueTimer, SIGNAL(timeout()), this, SLOT(proceedNextJob()) );
@@ -5684,6 +5653,12 @@ void CloudDriveModel::unmarkAll()
 
 void CloudDriveModel::clearCachedImagesOnCurrentRemotePath(bool clearThumbnail, bool clearThumbnail128, bool clearPreview)
 {
+#if defined(Q_WS_HARMATTAN)
+    const QString IMAGE_CACHE_PATH = "/home/user/MyDocs/temp/.filesplus";
+#else
+    const QString IMAGE_CACHE_PATH = "E:/temp/.filesplus";
+#endif
+
     for (int i = 0; i < m_modelItemList->length(); i++) {
         QApplication::processEvents();
         CloudDriveModelItem item = m_modelItemList->at(i);
