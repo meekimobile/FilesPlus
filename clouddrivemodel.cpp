@@ -2538,6 +2538,16 @@ void CloudDriveModel::metadata(CloudDriveModel::ClientTypes type, QString uid, Q
 
 void CloudDriveModel::browse(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath)
 {
+    if (!getCloudClient(type)->isAuthorized(uid)) {
+        emit browseReplySignal(createNonce(), -1, tr("User ID is not authorized."), "", false);
+        return;
+    }
+
+    // Reset sortFlag if requested from drive page or remoteParentPath changed.
+    if (remoteFilePath == "" || m_remoteParentPath != remoteFilePath) {
+        m_sortFlag = -1;
+    }
+
     // Enqueue job.
     CloudDriveJob job(createNonce(), Browse, type, uid, "", remoteFilePath, -1);
     job.isRunning = true;
@@ -3657,7 +3667,7 @@ void CloudDriveModel::browseReplyFilter(QString nonce, int err, QString errMsg, 
         qDebug() << QDateTime::currentDateTime().toString(Qt::ISODate) << "CloudDriveModel::browseReplyFilter" << nonce << "model is populated. m_modelItemList->size()" << m_modelItemList->size();
 
         // Sort model item list.
-        sortItemList(m_modelItemList, getSortFlag(getClientType(job.type), job.uid, job.remoteFilePath));
+        sortItemList(m_modelItemList, getSortFlag(getClientType(job.type), job.uid, m_remoteParentPath));
 
         emit remoteParentPathChanged();
         emit rowCountChanged();
@@ -4496,18 +4506,30 @@ void CloudDriveModel::initializeDB(QString nonce)
     // Fix damaged DB.
     fixDamagedDB();
 
+    // Create tables
     res = query.exec("CREATE TABLE cloud_drive_item(type INTEGER PRIMARY_KEY, uid TEXT PRIMARY_KEY, local_path TEXT PRIMARY_KEY, remote_path TEXT, hash TEXT, last_modified TEXT)");
     if (res) {
         qDebug() << "CloudDriveModel::initializeDB CREATE TABLE cloud_drive_item is done.";
     } else {
         qDebug() << "CloudDriveModel::initializeDB CREATE TABLE cloud_drive_item is failed. Error" << query.lastError();
     }
-
     res = query.exec("CREATE UNIQUE INDEX IF NOT EXISTS cloud_drive_item_pk ON cloud_drive_item (type, uid, local_path)");
     if (res) {
         qDebug() << "CloudDriveModel::initializeDB CREATE INDEX cloud_drive_item_pk is done.";
     } else {
         qDebug() << "CloudDriveModel::initializeDB CREATE INDEX cloud_drive_item_pk is failed. Error" << query.lastError();
+    }
+    res = query.exec("CREATE TABLE cloud_drive_item_property(type INTEGER PRIMARY_KEY, uid TEXT PRIMARY_KEY, remote_path TEXT PRIMARY_KEY, property_name TEXT PRIMARY_KEY, property_value TEXT)");
+    if (res) {
+        qDebug() << "CloudDriveModel::initializeDB CREATE TABLE cloud_drive_item_property is done.";
+    } else {
+        qDebug() << "CloudDriveModel::initializeDB CREATE TABLE cloud_drive_item_property is failed. Error" << query.lastError();
+    }
+    res = query.exec("CREATE UNIQUE INDEX IF NOT EXISTS cloud_drive_item_property_pk ON cloud_drive_item_property (type, uid, remote_path, property_name)");
+    if (res) {
+        qDebug() << "CloudDriveModel::initializeDB CREATE INDEX cloud_drive_item_property_pk is done.";
+    } else {
+        qDebug() << "CloudDriveModel::initializeDB CREATE INDEX cloud_drive_item_property_pk is failed. Error" << query.lastError();
     }
 
     // Process pending events.
@@ -5525,26 +5547,94 @@ void CloudDriveModel::createTempPath()
     }
 }
 
+QVariant CloudDriveModel::getCloudDriveItemProperty(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString propertyName, QVariant defaultValue)
+{
+    QSqlQuery qry(m_db);
+    qry.prepare("SELECT property_value FROM cloud_drive_item_property WHERE type = :type AND uid = :uid AND remote_path = :remote_path AND property_name = :property_name");
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":remote_path", remoteFilePath);
+    qry.bindValue(":property_name", propertyName);
+    if (qry.exec()) {
+        if (qry.first()) {
+            QSqlRecord rec = qry.record();
+            QVariant value = qry.value(rec.indexOf("property_value"));
+            qDebug() << "CloudDriveModel::getCloudDriveItemProperty done" << type << uid << remoteFilePath << propertyName << value;
+            return value;
+        } else {
+            qDebug() << "CloudDriveModel::getCloudDriveItemProperty done" << type << uid << remoteFilePath << propertyName << "defaultValue" << defaultValue;
+            return defaultValue;
+        }
+    } else {
+        qDebug() << "CloudDriveModel::getCloudDriveItemProperty failed" << type << uid << remoteFilePath << propertyName << "error" << qry.lastError() << "defaultValue" << defaultValue;
+        return defaultValue;
+    }
+}
+
 int CloudDriveModel::getSortFlag(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath)
 {
-    return m_settings.value(QString("CloudDriveModel.%1.%2.sortFlag").arg(type).arg(uid), QVariant(0)).toInt();
+    if (m_sortFlag == -1) {
+        m_sortFlag = getCloudDriveItemProperty(type, uid, remoteFilePath, "sortFlag", QVariant(SortByName)).toInt();
+    }
+
+    return m_sortFlag;
+}
+
+bool CloudDriveModel::setCloudDriveItemProperty(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString propertyName, QVariant value)
+{
+    QSqlQuery qry(m_db);
+    qry.prepare("UPDATE cloud_drive_item_property SET property_value = :property_value WHERE type = :type AND uid = :uid AND remote_path = :remote_path AND property_name = :property_name");
+    qry.bindValue(":property_value", value);
+    qry.bindValue(":type", type);
+    qry.bindValue(":uid", uid);
+    qry.bindValue(":remote_path", remoteFilePath);
+    qry.bindValue(":property_name", propertyName);
+    if (qry.exec()) {
+        int c = qry.numRowsAffected();
+        m_db.commit();
+        if (c > 0) {
+            qDebug() << "CloudDriveModel::setCloudDriveItemProperty done" << type << uid << remoteFilePath << propertyName << value << "numRowsAffected" << c;
+            return true;
+        } else {
+            // Insert new record.
+            qry.prepare("INSERT INTO cloud_drive_item_property VALUES (:type, :uid, :remote_path, :property_name, :property_value)");
+            qry.bindValue(":type", type);
+            qry.bindValue(":uid", uid);
+            qry.bindValue(":remote_path", remoteFilePath);
+            qry.bindValue(":property_name", propertyName);
+            qry.bindValue(":property_value", value);
+            if (qry.exec()) {
+                qDebug() << "CloudDriveModel::setCloudDriveItemProperty insert done" << type << uid << remoteFilePath << propertyName << value;
+                m_db.commit();
+                return true;
+            } else {
+                qDebug() << "CloudDriveModel::setCloudDriveItemProperty insert failed" << type << uid << remoteFilePath << propertyName << value << "error" << qry.lastError();
+                m_db.rollback();
+                return false;
+            }
+        }
+    } else {
+        qDebug() << "CloudDriveModel::setCloudDriveItemProperty failed" << type << uid << remoteFilePath << propertyName << value << "error" << qry.lastError();
+        m_db.rollback();
+        return false;
+    }
 }
 
 void CloudDriveModel::setSortFlag(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, int sortFlag)
 {
-    m_settings.setValue(QString("CloudDriveModel.%1.%2.sortFlag").arg(type).arg(uid), QVariant(sortFlag));
+    if (setCloudDriveItemProperty(type, uid, remoteFilePath, "sortFlag", QVariant(sortFlag))) {
+        m_sortFlag = sortFlag;
+    }
 
     // Sorting.
     // TODO Sort in thread.
-//    QString msg = sortJsonText(m_cachedJsonText, getSortFlag(type, uid, remoteFilePath));
-    sortItemList(m_modelItemList, getSortFlag(type, uid, remoteFilePath));
+    sortItemList(m_modelItemList, m_sortFlag);
 
     // Emit data changed.
     beginResetModel();
     emit dataChanged(createIndex(0,0), createIndex(rowCount()-1, 0));
     endResetModel();
 
-//    emit browseReplySignal(createNonce(), 0, "Set sort flag", msg);
     emit browseReplySignal(createNonce(), 0, "Set sort flag", "{}", false);
 }
 

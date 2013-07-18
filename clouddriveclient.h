@@ -23,6 +23,7 @@ public:
     virtual ~CloudDriveClient();
 
     bool isAuthorized();
+    bool isAuthorized(QString uid);
     QStringList getStoredUidList();
     QString getStoredUid(QString uid);
     QString getEmail(QString uid);

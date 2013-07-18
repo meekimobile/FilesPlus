@@ -76,11 +76,11 @@ public:
     };
 
     enum SortFlags {
-        SortByName,
-        SortByTime,
-        SortBySize,
-        SortByType,
-        SortByNameWithDirectoryFirst
+        SortByName = 0,
+        SortByTime = 1,
+        SortBySize = 2,
+        SortByType = 3,
+        SortByNameWithDirectoryFirst = 4
     };
 
     enum SyncDirections {
@@ -355,6 +355,10 @@ public:
     Q_INVOKABLE int findIndexByRemotePath(QString remotePath);
     Q_INVOKABLE int findIndexByRemotePathName(QString remotePathName);
     Q_INVOKABLE int findIndexByNameFilter(QString nameFilter, int startIndex = -1, bool backward = false);
+
+    // Cloud drive item property.
+    QVariant getCloudDriveItemProperty(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString propertyName, QVariant defaultValue);
+    bool setCloudDriveItemProperty(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString propertyName, QVariant value);
 signals:
     void loadCloudDriveItemsFinished(QString nonce);
     void initializeDBStarted(QString nonce);
@@ -449,6 +453,7 @@ private:
     bool m_isSuspended;
     bool m_isAborted;
     bool m_isPaused;
+    int m_sortFlag;
 
     QHash<QString, QThread*> *m_threadHash;
     QThreadPool m_browseThreadPool;

@@ -39,6 +39,11 @@ bool CloudDriveClient::isAuthorized()
     return (!accessTokenPairMap.isEmpty());
 }
 
+bool CloudDriveClient::isAuthorized(QString uid)
+{
+    return accessTokenPairMap.contains(uid);
+}
+
 QStringList CloudDriveClient::getStoredUidList()
 {
     QStringList list;

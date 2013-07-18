@@ -563,7 +563,7 @@ Page {
             console.debug("sortByMenu setSortFlag flag=" + flag);
             cloudFolderView.positionViewAtBeginning();
             cloudFolderGridView.positionViewAtBeginning();
-            cloudDriveModel.setSortFlag(selectedCloudType, selectedUid, selectedRemotePath, flag);
+            cloudDriveModel.setSortFlag(selectedCloudType, selectedUid, remoteParentPath, flag);
         }
 
         onStatusChanged: {

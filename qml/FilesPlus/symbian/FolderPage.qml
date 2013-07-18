@@ -1290,6 +1290,8 @@ Page {
                 return cloudDriveModel.isConnected(selectedFilePath);
             } else if (buttonName === "sms") {
                 return cloudDriveModel.isConnected(selectedFilePath);
+            } else if (buttonName === "copyLink") {
+                return cloudDriveModel.isConnected(selectedFilePath);
             } else if (buttonName === "bluetooth") {
                 return fsModel.isFile(selectedFilePath);
             } else if (buttonName === "editFile") {
