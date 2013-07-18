@@ -164,6 +164,13 @@ Page {
         cloudDriveModel.shareFile(selectedCloudType, selectedUid, remotePathName, remotePath);
     }
 
+    function copyLinkSlot(remotePath, remotePathName) {
+        console.debug("cloudFolderPage copyLinkSlot remotePath=" + remotePath);
+        recipientSelectionDialog.refresh();
+        cloudDriveModel.shareFileCaller = "copyLinkSlot";
+        cloudDriveModel.shareFile(selectedCloudType, selectedUid, remotePathName, remotePath);
+    }
+
     function resetBusySlot(caller) {
         isBusy = false;
     }
@@ -1169,6 +1176,10 @@ Page {
 
         onSmsFile: {
             smsFileSlot(srcFilePath, selectedFileName);
+        }
+
+        onCopyLink: {
+            copyLinkSlot(srcFilePath, selectedFileName)
         }
 
         onShowInfo: {

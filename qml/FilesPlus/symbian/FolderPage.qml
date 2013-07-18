@@ -657,6 +657,16 @@ Page {
         }
     }
 
+    function copyLinkSlot(srcFilePath, selectedIndex) {
+        console.debug("folderPage copyLinkSlot srcFilePath=" + srcFilePath);
+        if (cloudDriveModel.isConnected(srcFilePath)) {
+            uidDialog.localPath = srcFilePath;
+            uidDialog.operation = CloudDriveModel.ShareFile;
+            uidDialog.caller = "copyLinkSlot";
+            uidDialog.open();
+        }
+    }
+
     function bluetoothFileSlot(srcFilePath, selectedIndex) {
         console.debug("folderPage bluetoothFileSlot srcFilePath=" + srcFilePath);
         if (fsModel.isFile(srcFilePath)) {
@@ -1391,6 +1401,10 @@ Page {
             bluetoothFileSlot(srcFilePath, srcItemIndex);
         }
 
+        onCopyLink: {
+            copyLinkSlot(srcFilePath, srcItemIndex);
+        }
+
         onEditFile: {
             pageStack.push(Qt.resolvedUrl("TextViewPage.qml"),
                            { filePath: srcFilePath, fileName: fsModel.getFileName(srcFilePath) });
@@ -1504,10 +1518,6 @@ Page {
 
     CloudDriveUsersDialog {
         id: uidDialog
-
-        function proceedPendingOperation() {
-            // TODO
-        }
 
         function proceedOperation(type, uid, localPath, remotePath, modelIndex, suppressBrowsing) {
             switch (operation) {

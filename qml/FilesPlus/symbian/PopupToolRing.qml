@@ -93,6 +93,7 @@ Rectangle {
     signal mailFile(string srcFilePath, int srcItemIndex)
     signal smsFile(string srcFilePath, int srcItemIndex)
     signal bluetoothFile(string srcFilePath, int srcItemIndex)
+    signal copyLink(string srcFilePath, int srcItemIndex)
     signal editFile(string srcFilePath, int srcItemIndex)
     signal showInfo(string srcFilePath, int srcItemIndex)
     signal compress(string srcFilePath, int srcItemIndex)
@@ -166,6 +167,7 @@ Rectangle {
         ListElement { buttonName: "mail"; icon: "mail.svg" }
         ListElement { buttonName: "sms"; icon: "messaging.svg" }
         ListElement { buttonName: "bluetooth"; icon: "bluetooth.svg" }
+        ListElement { buttonName: "copyLink"; icon: "copy.svg" }
     }
 
     ListModel {
@@ -270,6 +272,8 @@ Rectangle {
             smsFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "bluetooth") {
             bluetoothFile(selectedFilePath, selectedFileIndex);
+        } else if (buttonName == "copyLink") {
+            copyLink(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "editFile") {
             editFile(selectedFilePath, selectedFileIndex);
         } else if (buttonName == "info") {

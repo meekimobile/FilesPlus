@@ -1434,10 +1434,6 @@ Page {
     CloudDriveUsersDialog {
         id: uidDialog
 
-        function proceedPendingOperation() {
-            // TODO
-        }
-
         function proceedOperation(type, uid, localPath, remotePath, modelIndex, suppressBrowsing) {
             switch (operation) {
             case CloudDriveModel.Metadata:

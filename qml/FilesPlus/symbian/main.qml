@@ -1609,10 +1609,14 @@ PageStackWindow {
             var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
 
             if (err == 0) {
-                // Open recipientSelectionDialog for sending share link.
-                showRecipientSelectionDialogSlot(jobJson.type, jobJson.uid, jobJson.local_file_path,
-                                                 (jobJson.local_file_path.indexOf("/") >= 0) ? cloudDriveModel.getFileName(jobJson.local_file_path) : jobJson.local_file_path,
-                                                 url);
+                if (shareFileCaller == "copyLinkSlot") {
+                    appInfo.addToClipboard(url);
+                } else {
+                    // Open recipientSelectionDialog for sending share link.
+                    showRecipientSelectionDialogSlot(jobJson.type, jobJson.uid, jobJson.local_file_path,
+                                                     (jobJson.local_file_path.indexOf("/") >= 0) ? cloudDriveModel.getFileName(jobJson.local_file_path) : jobJson.local_file_path,
+                                                     url);
+                }
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Share"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
