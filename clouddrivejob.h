@@ -4,12 +4,15 @@
 #include <QDebug>
 #include <QDateTime>
 #include <QStringList>
+#include <QVariant>
+#include <QScriptValue>
 
 class CloudDriveJob
 {
 public:
     CloudDriveJob();
     CloudDriveJob(QString jobId, int operation, int type, QString uid, QString localFilePath, QString remoteFilePath, int modelIndex);
+    CloudDriveJob(QScriptValue item);
 
     QString jobId;
     int operation;
@@ -58,6 +61,7 @@ public:
     bool suppressRemoveJob;
 
     QString toJsonText();
+    QVariant toJson();
 };
 
 #endif // CLOUDDRIVEJOB_H

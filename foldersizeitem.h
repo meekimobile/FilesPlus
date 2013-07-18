@@ -4,6 +4,7 @@
 #include <QDateTime>
 #include <QDataStream>
 #include <QDebug>
+#include <QVariant>
 
 class FolderSizeItem
 {
@@ -32,6 +33,7 @@ public:
     bool isReadOnly;
 
     QString toJsonText();
+    QVariant toJson();
 private:
     void setFileType();
 };

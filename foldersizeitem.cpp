@@ -36,22 +36,47 @@ QString FolderSizeItem::toJsonText()
 {
     QString jsonText("{ ");
     jsonText.append(QString("\"name\": \"%1\", ").arg(name));
-    jsonText.append(QString("\"absolute_path\": \"%1\", ").arg(absolutePath));
-    jsonText.append(QString("\"last_modified\": \"%1\", ").arg(lastModified.toString()));
+    jsonText.append(QString("\"absolutePath\": \"%1\", ").arg(absolutePath));
+    jsonText.append(QString("\"lastModified\": \"%1\", ").arg(lastModified.toString(Qt::ISODate)));
     jsonText.append(QString("\"size\": %1, ").arg(size));
-    jsonText.append(QString("\"is_dir\": %1, ").arg((isDir)?"true":"false"));
-    jsonText.append(QString("\"sub_dir_count\": %1, ").arg(subDirCount));
-    jsonText.append(QString("\"sub_file_count\": %1, ").arg(subFileCount));
-    jsonText.append(QString("\"file_type\": \"%1\", ").arg(fileType));
-    jsonText.append(QString("\"is_running\": %1, ").arg((isRunning)?"true":"false"));
-    jsonText.append(QString("\"running_operation\": %1, ").arg(runningOperation));
-    jsonText.append(QString("\"running_value\": %1, ").arg(runningValue));
-    jsonText.append(QString("\"running_max_value\": %1, ").arg(runningMaxValue));
-    jsonText.append(QString("\"is_checked\": %1, ").arg(isChecked));
-    jsonText.append(QString("\"is_dirty\": %1 ").arg(isDirty));
+    jsonText.append(QString("\"isDir\": %1, ").arg((isDir)?"true":"false"));
+    jsonText.append(QString("\"subDir_count\": %1, ").arg(subDirCount));
+    jsonText.append(QString("\"subFile_count\": %1, ").arg(subFileCount));
+    jsonText.append(QString("\"fileType\": \"%1\", ").arg(fileType));
+    jsonText.append(QString("\"isRunning\": %1, ").arg((isRunning)?"true":"false"));
+    jsonText.append(QString("\"runningOperation\": %1, ").arg(runningOperation));
+    jsonText.append(QString("\"runningValue\": %1, ").arg(runningValue));
+    jsonText.append(QString("\"runningMaxValue\": %1, ").arg(runningMaxValue));
+    jsonText.append(QString("\"isChecked\": %1, ").arg(isChecked));
+    jsonText.append(QString("\"isDirty\": %1, ").arg(isDirty));
+    jsonText.append(QString("\"isHidden\": %1, ").arg(isHidden));
+    jsonText.append(QString("\"isReadOnly\": %1 ").arg(isReadOnly));
     jsonText.append("}");
 
     return jsonText;
+}
+
+QVariant FolderSizeItem::toJson()
+{
+    QMap<QString,QVariant> jsonObj;
+    jsonObj["name"] = QVariant(name);
+    jsonObj["absolutePath"] = QVariant(absolutePath);
+    jsonObj["size"] = QVariant(size);
+    jsonObj["lastModified"] = QVariant(lastModified.toString(Qt::ISODate));
+    jsonObj["isDir"] = QVariant(isDir);
+    jsonObj["subDirCount"] = QVariant(subDirCount);
+    jsonObj["subFileCount"] = QVariant(subFileCount);
+    jsonObj["fileType"] = QVariant(fileType);
+    jsonObj["isRunning"] = QVariant(isRunning);
+    jsonObj["runningValue"] = QVariant(runningValue);
+    jsonObj["runningMaxValue"] = QVariant(runningMaxValue);
+    jsonObj["runningOperation"] = QVariant(runningOperation);
+    jsonObj["isChecked"] = QVariant(isChecked);
+    jsonObj["isDirty"] = QVariant(isDirty);
+    jsonObj["isHidden"] = QVariant(isHidden);
+    jsonObj["isReadOnly"] = QVariant(isReadOnly);
+
+    return QVariant(jsonObj);
 }
 
 void FolderSizeItem::setFileType()

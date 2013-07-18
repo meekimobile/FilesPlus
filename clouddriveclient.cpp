@@ -631,10 +631,12 @@ QString CloudDriveClient::filePutCommit(QString nonce, QString uid, QString remo
 
 bool CloudDriveClient::abort(QString nonce)
 {
+    bool res = false;
     if (m_replyHash->contains(nonce)) {
         QNetworkReply *reply = m_replyHash->value(nonce);
         if (!reply->isFinished()) {
             reply->abort();
+            res = true;
             qDebug() << "CloudDriveClient::abort nonce" << nonce << "is aborted.";
         }
         m_replyHash->remove(nonce);
@@ -642,6 +644,8 @@ bool CloudDriveClient::abort(QString nonce)
     } else {
         qDebug() << "CloudDriveClient::abort nonce" << nonce << "is not found. Operation is ignored.";
     }
+
+    return res;
 }
 
 QNetworkReply *CloudDriveClient::files(QString nonce, QString uid, QString remoteFilePath, int offset, bool synchronous, QString callback)

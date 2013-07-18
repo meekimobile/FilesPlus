@@ -139,13 +139,11 @@ PageStackWindow {
                 var sourcePath = clipboard.get(i).sourcePath;
 //                console.debug("fileActionDialog openCopyProgressDialog estimate total action " + action + " sourcePath " + sourcePath);
                 if ((action == "copy" || action == "cut") && !clipboard.get(i).type)  {
-                    var jsonText = fsModel.getItemJson(sourcePath);
-//                    console.debug("fileActionDialog openCopyProgressDialog estimate total jsonText " + jsonText);
-                    var itemJson = Utility.createJsonObj(jsonText);
-                    console.debug("fileActionDialog openCopyProgressDialog estimate total itemJson " + itemJson + " itemJson.size " + itemJson.size + " itemJson.sub_dir_count " + itemJson.sub_dir_count + " itemJson.sub_file_count " + itemJson.sub_file_count);
+                    var itemJson = fsModel.getItemJson(sourcePath);
+//                    console.debug("fileActionDialog openCopyProgressDialog estimate total itemJson " + itemJson + " itemJson.size " + itemJson.size + " itemJson.subDirCount " + itemJson.subDirCount + " itemJson.subFileCount " + itemJson.subFileCount);
                     totalBytes += itemJson.size;
-                    totalFiles += itemJson.sub_file_count + ((itemJson.is_dir) ? 0 : 1);  // +1 for file.
-                    totalFolders += itemJson.sub_dir_count + ((itemJson.is_dir) ? 1 : 0);  // +1 for folder.
+                    totalFiles += itemJson.subFileCount + ((itemJson.isDir) ? 0 : 1);  // +1 for file.
+                    totalFolders += itemJson.subDirCount + ((itemJson.isDir) ? 1 : 0);  // +1 for folder.
                 }
             }
             console.debug("fileActionDialog openCopyProgressDialog estimate totalBytes " + totalBytes + " totalFiles " + totalFiles + " totalFolders " + totalFolders);
@@ -183,12 +181,10 @@ PageStackWindow {
                 var sourcePath = clipboard.get(i).sourcePath;
 //                console.debug("fileActionDialog openDeleteProgressDialog estimate total action " + action + " sourcePath " + sourcePath);
                 if (action == "delete" && !clipboard.get(i).type) {
-                    var jsonText = fsModel.getItemJson(sourcePath);
-//                    console.debug("fileActionDialog openDeleteProgressDialog estimate total jsonText " + jsonText);
-                    var itemJson = Utility.createJsonObj(jsonText);
-//                    console.debug("fileActionDialog openDeleteProgressDialog estimate total itemJson " + itemJson + " itemJson.sub_file_count " + itemJson.sub_file_count);
-                    totalFiles += itemJson.sub_file_count + ((itemJson.is_dir) ? 0 : 1);  // +1 for file.
-                    totalFolders += itemJson.sub_dir_count + ((itemJson.is_dir) ? 1 : 0);  // +1 for folder.
+                    var itemJson = fsModel.getItemJson(sourcePath);
+//                    console.debug("fileActionDialog openDeleteProgressDialog estimate total itemJson " + itemJson + " itemJson.subFileCount " + itemJson.subFileCount);
+                    totalFiles += itemJson.subFileCount + ((itemJson.isDir) ? 0 : 1);  // +1 for file.
+                    totalFolders += itemJson.subDirCount + ((itemJson.isDir) ? 1 : 0);  // +1 for folder.
                 }
             }
             console.debug("fileActionDialog openDeleteProgressDialog estimate totalFiles " + totalFiles + " totalFolders " + totalFolders);
@@ -268,9 +264,9 @@ PageStackWindow {
             if (err == 0) {
                 if (fileAction == FolderSizeItemListModel.MoveFile && cloudDriveModel.isParentConnected(sourcePath)) {
                     // Delete file from clouds.
-                    var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
+                    var json = cloudDriveModel.getItemListJson(sourcePath);
                     for (var i=0; i<json.length; i++) {
-                        cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path, true); // NOTE suppressDeleteLocal=true
+                        cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].localPath, json[i].remotePath, true); // NOTE suppressDeleteLocal=true
                     }
 
                     // Reset cloudDriveModel hash on parent. CloudDriveModel will update with actual hash once it got reply.
@@ -334,12 +330,12 @@ PageStackWindow {
             // Delete file from clouds.
             if (err == 0) {
                 if (cloudDriveModel.isConnected(sourcePath)) {
-                    var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
+                    var json = cloudDriveModel.getItemListJson(sourcePath);
                     for (var i=0; i<json.length; i++) {
-                        if (json[i].sync_direction === CloudDriveModel.SyncBackward) {
-                            cloudDriveModel.disconnect(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path);
+                        if (json[i].syncDirection === CloudDriveModel.SyncBackward) {
+                            cloudDriveModel.disconnect(json[i].type, json[i].uid, json[i].localPath, json[i].remotePath);
                         } else {
-                            cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].local_path, json[i].remote_path, true); // NOTE suppressDeleteLocal=true
+                            cloudDriveModel.deleteFile(json[i].type, json[i].uid, json[i].localPath, json[i].remotePath, true); // NOTE suppressDeleteLocal=true
                         }
                     }
 
@@ -378,11 +374,10 @@ PageStackWindow {
             // Rename file on clouds by specify empty newRemoteParentPath to moveFIle method.
             // TODO Make it configurable.
             if (err == 0 && cloudDriveModel.isConnected(sourcePath)) {
-//                console.debug("fsModel onRenameFinished itemList " + cloudDriveModel.getItemListJson(sourcePath));
-                var json = Utility.createJsonObj(cloudDriveModel.getItemListJson(sourcePath));
+                var json = cloudDriveModel.getItemListJson(sourcePath);
                 for (var i=0; i<json.length; i++) {
-                    console.debug("fsModel onRenameFinished item " + json[i].type + " " + json[i].uid + " " + json[i].local_path + " " + json[i].remote_path);
-                    cloudDriveModel.moveFile(json[i].type, json[i].uid, sourcePath, json[i].remote_path, targetPath, "", fsModel.getFileName(targetPath));
+                    console.debug("fsModel onRenameFinished item " + json[i].type + " " + json[i].uid + " " + json[i].localPath + " " + json[i].remotePath);
+                    cloudDriveModel.moveFile(json[i].type, json[i].uid, sourcePath, json[i].remotePath, targetPath, "", fsModel.getFileName(targetPath));
                 }
             }
         }
@@ -407,9 +402,9 @@ PageStackWindow {
 
             // Update trash size.
             if (appInfo.getSettingBoolValue("drivepage.trash.enabled", false)) {
-                var trashObj = Utility.createJsonObj(fsModel.getTrashJsonText());
-                var trashMaxSize = (trashObj.absolute_path != "") ? fsModel.getMaxTrashSize() : -1;
-                var trashAvailableSize = (trashObj.absolute_path != "") ? (trashMaxSize - trashObj.size) : 0;
+                var trashObj = fsModel.getTrashJson();
+                var trashMaxSize = (trashObj.absolutePath != "") ? fsModel.getMaxTrashSize() : -1;
+                var trashAvailableSize = (trashObj.absolutePath != "") ? (trashMaxSize - trashObj.size) : 0;
                 var p = findPage("drivePage");
                 if (p) {
                     p.updateLogicalDriveSlot(fsModel.getTrashPath(), trashAvailableSize, trashMaxSize);
@@ -998,8 +993,8 @@ PageStackWindow {
             for (var i=0; i<uidList.length; i++)
             {
                 var json = JSON.parse(uidList[i]);
-                var cloudItem = Utility.createJsonObj(cloudDriveModel.getItemJson(localPath, getClientType(json.type), json.uid));
-                console.debug("window cloudDriveModel getUidListModel i " + i + " type " + json.type + " uid " + json.uid + " email " + json.email + " localHash " + cloudItem.hash + " remotePath " + cloudItem.remote_path);
+                var cloudItem = cloudDriveModel.getItemJson(localPath, getClientType(json.type), json.uid);
+                console.debug("window cloudDriveModel getUidListModel i " + i + " type " + json.type + " uid " + json.uid + " email " + json.email + " localHash " + cloudItem.hash + " remotePath " + cloudItem.remotePath);
                 model.append({
                                  type: getClientType(json.type),
                                  uid: json.uid,
@@ -1083,7 +1078,7 @@ PageStackWindow {
         onRequestTokenReplySignal: {
             console.debug("window cloudDriveModel onRequestTokenReplySignal " + err + " " + errMsg + " " + msg);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             if (err != 0) {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Request Token"),
@@ -1100,7 +1095,7 @@ PageStackWindow {
         onAccessTokenReplySignal: {
             console.debug("window cloudDriveModel onAccessTokenReplySignal " + err + " " + errMsg + " " + msg);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             if (err == 0) {
                 // Get account info and show in dialog.
@@ -1121,7 +1116,7 @@ PageStackWindow {
         onAccountInfoReplySignal: {
             console.debug("window cloudDriveModel onAccountInfoReplySignal " + err + " " + errMsg + " " + msg);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             if (err == 0) {
                 var i = cloudDriveAccountsModel.findIndexByCloudTypeAndUid(jobJson.type, jobJson.uid);
@@ -1157,7 +1152,7 @@ PageStackWindow {
         onQuotaReplySignal: {
             console.debug("window cloudDriveModel onQuotaReplySignal " + nonce + " " + err + " " + errMsg + " " + msg + " normalBytes " + normalBytes + " sharedBytes " + sharedBytes + " quotaBytes " + quotaBytes);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             if (err == 0) {
                 var jsonObj = Utility.createJsonObj(msg);
@@ -1187,7 +1182,7 @@ PageStackWindow {
         onBrowseReplySignal: {
             console.debug("window cloudDriveModel onBrowseReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             if (err == 0) {
                 pageStack.find(function (page) {
@@ -1218,10 +1213,10 @@ PageStackWindow {
         onFileGetReplySignal: {
             console.debug("window cloudDriveModel onFileGetReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             if (err == 0) {
-                fsModel.addItem(jobJson.local_file_path);
+                fsModel.addItem(jobJson.localFilePath);
             } else {
                 logError(getCloudName(jobJson.type) + " " + qsTr("File Get"),
                          qsTr("Error") + " " + err + " " + errMsg + " " + msg);
@@ -1236,7 +1231,7 @@ PageStackWindow {
         onFilePutReplySignal: {
             console.debug("window cloudDriveModel onFilePutReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             if (err == 0) {
                 // Refresh cloudFolderPage.
@@ -1263,7 +1258,7 @@ PageStackWindow {
 
         onMetadataReplySignal: {
             // Get job json.
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             console.debug("window cloudDriveModel onMetadataReplySignal " + getCloudName(jobJson.type) + " " + nonce + " " + err + " " + errMsg);
 
@@ -1281,17 +1276,17 @@ PageStackWindow {
         onCreateFolderReplySignal: {
             console.debug("window cloudDriveModel onCreateFolderReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
             var msgJson = Utility.createJsonObj(msg);
 
-            // NOTE creatFolder always have jobJson.remote_file_path = remoteParentPath.
+            // NOTE creatFolder always have jobJson.remoteFilePath = remoteParentPath.
             if (err == 0) {
                 // Refresh cloudFolderPage.
                 var p = findPage("cloudFolderPage");
                 if (p) {
                     p.refreshSlot("cloudDriveModel onCreateFolderReplySignal");
                 }
-            } else if (err == 202 && jobJson.type == CloudDriveModel.Dropbox && jobJson.local_file_path != "") {
+            } else if (err == 202 && jobJson.type == CloudDriveModel.Dropbox && jobJson.localFilePath != "") {
                 // Dropbox Folder already exists. Do nothing
                 logError(getCloudName(jobJson.type) + " " + qsTr("Create Folder"),
                         qsTr("Error") + " " + err + " " + errMsg + " " + msg +
@@ -1311,8 +1306,8 @@ PageStackWindow {
             // TODO *** create SkyDrive folder freezes here *** TODO Does it need?
             // Update ProgressBar if localPath is specified.
             if (jobJson.type == CloudDriveModel.SkyDrive && pageStack.currentPage.name == "folderPage") {
-                // Refresh all items because jobJson.local_file_path is new folder name.
-                // TODO jobJson.local_file_path is no longer contains new folder name. jobJson.new_remote_file_name does.
+                // Refresh all items because jobJson.localFilePath is new folder name.
+                // TODO jobJson.localFilePath is no longer contains new folder name. jobJson.newRemoteFileName does.
                 pageStack.currentPage.refreshItemSlot("cloudDriveModel onCreateFolderReplySignal SkyDrive");
             } else {
                 // Refresh only created folder and its parents.
@@ -1323,7 +1318,7 @@ PageStackWindow {
 
             if (pageStack.currentPage.name == "folderPage") {
                 // Refresh cloudDrivePathDialog if it's opened.
-                pageStack.currentPage.updateCloudDrivePathDialogSlot(jobJson.new_remote_file_path);
+                pageStack.currentPage.updateCloudDrivePathDialogSlot(jobJson.newRemoteFilePath);
             }
 
             // Reset cloudFolderPage.
@@ -1343,7 +1338,7 @@ PageStackWindow {
 
             if (nonce != "") {
                 // Update item after removing job as isSyncing will check if job exists.
-                var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+                var jobJson = cloudDriveModel.getJobJson(nonce);
 
                 // Update ProgressBar on listItem and its parents. Needs to update after removeJob as isSyncing check if job exists.
                 pageStack.find(function (page) {
@@ -1363,7 +1358,7 @@ PageStackWindow {
 
             if (nonce != "") {
                 // Update item after removing job as isSyncing will check if job exists.
-                var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+                var jobJson = cloudDriveModel.getJobJson(nonce);
 
                 fsModel.trash(localPath);
             }
@@ -1372,7 +1367,7 @@ PageStackWindow {
         onCopyFileReplySignal: {
             console.debug("window cloudDriveModel onCopyFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             if (err == 0) {
                 // Cloud items have been managed by CloudDriveModel::copyFileReplyFilter.
@@ -1402,7 +1397,7 @@ PageStackWindow {
         onMoveFileReplySignal: {
             console.debug("window cloudDriveModel onMoveFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             if (err == 0) {
                 // Cloud items have been managed by CloudDriveModel::moveFileReplyFilter.
@@ -1432,7 +1427,7 @@ PageStackWindow {
         onDeleteFileReplySignal: {
             console.debug("window cloudDriveModel onDeleteFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             if (err == 0) {
                 // Reset cloudDrivePathDialog.
@@ -1460,7 +1455,7 @@ PageStackWindow {
         onShareFileReplySignal: {
             console.debug("window cloudDriveModel onShareFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg + " " + url + " " + expires);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             if (err == 0) {
                 // Show share UI. For Meego only.
@@ -1481,7 +1476,7 @@ PageStackWindow {
         onDeltaReplySignal: {
             console.debug("window cloudDriveModel onDeltaReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             if (err == 0) {
                 // TODO
@@ -1499,7 +1494,7 @@ PageStackWindow {
         onMigrateFileReplySignal: {
             console.debug("window cloudDriveModel onMigrateFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             if (err != 0) {
                 logError(getCloudName(jobJson.type) + " " + qsTr("Migrate"),
@@ -1515,7 +1510,7 @@ PageStackWindow {
         onMigrateFilePutReplySignal: {
             console.debug("window cloudDriveModel onMigrateFilePutReplySignal " + nonce + " " + err + " " + errMsg + " " + msg + " " + errorOnTarget);
 
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
 
             if (err == 0) {
                 // Refresh cloudFolderPage.
@@ -1525,7 +1520,7 @@ PageStackWindow {
                 }
             } else {
                 if (errorOnTarget) {
-                    logError(getCloudName(jobJson.target_type) + " " + qsTr("Migrate"),
+                    logError(getCloudName(jobJson.targetType) + " " + qsTr("Migrate"),
                              qsTr("Error") + " " + err + " " + errMsg + " " + msg);
                 } else {
                     logError(getCloudName(jobJson.type) + " " + qsTr("Migrate"),
@@ -1541,7 +1536,7 @@ PageStackWindow {
 
         onJobEnqueuedSignal: {
             // Get job json.
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
             cloudDriveJobsModel.append(jobJson);
 
             console.debug("window cloudDriveModel onJobEnqueuedSignal " + nonce + " " + cloudDriveModel.getOperationName(jobJson.operation) + " localPath " + localPath);
@@ -1554,7 +1549,7 @@ PageStackWindow {
 
         onJobUpdatedSignal: {
             // NOTE It's emitted from updateJob() to update job in job model.
-            var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(nonce));
+            var jobJson = cloudDriveModel.getJobJson(nonce);
             cloudDriveJobsModel.updateJob(jobJson);
 
 //            console.debug("window cloudDriveModel onJobUpdatedSignal " + nonce + " " + cloudDriveModel.getOperationName(jobJson.operation));
@@ -1568,7 +1563,7 @@ PageStackWindow {
         onJobRemovedSignal: {
             // NOTE It's emitted from removeJob() to remove job from job model.
             var removingIndex = cloudDriveJobsModel.findIndexByJobId(nonce);
-            var localFilePath = (removingIndex == -1) ? "" : cloudDriveJobsModel.get(removingIndex).local_file_path;
+            var localFilePath = (removingIndex == -1) ? "" : cloudDriveJobsModel.get(removingIndex).localFilePath;
             // console.debug("cloudDriveModel onJobRemovedSignal nonce " + nonce + " localFilePath " + localFilePath);
             var i = cloudDriveJobsModel.removeJob(nonce);
             if (i >= 0) {
@@ -1617,8 +1612,8 @@ PageStackWindow {
         // TODO Cache found index. But most running jobs usually be on prior index (queue).
         function findIndexByJobId(jobId) {
             for (var i=0; i<cloudDriveJobsModel.count; i++) {
-                if (cloudDriveJobsModel.get(i).job_id == jobId) {
-//                        console.debug("cloudDriveJobsModel findIndexByJobId " + i + " " + cloudDriveJobsModel.get(i).job_id);
+                if (cloudDriveJobsModel.get(i).jobId == jobId) {
+//                        console.debug("cloudDriveJobsModel findIndexByJobId " + i + " " + cloudDriveJobsModel.get(i).jobId);
                     return i;
                 }
             }
@@ -1629,7 +1624,7 @@ PageStackWindow {
         function updateJob(jobJson) {
             if (!jobJson) return;
 
-            var i = findIndexByJobId(jobJson.job_id);
+            var i = findIndexByJobId(jobJson.jobId);
             if (i >= 0) {
                 cloudDriveJobsModel.set(i, jobJson);
             }
@@ -1638,7 +1633,7 @@ PageStackWindow {
         function updateJobProgressBar(jobJson) {
             if (!jobJson) return;
 
-            var i = findIndexByJobId(jobJson.job_id);
+            var i = findIndexByJobId(jobJson.jobId);
             if (i >= 0) {
                 cloudDriveJobsModel.setProperty(i, "bytes", jobJson.bytes);
             }

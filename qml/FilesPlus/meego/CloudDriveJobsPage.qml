@@ -112,7 +112,7 @@ Page {
                 name: "stop"
                 text: appInfo.emptyStr+qsTr("Stop")
                 onClicked: {
-                    var jobId = jobListView.model.get(jobListView.currentIndex).job_id;
+                    var jobId = jobListView.model.get(jobListView.currentIndex).jobId;
                     cloudDriveModel.suspendJob(jobId);
                 }
             }
@@ -138,7 +138,7 @@ Page {
                 name: "resume"
                 text: appInfo.emptyStr+qsTr("Resume")
                 onClicked: {
-                    var jobId = jobListView.model.get(jobListView.currentIndex).job_id;
+                    var jobId = jobListView.model.get(jobListView.currentIndex).jobId;
                     cloudDriveModel.resumeJob(jobId);
                 }
             }
@@ -147,7 +147,7 @@ Page {
                 name: "remove"
                 text: appInfo.emptyStr+qsTr("Remove")
                 onClicked: {
-                    var jobId = jobListView.model.get(jobListView.currentIndex).job_id;
+                    var jobId = jobListView.model.get(jobListView.currentIndex).jobId;
                     cloudDriveModel.removeJob("cloudDriveJobsPage jobMenu", jobId);
                 }
             }
@@ -174,7 +174,7 @@ Page {
                 text: appInfo.emptyStr+qsTr("Resume all")
                 onClicked: {
                     for (var i=0; i<cloudDriveJobsModel.count; i++) {
-                        var jobId = cloudDriveJobsModel.get(i).job_id;
+                        var jobId = cloudDriveJobsModel.get(i).jobId;
                         cloudDriveModel.resumeJob(jobId);
                     }
                 }
@@ -222,23 +222,23 @@ Page {
                         ProgressBar {
                             id: syncProgressBar
                             width: parent.width
-                            visible: is_running && !showBytes
+                            visible: isRunning && !showBytes
                             value: bytes
                             minimumValue: 0
-                            maximumValue: bytes_total
+                            maximumValue: bytesTotal
                         }
                         Text {
-                            text: appInfo.emptyStr+Utility.formatFileSize(bytes, 1)+" / "+Utility.formatFileSize(bytes_total, 1)
+                            text: appInfo.emptyStr+Utility.formatFileSize(bytes, 1)+" / "+Utility.formatFileSize(bytesTotal, 1)
                             width: parent.width
                             horizontalAlignment: Text.AlignRight
-                            visible: is_running && showBytes
+                            visible: isRunning && showBytes
                             font.pointSize: 14
                             color: (!inverted) ? "white" : "black"
                         }
                         Text {
-                            text: appInfo.emptyStr+(err != 0 ? qsTr("Error %1 %2").arg(err).arg(err_string) : "")
+                            text: appInfo.emptyStr+(err != 0 ? qsTr("Error %1 %2").arg(err).arg(errString) : "")
                             width: parent.width
-                            visible: !is_running && !showBytes
+                            visible: !isRunning && !showBytes
                             font.pointSize: 14
                             elide: Text.ElideRight
                             color: (!inverted) ? "white" : "black"
@@ -261,7 +261,7 @@ Page {
                             if (operation == CloudDriveModel.Quota) {
                                 return uid + " (" + cloudDriveModel.getUidEmail(type, uid) + ")";
                             } else {
-                                return remote_file_path;
+                                return remoteFilePath;
                             }
                         }
                         width: parent.width - sourceCloudIcon.width
@@ -277,7 +277,7 @@ Page {
                         id: targetCloudIcon
                         source: {
                             if (operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
-                                return cloudDriveModel.getCloudIcon(target_type)
+                                return cloudDriveModel.getCloudIcon(targetType)
                             } else {
                                 return "";
                             }
@@ -291,13 +291,13 @@ Page {
                         id: targetName
                         text: {
                             if (operation == CloudDriveModel.MigrateFile || operation == CloudDriveModel.MigrateFilePut) {
-                                if (cloudDriveModel.isRemoteAbsolutePath(target_type)) {
-                                    return cloudDriveModel.getRemotePath(target_type, new_remote_file_path, new_remote_file_name);
+                                if (cloudDriveModel.isRemoteAbsolutePath(targetType)) {
+                                    return cloudDriveModel.getRemotePath(targetType, newRemoteFilePath, newRemoteFileName);
                                 } else {
-                                    return new_remote_file_path + " > " + new_remote_file_name;
+                                    return newRemoteFilePath + " > " + newRemoteFileName;
                                 }
                             } else {
-                                return local_file_path;
+                                return localFilePath;
                             }
                         }
                         width: parent.width - targetCloudIcon.width
@@ -313,16 +313,16 @@ Page {
                 id: refreshTimer
                 interval: 500
                 repeat: true
-                running: is_running
+                running: isRunning
                 onTriggered: {
-                    var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(job_id));
+                    var jobJson = cloudDriveModel.getJobJson(jobId);
                     cloudDriveJobsModel.updateJob(jobJson);
                 }
             }
 
             onClicked: {
-                console.debug("cloudDriveJobsPage listItem onClicked jobJson " + cloudDriveModel.getJobJson(job_id) );
-                if (!is_running) {
+                console.debug("cloudDriveJobsPage listItem onClicked jobJson " + JSON.stringify(cloudDriveModel.getJobJson(jobId)) );
+                if (!isRunning) {
                     jobListView.currentIndex = index;
                     jobListView.highlightFollowsCurrentItem = true;
                     jobMenu.open();

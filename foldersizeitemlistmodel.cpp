@@ -530,9 +530,9 @@ bool FolderSizeItemListModel::isRoot(const QString absPath)
     return (dir.isRoot() || isRootLogicalDrive);
 }
 
-QString FolderSizeItemListModel::getItemJson(const QString absFilePath)
+QVariant FolderSizeItemListModel::getItemJson(const QString absFilePath)
 {
-    return m.getItem(QFileInfo(absFilePath)).toJsonText();
+    return m.getItem(QFileInfo(absFilePath)).toJson();
 }
 
 int FolderSizeItemListModel::getSortFlag() const
@@ -785,7 +785,7 @@ bool FolderSizeItemListModel::createTrashIfNotExists()
     return true;
 }
 
-QString FolderSizeItemListModel::getTrashJsonText()
+QVariant FolderSizeItemListModel::getTrashJson()
 {
     if (!createTrashIfNotExists()) {
         return "";
@@ -1066,21 +1066,6 @@ void FolderSizeItemListModel::initializeFSWatcher()
     qDebug() << "FolderSizeItemListModel::initializeFSWatcher watched directories" << m_fsWatcher->directories();
 
     connect(m_fsWatcher, SIGNAL(directoryChanged(QString)), SLOT(fsWatcherDirectoryChangedSlot(QString)) );
-}
-
-QString FolderSizeItemListModel::getDirContentJson(const QString dirPath)
-{
-    QList<FolderSizeItem> itemList;
-    m.getDirContent(dirPath, itemList);
-    QString jsonText = "[ ";
-    for (int i=0; i<itemList.length(); i++) {
-        FolderSizeItem item = itemList.at(i);
-        if (i>0) jsonText.append(", ");
-        jsonText.append(item.toJsonText());
-    }
-    jsonText.append(" ]");
-
-    return jsonText;
 }
 
 int FolderSizeItemListModel::getIndexOnCurrentDir(const QString absFilePath)

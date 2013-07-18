@@ -27,14 +27,28 @@ QString CloudDriveItem::toJsonText()
     QString jsonText = "{ ";
     jsonText.append( QString("\"type\": %1, ").arg(type) );
     jsonText.append( QString("\"uid\": \"%1\", ").arg(uid) );
-    jsonText.append( QString("\"local_path\": \"%1\", ").arg(localPath) );
-    jsonText.append( QString("\"remote_path\": \"%1\", ").arg(remotePath) );
+    jsonText.append( QString("\"localPath\": \"%1\", ").arg(localPath) );
+    jsonText.append( QString("\"remotePath\": \"%1\", ").arg(remotePath) );
     jsonText.append( QString("\"hash\": \"%1\", ").arg(hash) );
-    jsonText.append( QString("\"last_modified\": \"%1\", ").arg(lastModified.toString()) );
-    jsonText.append( QString("\"sync_direction\": %1").arg(syncDirection) );
+    jsonText.append( QString("\"lastModified\": \"%1\", ").arg(lastModified.toString(Qt::ISODate)) );
+    jsonText.append( QString("\"syncDirection\": %1").arg(syncDirection) );
     jsonText.append(" }");
 
     return jsonText;
+}
+
+QVariant CloudDriveItem::toJson()
+{
+    QMap<QString,QVariant> jsonObj;
+    jsonObj["type"] = QVariant(type);
+    jsonObj["uid"] = QVariant(uid);
+    jsonObj["localPath"] = QVariant(localPath);
+    jsonObj["remotePath"] = QVariant(remotePath);
+    jsonObj["hash"] = QVariant(hash);
+    jsonObj["lastModified"] = QVariant(lastModified.toString(Qt::ISODate));
+    jsonObj["syncDirection"] = QVariant(syncDirection);
+
+    return QVariant(jsonObj);
 }
 
 bool CloudDriveItem::isValid()

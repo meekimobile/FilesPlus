@@ -32,40 +32,112 @@ CloudDriveJob::CloudDriveJob(QString jobId, int operation, int type, QString uid
     this->remotePathList = QStringList("*");
 }
 
+CloudDriveJob::CloudDriveJob(QScriptValue item)
+{
+    jobId = item.property("jobId").toString();
+    operation = item.property("operation").toInteger();
+    type = item.property("type").toInteger();
+    uid = item.property("uid").toString();
+    localFilePath = item.property("localFilePath").toString();
+    remoteFilePath = item.property("remoteFilePath").toString();
+    modelIndex = -1;
+    newLocalFilePath = item.property("newLocalFilePath").toString();
+    newRemoteFilePath = item.property("newRemoteFilePath").toString();
+    newRemoteFileName = item.property("newRemoteFileName").toString();
+    targetUid = item.property("targetUid").toString();
+    targetType = item.property("targetType").toInteger();
+    bytes = item.property("bytes").toInteger();
+    bytesTotal = item.property("bytesTotal").toInteger();
+    forcePut = item.property("forcePut").toBool();
+    downloadOffset = item.property("downloadOffset").toInteger();
+    uploadId = item.property("uploadId").toString();
+    uploadOffset = item.property("upload_offset").toInteger();
+    createdTime = item.property("createdTime").toDateTime();
+    lastStartedTime = item.property("lastStartedTime").toDateTime();
+    lastStoppedTime = item.property("lastStoppedTime").toDateTime();
+    err = item.property("err").toInteger();
+    errString = item.property("errString").toString();
+    errMessage = item.property("errMessage").toString();
+    nextJobId = item.property("nextJobId").toString();
+    isRunning = false;
+    isDir = false;
+    retryCount = 0;
+    isAborted = false;
+    suppressDeleteLocal = false;
+    suppressRemoveJob = false;
+    remotePathList = QStringList("*");
+}
+
 QString CloudDriveJob::toJsonText()
 {
     QString jsonText;
     jsonText.append("{ ");
-    jsonText.append(QString("\"job_id\": \"%1\", ").arg(jobId));
-    jsonText.append(QString("\"is_running\": %1, ").arg( (isRunning)?"true":"false" ));
-    jsonText.append(QString("\"is_dir\": %1, ").arg( (isDir)?"true":"false" ));
+    jsonText.append(QString("\"jobId\": \"%1\", ").arg(jobId));
+    jsonText.append(QString("\"isRunning\": %1, ").arg( (isRunning)?"true":"false" ));
+    jsonText.append(QString("\"isDir\": %1, ").arg( (isDir)?"true":"false" ));
     jsonText.append(QString("\"uid\": \"%1\", ").arg(uid));
     jsonText.append(QString("\"type\": %1, ").arg(type));
     jsonText.append(QString("\"operation\": %1, ").arg(operation));
-    jsonText.append(QString("\"local_file_path\": \"%1\", ").arg(localFilePath));
-    jsonText.append(QString("\"remote_file_path\": \"%1\", ").arg(remoteFilePath));
-    jsonText.append(QString("\"new_local_file_path\": \"%1\", ").arg(newLocalFilePath));
-    jsonText.append(QString("\"new_remote_file_path\": \"%1\", ").arg(newRemoteFilePath));
-    jsonText.append(QString("\"new_remote_file_name\": \"%1\", ").arg(newRemoteFileName));
-    jsonText.append(QString("\"target_uid\": \"%1\", ").arg(targetUid));
+    jsonText.append(QString("\"localFilePath\": \"%1\", ").arg(localFilePath));
+    jsonText.append(QString("\"remoteFilePath\": \"%1\", ").arg(remoteFilePath));
+    jsonText.append(QString("\"newLocalFilePath\": \"%1\", ").arg(newLocalFilePath));
+    jsonText.append(QString("\"newRemoteFilePath\": \"%1\", ").arg(newRemoteFilePath));
+    jsonText.append(QString("\"newRemoteFileName\": \"%1\", ").arg(newRemoteFileName));
+    jsonText.append(QString("\"targetUid\": \"%1\", ").arg(targetUid));
     jsonText.append(QString("\"target_type\": %1, ").arg(targetType));
-    jsonText.append(QString("\"model_index\": %1, ").arg(modelIndex));
+    jsonText.append(QString("\"modelIndex\": %1, ").arg(modelIndex));
     jsonText.append(QString("\"bytes\": %1, ").arg(bytes));
-    jsonText.append(QString("\"bytes_total\": %1, ").arg(bytesTotal));
-    jsonText.append(QString("\"force_put\": %1, ").arg( (forcePut)?"true":"false" ));
-    jsonText.append(QString("\"force_get\": %1, ").arg( (forceGet)?"true":"false" ));
-    jsonText.append(QString("\"download_offset\": %1, ").arg(downloadOffset));
-    jsonText.append(QString("\"upload_id\": \"%1\", ").arg(uploadId));
-    jsonText.append(QString("\"upload_offset\": %1, ").arg(uploadOffset));
-    jsonText.append(QString("\"created_time\": \"%1\", ").arg(createdTime.toString(Qt::ISODate)));
-    jsonText.append(QString("\"last_started_time\": \"%1\", ").arg(lastStartedTime.toString(Qt::ISODate)));
-    jsonText.append(QString("\"last_stopped_time\": \"%1\", ").arg(lastStoppedTime.toString(Qt::ISODate)));
+    jsonText.append(QString("\"bytesTotal\": %1, ").arg(bytesTotal));
+    jsonText.append(QString("\"forcePut\": %1, ").arg( (forcePut)?"true":"false" ));
+    jsonText.append(QString("\"forceGet\": %1, ").arg( (forceGet)?"true":"false" ));
+    jsonText.append(QString("\"downloadOffset\": %1, ").arg(downloadOffset));
+    jsonText.append(QString("\"uploadId\": \"%1\", ").arg(uploadId));
+    jsonText.append(QString("\"uploadOffset\": %1, ").arg(uploadOffset));
+    jsonText.append(QString("\"createdTime\": \"%1\", ").arg(createdTime.toString(Qt::ISODate)));
+    jsonText.append(QString("\"lastStartedTime\": \"%1\", ").arg(lastStartedTime.toString(Qt::ISODate)));
+    jsonText.append(QString("\"lastStoppedTime\": \"%1\", ").arg(lastStoppedTime.toString(Qt::ISODate)));
     jsonText.append(QString("\"err\": %1, ").arg(err));
-    jsonText.append(QString("\"err_string\": \"%1\", ").arg(errString));
-    jsonText.append(QString("\"err_message\": \"%1\", ").arg(errMessage));
-    jsonText.append(QString("\"retry_count\": %1, ").arg(retryCount));
-    jsonText.append(QString("\"next_job_id\": \"%1\" ").arg(nextJobId));
+    jsonText.append(QString("\"errString\": \"%1\", ").arg(errString));
+    jsonText.append(QString("\"errMessage\": \"%1\", ").arg(errMessage));
+    jsonText.append(QString("\"retryCount\": %1, ").arg(retryCount));
+    jsonText.append(QString("\"nextJobId\": \"%1\" ").arg(nextJobId));
     jsonText.append(" }");
 
     return jsonText;
+}
+
+QVariant CloudDriveJob::toJson()
+{
+    QMap<QString,QVariant> jsonObj;
+    jsonObj["jobId"] = QVariant(jobId);
+    jsonObj["isRunning"] = QVariant(isRunning);
+    jsonObj["isDir"] = QVariant(isDir);
+    jsonObj["uid"] = QVariant(uid);
+    jsonObj["type"] = QVariant(type);
+    jsonObj["operation"] = QVariant(operation);
+    jsonObj["localFilePath"] = QVariant(localFilePath);
+    jsonObj["remoteFilePath"] = QVariant(remoteFilePath);
+    jsonObj["newLocalFilePath"] = QVariant(newLocalFilePath);
+    jsonObj["newRemoteFilePath"] = QVariant(newRemoteFilePath);
+    jsonObj["newRemoteFileName"] = QVariant(newRemoteFileName);
+    jsonObj["targetUid"] = QVariant(targetUid);
+    jsonObj["targetType"] = QVariant(targetType);
+    jsonObj["modelIndex"] = QVariant(modelIndex);
+    jsonObj["bytes"] = QVariant(bytes);
+    jsonObj["bytesTotal"] = QVariant(bytesTotal);
+    jsonObj["forcePut"] = QVariant(forcePut);
+    jsonObj["forceGet"] = QVariant(forceGet);
+    jsonObj["downloadOffset"] = QVariant(downloadOffset);
+    jsonObj["uploadId"] = QVariant(uploadId);
+    jsonObj["uploadOffset"] = QVariant(uploadOffset);
+    jsonObj["createdTime"] = QVariant(createdTime.toString(Qt::ISODate));
+    jsonObj["lastStartedTime"] = QVariant(lastStartedTime.toString(Qt::ISODate));
+    jsonObj["lastStoppedTime"] = QVariant(lastStoppedTime.toString(Qt::ISODate));
+    jsonObj["err"] = QVariant(err);
+    jsonObj["errString"] = QVariant(errString);
+    jsonObj["errMessage"] = QVariant(errMessage);
+    jsonObj["retryCount"] = QVariant(retryCount);
+    jsonObj["nextJobId"] = QVariant(nextJobId);
+
+    return QVariant(jsonObj);
 }

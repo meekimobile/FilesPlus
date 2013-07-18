@@ -171,7 +171,7 @@ public:
     Q_INVOKABLE bool isRemoteRoot(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
     Q_INVOKABLE bool canSync(QString localPath);
     Q_INVOKABLE QString getRunningJob(QString localPath);
-    Q_INVOKABLE QString getJobJson(QString jobId);
+    Q_INVOKABLE QVariant getJobJson(QString jobId);
     void addJob(CloudDriveJob job, bool runAsNextJob = false, bool emitJobEnqueuedSignal = true);
     void updateJob(CloudDriveJob job, bool emitJobUpdatedSignal = true, bool clearCache = true);
     Q_INVOKABLE void removeJob(QString caller, QString nonce);
@@ -193,9 +193,9 @@ public:
     Q_INVOKABLE int getItemCount();
     Q_INVOKABLE QString getItemHash(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE QString getItemRemotePath(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
-    Q_INVOKABLE QString getItemListJson(QString localPath);
-    Q_INVOKABLE QString getItemListJsonByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
-    Q_INVOKABLE QString getItemJson(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
+    Q_INVOKABLE QVariantList getItemListJson(QString localPath);
+    Q_INVOKABLE QVariantList getItemListJsonByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath);
+    Q_INVOKABLE QVariant getItemJson(QString localPath, CloudDriveModel::ClientTypes type, QString uid);
     Q_INVOKABLE QString getDefaultLocalFilePath(const QString &remoteFilePath); // TODO Avoid using.
     Q_INVOKABLE QString getDefaultRemoteFilePath(const QString &localFilePath); // TODO Avoid using.
     Q_INVOKABLE bool isAuthorized();

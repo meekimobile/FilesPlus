@@ -509,39 +509,17 @@ void CloudDriveModel::loadCloudDriveJobs(QString nonce)
     if (file.open(QIODevice::ReadOnly)) {
         sc = engine.evaluate(QString::fromUtf8(file.readAll()));
         if (sc.isArray()) {
-            int len = sc.toVariant().toList().length();
+            int len = sc.property("length").toInteger();
             for (i = 0; i < len; i++) {
                 QApplication::processEvents();
 
-                QScriptValue item = sc.property(i);
-                CloudDriveJob job(item.property("job_id").toString(),
-                                  item.property("operation").toInt32(),
-                                  item.property("type").toInt32(),
-                                  item.property("uid").toString(),
-                                  item.property("local_file_path").toString(),
-                                  item.property("remote_file_path").toString(), -1);
-                job.newLocalFilePath = item.property("new_local_file_path").toString();
-                job.newRemoteFilePath = item.property("new_remote_file_path").toString();
-                job.newRemoteFileName = item.property("new_remote_file_name").toString();
-                job.targetUid = item.property("target_uid").toString();
-                job.targetType = item.property("target_type").toInt32();
-                job.bytes = item.property("bytes").toInt32();
-                job.bytesTotal = item.property("bytes_total").toInt32();
-                job.forcePut = item.property("force_put").toBool();
-                job.downloadOffset = item.property("download_offset").toInt32();
-                job.uploadId = item.property("upload_id").toString();
-                job.uploadOffset = item.property("upload_offset").toInt32();
-                job.createdTime = item.property("created_time").toDateTime();
-                job.lastStartedTime = item.property("last_started_time").toDateTime();
-                job.lastStoppedTime = item.property("last_stopped_time").toDateTime();
-                job.err = item.property("err").toInt32();
-                job.errString = item.property("err_string").toString();
-                job.errMessage = item.property("err_message").toString();
-                job.nextJobId = item.property("next_job_id").toString();
+                CloudDriveJob job(sc.property(i));
 
                 // Add job to jobModel for displaying on job page.
-                m_cloudDriveJobs->insert(job.jobId, job);
-                emit jobEnqueuedSignal(job.jobId, job.localFilePath);
+                if (job.jobId != "") {
+                    m_cloudDriveJobs->insert(job.jobId, job);
+                    emit jobEnqueuedSignal(job.jobId, job.localFilePath);
+                }
             }
         }
     }
@@ -1473,11 +1451,11 @@ QString CloudDriveModel::getRunningJob(QString localPath)
     return "";
 }
 
-QString CloudDriveModel::getJobJson(QString jobId)
+QVariant CloudDriveModel::getJobJson(QString jobId)
 {
     CloudDriveJob job = m_cloudDriveJobs->value(jobId);
 
-    return job.toJsonText();
+    return job.toJson();
 }
 
 void CloudDriveModel::addJob(CloudDriveJob job, bool runAsNextJob, bool emitJobEnqueuedSignal)
@@ -1536,9 +1514,6 @@ void CloudDriveModel::removeJob(QString caller, QString nonce)
     }
 
     qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce << "started.";
-
-    // Abort job.
-    suspendJob(nonce);
 
     qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce << "managing job's data.";
     mutex.lock();
@@ -2042,34 +2017,30 @@ int CloudDriveModel::getItemCount()
     return (dbCount + datCount);
 }
 
-QString CloudDriveModel::getItemListJson(QString localPath)
+QVariantList CloudDriveModel::getItemListJson(QString localPath)
 {
-    QList<CloudDriveItem> list = getItemList(localPath);
-
-    QString jsonText;
-    foreach (CloudDriveItem item, list) {
-        if (jsonText != "") jsonText.append(", ");
-        jsonText.append( item.toJsonText() );
+    QVariantList jsonArray;
+    foreach (CloudDriveItem item, getItemList(localPath)) {
+        jsonArray.append( item.toJson() );
     }
 
-    return "[ " + jsonText + " ]";
+    return jsonArray;
 }
 
-QString CloudDriveModel::getItemListJsonByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
+QVariantList CloudDriveModel::getItemListJsonByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
 {
-    QString jsonText;
+    QVariantList jsonArray;
     foreach (CloudDriveItem item, findItemsByRemotePath(type, uid, remotePath)) {
-        if (jsonText != "") jsonText.append(", ");
-        jsonText.append( item.toJsonText() );
+        jsonArray.append( item.toJson() );
     }
 
-    return "[ " + jsonText + " ]";
+    return jsonArray;
 }
 
-QString CloudDriveModel::getItemJson(QString localPath, CloudDriveModel::ClientTypes type, QString uid)
+QVariant CloudDriveModel::getItemJson(QString localPath, CloudDriveModel::ClientTypes type, QString uid)
 {
     CloudDriveItem item = getItem(localPath, type, uid);
-    return item.toJsonText();
+    return item.toJson();
 }
 
 QString CloudDriveModel::getItemRemotePath(QString localPath, CloudDriveModel::ClientTypes type, QString uid)
@@ -5346,17 +5317,19 @@ void CloudDriveModel::suspendJob(const QString jobId)
     qDebug() << "CloudDriveModel::suspendJob" << jobId;
 
     // Suspend job.
-    // TODO Why comment job updating below?
     CloudDriveJob job = m_cloudDriveJobs->value(jobId);
-//    job.isRunning = false;
-//    updateJob(job);
-//    jobDone();
-//    requestJobQueueStatus();
 
     // Actually abort job.
     CloudDriveClient *client = getCloudClient(getClientType(job.type));
     if (client->isAuthorized()) {
-        client->abort(jobId);
+        if (!client->abort(jobId)) {
+            // Job is not aborted. It may finish already. Then fail job.
+            job.err = -1;
+            job.errString = "Operation is aborted manually.";
+            job.isRunning = false;
+            updateJob(job);
+            jobDone();
+        }
     }
 }
 

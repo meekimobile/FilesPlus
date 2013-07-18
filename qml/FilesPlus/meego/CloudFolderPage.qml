@@ -199,14 +199,14 @@ Page {
         if (!jobJson) return;
 //        console.debug("cloudFolderPage updateItemSlot caller " + caller + " jobJson " + JSON.stringify(jobJson));
 
-        if (jobJson.remote_file_path == "") return;
+        if (jobJson.remoteFilePath == "") return;
 
         if (jobJson.type == selectedCloudType && jobJson.uid == selectedUid) {
-            var i = cloudDriveModel.findIndexByRemotePath(jobJson.remote_file_path);
+            var i = cloudDriveModel.findIndexByRemotePath(jobJson.remoteFilePath);
             console.debug("cloudFolderPage updateItemSlot caller " + caller + " jobJson " + JSON.stringify(jobJson) + " model index " + i);
             if (i >= 0) {
-                cloudDriveModel.setProperty(i, "isRunning", jobJson.is_running);
-                cloudDriveModel.setProperty(i, "isConnected", cloudDriveModel.isRemotePathConnected(jobJson.type, jobJson.uid, jobJson.remote_file_path));
+                cloudDriveModel.setProperty(i, "isRunning", jobJson.isRunning);
+                cloudDriveModel.setProperty(i, "isConnected", cloudDriveModel.isRemotePathConnected(jobJson.type, jobJson.uid, jobJson.remoteFilePath));
             }
         }
     }
@@ -216,15 +216,15 @@ Page {
         console.debug("cloudFolderPage refreshItemAfterFilePutSlot jobJson " + JSON.stringify(jobJson));
 
         if (jobJson.type == selectedCloudType && jobJson.uid == selectedUid) {
-            if (jobJson.remote_file_path == remoteParentPath) {
+            if (jobJson.remoteFilePath == remoteParentPath) {
                 refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot");
-            } else if (jobJson.remote_file_path == "/" && remoteParentPath == "") {
+            } else if (jobJson.remoteFilePath == "/" && remoteParentPath == "") {
                 refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot Dropbox");
             }
-        } else if (jobJson.target_type == selectedCloudType && jobJson.target_uid == selectedUid) {
-            if (jobJson.new_remote_file_path == remoteParentPath) {
+        } else if (jobJson.targetType == selectedCloudType && jobJson.targetUid == selectedUid) {
+            if (jobJson.newRemoteFilePath == remoteParentPath) {
                 refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot");
-            } else if (jobJson.new_remote_file_path == "/" && remoteParentPath == "") {
+            } else if (jobJson.newRemoteFilePath == "/" && remoteParentPath == "") {
                 refreshSlot("cloudFolderPage refreshItemAfterFilePutSlot Dropbox");
             }
         }
@@ -1259,10 +1259,10 @@ Page {
         function populateCloudItemModel() {
             cloudItemModel.clear();
             if (selectedItem) {
-                var cloudItems = Utility.createJsonObj(cloudDriveModel.getItemListJsonByRemotePath(selectedCloudType, selectedUid, selectedItem.absolutePath));
+                var cloudItems = cloudDriveModel.getItemListJsonByRemotePath(selectedCloudType, selectedUid, selectedItem.absolutePath);
                 for (var i = 0; i < cloudItems.length; i++) {
                     var cloudItem = cloudItems[i];
-                    var modelItem = { absolutePath: (cloudItem.local_path ? cloudItem.local_path : qsTr("Not available")) };
+                    var modelItem = { absolutePath: (cloudItem.localPath ? cloudItem.localPath : qsTr("Not available")) };
                     cloudItemModel.append(modelItem);
                 }
             }

@@ -720,36 +720,36 @@ Page {
 
     function updateItemSlot(jobJson) {
         if (!jobJson) return;
-        if (jobJson.local_file_path == "") return;
+        if (jobJson.localFilePath == "") return;
 
         // Show indicator on localPath up to root.
-        var pathList = fsModel.getPathToRoot(jobJson.local_file_path);
+        var pathList = fsModel.getPathToRoot(jobJson.localFilePath);
         for(var i=0; i<pathList.length; i++) {
             var modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-//            console.debug("folderPage updateItemSlot " + pathList[i] + " modelIndex " + modelIndex + " jobJson.is_running " + jobJson.is_running);
+//            console.debug("folderPage updateItemSlot " + pathList[i] + " modelIndex " + modelIndex + " jobJson.isRunning " + jobJson.isRunning);
             if (modelIndex == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
                 fsModel.clearIndexOnCurrentDir();
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
             }
             if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
+                fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.isRunning);
                 fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
                 fsModel.refreshItem(modelIndex);
             }
         }
 
         // Show indicator on newLocalPath up to root.
-        if (jobJson.new_local_file_path != "") {
-            pathList = fsModel.getPathToRoot(jobJson.new_local_file_path);
+        if (jobJson.newLocalFilePath != "") {
+            pathList = fsModel.getPathToRoot(jobJson.newLocalFilePath);
             for(i=0; i<pathList.length; i++) {
                 modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
-//                console.debug("folderPage updateItemSlot " + pathList[i] + " modelIndex " + modelIndex + " jobJson.is_running " + jobJson.is_running);
+//                console.debug("folderPage updateItemSlot " + pathList[i] + " modelIndex " + modelIndex + " jobJson.isRunning " + jobJson.isRunning);
                 if (modelIndex == FolderSizeItemListModel.IndexOnCurrentDirButNotFound) {
                     fsModel.clearIndexOnCurrentDir();
                     modelIndex = fsModel.getIndexOnCurrentDir(pathList[i]);
                 }
                 if (modelIndex < FolderSizeItemListModel.IndexNotOnCurrentDir) {
-                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.is_running);
+                    fsModel.setProperty(modelIndex, FolderSizeItemListModel.IsRunningRole, jobJson.isRunning);
                     fsModel.setProperty(modelIndex, FolderSizeItemListModel.RunningOperationRole, FolderSizeItemListModel.SyncOperation);
                     fsModel.refreshItem(modelIndex);
                 }
@@ -1084,11 +1084,11 @@ Page {
                 running: isRunning
                 onTriggered: {
                     var jobId = cloudDriveModel.getRunningJob(absolutePath);
-                    var jobJson = Utility.createJsonObj(cloudDriveModel.getJobJson(jobId));
+                    var jobJson = cloudDriveModel.getJobJson(jobId);
                     var runningOperation = fsModel.mapToFolderSizeListModelOperation(jobJson.operation);
                     fsModel.setProperty(index, FolderSizeItemListModel.RunningOperationRole, runningOperation);
                     fsModel.setProperty(index, FolderSizeItemListModel.RunningValueRole, jobJson.bytes);
-                    fsModel.setProperty(index, FolderSizeItemListModel.RunningMaxValueRole, jobJson.bytes_total);
+                    fsModel.setProperty(index, FolderSizeItemListModel.RunningMaxValueRole, jobJson.bytesTotal);
                 }
             }
 
@@ -1871,15 +1871,15 @@ Page {
         function populateCloudItemModel() {
             cloudItemModel.clear();
             if (selectedItem) {
-                var cloudItems = Utility.createJsonObj(cloudDriveModel.getItemListJson(selectedItem.absolutePath));
+                var cloudItems = cloudDriveModel.getItemListJson(selectedItem.absolutePath);
                 for (var i = 0; i < cloudItems.length; i++) {
                     var cloudItem = cloudItems[i];
                     var tokenPairJsonText = cloudDriveModel.getStoredUid(cloudItem.type, cloudItem.uid);
                     if (tokenPairJsonText != "") {
                         var uidJson = Utility.createJsonObj(tokenPairJsonText);
                         var modelItem = { type: cloudItem.type, uid: cloudItem.uid, email: uidJson.email,
-                            absolutePath: (cloudItem.remote_path ? cloudItem.remote_path : qsTr("Not available")),
-                            syncDirection: cloudItem.sync_direction };
+                            absolutePath: (cloudItem.remotePath ? cloudItem.remotePath : qsTr("Not available")),
+                            syncDirection: cloudItem.syncDirection };
                         cloudItemModel.append(modelItem);
                     }
                 }

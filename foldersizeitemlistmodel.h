@@ -123,8 +123,7 @@ public:
     Q_INVOKABLE QString getUrl(const QString absPath);
     Q_INVOKABLE bool isRoot(); // Overload method for verifying on currentDir.
     Q_INVOKABLE bool isRoot(const QString absPath);
-    Q_INVOKABLE QString getItemJson(const QString absFilePath);
-    Q_INVOKABLE QString getDirContentJson(const QString dirPath);
+    Q_INVOKABLE QVariant getItemJson(const QString absFilePath);
     Q_INVOKABLE int getIndexOnCurrentDir(const QString absFilePath);
     Q_INVOKABLE void clearIndexOnCurrentDir();
     void refreshIndexOnCurrentDir();
@@ -146,7 +145,7 @@ public:
     // Trash related methods.
     Q_INVOKABLE QString getTrashPath();
     bool createTrashIfNotExists();
-    Q_INVOKABLE QString getTrashJsonText();
+    Q_INVOKABLE QVariant getTrashJson();
     Q_INVOKABLE qlonglong getMaxTrashSize();
     Q_INVOKABLE bool trash(const QString sourcePath);
     Q_INVOKABLE void requestTrashStatus();

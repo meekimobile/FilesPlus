@@ -67,7 +67,7 @@ function formatDistance(distance, len, unit) {
 }
 
 function createJsonObj(jsonText) {
-    var jsonObj = eval('(' + jsonText + ')');
+    var jsonObj = JSON.parse(jsonText);
     return jsonObj;
 }
 

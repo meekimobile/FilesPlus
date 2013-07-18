@@ -4,6 +4,7 @@
 #include <QDataStream>
 #include <QDateTime>
 #include <QDebug>
+#include <QVariant>
 
 class CloudDriveItem
 {
@@ -22,6 +23,7 @@ public:
     int syncDirection;
 
     QString toJsonText();
+    QVariant toJson();
     bool isValid();
 };
 
