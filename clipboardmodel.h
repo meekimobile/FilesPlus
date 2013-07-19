@@ -24,7 +24,7 @@ public slots:
     Q_INVOKABLE int clear();
     Q_INVOKABLE void emitCountChanged();
     Q_INVOKABLE bool addClipboardItem(const QString localPath, const QString jsonText, const bool suppressCountChanged = false);
-//    Q_INVOKABLE bool addClipboardItem(const QVariant v);
+    Q_INVOKABLE int removeClipboardItem(const QString localPath);
     Q_INVOKABLE QString getItemJsonText(const int index);
     Q_INVOKABLE QString getItemJsonText(const QString localPath);
 

@@ -61,12 +61,10 @@ bool ClipboardModel::addClipboardItem(const QString localPath, const QString jso
     return true;
 }
 
-//bool ClipboardModel::addClipboardItem(const QVariant v)
-//{
-//    qDebug() << "ClipboardModel::addClipboardItem" << v;
-
-//    return true;
-//}
+int ClipboardModel::removeClipboardItem(const QString localPath)
+{
+    return m_hash->remove(localPath);
+}
 
 QString ClipboardModel::getItemJsonText(const int index)
 {
