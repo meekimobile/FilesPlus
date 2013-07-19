@@ -1109,10 +1109,10 @@ void FolderSizeModelThread::getDirContent(const QString dirPath, QList<FolderSiz
     dir.setNameFilters(m_nameFilters);
     switch (m_sortFlag) {
     case SortByName:
-        dir.setSorting(QDir::Name);
+        dir.setSorting(QDir::Name | QDir::IgnoreCase);
         break;
     case SortByNameWithDirectoryFirst:
-        dir.setSorting(QDir::Name | QDir::DirsFirst);
+        dir.setSorting(QDir::Name | QDir::IgnoreCase | QDir::DirsFirst);
         break;
     case SortBySize:
         dir.setSorting(QDir::Size | QDir::DirsFirst);
@@ -1121,7 +1121,7 @@ void FolderSizeModelThread::getDirContent(const QString dirPath, QList<FolderSiz
         dir.setSorting(QDir::Time);
         break;
     case SortByType:
-        dir.setSorting(QDir::Type | QDir::DirsFirst);
+        dir.setSorting(QDir::Type | QDir::IgnoreCase | QDir::DirsFirst);
         break;
     }
 
