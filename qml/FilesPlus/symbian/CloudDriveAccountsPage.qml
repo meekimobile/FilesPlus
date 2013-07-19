@@ -512,6 +512,69 @@ Page {
         }
     }
 
+    Item {
+        id: cloudDriveFeatures
+        anchors.fill: parent
+        z: 1
+        visible: false
+
+        property int buttonRadius: 28
+        property int cloudDriveType
+        property string uid
+
+        function open() {
+            mediaEnabledButton.checked = cloudDriveModel.isMediaEnabled(cloudDriveType, uid);
+            scheduleSyncButton.checked = cloudDriveModel.isDeltaEnabled(cloudDriveType, uid);
+            visible = true;
+        }
+
+        function close() {
+            visible = false;
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                parent.close();
+            }
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            color: "black"
+            opacity: 0.8
+        }
+
+        Row {
+            anchors.centerIn: parent
+            spacing: 5
+            Button {
+                id: mediaEnabledButton
+                width: cloudDriveFeatures.buttonRadius * 2
+                height: cloudDriveFeatures.buttonRadius * 2
+                iconSource: "photos.svg"
+                checkable: true
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: {
+                    cloudDriveFeatures.close();
+                    cloudDriveModel.setMediaEnabled(cloudDriveFeatures.cloudDriveType, cloudDriveFeatures.uid, checked);
+                }
+            }
+            Button {
+                id: scheduleSyncButton
+                width: cloudDriveFeatures.buttonRadius * 2
+                height: cloudDriveFeatures.buttonRadius * 2
+                iconSource: "cloud_wait.svg"
+                checkable: true
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: {
+                    cloudDriveFeatures.close();
+                    deltaSchedulerDialog.show(cloudDriveFeatures.cloudDriveType, cloudDriveFeatures.uid);
+                }
+            }
+        }
+    }
+
     ListView {
         id: accountListView
         width: parent.width
@@ -546,28 +609,40 @@ Page {
                 }
                 Column {
                     width: parent.width - cloudIcon.width
+                    height: parent.height
                     spacing: 5
                     Row {
                         width: parent.width
+                        height: parent.height / 2
                         Text {
                             id: titleText
                             text: email
-                            width: parent.width - (schedulerIcon.visible ? schedulerIcon.width : 0)
-                            verticalAlignment: Text.AlignVCenter
+                            width: parent.width - (mediaIcon.visible ? mediaIcon.width : 0) - (schedulerIcon.visible ? schedulerIcon.width : 0)
+                            anchors.verticalCenter: parent.verticalCenter
                             font.pointSize: 6
                             elide: Text.ElideMiddle
                             color: (!inverted) ? "white" : "black"
                         }
                         Image {
+                            id: mediaIcon
+                            width: 24
+                            height: 24
+                            anchors.verticalCenter: parent.verticalCenter
+                            source: (!inverted ? "photos.svg" : "photos_inverted.svg")
+                            visible: (cloudDriveType == CloudDriveModel.Box)
+                        }
+                        Image {
                             id: schedulerIcon
                             width: 24
                             height: 24
+                            anchors.verticalCenter: parent.verticalCenter
                             source: (!inverted ? "cloud_wait.svg" : "cloud_wait_inverted.svg")
                             visible: cloudDriveModel.isDeltaSupported(cloudDriveType)
                         }
                     }
                     Row {
                         width: parent.width
+                        height: parent.height / 2
                         Text {
                             text: "UID " + uid
                             width: parent.width - (quotaText.visible ? quotaText.width : 0) - (runningIcon.visible ? runningIcon.width : 0)
@@ -609,6 +684,10 @@ Page {
                     var host = email.substring(atPos+1);
                     var user = email.substring(0, atPos);
                     addAccountDialog.show(cloudDriveType, uid, host, user, secret, token);
+                } else if (cloudDriveType == CloudDriveModel.Box) {
+                    cloudDriveFeatures.cloudDriveType = cloudDriveType;
+                    cloudDriveFeatures.uid = uid;
+                    cloudDriveFeatures.open();
                 } else if (cloudDriveModel.isDeltaSupported(cloudDriveType)) {
                     deltaSchedulerDialog.show(cloudDriveType, uid);
                 }

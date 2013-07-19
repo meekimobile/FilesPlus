@@ -1406,6 +1406,11 @@ bool CloudDriveModel::isDirtyBeforeSync(CloudDriveModel::ClientTypes type)
     return m_settings.value(QString("%1.dirtyBeforeSync.enabled").arg(clientObjectName), false).toBool();
 }
 
+void CloudDriveModel::setMediaEnabled(CloudDriveModel::ClientTypes type, QString uid, bool flag)
+{
+    getCloudClient(type)->setMediaEnabled(uid, flag);
+}
+
 void CloudDriveModel::initScheduler()
 {
     connect(&m_schedulerTimer, SIGNAL(timeout()), this, SLOT(schedulerTimeoutFilter()) );

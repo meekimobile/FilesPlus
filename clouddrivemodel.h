@@ -228,6 +228,7 @@ public:
     Q_INVOKABLE bool isImageUrlCachable(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE bool isUnicodeSupported(CloudDriveModel::ClientTypes type);
     Q_INVOKABLE bool isDirtyBeforeSync(CloudDriveModel::ClientTypes type);
+    Q_INVOKABLE void setMediaEnabled(CloudDriveModel::ClientTypes type, QString uid, bool flag);
     Q_INVOKABLE QString getRemoteName(CloudDriveModel::ClientTypes type, QString remotePath);
     Q_INVOKABLE QString getRemotePath(CloudDriveModel::ClientTypes type, QString remoteParentPath, QString remotePathName);
     Q_INVOKABLE QString getParentLocalPath(const QString absFilePath);
@@ -264,7 +265,7 @@ public:
 
     // Delta.
     Q_INVOKABLE bool isDeltaSupported(CloudDriveModel::ClientTypes type);
-    bool isDeltaEnabled(CloudDriveModel::ClientTypes type, QString uid);
+    Q_INVOKABLE bool isDeltaEnabled(CloudDriveModel::ClientTypes type, QString uid);
     void scheduleDeltaJobs(QString cronValue);
     Q_INVOKABLE void setDeltaCronExp(CloudDriveModel::ClientTypes type, QString uid, QString cronExp);
     Q_INVOKABLE QString getDeltaCronExp(CloudDriveModel::ClientTypes type, QString uid);

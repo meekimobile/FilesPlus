@@ -44,6 +44,7 @@ public:
     virtual bool isUnicodeSupported();
     virtual bool isMediaEnabled(QString uid);
     virtual bool isFileGetRedirected();
+    virtual void setMediaEnabled(QString uid, bool flag);
     virtual QString getRemoteRoot(QString id);
     virtual qint64 getChunkSize();
 

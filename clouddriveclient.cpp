@@ -167,6 +167,11 @@ bool CloudDriveClient::isFileGetRedirected()
     return false;
 }
 
+void CloudDriveClient::setMediaEnabled(QString uid, bool flag)
+{
+    m_settings.setValue(QString("%1.%2.media.enabled").arg(objectName()).arg(uid), QVariant(flag));
+}
+
 qint64 CloudDriveClient::getChunkSize()
 {
     return m_settings.value(QString("%1.resumable.chunksize").arg(objectName()), DefaultChunkSize).toInt();

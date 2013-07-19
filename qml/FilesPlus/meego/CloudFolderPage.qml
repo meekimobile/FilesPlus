@@ -110,8 +110,9 @@ Page {
                 }
             } else {
                 // Open direct link with system web browser.
-                if (item.source) {
-                    Qt.openUrlExternally(item.source);
+                url = (item.source) ? item.source : cloudDriveModel.media(selectedCloudType, selectedUid, item.absolutePath);
+                if (url != "") {
+                    Qt.openUrlExternally(url);
                 }
             }
         }
