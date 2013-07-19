@@ -1480,7 +1480,6 @@ void CloudDriveModel::addJob(CloudDriveJob job, bool runAsNextJob, bool emitJobE
 
 void CloudDriveModel::updateJob(CloudDriveJob job, bool emitJobUpdatedSignal, bool clearCache)
 {
-    mutex.lock();
     if (clearCache) {
         clearConnectedRemoteDirtyCache(job.localFilePath);
     }
@@ -1493,6 +1492,7 @@ void CloudDriveModel::updateJob(CloudDriveJob job, bool emitJobUpdatedSignal, bo
         // Reset retry count if job is done successfully.
         job.retryCount = 0;
     }
+    mutex.lock();
     m_cloudDriveJobs->insert(job.jobId, job);
     mutex.unlock();
 
@@ -1516,12 +1516,12 @@ void CloudDriveModel::removeJob(QString caller, QString nonce)
     qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce << "started.";
 
     qDebug() << "CloudDriveModel::removeJob caller" << caller << "nonce" << nonce << "managing job's data.";
-    mutex.lock();
     CloudDriveJob job = m_cloudDriveJobs->value(nonce);
     clearConnectedRemoteDirtyCache(job.localFilePath);
     clearRunningJobCache(job.localFilePath);
     clearConnectedRemoteDirtyCache(job.newLocalFilePath);
     clearRunningJobCache(job.newLocalFilePath);
+    mutex.lock();
     int removeCount = m_cloudDriveJobs->remove(nonce);
     mutex.unlock();
 
@@ -5026,8 +5026,9 @@ void CloudDriveModel::jobDone() {
     mutex.lock();
     runningJobCount--;
     runningJobCount = (runningJobCount < 0) ? 0 : runningJobCount;
-    emit runningJobCountChanged();
     mutex.unlock();
+
+    emit runningJobCountChanged();
 
     qDebug() << "CloudDriveModel::jobDone runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count();
 }
@@ -5135,8 +5136,8 @@ void CloudDriveModel::proceedNextJob() {
     // Increase runningJobCount.
     mutex.lock();
     runningJobCount++;
-    emit runningJobCountChanged();
     mutex.unlock();
+    emit runningJobCountChanged();
 
     // Dispatch job.
     CloudDriveModelThread *t = new CloudDriveModelThread(this);
