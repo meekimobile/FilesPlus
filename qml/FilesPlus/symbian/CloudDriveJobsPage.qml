@@ -217,7 +217,7 @@ Page {
                             color: (!inverted) ? "white" : "black"
                         }
                         Text {
-                            text: appInfo.emptyStr+(err != 0 ? qsTr("Error %1 %2").arg(err).arg(err_string) : "")
+                            text: appInfo.emptyStr+(err != 0 ? qsTr("Error %1 %2").arg(err).arg(errString) : "")
                             width: parent.width
                             visible: !isRunning && !showBytes
                             font.pointSize: 6
