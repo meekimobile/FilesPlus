@@ -608,7 +608,7 @@ Page {
     Component {
         id: switchItemDelegate
         Row {
-            width: parent.width - 40
+            width: parent.width - 20
             anchors.centerIn: parent
             Text {
                 id: settingKey
@@ -618,6 +618,8 @@ Page {
                 height: parent.height
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                elide: Text.ElideRight
+                maximumLineCount: 2
                 text: getTitle(name)
             }
             Switch {
@@ -639,7 +641,7 @@ Page {
     Component {
         id: sliderItemDelegate
         Row {
-            width: parent.width - 40
+            width: parent.width - 20
             anchors.centerIn: parent
             Text {
                 id: sliderLabel
@@ -649,6 +651,8 @@ Page {
                 height: parent.height
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                elide: Text.ElideRight
+                maximumLineCount: 2
                 text: getTitle(name)
             }
             Slider {
