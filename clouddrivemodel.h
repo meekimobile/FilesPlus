@@ -214,6 +214,7 @@ public:
     Q_INVOKABLE void resumeScheduledJob();
     Q_INVOKABLE bool isPaused();
     Q_INVOKABLE void setIsPaused(bool pause);
+    Q_INVOKABLE void resetRunningJobCount();
 
     // Other.
     Q_INVOKABLE QString getRemoteRoot(CloudDriveModel::ClientTypes type, QString uid);

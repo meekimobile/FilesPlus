@@ -5387,6 +5387,16 @@ void CloudDriveModel::setIsPaused(bool pause)
     m_isPaused = pause;
 }
 
+void CloudDriveModel::resetRunningJobCount()
+{
+    mutex.lock();
+    runningJobCount = 0;
+    mutex.unlock();
+    emit runningJobCountChanged();
+
+    qDebug() << "CloudDriveModel::resetRunningJobCount runningJobCount" << runningJobCount << " m_jobQueue" << m_jobQueue->count() << "m_cloudDriveJobs" << m_cloudDriveJobs->count();
+}
+
 void CloudDriveModel::threadFinishedFilter()
 {
     qDebug() << "CloudDriveModel::threadFinishedFilter" << sender();

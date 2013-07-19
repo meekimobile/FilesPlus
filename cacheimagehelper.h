@@ -16,6 +16,7 @@ public:
     Q_INVOKABLE void cacheImage(QString remoteFilePath, QString url, int w, int h, QString caller);
 signals:
     void cacheImageFinished(QString absoluteFilePath, int err, QString errMsg, QString caller);
+    void refreshFolderCacheSignal(QString localPath);
 
 public slots:
     // Cache image.

@@ -887,6 +887,11 @@ PageStackWindow {
                 }
             }
         }
+
+        onRefreshFolderCacheSignal: {
+            // Remove folder cache.
+            fsModel.removeCache(localPath, true);
+        }
     }
 
     GCPClient {

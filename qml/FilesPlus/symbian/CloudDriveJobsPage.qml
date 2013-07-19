@@ -166,6 +166,23 @@ Page {
                     cancelQueuedCloudDriveJobsConfirmation.open();
                 }
             }
+
+            MenuItemWithIcon {
+                name: "resetRunningJobCount"
+                text: appInfo.emptyStr+qsTr("Reset stalled jobs")
+                onClicked: {
+                    resetRunningJobCountConfirmation.open();
+                }
+            }
+        }
+    }
+
+    ConfirmDialog {
+        id: resetRunningJobCountConfirmation
+        titleText: appInfo.emptyStr+qsTr("Reset stalled jobs")
+        contentText: appInfo.emptyStr+qsTr("Reset stalled jobs") + "?"
+        onConfirm: {
+            cloudDriveModel.resetRunningJobCount();
         }
     }
 
