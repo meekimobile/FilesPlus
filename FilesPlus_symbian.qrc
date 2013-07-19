@@ -176,5 +176,7 @@
         <file>qml/FilesPlus/Box_Logo_Blue_100x50.png</file>
         <file>qml/FilesPlus/call_logs.svg</file>
         <file>qml/FilesPlus/call_logs_inverted.svg</file>
+        <file>qml/FilesPlus/love.svg</file>
+        <file>qml/FilesPlus/love_inverted.svg</file>
     </qresource>
 </RCC>

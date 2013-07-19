@@ -19,6 +19,13 @@ Page {
                 Qt.openUrlExternally("http://www.meeki.mobi/faq");
             }
         }
+        ToolIcon {
+            id: donate
+            iconSource: (theme.inverted ? "love.svg" : "love_inverted.svg")
+            onClicked: {
+                Qt.openUrlExternally("http://www.meeki.mobi/donate");
+            }
+        }
     }
 
     FilesPlusInfo {
