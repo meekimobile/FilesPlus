@@ -359,8 +359,8 @@ Please click &apos;OK&apos; to continue.</translation>
         <translation>delta schedule</translation>
     </message>
     <message>
-        <location line="+85"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+82"/>
+        <location line="+160"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+157"/>
         <source>Not available</source>
         <translation>Not available</translation>
     </message>
@@ -483,6 +483,16 @@ Please click &apos;OK&apos; to continue.</translation>
         <translation>Remove all</translation>
     </message>
     <message>
+        <location line="+8"/>
+        <location line="+10"/>
+        <location line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveJobsPage.qml" line="+8"/>
+        <location line="+10"/>
+        <location line="+1"/>
+        <source>Reset stalled jobs</source>
+        <translation>Reset stalled jobs</translation>
+    </message>
+    <message>
         <source>Resume job</source>
         <translation type="obsolete">Resume job</translation>
     </message>
@@ -491,8 +501,8 @@ Please click &apos;OK&apos; to continue.</translation>
         <translation type="obsolete">Resume job %1?</translation>
     </message>
     <message>
-        <location line="+54"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveJobsPage.qml" line="+56"/>
+        <location line="+52"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveJobsPage.qml" line="+54"/>
         <source>Error %1 %2</source>
         <translation>Error %1 %2</translation>
     </message>
@@ -655,7 +665,7 @@ Please click &apos;OK&apos; to continue.</translation>
         <translation>Cancel CloudDrive jobs</translation>
     </message>
     <message>
-        <location line="+1223"/>
+        <location line="+1228"/>
         <source>User ID is not authorized.</source>
         <translation>User ID is not authorized.</translation>
     </message>
@@ -709,7 +719,7 @@ It can&apos;t be downloaded.</translation>
         <translation>Can&apos;t create folder. Migration is aborted.</translation>
     </message>
     <message>
-        <location line="+1331"/>
+        <location line="+1332"/>
         <location line="+12"/>
         <location line="+12"/>
         <source>Suspend</source>
@@ -1006,8 +1016,8 @@ It can&apos;t be downloaded.</translation>
         <translation type="obsolete">_Copy</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+1228"/>
-        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+1268"/>
+        <location filename="../qml/FilesPlus/meego/CloudFolderPage.qml" line="+1229"/>
+        <location filename="../qml/FilesPlus/symbian/CloudFolderPage.qml" line="+1269"/>
         <source>New folder</source>
         <translation>New folder</translation>
     </message>
@@ -3343,8 +3353,8 @@ Please confirm.</translation>
         </translation>
     </message>
     <message>
-        <location line="+159"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+160"/>
+        <location line="+163"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+164"/>
         <source>English</source>
         <translation>English</translation>
     </message>
@@ -3379,7 +3389,7 @@ Please confirm.</translation>
         <translation type="obsolete">Locale</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-305"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-309"/>
         <source>Show private drive on drive page</source>
         <translation>Show private drive on drive page</translation>
     </message>
@@ -3522,31 +3532,31 @@ Please confirm.</translation>
     <name>main</name>
     <message>
         <location filename="../qml/FilesPlus/meego/main.qml" line="+86"/>
-        <location line="+1295"/>
+        <location line="+1300"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+90"/>
-        <location line="+1437"/>
+        <location line="+1442"/>
         <source>Copy</source>
         <translation>Copy</translation>
     </message>
     <message>
-        <location line="-1293"/>
-        <location line="+1323"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1435"/>
-        <location line="+1465"/>
+        <location line="-1298"/>
+        <location line="+1328"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1440"/>
+        <location line="+1470"/>
         <source>Move</source>
         <translation>Move</translation>
     </message>
     <message>
-        <location line="-1321"/>
-        <location line="+1349"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1463"/>
-        <location line="+1491"/>
+        <location line="-1326"/>
+        <location line="+1354"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1468"/>
+        <location line="+1496"/>
         <source>Delete</source>
         <translation>Delete</translation>
     </message>
     <message>
-        <location line="-1347"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1489"/>
+        <location line="-1352"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1494"/>
         <source>Trash</source>
         <translation>Trash</translation>
     </message>
@@ -3600,19 +3610,19 @@ Please confirm.</translation>
     </message>
     <message>
         <location line="+46"/>
-        <location line="+548"/>
+        <location line="+553"/>
         <location line="+637"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+46"/>
         <location line="+335"/>
         <location line="+83"/>
-        <location line="+272"/>
+        <location line="+277"/>
         <location line="+641"/>
         <source>%1 is loaded.</source>
         <translation>%1 is loaded.</translation>
     </message>
     <message>
-        <location line="-1176"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1322"/>
+        <location line="-1181"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1327"/>
         <source>Quit</source>
         <translation>Quit</translation>
     </message>
@@ -3788,8 +3798,8 @@ Please re-authorize your accounts before proceed your actions.</translation>
         <translation>Other recipient</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/meego/main.qml" line="+204"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+198"/>
+        <location filename="../qml/FilesPlus/meego/main.qml" line="+209"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+203"/>
         <source>Print Error</source>
         <translation>Print Error</translation>
     </message>
