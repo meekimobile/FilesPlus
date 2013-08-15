@@ -1856,6 +1856,9 @@ QString GCDClient::shareFileReplyFinished(QNetworkReply *reply, bool synchronous
         } else if (sc.property("webViewLink").isValid()) {
             // For folder.
             url = sc.property("webViewLink").toString();
+        } else if (sc.property("alternateLink").isValid()) {
+            // Default web link.
+            url = sc.property("alternateLink").toString();
         }
         expires = -1;
     }
