@@ -20,8 +20,10 @@ public:
 
     Q_INVOKABLE QVariant getSettingValue(const QString key, const QVariant defaultValue);
     Q_INVOKABLE bool getSettingBoolValue(const QString key, const bool defaultValue);
+    Q_INVOKABLE int getSettingIntValue(const QString key, const int defaultValue);
     Q_INVOKABLE bool setSettingValue(const QString key, const QVariant v, const bool forceUpdate = false);
     Q_INVOKABLE bool hasSettingValue(const QString key);
+    Q_INVOKABLE void removeSettingValue(const QString key);
 
     // Monitoring for Symbian.
     Q_INVOKABLE bool isMonitoring();
@@ -63,7 +65,6 @@ private:
     QSettings *m_settings;
     Monitoring *mon;
     QTranslator *m_ts;
-    QHash<QString, QVariant> *m_settingsCache;
 
     void initTS();
     bool loadTS(const QString localeName);

@@ -783,11 +783,11 @@ Page {
 
     ListModel {
         id: languageModel
+        ListElement { locale: ""; name: "System default" }
         ListElement { locale: "de"; name: "Deutsch" }
         ListElement { locale: "en"; name: "English" }
         ListElement { locale: "it"; name: "Italiano" }
         ListElement { locale: "ru"; name: "Русский" }
-        ListElement { locale: "ru_2"; name: "Русский (2)" }
         ListElement { locale: "zh"; name: "中文(中国大陆)" }
 
         function getIndexByLocale(locale) {

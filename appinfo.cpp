@@ -35,6 +35,8 @@ QString AppInfo::getLogPath() const
     return "E:/";
 #elif defined(Q_WS_HARMATTAN)
     return "/home/user/MyDocs/";
+#else
+    return "";
 #endif
 }
 
@@ -50,7 +52,16 @@ QString AppInfo::getLocale()
 
 void AppInfo::setLocale(const QString locale)
 {
-    if (locale != getLocale()) {
+    if (locale == "") {
+        // Load TS.
+        loadTS(getSystemLocale());
+
+        // Remove existing setting value.
+        removeSettingValue("locale");
+
+        // Emit signal
+        emit localeChanged(getSystemLocale());
+    } else if (locale != getLocale()) {
         // Load TS.
         loadTS(locale);
 
@@ -125,17 +136,9 @@ QVariant AppInfo::getSettingValue(const QString key, const QVariant defaultValue
     // Initialize if it's not done.
     init();
 
-    if (m_settingsCache->contains(key)) {
-        QVariant cachedV = m_settingsCache->value(key);
-//        qDebug() << "AppInfo::getSettingValue cached key" << key << "cachedV" << cachedV;
-        return cachedV;
-    }
-
     QVariant v = m_settings->value(key, defaultValue);
 
     qDebug() << "AppInfo::getSettingValue key" << key << "v" << v;
-
-    m_settingsCache->insert(key, v);
 
     return v;
 }
@@ -145,14 +148,17 @@ bool AppInfo::getSettingBoolValue(const QString key, const bool defaultValue)
     return getSettingValue(key, defaultValue).toBool();
 }
 
+int AppInfo::getSettingIntValue(const QString key, const int defaultValue)
+{
+    return getSettingValue(key, defaultValue).toInt();
+}
+
 bool AppInfo::setSettingValue(const QString key, const QVariant v, const bool forceUpdate)
 {
     if (forceUpdate || m_settings->value(key) != v.toString()) {
         qDebug() << "AppInfo::setSettingValue key" << key << "settingValue" << m_settings->value(key) << "v" << v;
 
         m_settings->setValue(key, v);
-
-        m_settingsCache->insert(key, v);
 
         // Sync to backend.
         m_settings->sync();
@@ -171,6 +177,11 @@ bool AppInfo::hasSettingValue(const QString key)
     bool res =  m_settings->contains(key);
     qDebug() << "AppInfo::hasSettingValue key" << key << "contains" << res;
     return res;
+}
+
+void AppInfo::removeSettingValue(const QString key)
+{
+    m_settings->remove(key);
 }
 
 void AppInfo::toggleMonitoring()
@@ -193,9 +204,6 @@ void AppInfo::toggleMonitoring()
 void AppInfo::init()
 {
     if (m_settings != 0) return;
-
-    // Initialize cache.
-    m_settingsCache = new QHash<QString, QVariant>();
 
     // Check settings if monitoring is enabled.
     m_settings = new QSettings();
