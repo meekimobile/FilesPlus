@@ -1,4 +1,7 @@
 filesplus (1.3.0) unstable; urgency=low
+  * Fix WebDAV client to support special characters in hostname.
+  * Fix sort by name, name(dir. first) to sort case insensitively.
+  * Save sort flag per cloud storage path.
   * Add BOX client.
 
  -- Taweesak Kittipuree <>  Mon, 01 Jul 2013 16:48:40 +0700
