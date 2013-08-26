@@ -1339,7 +1339,8 @@ QScriptValue WebDavClient::parseCommonPropertyScriptValue(QScriptEngine &engine,
 
     bool objIsDir = jsonObj.property("href").toString().endsWith("/")
             || jsonObj.property("propstat").property("prop").property("getcontenttype").toString().indexOf(QRegExp("httpd/unix-directory", Qt::CaseInsensitive)) == 0
-            || jsonObj.property("propstat").property("prop").property("isFolder").toBool();
+            || jsonObj.property("propstat").property("prop").property("isFolder").toBool()
+            || jsonObj.property("propstat").property("prop").property("resourcetype").property("collection").isValid();
     QString objHref = (jsonObj.property("href").toString().startsWith("http")) ? QUrl::fromPercentEncoding(getPathFromUrl(jsonObj.property("href").toString()).toAscii()) : QUrl::fromPercentEncoding(jsonObj.property("href").toString().toAscii());
     QString objRemotePath = (objHref.endsWith("/")) ? objHref.mid(0, objHref.length()-1) : objHref; // Workaround because it ended with /
     QString objRemoteName = jsonObj.property("propstat").property("prop").property("displayname").isValid() ? jsonObj.property("propstat").property("prop").property("displayname").toString() : getRemoteFileName(objHref);
