@@ -166,7 +166,7 @@ Rectangle {
         id: shareButtonModel
         ListElement { buttonName: "mail"; icon: "mail.svg" }
         ListElement { buttonName: "sms"; icon: "messaging.svg" }
-        ListElement { buttonName: "bluetooth"; icon: "bluetooth.svg" }
+//        ListElement { buttonName: "bluetooth"; icon: "bluetooth.svg" }
         ListElement { buttonName: "copyLink"; icon: "copy.svg" }
     }
 

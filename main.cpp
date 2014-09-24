@@ -15,7 +15,7 @@
 #include "clipboardmodel.h"
 #include "bookmarksmodel.h"
 #ifdef Q_OS_SYMBIAN
-#include "bluetoothclient.h"
+//#include "bluetoothclient.h"
 #include "messageclient.h"
 #endif
 #include "customqnetworkaccessmanagerfactory.h"
@@ -343,7 +343,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qmlRegisterType<ClipboardModel>("ClipboardModel", 1, 0, "ClipboardModel");
     qmlRegisterType<BookmarksModel>("BookmarksModel", 1, 0, "BookmarksModel");
 #ifdef Q_OS_SYMBIAN
-    qmlRegisterType<BluetoothClient>("BluetoothClient", 1, 0, "BluetoothClient");
+//    qmlRegisterType<BluetoothClient>("BluetoothClient", 1, 0, "BluetoothClient");
     qmlRegisterType<MessageClient>("MessageClient", 1, 0, "MessageClient");
 #endif
     qmlRegisterType<CompressedFolderModel>("CompressedFolderModel", 1, 0, "CompressedFolderModel");

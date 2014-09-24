@@ -8,7 +8,7 @@ import CloudDriveModel 1.0
 import BookmarksModel 1.0
 import FolderSizeItemListModel 1.0
 import MessageClient 1.0
-import BluetoothClient 1.0
+//import BluetoothClient 1.0
 import SystemInfoHelper 1.0
 import CompressedFolderModel 1.0
 import CacheImageHelper 1.0
@@ -760,7 +760,7 @@ PageStackWindow {
     MessageClient {
         id: msgClient
     }
-
+/*
     BluetoothClient {
         id: btClient
         property alias deviceModel: btDeviceModel
@@ -839,7 +839,7 @@ PageStackWindow {
             window.updateLoadingProgressSlot(qsTr("%1 is loaded.").arg("BTClient"), 0.1);
         }
     }
-
+*/
     SystemInfoHelper {
         id: helper
     }

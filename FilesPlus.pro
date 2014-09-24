@@ -18,7 +18,7 @@ QML_IMPORT_PATH =
 #symbian:TARGET.UID3 = 0xE11DCC9D
 symbian:TARGET.UID3 = 0x20064E45
 
-VERSION = 1.3.2
+VERSION = 1.3.3
 
 # Smart Installer package's UID
 # This UID is from the protected range and therefore the package will
@@ -39,9 +39,9 @@ symbian:TARGET.EPOCSTACKSIZE = 0x100000 # 1M
 # If your application uses the Qt Mobility libraries, uncomment the following
 # lines and add the respective components to the MOBILITY variable.
 CONFIG += mobility
-MOBILITY = systeminfo connectivity
+MOBILITY = systeminfo
 symbian {
-    MOBILITY += contacts messaging
+    MOBILITY += contacts messaging #connectivity
 }
 
 # Speed up launching on MeeGo/Harmattan when using applauncherd daemon
@@ -143,7 +143,7 @@ SOURCES += main.cpp \
 
 symbian {
 SOURCES += \
-    bluetoothclient.cpp \
+#    bluetoothclient.cpp \
     messageclient.cpp
 }
 
@@ -194,7 +194,7 @@ HEADERS += \
 
 symbian {
 HEADERS += \
-    bluetoothclient.h \
+#    bluetoothclient.h \
     messageclient.h
 }
 
