@@ -77,11 +77,11 @@ void SkyDriveClient::accessToken(QString nonce, QString pin)
     sortMap["grant_type"] = "authorization_code";
 
     QString queryString = createNormalizedQueryString(sortMap);
-    qDebug() << "queryString " << queryString;
+    qDebug() << "SkyDriveClient::accessToken queryString " << queryString;
 
     QByteArray postData;
     postData.append(queryString);
-    qDebug() << "postData" << postData;
+    qDebug() << "SkyDriveClient::accessToken postData" << postData;
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);

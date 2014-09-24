@@ -30,7 +30,6 @@ public:
 
     QDateTime parseReplyDateString(QString dateString);
 
-    void requestToken(QString nonce);
     void authorize(QString nonce, QString hostname);
     void accessToken(QString nonce, QString pin = "");
     void accountInfo(QString nonce, QString uid);
@@ -58,7 +57,6 @@ public:
 signals:
 
 public slots:
-    void requestTokenReplyFinished(QNetworkReply *reply);
     void accessTokenReplyFinished(QNetworkReply *reply);
     void accountInfoReplyFinished(QNetworkReply *reply);
     void quotaReplyFinished(QNetworkReply *reply);
@@ -78,11 +76,8 @@ protected:
     QString filePutReplyResult(QNetworkReply *reply);
 private:
     QString signatureMethod;
-    QString requestTokenURI;
     QString chunkedUploadURI;
     QString commitChunkedUploadURI;
-
-    TokenPair requestTokenPair;
 
     bool isFullAccess;
     QString dropboxRoot;

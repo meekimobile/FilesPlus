@@ -5473,17 +5473,18 @@ void CloudDriveModel::accessTokenReplyFilter(QString nonce, int err, QString err
             qDebug() << "CloudDriveModel::accessTokenReplyFilter insert job.nextJobId" << job.nextJobId;
             m_jobQueue->insert(0, job.nextJobId);
         } else {
+            QScriptEngine engine;
+            QScriptValue sc;
             QHash<QString, QString> m_paramMap;
 
             // Proceed to accountInfo for authorization's accessToken.
             switch (job.type) {
             case Dropbox:
                 // Dropbox provides uid but no email yet. Get email from accountInfo.
-                foreach (QString s, msg.split('&')) {
-                    QStringList c = s.split('=');
-                    m_paramMap[c.at(0)] = c.at(1);
-                }
-//                qDebug() << "CloudDriveModel::accessTokenReplyFilter Dropbox uid" << m_paramMap["uid"];
+                sc = engine.evaluate("(" + msg + ")");
+                m_paramMap["access_token"] = sc.property("access_token").toString();
+                m_paramMap["uid"] = sc.property("uid").toString();
+                qDebug() << "CloudDriveModel::accessTokenReplyFilter Dropbox uid" << m_paramMap["uid"];
 
                 accountInfo(Dropbox, m_paramMap["uid"]);
                 break;

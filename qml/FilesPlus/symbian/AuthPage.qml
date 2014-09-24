@@ -114,6 +114,14 @@ Page {
         return "PinNotFound";
     }
 
+    function activateSlot() {
+        var pin = appInfo.getFromClipboard();
+        if (pin !== '') {
+            pinInputPanel.pin = pin.trim();
+            appInfo.clearClipboard();
+        }
+    }
+
     onStatusChanged: {
         if (status == PageStatus.Active) {
             privacyConsent.open();
@@ -163,6 +171,11 @@ Page {
             onLoadStarted: {
                 webViewBusy.visible = true;
 //                okButton.visible = false;
+
+                if (authPage.redirectFrom == "DropboxClient") {
+                    webView.stop.trigger();
+                    webViewBusy.visible = false;
+                }
             }
 
             onLoadFailed: {
@@ -306,11 +319,30 @@ Page {
         onConfirm: {
             appInfo.setSettingValue("privacy.policy.accepted", true);
             privacyConsent.close();
+
+            if (authPage.redirectFrom == "DropboxClient") {
+                openDropboxAuthorization.open();
+            }
         }
 
         onReject: {
             appInfo.setSettingValue("privacy.policy.accepted", false);
             privacyConsent.close();
+            pageStack.pop();
+        }
+    }
+
+    ConfirmDialog {
+        id: openDropboxAuthorization
+        titleText: appInfo.emptyStr+qsTr("Authorization")
+        contentText: appInfo.emptyStr+qsTr("FilesPlus will open Dropbox authorization page with web browser.\
+\n\nPlease click 'OK' to continue.")
+
+        onConfirm: {
+            Qt.openUrlExternally(webView.url);
+        }
+
+        onReject: {
             pageStack.pop();
         }
     }

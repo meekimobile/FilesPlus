@@ -112,8 +112,6 @@ Page {
             var type = model.get(selectedIndex).type;
             switch (type) {
             case CloudDriveModel.Dropbox:
-                cloudDriveModel.requestToken(type);
-                break;
             case CloudDriveModel.SkyDrive:
             case CloudDriveModel.GoogleDrive:
             case CloudDriveModel.Box:

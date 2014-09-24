@@ -2037,7 +2037,7 @@ PageStackWindow {
             }
         }
     }
-
+/*
     ConfirmDialog {
         id: btPowerOnDialog
         titleText: appInfo.emptyStr+qsTr("Bluetooth transfering")
@@ -2069,7 +2069,7 @@ PageStackWindow {
             }
         }
     }
-
+*/
     Text {
         id: statusBarTitle
         x: 4
@@ -2176,8 +2176,11 @@ PageStackWindow {
     function activateSlot() {
         console.debug("window activateSlot symbian.foreground " + symbian.foreground);
         if (symbian.foreground) {
-            var p = findPage("folderPage");
-            if (p) p.activateSlot();
+            pageStack.find(function (page) {
+                if (page.activateSlot) {
+                    page.activateSlot();
+                }
+            });
         }
     }
 }

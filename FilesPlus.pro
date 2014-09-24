@@ -224,6 +224,7 @@ simulator {
 }
 symbian {
     RESOURCES += FilesPlus_symbian.qrc
+
     # Define VER to use in cpp.
     VERSTR = '$${VERSION}'  # place quotes around the version string
     DEFINES += VER=\"$${VERSTR}\" # create a VER macro containing the version string
