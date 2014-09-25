@@ -5,7 +5,7 @@
     <name>AuthPage</name>
     <message>
         <location filename="../qml/FilesPlus/meego/AuthPage.qml" line="+222"/>
-        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+223"/>
+        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+236"/>
         <source>^API Request Authorized</source>
         <translation>^API Antrag Autorisiert</translation>
     </message>
@@ -32,6 +32,20 @@ Please click &apos;OK&apos; to continue.</source>
         <translation>+ FilesPlus speichert Ihre E-Mail nur während der Autorisierung, diese wird nicht an Personen / Dienste mitgeteilt.
 + FilesPlus nie speichert Ihr Passwort. Es speichert nur die empfangenen Token, welche für die Verbindung mit dem Dienstanbieter verwendet wird.
 + FilesPlus erkennt Ihre Sprachinformationen und speichert intern die gewählte Sprache. Es wird keine Informationen mit Personen / Diensten zu teilen.
+
+Bitte klicken Sie auf &apos;OK&apos;, um fortzufahren.</translation>
+    </message>
+    <message>
+        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+23"/>
+        <source>Authorization</source>
+        <translation>Autorisieren</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>FilesPlus will open Dropbox authorization page with web browser.
+
+Please click &apos;OK&apos; to continue.</source>
+        <translation>FilesPlus wird Dropbox Genehmigung Seite mit Web-Browser zu öffnen.
 
 Bitte klicken Sie auf &apos;OK&apos;, um fortzufahren.</translation>
     </message>
@@ -190,7 +204,7 @@ Bitte klicken Sie auf &apos;OK&apos;, um fortzufahren.</translation>
     </message>
     <message>
         <location line="+85"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+84"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+82"/>
         <source>Remove cloud drive account</source>
         <translation>Cloud-Speicher Konto entfernen</translation>
     </message>
@@ -3580,8 +3594,7 @@ Bitte bestätigen Sie.</translation>
         <location line="+637"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+46"/>
         <location line="+335"/>
-        <location line="+83"/>
-        <location line="+277"/>
+        <location line="+360"/>
         <location line="+641"/>
         <source>%1 is loaded.</source>
         <translation>%1 wird geladen.</translation>
@@ -4021,7 +4034,7 @@ Link wird entfernt.</translation>
     </message>
     <message>
         <location line="-264"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+139"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+140"/>
         <source>Share file on %1</source>
         <translation>Teile Link auf %1</translation>
     </message>
@@ -4033,27 +4046,25 @@ Link wird entfernt.</translation>
     </message>
     <message>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+8"/>
-        <location line="+13"/>
         <source>Bluetooth transfering</source>
         <translation>Bluetooth-Übertragung</translation>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="+1"/>
         <source>Cancel</source>
         <translation>Abbrechen</translation>
     </message>
     <message>
-        <location line="+13"/>
         <source>Transfering requires Bluetooth.
 
 Please click &apos;OK&apos; to turn Bluetooth on.</source>
-        <translation>Übertragung erfordert Bluetooth.
+        <translation type="obsolete">Übertragung erfordert Bluetooth.
 
 Bitte klicken Sie auf &quot;OK&quot;, um Bluetooth einzuschalten.</translation>
     </message>
     <message>
         <location filename="../qml/FilesPlus/meego/main.qml" line="+391"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+68"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+81"/>
         <source>Please wait while loading.</source>
         <translation>Bitte warten beim Laden.</translation>
     </message>

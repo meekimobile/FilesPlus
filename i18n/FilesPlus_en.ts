@@ -5,7 +5,7 @@
     <name>AuthPage</name>
     <message>
         <location filename="../qml/FilesPlus/meego/AuthPage.qml" line="+222"/>
-        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+223"/>
+        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+236"/>
         <source>^API Request Authorized</source>
         <translation>^API Request Authorized</translation>
     </message>
@@ -32,6 +32,20 @@ Please click &apos;OK&apos; to continue.</source>
         <translation>+ FilesPlus stores only your email during authorization but will not share to any persons/services.
 + FilesPlus never stores your password. It stores only received token which will be used for communicating only with its provider.
 + FilesPlus get your language information and stores selected language internally. It will not share to any persons/services.
+
+Please click &apos;OK&apos; to continue.</translation>
+    </message>
+    <message>
+        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+23"/>
+        <source>Authorization</source>
+        <translation>Authorization</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>FilesPlus will open Dropbox authorization page with web browser.
+
+Please click &apos;OK&apos; to continue.</source>
+        <translation>FilesPlus will open Dropbox authorization page with web browser.
 
 Please click &apos;OK&apos; to continue.</translation>
     </message>
@@ -188,7 +202,7 @@ Please click &apos;OK&apos; to continue.</translation>
     </message>
     <message>
         <location line="+85"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+84"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+82"/>
         <source>Remove cloud drive account</source>
         <translation>Remove CloudDrive account</translation>
     </message>
@@ -3614,8 +3628,7 @@ Please confirm.</translation>
         <location line="+637"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+46"/>
         <location line="+335"/>
-        <location line="+83"/>
-        <location line="+277"/>
+        <location line="+360"/>
         <location line="+641"/>
         <source>%1 is loaded.</source>
         <translation>%1 is loaded.</translation>
@@ -4053,7 +4066,7 @@ Link will be removed.</translation>
     </message>
     <message>
         <location line="-264"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+139"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+140"/>
         <source>Share file on %1</source>
         <translation>Share file on %1</translation>
     </message>
@@ -4065,27 +4078,25 @@ Link will be removed.</translation>
     </message>
     <message>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+8"/>
-        <location line="+13"/>
         <source>Bluetooth transfering</source>
         <translation>Bluetooth transferring</translation>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="+1"/>
         <source>Cancel</source>
         <translation>Cancel</translation>
     </message>
     <message>
-        <location line="+13"/>
         <source>Transfering requires Bluetooth.
 
 Please click &apos;OK&apos; to turn Bluetooth on.</source>
-        <translation>Transferring requires Bluetooth.
+        <translation type="obsolete">Transferring requires Bluetooth.
 
 Please click &apos;OK&apos; to turn Bluetooth on.</translation>
     </message>
     <message>
         <location filename="../qml/FilesPlus/meego/main.qml" line="+391"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+68"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+81"/>
         <source>Please wait while loading.</source>
         <translation>Please wait while loading.</translation>
     </message>

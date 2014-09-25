@@ -5,7 +5,7 @@
     <name>AuthPage</name>
     <message>
         <location filename="../qml/FilesPlus/meego/AuthPage.qml" line="+301"/>
-        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+301"/>
+        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+314"/>
         <source>+ FilesPlus stores only your email during authorization but will not share to any persons/services.
 + FilesPlus never stores your password. It stores only received token which will be used for communicating only with its provider.
 + FilesPlus get your language information and stores selected language internally. It will not share to any persons/services.
@@ -30,6 +30,23 @@ Please click &apos;OK&apos; to continue.</source>
         <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+16"/>
         <source>Privacy Policy</source>
         <translation>隐私政策</translation>
+    </message>
+    <message>
+        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+24"/>
+        <source>Authorization</source>
+        <translation>批准</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>FilesPlus will open Dropbox authorization page with web browser.
+
+Please click &apos;OK&apos; to continue.</source>
+        <translatorcomment>FilesPlus to open Dropbox login page in web browser.
+
+Please click &apos;OK&apos; to continue.</translatorcomment>
+        <translation>FilesPlus在网页浏览器中打开Dropbox的登录页面。
+
+请点击“确定”继续。</translation>
     </message>
 </context>
 <context>
@@ -169,7 +186,7 @@ Please click &apos;OK&apos; to continue.</source>
     <name>CloudDriveAccountsPage</name>
     <message>
         <location filename="../qml/FilesPlus/meego/CloudDriveAccountsPage.qml" line="+237"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+236"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+234"/>
         <source>Name</source>
         <translation>名称</translation>
     </message>
@@ -245,13 +262,13 @@ Please click &apos;OK&apos; to continue.</source>
     </message>
     <message>
         <location line="-450"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="-449"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="-447"/>
         <source>Cloud Drive Accounts</source>
         <translation>&lt;b&gt;Cloud Drive&lt;/b&gt;账户</translation>
     </message>
     <message>
         <location line="+273"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+272"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+270"/>
         <source>Input token</source>
         <translation>请输入授权信息</translation>
     </message>
@@ -335,13 +352,13 @@ Please click &apos;OK&apos; to continue.</source>
     </message>
     <message>
         <location line="-230"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="-229"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="-227"/>
         <source>Select Cloud Storage</source>
         <translation>选择&lt;b&gt;云存储&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="+250"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+249"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+247"/>
         <source>Input password</source>
         <translation>请输入密码</translation>
     </message>
@@ -2857,7 +2874,7 @@ Please proceed your sync action.</source>
     </message>
     <message>
         <location line="+1387"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1635"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1636"/>
         <source>Loading</source>
         <translation>正在加载中</translation>
     </message>
@@ -2865,7 +2882,7 @@ Please proceed your sync action.</source>
         <location line="-413"/>
         <location line="+23"/>
         <location line="+3"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-515"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-516"/>
         <location line="+23"/>
         <location line="+3"/>
         <source>Migrate</source>
@@ -2873,13 +2890,13 @@ Please proceed your sync action.</source>
     </message>
     <message>
         <location line="+329"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+431"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+432"/>
         <source>Please wait while loading.</source>
         <translation>正在加载,请稍后.</translation>
     </message>
     <message>
         <location line="-1404"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1652"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1653"/>
         <source>Thank you for download FilesPlus.
 This is first time running, FilesPlus needs to load information from your drive.
 
@@ -2907,13 +2924,13 @@ Please click OK to continue.</source>
         <translation>不能添加书签。(%1 %2)</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+149"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+150"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
         <location filename="../qml/FilesPlus/meego/main.qml" line="-531"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-684"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-685"/>
         <source>Browse</source>
         <translation>浏览</translation>
     </message>
@@ -2966,23 +2983,22 @@ You will be redirected to authorization page.</source>
         <translation>重命名</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1669"/>
         <source>Transfering requires Bluetooth.
 
 Please click &apos;OK&apos; to turn Bluetooth on.</source>
-        <translation>传送文件需要开启蓝牙
+        <translation type="obsolete">传送文件需要开启蓝牙
 
 请按&apos;确定&apos;开启蓝牙.</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/meego/main.qml" line="+1098"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-22"/>
+        <location line="+1098"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1648"/>
         <source>Please download file with below link.</source>
         <translation>请使用下面链接下载文件.</translation>
     </message>
     <message>
         <location line="-937"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1486"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1487"/>
         <source>Change to have app access to your Dropbox?</source>
         <translation>授权程序的Dropbox全功能访问权限?</translation>
     </message>
@@ -3043,13 +3059,12 @@ Please click OK to continue.</source>
 请按&apos;确定&apos;继续.</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1558"/>
-        <location line="+13"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+1559"/>
         <source>Bluetooth transfering</source>
         <translation>正在通过蓝牙传送</translation>
     </message>
     <message>
-        <location line="-1298"/>
+        <location line="-1286"/>
         <source>Other recipient</source>
         <translation>其他接收人</translation>
     </message>
@@ -3091,8 +3106,7 @@ Please re-authorize your accounts before proceed your actions.</source>
         <location line="+637"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="-70"/>
         <location line="+335"/>
-        <location line="+83"/>
-        <location line="+277"/>
+        <location line="+360"/>
         <location line="+641"/>
         <source>%1 is loaded.</source>
         <translation>%1 已上传.</translation>
@@ -3143,13 +3157,13 @@ Please re-authorize your accounts before proceed your actions.</source>
     </message>
     <message>
         <location line="+379"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+786"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+787"/>
         <source>Share file on %1</source>
         <translation>分享 %1 的文件</translation>
     </message>
     <message numerus="yes">
         <location line="-990"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1539"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="-1540"/>
         <source>Cancel %n job(s) ?</source>
         <translation>
             <numerusform>取消 %n 事件?</numerusform>

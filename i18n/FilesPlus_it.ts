@@ -321,7 +321,7 @@ Si prega di fare clic su OK per continuare.</translation>
     <name>AuthPage</name>
     <message>
         <location filename="../qml/FilesPlus/meego/AuthPage.qml" line="+222"/>
-        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+223"/>
+        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+236"/>
         <source>^API Request Authorized</source>
         <translation>^API Request Authorized</translation>
     </message>
@@ -350,6 +350,20 @@ Please click &apos;OK&apos; to continue.</source>
 + FilesPlus memorizza le informazioni sulla vostra lingua selezionata internamente. Non condivide nessuna informazione con altre persone e/o servizi.
 
 Premi &apos;OK&apos; per continuare.</translation>
+    </message>
+    <message>
+        <location filename="../qml/FilesPlus/symbian/AuthPage.qml" line="+23"/>
+        <source>Authorization</source>
+        <translation>Autorizzare</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>FilesPlus will open Dropbox authorization page with web browser.
+
+Please click &apos;OK&apos; to continue.</source>
+        <translation>FilesPLUS si aprirà la pagina di autorizzazione di Dropbox con il browser web.
+
+Si prega di fare clic su &apos;OK&apos; per continuare.</translation>
     </message>
 </context>
 <context>
@@ -505,7 +519,7 @@ Premi &apos;OK&apos; per continuare.</translation>
     </message>
     <message>
         <location line="+85"/>
-        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+84"/>
+        <location filename="../qml/FilesPlus/symbian/CloudDriveAccountsPage.qml" line="+82"/>
         <source>Remove cloud drive account</source>
         <translation>Rimuovi l&apos;account Cloud</translation>
     </message>
@@ -3868,8 +3882,7 @@ Conferma.</translation>
         <location line="+637"/>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+46"/>
         <location line="+335"/>
-        <location line="+83"/>
-        <location line="+277"/>
+        <location line="+360"/>
         <location line="+641"/>
         <source>%1 is loaded.</source>
         <translation>%1 viene caricato.</translation>
@@ -4308,7 +4321,7 @@ Il link verrà rimosso.</translation>
     </message>
     <message>
         <location line="-264"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+139"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+140"/>
         <source>Share file on %1</source>
         <translation>Condivisione di file su %1</translation>
     </message>
@@ -4320,27 +4333,25 @@ Il link verrà rimosso.</translation>
     </message>
     <message>
         <location filename="../qml/FilesPlus/symbian/main.qml" line="+8"/>
-        <location line="+13"/>
         <source>Bluetooth transfering</source>
         <translation>Bluetooth il trasferimento</translation>
     </message>
     <message>
-        <location line="-12"/>
+        <location line="+1"/>
         <source>Cancel</source>
         <translation>Cancella</translation>
     </message>
     <message>
-        <location line="+13"/>
         <source>Transfering requires Bluetooth.
 
 Please click &apos;OK&apos; to turn Bluetooth on.</source>
-        <translation>Il trasferimento richiede Bluetooth.
+        <translation type="obsolete">Il trasferimento richiede Bluetooth.
 
 Si prega di fare clic su &apos;OK&apos; per attivare il Bluetooth.</translation>
     </message>
     <message>
         <location filename="../qml/FilesPlus/meego/main.qml" line="+391"/>
-        <location filename="../qml/FilesPlus/symbian/main.qml" line="+68"/>
+        <location filename="../qml/FilesPlus/symbian/main.qml" line="+81"/>
         <source>Please wait while loading.</source>
         <translation>Attendere il caricamento.</translation>
     </message>
