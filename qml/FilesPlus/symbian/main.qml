@@ -1164,13 +1164,13 @@ PageStackWindow {
         }
 
         function getUidEmail(type, uid) {
-            // Get uid list from DropboxClient.
             var dbUidList = cloudDriveModel.getStoredUidList(type);
-
-            for (var i=0; i<dbUidList.length; i++)
-            {
+//            console.debug("cloudDriveModel getUidEmail dbUidList " + dbUidList);
+            for (var i=0; i<dbUidList.length; i++) {
                 var json = JSON.parse(dbUidList[i]);
-                if (uid == json.uid) return json.email;
+                if (uid === json.uid) {
+                    return json.email;
+                }
             }
 
             return "";
@@ -1604,7 +1604,7 @@ PageStackWindow {
         }
 
         onShareFileReplySignal: {
-            console.debug("window cloudDriveModel onShareFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg + " " + url + " " + expires);
+            console.debug("window cloudDriveModel onShareFileReplySignal " + nonce + " " + err + " " + errMsg + " " + msg + " " + url + " " + expires + " shareFileCaller " + shareFileCaller);
 
             var jobJson = cloudDriveModel.getJobJson(nonce);
 
@@ -2015,7 +2015,8 @@ PageStackWindow {
     function showRecipientSelectionDialogSlot(cloudDriveType, uid, localPath, fileName, url) {
         // Open recipientSelectionDialog for sending share link.
         var senderEmail = cloudDriveModel.getUidEmail(cloudDriveType, uid);
-        if (senderEmail != "") {
+        console.debug("main showRecipientSelectionDialogSlot cloudDriveType " + cloudDriveType + " uid " + uid + " senderEmail " + senderEmail);
+        if (senderEmail !== "") {
             recipientSelectionDialog.srcFilePath = localPath;
             recipientSelectionDialog.srcFileName = fileName;
             recipientSelectionDialog.messageSubject = appInfo.emptyStr+qsTr("Share file on %1").arg(cloudDriveModel.getCloudName(cloudDriveType));
