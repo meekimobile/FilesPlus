@@ -21,6 +21,7 @@
 #include "customqnetworkaccessmanagerfactory.h"
 #include "compressedfoldermodel.h"
 #include "cacheimagehelper.h"
+#include "databasemanager.h"
 
 static const QString OrgName = "MeekiMobile";
 static const QString AppName = "FilesPlus";
@@ -228,29 +229,7 @@ void initializeDefaultSettings(QSettings *m_settings)
 
 void initializeDefaultDB()
 {
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-#if defined(Q_WS_HARMATTAN)
-    // Create cache database path if it's not exist.
-    QDir dbPath("/home/user/.filesplus");
-    if (!dbPath.exists()) {
-        qDebug() << "main default database path" << dbPath.absolutePath() << "doesn't exists.";
-        bool res = QDir::home().mkpath(dbPath.absolutePath());
-        if (!res) {
-            qDebug() << "main default database path" << dbPath.absolutePath() << "can't be created.";
-        } else {
-            qDebug() << "main default database path" << dbPath.absolutePath() << "is created.";
-        }
-    }
-    db.setDatabaseName(dbPath.absoluteFilePath("default.db"));
-#else
-    db.setDatabaseName("default.db");
-#endif
-    if (db.open()) {
-        qDebug() << "main initialize default database successfully.";
-    } else {
-        qDebug() << "main initialize default database failed." << db.lastError().type() << db.lastError().text();
-    }
-    db.close();
+    DatabaseManager::defaultManager().initializeDB();
 }
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
