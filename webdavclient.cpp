@@ -142,8 +142,10 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    // NOTE: These signal/slot connection work in both sync/async as eventloop is being processed while waiting.
+    connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)) );
     if (!synchronous) {
-        connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(propertyReplyFinished(QNetworkReply*)) );
     }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
@@ -238,6 +240,7 @@ void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, 
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
@@ -277,6 +280,7 @@ void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, 
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(copyFileReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
@@ -304,8 +308,9 @@ QString WebDavClient::deleteFile(QString nonce, QString uid, QString remoteFileP
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
-        connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deleteFileReplyFinished(QNetworkReply*)));
     }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
@@ -348,8 +353,9 @@ QString WebDavClient::shareFile(QString nonce, QString uid, QString remoteFilePa
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
-        connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)));
     }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
@@ -398,6 +404,8 @@ QString WebDavClient::media(QString nonce, QString uid, QString remoteFilePath)
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
     req.setRawHeader("Authorization", authHeader);
@@ -447,8 +455,9 @@ QString WebDavClient::createFolder(QString nonce, QString uid, QString remotePar
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
-        connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(createFolderReplyFinished(QNetworkReply*)));
     }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
@@ -491,8 +500,10 @@ QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFileP
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
-        connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
+        // TODO: Why disable fileGet signal/slot?
 //        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetReplyFinished(QNetworkReply*)));
     }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
@@ -554,8 +565,9 @@ QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *sour
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
+    connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
-        connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)));
     }
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
@@ -613,6 +625,7 @@ QIODevice *WebDavClient::fileGetResume(QString nonce, QString uid, QString remot
 
     // Send request.
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetResumeReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
@@ -1392,6 +1405,16 @@ void WebDavClient::sslErrorsReplyFilter(QList<QSslError> sslErrors)
     }
 }
 
+void WebDavClient::authenticationReplyFilter(QNetworkReply *reply, QAuthenticator *authenticator)
+{
+    QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
+    qDebug() << "WebDavClient::authenticationReplyFilter nonce" << nonce << "reply" << reply << "authenticator" << authenticator;
+
+    // TODO: Get user/password from map.
+    authenticator->setUser("ktaweesak");
+    authenticator->setPassword("Maijung04");
+}
+
 QString WebDavClient::fileGetReplyResult(QNetworkReply *reply)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
@@ -1400,6 +1423,7 @@ QString WebDavClient::fileGetReplyResult(QNetworkReply *reply)
 
     QString result;
     if (reply->error() == QNetworkReply::NoError) {
+        // TODO: Why did it invoke superclass property()?
         QNetworkReply *propertyReply = property(nonce, uid, remoteFilePath, false, true, "fileGetReplyResult");
         if (propertyReply != 0 && propertyReply->error() == QNetworkReply::NoError) {
             result = createPropertyJson(QString::fromUtf8(propertyReply->readAll()), "fileGetReplyResult");
@@ -1419,4 +1443,37 @@ QString WebDavClient::fileGetReplyResult(QNetworkReply *reply)
     }
 
     return result;
+}
+
+void WebDavClient::saveAccessPairMap() {
+    // Workaround fix to remove tokenPair with key="" or tokenPair without both email and token.
+    accessTokenPairMap.remove("");
+    foreach (QString uid, accessTokenPairMap.keys()) {
+        if (accessTokenPairMap[uid].email == "" && accessTokenPairMap[uid].token == "") {
+            accessTokenPairMap.remove(uid);
+        }
+    }
+
+    QFile file(KeyStoreFilePath.arg(objectName()));
+    QFileInfo info(file);
+    if (!info.absoluteDir().exists()) {
+        qDebug() << objectName() << "::saveAccessPairMap dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
+        bool res = QDir::home().mkpath(info.absolutePath());
+        if (!res) {
+            qDebug() << objectName() << "::saveAccessPairMap can't make dir" << info.absolutePath();
+        } else {
+            qDebug() << objectName() << "::saveAccessPairMap make dir" << info.absolutePath();
+        }
+    }
+
+    if (file.open(QIODevice::WriteOnly)) {
+        QDataStream out(&file);   // we will serialize the data into the file
+        out << accessTokenPairMap;
+        file.flush();
+        file.close();
+
+        qDebug() << objectName() << "::saveAccessPairMap" << accessTokenPairMap << "file" << info.absoluteFilePath();
+    } else {
+        qDebug() << objectName() << "::saveAccessPairMap can't open writable file" << info.absoluteFilePath();
+    }
 }

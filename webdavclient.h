@@ -47,6 +47,7 @@ signals:
 public slots:
     void sslErrorsReplyFilter(QNetworkReply *reply, QList<QSslError> sslErrors);
     void sslErrorsReplyFilter(QList<QSslError> sslErrors);
+    void authenticationReplyFilter(QNetworkReply *reply, QAuthenticator *authenticator);
 
     void accessTokenReplyFinished(QNetworkReply *reply);
     void accountInfoReplyFinished(QNetworkReply *reply);
@@ -62,6 +63,7 @@ protected:
     QScriptValue parseCommonPropertyScriptValue(QScriptEngine &engine, QScriptValue jsonObj);
     QString fileGetReplyResult(QNetworkReply *reply);
     QString filePutReplyResult(QNetworkReply *reply);
+    void saveAccessPairMap();
 private:
     QHash<QString, QString> m_remoteRootHash;
 
