@@ -15,10 +15,14 @@ DEPLOYMENTFOLDERS = i18n_folder config_folder
 QML_IMPORT_PATH =
 
 # Change UID3 to protected UID for publishing to Nokia Store.
-#symbian:TARGET.UID3 = 0xE11DCC9D
-symbian:TARGET.UID3 = 0x20064E45
+#symbian:TARGET.UID3 = 0xE11DCC9D #unprotected UID for dev.
+#symbian:TARGET.UID3 = 0x20064E45 #protected UID for dev.
 
-VERSION = 1.3.3
+# ISSUE:Not work on stock firmware unless you have valid 3rd party certificate.
+symbian:TARGET.UID3 = 0xA11DCC9D #unprotected UID for unsigned app.
+
+
+VERSION = 1.3.4
 
 # Smart Installer package's UID
 # This UID is from the protected range and therefore the package will
