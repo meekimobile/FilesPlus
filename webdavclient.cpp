@@ -153,10 +153,11 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
     if (synchronous && m_settings.value(objectName() + ".ignoreSSLSelfSignedCertificateErrors", QVariant(false)).toBool()) {
         req.setSslConfiguration(getSelfSignedSslConfiguration(req.sslConfiguration()));
     }
+    // NOTE: Request attributes must be ordered nonce, uid, ... to support authenticationReplyFilter().
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
-    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(callback));
-    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(uid));
-    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3), QVariant(remoteFilePath));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2), QVariant(remoteFilePath));
+    req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3), QVariant(callback));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "text/xml");
     req.setHeader(QNetworkRequest::ContentLengthHeader, m_bufferHash[nonce]->size());
     req.setRawHeader("Authorization", authHeader);
@@ -1104,9 +1105,9 @@ QString WebDavClient::filePutReplyResult(QNetworkReply *reply)
 void WebDavClient::propertyReplyFinished(QNetworkReply *reply)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-    QString callback = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
-    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
-    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3)).toString();
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    QString remoteFilePath = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 2)).toString();
+    QString callback = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 3)).toString();
 
     qDebug() << "WebDavClient::propertyReplyFinished" << nonce << callback << uid << remoteFilePath << "reply" << reply << QString("Error=%1").arg(reply->error());
 
@@ -1408,11 +1409,20 @@ void WebDavClient::sslErrorsReplyFilter(QList<QSslError> sslErrors)
 void WebDavClient::authenticationReplyFilter(QNetworkReply *reply, QAuthenticator *authenticator)
 {
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
-    qDebug() << "WebDavClient::authenticationReplyFilter nonce" << nonce << "reply" << reply << "authenticator" << authenticator;
+    QString uid = reply->request().attribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1)).toString();
+    qDebug() << "WebDavClient::authenticationReplyFilter nonce" << nonce << "uid" << uid << "reply" << reply << "authenticator" << authenticator;
 
-    // TODO: Get user/password from map.
-    authenticator->setUser("ktaweesak");
-    authenticator->setPassword("Maijung04");
+    if (accessTokenPairMap.contains(uid)) {
+        if (accessTokenPairMap[uid].token.toLower() == "basic") {
+            QByteArray token;
+            QString username = accessTokenPairMap[uid].email.mid(0, accessTokenPairMap[uid].email.lastIndexOf("@"));
+            QString password = accessTokenPairMap[uid].secret;
+            qDebug() << "WebDavClient::authenticationReplyFilter nonce" << nonce << "uid" << uid << "username" << username << "password" << password;
+
+            authenticator->setUser(username);
+            authenticator->setPassword(password);
+        }
+    }
 }
 
 QString WebDavClient::fileGetReplyResult(QNetworkReply *reply)
