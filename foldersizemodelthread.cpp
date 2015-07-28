@@ -1,6 +1,7 @@
 #include "foldersizemodelthread.h"
 #include "foldersizeitem.h"
 #include "foldersizeitemlistmodel.h"
+#include "databasemanager.h"
 #include <QDebug>
 #include <QCoreApplication>
 #include <QDesktopServices>
@@ -70,17 +71,11 @@ bool sizeGreaterThan(const FolderSizeItem &o1, const FolderSizeItem &o2)
 }
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
-const QString FolderSizeModelThread::CACHE_FILE_PATH = "/home/user/.folderpie/FolderPieCache.dat";
-const QString FolderSizeModelThread::CACHE_DB_PATH = "/home/user/.folderpie/FolderPieCache.db";
-const QString FolderSizeModelThread::CACHE_DB_CONNECTION_NAME = "folderpie_cache";
 const QString FolderSizeModelThread::DEFAULT_CURRENT_DIR = "/home/user/MyDocs";
 const int FolderSizeModelThread::FILE_READ_BUFFER = 1048576;
 const int FolderSizeModelThread::FILE_COPY_DELAY = 50;
 const int FolderSizeModelThread::FILE_DELETE_DELAY = 200;
 #else
-const QString FolderSizeModelThread::CACHE_FILE_PATH = QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/FolderPieCache.dat";
-const QString FolderSizeModelThread::CACHE_DB_PATH = "FolderPieCache.db"; // Symbian supports only default database file location.
-const QString FolderSizeModelThread::CACHE_DB_CONNECTION_NAME = "folderpie_cache";
 const QString FolderSizeModelThread::DEFAULT_CURRENT_DIR = "E:/";
 const int FolderSizeModelThread::FILE_READ_BUFFER = 32768;
 const int FolderSizeModelThread::FILE_COPY_DELAY = 50;
@@ -119,9 +114,8 @@ FolderSizeModelThread::FolderSizeModelThread(QObject *parent) : QThread(parent)
 //    m_db.close();
 //#endif
 
-    // TODO Initialize SQLLITE DB.
-    // Moved to enqueue while constructing model class.
-//    initializeDB();
+    // Initialize DB queries.
+    initializeDB();
 
 //    m_currentDir = DEFAULT_CURRENT_DIR;
 //    m_sortFlag = getSortFlagFromDB(m_currentDir, SortByType);
@@ -134,97 +128,34 @@ FolderSizeModelThread::FolderSizeModelThread(QObject *parent) : QThread(parent)
 
 FolderSizeModelThread::~FolderSizeModelThread()
 {
-    // Close database before destroyed.
-    closeDB();
 }
 
 void FolderSizeModelThread::initializeDB()
 {
-    qDebug() << "FolderSizeModelThread::initializeDB started";
-    emit initializeDBStarted();
-
-    // Create cache database path if it's not exist.
-    QFile file(CACHE_DB_PATH);
-    QFileInfo info(file);
-    if (!info.absoluteDir().exists()) {
-        qDebug() << "FolderSizeModelThread::initializeDB dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
-        bool res = QDir::home().mkpath(info.absolutePath());
-        if (!res) {
-            qDebug() << "FolderSizeModelThread::initializeDB can't make dir" << info.absolutePath();
-        } else {
-            qDebug() << "FolderSizeModelThread::initializeDB make dir" << info.absolutePath();
-        }
-    }
-
-    // First initialization.
-    m_db = QSqlDatabase::addDatabase("QSQLITE", CACHE_DB_CONNECTION_NAME);
-    m_db.setDatabaseName(CACHE_DB_PATH);    
-    bool ok = m_db.open();
-    qDebug() << "FolderSizeModelThread::initializeDB" << ok << "connectionName" << m_db.connectionName() << "databaseName" << m_db.databaseName() << "driverName" << m_db.driverName();
-
-    // Fix damaged DB.
-    fixDamagedDB();
-
-    QSqlQuery query(m_db);
-    bool res = false;
-
-    res = query.exec("CREATE TABLE folderpie_cache(id TEXT PRIMARY_KEY, name TEXT, absolute_path TEXT, last_modified TEXT, size INTEGER, is_dir INTEGER, sub_dir_count INTEGER, sub_file_count INTEGER, file_type TEXT)");
-    if (res) {
-        qDebug() << "FolderSizeModelThread::initializeDB CREATE TABLE folderpie_cache is done.";
-    } else {
-        qDebug() << "FolderSizeModelThread::initializeDB CREATE TABLE folderpie_cache is failed. Error" << query.lastError();
-    }
-
-    res = query.exec("CREATE UNIQUE INDEX IF NOT EXISTS folderpie_cache_pk ON folderpie_cache (id)");
-    if (res) {
-        qDebug() << "FolderSizeModelThread::initializeDB CREATE INDEX folderpie_cache_pk is done.";
-    } else {
-        qDebug() << "FolderSizeModelThread::initializeDB CREATE INDEX folderpie_cache_pk is failed. Error" << query.lastError();
-    }
-
-    // TODO Additional initialization.
-    res = query.exec("ALTER TABLE folderpie_cache ADD COLUMN sort_flag INTEGER");
-    if (res) {
-        qDebug() << "FolderSizeModelThread::initializeDB adding column folderpie_cache.sort_flag is done.";
-    } else {
-        qDebug() << "FolderSizeModelThread::initializeDB adding column folderpie_cache.sort_flag is failed. Error" << query.lastError();
-    }
-
     // Prepare queries.
-    m_selectPS = QSqlQuery(m_db);
+    m_selectPS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_selectPS.prepare("SELECT * FROM folderpie_cache WHERE id = :id");
 
-    m_insertPS = QSqlQuery(m_db);
+    m_insertPS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_insertPS.prepare("INSERT INTO folderpie_cache(id, name, absolute_path, last_modified, size, is_dir, sub_dir_count, sub_file_count, file_type)"
                        " VALUES (:id, :name, :absolute_path, :last_modified, :size, :is_dir, :sub_dir_count, :sub_file_count, :file_type)");
 
-    m_updatePS = QSqlQuery(m_db);
+    m_updatePS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_updatePS.prepare("UPDATE folderpie_cache SET"
                        " name = :name, absolute_path = :absolute_path, last_modified = :last_modified, size = :size,"
                        " is_dir = :is_dir, sub_dir_count = :sub_dir_count, sub_file_count = :sub_file_count, file_type = :file_type"
                        " WHERE id = :id");
 
-    m_deletePS = QSqlQuery(m_db);
+    m_deletePS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_deletePS.prepare("DELETE FROM folderpie_cache WHERE id = :id");
 
-    m_countPS = QSqlQuery(m_db);
+    m_countPS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_countPS.prepare("SELECT count(*) count FROM folderpie_cache");
-
-    // Process pending events.
-    QApplication::processEvents();
-
-    emit initializeDBFinished();
-}
-
-void FolderSizeModelThread::closeDB()
-{
-    qDebug() << "FolderSizeModelThread::closeDB" << countDirSizeCacheDB();
-    m_db.close();
 }
 
 void FolderSizeModelThread::fixDamagedDB()
 {
-    QSqlQuery query(m_db);
+    QSqlQuery query(DatabaseManager::defaultManager().getDB());
     bool res;
 
     // Test database table.
@@ -253,7 +184,7 @@ void FolderSizeModelThread::fixDamagedDB()
     }
 
     // TODO Workaround. Delete duplicated unique item to fix QSqlError 19 indexed columns are not unique.
-    QSqlQuery deleteDuplicatedPS(m_db);
+    QSqlQuery deleteDuplicatedPS(DatabaseManager::defaultManager().getDB());
     deleteDuplicatedPS.prepare("DELETE FROM folderpie_cache WHERE id = :id AND rowid < :rowid;");
 
     res = query.exec("SELECT id, count(*) c, max(rowid) max_rowid FROM folderpie_cache GROUP BY id HAVING count(*) > 1;");
@@ -345,7 +276,7 @@ int FolderSizeModelThread::insertDirSizeCacheToDB(const FolderSizeItem item)
     res = m_insertPS.exec();
     if (res) {
         qDebug() << "FolderSizeModelThread::insertDirSizeCacheToDB insert done" << item << "res" << res << "numRowsAffected" << m_insertPS.numRowsAffected();
-        m_db.commit();
+        DatabaseManager::defaultManager().getDB().commit();
 
         // Insert item to itemCache.
         m_itemCache->insert(item.absolutePath, item);
@@ -372,7 +303,7 @@ int FolderSizeModelThread::updateDirSizeCacheToDB(const FolderSizeItem item)
     res = m_updatePS.exec();
     if (res) {
         qDebug() << "FolderSizeModelThread::updateDirSizeCacheToDB update done" << item << "res" << res << "numRowsAffected" << m_updatePS.numRowsAffected();
-        m_db.commit();
+        DatabaseManager::defaultManager().getDB().commit();
 
         // Insert item to itemCache.
         m_itemCache->insert(item.absolutePath, item);
@@ -387,7 +318,7 @@ int FolderSizeModelThread::updateDirSizeCacheTreeToDB(const QString oldAbsPath, 
 {
     bool res;
 
-    QSqlQuery m_updateTreePS(m_db);
+    QSqlQuery m_updateTreePS(DatabaseManager::defaultManager().getDB());
     m_updateTreePS.prepare("UPDATE folderpie_cache SET"
                        " absolute_path = REPLACE(absolute_path, :old_absolute_path, :new_absolute_path),"
                        " id = REPLACE(id, :old_id, :new_id)"
@@ -401,7 +332,7 @@ int FolderSizeModelThread::updateDirSizeCacheTreeToDB(const QString oldAbsPath, 
     res = m_updateTreePS.exec();
     if (res) {
         qDebug() << "FolderSizeModelThread::updateDirSizeCacheTreeToDB update done" << oldAbsPath << "res" << res << "numRowsAffected" << m_updateTreePS.numRowsAffected();
-        m_db.commit();
+        DatabaseManager::defaultManager().getDB().commit();
 
         // Remove source item from itemCache.
         m_itemCache->remove(oldAbsPath);
@@ -420,7 +351,7 @@ int FolderSizeModelThread::deleteDirSizeCacheToDB(const QString id)
     res = m_deletePS.exec();
     if (res) {
         qDebug() << "FolderSizeModelThread::deleteDirSizeCacheToDB delete done" << id << "res" << res << "numRowsAffected" << m_deletePS.numRowsAffected();
-        m_db.commit();
+        DatabaseManager::defaultManager().getDB().commit();
 
         // Remove item from itemCache.
         m_itemCache->remove(id);
@@ -435,13 +366,13 @@ int FolderSizeModelThread::deleteDirSizeCacheTreeToDB(const QString id)
 {
     bool res;
 
-    QSqlQuery m_deleteTreePS(m_db);
+    QSqlQuery m_deleteTreePS(DatabaseManager::defaultManager().getDB());
     m_deleteTreePS.prepare("DELETE FROM folderpie_cache WHERE id like :id||'/%'");
     m_deleteTreePS.bindValue(":id", id);
     res = m_deleteTreePS.exec();
     if (res) {
         qDebug() << "FolderSizeModelThread::deleteDirSizeCacheTreeToDB delete done" << id << "res" << res << "numRowsAffected" << m_deleteTreePS.numRowsAffected();
-        m_db.commit();
+        DatabaseManager::defaultManager().getDB().commit();
 
         // Remove item to itemCache.
         m_itemCache->remove(id);
@@ -471,47 +402,6 @@ int FolderSizeModelThread::countDirSizeCacheDB()
 QString FolderSizeModelThread::currentDir() const
 {
     return m_currentDir;
-}
-
-void FolderSizeModelThread::loadDirSizeCache() {
-    // TODO load caches from file.
-//    qDebug() << "FolderSizeModelThread::loadDirSizeCache CACHE_FILE_PATH" << CACHE_FILE_PATH << "DEFAULT_CURRENT_DIR" << DEFAULT_CURRENT_DIR;
-    QFile file(CACHE_FILE_PATH);
-    if (file.open(QIODevice::ReadOnly)) {
-        QDataStream in(&file);    // read the data serialized from the file
-        in >> *dirSizeCache;
-
-        qDebug() << QTime::currentTime() << "FolderSizeModelThread::loadDirSizeCache " << dirSizeCache->count();
-
-        emit loadDirSizeCacheFinished();
-    }
-}
-
-void FolderSizeModelThread::saveDirSizeCache() {
-    if (!dirSizeCache->isEmpty()) {
-        // TODO save caches from file.
-
-        // TODO Clean up invalid items.
-        cleanItems();
-
-        QFile file(CACHE_FILE_PATH);
-        QFileInfo info(file);
-        if (!info.absoluteDir().exists()) {
-            qDebug() << "FolderSizeModelThread::saveDirSizeCache dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
-            bool res = QDir::home().mkpath(info.absolutePath());
-            if (!res) {
-                qDebug() << "FolderSizeModelThread::saveDirSizeCache can't make dir" << info.absolutePath();
-            } else {
-                qDebug() << "FolderSizeModelThread::saveDirSizeCache make dir" << info.absolutePath();
-            }
-        }
-        if (file.open(QIODevice::WriteOnly)) {
-            QDataStream out(&file);   // we will serialize the data into the file
-            out << *dirSizeCache;
-
-            qDebug() << "FolderSizeModelThread::saveDirSizeCache " << dirSizeCache->count();
-        }
-    }
 }
 
 void FolderSizeModelThread::cleanItems()
@@ -900,7 +790,7 @@ bool FolderSizeModelThread::isDirSizeCacheExisting()
 {
     // Return true if cache is not empty or cache is loading.
 //    qDebug() << "FolderSizeModelThread::isDirSizeCacheExisting isRunning(LoadDirSizeCache)" << (isRunning() && m_runMethod == LoadDirSizeCache) << "dirSizeCache" << (dirSizeCache->count()) << "countDirSizeCacheDB" << (countDirSizeCacheDB());
-    return ( (isRunning() && m_runMethod == LoadDirSizeCache) || dirSizeCache->count() > 0 || countDirSizeCacheDB() > 0);
+    return (dirSizeCache->count() > 0 || countDirSizeCacheDB() > 0);
 }
 
 int FolderSizeModelThread::removeDirSizeCache(const QString key)
@@ -1284,7 +1174,7 @@ int FolderSizeModelThread::getSortFlagFromDB(const QString absolutePath, const i
 {
     // TODO Get sortFlag from DB
     int sortFlag;
-    QSqlQuery query(m_db);
+    QSqlQuery query(DatabaseManager::defaultManager().getDB());
     query.prepare("SELECT sort_flag FROM folderpie_cache WHERE id = :id");
     query.bindValue(":id", absolutePath);
     if (query.exec()) {
@@ -1311,12 +1201,12 @@ bool FolderSizeModelThread::setSortFlag(int sortFlag, bool saveSortFlag)
 
         // TODO Save to DB
         if (saveSortFlag) {
-            QSqlQuery query(m_db);
+            QSqlQuery query(DatabaseManager::defaultManager().getDB());
             query.prepare("UPDATE folderpie_cache SET sort_flag = :sort_flag WHERE id = :id");
             query.bindValue(":sort_flag", m_sortFlag);
             query.bindValue(":id", m_currentDir);
             if (query.exec()) {
-                m_db.commit();
+                DatabaseManager::defaultManager().getDB().commit();
                 qDebug() << "FolderSizeModelThread::setSortFlag update sortFlag" << m_currentDir << " sortFlag " << m_sortFlag;
             }
         }
@@ -1416,9 +1306,6 @@ void FolderSizeModelThread::run()
     case FetchDirSize:
         fetchDirSize(m_sourcePath, m_clearCache);
         break;
-    case LoadDirSizeCache:
-        loadDirSizeCache();
-        break;
     case CopyFile:
         if (copy(m_runMethod, m_sourcePath, m_targetPath)) {
             // Reset copy method parameters
@@ -1468,9 +1355,6 @@ void FolderSizeModelThread::run()
                 emit deleteFinished(m_runMethod, m_sourcePath, tr("Deleting %1 is aborted.").arg(m_sourcePath), -2);
             }
         }
-        break;
-    case InitializeDB:
-        initializeDB();
         break;
     case TrashFile:
         if (trash(m_sourcePath, m_targetPath)) {

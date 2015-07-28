@@ -55,9 +55,6 @@ class CloudDriveModel : public QAbstractListModel
     Q_PROPERTY(int selectedIndex READ getSelectedIndex WRITE setSelectedIndex NOTIFY selectedIndexChanged)
     Q_PROPERTY(QString selectedRemotePath READ getSelectedRemotePath WRITE setSelectedRemotePath NOTIFY selectedIndexChanged)
 public:
-    static const QString ITEM_DAT_PATH;
-    static const QString ITEM_DB_PATH;
-    static const QString ITEM_DB_CONNECTION_NAME;
     static const QString TEMP_PATH;
     static const QString JOB_DAT_PATH;
     static const int MaxRunningJobCount;
@@ -90,9 +87,7 @@ public:
     };
 
     enum Operations {
-        LoadCloudDriveItems,
         LoadCloudDriveJobs,
-        InitializeDB,
         InitializeCloudClients,
         FileGet,
         FilePut,
@@ -362,9 +357,6 @@ public:
     QVariant getCloudDriveItemProperty(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString propertyName, QVariant defaultValue);
     bool setCloudDriveItemProperty(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString propertyName, QVariant value);
 signals:
-    void loadCloudDriveItemsFinished(QString nonce);
-    void initializeDBStarted(QString nonce);
-    void initializeDBFinished(QString nonce);
     void jobQueueStatusSignal(int runningJobCount, int jobQueueCount, int jobCount , int itemCount);
     void localChangedSignal(QString localPath);
     void refreshFolderCacheSignal(QString localPath);
@@ -417,7 +409,6 @@ public slots:
     void dispatchJob(CloudDriveJob job);
 
     void threadFinishedFilter();
-//    void loadCloudDriveItemsFilter(QString nonce);
     void requestTokenReplyFilter(QString nonce, int err, QString errMsg, QString msg);
     void authorizeRedirectFilter(QString nonce, QString url, QString redirectFrom);
     void accessTokenReplyFilter(QString nonce, int err, QString errMsg, QString msg);
@@ -473,7 +464,6 @@ private:
     QTimer m_jobQueueTimer;
     void initJobQueueTimer();
 
-    QSqlDatabase m_db;
     QSqlQuery m_selectByPrimaryKeyPS;
     QSqlQuery m_selectByLocalPathPS;
     QSqlQuery m_selectByTypePS;
@@ -486,10 +476,9 @@ private:
     QSqlQuery m_countPS;
     QSqlQuery m_countByLocalPathPS;
 
-    void initializeDB(QString nonce);
+    void initializeDB();
     void fixDamagedDB();
     void cleanDB();
-    void closeDB();
 
     QList<CloudDriveItem> getItemListFromPS(QSqlQuery ps);
     CloudDriveItem selectItemByPrimaryKeyFromDB(CloudDriveModel::ClientTypes type, QString uid, QString localPath);

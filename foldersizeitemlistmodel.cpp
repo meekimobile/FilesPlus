@@ -43,9 +43,6 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     m_indexOnCurrentDirHash = new QHash<QString, int>();
 
     // Connect model class with listModel.
-    connect(&m, SIGNAL(loadDirSizeCacheFinished()), this, SLOT(loadDirSizeCacheFinishedFilter()) );
-    connect(&m, SIGNAL(initializeDBStarted()), this, SIGNAL(initializeDBStarted()) );
-    connect(&m, SIGNAL(initializeDBFinished()), this, SLOT(initializeDBFinishedFilter()) );
     connect(&m, SIGNAL(fetchDirSizeStarted(QString)), this, SIGNAL(fetchDirSizeStarted(QString)) );
     connect(&m, SIGNAL(fetchDirSizeFinished(QString)), this, SLOT(fetchDirSizeFinishedFilter(QString)) );
     connect(&m, SIGNAL(copyStarted(int,QString,QString,QString,int)), this, SIGNAL(copyStarted(int,QString,QString,QString,int)) );
@@ -61,10 +58,6 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
     connect(&m, SIGNAL(started()), this, SIGNAL(isRunningChanged()));
     connect(&m, SIGNAL(finished()), this, SIGNAL(isRunningChanged()));
 
-    // Enqueue jobs. Queued jobs will proceed after folderPage is loaded.
-    m_jobQueue.enqueue(FolderSizeJob(createNonce(), FolderSizeModelThread::LoadDirSizeCache, "", ""));
-    m_jobQueue.enqueue(FolderSizeJob(createNonce(), FolderSizeModelThread::InitializeDB, "", ""));
-
     // Initialize FS watcher.
     initializeFSWatcher();
 
@@ -74,8 +67,6 @@ FolderSizeItemListModel::FolderSizeItemListModel(QObject *parent)
 
 FolderSizeItemListModel::~FolderSizeItemListModel()
 {
-    // Save cache
-    m.saveDirSizeCache();
 }
 
 int FolderSizeItemListModel::rowCount(const QModelIndex & parent) const {
@@ -1219,20 +1210,6 @@ int FolderSizeItemListModel::addItem(const QString absPath)
     }
 
     return index;
-}
-
-void FolderSizeItemListModel::loadDirSizeCacheFinishedFilter()
-{
-    emit loadDirSizeCacheFinished();
-
-    refreshDir("FolderSizeItemListModel::loadDirSizeCacheFinishedFilter");
-}
-
-void FolderSizeItemListModel::initializeDBFinishedFilter()
-{
-    emit initializeDBFinished();
-
-    requestTrashStatus();
 }
 
 void FolderSizeItemListModel::fetchDirSizeFinishedFilter(QString sourcePath)

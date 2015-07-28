@@ -2,6 +2,7 @@
 #include <QScriptValueIterator>
 #include <QDesktopServices>
 #include "cacheimageworker.h"
+#include "databasemanager.h"
 
 bool jsonNameLessThan(const QScriptValue &o1, const QScriptValue &o2)
 {
@@ -136,16 +137,10 @@ bool sizeGreaterThan(const CloudDriveModelItem &o1, const CloudDriveModelItem &o
 
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
-const QString CloudDriveModel::ITEM_DAT_PATH = "/home/user/.filesplus/CloudDriveModel.dat";
-const QString CloudDriveModel::ITEM_DB_PATH = "/home/user/.filesplus/CloudDriveModel.db";
-const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
 const QString CloudDriveModel::TEMP_PATH = "/home/user/MyDocs/temp/.filesplus";
 const QString CloudDriveModel::JOB_DAT_PATH = "/home/user/.filesplus/CloudDriveJobs.dat";
 const int CloudDriveModel::MaxRunningJobCount = 1;
 #else
-const QString CloudDriveModel::ITEM_DAT_PATH = QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/CloudDriveModel.dat";
-const QString CloudDriveModel::ITEM_DB_PATH = "CloudDriveModel.db";
-const QString CloudDriveModel::ITEM_DB_CONNECTION_NAME = "cloud_drive_model";
 const QString CloudDriveModel::TEMP_PATH = "E:/temp/.filesplus";
 const QString CloudDriveModel::JOB_DAT_PATH = QDesktopServices::storageLocation(QDesktopServices::DataLocation) + "/CloudDriveJobs.dat"; // It's in private folder.
 const int CloudDriveModel::MaxRunningJobCount = 1;
@@ -173,16 +168,15 @@ CloudDriveModel::CloudDriveModel(QObject *parent) :
     m_browseThreadPool.setMaxThreadCount(1);
     m_threadHash = new QHash<QString, QThread*>();
 
+    // Initialize DB.
+    initializeDB();
+
     // Initialize scheduler queue.
     initScheduler();
 
     // Enqueue initialization jobs. Queued jobs will proceed after foldePage is loaded.
-    CloudDriveJob loadCloudDriveItemsJob(createNonce(), LoadCloudDriveItems, -1, "", "", "", -1);
-    addJob(loadCloudDriveItemsJob);
     CloudDriveJob loadCloudDriveJobsJob(createNonce(), LoadCloudDriveJobs, -1, "", "", "", -1);
     addJob(loadCloudDriveJobsJob);
-    CloudDriveJob initializeDBJob(createNonce(), InitializeDB, -1, "", "", "", -1);
-    addJob(initializeDBJob);
 
     // Initialize itemCache.
     m_itemCache = new QMap<QString, CloudDriveItem>();
@@ -235,15 +229,11 @@ CloudDriveModel::CloudDriveModel(QObject *parent) :
 
 CloudDriveModel::~CloudDriveModel()
 {
-    // TODO Migrate DAT to DB.
-    saveCloudDriveItems();
-
     // Save current jobs.
     saveCloudDriveJobs();
 
-    // Close DB.
+    // Clean DB.
     cleanDB();
-    closeDB();
 }
 
 int CloudDriveModel::rowCount(const QModelIndex &parent) const
@@ -453,50 +443,6 @@ void CloudDriveModel::setSelectedRemotePath(QString remotePath)
 QString CloudDriveModel::dirtyHash() const
 {
     return DirtyHash;
-}
-
-void CloudDriveModel::loadCloudDriveItems(QString nonce) {
-    QFile file(ITEM_DAT_PATH);
-    if (file.open(QIODevice::ReadOnly)) {
-        QDataStream in(&file);    // read the data serialized from the file
-        in >> *m_cloudDriveItems;
-    }
-
-    qDebug() << QTime::currentTime() << "CloudDriveModel::loadCloudDriveItems " << m_cloudDriveItems->size();
-
-    // Notify job done.
-    jobDone();
-
-    // RemoveJob
-    removeJob("CloudDriveModel::loadCloudDriveItems", nonce);
-
-    emit loadCloudDriveItemsFinished(nonce);
-}
-
-void CloudDriveModel::saveCloudDriveItems() {
-    // Prevent save for testing only.
-//    if (m_cloudDriveItems.isEmpty()) return;
-
-    // Cleanup before save.
-    cleanItems();
-
-    QFile file(ITEM_DAT_PATH);
-    QFileInfo info(file);
-    if (!info.absoluteDir().exists()) {
-        qDebug() << "CloudDriveModel::saveCloudDriveItems dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
-        bool res = QDir::home().mkpath(info.absolutePath());
-        if (!res) {
-            qDebug() << "CloudDriveModel::saveCloudDriveItems can't make dir" << info.absolutePath();
-        } else {
-            qDebug() << "CloudDriveModel::saveCloudDriveItems make dir" << info.absolutePath();
-        }
-    }
-    if (file.open(QIODevice::WriteOnly)) {
-        QDataStream out(&file);   // we will serialize the data into the file
-        out << *m_cloudDriveItems;
-    }
-
-    qDebug() << "CloudDriveModel::saveCloudDriveItems" << m_cloudDriveItems->size();
 }
 
 void CloudDriveModel::loadCloudDriveJobs(QString nonce)
@@ -809,7 +755,7 @@ QList<CloudDriveItem> CloudDriveModel::findItems(CloudDriveModel::ClientTypes ty
 
 QList<CloudDriveItem> CloudDriveModel::findItemsByRemotePath(ClientTypes type, QString uid, QString remotePath, bool caseInsensitive)
 {
-    QSqlQuery qry(m_db);
+    QSqlQuery qry(DatabaseManager::defaultManager().getDB());
     if (caseInsensitive) {
         qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND lower(remote_path) = lower(:remote_path)");
     } else {
@@ -875,7 +821,7 @@ bool CloudDriveModel::isRemotePathConnected(CloudDriveModel::ClientTypes type, Q
 {
     // Show connections.
     if (showDebug) {
-        QSqlQuery qry(m_db);
+        QSqlQuery qry(DatabaseManager::defaultManager().getDB());
         qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
         qry.bindValue(":type", type);
         qry.bindValue(":uid", uid);
@@ -1289,12 +1235,8 @@ QString CloudDriveModel::getOperationName(int operation) {
         return tr("Delta");
     case Browse:
         return tr("Browse");
-    case LoadCloudDriveItems:
-        return tr("LoadCloudDriveItems");
     case LoadCloudDriveJobs:
         return tr("LoadCloudDriveJobs");
-    case InitializeDB:
-        return tr("InitializeDB");
     case InitializeCloudClients:
         return tr("InitializeCloudClients");
     case Disconnect:
@@ -1685,7 +1627,7 @@ void CloudDriveModel::removeItems(QString localPath)
 
 int CloudDriveModel::removeItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
 {
-    QSqlQuery qry(m_db);
+    QSqlQuery qry(DatabaseManager::defaultManager().getDB());
     qry.prepare("DELETE FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
     qry.bindValue(":type", type);
     qry.bindValue(":uid", uid);
@@ -1782,7 +1724,7 @@ void CloudDriveModel::updateItemWithChildrenByRemotePath(CloudDriveModel::Client
 
 int CloudDriveModel::updateItemCronExp(CloudDriveModel::ClientTypes type, QString uid, QString localPath, QString cronExp)
 {
-    QSqlQuery qry(m_db);
+    QSqlQuery qry(DatabaseManager::defaultManager().getDB());
     qry.prepare("UPDATE cloud_drive_item SET cron_exp = :cron_exp WHERE type = :type AND uid = :uid AND local_path = :local_path");
     qry.bindValue(":cron_exp", cronExp);
     qry.bindValue(":type", type);
@@ -1790,7 +1732,7 @@ int CloudDriveModel::updateItemCronExp(CloudDriveModel::ClientTypes type, QStrin
     qry.bindValue(":local_path", localPath);
     bool res = qry.exec();
     if (res) {
-        m_db.commit();
+        DatabaseManager::defaultManager().getDB().commit();
         m_itemCache->remove(getItemCacheKey(type, uid, localPath));
         qDebug() << "CloudDriveModel::updateItemCronExpToDB done" << type << uid << localPath << cronExp << "numRowsAffected" << qry.numRowsAffected();
         return qry.numRowsAffected();
@@ -1804,7 +1746,7 @@ QString CloudDriveModel::getItemCronExp(CloudDriveModel::ClientTypes type, QStri
 {
     QString cronExp = "";
 
-    QSqlQuery qry(m_db);
+    QSqlQuery qry(DatabaseManager::defaultManager().getDB());
     qry.prepare("SELECT cron_exp FROM cloud_drive_item WHERE type = :type AND uid = :uid AND local_path = :local_path");
     qry.bindValue(":type", type);
     qry.bindValue(":uid", uid);
@@ -1827,7 +1769,7 @@ void CloudDriveModel::dirtyScheduledItems(QString cronValue)
     int type;
     QString uid;
     QString localPath;
-    QSqlQuery ps(m_db);
+    QSqlQuery ps(DatabaseManager::defaultManager().getDB());
     ps.prepare("SELECT * FROM cloud_drive_item WHERE cron_exp <> ''");
     if (ps.exec()) {
         while (ps.next()) {
@@ -1861,7 +1803,7 @@ void CloudDriveModel::syncDirtyItems()
     }
 
     CloudDriveItem lastItem;
-    QSqlQuery ps(m_db);
+    QSqlQuery ps(DatabaseManager::defaultManager().getDB());
     ps.prepare("SELECT * FROM cloud_drive_item WHERE hash = :hash ORDER BY type, uid, local_path;");
     ps.bindValue(":hash", DirtyHash);
     foreach (CloudDriveItem item, getItemListFromPS(ps)) {
@@ -1891,7 +1833,7 @@ int CloudDriveModel::updateItemSyncDirection(CloudDriveModel::ClientTypes type, 
 {
     int c = 0;
     bool res = false;
-    QSqlQuery qry(m_db);
+    QSqlQuery qry(DatabaseManager::defaultManager().getDB());
 
     // Update itself.
     qry.prepare("UPDATE cloud_drive_item SET sync_direction = :sync_direction WHERE type = :type AND uid = :uid AND local_path = :local_path");
@@ -1923,7 +1865,7 @@ int CloudDriveModel::updateItemSyncDirection(CloudDriveModel::ClientTypes type, 
         c += qry.numRowsAffected();
     }
 
-    m_db.commit();
+    DatabaseManager::defaultManager().getDB().commit();
     removeItemCacheWithChildren(type, uid, localPath);
 
     return c;
@@ -2143,6 +2085,8 @@ QStringList CloudDriveModel::getStoredUidList()
     QStringList uidList;
 
     // TODO Generalize.
+    // ISSUE Martin has got missing ftp uid in list.
+    // TODO Refactor to return QVariantList which will be JSON automatically in QML.
     uidList.append(dbClient->getStoredUidList());
     uidList.append(gcdClient->getStoredUidList());
     uidList.append(skdClient->getStoredUidList());
@@ -2315,7 +2259,7 @@ void CloudDriveModel::syncItem(CloudDriveModel::ClientTypes type, QString uid, Q
 
 bool CloudDriveModel::syncItemByRemotePath(CloudDriveModel::ClientTypes type, QString uid, QString remotePath, QString newHash, bool forcePut, bool forceGet)
 {
-    QSqlQuery qry(m_db);
+    QSqlQuery qry(DatabaseManager::defaultManager().getDB());
     qry.prepare("SELECT * FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
     qry.bindValue(":type", type);
     qry.bindValue(":uid", uid);
@@ -4409,7 +4353,7 @@ void CloudDriveModel::initJobQueueTimer()
 
 void CloudDriveModel::fixDamagedDB()
 {
-    QSqlQuery query(m_db);
+    QSqlQuery query(DatabaseManager::defaultManager().getDB());
     bool res;
 
     // Test database table.
@@ -4438,7 +4382,7 @@ void CloudDriveModel::fixDamagedDB()
     }
 
     // TODO Workaround. Delete duplicated unique item to fix QSqlError 19 indexed columns are not unique.
-    QSqlQuery deleteDuplicatedPS(m_db);
+    QSqlQuery deleteDuplicatedPS(DatabaseManager::defaultManager().getDB());
     deleteDuplicatedPS.prepare("DELETE FROM cloud_drive_item WHERE type = :type AND uid = :uid AND local_path = :local_path AND rowid < :rowid;");
 
     res = query.exec("SELECT type, uid, local_path, count(*) c, max(rowid) max_rowid FROM cloud_drive_item GROUP BY type, uid, local_path HAVING count(*) > 1;");
@@ -4476,149 +4420,58 @@ void CloudDriveModel::fixDamagedDB()
         qDebug() << "CloudDriveModel::fixDamagedDB find duplicated unique key failed. Error" << query.lastError() << query.lastQuery();
     }
 
-    m_db.commit();
+    DatabaseManager::defaultManager().getDB().commit();
 
     // Process pending events.
     QApplication::processEvents();
 }
 
-void CloudDriveModel::initializeDB(QString nonce)
+void CloudDriveModel::initializeDB()
 {
-    emit initializeDBStarted(nonce);
-
-    // Create cache database path if it's not exist.
-    QFile file(ITEM_DB_PATH);
-    QFileInfo info(file);
-    if (!info.absoluteDir().exists()) {
-        qDebug() << "CloudDriveModel::initializeDB dir" << info.absoluteDir().absolutePath() << "doesn't exists.";
-        bool res = QDir::home().mkpath(info.absolutePath());
-        if (!res) {
-            qDebug() << "CloudDriveModel::initializeDB can't make dir" << info.absolutePath();
-        } else {
-            qDebug() << "CloudDriveModel::initializeDB make dir" << info.absolutePath();
-        }
-    }
-
-    // First initialization.
-    m_db = QSqlDatabase::addDatabase("QSQLITE", ITEM_DB_CONNECTION_NAME);
-    m_db.setDatabaseName(ITEM_DB_PATH);
-    bool ok = m_db.open();
-    qDebug() << "CloudDriveModel::initializeDB" << ok << "connectionName" << m_db.connectionName() << "databaseName" << m_db.databaseName() << "driverName" << m_db.driverName() << "tables" << m_db.tables();
-
-    QSqlQuery query(m_db);
-    bool res = false;
-
-    // Fix damaged DB.
-    fixDamagedDB();
-
-    // Create tables
-    res = query.exec("CREATE TABLE cloud_drive_item(type INTEGER PRIMARY_KEY, uid TEXT PRIMARY_KEY, local_path TEXT PRIMARY_KEY, remote_path TEXT, hash TEXT, last_modified TEXT)");
-    if (res) {
-        qDebug() << "CloudDriveModel::initializeDB CREATE TABLE cloud_drive_item is done.";
-    } else {
-        qDebug() << "CloudDriveModel::initializeDB CREATE TABLE cloud_drive_item is failed. Error" << query.lastError();
-    }
-    res = query.exec("CREATE UNIQUE INDEX IF NOT EXISTS cloud_drive_item_pk ON cloud_drive_item (type, uid, local_path)");
-    if (res) {
-        qDebug() << "CloudDriveModel::initializeDB CREATE INDEX cloud_drive_item_pk is done.";
-    } else {
-        qDebug() << "CloudDriveModel::initializeDB CREATE INDEX cloud_drive_item_pk is failed. Error" << query.lastError();
-    }
-    res = query.exec("CREATE TABLE cloud_drive_item_property(type INTEGER PRIMARY_KEY, uid TEXT PRIMARY_KEY, remote_path TEXT PRIMARY_KEY, property_name TEXT PRIMARY_KEY, property_value TEXT)");
-    if (res) {
-        qDebug() << "CloudDriveModel::initializeDB CREATE TABLE cloud_drive_item_property is done.";
-    } else {
-        qDebug() << "CloudDriveModel::initializeDB CREATE TABLE cloud_drive_item_property is failed. Error" << query.lastError();
-    }
-    res = query.exec("CREATE UNIQUE INDEX IF NOT EXISTS cloud_drive_item_property_pk ON cloud_drive_item_property (type, uid, remote_path, property_name)");
-    if (res) {
-        qDebug() << "CloudDriveModel::initializeDB CREATE INDEX cloud_drive_item_property_pk is done.";
-    } else {
-        qDebug() << "CloudDriveModel::initializeDB CREATE INDEX cloud_drive_item_property_pk is failed. Error" << query.lastError();
-    }
-
-    // Process pending events.
-    QApplication::processEvents();
-
-    // Add cron_exp.
-    res = query.exec("ALTER TABLE cloud_drive_item ADD COLUMN cron_exp TEXT");
-    if (res) {
-        qDebug() << "CloudDriveModel::initializeDB adding column cloud_drive_item.cron_exp is done.";
-    } else {
-        qDebug() << "CloudDriveModel::initializeDB adding column cloud_drive_item.cron_exp is failed. Error" << query.lastError();
-    }
-    // Add sync_direction.
-    res = query.exec("ALTER TABLE cloud_drive_item ADD COLUMN sync_direction INTEGER");
-    if (res) {
-        qDebug() << "CloudDriveModel::initializeDB adding column cloud_drive_item.sync_direction is done.";
-    } else {
-        qDebug() << "CloudDriveModel::initializeDB adding column cloud_drive_item.sync_direction is failed. Error" << query.lastError();
-    }
-
-    // Process pending events.
-    QApplication::processEvents();
-
     // Prepare queries.
-    m_selectByPrimaryKeyPS = QSqlQuery(m_db);
+    m_selectByPrimaryKeyPS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_selectByPrimaryKeyPS.prepare("SELECT * FROM cloud_drive_item WHERE type = :type AND uid = :uid AND local_path = :local_path");
 
-    m_selectByTypePS = QSqlQuery(m_db);
+    m_selectByTypePS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_selectByTypePS.prepare("SELECT * FROM cloud_drive_item WHERE type = :type ORDER BY uid, local_path");
 
-    m_selectByTypeAndUidPS = QSqlQuery(m_db);
+    m_selectByTypeAndUidPS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_selectByTypeAndUidPS.prepare("SELECT * FROM cloud_drive_item WHERE type = :type AND uid = :uid ORDER BY local_path");
 
-    m_selectByLocalPathPS = QSqlQuery(m_db);
+    m_selectByLocalPathPS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_selectByLocalPathPS.prepare("SELECT * FROM cloud_drive_item WHERE local_path = :local_path ORDER BY type, uid");
 
-    m_selectChildrenByPrimaryKeyPS = QSqlQuery(m_db);
+    m_selectChildrenByPrimaryKeyPS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_selectChildrenByPrimaryKeyPS.prepare("SELECT * FROM cloud_drive_item c WHERE c.local_path like :local_path||'/%' and c.type = :type and c.uid = :uid ORDER BY c.local_path");
 
-    m_insertPS = QSqlQuery(m_db);
+    m_insertPS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_insertPS.prepare("INSERT INTO cloud_drive_item(type, uid, local_path, remote_path, hash, last_modified, sync_direction)"
                        " VALUES (:type, :uid, :local_path, :remote_path, :hash, :last_modified, :sync_direction)");
 
-    m_updatePS = QSqlQuery(m_db);
+    m_updatePS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_updatePS.prepare("UPDATE cloud_drive_item SET"
                        " remote_path = :remote_path, hash = :hash, last_modified = :last_modified, sync_direction = :sync_direction"
                        " WHERE type = :type AND uid = :uid AND local_path = :local_path");
 
-    m_updateHashByLocalPathPS = QSqlQuery(m_db);
+    m_updateHashByLocalPathPS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_updateHashByLocalPathPS.prepare("UPDATE cloud_drive_item SET"
                        " hash = :hash"
                        " WHERE local_path = :local_path");
 
-    m_deletePS = QSqlQuery(m_db);
+    m_deletePS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_deletePS.prepare("DELETE FROM cloud_drive_item WHERE type = :type AND uid = :uid AND local_path = :local_path");
 
-    m_countPS = QSqlQuery(m_db);
+    m_countPS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_countPS.prepare("SELECT count(*) count FROM cloud_drive_item");
 
-    m_countByLocalPathPS = QSqlQuery(m_db);
+    m_countByLocalPathPS = QSqlQuery(DatabaseManager::defaultManager().getDB());
     m_countByLocalPathPS.prepare("SELECT count(*) count FROM cloud_drive_item where local_path = :local_path");
-
-    // Notify job done.
-    jobDone();
-
-    // RemoveJob
-    removeJob("CloudDriveModel::initializeDB", nonce);
-
-    // Process pending events.
-    QApplication::processEvents();
-
-    emit initializeDBFinished(nonce);
-}
-
-void CloudDriveModel::closeDB()
-{
-    qDebug() << "CloudDriveModel::closeDB" << countItemDB();
-    m_db.close();
 }
 
 bool CloudDriveModel::updateDropboxPrefix(bool fullAccess)
 {
     qDebug() << "CloudDriveModel::updateDropboxPrefix started. fullAccess" << fullAccess;
-    QSqlQuery updQry(m_db);
+    QSqlQuery updQry(DatabaseManager::defaultManager().getDB());
     bool res = false;
     if (fullAccess) {
         updQry.prepare("UPDATE cloud_drive_item SET remote_path = '/Apps/FilesPlus'||remote_path WHERE type = :type AND remote_path NOT LIKE '/Apps/FilesPlus/%'");
@@ -4634,13 +4487,13 @@ bool CloudDriveModel::updateDropboxPrefix(bool fullAccess)
     qDebug() << "CloudDriveModel::updateDropboxPrefix" << res << updQry.numRowsAffected() << updQry.lastQuery();
 
     if (res) {
-        m_db.commit();
+        DatabaseManager::defaultManager().getDB().commit();
 
         // Clear item cache.
         m_itemCache->clear();
         qDebug() << "CloudDriveModel::updateDropboxPrefix itemCache is cleared.";
     } else {
-        m_db.rollback();
+        DatabaseManager::defaultManager().getDB().rollback();
     }
 
     return res;
@@ -4681,16 +4534,16 @@ QString CloudDriveModel::getItemCacheKey(int type, QString uid, QString localPat
 
 void CloudDriveModel::cleanDB()
 {
-    QSqlQuery updQry(m_db);
+    QSqlQuery updQry(DatabaseManager::defaultManager().getDB());
     bool res = false;
     updQry.prepare("DELETE FROM cloud_drive_item WHERE local_path = ''");
     res = updQry.exec();
     if (res) {
         qDebug() << "CloudDriveModel::cleanDB" << updQry.lastQuery() << "res" << res << "numRowsAffected" << updQry.numRowsAffected();
-        m_db.rollback();
+        DatabaseManager::defaultManager().getDB().rollback();
     } else {
         qDebug() << "CloudDriveModel::cleanDB" << updQry.lastQuery() << "res" << res << "error" << updQry.lastError();
-        m_db.commit();
+        DatabaseManager::defaultManager().getDB().commit();
     }
 }
 
@@ -4763,7 +4616,7 @@ QList<CloudDriveItem> CloudDriveModel::selectItemsFromDB(CloudDriveModel::Client
     if (localPath != "") {
         sql += " AND local_path = :local_path";
     }
-    QSqlQuery query(m_db);
+    QSqlQuery query(DatabaseManager::defaultManager().getDB());
     query.prepare(sql);
     query.bindValue(":type", type);
     if (uid != "") query.bindValue(":uid", uid);
@@ -4800,7 +4653,7 @@ QList<CloudDriveItem> CloudDriveModel::selectChildrenByPrimaryKeyFromDB(ClientTy
 
 QList<CloudDriveItem> CloudDriveModel::selectItemsByTypeAndUidAndRemotePathFromDB(CloudDriveModel::ClientTypes type, QString uid, QString remotePath)
 {
-    QSqlQuery qry(m_db);
+    QSqlQuery qry(DatabaseManager::defaultManager().getDB());
     qry.prepare("SELECT * FROM cloud_drive_item WHERE type = :type AND uid = :uid AND remote_path = :remote_path");
     qry.bindValue(":type", type);
     qry.bindValue(":uid", uid);
@@ -4824,7 +4677,7 @@ int CloudDriveModel::insertItemToDB(const CloudDriveItem item, bool suppressMess
         if (!suppressMessages) {
             qDebug() << "CloudDriveModel::insertItemToDB insert done" << item << "res" << res << "numRowsAffected" << m_insertPS.numRowsAffected();
         }
-        m_db.commit();
+        DatabaseManager::defaultManager().getDB().commit();
 
         // Insert item to itemCache.
         m_itemCache->insert(getItemCacheKey(item.type, item.uid, item.localPath), item);
@@ -4853,7 +4706,7 @@ int CloudDriveModel::updateItemToDB(const CloudDriveItem item, bool suppressMess
         if (!suppressMessages) {
             qDebug() << "CloudDriveModel::updateItemToDB update done" << item << "res" << res << "numRowsAffected" << m_updatePS.numRowsAffected();
         }
-        m_db.commit();
+        DatabaseManager::defaultManager().getDB().commit();
 
         // Insert item to itemCache.
         m_itemCache->insert(getItemCacheKey(item.type, item.uid, item.localPath), item);
@@ -4875,7 +4728,7 @@ int CloudDriveModel::updateItemHashByLocalPathToDB(const QString localPath, cons
     res = m_updateHashByLocalPathPS.exec();
     if (res) {
         qDebug() << "CloudDriveModel::updateItemHashByLocalPathToDB update done numRowsAffected" << m_updateHashByLocalPathPS.numRowsAffected();
-        m_db.commit();
+        DatabaseManager::defaultManager().getDB().commit();
 
         // Refresh items to itemCache.
         selectItemsByLocalPathFromDB(localPath);
@@ -4897,7 +4750,7 @@ int CloudDriveModel::deleteItemToDB(CloudDriveModel::ClientTypes type, QString u
     res = m_deletePS.exec();
     if (res) {
         qDebug() << "CloudDriveModel::deleteItemToDB delete done" << itemCacheKey << "res" << res << "numRowsAffected" << m_deletePS.numRowsAffected();
-        m_db.commit();
+        DatabaseManager::defaultManager().getDB().commit();
 
         // Remove item from itemCache.
         m_itemCache->remove(itemCacheKey);
@@ -4935,14 +4788,14 @@ int CloudDriveModel::deleteItemWithChildrenFromDB(CloudDriveModel::ClientTypes t
     qDebug() << "CloudDriveModel::deleteItemWithChildrenFromDB" << type << uid << localPath;
 
     int res = 0;
-    QSqlQuery qry("DELETE FROM cloud_drive_item WHERE type = :type AND uid = :uid AND local_path = :localPath", m_db);
+    QSqlQuery qry("DELETE FROM cloud_drive_item WHERE type = :type AND uid = :uid AND local_path = :localPath", DatabaseManager::defaultManager().getDB());
     qry.bindValue(":type", type);
     qry.bindValue(":uid", uid);
     qry.bindValue(":localPath", localPath);
     if (qry.exec()) {
         res += qry.numRowsAffected();
     }
-    QSqlQuery childrenQry("DELETE FROM cloud_drive_item WHERE type = :type AND uid = :uid AND local_path LIKE :localPath", m_db);
+    QSqlQuery childrenQry("DELETE FROM cloud_drive_item WHERE type = :type AND uid = :uid AND local_path LIKE :localPath", DatabaseManager::defaultManager().getDB());
     childrenQry.bindValue(":type", type);
     childrenQry.bindValue(":uid", uid);
     childrenQry.bindValue(":localPath", localPath + "/%");
@@ -4990,7 +4843,7 @@ int CloudDriveModel::countItemByTypeAndUidAndRemotePathFromDB(CloudDriveModel::C
     // TODO Cache.
     int c = 0;
 
-    QSqlQuery qry(m_db);
+    QSqlQuery qry(DatabaseManager::defaultManager().getDB());
     qry.prepare("SELECT count(*) count FROM cloud_drive_item where type = :type AND uid = :uid AND remote_path = :remote_path");
     qry.bindValue(":type", type);
     qry.bindValue(":uid", uid);
@@ -5151,9 +5004,7 @@ void CloudDriveModel::proceedNextJob() {
 
     // These are blocking operations.
     switch (job.operation) {
-    case LoadCloudDriveItems:
     case LoadCloudDriveJobs:
-    case InitializeDB:
     case InitializeCloudClients:
     case Disconnect:
     case DeleteLocal:
@@ -5227,14 +5078,8 @@ void CloudDriveModel::dispatchJob(CloudDriveJob job)
     updateJob(job);
 
     switch (job.operation) {
-    case LoadCloudDriveItems:
-        loadCloudDriveItems(job.jobId);
-        break;
     case LoadCloudDriveJobs:
         loadCloudDriveJobs(job.jobId);
-        break;
-    case InitializeDB:
-        initializeDB(job.jobId);
         break;
     case InitializeCloudClients:
         initializeCloudClients(job.jobId);
@@ -5566,7 +5411,7 @@ void CloudDriveModel::createTempPath()
 
 QVariant CloudDriveModel::getCloudDriveItemProperty(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString propertyName, QVariant defaultValue)
 {
-    QSqlQuery qry(m_db);
+    QSqlQuery qry(DatabaseManager::defaultManager().getDB());
     qry.prepare("SELECT property_value FROM cloud_drive_item_property WHERE type = :type AND uid = :uid AND remote_path = :remote_path AND property_name = :property_name");
     qry.bindValue(":type", type);
     qry.bindValue(":uid", uid);
@@ -5599,7 +5444,7 @@ int CloudDriveModel::getSortFlag(CloudDriveModel::ClientTypes type, QString uid,
 
 bool CloudDriveModel::setCloudDriveItemProperty(CloudDriveModel::ClientTypes type, QString uid, QString remoteFilePath, QString propertyName, QVariant value)
 {
-    QSqlQuery qry(m_db);
+    QSqlQuery qry(DatabaseManager::defaultManager().getDB());
     qry.prepare("UPDATE cloud_drive_item_property SET property_value = :property_value WHERE type = :type AND uid = :uid AND remote_path = :remote_path AND property_name = :property_name");
     qry.bindValue(":property_value", value);
     qry.bindValue(":type", type);
@@ -5608,7 +5453,7 @@ bool CloudDriveModel::setCloudDriveItemProperty(CloudDriveModel::ClientTypes typ
     qry.bindValue(":property_name", propertyName);
     if (qry.exec()) {
         int c = qry.numRowsAffected();
-        m_db.commit();
+        DatabaseManager::defaultManager().getDB().commit();
         if (c > 0) {
             qDebug() << "CloudDriveModel::setCloudDriveItemProperty done" << type << uid << remoteFilePath << propertyName << value << "numRowsAffected" << c;
             return true;
@@ -5622,17 +5467,17 @@ bool CloudDriveModel::setCloudDriveItemProperty(CloudDriveModel::ClientTypes typ
             qry.bindValue(":property_value", value);
             if (qry.exec()) {
                 qDebug() << "CloudDriveModel::setCloudDriveItemProperty insert done" << type << uid << remoteFilePath << propertyName << value;
-                m_db.commit();
+                DatabaseManager::defaultManager().getDB().commit();
                 return true;
             } else {
                 qDebug() << "CloudDriveModel::setCloudDriveItemProperty insert failed" << type << uid << remoteFilePath << propertyName << value << "error" << qry.lastError();
-                m_db.rollback();
+                DatabaseManager::defaultManager().getDB().rollback();
                 return false;
             }
         }
     } else {
         qDebug() << "CloudDriveModel::setCloudDriveItemProperty failed" << type << uid << remoteFilePath << propertyName << value << "error" << qry.lastError();
-        m_db.rollback();
+        DatabaseManager::defaultManager().getDB().rollback();
         return false;
     }
 }

@@ -232,6 +232,31 @@ void initializeDefaultDB()
     DatabaseManager::defaultManager().initializeDB();
 }
 
+void importCloudDriveClientDAT()
+{
+#ifdef Q_OS_SYMBIAN
+    QDir sourceDir("C:/");
+    foreach (QFileInfo fileInfo, sourceDir.entryInfoList(QStringList("*.dat"))) {
+        QString targetFilePath = QDir(QDesktopServices::storageLocation(QDesktopServices::DataLocation)).absoluteFilePath(fileInfo.fileName());
+        if (QFile(targetFilePath).exists()) {
+            QFile::rename(targetFilePath, targetFilePath + ".bak");
+            qDebug() << "main importCloudDriveClientDAT backup" << targetFilePath << "to" << targetFilePath + ".bak";
+        }
+        if (QFile::rename(fileInfo.absoluteFilePath(), targetFilePath)) {
+            // For file in same drive/partition.
+            qDebug() << "main importCloudDriveClientDAT moved" << fileInfo.absoluteFilePath() << "to" << targetFilePath;
+        } else if (QFile::copy(fileInfo.absoluteFilePath(), targetFilePath)) {
+            // For file in different drive/partition.
+            qDebug() << "main importCloudDriveClientDAT copied" << fileInfo.absoluteFilePath() << "to" << targetFilePath;
+            QFile(fileInfo.absoluteFilePath()).remove();
+            qDebug() << "main importCloudDriveClientDAT removed" << fileInfo.absoluteFilePath();
+        } else {
+            qDebug() << "main importCloudDriveClientDAT moving" << fileInfo.absoluteFilePath() << "to" << targetFilePath << "failed.";
+        }
+    }
+#endif
+}
+
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
     qDebug() << QTime::currentTime() << "main started.";
@@ -283,27 +308,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
     qDebug() << "main MoviesLocation" << QDesktopServices::storageLocation(QDesktopServices::MoviesLocation);
 
     // Migrate DAT from C:/ to private folder.
-#ifdef Q_OS_SYMBIAN
-    QDir sourceDir("C:/");
-    foreach (QFileInfo fileInfo, sourceDir.entryInfoList(QStringList("*.dat"))) {
-        QString targetFilePath = QDir(QDesktopServices::storageLocation(QDesktopServices::DataLocation)).absoluteFilePath(fileInfo.fileName());
-        if (QFile(targetFilePath).exists()) {
-            QFile::rename(targetFilePath, targetFilePath + ".bak");
-            qDebug() << "main backup" << targetFilePath << "to" << targetFilePath + ".bak";
-        }
-        if (QFile::rename(fileInfo.absoluteFilePath(), targetFilePath)) {
-            // For file in same drive/partition.
-            qDebug() << "main moved" << fileInfo.absoluteFilePath() << "to" << targetFilePath;
-        } else if (QFile::copy(fileInfo.absoluteFilePath(), targetFilePath)) {
-            // For file in different drive/partition.
-            qDebug() << "main copied" << fileInfo.absoluteFilePath() << "to" << targetFilePath;
-            QFile(fileInfo.absoluteFilePath()).remove();
-            qDebug() << "main removed" << fileInfo.absoluteFilePath();
-        } else {
-            qDebug() << "main moving" << fileInfo.absoluteFilePath() << "to" << targetFilePath << "failed.";
-        }
-    }
-#endif
+    importCloudDriveClientDAT();
 
     // Default setting values.
     initializeDefaultSettings(m_settings);

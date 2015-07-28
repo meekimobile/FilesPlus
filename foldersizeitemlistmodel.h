@@ -49,11 +49,9 @@ public:
     // NOTE Always needs to be the same as FolderSizeModelThread.
     enum RunnableMethods {
         FetchDirSize,
-        LoadDirSizeCache,
         CopyFile,
         MoveFile,
         DeleteFile,
-        InitializeDB,
         TrashFile
     };
 
@@ -227,8 +225,6 @@ private:
     QTimer m_jobQueueTimer;
     void initJobQueueTimer();
 public slots:
-    void loadDirSizeCacheFinishedFilter();
-    void initializeDBFinishedFilter();
     void fetchDirSizeFinishedFilter(QString sourcePath);
     void copyProgressFilter(int fileAction, QString sourcePath, QString targetPath, qint64 bytes, qint64 bytesTotal);
     void copyFinishedFilter(int fileAction, QString sourcePath, QString targetPath, QString msg, int err, qint64 bytes, qint64 totalBytes, qint64 count, bool isSourceRoot);
@@ -239,9 +235,6 @@ public slots:
     void jobDone();
     void fsWatcherDirectoryChangedSlot(const QString &entry);
 Q_SIGNALS:
-    void loadDirSizeCacheFinished();
-    void initializeDBStarted();
-    void initializeDBFinished();
     void currentDirChanged();
     void refreshBegin();
     void refreshCompleted();

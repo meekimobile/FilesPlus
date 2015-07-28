@@ -10,23 +10,6 @@ BookmarksModel::BookmarksModel(QObject *parent) :
 
 void BookmarksModel::initializeDB()
 {
-    QSqlQuery query;
-    bool res = false;
-
-    res = query.exec("CREATE TABLE bookmarks(type INTEGER PRIMARY_KEY, uid TEXT PRIMARY_KEY, path TEXT PRIMARY_KEY, title TEXT)");
-    if (res) {
-        qDebug() << "BookmarksModel::initializeDB CREATE TABLE bookmarks is done.";
-    } else {
-        qDebug() << "BookmarksModel::initializeDB CREATE TABLE bookmarks is failed. Error" << query.lastError();
-    }
-
-    res = query.exec("CREATE UNIQUE INDEX IF NOT EXISTS bookmarks_pk ON bookmarks (type, uid, path)");
-    if (res) {
-        qDebug() << "BookmarksModel::initializeDB CREATE INDEX bookmarks_pk is done.";
-    } else {
-        qDebug() << "BookmarksModel::initializeDB CREATE INDEX bookmarks_pk is failed. Error" << query.lastError();
-    }
-
     setTable("bookmarks");
     setSort(fieldIndex("title"), Qt::AscendingOrder);
     select();
