@@ -345,6 +345,18 @@ Page {
             group: "Developer"
         }
         ListElement {
+            name: "AuthPage.openAuthorizationWithBrowser"
+            options: ""
+            type: "switch"
+            group: "Developer"
+        }
+        ListElement {
+            name: "CustomQNetworkAccessManager.ignoreSSLCertificateErrors"
+            options: ""
+            type: "switch"
+            group: "Developer"
+        }
+        ListElement {
             name: "WebDavClient.ignoreSSLSelfSignedCertificateErrors"
             options: ""
             type: "switch"
@@ -453,6 +465,8 @@ Page {
         else if (name == "drivepage.systemdrive.enabled") return qsTr("Show system drive on drive page") + appInfo.emptyStr;
         else if (name == "drivepage.privatedrive.enabled") return qsTr("Show private drive on drive page") + appInfo.emptyStr;
         else if (name == "drivepage.trash.enabled") return qsTr("Show trash on drive page") + appInfo.emptyStr;
+        else if (name == "AuthPage.openAuthorizationWithBrowser") return qsTr("Open authorization in browser") + appInfo.emptyStr;
+        else if (name == "CustomQNetworkAccessManager.ignoreSSLCertificateErrors") return qsTr("Ignore all SSL certificate errors") + appInfo.emptyStr;
         else if (name == "WebDavClient.ignoreSSLSelfSignedCertificateErrors") return qsTr("Ignore WebDAV SSL self-signed certificate errors") + appInfo.emptyStr;
         else if (name == "LocalFileImageProvider.cache.enabled") return qsTr("Cache local images") + appInfo.emptyStr;
         else if (name == "local.image.preview.size") return qsTr("Local image preview size") + appInfo.emptyStr;

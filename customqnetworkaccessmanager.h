@@ -1,9 +1,7 @@
 #ifndef CUSTOMQNETWORKACCESSMANAGER_H
 #define CUSTOMQNETWORKACCESSMANAGER_H
 
-#include <QNetworkAccessManager>
-#include <QNetworkRequest>
-#include <QNetworkReply>
+#include <QtNetwork>
 #include <QSettings>
 
 class CustomQNetworkAccessManager : public QNetworkAccessManager
@@ -15,6 +13,7 @@ public:
 signals:
     
 public slots:
+    void sslErrorsReplyFilter(QNetworkReply *reply, QList<QSslError> sslErrors);
 
 private:
     QSettings m_settings;

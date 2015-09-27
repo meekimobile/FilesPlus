@@ -7,6 +7,7 @@
 #include <QScriptValueIterator>
 #include <QDesktopServices>
 #include "contenttypehelper.h"
+#include "customqnetworkaccessmanager.h"
 
 // Harmattan is a linux
 #if defined(Q_WS_HARMATTAN)
@@ -321,7 +322,7 @@ void GCPClient::accessToken()
     qDebug() << "postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accessTokenReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
@@ -354,7 +355,7 @@ void GCPClient::refreshAccessToken()
     qDebug() << "postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(refreshAccessTokenReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
@@ -370,7 +371,7 @@ void GCPClient::accountInfo()
     QString uri = accountInfoURI;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setRawHeader("Authorization", QByteArray().append("Bearer ").append(m_paramMap["access_token"]));
@@ -399,7 +400,7 @@ QNetworkReply * GCPClient::search(QString q)
     qDebug() << "GCPClient::search authHeader " << authHeader;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(searchReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setRawHeader("Authorization", authHeader) ;
@@ -445,7 +446,7 @@ QNetworkReply * GCPClient::submit(QString printerId, QString title, QString capa
 //    qDebug() << "postData " << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(submitReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setRawHeader("Authorization", authHeader) ;
@@ -491,7 +492,7 @@ void GCPClient::jobs(QString printerId)
     qDebug() << "GCPClient::jobs authHeader " << authHeader;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(jobsReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setRawHeader("Authorization", authHeader) ;
@@ -517,7 +518,7 @@ void GCPClient::deletejob(QString jobId, bool refreshAfterDelete)
     qDebug() << "GCPClient::deletejob authHeader " << authHeader;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deletejobReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(refreshAfterDelete));
@@ -545,7 +546,7 @@ void GCPClient::printer(QString printerId)
     qDebug() << "GCPClient::printer authHeader " << authHeader;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(printerReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setRawHeader("Authorization", authHeader) ;

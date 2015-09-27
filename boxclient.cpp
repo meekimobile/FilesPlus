@@ -83,7 +83,7 @@ void BoxClient::accessToken(QString nonce, QString pin)
     qDebug() << "postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accessTokenReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -112,7 +112,7 @@ void BoxClient::refreshToken(QString nonce, QString uid)
     qDebug() << "postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accessTokenReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -136,7 +136,7 @@ void BoxClient::accountInfo(QString nonce, QString uid)
     qDebug() << "BoxClient::accountInfo uri " << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -152,7 +152,7 @@ void BoxClient::quota(QString nonce, QString uid)
     qDebug() << "BoxClient::quota uri " << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(quotaReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -249,7 +249,7 @@ QNetworkReply * BoxClient::files(QString nonce, QString uid, QString remoteFileP
     qDebug() << "BoxClient::files" << nonce << "uri" << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filesReplyFinished(QNetworkReply*)) );
     }
@@ -287,7 +287,7 @@ QNetworkReply * BoxClient::property(QString nonce, QString uid, QString remoteFi
     qDebug() << "BoxClient::property" << nonce << "uri" << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(propertyReplyFinished(QNetworkReply*)) );
     }
@@ -337,7 +337,7 @@ QString BoxClient::createFolder(QString nonce, QString uid, QString remoteParent
     qDebug() << "BoxClient::createFolder postString" << postString;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(createFolderReplyFinished(QNetworkReply*)));
     }
@@ -384,7 +384,7 @@ void BoxClient::moveFile(QString nonce, QString uid, QString remoteFilePath, QSt
     qDebug() << "BoxClient::moveFile postString" << postString;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)) );
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -407,7 +407,7 @@ void BoxClient::copyFile(QString nonce, QString uid, QString remoteFilePath, QSt
     qDebug() << "BoxClient::copyFile postString" << postString;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(copyFileReplyFinished(QNetworkReply*)) );
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -453,7 +453,7 @@ QString BoxClient::deleteFile(QString nonce, QString uid, QString remoteFilePath
     qDebug() << "BoxClient::deleteFile" << nonce << "uri" << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deleteFileReplyFinished(QNetworkReply*)) );
     }
@@ -493,7 +493,7 @@ void BoxClient::renameFile(QString nonce, QString uid, QString remoteFilePath, Q
     qDebug() << "BoxClient::renameFile postString" << postString;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)) );
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -562,7 +562,7 @@ QNetworkReply *BoxClient::filePut(QString nonce, QString uid, QIODevice *source,
 
     if (m_bufferHash[nonce]->open(QIODevice::ReadOnly)) {
         // Send request.
-        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
         if (!synchronous) {
             connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)));
         }
@@ -643,7 +643,7 @@ QString BoxClient::shareFile(QString nonce, QString uid, QString remoteFilePath,
     qDebug() << "BoxClient::shareFile postString" << postString;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)));
     }
@@ -685,7 +685,7 @@ QString BoxClient::delta(QString nonce, QString uid, bool synchronous)
     qDebug() << "BoxClient::delta" << nonce << "uri" << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deltaReplyFinished(QNetworkReply*)));
     }
@@ -1306,7 +1306,7 @@ QString BoxClient::media(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "BoxClient::media postString" << postString;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
@@ -1360,7 +1360,7 @@ QString BoxClient::searchFileId(QString nonce, QString uid, QString remoteParent
     qDebug() << "BoxClient::searchFileId uri" << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );

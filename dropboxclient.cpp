@@ -198,7 +198,7 @@ void DropboxClient::accessToken(QString nonce, QString pin)
     qDebug() << "DropboxClient::accessToken" << nonce << "postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accessTokenReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -252,7 +252,7 @@ void DropboxClient::accountInfo(QString nonce, QString uid)
     QString uri = accountInfoURI;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -272,7 +272,7 @@ void DropboxClient::quota(QString nonce, QString uid)
     QString uri = accountInfoURI;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(quotaReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -289,7 +289,7 @@ QIODevice *DropboxClient::fileGet(QString nonce, QString uid, QString remoteFile
     qDebug() << "DropboxClient::fileGet" << nonce << "uri" << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
@@ -345,7 +345,7 @@ QNetworkReply *DropboxClient::filePut(QString nonce, QString uid, QIODevice *sou
     qDebug() << "DropboxClient::filePut uri " << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)));
     }
@@ -416,7 +416,7 @@ QString DropboxClient::media(QString nonce, QString uid, QString remoteFilePath)
     QByteArray postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setRawHeader("Authorization", QString("Bearer " + accessTokenPairMap[uid].token).toAscii() );
@@ -492,7 +492,7 @@ QNetworkReply * DropboxClient::property(QString nonce, QString uid, QString remo
     qDebug() << "DropboxClient::property" << nonce << "uri" << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         if (callback == "metadata") {
             connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(metadataReplyFinished(QNetworkReply*)));
@@ -531,7 +531,7 @@ void DropboxClient::metadata(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "DropboxClient::metadata" << nonce << "uri" << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(metadataReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -551,7 +551,7 @@ void DropboxClient::browse(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "DropboxClient::browse" << nonce << "uri" << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(browseReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -592,7 +592,7 @@ void DropboxClient::moveFile(QString nonce, QString uid, QString remoteFilePath,
     qDebug() << "DropboxClient::moveFile" << nonce << "postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)) );
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -624,7 +624,7 @@ void DropboxClient::copyFile(QString nonce, QString uid, QString remoteFilePath,
     qDebug() << "DropboxClient::copyFile" << nonce << "postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(copyFileReplyFinished(QNetworkReply*)) );
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -652,7 +652,7 @@ QString DropboxClient::deleteFile(QString nonce, QString uid, QString remoteFile
     qDebug() << "DropboxClient::deleteFile" << nonce << "postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deleteFileReplyFinished(QNetworkReply*)) );
     }
@@ -692,7 +692,7 @@ QString DropboxClient::shareFile(QString nonce, QString uid, QString remoteFileP
     QByteArray postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)));
     }
@@ -734,7 +734,7 @@ QString DropboxClient::delta(QString nonce, QString uid, bool synchronous)
     qDebug() << "DropboxClient::delta" << nonce << "postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deltaReplyFinished(QNetworkReply*)));
     }
@@ -771,7 +771,7 @@ QIODevice *DropboxClient::fileGetResume(QString nonce, QString uid, QString remo
     m_localFileHash[nonce] = new QFile(localFilePath);
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetResumeReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -843,7 +843,7 @@ QString DropboxClient::filePutResumeUpload(QString nonce, QString uid, QIODevice
     qDebug() << "DropboxClient::filePutResumeUpload" << nonce << "source->size()" << source->size() << "bytesTotal" << bytesTotal << "offset" << offset << "chunkSize" << chunkSize;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutResumeReplyFinished(QNetworkReply*)));
     }
@@ -915,7 +915,7 @@ QString DropboxClient::filePutResumeStatus(QString nonce, QString uid, QString f
     qDebug() << "DropboxClient::filePutResumeStatus" << nonce << "url" << url;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutResumeReplyFinished(QNetworkReply*)));
     }
@@ -977,7 +977,7 @@ QString DropboxClient::filePutCommit(QString nonce, QString uid, QString remoteF
     qDebug() << "postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)) );
     }
@@ -1039,7 +1039,7 @@ QString DropboxClient::createFolder(QString nonce, QString uid, QString remotePa
     qDebug() << "DropboxClient::createFolder" << nonce << "postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(createFolderReplyFinished(QNetworkReply*)));
     }

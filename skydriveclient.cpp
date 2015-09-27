@@ -84,7 +84,7 @@ void SkyDriveClient::accessToken(QString nonce, QString pin)
     qDebug() << "SkyDriveClient::accessToken postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accessTokenReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -114,7 +114,7 @@ void SkyDriveClient::refreshToken(QString nonce, QString uid)
     qDebug() << "postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accessTokenReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(accessTokenURI));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -138,7 +138,7 @@ void SkyDriveClient::accountInfo(QString nonce, QString uid)
     qDebug() << "SkyDriveClient::accountInfo uri " << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -154,7 +154,7 @@ void SkyDriveClient::quota(QString nonce, QString uid)
     qDebug() << "SkyDriveClient::quota uri " << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(quotaReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -194,7 +194,7 @@ QNetworkReply * SkyDriveClient::files(QString nonce, QString uid, QString remote
     qDebug() << "SkyDriveClient::files uri " << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filesReplyFinished(QNetworkReply*)) );
     }
@@ -231,7 +231,7 @@ QNetworkReply * SkyDriveClient::property(QString nonce, QString uid, QString rem
     qDebug() << "SkyDriveClient::property uri " << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(propertyReplyFinished(QNetworkReply*)) );
     }
@@ -283,7 +283,7 @@ QString SkyDriveClient::createFolder(QString nonce, QString uid, QString remoteP
     qDebug() << "SkyDriveClient::createFolder postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(createFolderReplyFinished(QNetworkReply*)));
     }
@@ -342,7 +342,7 @@ void SkyDriveClient::moveFile(QString nonce, QString uid, QString remoteFilePath
 
     if (m_bufferHash[nonce]->open(QIODevice::ReadOnly)) {
         // Send request.
-        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)) );
         QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
         req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -373,7 +373,7 @@ void SkyDriveClient::copyFile(QString nonce, QString uid, QString remoteFilePath
 
     if (m_bufferHash[nonce]->open(QIODevice::ReadOnly)) {
         // Send request.
-        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(copyFileReplyFinished(QNetworkReply*)) );
         QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
         req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -392,7 +392,7 @@ QString SkyDriveClient::deleteFile(QString nonce, QString uid, QString remoteFil
     qDebug() << "SkyDriveClient::deleteFile uri " << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(deleteFileReplyFinished(QNetworkReply*)) );
     }
@@ -432,7 +432,7 @@ void SkyDriveClient::renameFile(QString nonce, QString uid, QString remoteFilePa
     qDebug() << "SkyDriveClient::renameFile postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)) );
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -450,7 +450,7 @@ QNetworkReply *SkyDriveClient::filePut(QString nonce, QString uid, QIODevice *so
     qDebug() << "SkyDriveClient::filePut" << nonce << "uri" << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(filePutReplyFinished(QNetworkReply*)));
     }
@@ -503,7 +503,7 @@ QString SkyDriveClient::shareFile(QString nonce, QString uid, QString remoteFile
     qDebug() << "SkyDriveClient::shareFile" << nonce << "uri" << uri;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     if (!synchronous) {
         connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(shareFileReplyFinished(QNetworkReply*)));
     }

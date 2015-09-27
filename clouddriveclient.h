@@ -9,6 +9,7 @@
 #include "clouddrivemodelitem.h"
 #include "clouddrivejob.h"
 #include "clouddriveitem.h"
+#include "customqnetworkaccessmanager.h"
 
 class CloudDriveClient : public QObject
 {

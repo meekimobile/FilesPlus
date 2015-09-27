@@ -172,7 +172,7 @@ Page {
                 webViewBusy.visible = true;
 //                okButton.visible = false;
 
-                if (authPage.redirectFrom == "DropboxClient") {
+                if (appInfo.getSettingBoolValue("AuthPage.openAuthorizationWithBrowser", false)) {
                     webView.stop.trigger();
                     webViewBusy.visible = false;
                 }
@@ -238,8 +238,8 @@ Page {
                         cloudDriveModel.accessTokenSlot(authPage.redirectFrom, pinInputPanel.pin);
                         pageStack.pop();
                     } else {
-                        // Can't detect successful title, use default pin to hide PIN panel.
-                        pinInputPanel.pin = "PinDefault";
+                        var pin = authPage.parseOAuth2Code(url);
+                        pinInputPanel.pin = pin;
                     }
                 } else if (authPage.redirectFrom == "SkyDriveClient") {
                     // SkyDriveClient handler
@@ -320,8 +320,8 @@ Page {
             appInfo.setSettingValue("privacy.policy.accepted", true);
             privacyConsent.close();
 
-            if (authPage.redirectFrom == "DropboxClient") {
-                openDropboxAuthorization.open();
+            if (appInfo.getSettingBoolValue("AuthPage.openAuthorizationWithBrowser", false)) {
+                openAuthorization.open();
             }
         }
 
@@ -333,9 +333,9 @@ Page {
     }
 
     ConfirmDialog {
-        id: openDropboxAuthorization
+        id: openAuthorization
         titleText: appInfo.emptyStr+qsTr("Authorization")
-        contentText: appInfo.emptyStr+qsTr("FilesPlus will open Dropbox authorization page with web browser.\
+        contentText: appInfo.emptyStr+qsTr("FilesPlus will open authorization page with web browser.\
 \n\nPlease click 'OK' to continue.")
 
         onConfirm: {

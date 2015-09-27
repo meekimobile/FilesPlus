@@ -74,7 +74,7 @@ void WebDavClient::accessToken(QString nonce, QString pin)
     qDebug() << "WebDavClient::accessToken postData" << postData;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accessTokenReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
@@ -100,7 +100,7 @@ void WebDavClient::accountInfo(QString nonce, QString uid)
     qDebug() << "WebDavClient::accountInfo authHeader" << authHeader;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(accountInfoReplyFinished(QNetworkReply*)));
     QNetworkRequest req = QNetworkRequest(QUrl(uri));
@@ -141,7 +141,7 @@ QNetworkReply * WebDavClient::property(QString nonce, QString uid, QString remot
     m_bufferHash[nonce]->reset(); // Reset pos for reading while request.
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     // NOTE: These signal/slot connection work in both sync/async as eventloop is being processed while waiting.
     connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)) );
@@ -240,7 +240,7 @@ void WebDavClient::moveFile(QString nonce, QString uid, QString remoteFilePath, 
     qDebug() << "WebDavClient::moveFile destinationHeader" << destinationHeader;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(moveFileReplyFinished(QNetworkReply*)));
@@ -280,7 +280,7 @@ void WebDavClient::copyFile(QString nonce, QString uid, QString remoteFilePath, 
     qDebug() << "WebDavClient::copyFile destinationHeader" << destinationHeader;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(copyFileReplyFinished(QNetworkReply*)));
@@ -308,7 +308,7 @@ QString WebDavClient::deleteFile(QString nonce, QString uid, QString remoteFileP
     qDebug() << "WebDavClient::deleteFile authHeader" << authHeader;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
@@ -353,7 +353,7 @@ QString WebDavClient::shareFile(QString nonce, QString uid, QString remoteFilePa
     qDebug() << "WebDavClient::shareFile authHeader" << authHeader;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
@@ -404,7 +404,7 @@ QString WebDavClient::media(QString nonce, QString uid, QString remoteFilePath)
     qDebug() << "WebDavClient::media authHeader" << authHeader;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
@@ -455,7 +455,7 @@ QString WebDavClient::createFolder(QString nonce, QString uid, QString remotePar
     qDebug() << "WebDavClient::createFolder authHeader" << authHeader;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
@@ -500,7 +500,7 @@ QIODevice *WebDavClient::fileGet(QString nonce, QString uid, QString remoteFileP
     qDebug() << "WebDavClient::fileGet" << nonce << "authHeader" << authHeader;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
@@ -565,7 +565,7 @@ QNetworkReply *WebDavClient::filePut(QString nonce, QString uid, QIODevice *sour
     qDebug() << "WebDavClient::filePut" << nonce << "authHeader" << authHeader;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     if (!synchronous) {
@@ -625,7 +625,7 @@ QIODevice *WebDavClient::fileGetResume(QString nonce, QString uid, QString remot
     qDebug() << "WebDavClient::fileGet" << nonce << "authHeader" << authHeader;
 
     // Send request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     connect(manager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)), this, SLOT(authenticationReplyFilter(QNetworkReply*,QAuthenticator*)) );
     connect(manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(sslErrorsReplyFilter(QNetworkReply*,QList<QSslError>)));
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileGetResumeReplyFinished(QNetworkReply*)));
@@ -1384,19 +1384,35 @@ void WebDavClient::sslErrorsReplyFilter(QNetworkReply *reply, QList<QSslError> s
     QString nonce = reply->request().attribute(QNetworkRequest::User).toString();
     qDebug() << "WebDavClient::sslErrorsReplyFilter nonce" << nonce << "reply" << reply << QString("Error=%1").arg(reply->error()) << "sslErrors" << sslErrors;
 
-    // Configure to ignore errors for self-signed certificate.
-    if (m_settings.value(objectName() + ".ignoreSSLSelfSignedCertificateErrors", QVariant(false)).toBool()) {
-        QList<QSslError> expectedSslErrors;
-        foreach (QSslError sslError, sslErrors) {
-            // NOTE Ignore all errors to support WIndows self-signed certificates. sslErrors ["The host name did not match any of the valid hosts for this certificate", "The issuer certificate of a locally looked up certificate could not be found", "No certificates could be verified"]
-//            if (sslError.error() == QSslError::SelfSignedCertificate || sslError.error() == QSslError::HostNameMismatch) {
-                expectedSslErrors.append(sslError);
-//            }
-        }
+    QList<QSslError> expectedSslErrors;
 
-        qDebug() << "WebDavClient::sslErrorsReplyFilter nonce" << nonce << "ignore expectedSslErrors" << expectedSslErrors;
-        reply->ignoreSslErrors(expectedSslErrors);
+    foreach (QSslError sslError, sslErrors) {
+//        qDebug() << "WebDavClient::sslErrorsReplyFilter sslError error" << sslError.error();
+//        qDebug() << "WebDavClient::sslErrorsReplyFilter sslError certificate" << sslError.certificate();
+
+        if (m_settings.value(objectName() + ".ignoreSSLSelfSignedCertificateErrors", QVariant(false)).toBool()) {
+            /*
+             * NOTE Ignore all errors to support WIndows self-signed certificates.
+             * sslErrors
+             * "The host name did not match any of the valid hosts for this certificate"
+             * "The issuer certificate of a locally looked up certificate could not be found"
+             * "The root CA certificate is not trusted for this purpose"
+             * "No certificates could be verified"
+             */
+            qDebug() << "WebDavClient::sslErrorsReplyFilter ignore sslError error" << sslError.error();
+            expectedSslErrors.append(sslError);
+
+        } else if (m_settings.value("CustomCustomQNetworkAccessManager.ignoreSSLCertificateErrors", QVariant(false)).toBool()) {
+            // NOTE Ignore all errors to support Not yet valid certificates because of SSLv3 poodle security hole detected and Qt4.7 doesn't support newer TLS. sslError = ("The certificate is not yet valid", "The certificate is not yet valid")
+            qDebug() << "WebDavClient::sslErrorsReplyFilter ignore sslError error" << sslError.error();
+            expectedSslErrors.append(sslError);
+
+        } else {
+            qDebug() << "WebDavClient::sslErrorsReplyFilter sslError error" << sslError.error();
+        }
     }
+
+    reply->ignoreSslErrors(expectedSslErrors);
 }
 
 void WebDavClient::sslErrorsReplyFilter(QList<QSslError> sslErrors)
