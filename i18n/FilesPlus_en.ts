@@ -42,10 +42,18 @@ Please click &apos;OK&apos; to continue.</translation>
     </message>
     <message>
         <location line="+1"/>
+        <source>FilesPlus will open authorization page with web browser.
+
+Please click &apos;OK&apos; to continue.</source>
+        <translation>FilesPlus will open authorization page with web browser.
+
+Please click &apos;OK&apos; to continue.</translation>
+    </message>
+    <message>
         <source>FilesPlus will open Dropbox authorization page with web browser.
 
 Please click &apos;OK&apos; to continue.</source>
-        <translation>FilesPlus will open Dropbox authorization page with web browser.
+        <translation type="obsolete">FilesPlus will open Dropbox authorization page with web browser.
 
 Please click &apos;OK&apos; to continue.</translation>
     </message>
@@ -532,7 +540,7 @@ Please click &apos;OK&apos; to continue.</translation>
 <context>
     <name>CloudDriveModel</name>
     <message>
-        <location filename="../clouddrivemodel.cpp" line="+1148"/>
+        <location filename="../clouddrivemodel.cpp" line="+1094"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
@@ -542,18 +550,18 @@ Please click &apos;OK&apos; to continue.</translation>
     </message>
     <message>
         <location line="+103"/>
-        <location line="+56"/>
+        <location line="+52"/>
         <source>Download</source>
         <translation>Download</translation>
     </message>
     <message>
-        <location line="-54"/>
-        <location line="+50"/>
+        <location line="-50"/>
+        <location line="+46"/>
         <source>Upload</source>
         <translation>Upload</translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="-44"/>
         <source>Sync</source>
         <translation>Sync</translation>
     </message>
@@ -594,12 +602,12 @@ Please click &apos;OK&apos; to continue.</translation>
     </message>
     <message>
         <location line="+2"/>
-        <location line="+22"/>
+        <location line="+18"/>
         <source>Delete</source>
         <translation>Delete</translation>
     </message>
     <message>
-        <location line="-20"/>
+        <location line="-16"/>
         <source>Move</source>
         <translation>Move</translation>
     </message>
@@ -624,9 +632,8 @@ Please click &apos;OK&apos; to continue.</translation>
         <translation>Browse</translation>
     </message>
     <message>
-        <location line="+2"/>
         <source>LoadCloudDriveItems</source>
-        <translation>LoadCloudDriveItems</translation>
+        <translation type="obsolete">LoadCloudDriveItems</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -634,9 +641,8 @@ Please click &apos;OK&apos; to continue.</translation>
         <translation>LoadCloudDriveJobs</translation>
     </message>
     <message>
-        <location line="+2"/>
         <source>InitializeDB</source>
-        <translation>InitializeDB</translation>
+        <translation type="obsolete">InitializeDB</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -679,7 +685,7 @@ Please click &apos;OK&apos; to continue.</translation>
         <translation>Cancel CloudDrive jobs</translation>
     </message>
     <message>
-        <location line="+1228"/>
+        <location line="+1230"/>
         <source>User ID is not authorized.</source>
         <translation>User ID is not authorized.</translation>
     </message>
@@ -733,7 +739,7 @@ It can&apos;t be downloaded.</translation>
         <translation>Can&apos;t create folder. Migration is aborted.</translation>
     </message>
     <message>
-        <location line="+1332"/>
+        <location line="+1241"/>
         <location line="+12"/>
         <location line="+12"/>
         <source>Suspend</source>
@@ -2201,7 +2207,7 @@ And present in Pie view for easy understanding at glance.</translation>
 <context>
     <name>FolderSizeItemListModel</name>
     <message>
-        <location filename="../foldersizeitemlistmodel.cpp" line="+640"/>
+        <location filename="../foldersizeitemlistmodel.cpp" line="+631"/>
         <location line="+20"/>
         <source>Source and Target path can&apos;t be the same.</source>
         <translation>Source and Target path can&apos;t be the same.</translation>
@@ -2261,15 +2267,15 @@ And present in Pie view for easy understanding at glance.</translation>
 <context>
     <name>FolderSizeModelThread</name>
     <message>
-        <location filename="../foldersizemodelthread.cpp" line="+565"/>
+        <location filename="../foldersizemodelthread.cpp" line="+455"/>
         <location line="+75"/>
         <location line="+121"/>
-        <location line="+717"/>
+        <location line="+711"/>
         <source>Move %1 to %2 is done successfully.</source>
         <translation>Move %1 to %2 is done successfully.</translation>
     </message>
     <message>
-        <location line="-895"/>
+        <location line="-889"/>
         <location line="+90"/>
         <location line="+80"/>
         <source>Copy %1 to %2 is aborted.</source>
@@ -2297,12 +2303,12 @@ And present in Pie view for easy understanding at glance.</translation>
     <message>
         <location line="-120"/>
         <location line="+120"/>
-        <location line="+716"/>
+        <location line="+710"/>
         <source>Move %1 to %2 is failed.</source>
         <translation>Move %1 to %2 is failed.</translation>
     </message>
     <message>
-        <location line="-784"/>
+        <location line="-778"/>
         <source>Both source/target path can&apos;t be the same file.</source>
         <translation>Both source/target path can&apos;t be the same file.</translation>
     </message>
@@ -2322,7 +2328,7 @@ And present in Pie view for easy understanding at glance.</translation>
         <translation>Deleting %1 is done.</translation>
     </message>
     <message>
-        <location line="+646"/>
+        <location line="+640"/>
         <source>Empty %1 is done successfully.</source>
         <translation>Empty %1 is done successfully.</translation>
     </message>
@@ -2340,7 +2346,7 @@ And present in Pie view for easy understanding at glance.</translation>
         <translation type="obsolete">Deleting sub item %1 is done.</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-22"/>
         <source>Deleting %1 is aborted.</source>
         <translation>Deleting %1 is aborted.</translation>
     </message>
@@ -2426,7 +2432,7 @@ It can&apos;t be downloaded.</translation>
 <context>
     <name>GCPClient</name>
     <message>
-        <location filename="../gcpclient.cpp" line="+339"/>
+        <location filename="../gcpclient.cpp" line="+340"/>
         <source>Refresh token is missing</source>
         <translation>Refresh token is missing</translation>
     </message>
@@ -3033,7 +3039,7 @@ Link will be removed.</translation>
     <name>SettingPage</name>
     <message>
         <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+403"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+421"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+433"/>
         <source>Cancel queued jobs</source>
         <translation>Cancel queued jobs</translation>
     </message>
@@ -3045,7 +3051,7 @@ Link will be removed.</translation>
     </message>
     <message>
         <location line="-306"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-324"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-336"/>
         <source>Settings</source>
         <translation>Settings</translation>
     </message>
@@ -3053,13 +3059,13 @@ Link will be removed.</translation>
         <location line="+6"/>
         <location line="+324"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <location line="+344"/>
+        <location line="+356"/>
         <source>Logging (Debug)</source>
         <translation>Logging (Debug)</translation>
     </message>
     <message>
         <location line="-323"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-343"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-355"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -3071,7 +3077,7 @@ Please confirm.</translation>
     </message>
     <message>
         <location line="+294"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+312"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+324"/>
         <source>Show cloud print jobs</source>
         <translation>Show cloud print jobs</translation>
     </message>
@@ -3201,8 +3207,18 @@ Please confirm.</translation>
         <translation>Turn bluetooth on automatically</translation>
     </message>
     <message>
+        <location line="+11"/>
+        <source>Open authorization in browser</source>
+        <translation>Open authorization in browser</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ignore all SSL certificate errors</source>
+        <translation>Ignore all SSL certificate errors</translation>
+    </message>
+    <message>
         <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+1"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+2"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-10"/>
         <source>Show status bar</source>
         <translation>Show status bar</translation>
     </message>
@@ -3214,7 +3230,7 @@ Please confirm.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+3"/>
         <source>Ignore WebDAV SSL self-signed certificate errors</source>
         <translation>Ignore WebDAV SSL self-signed certificate errors</translation>
     </message>
@@ -3223,7 +3239,7 @@ Please confirm.</translation>
         <translation type="obsolete">Show thumbnail</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-10"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-12"/>
         <source>Keep bluetooth off</source>
         <translation>Turn bluetooth off after use</translation>
     </message>
@@ -3259,7 +3275,7 @@ Please confirm.</translation>
     </message>
     <message>
         <location line="+3"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+4"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
         <source>Cache local images</source>
         <translation>Cache local images</translation>
     </message>
@@ -3277,7 +3293,7 @@ Please confirm.</translation>
     </message>
     <message>
         <location line="-31"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-34"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-36"/>
         <source>Sync to cloud storage root</source>
         <translation>Sync to cloud storage root</translation>
     </message>
@@ -3293,13 +3309,13 @@ Please confirm.</translation>
     </message>
     <message>
         <location line="+35"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+38"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+40"/>
         <source>Delete by moving to trash</source>
         <translation>Delete by moving to trash</translation>
     </message>
     <message>
         <location line="-34"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-37"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-39"/>
         <source>Dirty before sync (GoogleDrive)</source>
         <translation>Dirty before sync (GoogleDrive)</translation>
     </message>
@@ -3311,7 +3327,7 @@ Please confirm.</translation>
     </message>
     <message>
         <location line="+14"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+17"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+19"/>
         <source>Local image preview size</source>
         <translation>Local image preview size</translation>
     </message>
@@ -3403,7 +3419,7 @@ Please confirm.</translation>
         <translation type="obsolete">Locale</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-309"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-311"/>
         <source>Show private drive on drive page</source>
         <translation>Show private drive on drive page</translation>
     </message>
@@ -3516,7 +3532,7 @@ Please confirm.</translation>
 <context>
     <name>WebDavClient</name>
     <message>
-        <location filename="../webdavclient.cpp" line="+917"/>
+        <location filename="../webdavclient.cpp" line="+931"/>
         <source>Test connection</source>
         <translation>Connection testing</translation>
     </message>

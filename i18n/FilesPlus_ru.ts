@@ -47,13 +47,21 @@ Please click &apos;Yes&apos; to continue.</translatorcomment>
     </message>
     <message>
         <location line="+1"/>
+        <source>FilesPlus will open authorization page with web browser.
+
+Please click &apos;OK&apos; to continue.</source>
+        <translation>FilesPlus откроет страницу авторизации с веб-браузером.
+
+Для продолжения нажмите Да.</translation>
+    </message>
+    <message>
         <source>FilesPlus will open Dropbox authorization page with web browser.
 
 Please click &apos;OK&apos; to continue.</source>
         <translatorcomment>FilesPlus open Dropbox login page with a web browser.
 
 Click Yes to continue.</translatorcomment>
-        <translation>FilesPlus откроет страницу авторизации Dropbox с веб-браузером.
+        <translation type="obsolete">FilesPlus откроет страницу авторизации Dropbox с веб-браузером.
 
 Для продолжения нажмите Да.</translation>
     </message>
@@ -502,7 +510,7 @@ Click Yes to continue.</translatorcomment>
 <context>
     <name>CloudDriveModel</name>
     <message>
-        <location filename="../clouddrivemodel.cpp" line="+1148"/>
+        <location filename="../clouddrivemodel.cpp" line="+1094"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
@@ -512,18 +520,18 @@ Click Yes to continue.</translatorcomment>
     </message>
     <message>
         <location line="+103"/>
-        <location line="+56"/>
+        <location line="+52"/>
         <source>Download</source>
         <translation>Скачать</translation>
     </message>
     <message>
-        <location line="-54"/>
-        <location line="+50"/>
+        <location line="-50"/>
+        <location line="+46"/>
         <source>Upload</source>
         <translation>Загрузить</translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="-44"/>
         <source>Sync</source>
         <translation>Синхронизировать</translation>
     </message>
@@ -564,12 +572,12 @@ Click Yes to continue.</translatorcomment>
     </message>
     <message>
         <location line="+2"/>
-        <location line="+22"/>
+        <location line="+18"/>
         <source>Delete</source>
         <translation>Удалить</translation>
     </message>
     <message>
-        <location line="-20"/>
+        <location line="-16"/>
         <source>Move</source>
         <translation>Переместить</translation>
     </message>
@@ -595,9 +603,8 @@ Click Yes to continue.</translatorcomment>
         <translation>Обзор</translation>
     </message>
     <message>
-        <location line="+2"/>
         <source>LoadCloudDriveItems</source>
-        <translation>Загрузка содержимого</translation>
+        <translation type="obsolete">Загрузка содержимого</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -605,9 +612,8 @@ Click Yes to continue.</translatorcomment>
         <translation>Загрузка заданий</translation>
     </message>
     <message>
-        <location line="+2"/>
         <source>InitializeDB</source>
-        <translation>Инициализация DB</translation>
+        <translation type="obsolete">Инициализация DB</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -651,7 +657,7 @@ Click Yes to continue.</translatorcomment>
         <translation>Отмена заданий Cloud Drive</translation>
     </message>
     <message>
-        <location line="+1228"/>
+        <location line="+1230"/>
         <source>User ID is not authorized.</source>
         <translatorcomment>Cloud account is not registered.</translatorcomment>
         <translation>Облачные аккаунта не зарегистрирован.</translation>
@@ -706,7 +712,7 @@ It can&apos;t be downloaded.</source>
         <translation>Невозможно создать папку. Копирование прервано.</translation>
     </message>
     <message>
-        <location line="+1332"/>
+        <location line="+1241"/>
         <location line="+12"/>
         <location line="+12"/>
         <source>Suspend</source>
@@ -2212,7 +2218,7 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>FolderSizeItemListModel</name>
     <message>
-        <location filename="../foldersizeitemlistmodel.cpp" line="+640"/>
+        <location filename="../foldersizeitemlistmodel.cpp" line="+631"/>
         <location line="+20"/>
         <source>Source and Target path can&apos;t be the same.</source>
         <translation>Источник и приемник не могут совпадать.</translation>
@@ -2272,15 +2278,15 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>FolderSizeModelThread</name>
     <message>
-        <location filename="../foldersizemodelthread.cpp" line="+565"/>
+        <location filename="../foldersizemodelthread.cpp" line="+455"/>
         <location line="+75"/>
         <location line="+121"/>
-        <location line="+717"/>
+        <location line="+711"/>
         <source>Move %1 to %2 is done successfully.</source>
         <translation>Перемещение %1 в %2 завершено</translation>
     </message>
     <message>
-        <location line="-895"/>
+        <location line="-889"/>
         <location line="+90"/>
         <location line="+80"/>
         <source>Copy %1 to %2 is aborted.</source>
@@ -2308,12 +2314,12 @@ And present in Pie view for easy understanding at glance.</source>
     <message>
         <location line="-120"/>
         <location line="+120"/>
-        <location line="+716"/>
+        <location line="+710"/>
         <source>Move %1 to %2 is failed.</source>
         <translation>Не удалось переместить %1 в %2</translation>
     </message>
     <message>
-        <location line="-784"/>
+        <location line="-778"/>
         <source>Both source/target path can&apos;t be the same file.</source>
         <translation>Источник и приемник не могут совпадать</translation>
     </message>
@@ -2333,7 +2339,7 @@ And present in Pie view for easy understanding at glance.</source>
         <translation>Удаление %1 завершено</translation>
     </message>
     <message>
-        <location line="+646"/>
+        <location line="+640"/>
         <source>Empty %1 is done successfully.</source>
         <translation>Очистить %1 завершено.</translation>
     </message>
@@ -2351,7 +2357,7 @@ And present in Pie view for easy understanding at glance.</source>
         <translation type="obsolete">Удаление %1 завершено</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-22"/>
         <source>Deleting %1 is aborted.</source>
         <translation>Удаление %1 прервано</translation>
     </message>
@@ -2437,7 +2443,7 @@ It can&apos;t be downloaded.</source>
 <context>
     <name>GCPClient</name>
     <message>
-        <location filename="../gcpclient.cpp" line="+339"/>
+        <location filename="../gcpclient.cpp" line="+340"/>
         <source>Refresh token is missing</source>
         <translation>Маркер отсутствует</translation>
     </message>
@@ -3056,7 +3062,7 @@ Link will be removed.</source>
     <name>SettingPage</name>
     <message>
         <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+403"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+421"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+433"/>
         <source>Cancel queued jobs</source>
         <translation>Отменить очередь заданий</translation>
     </message>
@@ -3068,7 +3074,7 @@ Link will be removed.</source>
     </message>
     <message>
         <location line="-306"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-324"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-336"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
@@ -3076,13 +3082,13 @@ Link will be removed.</source>
         <location line="+6"/>
         <location line="+324"/>
         <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+6"/>
-        <location line="+344"/>
+        <location line="+356"/>
         <source>Logging (Debug)</source>
         <translation>Ведение журнала (Debug)</translation>
     </message>
     <message>
         <location line="-323"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-343"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-355"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -3092,7 +3098,7 @@ FilesPlus сейчас закроется.</translation>
     </message>
     <message>
         <location line="+294"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+312"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+324"/>
         <source>Show cloud print jobs</source>
         <translation>Показать задания Cloud Print</translation>
     </message>
@@ -3246,8 +3252,19 @@ FilesPlus сейчас закроется.</translation>
         <translation>Автовключение Bluetooth</translation>
     </message>
     <message>
+        <location line="+11"/>
+        <source>Open authorization in browser</source>
+        <translatorcomment>Authorize with web browser</translatorcomment>
+        <translation>Авторизация с веб-браузером</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ignore all SSL certificate errors</source>
+        <translation>Игнорировать ошибки сертификатов SSL</translation>
+    </message>
+    <message>
         <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+8"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+11"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+1"/>
         <source>Ignore WebDAV SSL self-signed certificate errors</source>
         <translatorcomment>Ignore WebDAV SSL certificate errors</translatorcomment>
         <translation>Игнорировать ошибки сертификатов WebDAV SSL</translation>
@@ -3257,7 +3274,7 @@ FilesPlus сейчас закроется.</translation>
         <translation type="obsolete">Показать миниатюры</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-10"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-12"/>
         <source>Keep bluetooth off</source>
         <translatorcomment>Always turn off bluetooth</translatorcomment>
         <translation>Автовыключение Bluetooth</translation>
@@ -3306,7 +3323,7 @@ FilesPlus сейчас закроется.</translation>
     </message>
     <message>
         <location line="+2"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+2"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+4"/>
         <source>Cache local images</source>
         <translation>Кэширование эскизов местных</translation>
     </message>
@@ -3424,7 +3441,7 @@ FilesPlus сейчас закроется.</translation>
         <translation type="obsolete">Locale</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-309"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-311"/>
         <source>Show private drive on drive page</source>
         <translation>Показать скрытый диск на главной странице</translation>
     </message>
@@ -3533,7 +3550,7 @@ FilesPlus сейчас закроется.</translation>
 <context>
     <name>WebDavClient</name>
     <message>
-        <location filename="../webdavclient.cpp" line="+917"/>
+        <location filename="../webdavclient.cpp" line="+931"/>
         <source>Test connection</source>
         <translation>Проверка соединения</translation>
     </message>

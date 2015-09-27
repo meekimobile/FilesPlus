@@ -38,13 +38,21 @@ Please click &apos;OK&apos; to continue.</source>
     </message>
     <message>
         <location line="+1"/>
+        <source>FilesPlus will open authorization page with web browser.
+
+Please click &apos;OK&apos; to continue.</source>
+        <translation>FilesPlus在网页浏览器中打开登录页面。
+
+请点击“确定”继续。</translation>
+    </message>
+    <message>
         <source>FilesPlus will open Dropbox authorization page with web browser.
 
 Please click &apos;OK&apos; to continue.</source>
         <translatorcomment>FilesPlus to open Dropbox login page in web browser.
 
 Please click &apos;OK&apos; to continue.</translatorcomment>
-        <translation>FilesPlus在网页浏览器中打开Dropbox的登录页面。
+        <translation type="obsolete">FilesPlus在网页浏览器中打开Dropbox的登录页面。
 
 请点击“确定”继续。</translation>
     </message>
@@ -434,7 +442,7 @@ Please click &apos;OK&apos; to continue.</translatorcomment>
 <context>
     <name>CloudDriveModel</name>
     <message>
-        <location filename="../clouddrivemodel.cpp" line="+1285"/>
+        <location filename="../clouddrivemodel.cpp" line="+1231"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
@@ -474,39 +482,38 @@ Please click &apos;OK&apos; to continue.</translatorcomment>
         <translation>刷新授权访问</translation>
     </message>
     <message>
-        <location line="+22"/>
         <source>InitializeDB</source>
-        <translation>InitializeDB</translation>
+        <translation type="obsolete">InitializeDB</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+28"/>
         <source>Migrate</source>
         <translation>移动</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-12"/>
         <source>Browse</source>
         <translation>浏览</translation>
     </message>
     <message>
         <location line="-10"/>
-        <location line="+22"/>
+        <location line="+18"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="+1687"/>
+        <location line="+1689"/>
         <source>Service is not implemented or host is not accessible.</source>
         <translation>服务器未生效或无法访问主机.</translation>
     </message>
     <message>
-        <location line="-1727"/>
-        <location line="+50"/>
+        <location line="-1725"/>
+        <location line="+46"/>
         <source>Upload</source>
         <translation>上传</translation>
     </message>
     <message>
-        <location line="-165"/>
+        <location line="-161"/>
         <location line="+1"/>
         <location line="+4"/>
         <location line="+2"/>
@@ -516,27 +523,27 @@ Please click &apos;OK&apos; to continue.</translatorcomment>
     </message>
     <message>
         <location line="+103"/>
-        <location line="+56"/>
+        <location line="+52"/>
         <source>Download</source>
         <translation>下载</translation>
     </message>
     <message>
-        <location line="-30"/>
+        <location line="-26"/>
         <source>Share link</source>
         <translation>分享链接</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+6"/>
         <source>LoadCloudDriveJobs</source>
         <translation>读取&lt;b&gt;Cloud Drive&lt;/b&gt;中的事件</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+22"/>
         <source>Cancel Cloud Drive Jobs</source>
         <translation>取消&lt;b&gt;Cloud Drive&lt;/b&gt;中的事件</translation>
     </message>
     <message>
-        <location line="+1228"/>
+        <location line="+1230"/>
         <source>User ID is not authorized.</source>
         <translatorcomment>User account is not registered.</translatorcomment>
         <translation>未注册用户帐户。</translation>
@@ -586,7 +593,7 @@ It can&apos;t be downloaded.</source>
         <translation>无法创建文件夹,已中止移动操作.</translation>
     </message>
     <message>
-        <location line="+1332"/>
+        <location line="+1241"/>
         <location line="+12"/>
         <location line="+12"/>
         <source>Suspend</source>
@@ -609,22 +616,21 @@ It can&apos;t be downloaded.</source>
         <translation>同步只带WiFi。</translation>
     </message>
     <message>
-        <location line="-3823"/>
         <source>LoadCloudDriveItems</source>
-        <translation>读取&lt;b&gt;Cloud Drive&lt;/b&gt;中的文件</translation>
+        <translation type="obsolete">读取&lt;b&gt;Cloud Drive&lt;/b&gt;中的文件</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="-3726"/>
         <source>Disconnect</source>
         <translation>断开</translation>
     </message>
     <message>
-        <location line="-30"/>
+        <location line="-26"/>
         <source>Authorize</source>
         <translation>授权</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+36"/>
         <source>Sync from local</source>
         <translation>同步本地</translation>
     </message>
@@ -634,22 +640,22 @@ It can&apos;t be downloaded.</source>
         <translation>初始化&lt;b&gt;云客户端&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="-32"/>
+        <location line="-28"/>
         <source>Create folder</source>
         <translation>创建文件夹</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+44"/>
         <source>Commit upload</source>
         <translation>提交上传</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-42"/>
         <source>Request token</source>
         <translation>请求授权</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+36"/>
         <source>Migrate file</source>
         <translation>移动文件</translation>
     </message>
@@ -1569,7 +1575,7 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>FolderSizeItemListModel</name>
     <message>
-        <location filename="../foldersizeitemlistmodel.cpp" line="+960"/>
+        <location filename="../foldersizeitemlistmodel.cpp" line="+951"/>
         <location line="+9"/>
         <source>_Copy</source>
         <translation>_复制</translation>
@@ -1625,25 +1631,25 @@ And present in Pie view for easy understanding at glance.</source>
 <context>
     <name>FolderSizeModelThread</name>
     <message>
-        <location filename="../foldersizemodelthread.cpp" line="+844"/>
+        <location filename="../foldersizemodelthread.cpp" line="+734"/>
         <source>Deleting %1 is done.</source>
         <translation>已成功删除 %1.</translation>
     </message>
     <message>
-        <location line="+624"/>
+        <location line="+621"/>
         <source>Deleting %1 is aborted.</source>
         <translation>%1 删除失败.</translation>
     </message>
     <message>
-        <location line="-903"/>
+        <location line="-900"/>
         <location line="+75"/>
         <location line="+121"/>
-        <location line="+717"/>
+        <location line="+711"/>
         <source>Move %1 to %2 is done successfully.</source>
         <translation>%1 已成功移动到 %2.</translation>
     </message>
     <message>
-        <location line="-838"/>
+        <location line="-832"/>
         <location line="+121"/>
         <source>Copy %1 to %2 is done successfully.</source>
         <translation>%1 已成功复制到 %2.</translation>
@@ -1667,7 +1673,7 @@ And present in Pie view for easy understanding at glance.</source>
         <translation>%1 删除失败.</translation>
     </message>
     <message>
-        <location line="+650"/>
+        <location line="+644"/>
         <source>Empty %1 is done successfully.</source>
         <translation>已成功清空 %1.</translation>
     </message>
@@ -1677,19 +1683,19 @@ And present in Pie view for easy understanding at glance.</source>
         <translation>%1 清空失败.</translation>
     </message>
     <message>
-        <location line="-796"/>
+        <location line="-790"/>
         <source>Both source/target path can&apos;t be the same file.</source>
         <translation>源和目标路径不能为相同文件.</translation>
     </message>
     <message>
         <location line="-52"/>
         <location line="+120"/>
-        <location line="+716"/>
+        <location line="+710"/>
         <source>Move %1 to %2 is failed.</source>
         <translation>%1 移动到 %2失败.</translation>
     </message>
     <message>
-        <location line="-740"/>
+        <location line="-734"/>
         <source>Both source %1 and target %2 can&apos;t be read/written.</source>
         <translation>无法读取或写入源 %1 和目标路径 %2.</translation>
     </message>
@@ -1782,7 +1788,7 @@ It can&apos;t be downloaded.</source>
 <context>
     <name>GCPClient</name>
     <message>
-        <location filename="../gcpclient.cpp" line="+339"/>
+        <location filename="../gcpclient.cpp" line="+340"/>
         <source>Refresh token is missing</source>
         <translation>授权访问信息已丢失</translation>
     </message>
@@ -2144,7 +2150,7 @@ title %2 ?</source>
     </message>
     <message>
         <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="+401"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+419"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+431"/>
         <source>Reset cloud print</source>
         <translation>重置&lt;b&gt;Cloud Print&lt;/b&gt;</translation>
     </message>
@@ -2174,7 +2180,7 @@ title %2 ?</source>
     </message>
     <message>
         <location line="+17"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+20"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+22"/>
         <source>Show hidden files on local drive</source>
         <translation>本地驱动器上显示隐藏文件</translation>
     </message>
@@ -2209,15 +2215,25 @@ title %2 ?</source>
         <translation>监控</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-56"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-58"/>
         <source>Turn bluetooth on automatically</source>
         <translation>自动调用蓝牙</translation>
     </message>
     <message>
+        <location line="+11"/>
+        <source>Open authorization in browser</source>
+        <translation>在网页浏览器中打开登录页面</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ignore all SSL certificate errors</source>
+        <translation>忽略SSL证书错误</translation>
+    </message>
+    <message>
         <location filename="../qml/FilesPlus/meego/SettingPage.qml" line="-376"/>
         <location line="+324"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-341"/>
-        <location line="+344"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-365"/>
+        <location line="+356"/>
         <source>Logging (Debug)</source>
         <translation>日志(调试)</translation>
     </message>
@@ -2247,13 +2263,13 @@ title %2 ?</source>
     </message>
     <message>
         <location line="+62"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+65"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+67"/>
         <source>Monitoring is enabled. Log file is </source>
         <translation>已启用监控,日志存储于</translation>
     </message>
     <message>
         <location line="-60"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-63"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-65"/>
         <source>Popup interval</source>
         <translation>弹出间隔</translation>
     </message>
@@ -2269,7 +2285,7 @@ title %2 ?</source>
     </message>
     <message>
         <location line="+305"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+310"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+312"/>
         <source>Languages</source>
         <translation>语言</translation>
     </message>
@@ -2281,7 +2297,7 @@ title %2 ?</source>
     </message>
     <message>
         <location line="-10"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-13"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-15"/>
         <source>Show thumbnail on cloud drive</source>
         <translation>&lt;b&gt;Cloud Drive&lt;/b&gt;中的显示缓存</translation>
     </message>
@@ -2299,12 +2315,12 @@ title %2 ?</source>
     </message>
     <message>
         <location line="+6"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+7"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+9"/>
         <source>Ignore WebDAV SSL self-signed certificate errors</source>
-        <translation>忽略WebDAV SSL证书错误问题 </translation>
+        <translation>忽略WebDAV SSL证书错误</translation>
     </message>
     <message>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-10"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-12"/>
         <source>Keep bluetooth off</source>
         <translation>自动关闭蓝牙</translation>
     </message>
@@ -2316,7 +2332,7 @@ title %2 ?</source>
     </message>
     <message>
         <location line="+281"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+288"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+290"/>
         <source>Russian</source>
         <translation>俄语</translation>
     </message>
@@ -2328,13 +2344,13 @@ title %2 ?</source>
     </message>
     <message>
         <location line="-259"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-264"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-266"/>
         <source>Personalization</source>
         <translation>个性化设置</translation>
     </message>
     <message>
         <location line="-326"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-346"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-358"/>
         <source>Changing logging switch requires restart.
 FilesPlus is exiting now.
 
@@ -2343,7 +2359,7 @@ Please confirm.</source>
     </message>
     <message>
         <location line="+301"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+319"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+331"/>
         <source>Auto-sync after refresh</source>
         <translation>刷新后自动同步</translation>
     </message>
@@ -2403,7 +2419,7 @@ Please confirm.</source>
     </message>
     <message>
         <location line="+3"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+3"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+5"/>
         <source>Local image preview size</source>
         <translation>图像预览的大小</translation>
     </message>
@@ -2421,7 +2437,7 @@ Please confirm.</source>
     </message>
     <message>
         <location line="-31"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-34"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-36"/>
         <source>Sync to cloud storage root</source>
         <translation>同步到&lt;b&gt;Cloud Storage Root&lt;/b&gt;</translation>
     </message>
@@ -2437,20 +2453,20 @@ Please confirm.</source>
     </message>
     <message>
         <location line="+35"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+38"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+40"/>
         <source>Delete by moving to trash</source>
         <translatorcomment>Use trash basket</translatorcomment>
         <translation>使用垃圾篓</translation>
     </message>
     <message>
         <location line="-34"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-37"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-39"/>
         <source>Dirty before sync (GoogleDrive)</source>
         <translation>更改文件之前同步 (GoogleDrive)</translation>
     </message>
     <message numerus="yes">
         <location line="+97"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+103"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+105"/>
         <source>%n sec.</source>
         <translation>
             <numerusform>%n 秒.</numerusform>
@@ -2464,13 +2480,13 @@ Please confirm.</source>
     </message>
     <message>
         <location line="-572"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-597"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="-611"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
     <message>
         <location line="+334"/>
-        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+354"/>
+        <location filename="../qml/FilesPlus/symbian/SettingPage.qml" line="+366"/>
         <source>Developer</source>
         <translation>开发者</translation>
     </message>
@@ -2608,7 +2624,7 @@ Please confirm.</source>
 <context>
     <name>WebDavClient</name>
     <message>
-        <location filename="../webdavclient.cpp" line="+917"/>
+        <location filename="../webdavclient.cpp" line="+931"/>
         <source>Test connection</source>
         <translation>连接测试</translation>
     </message>
