@@ -518,7 +518,7 @@ QIODevice *CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteF
     qDebug() << "CloudDriveClient::fileGet" << objectName() << nonce << "uri" << uri;
 
     // Get redirected request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
@@ -531,7 +531,7 @@ QIODevice *CloudDriveClient::fileGet(QString nonce, QString uid, QString remoteF
         qDebug() << "CloudDriveClient::fileGet" << objectName() << nonce << "rangeHeader" << rangeHeader;
         req.setRawHeader("Range", rangeHeader.toAscii() );
     }
-    req.setRawHeader("Accept-Encoding", "gzip, deflate");
+//    req.setRawHeader("Accept-Encoding", "gzip, deflate"); // NOTE: It causes invalid downloaded SIS file from SkyDrive.
     QNetworkReply *reply = manager->get(req);
     reply = getRedirectedReply(reply);
 
@@ -569,7 +569,7 @@ QIODevice *CloudDriveClient::fileGetResume(QString nonce, QString uid, QString r
     m_localFileHash[nonce] = new QFile(localFilePath);
 
     // Get redirected request.
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    CustomQNetworkAccessManager *manager = new CustomQNetworkAccessManager(this);
     QNetworkRequest req = QNetworkRequest(QUrl::fromEncoded(uri.toAscii()));
     req.setAttribute(QNetworkRequest::User, QVariant(nonce));
     req.setAttribute(QNetworkRequest::Attribute(QNetworkRequest::User + 1), QVariant(uid));
