@@ -22,7 +22,7 @@ QML_IMPORT_PATH =
 symbian:TARGET.UID3 = 0xA11DCC9D #unprotected UID for unsigned app.
 
 
-VERSION = 1.3.4
+VERSION = 1.3.5
 
 # Smart Installer package's UID
 # This UID is from the protected range and therefore the package will
