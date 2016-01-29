@@ -16,7 +16,7 @@ QML_IMPORT_PATH =
 
 # Change UID3 to protected UID for publishing to Nokia Store.
 #symbian:TARGET.UID3 = 0xE11DCC9D #unprotected UID for dev.
-#symbian:TARGET.UID3 = 0x20064E45 #protected UID for dev.
+#symbian:TARGET.UID3 = 0x20064E45 #protected UID for dev. # NOTE: work on custom firmware.
 
 # ISSUE:Not work on stock firmware unless you have valid 3rd party certificate.
 symbian:TARGET.UID3 = 0xA11DCC9D #unprotected UID for unsigned app.

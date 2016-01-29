@@ -15,6 +15,7 @@ public:
 
     void initializeDB();
     QSqlDatabase getDB();
+    // TODO: Backup/Restore to support App ID updating.
 
 private:
     DatabaseManager(){} // Private so that it can  not be called

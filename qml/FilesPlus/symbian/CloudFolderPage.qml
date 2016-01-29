@@ -141,7 +141,7 @@ Page {
     }
 
     function refreshSlot(caller) {
-        console.debug("cloudFolderPage refreshSlot caller " + caller + " " + selectedCloudType + " " + remotePath + " " + remoteParentPath);
+        console.debug("cloudFolderPage refreshSlot caller [" + caller + "] selectedCloudType " + selectedCloudType + " selectedUid " + selectedUid + " remotePath " + remotePath + " remoteParentPath " + remoteParentPath);
         quickScrollPanel.visible = false;
         selectedIndex = -1;
         isBusy = true;
